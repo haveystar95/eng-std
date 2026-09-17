@@ -51,8 +51,8 @@ final class PlanSchemas
     }
 
     /**
-     * `lesson_day.v4.5`'s STRICT OUTPUT SCHEMA, keys in its order (the same structure as v4.4 — v4.5 changed
-     * rules, not fields). Enums hold what the vendor can hold: the kinds, the speakers, the gender, and every
+     * `lesson_day.v4.6`'s STRICT OUTPUT SCHEMA, keys in its order (the same structure as v4.4 and v4.5 — the versions changed
+     * rules and inputs, not fields). Enums hold what the vendor can hold: the kinds, the speakers, the gender, and every
      * reference — a frame id is one of `p1…pN` (N = DIALOGUE_COUNT, the most frames a day can have) or null, a
      * vocabulary id one of `v1…vM`, a `used_in` entry a frame id or a partner line `A1…AN`. `in_dialogue` is a
      * boolean; «exactly the fillers the dialogue says» is the validator's, the schema cannot say it. No list has a
@@ -87,45 +87,39 @@ final class PlanSchemas
             ]),
             'vocabulary' => [
                 'type' => 'array',
-                'items' => self::object([
-                    'id' => ['type' => 'string', 'enum' => self::ids('v', $vocabularyCount)],
-                    'term_target' => $string,
-                    'translation_native' => $string,
-                    'pronunciation_native' => $string,
-                    'definition_target' => $string,
-                    'kind' => ['type' => 'string', 'enum' => ['word', 'chunk']],
-                    'image_prompt' => ['type' => ['string', 'null']],
-                    'used_in' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => [...$frameIds, ...self::ids('A', $dialogueCount)]]],
-                ]),
+                'items' => self::vocabularyItem(self::ids('v', $vocabularyCount), $frameIds, $dialogueCount),
             ],
         ]);
     }
 
     /**
-     * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1.1`): `{card}` in the shape that card has in the
-     * lesson. A frame keeps its id (the enum has only it); a learner line may name any frame of the day; an
-     * exchange keeps its step (the enum has only it) and comes with `frame_update` — the frame its learner line
-     * stands on, whole. The prompt says «omit "frame_update"» when no filler needed marking; a strict schema
-     * has no optional key, so «omitted» is `null` there.
+     * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1.2`): `{card}` in the shape that card has in the lesson, with the
+     * lesson schema's own enums — every id a day of these counts may have, never the ids of THIS day or the card's own
+     * address. The schema is the first thing the vendor reads, before the rules, and one that changed from card to card
+     * would keep the rules out of its prompt cache (наряд GEN-3); the server holds what the enums no longer say — a card
+     * keeps its id and its step ({@see \App\Modules\Plan\Domain\Lesson\LessonCard::replace()}), a learner line stands on a
+     * frame of the lesson ({@see \App\Modules\Plan\Application\Service\LessonCardRepairer}). A whole exchange comes with
+     * `frame_update` — the frame its learner line stands on, whole; the prompt says «omit "frame_update"» when no filler
+     * needed marking, and a strict schema has no optional key, so «omitted» is `null` there.
      *
-     * @param  'frame'|'exchange'|'line'|'check'|'listening'  $kind
-     * @param  list<string>  $frameIds  the frames of the day
+     * @param  'frame'|'exchange'|'line'|'check'|'listening'|'term'  $kind
      * @return array<string, mixed>
      */
-    public static function lessonCard(string $kind, string $address, array $frameIds): array
+    public static function lessonCard(string $kind, int $dialogueCount, int $vocabularyCount): array
     {
-        $frames = $frameIds === [] ? ['p1'] : $frameIds;
+        $frames = self::ids('p', $dialogueCount);
         if ($kind === 'exchange') {
             return self::object([
-                'card' => self::exchange($frames, ['type' => 'integer', 'enum' => [(int) substr($address, 1)]]),
+                'card' => self::exchange($frames, ['type' => 'integer']),
                 'frame_update' => ['type' => ['object', 'null']] + array_slice(self::frame($frames), 1),
             ]);
         }
         $card = match ($kind) {
-            'frame' => self::frame([$address]),
+            'frame' => self::frame($frames),
             'line' => self::learnerMessage($frames),
             'check' => self::check(),
             'listening' => self::listeningQuestion(),
+            'term' => self::vocabularyItem(self::ids('v', $vocabularyCount), $frames, $dialogueCount),
         };
 
         return self::object(['card' => $card]);
@@ -262,6 +256,27 @@ final class PlanSchemas
                     ]),
                 ],
             ]),
+        ]);
+    }
+
+    /**
+     * @param  list<string>  $ids
+     * @param  list<string>  $frameIds
+     * @return array<string, mixed>
+     */
+    private static function vocabularyItem(array $ids, array $frameIds, int $dialogueCount): array
+    {
+        $string = ['type' => 'string'];
+
+        return self::object([
+            'id' => ['type' => 'string', 'enum' => $ids],
+            'term_target' => $string,
+            'translation_native' => $string,
+            'pronunciation_native' => $string,
+            'definition_target' => $string,
+            'kind' => ['type' => 'string', 'enum' => ['word', 'chunk']],
+            'image_prompt' => ['type' => ['string', 'null']],
+            'used_in' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => [...$frameIds, ...self::ids('A', $dialogueCount)]]],
         ]);
     }
 

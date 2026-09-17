@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Infrastructure\Job;
 
 use App\Modules\Plan\Application\Command\BuildPlan;
 use App\Modules\Plan\Application\Command\BuildPlanHandler;
+use App\Modules\Plan\Application\Service\PlanBuildService;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Infrastructure\Eloquent\PlanModel;
 use App\Modules\Plan\Infrastructure\Eloquent\PlanSceneModel;
@@ -31,7 +32,7 @@ final class BuildPlanJob implements ShouldQueue
         private readonly string $planId,
         private readonly int $scenesToAdd = 0,
     ) {
-        $this->timeout = 2 * (int) config('plan.model.plan_timeout', 90) + 30;
+        $this->timeout = PlanBuildService::MAX_ATTEMPTS * (int) config('plan.model.plan_timeout') + BuildLessonJob::MARGIN_SECONDS;
     }
 
     public function handle(BuildPlanHandler $handler): void

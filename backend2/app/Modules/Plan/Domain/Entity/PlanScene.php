@@ -20,7 +20,8 @@ use DateTimeImmutable;
 
 /**
  * One scene of the plan: the brief the plan builder wrote, and — once the lesson generator has
- * answered — the lesson with the cost and version it was written at.
+ * answered — the lesson with the cost and version it was written at, spoken in the roles the plan gives
+ * (the learner's of the plan, the partner's of the scene — наряд GEN-3).
  *
  * The scene keeps the model's ANSWER (what is stored and what the validator judged) and serves the
  * lesson put together from it ({@see LessonAssembly}, seeded by the scene): the filler of every learner
@@ -196,9 +197,14 @@ final class PlanScene
         $this->image ??= $image;
     }
 
+    /**
+     * The lesson is still to be asked for — `pending`. A FAILED lesson is not: it waits for the learner's retry
+     * ({@see resetLesson()}), and nothing buys it again on its own (наряд GEN-3) — a call lost to a timeout may have been
+     * billed, and a day that opens or closes must not pay for it twice.
+     */
     public function needsLesson(): bool
     {
-        return $this->lessonStatus === LessonStatus::Pending || $this->lessonStatus === LessonStatus::Failed;
+        return $this->lessonStatus === LessonStatus::Pending;
     }
 
     public function isReady(): bool

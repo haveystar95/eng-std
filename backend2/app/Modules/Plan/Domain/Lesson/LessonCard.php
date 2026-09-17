@@ -8,10 +8,11 @@ use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Service\FrameText;
 
 /**
- * ONE REPAIRABLE CARD OF A LESSON, BY ITS ADDRESS (P2R, наряды GEN-2a, GEN-2b): a frame (`p3`, or one of its
+ * ONE REPAIRABLE CARD OF A LESSON, BY ITS ADDRESS (P2R, наряды GEN-2a, GEN-2b, GEN-3): a frame (`p3`, or one of its
  * fillers `p3.f2`), a whole exchange (`x3` — both messages and the check), a learner line (`B3`), an exchange's
- * check (`x3.check`), a listening question (`L2`). Anything else the validator addresses — the lesson as a
- * whole, a partner line on its own, a vocabulary item — is not a card a repair can take.
+ * check (`x3.check`), a listening question (`L2`), a word of the day (`v4`, P2R v1.2 — a word the learner learned on
+ * an earlier day is replaced by another word of this lesson). Anything else the validator addresses — the lesson as a
+ * whole, a partner line on its own — is not a card a repair can take.
  *
  * It reads the card out of a lesson and puts a repaired one back. A repaired frame keeps the dialogue lines that
  * stand on it true to it: each line that said the old frame becomes the new frame with the filler the server found
@@ -31,9 +32,11 @@ final readonly class LessonCard
 
     public const LISTENING = 'listening';
 
+    public const TERM = 'term';
+
     /**
-     * @param  self::FRAME|self::EXCHANGE|self::LINE|self::CHECK|self::LISTENING  $kind
-     * @param  string  $frameId  the frame's id for a frame card, '' otherwise
+     * @param  self::FRAME|self::EXCHANGE|self::LINE|self::CHECK|self::LISTENING|self::TERM  $kind
+     * @param  string  $frameId  the frame's id for a frame card, the word's id for a term card, '' otherwise
      * @param  int  $number  the exchange's step, or the listening question's number; 0 for a frame
      */
     private function __construct(
@@ -51,6 +54,7 @@ final readonly class LessonCard
             preg_match('/^B(\d+)$/', $address, $m) === 1 => new self($address, self::LINE, '', (int) $m[1]),
             preg_match('/^x(\d+)\.check$/', $address, $m) === 1 => new self($address, self::CHECK, '', (int) $m[1]),
             preg_match('/^L(\d+)$/', $address, $m) === 1 && (int) $m[1] > 0 => new self($address, self::LISTENING, '', (int) $m[1]),
+            preg_match('/^v\d+$/', $address) === 1 => new self($address, self::TERM, $address, 0),
             default => null,
         };
     }
@@ -78,11 +82,12 @@ final readonly class LessonCard
             self::LINE => $answer->exchange($this->number)?->learner()?->toArray(),
             self::CHECK => $answer->exchange($this->number)?->check->toArray(),
             self::LISTENING => ($answer->listening[$this->number - 1] ?? null)?->toArray(),
+            self::TERM => $answer->vocabularyItem($this->frameId)?->toArray(),
         };
     }
 
     /** The answer with this card replaced; the answer as it was when the card is not there. */
-    public function replace(Lesson $answer, Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion $card): Lesson
+    public function replace(Lesson $answer, Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion|VocabularyItem $card): Lesson
     {
         return match (true) {
             $this->kind === self::FRAME && $card instanceof Phrase => $this->withFrame($answer, $this->frameId, $card),
@@ -105,6 +110,11 @@ final readonly class LessonCard
                 fn (ListeningQuestion $q, int $i): ListeningQuestion => $i === $this->number - 1 ? $card : $q,
                 $answer->listening,
                 array_keys($answer->listening),
+            )),
+            // A word keeps its id and its place in the list, whatever id the repair wrote.
+            $this->kind === self::TERM && $card instanceof VocabularyItem => $answer->withVocabulary(array_map(
+                fn (VocabularyItem $v): VocabularyItem => $v->id === $this->frameId ? $card->withId($this->frameId) : $v,
+                $answer->vocabulary,
             )),
             default => $answer,
         };

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Command;
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
-use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\LessonBuildService;
+use App\Modules\Plan\Application\Service\LessonRequests;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
@@ -17,7 +16,6 @@ use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Shared\Domain\Service\Clock;
-use App\Modules\Shared\Domain\Service\LanguageName;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
@@ -38,9 +36,9 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * with no start date and day 1 locked again). The plan is re-read after the claim, for the level,
  * the languages and the learner's own words the request needs, and never written.
  *
- * The learner's facts travel in TOPIC_DESCRIPTION: the scene's brief, then the plan's goal as the
- * learner wrote it — a fact that fits a frame's slot (years, field, family) becomes its filler. The
- * learner's gender is read from the profile now, at the moment the day is written.
+ * The inputs are put together by {@see LessonRequests}: the learner's facts in TOPIC_DESCRIPTION, the learner's gender
+ * as the profile says it now, the roles of the plan and the scene, and the story so far — the days before this one whose
+ * lessons are written (наряд GEN-3).
  */
 final readonly class BuildLessonHandler
 {
@@ -50,7 +48,7 @@ final readonly class BuildLessonHandler
         private LessonBuildService $builder,
         private PlanDispatcher $dispatcher,
         private PlanConfig $config,
-        private LearnerGender $gender,
+        private LessonRequests $requests,
         private Clock $clock,
         private TransactionManager $tx,
         private LanguagePacks $packs,
@@ -81,20 +79,7 @@ final readonly class BuildLessonHandler
         if ($plan === null) {
             return;
         }
-        $counts = $this->config->countsFor($plan->level());
-
-        $request = new LessonRequest(
-            topic: $scene->titleNative(),
-            topicDescription: self::topicDescription($scene->topicDescription(), $plan->goalText()),
-            targetLanguage: LanguageName::of($plan->targetLang()->value),
-            nativeLanguage: LanguageName::of($plan->nativeLang()->value),
-            level: $plan->level(),
-            learnerGender: $this->gender->of($plan->userId()),
-            vocabularyCount: $counts['vocabulary'],
-            dialogueCount: $counts['dialogue'],
-            targetLangCode: $plan->targetLang()->value,
-            nativeLangCode: $plan->nativeLang()->value,
-        );
+        $request = $this->requests->for($plan, $scene);
 
         try {
             $outcome = $this->builder->build($request);
@@ -131,13 +116,5 @@ final readonly class BuildLessonHandler
             $this->dispatcher->voiceScene($scene->id());
             $this->dispatcher->illustrateScene($scene->id());
         }
-    }
-
-    /** The scene's brief, then the learner's own words — the facts a frame's slot may take. */
-    public static function topicDescription(string $brief, string $goal): string
-    {
-        $goal = trim((string) preg_replace('/\s+/u', ' ', $goal));
-
-        return $goal === '' ? trim($brief) : trim($brief)."\n\nAbout the learner, in their own words: {$goal}";
     }
 }

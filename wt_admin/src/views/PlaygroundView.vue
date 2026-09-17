@@ -26,6 +26,7 @@ import { money } from '@/utils/format'
 import type {
   PlaygroundProvider,
   PlaygroundResult,
+  PlaygroundRunStatus,
   PlaygroundValidation,
   TermRow,
 } from '@/api/types'
@@ -51,6 +52,8 @@ const prompt = ref('')
 const temperature = ref<string>('')
 
 const sending = ref(false)
+// The run's state while the call is out (the backend runs it in a queued job, the screen polls it).
+const runStatus = ref<PlaygroundRunStatus | null>(null)
 const result = ref<PlaygroundResult | null>(null)
 
 // What the validator reads. Declared here, next to the other persisted fields, because a model
@@ -92,15 +95,19 @@ watch(provider, () => {
 
 async function send(): Promise<void> {
   sending.value = true
+  runStatus.value = null
   validation.value = null
   try {
     const t = temperature.value.trim()
-    result.value = await api.playgroundGenerate({
-      provider: provider.value,
-      model: model.value,
-      prompt: prompt.value,
-      temperature: t === '' ? null : Number(t),
-    })
+    result.value = await api.playgroundGenerate(
+      {
+        provider: provider.value,
+        model: model.value,
+        prompt: prompt.value,
+        temperature: t === '' ? null : Number(t),
+      },
+      (status) => (runStatus.value = status),
+    )
     // The answer lands in the validator's field, and from there it is editable. Overwriting is the
     // intent: «отправил → появилось». What was in the box was either the previous answer or a paste
     // the person has already run, and both are recoverable — the answer above has its own «Скопировать».
@@ -125,6 +132,7 @@ async function send(): Promise<void> {
     }
   } finally {
     sending.value = false
+    runStatus.value = null
   }
 }
 
@@ -318,7 +326,7 @@ async function validate(): Promise<void> {
 
       <div class="actions">
         <PaperButton :disabled="!canSend || sending" @click="send">
-          {{ sending ? 'Отправляем…' : 'Отправить' }}
+          {{ sending ? (runStatus === 'running' ? 'Модель отвечает…' : 'В очереди…') : 'Отправить' }}
         </PaperButton>
       </div>
     </PaperCard>

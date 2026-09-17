@@ -8,11 +8,13 @@ use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguageSide;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
 use App\Modules\Plan\Domain\Check\Language\PackSkips;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * What the lesson was ORDERED with — the counts, the pair of languages as their packs, and the learner's gender
- * the rules compare against — and what the rules could not check for want of a pack (наряд GEN-2b).
+ * What the lesson was ORDERED with — the counts, the pair of languages as their packs, the learner's gender the rules
+ * compare against, the story so far (the earlier days of the plan) and the partner's role of this scene (наряд GEN-3) —
+ * and what the rules could not check for want of a pack (наряд GEN-2b).
  *
  * A rule that needs a language asks {@see reads()} first: the pack of that side has every key the check needs —
  * the check runs; it does not — the check is skipped, the skip is written down ({@see $skips}) and nothing is
@@ -28,6 +30,8 @@ final readonly class LessonValidationContext
         public LanguagePack $native,
         public LanguagePack $target,
         public ?VoiceGender $learnerGender = null,
+        public EarlierDays $earlierDays = new EarlierDays,
+        public string $partnerRoleTarget = '',
     ) {
         $this->skips = new PackSkips;
     }

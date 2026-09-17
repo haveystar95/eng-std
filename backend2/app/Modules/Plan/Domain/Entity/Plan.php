@@ -14,6 +14,9 @@ use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Exception\PlanNotInState;
 use App\Modules\Plan\Domain\Exception\PlanTooShort;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
+use App\Modules\Plan\Domain\Lesson\EarlierDay;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
+use App\Modules\Plan\Domain\Lesson\LessonRoles;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
 use App\Modules\Plan\Domain\ValueObject\DayMetrics;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
@@ -494,6 +497,53 @@ final class Plan
         }
 
         return $out;
+    }
+
+    /**
+     * THE STORY SO FAR of a scene (`lesson_day.v4.6`, EARLIER_DAYS; наряд GEN-3): the scene days of this plan before the
+     * scene's day whose lesson is written (ready, or waiting for its photos), in the order of the calendar — none for the
+     * first scene day, and none for a scene no day holds. Each is read off its served lesson, the partner's gender as the
+     * day was spoken ({@see PlanScene::partnerVoiceGender()}, the default cast when it has none).
+     */
+    public function earlierDaysOf(PlanSceneId $sceneId): EarlierDays
+    {
+        $days = [];
+        foreach ($this->days as $day) {
+            if ($day->sceneId()?->equals($sceneId) === true) {
+                return new EarlierDays($days);
+            }
+            $scene = $day->type() === DayType::Scene ? $this->sceneOf($day) : null;
+            $lesson = $scene?->hasLesson() === true ? $scene->lesson() : null;
+            if ($scene !== null && $lesson !== null) {
+                $days[] = EarlierDay::of(
+                    $day->number(),
+                    $scene->titleTarget(),
+                    $scene->partnerRoleTarget(),
+                    $scene->partnerVoiceGender() ?? PlanScene::DEFAULT_PARTNER_VOICE,
+                    $lesson,
+                );
+            }
+        }
+
+        return new EarlierDays;
+    }
+
+    /**
+     * Who speaks in a scene's lesson (наряд GEN-3): the learner's role is the PLAN's — the same on every day of the story —
+     * and the partner's is the scene's. A plan has its titles from the moment it has scenes.
+     */
+    public function lessonRoles(PlanScene $scene): LessonRoles
+    {
+        if ($this->titles === null) {
+            throw PlanNotInState::for('write a lesson', $this->status, [PlanStatus::Ready, PlanStatus::Active, PlanStatus::Overdue, PlanStatus::Finished]);
+        }
+
+        return new LessonRoles(
+            $this->titles->learnerRoleTarget,
+            $this->titles->learnerRoleNative,
+            $scene->partnerRoleTarget(),
+            $scene->partnerRoleNative(),
+        );
     }
 
     /** The previous scene day (any distance back), or null. */

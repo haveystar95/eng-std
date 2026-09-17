@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\Assembly\ReturnedUnit;
@@ -45,7 +46,7 @@ function s1daScene(PlanLevel $level = PlanLevel::Intermediate, int $n = 1): Scen
 {
     $sceneId = s1daSceneId($n);
     $packs = lessonPacks();
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', $level, null, 8, 8));
+    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', $level, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
     $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
 
     return new SceneMaterial($sceneId, $lesson, PlanTerm::fromLesson($sceneId, $lesson, static fn (): PlanTermId => PlanTermId::generate()), $packs->for('en'), $packs->for('ru'));

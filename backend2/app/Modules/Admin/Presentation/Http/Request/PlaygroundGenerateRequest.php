@@ -23,7 +23,8 @@ final class PlaygroundGenerateRequest extends FormRequest
         return [
             'provider' => ['required', 'string', 'max:32'],
             'model' => ['required', 'string', 'max:100'],
-            'prompt' => ['required', 'string', 'max:32000'],
+            // A lesson prompt with its test input is ≈ 34 000 characters (lesson_day.v4.6): room for twice that (наряд GEN-3).
+            'prompt' => ['required', 'string', 'max:65000'],
             // Omitted entirely when absent — several current models refuse the parameter.
             'temperature' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:2'],
         ];

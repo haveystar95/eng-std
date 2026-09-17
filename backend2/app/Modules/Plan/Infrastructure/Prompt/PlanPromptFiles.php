@@ -9,24 +9,31 @@ use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use RuntimeException;
 
 /**
  * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
- * (`plan-builder-v2`, `lesson_day.v4.5`) — a rename is a version bump and nothing else is.
+ * (`plan-builder-v2`, `lesson_day.v4.6`) — a rename is a version bump and nothing else is. The previous lesson and repair
+ * files stay beside the current ones (`lesson_day.v4.5`, `lesson_card_repair.v1.1`): going back is one constant.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
  * author used to try the prompt by hand; that section is cut out and the real inputs go in the
  * user message, named exactly as the prompt's INPUTS section names them, so the rules and the data
  * travel on different channels.
+ *
+ * THE REQUEST IS BUILT FOR THE VENDOR'S PROMPT CACHE (наряд GEN-3): the rules — the file's text, byte for byte the same on
+ * every call of that prompt (of that card kind, for a repair) — go first, as the system message; everything that changes
+ * from call to call — the topic, the roles, the story so far, the card — goes after them, in the user message. Nothing
+ * that varies (a date, an id) is ever written into the rules.
  */
 final class PlanPromptFiles
 {
     private const PLAN_FILE = 'plan-builder-v2.md';
 
-    private const LESSON_FILE = 'lesson_day.v4.5.md';
+    private const LESSON_FILE = 'lesson_day.v4.6.md';
 
-    private const REPAIR_FILE = 'lesson_card_repair.v1.1.md';
+    private const REPAIR_FILE = 'lesson_card_repair.v1.2.md';
 
     private const JUDGE_FILE = 'lesson_seam_judge.v1.1.md';
 
@@ -36,20 +43,24 @@ final class PlanPromptFiles
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
      * heading, word for word: the repair wrapper never retells a rule. A whole exchange answers to every
-     * rule a turn of the visit has: its kind, its place in the visit, both lines and its check.
+     * rule a turn of the visit has: its kind, its place in the visit, both lines and its check. A frame, a whole exchange
+     * and a word answer to the story so far too (v4.6): what the earlier days taught is not taught again.
      */
-    private const REPAIR_SECTIONS = [
-        'frame' => ['LEVEL', 'FRAMES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE'],
+    public const REPAIR_SECTIONS = [
+        'frame' => ['LEVEL', 'FRAMES', 'THE STORY SO FAR', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE'],
         'exchange' => [
-            'LEVEL', 'EXCHANGE KINDS', 'NATURAL ORDER OF ONE VISIT', 'MOBILE-FRIENDLY MESSAGE LENGTH', 'CONVERSATION PARTNER RULE',
-            'LEARNER MESSAGES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE', 'CHECK PER EXCHANGE',
+            'LEVEL', 'EXCHANGE KINDS', 'NATURAL ORDER OF ONE VISIT', 'THE STORY SO FAR', 'MOBILE-FRIENDLY MESSAGE LENGTH',
+            'CONVERSATION PARTNER RULE', 'LEARNER MESSAGES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE', 'CHECK PER EXCHANGE',
         ],
         'line' => ['LEVEL', 'EXCHANGE KINDS', 'MOBILE-FRIENDLY MESSAGE LENGTH', 'LEARNER MESSAGES', 'TEXT QUALITY', 'PRONUNCIATION_NATIVE'],
         'check' => ['LEVEL', 'CHECK PER EXCHANGE'],
         'listening' => ['LISTENING'],
+        'term' => ['LEVEL', 'VOCABULARY', 'THE STORY SO FAR', 'PRONUNCIATION_NATIVE'],
     ];
 
     private const TEST_INPUT_MARKER = "\n---\n\nTEST INPUT\n";
+
+    private const JSON_FLAGS = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
 
     private const FINAL_RULE_MARKER = "\n---\n\nFINAL OUTPUT RULE\n";
 
@@ -85,20 +96,28 @@ final class PlanPromptFiles
 
     /**
      * P2R's rules for one card kind: the repair wrapper with the lesson prompt's own sections for that
-     * kind quoted in place of `{{rules}}`.
+     * kind quoted in place of `{{rules}}` — the sections the lesson prompt has, so that going back to the previous lesson
+     * prompt (which has no THE STORY SO FAR) is still its one constant.
      *
-     * @param  'frame'|'exchange'|'line'|'check'|'listening'  $kind
+     * @param  'frame'|'exchange'|'line'|'check'|'listening'|'term'  $kind
      */
     public function repairSystem(string $kind): string
     {
-        $sections = array_map(fn (string $heading): string => $this->lessonSection($heading), self::REPAIR_SECTIONS[$kind]);
+        $sections = [];
+        foreach (self::REPAIR_SECTIONS[$kind] as $heading) {
+            $section = $this->findLessonSection($heading);
+            if ($section !== null) {
+                $sections[] = $section;
+            }
+        }
 
         return str_replace('{{rules}}', implode("\n\n---\n\n", $sections), $this->text(self::REPAIR_FILE));
     }
 
     /**
-     * The repair's data: the inputs, the card's address and kind, what is broken, the card, and only the part of
-     * the lesson this card needs (P2R v1.1, наряд GEN-2b) — the day's frames and words and the lines around it.
+     * The repair's data: the inputs, the card's address and kind, what is broken, the card, only the part of the lesson
+     * this card needs (P2R v1.1, наряд GEN-2b) — the day's frames and words and the lines around it — and (P2R v1.2, наряд
+     * GEN-3) a whole exchange's NEIGHBOURS and what the earlier days taught, EARLIER_DAYS in its short form.
      */
     public function repairUser(LessonCardRepairRequest $request): string
     {
@@ -117,7 +136,7 @@ final class PlanPromptFiles
             $lines[] = '- '.$finding['code'].' · '.self::oneLine($finding['detail']);
         }
 
-        return implode("\n", [
+        $blocks = [
             ...$lines,
             '',
             'CARD (as written):',
@@ -125,7 +144,18 @@ final class PlanPromptFiles
             '',
             'LESSON (accepted; only the part this card needs — the day\'s frames and words, the lines around the card; for context, do not return it):',
             self::json($request->context),
-        ]);
+        ];
+        if ($request->neighbours !== null) {
+            $blocks = [
+                ...$blocks,
+                '',
+                'NEIGHBOURS (the exchange before and the exchange after the card, as they lie in the lesson; for reading only):',
+                'before: '.($request->neighbours['before'] === null ? 'none' : json_encode($request->neighbours['before'], self::JSON_FLAGS)),
+                'after: '.($request->neighbours['after'] === null ? 'none' : json_encode($request->neighbours['after'], self::JSON_FLAGS)),
+            ];
+        }
+
+        return implode("\n", [...$blocks, '', 'EARLIER_DAYS:', self::earlierDays($request->earlierDays, short: true)]);
     }
 
     /** The seam judge's rules — the file as it is. */
@@ -179,6 +209,11 @@ final class PlanPromptFiles
      */
     public function lessonSection(string $heading): string
     {
+        return $this->findLessonSection($heading) ?? throw new RuntimeException("Lesson prompt has no section «{$heading}»");
+    }
+
+    private function findLessonSection(string $heading): ?string
+    {
         foreach (explode("\n---\n", $this->text(self::LESSON_FILE)) as $part) {
             $part = trim($part);
             if (str_starts_with($part, $heading)) {
@@ -186,7 +221,7 @@ final class PlanPromptFiles
             }
         }
 
-        throw new RuntimeException("Lesson prompt has no section «{$heading}»");
+        return null;
     }
 
     /** The plan builder's rules — the file without its TEST INPUT tail. */
@@ -237,12 +272,53 @@ final class PlanPromptFiles
             '',
             'LEARNER_GENDER: '.$request->learnerGenderInput(),
             '',
+            'LEARNER_ROLE: '.self::oneLine($request->roles->learnerTarget).' / '.self::oneLine($request->roles->learnerNative),
+            '',
+            'PARTNER_ROLE: '.self::oneLine($request->roles->partnerTarget).' / '.self::oneLine($request->roles->partnerNative),
+            '',
             'VOCABULARY_COUNT: '.$request->vocabularyCount,
             '',
             'DIALOGUE_COUNT: '.$request->dialogueCount,
+            '',
+            'EARLIER_DAYS:',
+            self::earlierDays($request->earlierDays, short: false),
         ];
 
         return implode("\n", $lines).self::violations($request->previousViolations);
+    }
+
+    /**
+     * EARLIER_DAYS as the prompts read it (наряд GEN-3) — `none` on the first day; otherwise day by day, oldest first, a blank
+     * line between days:
+     *
+     *   Day {n} — {title_target of the scene} (partner: {partner_role_target}, {gender})
+     *   A: … / B: …           (the dialogue in order, the target text only — the full form, the lesson's)
+     *   Frames: {frame_target} = {frame_native} | …
+     *   Words: {term_target} | …
+     *
+     * The short form (a card repair's, P2R v1.2) is a day's number with its Frames and Words only.
+     */
+    private static function earlierDays(EarlierDays $earlier, bool $short): string
+    {
+        if ($earlier->isEmpty()) {
+            return 'none';
+        }
+        $days = [];
+        foreach ($earlier->days as $day) {
+            $lines = $short
+                ? ["Day {$day->number}"]
+                : ["Day {$day->number} — ".self::oneLine($day->titleTarget).' (partner: '.self::oneLine($day->partnerRoleTarget).", {$day->partnerGender->value})"];
+            if (! $short) {
+                foreach ($day->lines as $line) {
+                    $lines[] = $line['speaker'].': '.self::oneLine($line['text']);
+                }
+            }
+            $lines[] = 'Frames: '.implode(' | ', array_map(static fn (array $f): string => self::oneLine($f['target']).' = '.self::oneLine($f['native']), $day->frames));
+            $lines[] = 'Words: '.implode(' | ', array_map(self::oneLine(...), $day->words));
+            $days[] = implode("\n", $lines);
+        }
+
+        return implode("\n\n", $days);
     }
 
     /**
@@ -277,7 +353,7 @@ final class PlanPromptFiles
      */
     private static function json(array $value, bool $pretty = false): string
     {
-        $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
+        $flags = self::JSON_FLAGS;
         if ($pretty) {
             return json_encode($value, $flags | JSON_PRETTY_PRINT);
         }

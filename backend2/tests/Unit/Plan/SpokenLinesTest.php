@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
@@ -23,7 +24,7 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 function slLesson(?Closure $edit = null): Lesson
 {
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8));
+    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
 
     return LessonAssembly::serve((new LessonParser)->parse($edit === null ? $payload : $edit($payload)), 'scene', lessonPacks()->for('en'));
 }

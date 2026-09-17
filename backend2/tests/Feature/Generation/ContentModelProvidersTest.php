@@ -9,6 +9,7 @@ use App\Modules\Generation\Infrastructure\Adapter\AnthropicContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\GeminiContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCompatibleContentModel;
+use App\Modules\Generation\Infrastructure\Adapter\VendorCall;
 use App\Modules\Generation\Infrastructure\Prompt\PromptLibrary;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -49,7 +50,7 @@ it('asks an OpenAI-compatible provider for strict json and reads back tokens, mo
     ], 200)]);
 
     $answer = (new OpenAiCompatibleContentModel(
-        app(OutboundCallContext::class), ProviderId::OpenAi, 'key', 'gpt-4o', 'https://api.openai.com/v1',
+        app(OutboundCallContext::class), app(VendorCall::class), ProviderId::OpenAi, 'key', 'gpt-4o', 'https://api.openai.com/v1',
     ))->complete(renderedPrompt(), 'TOPIC: "в банке"', tinySchema());
 
     expect($answer->payload)->toBe(['items' => ['a']])
@@ -78,7 +79,7 @@ it('points the same adapter at xAI without changing the request shape', function
     ], 200)]);
 
     $answer = (new OpenAiCompatibleContentModel(
-        app(OutboundCallContext::class), ProviderId::Xai, 'key', 'grok-4.6', 'https://api.x.ai/v1',
+        app(OutboundCallContext::class), app(VendorCall::class), ProviderId::Xai, 'key', 'grok-4.6', 'https://api.x.ai/v1',
     ))->complete(renderedPrompt(), 'TOPIC', tinySchema());
 
     // 1000/1000 × $0.002 + 1000/1000 × $0.006
@@ -100,7 +101,7 @@ it('sends the Anthropic shape: x-api-key, a top-level system field and output_co
         'usage' => ['input_tokens' => 1000, 'output_tokens' => 1000],
     ], 200)]);
 
-    $answer = (new AnthropicContentModel(app(OutboundCallContext::class), 'key', 'claude-opus-5'))
+    $answer = (new AnthropicContentModel(app(OutboundCallContext::class), app(VendorCall::class), 'key', 'claude-opus-5'))
         ->complete(renderedPrompt(), 'TOPIC', tinySchema());
 
     // 1000/1000 × $0.005 + 1000/1000 × $0.025
@@ -125,7 +126,7 @@ it('reports an Anthropic policy refusal as a refusal, not as malformed json', fu
         'model' => 'claude-opus-5', 'stop_reason' => 'refusal', 'content' => [],
     ], 200)]);
 
-    expect(fn () => (new AnthropicContentModel(app(OutboundCallContext::class), 'key', 'claude-opus-5'))
+    expect(fn () => (new AnthropicContentModel(app(OutboundCallContext::class), app(VendorCall::class), 'key', 'claude-opus-5'))
         ->complete(renderedPrompt(), 'TOPIC', tinySchema()))
         ->toThrow(RuntimeException::class, 'refused');
 });
@@ -141,7 +142,7 @@ it('skips a text block that is not the answer when a model thinks out loud first
         'usage' => ['input_tokens' => 1, 'output_tokens' => 1],
     ], 200)]);
 
-    $answer = (new AnthropicContentModel(app(OutboundCallContext::class), 'key', 'claude-opus-5'))
+    $answer = (new AnthropicContentModel(app(OutboundCallContext::class), app(VendorCall::class), 'key', 'claude-opus-5'))
         ->complete(renderedPrompt(), 'TOPIC', tinySchema());
 
     expect($answer->payload)->toBe(['items' => ['a']]);
@@ -161,7 +162,7 @@ it('sends the Gemini shape: x-goog-api-key, systemInstruction and a json respons
         'usageMetadata' => ['promptTokenCount' => 4000, 'candidatesTokenCount' => 1000],
     ], 200)]);
 
-    $answer = (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+    $answer = (new GeminiContentModel(app(OutboundCallContext::class), app(VendorCall::class), 'key', 'gemini-3.7-flash'))
         ->complete(renderedPrompt(), 'TOPIC', tinySchema());
 
     // 4000/1000 × $0.00075 + 1000/1000 × $0.00375
@@ -211,7 +212,7 @@ it('translates the shared schema into the dialect Gemini accepts', function () {
         'required' => ['title', 'items'],
     ];
 
-    (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+    (new GeminiContentModel(app(OutboundCallContext::class), app(VendorCall::class), 'key', 'gemini-3.7-flash'))
         ->complete(renderedPrompt(), 'TOPIC', $schema);
 
     Http::assertSent(function (Request $request) : bool {
@@ -234,7 +235,7 @@ it('translates the shared schema into the dialect Gemini accepts', function () {
 it('names a Gemini safety block as a block, not as malformed json', function () {
     Http::fake(['*' => Http::response(['promptFeedback' => ['blockReason' => 'SAFETY']], 200)]);
 
-    expect(fn () => (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+    expect(fn () => (new GeminiContentModel(app(OutboundCallContext::class), app(VendorCall::class), 'key', 'gemini-3.7-flash'))
         ->complete(renderedPrompt(), 'TOPIC', tinySchema()))
         ->toThrow(RuntimeException::class, 'blockReason=SAFETY');
 });
@@ -248,7 +249,7 @@ it('joins a Gemini answer split across several parts', function () {
         'usageMetadata' => ['promptTokenCount' => 1, 'candidatesTokenCount' => 1],
     ], 200)]);
 
-    $answer = (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+    $answer = (new GeminiContentModel(app(OutboundCallContext::class), app(VendorCall::class), 'key', 'gemini-3.7-flash'))
         ->complete(renderedPrompt(), 'TOPIC', tinySchema());
 
     expect($answer->payload)->toBe(['items' => ['a']]);
@@ -270,7 +271,7 @@ it('reports a keyless provider as unavailable with the env var named, and still 
         'services.gemini.api_key' => 'AIza-test',
     ]);
 
-    $catalog = new ConfiguredContentModelCatalog(app(OutboundCallContext::class));
+    $catalog = new ConfiguredContentModelCatalog(app(OutboundCallContext::class), app(VendorCall::class));
     $byProvider = [];
     foreach ($catalog->availability() as $row) {
         $byProvider[$row->provider->value] = $row;

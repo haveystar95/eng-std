@@ -32,6 +32,7 @@ use App\Modules\Plan\Presentation\Console\PlanNotifyTestCommand;
 use App\Modules\Plan\Presentation\Console\PlanRepairCardCommand;
 use App\Modules\Plan\Presentation\Console\PlanNotifyTickCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
+use App\Modules\Observability\Infrastructure\Console\SweepLostModelCallsCommand;
 use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
 use Illuminate\Auth\AuthenticationException;
@@ -78,6 +79,8 @@ return Application::configure(basePath: dirname(__DIR__))
         PlanSpeakReportCommand::class,
         // The length of every stored voice file (SESSION-1a): idempotent, buys nothing.
         PlanAudioDurationsCommand::class,
+        // The model call journal (GEN-3): calls of processes that ended mid-call become `lost` (scheduled).
+        SweepLostModelCallsCommand::class,
         VerificationStatsCommand::class,
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,

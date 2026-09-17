@@ -20,7 +20,7 @@ use App\Modules\Observability\Application\Support\OutboundCallContext;
  */
 final readonly class ConfiguredPlaygroundCatalog implements PlaygroundModelCatalog
 {
-    public function __construct(private OutboundCallContext $context) {}
+    public function __construct(private OutboundCallContext $context, private VendorCall $calls) {}
 
     public function providers(): array
     {
@@ -68,12 +68,13 @@ final readonly class ConfiguredPlaygroundCatalog implements PlaygroundModelCatal
         // door a test would not think to close ({@see LiveModelGuard}).
         LiveModelGuard::refuse("playground model {$provider->value}");
 
-        $timeout = max(1, (int) config('playground.timeout', 60));
+        $timeout = max(1, (int) config('playground.timeout'));
         $base = (string) ($row['base_url'] ?? '');
 
         return match ($provider) {
             ProviderId::Anthropic => new AnthropicPlaygroundModel(
                 context: $this->context,
+                calls: $this->calls,
                 apiKey: $key,
                 model: $model,
                 baseUrl: $base,
@@ -81,6 +82,7 @@ final readonly class ConfiguredPlaygroundCatalog implements PlaygroundModelCatal
             ),
             default => new OpenAiCompatiblePlaygroundModel(
                 context: $this->context,
+                calls: $this->calls,
                 provider: $provider,
                 apiKey: $key,
                 model: $model,

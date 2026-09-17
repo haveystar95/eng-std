@@ -10,8 +10,11 @@ use App\Modules\Plan\Domain\Lesson\Lesson;
  * What a repair of one card came back with (P2R). `status`: `repaired` — the model answered with a card of
  * the right shape and `answer` is the lesson with it put in; `nothing_to_repair` — the validator finds
  * nothing at the address (and no code was named); `not_a_card` — the address names no repairable card;
- * `off_schema` — the model's card is not the card's shape, or an exchange's `frame_update` does not fit it (the
- * call is paid for all the same, and nothing is put in). `frameUpdate` — the frame a repaired exchange came with.
+ * `off_schema` — the model's card is not the card's shape, or an exchange's `frame_update` does not fit it, or a learner
+ * line names no frame of the lesson (the call is paid for all the same, and nothing is put in); `refused` — a repaired
+ * word the server's own check does not take: `used_in` untrue, a word of an earlier day, an abbreviation, a word twice in
+ * the day (P2R
+ * v1.2, наряд GEN-3; paid for, nothing put in, `note` says why). `frameUpdate` — the frame a repaired exchange came with.
  */
 final readonly class LessonCardRepairOutcome
 {
@@ -22,6 +25,8 @@ final readonly class LessonCardRepairOutcome
     public const NOT_A_CARD = 'not_a_card';
 
     public const OFF_SCHEMA = 'off_schema';
+
+    public const REFUSED = 'refused';
 
     /**
      * @param  array<string, mixed>|null  $before  the card as the answer held it

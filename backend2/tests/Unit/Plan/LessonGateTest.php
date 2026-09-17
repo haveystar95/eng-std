@@ -8,21 +8,28 @@ use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 
 /**
- * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a и в GEN-2b, docs/plan-v2.md §4): seven fatal codes, the cards
- * a repair takes for them in the order it reaches furthest, and the reason a day fails with.
+ * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a, в GEN-2b и в GEN-3, docs/plan-v2.md §4): ten fatal codes, the
+ * cards a repair takes for them in the order it reaches furthest, and the reason a day fails with.
  */
 
-// Canon GEN-2b: «фатальные — ТЕ ЖЕ пять из GEN-2a плюс exchange.second_question и exchange.repeats. Ничего нового
-// фатальным не делать». Catches a code made fatal that is not on the list — a heuristic warning holding a learner's day
-// for a paid repair — and one of the seven left out, dealing a broken card.
-it('holds the day for exactly the seven fatal codes, and everything else the validator counts is a warning', function () {
+// Canon GEN-2b: «фатальные — ТЕ ЖЕ пять из GEN-2a плюс exchange.second_question и exchange.repeats»; наряд GEN-3: «фатально
+// — vocab.known_repeat и frame.known_repeat; frame.known_native_repeat, frame.twin, frame.adjacent_repeat, role_gender.changed
+// — предупреждения»; дополнение: «vocab.abbreviation — фатально, фатальных кодов — 10». Catches a code made fatal that is not
+// on the list — a heuristic warning holding a learner's day for a paid repair — and one of the ten left out, dealing a
+// broken card, a word taught twice or an acronym with nothing to translate.
+it('holds the day for exactly the ten fatal codes, and everything else the validator counts is a warning', function () {
     $fatal = [
         LessonCodes::LINE_NE_FRAME, LessonCodes::FILLER_UNGRAMMATICAL, LessonCodes::CHECK_SHAPE, LessonCodes::LISTENING_SHAPE,
         LessonCodes::EXCHANGE_SHAPE, LessonCodes::EXCHANGE_SECOND_QUESTION, LessonCodes::EXCHANGE_REPEATS,
+        LessonCodes::VOCAB_KNOWN_REPEAT, LessonCodes::FRAME_KNOWN_REPEAT, LessonCodes::VOCAB_ABBREVIATION,
     ];
 
     expect(array_values(array_filter(LessonCodes::all(), LessonGate::isFatal(...))))->toEqualCanonicalizing($fatal)
-        ->and(count(LessonGate::FATAL))->toBe(7)
+        ->and(count(LessonGate::FATAL))->toBe(10)
+        ->and(array_filter(
+            [LessonCodes::FRAME_KNOWN_NATIVE_REPEAT, LessonCodes::FRAME_TWIN, LessonCodes::FRAME_ADJACENT_REPEAT, LessonCodes::ROLE_GENDER_CHANGED],
+            LessonGate::isFatal(...),
+        ))->toBe([])
         ->and(array_values(array_diff(LessonGate::FATAL, LessonCodes::all())))->toBe([])
         ->and(LessonGate::isFatal(LessonCodes::LANG_PACK_MISSING))->toBeFalse()
         ->and(LessonGate::isFatal(LessonCodes::FILLER_NATIVE_SEAM))->toBeFalse()
@@ -31,8 +38,9 @@ it('holds the day for exactly the seven fatal codes, and everything else the val
 
 // Catches a gate that repairs lines before the frame they are assembled from, or a line and a check of an exchange before
 // the exchange that brings both back — spending both cards where one would do — and a fatal code of an exchange that
-// stands at no card (v4.4 failed such a day without a repair; P2R v1.1 takes the whole exchange).
-it('asks for a frame, then a whole exchange, then lines, checks and listening — each card once', function () {
+// stands at no card (v4.4 failed such a day without a repair; P2R v1.1 takes the whole exchange). Наряд GEN-3: a word an
+// earlier day taught is a card of its own (P2R v1.2, `term`), repaired last — it changes nothing else of the day.
+it('asks for a frame, then a whole exchange, then lines, checks, listening and words — each card once', function () {
     $found = [
         new LessonViolation(LessonCodes::LINE_NE_FRAME, 'B10', 'x'),
         new LessonViolation(LessonCodes::CHECK_SHAPE, 'x3.check', 'x'),
@@ -44,12 +52,14 @@ it('asks for a frame, then a whole exchange, then lines, checks and listening �
         new LessonViolation(LessonCodes::FILLER_UNGRAMMATICAL, 'p1.f3', 'x'),
         new LessonViolation(LessonCodes::LISTENING_SHAPE, 'L2', 'x'),
         new LessonViolation(LessonCodes::EXCHANGE_SHAPE, 'x4', 'x'),
+        new LessonViolation(LessonCodes::VOCAB_KNOWN_REPEAT, 'v3', 'x'),
+        new LessonViolation(LessonCodes::FRAME_KNOWN_REPEAT, 'p2', 'x'),
     ];
     $fatal = LessonGate::fatal($found);
     $cards = LessonGate::cards($fatal) ?? [];
 
-    expect(array_map(static fn (LessonCard $c): string => $c->address, $cards))->toBe(['p1', 'x4', 'x8', 'B2', 'B10', 'x3.check', 'L2'])
-        ->and(array_map(static fn (LessonCard $c): string => $c->kind, $cards))->toBe(['frame', 'exchange', 'exchange', 'line', 'line', 'check', 'listening'])
+    expect(array_map(static fn (LessonCard $c): string => $c->address, $cards))->toBe(['p1', 'p2', 'x4', 'x8', 'B2', 'B10', 'x3.check', 'L2', 'v3'])
+        ->and(array_map(static fn (LessonCard $c): string => $c->kind, $cards))->toBe(['frame', 'frame', 'exchange', 'exchange', 'line', 'line', 'check', 'listening', 'term'])
         ->and(LessonGate::cards([...$fatal, new LessonViolation(LessonCodes::EXCHANGE_SHAPE, 'lesson', 'x')]))->toBeNull()
-        ->and(LessonGate::failReason($fatal))->toBe('fatal: line.ne_frame, check.shape, exchange.repeats, filler.ungrammatical, exchange.second_question, listening.shape, exchange.shape');
+        ->and(LessonGate::failReason($fatal))->toBe('fatal: line.ne_frame, check.shape, exchange.repeats, filler.ungrammatical, exchange.second_question, listening.shape, exchange.shape, vocab.known_repeat, frame.known_repeat');
 });

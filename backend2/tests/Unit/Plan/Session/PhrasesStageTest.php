@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\CardObjects;
@@ -45,7 +46,7 @@ function s1pSceneId(): string
 /** @return array<string, mixed> the clean fake lesson as the model writes it */
 function s1pPayload(): array
 {
-    return FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8));
+    return FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
 }
 
 /** @param  (Closure(array<string, mixed>): array<string, mixed>)|null  $edit  a change to the model's answer before it is served */

@@ -95,7 +95,27 @@ final class ModelCost
         'gemini-3.1-flash-live-preview' => [3.0, 12.0, 25, 25, 0.0003, 0.0025],
     ];
 
-    public function estimate(string $model, ?int $tokensIn, ?int $tokensOut): ?string
+    /**
+     * The share of the input rate a vendor bills for an input token served from its PROMPT CACHE, per model (наряд GEN-3:
+     * the lesson prompt is a cached prefix of ≈7K tokens, billed at a tenth). A model not here bills its cached tokens at the
+     * full input rate — an overestimate, never a discount nobody checked. OpenAI's pricing page, 2026-09-17: the 5.x models
+     * a tenth, the 4o models half.
+     *
+     * @var array<string, float>
+     */
+    private const CACHED_INPUT_SHARE = [
+        'gpt-5.5' => 0.1,
+        'gpt-5.4' => 0.1,
+        'gpt-5.4-mini' => 0.1,
+        'gpt-5.4-nano' => 0.1,
+        'gpt-4o' => 0.5,
+        'gpt-4o-mini' => 0.5,
+    ];
+
+    /**
+     * @param  int  $cachedTokensIn  of `$tokensIn`, the tokens the vendor served from its prompt cache
+     */
+    public function estimate(string $model, ?int $tokensIn, ?int $tokensOut, int $cachedTokensIn = 0): ?string
     {
         $key = self::baseModel($model);
 
@@ -104,7 +124,10 @@ final class ModelCost
         }
 
         [$inRate, $outRate] = self::PRICING[$key];
-        $cost = ($tokensIn / 1000) * $inRate + ($tokensOut / 1000) * $outRate;
+        $cached = max(0, min($cachedTokensIn, $tokensIn));
+        $cost = (($tokensIn - $cached) / 1000) * $inRate
+            + ($cached / 1000) * $inRate * (self::CACHED_INPUT_SHARE[$key] ?? 1.0)
+            + ($tokensOut / 1000) * $outRate;
 
         return number_format($cost, 6, '.', '');
     }

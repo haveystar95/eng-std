@@ -21,11 +21,11 @@ declare(strict_types=1);
  */
 return [
     /**
-     * Per-call timeout for the sandbox, seconds. Deliberately far below the 180s the production
-     * generation path allows itself: nobody sits in front of a screen for three minutes, and a
-     * sandbox call that hangs is a browser tab that looks broken.
+     * How long the sandbox waits for the model's answer, seconds. The call runs in a queued job the screen polls (наряд
+     * GEN-3), so nobody's browser tab waits on it — and a prompt the size of a lesson takes a strong model 30–51 s: the 60 s
+     * this used to be cut such a call off after the vendor had billed it.
      */
-    'timeout' => (int) env('PLAYGROUND_TIMEOUT', 60),
+    'timeout' => (int) env('PLAYGROUND_TIMEOUT', 180),
 
     'providers' => [
         'openai' => [

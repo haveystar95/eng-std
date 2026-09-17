@@ -23,6 +23,8 @@ final readonly class ModelAnswer
      *                                the pricing table — an unpriced call is reported as unpriced,
      *                                never as free
      * @param  string  $raw  the answer text, truncated — enough to diagnose a malformed reply
+     * @param  int|null  $cachedTokensIn  of `tokensIn`, what the vendor served from its prompt cache (and billed at its
+     *                                    cached rate — `costUsd` already counts it so); null when the vendor did not say
      */
     public function __construct(
         public array $payload,
@@ -32,5 +34,6 @@ final readonly class ModelAnswer
         public ?int $tokensOut,
         public ?string $costUsd,
         public string $raw = '',
+        public ?int $cachedTokensIn = null,
     ) {}
 }

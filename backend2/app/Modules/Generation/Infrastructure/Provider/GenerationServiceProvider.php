@@ -9,6 +9,8 @@ use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\BakeoffJournal;
 use App\Modules\Generation\Application\Port\ContentModelCatalog;
 use App\Modules\Generation\Application\Port\PlaygroundModelCatalog;
+use App\Modules\Generation\Application\Port\PlaygroundRunDispatcher;
+use App\Modules\Generation\Application\Port\PlaygroundRunStore;
 use App\Modules\Generation\Application\Port\PromptSource;
 use App\Modules\Generation\Application\Service\ContentContract;
 use App\Modules\Generation\Application\Service\VocabularyKeyIsomorphism;
@@ -68,7 +70,9 @@ use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\LiveModelGuard;
+use App\Modules\Generation\Infrastructure\Adapter\CachePlaygroundRunStore;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredPlaygroundCatalog;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedPlaygroundRunDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\ContentModelCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\MachineryEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
@@ -128,6 +132,9 @@ final class GenerationServiceProvider extends ServiceProvider
         // of it: this one hands out adapters that send no system prompt and demand no schema, which
         // is exactly what nothing on the production path may ever get.
         $this->app->bind(PlaygroundModelCatalog::class, ConfiguredPlaygroundCatalog::class);
+        // The sandbox runs asynchronously (наряд GEN-3): a queued call, a run in the cache the screen polls.
+        $this->app->bind(PlaygroundRunStore::class, CachePlaygroundRunStore::class);
+        $this->app->bind(PlaygroundRunDispatcher::class, QueuedPlaygroundRunDispatcher::class);
         // Prompts are files, so reading them is Infrastructure's job; deciding which version to run
         // is Application's. The port is what keeps that direction one-way.
         $this->app->bind(PromptSource::class, PromptLibrary::class);

@@ -11,6 +11,9 @@ use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Lesson\LessonParser;
+use App\Modules\Plan\Domain\Lesson\LessonRoles;
+use App\Modules\Plan\Domain\Service\FrameText;
 use Closure;
 
 /**
@@ -64,7 +67,7 @@ final class FakePlanModel implements PlanModelPort
         private readonly ?Closure $lesson = null,
         private readonly ?Closure $repair = null,
         private readonly string $planVersion = 'plan-builder-v2',
-        private readonly string $lessonVersion = 'lesson_day.v4.5',
+        private readonly string $lessonVersion = 'lesson_day.v4.6',
         private readonly ?Closure $judge = null,
         private readonly ?Closure $slotJudge = null,
     ) {}
@@ -93,7 +96,7 @@ final class FakePlanModel implements PlanModelPort
         $this->repairRequests[] = $request;
         $payload = $this->repair !== null ? ($this->repair)($request, $this->repairCalls) : ['card' => $request->card];
 
-        return new ModelReply($payload, 'lesson_card_repair.v1.1', self::MODEL, 900, 300, '0.000000', 3, '');
+        return new ModelReply($payload, 'lesson_card_repair.v1.2', self::MODEL, 900, 300, '0.000000', 3, '');
     }
 
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
@@ -129,7 +132,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function repairPromptVersion(): string
     {
-        return 'lesson_card_repair.v1.1';
+        return 'lesson_card_repair.v1.2';
     }
 
     public function judgePromptVersion(): string
@@ -145,6 +148,12 @@ final class FakePlanModel implements PlanModelPort
     public function lessonPromptVersion(): string
     {
         return $this->lessonVersion;
+    }
+
+    /** The roles of the fake's plan and of its clean lesson — the plan's parent, the doctor of the visit. */
+    public static function roles(): LessonRoles
+    {
+        return new LessonRoles('Parent', 'Родитель', 'Doctor', 'Врач');
     }
 
     /** @return array<string, mixed> */
@@ -207,22 +216,37 @@ final class FakePlanModel implements PlanModelPort
     }
 
     /**
-     * THE CLEAN LESSON (`lesson_day.v4.5`): a doctor's visit with a child's back pain, written to break
+     * THE CLEAN LESSON (`lesson_day.v4.6`): a doctor's visit with a child's back pain, written to break
      * no rule the validator counts — the fixture every plan test deals its days from, and the baseline a
      * test breaks one rule of.
      *
      * Eight exchanges: five answers, one rescue after the long partner line of exchange 5, two asks that
-     * say the SAME frame with two different fillers (`p6`, «Do we need ___?»). Six frames for seven
-     * answer/ask exchanges, one of them without a slot; eight vocabulary items, six of them in the
+     * say the SAME frame with two different fillers (`p6`, «Do we need ___?», exchanges 7 and 8). Written to v4.5: v4.6 asks
+     * a frame not to stand in two exchanges in a row, so the validator counts one warning here, `frame.adjacent_repeat` at
+     * `x8` — kept, because every test of the day's dealing reads this order.
+     * Six frames for seven answer/ask exchanges, one of them without a slot; eight vocabulary items, six of them in the
      * learner's frames or fillers; three listening questions, the first asking the learner's own value.
      * The right answers stand at varied places, as a model would put them before the server shuffles.
      *
      * Other counts are served by cycling the same material — such a lesson is dealt fine but is no
      * longer clean.
      *
+     * A LATER DAY OF THE STORY (EARLIER_DAYS not empty, наряд GEN-3) keeps what it learned: the same visit, told with every
+     * word and every frame of the day marked by the day's number ({@see laterDay()}) — no word or frame of an earlier day
+     * comes back, as the prompt asks, and the day breaks what the first breaks and nothing more.
+     *
      * @return array<string, mixed>
      */
     public static function lessonPayload(LessonRequest $request): array
+    {
+        $payload = self::firstDayPayload($request);
+        $day = count($request->earlierDays->days) + 1;
+
+        return $day === 1 ? $payload : self::laterDay($payload, $day);
+    }
+
+    /** @return array<string, mixed> */
+    private static function firstDayPayload(LessonRequest $request): array
     {
         $doctor = ['role_target' => 'Doctor', 'role_native' => 'Врач'];
         $parent = ['role_target' => 'Parent', 'role_native' => 'Родитель'];
@@ -365,5 +389,69 @@ final class FakePlanModel implements PlanModelPort
             ]],
             'vocabulary' => $items,
         ];
+    }
+
+    /**
+     * The same lesson as day `$day` of the story: every word of the day gets «-{day}» wherever the target text says it
+     * (frames, fillers, lines, variants, the word itself), and every frame gets «-{day}» on its first word — in both
+     * languages — and so does every line that stands on it, after its glue. No word is added: the day breaks what the first
+     * day breaks and nothing more.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private static function laterDay(array $payload, int $day): array
+    {
+        /** @var list<array<string, mixed>> $vocabulary */
+        $vocabulary = $payload['vocabulary'];
+        $terms = array_map(static fn (array $item): string => (string) $item['term_target'], $vocabulary);
+        usort($terms, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+        $marked = static function (string $text) use ($terms, $day): string {
+            foreach ($terms as $term) {
+                $text = (string) preg_replace('/(?<![\p{L}\p{N}\'’-])('.preg_quote($term, '/').')(?![\p{L}\p{N}\'’-])/iu', '$1-'.$day, $text);
+            }
+
+            return $text;
+        };
+        $firstWord = static fn (string $text): string => (string) preg_replace('/^([\p{L}\p{N}\'’]+)/u', '$1-'.$day, $text, 1);
+
+        foreach ($payload['vocabulary'] as $i => $item) {
+            $payload['vocabulary'][$i]['term_target'] = $item['term_target'].'-'.$day;
+        }
+        foreach ($payload['phrases'] as $i => $phrase) {
+            $payload['phrases'][$i]['frame_target'] = $marked((string) $phrase['frame_target']);
+            foreach ($phrase['slot']['fillers'] ?? [] as $f => $filler) {
+                $payload['phrases'][$i]['slot']['fillers'][$f]['target'] = $marked((string) $filler['target']);
+            }
+        }
+        foreach ($payload['dialogue'] as $x => $exchange) {
+            foreach ($exchange['messages'] as $m => $message) {
+                $payload['dialogue'][$x]['messages'][$m]['text_target'] = $marked((string) $message['text_target']);
+                if ($message['speaker'] === 'B') {
+                    $payload['dialogue'][$x]['messages'][$m]['filler'] = $message['filler'] === null ? null : $marked((string) $message['filler']);
+                    $payload['dialogue'][$x]['messages'][$m]['simplified_variants'] = array_map($marked, $message['simplified_variants']);
+                }
+            }
+        }
+
+        // The lines are read against their frames before the frames change: what a line says after its glue gets the mark.
+        $lesson = (new LessonParser)->parse($payload);
+        foreach ($payload['dialogue'] as $x => $exchange) {
+            foreach ($exchange['messages'] as $m => $message) {
+                $phrase = $message['speaker'] === 'B' && $message['phrase_id'] !== null ? $lesson->phrase((string) $message['phrase_id']) : null;
+                if ($phrase === null) {
+                    continue;
+                }
+                $text = (string) $message['text_target'];
+                $glue = FrameText::line($phrase, $text)['glue'];
+                $payload['dialogue'][$x]['messages'][$m]['text_target'] = $glue.$firstWord(mb_substr($text, mb_strlen($glue)));
+            }
+        }
+        foreach ($payload['phrases'] as $i => $phrase) {
+            $payload['phrases'][$i]['frame_target'] = $firstWord((string) $phrase['frame_target']);
+            $payload['phrases'][$i]['frame_native'] = $firstWord((string) $phrase['frame_native']);
+        }
+
+        return $payload;
     }
 }

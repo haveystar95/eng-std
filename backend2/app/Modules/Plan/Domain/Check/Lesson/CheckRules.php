@@ -91,7 +91,8 @@ final class CheckRules implements LessonRule
             return false;
         }
 
-        $role = Words::tokens($learner->roleTarget ?? $answer->learnerRoleTarget);
+        // The learner's role is the plan's, written over every line by the server (наряд GEN-3).
+        $role = Words::tokens($answer->learnerRoleTarget);
         $question = Words::tokens($exchange->check->textTarget);
         if ($role !== [] && self::contains($question, $role) && array_filter($question, $words->isSaying(...)) !== []) {
             return true;

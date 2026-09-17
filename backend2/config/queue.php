@@ -68,7 +68,10 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
+            // Longer than the longest job may run (a plan's lesson: every model call it can make × 180 s, plus a minute —
+            // BuildLessonJob; the voice of a day, 900 s): a job still waiting for its answer is never handed to a second
+            // worker, and a job past its timeout fails instead of running again (наряд GEN-3).
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 1020),
             'block_for' => null,
             'after_commit' => false,
         ],

@@ -7,6 +7,7 @@ use App\Modules\Admin\Application\Query\DryRunDistractorValidationHandler;
 use App\Modules\Generation\Domain\Service\EnrichmentValidator;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentCandidate;
 use App\Modules\Generation\Domain\ValueObject\RawDistractor;
+use App\Modules\Generation\Infrastructure\Job\RunPlaygroundCallJob;
 use App\Modules\Identity\Infrastructure\Eloquent\Profile;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Shared\Domain\ValueObject\TermId;
@@ -16,6 +17,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
@@ -58,6 +60,30 @@ function playgroundFixture(): array
     ]);
 
     return [adminActor()[1], $termId, $exampleId];
+}
+
+/**
+ * One sandbox run through the panel's routes (наряд GEN-3): the start answers 202 with the run's id, and the run is read back.
+ * The test queue is synchronous, so the run is done by the time the start answers.
+ *
+ * @param  array<string, mixed>  $input
+ * @return array<string, mixed> the run's result
+ */
+function playgroundRun(string $token, array $input): array
+{
+    $started = test()->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/admin/api/playground/generate', $input)
+        ->assertStatus(202)
+        ->assertJsonPath('status', 'queued')
+        ->json();
+
+    $run = test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/admin/api/playground/runs/{$started['id']}")
+        ->assertOk()
+        ->assertJsonPath('status', 'done')
+        ->json();
+
+    return $run['result'];
 }
 
 /** The row that survives every check: the example with exactly one fragment broken. */
@@ -306,14 +332,11 @@ it('sends the prompt verbatim, with no system message and no schema', function (
         'usage' => ['prompt_tokens' => 1000, 'completion_tokens' => 1000],
     ], 200)]);
 
-    $body = test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/admin/api/playground/generate', [
-            'provider' => 'openai',
-            'model' => 'gpt-4o-mini',
-            'prompt' => 'Верни JSON. Ничего больше.',
-        ])
-        ->assertOk()
-        ->json();
+    $body = playgroundRun($token, [
+        'provider' => 'openai',
+        'model' => 'gpt-4o-mini',
+        'prompt' => 'Верни JSON. Ничего больше.',
+    ]);
 
     expect($body['parsed_json'])->toBe(['items' => [['sentence' => 'a']]])
         ->and($body['parse_error'])->toBeNull()
@@ -337,12 +360,7 @@ it('returns a provider failure as text rather than a 500', function () {
     config(['playground.providers.openai.key' => 'test-key']);
     Http::fake(['*' => Http::response(['error' => ['message' => 'insufficient_quota']], 429)]);
 
-    $body = test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/admin/api/playground/generate', [
-            'provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi',
-        ])
-        ->assertOk()
-        ->json();
+    $body = playgroundRun($token, ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi']);
 
     expect($body['error'])->toContain('429')
         ->and($body['error'])->toContain('insufficient_quota')
@@ -353,15 +371,10 @@ it('refuses a provider with no key, and a model outside the registry, in words',
     [$token] = playgroundFixture();
     config(['playground.providers.anthropic.key' => '', 'playground.providers.openai.key' => 'test-key']);
 
-    test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/admin/api/playground/generate', ['provider' => 'anthropic', 'model' => 'claude-haiku-4-5', 'prompt' => 'hi'])
-        ->assertOk()
-        ->assertJsonPath('error', 'Anthropic: нет ключа (ANTHROPIC_API_KEY не задан)');
-
-    test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/admin/api/playground/generate', ['provider' => 'openai', 'model' => 'gpt-9000', 'prompt' => 'hi'])
-        ->assertOk()
-        ->assertJsonPath('error', 'модель «gpt-9000» не входит в список песочницы для «OpenAI».');
+    expect(playgroundRun($token, ['provider' => 'anthropic', 'model' => 'claude-haiku-4-5', 'prompt' => 'hi'])['error'])
+        ->toBe('Anthropic: нет ключа (ANTHROPIC_API_KEY не задан)')
+        ->and(playgroundRun($token, ['provider' => 'openai', 'model' => 'gpt-9000', 'prompt' => 'hi'])['error'])
+        ->toBe('модель «gpt-9000» не входит в список песочницы для «OpenAI».');
 });
 
 it('keeps unparseable text instead of calling it an error', function () {
@@ -373,10 +386,7 @@ it('keeps unparseable text instead of calling it an error', function () {
         'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 5],
     ], 200)]);
 
-    $body = test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/admin/api/playground/generate', ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi'])
-        ->assertOk()
-        ->json();
+    $body = playgroundRun($token, ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi']);
 
     expect($body['parsed_json'])->toBeNull()
         ->and($body['parse_error'])->not->toBeNull()
@@ -393,11 +403,10 @@ it('unwraps a fenced json block, because models fence constantly', function () {
         'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 5],
     ], 200)]);
 
-    test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/admin/api/playground/generate', ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi'])
-        ->assertOk()
-        ->assertJsonPath('parsed_json', ['a' => 1])
-        ->assertJsonPath('parse_error', null);
+    $body = playgroundRun($token, ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi']);
+
+    expect($body['parsed_json'])->toBe(['a' => 1])
+        ->and($body['parse_error'])->toBeNull();
 });
 
 it('sends temperature only when it was asked for', function () {
@@ -409,10 +418,7 @@ it('sends temperature only when it was asked for', function () {
         'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
     ], 200)]);
 
-    test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/admin/api/playground/generate', [
-            'provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi', 'temperature' => 0.2,
-        ])->assertOk();
+    playgroundRun($token, ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi', 'temperature' => 0.2]);
 
     Http::assertSent(fn (Request $request): bool => $request->data()['temperature'] === 0.2);
 });
@@ -420,5 +426,51 @@ it('sends temperature only when it was asked for', function () {
 it('refuses an anonymous caller on every sandbox route', function () {
     test()->getJson('/admin/api/playground/providers')->assertUnauthorized();
     test()->postJson('/admin/api/playground/generate', [])->assertUnauthorized();
+    test()->getJson('/admin/api/playground/runs/01M2GEN3PLAYGROUNDRUN00001')->assertUnauthorized();
     test()->postJson('/admin/api/playground/validate', [])->assertUnauthorized();
+});
+
+// Addendum C: «песочница: вызов — тем же асинхронным job'ом с опросом, что и генерация плана, не синхронно в веб-запросе». Catches a
+// sandbox whose web request waits on the model (a lesson-sized prompt takes 30–51 s — the synchronous sandbox cut it at 60 s
+// after the vendor billed it), and a run that cannot be read while it waits.
+it('starts a run without calling the model, and shows it queued until the job runs', function () {
+    [$token] = playgroundFixture();
+    config(['playground.providers.openai.key' => 'test-key']);
+    Queue::fake();
+    Http::fake();
+
+    $started = test()->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/admin/api/playground/generate', ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => str_repeat('правило ', 5000)])
+        ->assertStatus(202)
+        ->json();
+
+    Http::assertNothingSent();
+    Queue::assertPushed(RunPlaygroundCallJob::class, fn (RunPlaygroundCallJob $job): bool => $job->tries === 1 && $job->timeout === (int) config('playground.timeout') + 60);
+    test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/admin/api/playground/runs/{$started['id']}")
+        ->assertOk()
+        ->assertExactJson(['id' => $started['id'], 'status' => 'queued', 'result' => null]);
+    test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/admin/api/playground/runs/01M2GEN3PLAYGROUNDRUN00001')
+        ->assertNotFound();
+});
+
+// Addendum C: «запись в журнал расходов … до вызова»; the sandbox's call is a model call like any other. Catches sandbox
+// spend that no journal holds — the calls a person makes by hand are the ones nobody else remembers paying for.
+it('journals the sandbox\'s call as a playground spend, waited for 180 seconds', function () {
+    [$token] = playgroundFixture();
+    config(['playground.providers.openai.key' => 'test-key']);
+    Http::fake(['*' => Http::response([
+        'model' => 'gpt-4o-mini',
+        'choices' => [['message' => ['content' => '{}']]],
+        'usage' => ['prompt_tokens' => 1200, 'completion_tokens' => 10, 'prompt_tokens_details' => ['cached_tokens' => 1024]],
+    ], 200)]);
+
+    playgroundRun($token, ['provider' => 'openai', 'model' => 'gpt-4o-mini', 'prompt' => 'hi']);
+    $row = DB::table('model_calls')->first();
+
+    expect($row?->status)->toBe('completed')
+        ->and($row?->purpose)->toBe('playground')
+        ->and($row?->cached_tokens)->toBe(1024)
+        ->and($row?->timeout_seconds)->toBe(180);
 });

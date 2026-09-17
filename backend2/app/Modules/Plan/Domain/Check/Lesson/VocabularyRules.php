@@ -16,14 +16,20 @@ use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE DAY'S WORDS (`lesson_day.v4.5`, VOCABULARY): `used_in` names places that exist and really
+ * THE DAY'S WORDS (`lesson_day.v4.6`, VOCABULARY): `used_in` names places that exist and really
  * carry the term; at least half the items stand in the learner's frames or fillers; no item inside
- * another; no free combination of ordinary words as a «chunk», no plain everyday word as a word.
+ * another; no free combination of ordinary words as a «chunk», no plain everyday word as a word; no abbreviation or
+ * acronym — «there is nothing to translate» (наряд GEN-3, fatal: the card of such a word teaches nothing).
  *
- * The last two read the target's pack — its ordinary heads, its everyday words and STOP LIST.
+ * An abbreviation is read by its letters, in any language that has capitals: two capitals or more in a row, with or without
+ * a dot or a slash between them — API, CI/CD, U.S.; one capital («X-ray», «iPhone») is not one. The free combination and
+ * the everyday word read the target's pack — its ordinary heads, its everyday words and STOP LIST.
  */
 final class VocabularyRules implements LessonRule
 {
+    /** Two capital letters or more in a row, a dot or a slash allowed between them, and no lower-case letter after them. */
+    public const ABBREVIATION = '~(?<!\p{L})\p{Lu}(?:[./]?\p{Lu})+\.?(?!\p{Ll})~u';
+
     public function violations(Lesson $answer, LessonValidationContext $context): array
     {
         $combinations = $context->reads(LessonCodes::VOCAB_FREE_COMBINATION, LanguageSide::Target, 'ordinary_heads', 'everyday_words', 'function_words', 'word_forms');
@@ -37,6 +43,10 @@ final class VocabularyRules implements LessonRule
             $out = [...$out, ...$wrong];
             if ($inFrames) {
                 $learnerItems++;
+            }
+
+            if (self::isAbbreviation($item->termTarget)) {
+                $out[] = new LessonViolation(LessonCodes::VOCAB_ABBREVIATION, $item->id, "«{$item->termTarget}» is an abbreviation or an acronym — there is nothing to translate");
             }
 
             $tokens = Words::tokens($item->termTarget);
@@ -69,6 +79,11 @@ final class VocabularyRules implements LessonRule
         }
 
         return $out;
+    }
+
+    public static function isAbbreviation(string $term): bool
+    {
+        return preg_match(self::ABBREVIATION, $term) === 1;
     }
 
     /**

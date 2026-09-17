@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\ListenCards;
 use App\Modules\Plan\Domain\Assembly\PhraseCards;
@@ -45,7 +46,7 @@ function s1sScene(array $unreadable, ?Closure $edit = null, string $sceneId = S1
 {
     $id = PlanSceneId::fromString($sceneId);
     $packs = lessonPacks();
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8));
+    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
     if ($edit !== null) {
         $payload = $edit($payload);
     }

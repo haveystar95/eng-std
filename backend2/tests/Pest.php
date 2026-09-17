@@ -500,12 +500,76 @@ function lessonPacks(): App\Modules\Plan\Domain\Check\Language\LanguagePacks
     return new App\Modules\Plan\Domain\Check\Language\LanguagePacks($packs);
 }
 
-/** What the validator is given for a lesson of the pair (`$native`, `$target`) ordered with 8 words and 8 exchanges. */
-function lessonContext(string $native = 'ru', string $target = 'en', ?App\Modules\Shared\Domain\ValueObject\VoiceGender $gender = null): App\Modules\Plan\Domain\Check\LessonValidationContext
-{
+/**
+ * What the validator is given for a lesson of the pair (`$native`, `$target`) ordered with 8 words and 8 exchanges — and,
+ * for a later day of a plan (наряд GEN-3), the story so far with the scene's partner role.
+ */
+function lessonContext(
+    string $native = 'ru',
+    string $target = 'en',
+    ?App\Modules\Shared\Domain\ValueObject\VoiceGender $gender = null,
+    ?App\Modules\Plan\Domain\Lesson\EarlierDays $earlierDays = null,
+    string $partnerRole = 'Doctor',
+): App\Modules\Plan\Domain\Check\LessonValidationContext {
     $packs = lessonPacks();
 
-    return new App\Modules\Plan\Domain\Check\LessonValidationContext(8, 8, $packs->for($native), $packs->for($target), $gender);
+    return new App\Modules\Plan\Domain\Check\LessonValidationContext(
+        8, 8, $packs->for($native), $packs->for($target), $gender,
+        $earlierDays ?? new App\Modules\Plan\Domain\Lesson\EarlierDays, $partnerRole,
+    );
+}
+
+/**
+ * WHAT THE FAKE'S CLEAN LESSON STILL BREAKS UNDER v4.6 (наряд GEN-3) — `code@address` of each finding. It was written to
+ * v4.5 and says frame p6 in exchanges 7 and 8, one after the other; every test of the day's dealing reads that order, so
+ * the lesson keeps it, and a test that asks for «no findings» of it asks for exactly these.
+ *
+ * @return list<string>
+ */
+function planFixtureWarnings(): array
+{
+    return ['frame.adjacent_repeat@x8'];
+}
+
+/**
+ * The fake's lesson for a request told so that it breaks no rule of v4.6 either: its exchanges 4 and 7 change places (and
+ * the words' `used_in` with them), so frame p6 is said in exchanges 4 and 8, never twice in a row. The lesson a test asks
+ * for «no findings» of.
+ *
+ * @return array<string, mixed>
+ */
+function planCleanLesson(App\Modules\Plan\Application\Dto\LessonRequest $request): array
+{
+    $p = App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload($request);
+    [$p['dialogue'][3], $p['dialogue'][6]] = [$p['dialogue'][6], $p['dialogue'][3]];
+    $p['dialogue'][3]['step'] = 4;
+    $p['dialogue'][6]['step'] = 7;
+    foreach ($p['vocabulary'] as $i => $item) {
+        $p['vocabulary'][$i]['used_in'] = array_map(static fn (string $ref): string => ['A4' => 'A7', 'A7' => 'A4'][$ref] ?? $ref, $item['used_in']);
+    }
+
+    return $p;
+}
+
+/**
+ * An earlier day of a plan (наряд GEN-3) made of a lesson payload — the fake's clean lesson unless one is given — as the
+ * next day's lesson reads it.
+ *
+ * @param  array<string, mixed>|null  $payload
+ */
+function planEarlierDay(
+    int $number = 1,
+    ?array $payload = null,
+    string $partnerRole = 'Doctor',
+    App\Modules\Shared\Domain\ValueObject\VoiceGender $gender = App\Modules\Shared\Domain\ValueObject\VoiceGender::Female,
+    string $title = 'Consultation',
+): App\Modules\Plan\Domain\Lesson\EarlierDay {
+    $payload ??= App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload(new App\Modules\Plan\Application\Dto\LessonRequest(
+        'Приём у врача', 'x', 'English', 'Russian', App\Modules\Plan\Domain\ValueObject\PlanLevel::Beginner, null, 8, 8,
+        App\Modules\Plan\Infrastructure\Model\FakePlanModel::roles(), new App\Modules\Plan\Domain\Lesson\EarlierDays,
+    ));
+
+    return App\Modules\Plan\Domain\Lesson\EarlierDay::of($number, $title, $partnerRole, $gender, (new App\Modules\Plan\Domain\Lesson\LessonParser)->parse($payload));
 }
 
 /**

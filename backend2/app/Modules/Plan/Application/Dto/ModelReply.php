@@ -18,5 +18,7 @@ final readonly class ModelReply
         public string $costUsd,
         public int $latencyMs,
         public string $raw = '',
+        /** Of `tokensIn`, what the vendor served from its prompt cache (already priced so in `costUsd`); null when unsaid. */
+        public ?int $cachedTokensIn = null,
     ) {}
 }

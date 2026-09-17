@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Domain\Lesson;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The lesson of one scene (`lesson_day.v4.5`): the visit as exchanges, the frames the learner's
+ * The lesson of one scene (`lesson_day.v4.6`): the visit as exchanges, the frames the learner's
  * lines stand on, the questions about the whole visit, and the day's words.
  *
  * Immutable. Two of them exist per scene: the ANSWER — the model's JSON as written, what is stored
@@ -109,6 +109,39 @@ final readonly class Lesson
             $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
             $this->learnerRoleTarget, $this->learnerRoleNative, $this->roleGender,
             $this->exchanges, $phrases, $this->listening, $this->vocabulary,
+        );
+    }
+
+    /**
+     * The same lesson with the roles the plan and the scene give (наряд GEN-3): `learner_role` and the roles of every
+     * message — the learner's lines take the learner's role, the partner's lines the partner's — whatever the model wrote.
+     */
+    public function withRoles(LessonRoles $roles): self
+    {
+        $exchanges = array_map(
+            static fn (Exchange $exchange): Exchange => $exchange->withMessages(array_map(
+                static fn (Message $message): Message => $message->isLearner()
+                    ? $message->withRole($roles->learnerTarget, $roles->learnerNative)
+                    : $message->withRole($roles->partnerTarget, $roles->partnerNative),
+                $exchange->messages,
+            )),
+            $this->exchanges,
+        );
+
+        return new self(
+            $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
+            $roles->learnerTarget, $roles->learnerNative, $this->roleGender,
+            $exchanges, $this->phrases, $this->listening, $this->vocabulary,
+        );
+    }
+
+    /** @param list<VocabularyItem> $vocabulary */
+    public function withVocabulary(array $vocabulary): self
+    {
+        return new self(
+            $this->titleTarget, $this->titleNative, $this->descriptionTarget, $this->descriptionNative,
+            $this->learnerRoleTarget, $this->learnerRoleNative, $this->roleGender,
+            $this->exchanges, $this->phrases, $this->listening, $vocabulary,
         );
     }
 

@@ -7,7 +7,10 @@ namespace App\Modules\Generation\Infrastructure\Adapter;
 use App\Modules\Generation\Application\Dto\PlaygroundRawReply;
 use App\Modules\Generation\Application\Port\PlaygroundModelPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Observability\Application\Dto\ModelCallUsage;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\ModelCost;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -23,6 +26,9 @@ use RuntimeException;
  *  - **no retries** — a retry silently multiplies the bill for a call a person is watching, and
  *    «упало» is information here rather than something to paper over.
  *
+ * Journalled like every model call ({@see VendorCall}): the row is written before the call, finished after it, and a call
+ * our client gave up on stays `lost` (наряд GEN-3).
+ *
  * Labelled `playground` through {@see OutboundCallContext}, so sandbox spend lands in the same
  * request log as everything else and is separable from production spend rather than hidden in it.
  */
@@ -30,11 +36,13 @@ final readonly class OpenAiCompatiblePlaygroundModel implements PlaygroundModelP
 {
     public function __construct(
         private OutboundCallContext $context,
+        private VendorCall $calls,
         private ProviderId $provider,
         private string $apiKey,
         private string $model,
         private string $baseUrl,
-        private int $timeoutSeconds = 60,
+        private int $timeoutSeconds,
+        private ModelCost $cost = new ModelCost(),
     ) {}
 
     public function provider(): ProviderId
@@ -60,9 +68,18 @@ final readonly class OpenAiCompatiblePlaygroundModel implements PlaygroundModelP
         }
 
         $startedAt = hrtime(true);
-        $response = $this->context->run('playground', null, fn () => Http::withToken($this->apiKey)
-            ->timeout($this->timeoutSeconds)
-            ->post(rtrim($this->baseUrl, '/') . '/chat/completions', $payload));
+        $response = $this->calls->send(
+            $this->provider,
+            $this->model,
+            'playground',
+            $this->timeoutSeconds,
+            $payload,
+            fn () => $this->context->run('playground', null, fn () => Http::withToken($this->apiKey)
+                ->connectTimeout(VendorCall::CONNECT_TIMEOUT)
+                ->timeout($this->timeoutSeconds)
+                ->post(rtrim($this->baseUrl, '/') . '/chat/completions', $payload)),
+            fn (Response $r): ModelCallUsage => $this->usage($r),
+        );
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
         if ($response->failed()) {
@@ -78,12 +95,25 @@ final readonly class OpenAiCompatiblePlaygroundModel implements PlaygroundModelP
             throw new RuntimeException($this->provider->label() . ': ответ без текстового содержимого.');
         }
 
+        $usage = $this->usage($response);
+
         return new PlaygroundRawReply(
             rawText: $content,
-            model: is_string($response->json('model')) ? $response->json('model') : $this->model,
+            model: $usage->answeredModel,
             latencyMs: $latencyMs,
-            tokensIn: is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null,
-            tokensOut: is_int($response->json('usage.completion_tokens')) ? $response->json('usage.completion_tokens') : null,
+            tokensIn: $usage->tokensIn,
+            tokensOut: $usage->tokensOut,
+            cachedTokensIn: $usage->cachedTokensIn,
         );
+    }
+
+    private function usage(Response $response): ModelCallUsage
+    {
+        $tokensIn = is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null;
+        $cached = is_int($response->json('usage.prompt_tokens_details.cached_tokens')) ? $response->json('usage.prompt_tokens_details.cached_tokens') : null;
+        $tokensOut = is_int($response->json('usage.completion_tokens')) ? $response->json('usage.completion_tokens') : null;
+        $model = is_string($response->json('model')) ? $response->json('model') : $this->model;
+
+        return new ModelCallUsage($model, $tokensIn, $cached, $tokensOut, $this->cost->estimate($model, $tokensIn, $tokensOut, $cached ?? 0));
     }
 }

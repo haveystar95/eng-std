@@ -25,7 +25,7 @@ function lrBuild(object $ctx, ?Closure $repair = null): array
 {
     $fake = new FakePlanModel(
         lesson: static function ($request): array {
-            $p = FakePlanModel::lessonPayload($request);
+            $p = planCleanLesson($request);
             $p['phrases'][0]['frame_native'] = 'У него болит в/на ___.';
 
             return $p;
@@ -121,7 +121,7 @@ it('keeps the stored lesson when the repaired card is not the card\'s shape', fu
 it('keeps the judged native seams of the frames a repair did not rewrite', function () {
     $fake = new FakePlanModel(
         lesson: static function ($request): array {
-            $p = FakePlanModel::lessonPayload($request);
+            $p = planCleanLesson($request);
             $p['phrases'][0]['frame_native'] = 'У него болит в/на ___.';
 
             return $p;

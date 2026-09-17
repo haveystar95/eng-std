@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.5`; наряды GEN-2a, GEN-2b и его доработка) — fifty. Every
- * breach is counted by code; seven of them are fatal — the day is not dealt until a repair takes their card
- * ({@see LessonGate}) — and the other 43 are warnings: counted and kept. One code is not the validator's but the seam
- * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}).
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.6`; наряды GEN-2a, GEN-2b и его доработка, GEN-3) — fifty-seven.
+ * Every breach is counted by code; ten of them are fatal — the day is not dealt until a repair takes their card
+ * ({@see LessonGate}) — and the other 47 are warnings: counted and kept. One code is not the validator's but the seam
+ * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}). Six codes read the story
+ * so far or the day as a whole (GEN-3): a word or a frame an earlier day taught, a frame whose native pattern an earlier
+ * day taught, two frames of one pattern, one frame in two exchanges in a row, a partner who changed gender; and one reads a
+ * word of the day itself — an abbreviation, which has nothing to translate.
  *
  * No code is about the speaking key: the key is the server's, taken from the frame (`docs/plan-v2.md` §3а).
  *
@@ -54,6 +57,19 @@ final class LessonCodes
     public const FRAME_UNRESOLVED_PRONOUN = 'frame.unresolved_pronoun';
 
     public const FRAME_NATIVE_AGREEMENT = 'frame.native_agreement';
+
+    public const FRAME_TWIN = 'frame.twin';
+
+    public const FRAME_ADJACENT_REPEAT = 'frame.adjacent_repeat';
+
+    // The story so far — what earlier days of the plan taught and how their partner sounded (наряд GEN-3).
+    public const VOCAB_KNOWN_REPEAT = 'vocab.known_repeat';
+
+    public const FRAME_KNOWN_REPEAT = 'frame.known_repeat';
+
+    public const FRAME_KNOWN_NATIVE_REPEAT = 'frame.known_native_repeat';
+
+    public const ROLE_GENDER_CHANGED = 'role_gender.changed';
 
     // Fillers.
     public const FILLER_COUNT = 'filler.count';
@@ -124,6 +140,8 @@ final class LessonCodes
 
     public const VOCAB_NESTED = 'vocab.nested';
 
+    public const VOCAB_ABBREVIATION = 'vocab.abbreviation';
+
     // Native text, image prompts.
     public const NATIVE_GENDERED_PAST = 'native.gendered_past';
 
@@ -146,7 +164,8 @@ final class LessonCodes
             self::CHECK_SHAPE, self::LISTENING_SHAPE, self::PRONUNCIATION_SCRIPT,
             self::FRAME_COUNT, self::FRAME_UNUSED, self::FRAME_TOO_LONG, self::FRAME_NO_SLOT_SHARE,
             self::FRAME_NATIVE_ALTERNATIVES, self::FRAME_NO_END_PUNCT, self::FRAME_NATIVE_PUNCT, self::FRAME_UNRESOLVED_PRONOUN,
-            self::FRAME_NATIVE_AGREEMENT,
+            self::FRAME_NATIVE_AGREEMENT, self::FRAME_TWIN, self::FRAME_ADJACENT_REPEAT,
+            self::VOCAB_KNOWN_REPEAT, self::FRAME_KNOWN_REPEAT, self::FRAME_KNOWN_NATIVE_REPEAT, self::ROLE_GENDER_CHANGED,
             self::FILLER_COUNT, self::FILLER_UNGRAMMATICAL, self::FILLER_ONE_IN_DIALOGUE, self::FILLER_IS_CLAUSE,
             self::FILLER_ARTICLE_SEAM, self::FILLER_NATIVE_SEAM,
             self::LINE_NE_FRAME, self::LINE_TOO_LONG, self::LINE_NO_FRAME, self::VARIANT_LONGER,
@@ -155,7 +174,7 @@ final class LessonCodes
             self::PARTNER_TWO_QUESTIONS, self::PARTNER_TOO_LONG, self::PARTNER_CLOSER,
             self::CHECK_ABOUT_LEARNER, self::CHECK_VERBATIM, self::CHECK_LISTED_ALTERNATIVE_AS_WRONG,
             self::LISTENING_COUNT, self::LISTENING_SAME_EXCHANGE, self::LISTENING_NO_LEARNER_VALUE, self::LISTENING_DISTRACTOR_NOT_FILLER,
-            self::VOCAB_FREE_COMBINATION, self::VOCAB_EVERYDAY_WORD, self::VOCAB_USED_IN_WRONG, self::VOCAB_LEARNER_SHARE, self::VOCAB_NESTED,
+            self::VOCAB_FREE_COMBINATION, self::VOCAB_EVERYDAY_WORD, self::VOCAB_USED_IN_WRONG, self::VOCAB_LEARNER_SHARE, self::VOCAB_NESTED, self::VOCAB_ABBREVIATION,
             self::NATIVE_GENDERED_PAST, self::IMAGE_PROMPT_RULE_TEXT,
         ];
     }

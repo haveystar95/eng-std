@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * WHAT A REPAIR OF ONE CARD IS SHOWN OF ITS LESSON (P2R, наряд GEN-2b) — only what the card needs to fit the visit,
+ * WHAT A REPAIR OF ONE CARD IS SHOWN OF ITS LESSON (P2R, наряды GEN-2b, GEN-3) — only what the card needs to fit the visit,
  * never the whole answer: the day's frames with their fillers (what a line may stand on, which values are said
  * already) and its words, and the lines around the card —
  *
  *  - a frame: every exchange whose learner line stands on it;
- *  - a whole exchange: the exchanges before and after it in full, and every other exchange's two lines (what the
- *    visit has asked and answered already, which fillers it has said);
+ *  - a whole exchange: every exchange's two lines but its own and its two neighbours' (what the visit has asked and
+ *    answered already, which fillers it has said) — the neighbours themselves go to the model on their own, as
+ *    NEIGHBOURS ({@see neighbours()}, P2R v1.2);
  *  - a learner line: its partner's line, and the exchanges before and after it;
  *  - a check: its exchange's two lines;
- *  - a listening question: the whole visit in the learner's language, and the other questions.
+ *  - a listening question: the whole visit in the learner's language, and the other questions;
+ *  - a word: every partner line (a word of the day stands in a frame, a filler or a partner line — `used_in` names it).
+ *
+ * What the earlier days of the plan taught goes to every repair beside this, as EARLIER_DAYS (P2R v1.2).
  *
  * Checks, readings, keys, variants, definitions and image prompts stay out: no card is repaired against them.
  *
@@ -46,8 +50,8 @@ final class LessonCardContext
             )],
             LessonCard::EXCHANGE => [
                 'exchanges' => array_values(array_map(
-                    static fn (Exchange $e): array => abs($e->step - $card->number) === 1 ? self::exchange($e, withCheck: true) : self::exchange($e),
-                    array_filter($answer->exchanges, static fn (Exchange $e): bool => $e->step !== $card->number),
+                    static fn (Exchange $e): array => self::exchange($e),
+                    array_filter($answer->exchanges, static fn (Exchange $e): bool => abs($e->step - $card->number) > 1),
                 )),
             ],
             LessonCard::LINE => ['exchanges' => array_values(array_map(
@@ -65,7 +69,32 @@ final class LessonCardContext
                     array_filter($answer->listening, static fn (ListeningQuestion $q, int $i): bool => $i !== $card->number - 1, ARRAY_FILTER_USE_BOTH),
                 )),
             ],
+            LessonCard::TERM => ['partner_lines' => array_values(array_filter(array_map(
+                static fn (Exchange $e): ?array => ($partner = $e->partner()) === null ? null : [
+                    'ref' => 'A'.$e->step, 'text_target' => $partner->textTarget, 'text_native' => $partner->textNative,
+                ],
+                $answer->exchanges,
+            )))],
         };
+    }
+
+    /**
+     * NEIGHBOURS of a whole exchange (P2R v1.2, наряд GEN-3): the exchange before it and the exchange after it, as they lie
+     * in the lesson — kind, both lines and the check's question — or null at the edge of the visit. The repaired exchange
+     * answers its own line and moves no fact out of them.
+     *
+     * @param  Lesson  $answer  the answer as the server reads it — {@see LessonAssembly::said()}
+     * @return array{before: array<string, mixed>|null, after: array<string, mixed>|null}
+     */
+    public static function neighbours(Lesson $answer, LessonCard $card): array
+    {
+        $before = $answer->exchange($card->number - 1);
+        $after = $answer->exchange($card->number + 1);
+
+        return [
+            'before' => $before === null ? null : self::exchange($before, withCheck: true),
+            'after' => $after === null ? null : self::exchange($after, withCheck: true),
+        ];
     }
 
     /** @return array<string, mixed> */

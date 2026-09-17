@@ -13,9 +13,9 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use Illuminate\Console\Command;
 
 /**
- * `plan:repair-card {scene} {address} {--code=*} {--apply}` — P2R by hand (наряды GEN-2a, GEN-2b): repair ONE card
+ * `plan:repair-card {scene} {address} {--code=*} {--apply}` — P2R by hand (наряды GEN-2a, GEN-2b, GEN-3): repair ONE card
  * of a written lesson — a frame `p3`, a whole exchange `x3`, a learner line `B3`, a check `x3.check`, a listening
- * question `L2` — for what the validator finds at it (or only the named codes).
+ * question `L2`, a word `v4` — for what the validator finds at it (or only the named codes).
  *
  * Without `--apply` nothing is written: the card before and after (and the frame a repaired exchange came with)
  * and the findings before and after are printed, and only the model call is spent. With `--apply` the repaired
@@ -24,7 +24,7 @@ use Illuminate\Console\Command;
  */
 final class PlanRepairCardCommand extends Command
 {
-    protected $signature = 'plan:repair-card {scene : scene id} {address : p3 | p3.f2 | x3 | B3 | x3.check | L2} {--code=* : only these validator codes} {--apply : write the repaired lesson}';
+    protected $signature = 'plan:repair-card {scene : scene id} {address : p3 | p3.f2 | x3 | B3 | x3.check | L2 | v4} {--code=* : only these validator codes} {--apply : write the repaired lesson}';
 
     protected $description = 'P2R: repair one card of a plan lesson by its address and the validator codes found at it';
 
@@ -46,7 +46,7 @@ final class PlanRepairCardCommand extends Command
             $this->line('frame_update: '.self::json($outcome->frameUpdate));
         }
         if ($outcome->status !== LessonCardRepairOutcome::REPAIRED || $outcome->answer === null) {
-            return $outcome->status === LessonCardRepairOutcome::OFF_SCHEMA ? self::FAILURE : self::SUCCESS;
+            return in_array($outcome->status, [LessonCardRepairOutcome::OFF_SCHEMA, LessonCardRepairOutcome::REFUSED], true) ? self::FAILURE : self::SUCCESS;
         }
         $this->line('findings at the card after: '.self::json($outcome->findingsAfter));
         $this->line("findings in the lesson: {$outcome->lessonFindingsBefore} → ".count($outcome->lessonFindings));

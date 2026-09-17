@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -15,16 +16,16 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
- * THE GATE OF THE LESSON BUILD (решения архитектора после GEN-2a и в GEN-2b, docs/plan-v2.md §4): «фатальные — день не
- * раздаётся до P2R по адресу, вызов автоматический, не больше двух карточек на день, дальше день failed с кодом;
- * остальные — предупреждения».
+ * THE GATE OF THE LESSON BUILD (решения архитектора после GEN-2a, в GEN-2b и в GEN-3, docs/plan-v2.md §4): «фатальные — день
+ * не раздаётся до P2R по адресу, вызов автоматический, не больше двух карточек на день, дальше день failed с кодом;
+ * остальные — предупреждения». The lessons are the fake's told apart ({@see planCleanLesson()}): no finding but a test's own.
  */
 
 /** @return array<string, array{action: string, hits: int}> «check|action» → hits, of the lesson prompt */
 function lgCounters(): array
 {
     $out = [];
-    foreach (DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.5')->get() as $row) {
+    foreach (DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.6')->get() as $row) {
         $out["{$row->check_name}|{$row->action}"] = (int) $row->hits;
     }
     ksort($out);
@@ -35,7 +36,7 @@ function lgCounters(): array
 /** @return array<string, mixed> a frame of the clean lesson, as the model writes it */
 function lgFrame(int $index): array
 {
-    return FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8))['phrases'][$index];
+    return FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays))['phrases'][$index];
 }
 
 // Catches a day dealt with a broken card — the gate off, the repair asked for the wrong card, or the repaired
@@ -43,7 +44,7 @@ function lgFrame(int $index): array
 it('holds a lesson with a fatal finding, repairs the card at its address and gives the repaired day', function () {
     $fake = new FakePlanModel(
         lesson: static function ($request): array {
-            $p = FakePlanModel::lessonPayload($request);
+            $p = planCleanLesson($request);
             $p['phrases'][0]['slot']['fillers'][1]['target'] = 'his neck';
 
             return $p;
@@ -76,7 +77,7 @@ it('holds a lesson with a fatal finding, repairs the card at its address and giv
 // not put right instead of failing it with the code.
 it('asks for two cards at most and then fails the lesson with its fatal codes, which the learner can retry', function () {
     $fake = new FakePlanModel(lesson: static function ($request): array {
-        $p = FakePlanModel::lessonPayload($request);
+        $p = planCleanLesson($request);
         $p['phrases'][0]['slot']['fillers'][1]['target'] = 'his neck';
         array_pop($p['dialogue'][1]['check']['options']);
         $p['listening']['questions'][2]['options_native'] = ['Завтра', 'Если через неделю ещё болит'];
@@ -115,10 +116,10 @@ it('asks for two cards at most and then fails the lesson with its fatal codes, w
 // repair shown the model's own filler field instead of the filler its line says.
 it('holds a repeated exchange, repairs the whole exchange and stores it together with the frame it came with', function () {
     $repeat = static function ($request): array {
-        $p = FakePlanModel::lessonPayload($request);
-        // Exchange 8 says «an X-ray» again; its field still names «a follow-up appointment», exchange 7's names «a sick note».
+        $p = planCleanLesson($request);
+        // Exchange 8 says «an X-ray» again; its field still names «a follow-up appointment», exchange 4's names «a sick note».
         $p['dialogue'][7]['messages'][0]['text_target'] = 'Do we need an X-ray?';
-        $p['dialogue'][6]['messages'][0]['filler'] = 'a sick note';
+        $p['dialogue'][3]['messages'][0]['filler'] = 'a sick note';
         $p['phrases'][5]['slot']['fillers'][1]['in_dialogue'] = false;
 
         return $p;
@@ -148,7 +149,7 @@ it('holds a repeated exchange, repairs the whole exchange and stores it together
         // filler each line says, not what the model wrote in the field.
         ->and(array_keys($fits->repairRequests[0]->context))->toBe(['frames', 'words', 'exchanges'])
         ->and($fits->repairRequests[0]->card['messages'][0]['filler'])->toBe('an X-ray')
-        ->and(array_column(array_column($fits->repairRequests[0]->context['exchanges'], null, 'step')[7]['messages'], 'filler', 'speaker'))->toBe(['B' => 'an X-ray'])
+        ->and(array_column(array_column($fits->repairRequests[0]->context['exchanges'], null, 'step')[4]['messages'], 'filler', 'speaker'))->toBe(['B' => 'an X-ray'])
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
         ->and($lesson['dialogue'][7]['messages'][0]['filler'])->toBe('a sick note')
         ->and(array_column($lesson['phrases'][5]['slot']['fillers'], 'in_dialogue'))->toBe([true, false, true])

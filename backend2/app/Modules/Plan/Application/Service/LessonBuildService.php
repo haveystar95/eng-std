@@ -21,11 +21,13 @@ use App\Modules\Plan\Domain\ValueObject\ModelCall;
 use Throwable;
 
 /**
- * THE LESSON CALL (`lesson_day.v4.5`). One retry, and only for an answer that is not the schema — the model's
- * refusal. Everything the validator finds is counted and written beside the lesson; warnings never hold the day,
- * the seven fatal codes do — the answer goes through {@see LessonGateKeeper}: P2R for at most two cards, the
- * repaired answer stored, or the lesson failed with the fatal code. A check the pair's language packs cannot run
- * is counted as `lang.pack_missing` (once a code, over the model's answer), never as a finding.
+ * THE LESSON CALL (`lesson_day.v4.6`). One retry, and only for an answer that is not the schema — the model's
+ * refusal; a call that got no answer at all (a timeout) is not retried here or anywhere (наряд GEN-3). The answer is spoken
+ * in the roles the plan gives, whatever roles the model wrote (the learner's of the plan, the partner's of the scene).
+ * Everything the validator finds — with the story so far, the earlier days of the plan — is counted and written beside the
+ * lesson; warnings never hold the day, the nine fatal codes do — the answer goes through {@see LessonGateKeeper}: P2R for
+ * at most two cards, the repaired answer stored, or the lesson failed with the fatal code. A check the pair's language
+ * packs cannot run is counted as `lang.pack_missing` (once a code, over the model's answer), never as a finding.
  *
  * The lesson that passed the gate is read by the seam judge — once a day, every native sentence of its frames in
  * one call ({@see LessonSeamJudge}); what does not read is a warning `filler.native_seam`. A failed lesson is not
@@ -62,7 +64,7 @@ final readonly class LessonBuildService
             $call = new ModelCall($reply->promptVersion, $this->build->current(), $reply->model, $cost, $latency, $attempt);
 
             try {
-                $answer = $this->parser->parse($reply->payload);
+                $answer = $this->parser->parse($reply->payload)->withRoles($request->roles);
             } catch (ModelAnswerOffSchema $e) {
                 $violations = [$e->getMessage()];
                 if ($attempt >= self::MAX_ATTEMPTS) {

@@ -16,3 +16,7 @@ Artisan::command('inspire', function () {
 // exactly one tick lands in each window. Idempotent, so an overlap would be harmless; it is still
 // kept from overlapping so a slow tick never races the next one over the same plans.
 Schedule::command('plan:notify-tick')->everyFifteenMinutes()->withoutOverlapping();
+
+// The model call journal (наряд GEN-3): a call still `started` past its caller's timeout belongs to a process that ended
+// mid-call — it is marked `lost`. Idempotent; the grace is the command's.
+Schedule::command('model-calls:sweep-lost')->everyTenMinutes()->withoutOverlapping();

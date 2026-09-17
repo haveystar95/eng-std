@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
@@ -12,17 +13,17 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
- * P2R — ONE CARD BY ITS ADDRESS (наряды GEN-2a, GEN-2b): which addresses are cards a repair can take, which findings
+ * P2R — ONE CARD BY ITS ADDRESS (наряды GEN-2a, GEN-2b, GEN-3): which addresses are cards a repair can take, which findings
  * belong to a card, and what putting a repaired card back changes — that card, and for a frame the lines that
  * stand on it, nothing else.
  */
 
 function lcAnswer(): Lesson
 {
-    return (new LessonParser)->parse(FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8)));
+    return (new LessonParser)->parse(FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays)));
 }
 
-it('takes a frame, a filler of it, a whole exchange, a learner line, a check and a listening question — and nothing else', function () {
+it('takes a frame, a filler of it, a whole exchange, a learner line, a check, a listening question and a word — and nothing else', function () {
     expect(LessonCard::at('p3')?->kind)->toBe(LessonCard::FRAME)
         ->and(LessonCard::at('p3.f2')?->address)->toBe('p3')
         ->and(LessonCard::at('x3')?->kind)->toBe(LessonCard::EXCHANGE)
@@ -30,7 +31,10 @@ it('takes a frame, a filler of it, a whole exchange, a learner line, a check and
         ->and(LessonCard::at('x3.check')?->kind)->toBe(LessonCard::CHECK)
         ->and(LessonCard::at('L2')?->kind)->toBe(LessonCard::LISTENING)
         ->and(LessonCard::at('A3'))->toBeNull()
-        ->and(LessonCard::at('v4'))->toBeNull()
+        ->and(LessonCard::at('v4')?->kind)->toBe(LessonCard::TERM)
+        ->and(LessonCard::at('v4')?->covers(new LessonViolation('vocab.known_repeat', 'v4', '')))->toBeTrue()
+        ->and(LessonCard::at('v4')?->covers(new LessonViolation('vocab.known_repeat', 'v40', '')))->toBeFalse()
+        ->and(LessonCard::at('v2')?->of(lcAnswer())['term_target'] ?? null)->toBe('sharp')
         ->and(LessonCard::at('lesson'))->toBeNull()
         ->and(LessonCard::at('p3')?->covers(new LessonViolation('filler.count', 'p3.f1', '')))->toBeTrue()
         ->and(LessonCard::at('p3')?->covers(new LessonViolation('filler.count', 'p30', '')))->toBeFalse()
@@ -107,4 +111,23 @@ it('puts a repaired line, check or listening question back in its place and nowh
         ->and($repaired->listening[2]->textNative)->toBe('Когда стоит прийти ещё раз?')
         ->and($repaired->listening[0])->toEqual($answer->listening[0])
         ->and($repaired->phrases)->toEqual($answer->phrases);
+});
+
+// Наряд GEN-3, P2R v1.2: «vocabulary item (card kind "term"): keep its id. Replace the item with a different word». Catches a
+// repaired word put in under the id the model wrote (two v2 in a day, v4 gone), at another place of the list, or over
+// another word.
+it('puts a repaired word back under its own id, at its place, and nowhere else', function () {
+    $answer = lcAnswer();
+    $card = LessonCard::at('v4');
+    $word = (new LessonParser)->card(LessonCard::TERM, [
+        'id' => 'v7', 'term_target' => 'rest', 'translation_native' => 'отдых', 'pronunciation_native' => 'рэст',
+        'definition_target' => 'time to relax', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['p5'],
+    ]);
+
+    $repaired = $card?->replace($answer, $word);
+
+    expect(array_map(static fn ($v): string => "{$v->id}:{$v->termTarget}", $repaired?->vocabulary ?? []))
+        ->toBe(['v1:lower back', 'v2:sharp', 'v3:fever', 'v4:rest', 'v5:heating pad', 'v6:X-ray', 'v7:follow-up appointment', 'v8:sick note'])
+        ->and($repaired?->exchanges)->toEqual($answer->exchanges)
+        ->and($repaired?->phrases)->toEqual($answer->phrases);
 });

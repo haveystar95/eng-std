@@ -53,6 +53,15 @@ final readonly class Message
         );
     }
 
+    /** The same line said in the role the plan gives its speaker (наряд GEN-3) — never the model's own name for it. */
+    public function withRole(string $roleTarget, string $roleNative): self
+    {
+        return new self(
+            $this->speaker, $roleTarget, $roleNative, $this->textTarget, $this->textNative,
+            $this->pronunciationNative, $this->speakingKey, $this->simplifiedVariants, $this->phraseId, $this->filler,
+        );
+    }
+
     /** The same line as the server reads it: the filler found in its text and the key it takes from its frame. */
     public function withServerReading(?string $filler, ?string $speakingKey): self
     {

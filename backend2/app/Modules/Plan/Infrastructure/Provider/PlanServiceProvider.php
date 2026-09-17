@@ -154,7 +154,7 @@ final class PlanServiceProvider extends ServiceProvider
 
             return new PlanConfig(
                 counts: $counts,
-                buildStaleSeconds: (int) config('plan.build_stale_seconds', 240),
+                buildStaleSeconds: (int) config('plan.build_stale_seconds'),
                 rescueKit: $kit,
                 languages: $languages,
                 pace: $pace,
@@ -199,8 +199,8 @@ final class PlanServiceProvider extends ServiceProvider
                 provider: ProviderId::tryFrom((string) config('plan.model.provider', 'openai')) ?? ProviderId::OpenAi,
                 planModel: (string) config('plan.model.plan_model', 'gpt-5.4'),
                 lessonModel: (string) config('plan.model.lesson_model', 'gpt-5.4'),
-                planTimeout: (int) config('plan.model.plan_timeout', 90),
-                lessonTimeout: (int) config('plan.model.lesson_timeout', 90),
+                planTimeout: (int) config('plan.model.plan_timeout'),
+                lessonTimeout: (int) config('plan.model.lesson_timeout'),
                 repairModel: (string) config('plan.model.repair_model', 'gpt-5.4'),
                 judgeModel: (string) config('plan.model.judge_model', 'gpt-5.4-mini'),
                 slotJudgeTimeout: (int) config('plan.slot_judge.timeout', ContentModelPlanBuilder::SLOT_JUDGE_TIMEOUT),

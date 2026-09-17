@@ -13,6 +13,7 @@ use App\Modules\Plan\Domain\Check\Lesson\LineRules;
 use App\Modules\Plan\Domain\Check\Lesson\ListeningRules;
 use App\Modules\Plan\Domain\Check\Lesson\NativeRules;
 use App\Modules\Plan\Domain\Check\Lesson\PartnerRules;
+use App\Modules\Plan\Domain\Check\Lesson\StoryRules;
 use App\Modules\Plan\Domain\Check\Lesson\StructureRules;
 use App\Modules\Plan\Domain\Check\Lesson\VisitRules;
 use App\Modules\Plan\Domain\Check\Lesson\VocabularyRules;
@@ -50,6 +51,7 @@ final readonly class LessonValidator
             new VocabularyRules,
             new NativeRules,
             new ImagePromptRules,
+            new StoryRules,
         ];
     }
 

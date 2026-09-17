@@ -6,6 +6,8 @@ namespace App\Modules\Plan\Infrastructure\Job;
 
 use App\Modules\Plan\Application\Command\BuildLesson;
 use App\Modules\Plan\Application\Command\BuildLessonHandler;
+use App\Modules\Plan\Application\Service\LessonBuildService;
+use App\Modules\Plan\Domain\Check\LessonGate;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Infrastructure\Eloquent\PlanSceneModel;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,10 +15,20 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-/** The lesson call for one scene — one try, for the reason {@see BuildPlanJob} gives. */
+/**
+ * The lesson call for one scene — one try, for the reason {@see BuildPlanJob} gives; a job that ran out of time fails, and
+ * the lesson waits for the learner's retry (наряд GEN-3).
+ *
+ * Its timeout covers every model call the build may make, each waited for as long as the plan's config says, and a minute
+ * for the writes: the lesson and its one retry, a repair of each card the gate may ask for, the seam judge. Anything
+ * shorter kills a healthy build between two paid calls.
+ */
 final class BuildLessonJob implements ShouldQueue
 {
     use Queueable;
+
+    /** Seconds past the calls for the claim, the writes and the queue's own bookkeeping. */
+    public const MARGIN_SECONDS = 60;
 
     public int $tries = 1;
 
@@ -24,7 +36,15 @@ final class BuildLessonJob implements ShouldQueue
 
     public function __construct(private readonly string $sceneId)
     {
-        $this->timeout = 2 * (int) config('plan.model.lesson_timeout', 90) + 30;
+        $this->timeout = self::timeoutSeconds((int) config('plan.model.lesson_timeout'));
+    }
+
+    /** The job's timeout for a lesson whose every call waits `$callTimeout` seconds for its answer. */
+    public static function timeoutSeconds(int $callTimeout): int
+    {
+        $calls = LessonBuildService::MAX_ATTEMPTS + LessonGate::MAX_CARDS + 1;
+
+        return $calls * $callTimeout + self::MARGIN_SECONDS;
     }
 
     public function handle(BuildLessonHandler $handler): void

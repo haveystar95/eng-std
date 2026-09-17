@@ -8,9 +8,10 @@ use App\Modules\Generation\Application\Dto\ModelAnswer;
 use App\Modules\Generation\Application\Dto\RenderedPrompt;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Observability\Application\Dto\ModelCallUsage;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\Service\ModelCost;
-use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -41,6 +42,7 @@ final readonly class AnthropicContentModel implements ContentModelPort
 
     public function __construct(
         private OutboundCallContext $context,
+        private VendorCall $calls,
         private string $apiKey,
         private string $model,
         private string $baseUrl = 'https://api.anthropic.com/v1',
@@ -73,28 +75,31 @@ final readonly class AnthropicContentModel implements ContentModelPort
     public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
     {
         $startedAt = hrtime(true);
+        $body = [
+            'model' => $this->model,
+            'max_tokens' => $this->maxTokens,
+            'system' => $prompt->text,
+            'messages' => [['role' => 'user', 'content' => $userMessage]],
+            'output_config' => ['format' => ['type' => 'json_schema', 'schema' => $schema]],
+        ];
 
-        $response = $this->context->run($this->purpose, null, fn () => Http::withHeaders([
-            'x-api-key' => $this->apiKey,
-            'anthropic-version' => self::API_VERSION,
-        ])
-            ->timeout($this->timeoutSeconds)
-            // Same policy as the OpenAI-shaped adapter — see the comment there for why the backoff
-            // escalates and why a 403 is not retried.
-            ->retry(
-                $this->retries,
-                static fn (int $attempt): int => $attempt * 4000,
-                static fn (\Throwable $e): bool => ! $e instanceof RequestException
-                    || in_array($e->response->status(), [408, 409, 429, 500, 502, 503, 504], true),
-                throw: false,
-            )
-            ->post(rtrim($this->baseUrl, '/') . '/messages', [
-                'model' => $this->model,
-                'max_tokens' => $this->maxTokens,
-                'system' => $prompt->text,
-                'messages' => [['role' => 'user', 'content' => $userMessage]],
-                'output_config' => ['format' => ['type' => 'json_schema', 'schema' => $schema]],
-            ]));
+        // The same call policy as every adapter of the module — journal, timeouts, what is retried: {@see VendorCall}.
+        $response = $this->calls->send(
+            ProviderId::Anthropic,
+            $this->model,
+            $this->purpose,
+            $this->timeoutSeconds,
+            $body,
+            fn () => $this->context->run($this->purpose, null, fn () => Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'anthropic-version' => self::API_VERSION,
+            ])
+                ->connectTimeout(VendorCall::CONNECT_TIMEOUT)
+                ->timeout($this->timeoutSeconds)
+                ->retry($this->retries, VendorCall::backoff(...), VendorCall::retryable(...), throw: false)
+                ->post(rtrim($this->baseUrl, '/') . '/messages', $body)),
+            fn (Response $r): ModelCallUsage => $this->usage($r),
+        );
 
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
@@ -119,20 +124,28 @@ final readonly class AnthropicContentModel implements ContentModelPort
             throw new RuntimeException('Anthropic returned malformed JSON: ' . mb_substr($content, 0, 500));
         }
 
-        $tokensIn = is_int($response->json('usage.input_tokens')) ? $response->json('usage.input_tokens') : null;
-        $tokensOut = is_int($response->json('usage.output_tokens')) ? $response->json('usage.output_tokens') : null;
-        $model = is_string($response->json('model')) ? $response->json('model') : $this->model;
+        $usage = $this->usage($response);
 
         /** @var array<string, mixed> $decoded */
         return new ModelAnswer(
             payload: $decoded,
-            model: $model,
+            model: $usage->answeredModel,
             latencyMs: $latencyMs,
-            tokensIn: $tokensIn,
-            tokensOut: $tokensOut,
-            costUsd: $this->cost->estimate($model, $tokensIn, $tokensOut),
+            tokensIn: $usage->tokensIn,
+            tokensOut: $usage->tokensOut,
+            costUsd: $usage->costUsd,
             raw: mb_substr($content, 0, 4000),
         );
+    }
+
+    /** What the answer says it spent. No cache breakpoint is ever set on this vendor, so nothing of the input is cached. */
+    private function usage(Response $response): ModelCallUsage
+    {
+        $tokensIn = is_int($response->json('usage.input_tokens')) ? $response->json('usage.input_tokens') : null;
+        $tokensOut = is_int($response->json('usage.output_tokens')) ? $response->json('usage.output_tokens') : null;
+        $model = is_string($response->json('model')) ? $response->json('model') : $this->model;
+
+        return new ModelCallUsage($model, $tokensIn, null, $tokensOut, $this->cost->estimate($model, $tokensIn, $tokensOut));
     }
 
     /**

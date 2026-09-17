@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\ListenStage;
@@ -39,7 +40,7 @@ function s1lScene(?Closure $payload = null, ?Closure $lesson = null, string $nat
 {
     $sceneId = PlanSceneId::fromString('01J8SESS10N1A4EAR000000000');
     $packs = lessonPacks();
-    $answer = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8));
+    $answer = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
     if ($payload !== null) {
         $answer = $payload($answer);
     }

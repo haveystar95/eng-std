@@ -15,10 +15,14 @@ use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE FRAMES (`lesson_day.v4.5`, FRAMES): as many as half to all of the answer/ask exchanges, each said at least
+ * THE FRAMES (`lesson_day.v4.6`, FRAMES): as many as half to all of the answer/ask exchanges, each said at least
  * once, at most seven words outside the slot, at most a third without a slot, a native rendering with no
  * «в/на»-style alternatives that ends the way the frame ends; a frame that stands alone — no pronoun it leans on
  * without a thing it stands for; a native frame with no word that agrees with its slot («___ разрешён?»).
+ *
+ * «One pattern = one frame» (наряд GEN-3): two frames of the day with the same target pattern or the same native pattern
+ * ({@see FrameText::identity()}) are `frame.twin` — a warning at the later frame; the lines stand on one frame with two
+ * fillers.
  *
  * A frame written without a mark at its end, in either language, is `frame.no_end_punct` (доработка GEN-2b): the
  * assembly reads the line past it all the same, and the phrase of the day borrows its line's mark. Whether the two
@@ -52,7 +56,14 @@ final class FrameRules implements LessonRule
         $agreement = $context->reads(LessonCodes::FRAME_NATIVE_AGREEMENT, LanguageSide::Native, 'agreement');
 
         $withoutSlot = 0;
+        $patterns = [];
         foreach ($answer->phrases as $phrase) {
+            $twin = self::twin($patterns, $phrase->frameTarget, $phrase->frameNative);
+            if ($twin !== null) {
+                $out[] = new LessonViolation(LessonCodes::FRAME_TWIN, $phrase->id, "«{$phrase->frameTarget}» / «{$phrase->frameNative}» is the {$twin[1]} pattern of {$twin[0]}");
+            }
+            $patterns[] = [$phrase->id, FrameText::identity($phrase->frameTarget), FrameText::identity($phrase->frameNative)];
+
             if ($answer->linesOf($phrase->id) === []) {
                 $out[] = new LessonViolation(LessonCodes::FRAME_UNUSED, $phrase->id, "no learner line stands on «{$phrase->frameTarget}»");
             }
@@ -108,6 +119,28 @@ final class FrameRules implements LessonRule
         }
 
         return $out;
+    }
+
+    /**
+     * The earlier frame of the day that has this frame's pattern in either language, and which side matched.
+     *
+     * @param  list<array{0: string, 1: string, 2: string}>  $patterns  id, target identity, native identity
+     * @return array{0: string, 1: string}|null
+     */
+    private static function twin(array $patterns, string $target, string $native): ?array
+    {
+        $target = FrameText::identity($target);
+        $native = FrameText::identity($native);
+        foreach ($patterns as [$id, $theirTarget, $theirNative]) {
+            if ($target === $theirTarget) {
+                return [$id, 'target'];
+            }
+            if ($native !== '' && $native === $theirNative) {
+                return [$id, 'native'];
+            }
+        }
+
+        return null;
     }
 
     private static function named(string $mark): string

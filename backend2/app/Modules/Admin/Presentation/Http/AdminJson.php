@@ -41,6 +41,7 @@ use App\Modules\Admin\Application\Dto\PassportDistractorRow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Dto\PlaygroundProviderRow;
 use App\Modules\Admin\Application\Dto\PlaygroundResult;
+use App\Modules\Admin\Application\Dto\PlaygroundRunView;
 use App\Modules\Admin\Application\Dto\PlaygroundValidation;
 use App\Modules\Admin\Application\Dto\PlaygroundValidationRow;
 use App\Modules\Admin\Application\Dto\PurposeCost;
@@ -684,6 +685,16 @@ final class AdminJson
             'latency_ms' => $r->latencyMs,
             // The vendor never answered at all: auth, credits, timeout, a refusal.
             'error' => $r->error,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function playgroundRun(PlaygroundRunView $run): array
+    {
+        return [
+            'id' => $run->id,
+            'status' => $run->status,
+            'result' => $run->result === null ? null : self::playgroundResult($run->result),
         ];
     }
 

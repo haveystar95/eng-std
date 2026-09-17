@@ -57,7 +57,7 @@ final readonly class PlaygroundCall
             tokensOut: $reply->tokensOut,
             // The app's ONE pricing table, the same one the request log and the ledgers use — a
             // sandbox that priced calls its own way would disagree with the cost screens by design.
-            costUsd: $this->cost->estimate($reply->model, $reply->tokensIn, $reply->tokensOut),
+            costUsd: $this->cost->estimate($reply->model, $reply->tokensIn, $reply->tokensOut, $reply->cachedTokensIn ?? 0),
             latencyMs: $reply->latencyMs,
         );
     }

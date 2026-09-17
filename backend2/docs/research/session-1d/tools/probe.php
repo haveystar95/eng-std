@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
@@ -37,7 +38,7 @@ $sceneId = PlanSceneId::fromString($argv[1] ?? '01J8SESS1XTVRESCENE0000001');
 $packs = app(LanguagePacks::class);
 $pace = app(DayPace::class);
 foreach ([PlanLevel::Intermediate, PlanLevel::Beginner] as $level) {
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', $level, null, 8, 8));
+    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', $level, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
     $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
     $scene = new SceneMaterial($sceneId, $lesson, PlanTerm::fromLesson($sceneId, $lesson, static fn (): PlanTermId => PlanTermId::generate()), $packs->for('en'), $packs->for('ru'));
     $cards = app(DayAssembler::class)->sceneDay(PlanDayId::generate(), $scene, [$sceneId->value => $scene], $level, [], [], static fn (): DayCardId => DayCardId::generate());

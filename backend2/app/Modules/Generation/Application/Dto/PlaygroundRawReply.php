@@ -21,5 +21,7 @@ final readonly class PlaygroundRawReply
         public int $latencyMs,
         public ?int $tokensIn,
         public ?int $tokensOut,
+        /** Of `tokensIn`, what the vendor served from its prompt cache; null when it did not say. */
+        public ?int $cachedTokensIn = null,
     ) {}
 }

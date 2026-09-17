@@ -85,6 +85,18 @@ final class FrameText
         return ['text' => $said, 'matches' => false, 'glue' => '', 'filler' => null];
     }
 
+    /**
+     * WHEN TWO PATTERNS, TWO WORDS OR TWO ROLES ARE THE SAME (наряд GEN-3): what the comparison of a line with its frame
+     * forgives, and nothing more — the case of the letters, the run of spaces, the mark the text ends with; a slot is a
+     * slot however many underscores draw it. «Is ___ still available?» and «is  ___ still available» are one frame.
+     */
+    public static function identity(string $text): string
+    {
+        $slotted = (string) preg_replace(self::SLOT_PATTERN, '___', self::withoutEndMark($text));
+
+        return mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $slotted)));
+    }
+
     /** The mark a text ends with — a run of . ! ? … — or '' when it ends with none. */
     public static function endMark(string $text): string
     {

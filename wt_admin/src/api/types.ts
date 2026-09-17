@@ -854,6 +854,15 @@ export interface PlaygroundValidation {
   persisted: boolean
 }
 
+export type PlaygroundRunStatus = 'queued' | 'running' | 'done'
+
+/** A sandbox run as the backend keeps it: queued, running, or done with its result. */
+export interface PlaygroundRun {
+  id: string
+  status: PlaygroundRunStatus
+  result: PlaygroundResult | null
+}
+
 export interface PlaygroundGenerateInput {
   provider: string
   model: string

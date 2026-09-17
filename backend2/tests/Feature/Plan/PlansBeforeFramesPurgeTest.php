@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +23,7 @@ beforeEach(function () {
  * files of its scenes. Catches a cut that leaves a row, a file or a live collection behind — «снос без остатка».
  */
 it('drops every plan with all that hangs on it, tombstones its collection and deletes its scenes\' files', function () {
+    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: planCleanLesson(...)));
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 1])['id'];
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/start")->assertOk();

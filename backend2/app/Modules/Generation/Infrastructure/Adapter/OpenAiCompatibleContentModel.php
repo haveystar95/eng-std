@@ -8,9 +8,10 @@ use App\Modules\Generation\Application\Dto\ModelAnswer;
 use App\Modules\Generation\Application\Dto\RenderedPrompt;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Observability\Application\Dto\ModelCallUsage;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\Service\ModelCost;
-use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -23,11 +24,16 @@ use RuntimeException;
  *
  * If xAI ever stops matching OpenAI's request shape, this splits — but it splits on evidence, not
  * on the assumption that two vendors must need two classes.
+ *
+ * Every call goes through {@see VendorCall}: journalled before it is made, connected within ten seconds, waited for as long
+ * as the caller says, retried only on a vendor's answer that clears by itself — never after a timeout (наряд GEN-3). The
+ * answer's `usage.prompt_tokens_details.cached_tokens` is read and priced at the cached rate.
  */
 final readonly class OpenAiCompatibleContentModel implements ContentModelPort
 {
     public function __construct(
         private OutboundCallContext $context,
+        private VendorCall $calls,
         private ProviderId $provider,
         private string $apiKey,
         private string $model,
@@ -64,33 +70,32 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
     public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
     {
         $startedAt = hrtime(true);
+        $body = [
+            'model' => $this->model,
+            'messages' => [
+                ['role' => 'system', 'content' => $prompt->text],
+                ['role' => 'user', 'content' => $userMessage],
+            ],
+            'response_format' => [
+                'type' => 'json_schema',
+                'json_schema' => ['name' => 'content', 'strict' => true, 'schema' => $schema],
+            ],
+        ];
 
-        // Labelled so the request log can say what this spend was FOR, like every other vendor call.
-        $response = $this->context->run($this->purpose, null, fn () => Http::withToken($this->apiKey)
-            ->timeout($this->timeoutSeconds)
-            // Escalating backoff, and ONLY on the statuses that can change on their own. A 429 is
-            // an org token-per-minute ceiling and clears when the window rolls, so a fixed 1s wait
-            // just spends the retry inside the same saturated minute; 4s/8s/12s crosses it. A 403
-            // (no credits, wrong key) will answer the same way forever — retrying it turns one dead
-            // provider into four times the wall clock and tells us nothing new.
-            ->retry(
-                $this->retries,
-                static fn (int $attempt): int => $attempt * 4000,
-                static fn (\Throwable $e): bool => ! $e instanceof RequestException
-                    || in_array($e->response->status(), [408, 409, 429, 500, 502, 503, 504], true),
-                throw: false,
-            )
-            ->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
-                'model' => $this->model,
-                'messages' => [
-                    ['role' => 'system', 'content' => $prompt->text],
-                    ['role' => 'user', 'content' => $userMessage],
-                ],
-                'response_format' => [
-                    'type' => 'json_schema',
-                    'json_schema' => ['name' => 'content', 'strict' => true, 'schema' => $schema],
-                ],
-            ]));
+        $response = $this->calls->send(
+            $this->provider,
+            $this->model,
+            $this->purpose,
+            $this->timeoutSeconds,
+            $body,
+            // Labelled so the request log can say what this spend was FOR, like every other vendor call.
+            fn () => $this->context->run($this->purpose, null, fn () => Http::withToken($this->apiKey)
+                ->connectTimeout(VendorCall::CONNECT_TIMEOUT)
+                ->timeout($this->timeoutSeconds)
+                ->retry($this->retries, VendorCall::backoff(...), VendorCall::retryable(...), throw: false)
+                ->post(rtrim($this->baseUrl, '/') . '/chat/completions', $body)),
+            fn (Response $r): ModelCallUsage => $this->usage($r),
+        );
 
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
@@ -110,19 +115,29 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
             throw new RuntimeException($this->provider->label() . ' returned malformed JSON: ' . mb_substr($content, 0, 500));
         }
 
-        $tokensIn = is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null;
-        $tokensOut = is_int($response->json('usage.completion_tokens')) ? $response->json('usage.completion_tokens') : null;
-        $model = is_string($response->json('model')) ? $response->json('model') : $this->model;
+        $usage = $this->usage($response);
 
         /** @var array<string, mixed> $decoded */
         return new ModelAnswer(
             payload: $decoded,
-            model: $model,
+            model: $usage->answeredModel,
             latencyMs: $latencyMs,
-            tokensIn: $tokensIn,
-            tokensOut: $tokensOut,
-            costUsd: $this->cost->estimate($model, $tokensIn, $tokensOut),
+            tokensIn: $usage->tokensIn,
+            tokensOut: $usage->tokensOut,
+            costUsd: $usage->costUsd,
             raw: mb_substr($content, 0, 4000),
+            cachedTokensIn: $usage->cachedTokensIn,
         );
+    }
+
+    /** What the answer says it spent: tokens in and out, the cached part of the input, the model that ran, the price. */
+    private function usage(Response $response): ModelCallUsage
+    {
+        $tokensIn = is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null;
+        $cached = is_int($response->json('usage.prompt_tokens_details.cached_tokens')) ? $response->json('usage.prompt_tokens_details.cached_tokens') : null;
+        $tokensOut = is_int($response->json('usage.completion_tokens')) ? $response->json('usage.completion_tokens') : null;
+        $model = is_string($response->json('model')) ? $response->json('model') : $this->model;
+
+        return new ModelCallUsage($model, $tokensIn, $cached, $tokensOut, $this->cost->estimate($model, $tokensIn, $tokensOut, $cached ?? 0));
     }
 }

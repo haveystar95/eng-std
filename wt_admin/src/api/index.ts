@@ -5,6 +5,7 @@ import { useMocks } from './config'
 import { httpDelete, httpGet, httpGetPage, httpPatch, httpPost, httpPut } from './http'
 import { snakeizeParams } from './mapping'
 import { mock } from './mock'
+import { awaitPlaygroundRun } from './playgroundRun'
 import type {
   Admin,
   CollectionContentHealth,
@@ -35,6 +36,8 @@ import type {
   PlaygroundGenerateInput,
   PlaygroundProvider,
   PlaygroundResult,
+  PlaygroundRun,
+  PlaygroundRunStatus,
   PlaygroundValidateInput,
   PlaygroundValidation,
   RequestLog,
@@ -186,14 +189,20 @@ export const api = {
     useMocks ? mock.getTermContentPassport(id) : httpGet(`/content-health/terms/${id}`),
 
   // ── Playground («Песочница») ──
-  // Writes nothing on the server: `generate` calls a vendor and returns the text, `validate` runs
-  // the REAL enrichment validator in memory. There is deliberately no endpoint that saves either.
+  // Writes nothing of the catalogue: `generate` starts a run — a queued call the screen polls until it is done — and
+  // `validate` runs the REAL enrichment validator in memory. There is deliberately no endpoint that saves either.
   getPlaygroundProviders: async (): Promise<PlaygroundProvider[]> =>
     useMocks
       ? mock.getPlaygroundProviders()
       : (await httpGet<{ data: PlaygroundProvider[] }>('/playground/providers')).data,
-  playgroundGenerate: (input: PlaygroundGenerateInput): Promise<PlaygroundResult> =>
-    useMocks ? mock.playgroundGenerate(input) : httpPost('/playground/generate', input),
+  playgroundGenerate: (input: PlaygroundGenerateInput, onStatus?: (status: PlaygroundRunStatus) => void): Promise<PlaygroundResult> =>
+    useMocks
+      ? mock.playgroundGenerate(input)
+      : awaitPlaygroundRun(
+          () => httpPost<{ id: string; status: PlaygroundRunStatus }>('/playground/generate', input),
+          (id) => httpGet<PlaygroundRun>(`/playground/runs/${id}`),
+          { onStatus },
+        ),
   // NOT snakeized: `items` carries the wire keys already (sentence/error_span/correction), and the
   // generic mapper would rewrite the values' keys along with the envelope's.
   playgroundValidate: (input: PlaygroundValidateInput): Promise<PlaygroundValidation> =>

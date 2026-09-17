@@ -104,6 +104,7 @@ Route::middleware('auth:admin')->group(function (): void {
     // both spend or compute on a body, not because either mutates anything.
     Route::get('/playground/providers', [PlaygroundController::class, 'providers']);
     Route::post('/playground/generate', [PlaygroundController::class, 'generateAction']);
+    Route::get('/playground/runs/{id}', [PlaygroundController::class, 'runAction']);
     Route::post('/playground/validate', [PlaygroundController::class, 'validateAction']);
 
     Route::get('/practice-dialogs', [PracticeDialogController::class, 'index']);

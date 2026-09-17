@@ -28,18 +28,21 @@ return [
         'repair_model' => env('PLAN_REPAIR_MODEL', 'gpt-5.4'),
         // The seam judge — one yes or no per native sentence of the day, one call a day: a step cheaper.
         'judge_model' => env('PLAN_JUDGE_MODEL', 'gpt-5.4-mini'),
-        // Per-call vendor timeout, seconds. Both calls are asynchronous jobs the client polls; the repair and the
-        // judge run inside the lesson's job and take the lesson's.
-        'plan_timeout' => (int) env('PLAN_BUILDER_TIMEOUT', 90),
-        'lesson_timeout' => (int) env('PLAN_LESSON_TIMEOUT', 90),
+        // How long our client waits for the vendor's ANSWER, seconds (the connection itself — ten, VendorCall). Both calls
+        // are asynchronous jobs the client polls; the repair and the seam judge run inside the lesson's job and take the
+        // lesson's. 180 is three times the slowest lesson seen (51 s, наряд GEN-3): a client that gave up at 60 s paid
+        // for a lesson the model finished and nobody read.
+        'plan_timeout' => (int) env('PLAN_BUILDER_TIMEOUT', 180),
+        'lesson_timeout' => (int) env('PLAN_LESSON_TIMEOUT', 180),
     ],
 
-    // A build that started and never came back in this many seconds counts as dead: the client
-    // sees `failed` and may ask for a retry. Two attempts × the timeout, plus the writes.
-    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 240),
+    // A build that started and never came back in this many seconds counts as dead: the client sees `failed` and may ask
+    // for a retry — by hand, nothing retries it on its own. Longer than the lesson's job may run (every call it can make ×
+    // the timeout, plus a minute — BuildLessonJob), so a retry never races a job that is still waiting for its answer.
+    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 1020),
 
     // What a lesson orders, per level: VOCABULARY_COUNT and DIALOGUE_COUNT. The number of frames is
-    // not ordered — `lesson_day.v4.5` takes it from the dialogue (half to all of its answer/ask exchanges).
+    // not ordered — `lesson_day.v4.6` takes it from the dialogue (half to all of its answer/ask exchanges).
     'counts' => [
         'beginner' => ['vocabulary' => 8, 'dialogue' => 8],
         'intermediate' => ['vocabulary' => 8, 'dialogue' => 8],

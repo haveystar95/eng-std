@@ -26,6 +26,12 @@ final readonly class VocabularyItem
         public array $usedIn = [],
     ) {}
 
+    /** The same word under another id — a repaired word keeps the id of the one it replaces. */
+    public function withId(string $id): self
+    {
+        return new self($id, $this->termTarget, $this->translationNative, $this->pronunciationNative, $this->definitionTarget, $this->kind, $this->imagePrompt, $this->usedIn);
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {

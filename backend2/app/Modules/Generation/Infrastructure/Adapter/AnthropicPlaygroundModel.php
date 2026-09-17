@@ -7,7 +7,10 @@ namespace App\Modules\Generation\Infrastructure\Adapter;
 use App\Modules\Generation\Application\Dto\PlaygroundRawReply;
 use App\Modules\Generation\Application\Port\PlaygroundModelPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Observability\Application\Dto\ModelCallUsage;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\ModelCost;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -25,7 +28,8 @@ use RuntimeException;
  * `anthropic-version`, `max_tokens` is required, and the answer arrives as content blocks.
  *
  * Raw HTTP through Laravel's client for the same reason as every other vendor here: the Observability
- * listener logs calls made through it, so sandbox spend stays on the one ledger the app has.
+ * listener logs calls made through it, so sandbox spend stays on the one ledger the app has. Journalled like every model
+ * call ({@see VendorCall}, наряд GEN-3).
  */
 final readonly class AnthropicPlaygroundModel implements PlaygroundModelPort
 {
@@ -42,10 +46,12 @@ final readonly class AnthropicPlaygroundModel implements PlaygroundModelPort
 
     public function __construct(
         private OutboundCallContext $context,
+        private VendorCall $calls,
         private string $apiKey,
         private string $model,
-        private string $baseUrl = 'https://api.anthropic.com/v1',
-        private int $timeoutSeconds = 60,
+        private string $baseUrl,
+        private int $timeoutSeconds,
+        private ModelCost $cost = new ModelCost(),
     ) {}
 
     public function provider(): ProviderId
@@ -70,12 +76,21 @@ final readonly class AnthropicPlaygroundModel implements PlaygroundModelPort
         }
 
         $startedAt = hrtime(true);
-        $response = $this->context->run('playground', null, fn () => Http::withHeaders([
-            'x-api-key' => $this->apiKey,
-            'anthropic-version' => self::API_VERSION,
-        ])
-            ->timeout($this->timeoutSeconds)
-            ->post(rtrim($this->baseUrl, '/') . '/messages', $payload));
+        $response = $this->calls->send(
+            ProviderId::Anthropic,
+            $this->model,
+            'playground',
+            $this->timeoutSeconds,
+            $payload,
+            fn () => $this->context->run('playground', null, fn () => Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'anthropic-version' => self::API_VERSION,
+            ])
+                ->connectTimeout(VendorCall::CONNECT_TIMEOUT)
+                ->timeout($this->timeoutSeconds)
+                ->post(rtrim($this->baseUrl, '/') . '/messages', $payload)),
+            fn (Response $r): ModelCallUsage => $this->usage($r),
+        );
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
         if ($response->failed()) {
@@ -88,15 +103,26 @@ final readonly class AnthropicPlaygroundModel implements PlaygroundModelPort
             throw new RuntimeException('Anthropic отказался отвечать (stop_reason=refusal).');
         }
 
+        $usage = $this->usage($response);
+
         return new PlaygroundRawReply(
             // Every text block joined, not just the first: a sandbox must show the whole answer,
             // and a long reply legitimately arrives in several blocks.
             rawText: $this->text($response->json('content')),
-            model: is_string($response->json('model')) ? $response->json('model') : $this->model,
+            model: $usage->answeredModel,
             latencyMs: $latencyMs,
-            tokensIn: is_int($response->json('usage.input_tokens')) ? $response->json('usage.input_tokens') : null,
-            tokensOut: is_int($response->json('usage.output_tokens')) ? $response->json('usage.output_tokens') : null,
+            tokensIn: $usage->tokensIn,
+            tokensOut: $usage->tokensOut,
         );
+    }
+
+    private function usage(Response $response): ModelCallUsage
+    {
+        $tokensIn = is_int($response->json('usage.input_tokens')) ? $response->json('usage.input_tokens') : null;
+        $tokensOut = is_int($response->json('usage.output_tokens')) ? $response->json('usage.output_tokens') : null;
+        $model = is_string($response->json('model')) ? $response->json('model') : $this->model;
+
+        return new ModelCallUsage($model, $tokensIn, null, $tokensOut, $this->cost->estimate($model, $tokensIn, $tokensOut));
     }
 
     private function text(mixed $content): string

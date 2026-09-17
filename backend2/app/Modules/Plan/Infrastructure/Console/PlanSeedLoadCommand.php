@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Console;
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
@@ -59,7 +60,7 @@ final class PlanSeedLoadCommand extends Command
         $daysTotal = 6;
         $created = ['plans' => 0, 'days' => 0, 'cards' => 0, 'terms' => 0];
         // A real lesson shape: the mapper re-parses every stored lesson, and a stub would be a 500.
-        $lessonJson = json_encode(FakePlanModel::lessonPayload(new LessonRequest('Сцена', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        $lessonJson = json_encode(FakePlanModel::lessonPayload(new LessonRequest('Сцена', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
 
         // One live plan per learner is a unique index; the seed's first plan is the live one only
         // when the learner has none.

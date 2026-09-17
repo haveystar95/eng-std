@@ -9,7 +9,7 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The model's JSON → a {@see Lesson} (`lesson_day.v4.5`). Strict about SHAPE only: a missing key, a
+ * The model's JSON → a {@see Lesson} (`lesson_day.v4.6`). Strict about SHAPE only: a missing key, a
  * wrong type, an unknown kind or speaker, an empty required string is a reply that is not the
  * requested schema, and that is the model's refusal, not a finding ({@see ModelAnswerOffSchema}).
  * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
@@ -40,22 +40,7 @@ final class LessonParser
 
         $vocabulary = [];
         foreach ($this->list($payload, 'vocabulary') as $index => $item) {
-            $path = "vocabulary[{$index}]";
-            $row = $this->objectAt($item, $path);
-            $kind = $this->string($row, 'kind', $path);
-            if (! in_array($kind, [VocabularyItem::KIND_WORD, VocabularyItem::KIND_CHUNK], true)) {
-                throw ModelAnswerOffSchema::at("{$path}.kind", "unknown kind «{$kind}»");
-            }
-            $vocabulary[] = new VocabularyItem(
-                id: $this->string($row, 'id', $path),
-                termTarget: $this->string($row, 'term_target', $path),
-                translationNative: $this->string($row, 'translation_native', $path),
-                pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
-                definitionTarget: $this->stringOrEmpty($row, 'definition_target'),
-                kind: $kind,
-                imagePrompt: $this->nullableString($row, 'image_prompt'),
-                usedIn: $this->stringList($row, 'used_in'),
-            );
+            $vocabulary[] = $this->vocabularyItem($this->objectAt($item, "vocabulary[{$index}]"), "vocabulary[{$index}]");
         }
 
         return new Lesson(
@@ -77,12 +62,12 @@ final class LessonParser
 
     /**
      * One card of a lesson on its own — what a repair answers with: a frame, a whole exchange, a learner line,
-     * an exchange's check or a listening question, held to the same shape as inside a whole lesson.
+     * an exchange's check, a listening question or a word, held to the same shape as inside a whole lesson.
      *
-     * @param  'frame'|'exchange'|'line'|'check'|'listening'  $kind
+     * @param  'frame'|'exchange'|'line'|'check'|'listening'|'term'  $kind
      * @param  array<string, mixed>  $row
      */
-    public function card(string $kind, array $row): Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion
+    public function card(string $kind, array $row): Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion|VocabularyItem
     {
         return match ($kind) {
             LessonCard::FRAME => $this->phrase($row, 'card'),
@@ -90,6 +75,7 @@ final class LessonParser
             LessonCard::LINE => $this->learnerLine($row),
             LessonCard::CHECK => $this->check($row, 'card'),
             LessonCard::LISTENING => $this->listeningQuestion($row, 'card'),
+            LessonCard::TERM => $this->vocabularyItem($row, 'card'),
         };
     }
 
@@ -108,6 +94,26 @@ final class LessonParser
 
         /** @var array<string, mixed> $raw */
         return $this->phrase($raw, 'frame_update');
+    }
+
+    /** @param array<string, mixed> $row */
+    private function vocabularyItem(array $row, string $path): VocabularyItem
+    {
+        $kind = $this->string($row, 'kind', $path);
+        if (! in_array($kind, [VocabularyItem::KIND_WORD, VocabularyItem::KIND_CHUNK], true)) {
+            throw ModelAnswerOffSchema::at("{$path}.kind", "unknown kind «{$kind}»");
+        }
+
+        return new VocabularyItem(
+            id: $this->string($row, 'id', $path),
+            termTarget: $this->string($row, 'term_target', $path),
+            translationNative: $this->string($row, 'translation_native', $path),
+            pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
+            definitionTarget: $this->stringOrEmpty($row, 'definition_target'),
+            kind: $kind,
+            imagePrompt: $this->nullableString($row, 'image_prompt'),
+            usedIn: $this->stringList($row, 'used_in'),
+        );
     }
 
     /** @param array<string, mixed> $row */

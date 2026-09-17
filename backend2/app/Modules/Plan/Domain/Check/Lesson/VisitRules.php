@@ -13,12 +13,15 @@ use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Service\FrameText;
 
 /**
- * ONE VISIT, NO STEP TWICE (`lesson_day.v4.5`, NATURAL ORDER OF ONE VISIT): «no two exchanges ask the same thing,
+ * ONE VISIT, NO STEP TWICE (`lesson_day.v4.6`, NATURAL ORDER OF ONE VISIT): «no two exchanges ask the same thing,
  * and a frame used twice takes two different fillers (exchange 8 must not repeat exchange 2's "How much is the
  * deposit?")». What a code can tell of «the same thing» is the same frame said with the same filler — the filler the
  * server finds in each line — and a frame with no slot said twice is the same sentence twice. A line on a slot that
  * says none of its fillers is `line.ne_frame`, not a repeat. The later exchange is the card: the repair keeps the
  * frame and brings a filler and a fact the visit has not had.
+ *
+ * «…and is not used in two exchanges in a row» (v4.6, наряд GEN-3): one frame under the learner's lines of two
+ * neighbouring exchanges is `frame.adjacent_repeat` — a warning at the later exchange.
  */
 final class VisitRules implements LessonRule
 {
@@ -26,8 +29,18 @@ final class VisitRules implements LessonRule
     {
         $out = [];
         $said = [];
+        $previous = null;
         foreach ($answer->exchanges as $exchange) {
             $line = $exchange->learner();
+            $frame = $exchange->kind->takesFrame() ? $line?->phraseId : null;
+            if ($frame !== null && $previous !== null && $frame === $previous[1]) {
+                $out[] = new LessonViolation(
+                    LessonCodes::FRAME_ADJACENT_REPEAT,
+                    LessonViolation::exchange($exchange->step),
+                    "exchanges {$previous[0]} and {$exchange->step} both stand on {$frame}",
+                );
+            }
+            $previous = [$exchange->step, $frame];
             if (! $exchange->kind->takesFrame() || $line === null || $line->phraseId === null) {
                 continue;
             }

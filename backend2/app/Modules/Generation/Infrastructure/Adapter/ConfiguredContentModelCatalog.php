@@ -35,7 +35,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
      */
     private int $timeoutSeconds;
 
-    public function __construct(private OutboundCallContext $context)
+    public function __construct(private OutboundCallContext $context, private VendorCall $calls)
     {
         $this->timeoutSeconds = max(1, (int) config('services.generation.model_timeout', 180));
 
@@ -129,6 +129,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         return match ($provider) {
             ProviderId::Gemini => new GeminiContentModel(
                 context: $this->context,
+                calls: $this->calls,
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
@@ -138,6 +139,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
             ),
             ProviderId::Anthropic => new AnthropicContentModel(
                 context: $this->context,
+                calls: $this->calls,
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
@@ -148,6 +150,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
             // OpenAI and xAI speak the same wire format — see OpenAiCompatibleContentModel.
             ProviderId::OpenAi, ProviderId::Xai => new OpenAiCompatibleContentModel(
                 context: $this->context,
+                calls: $this->calls,
                 provider: $provider,
                 apiKey: $key,
                 model: $model,

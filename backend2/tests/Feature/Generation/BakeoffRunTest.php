@@ -53,6 +53,7 @@ function bakeoffProvider(): App\Modules\Generation\Application\Port\ContentModel
 {
     return new App\Modules\Generation\Infrastructure\Adapter\OpenAiCompatibleContentModel(
         app(App\Modules\Observability\Application\Support\OutboundCallContext::class),
+        app(App\Modules\Generation\Infrastructure\Adapter\VendorCall::class),
         ProviderId::OpenAi,
         'key',
         'gpt-4o',

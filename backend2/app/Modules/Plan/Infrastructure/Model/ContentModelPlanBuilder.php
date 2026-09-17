@@ -32,6 +32,10 @@ use Throwable;
  * strong model (a cheaper repair did not repair as well — report GEN-2b), the seam judge a step cheaper (a verdict
  * is a yes or a no), and the slot judge on the seam judge's model — the one call a learner WAITS on (наряд
  * SESSION-1a, разд. 4), so it gets one attempt and its own short timeout, and says in the log what it cost.
+ *
+ * The rules go first and the same for every call (the prompt file as the system message, and a schema that names no id of
+ * the day), the day's inputs after them (наряд GEN-3) — so the vendor serves the rules from its prompt cache; what it
+ * served is on the reply ({@see ModelReply::$cachedTokensIn}) and in the journal of model calls.
  */
 final readonly class ContentModelPlanBuilder implements PlanModelPort
 {
@@ -82,7 +86,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
         $model = $this->model($this->repairModel, $this->lessonTimeout);
         $text = $this->prompts->repairSystem($request->kind);
         $prompt = new RenderedPrompt($text, $this->prompts->repairVersion(), PromptShape::Full, hash('sha256', $text));
-        $schema = PlanSchemas::lessonCard($request->kind, $request->address, $request->frameIds);
+        $schema = PlanSchemas::lessonCard($request->kind, $request->dialogueCount, $request->vocabularyCount);
 
         return self::reply($model->complete($prompt, $this->prompts->repairUser($request), $schema), $prompt->version);
     }
@@ -176,6 +180,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
             costUsd: $answer->costUsd ?? '0.000000',
             latencyMs: $answer->latencyMs,
             raw: $answer->raw,
+            cachedTokensIn: $answer->cachedTokensIn,
         );
     }
 }

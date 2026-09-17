@@ -7,17 +7,18 @@ namespace App\Modules\Plan\Domain\Check;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 
 /**
- * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a и в наряде GEN-2b, `docs/plan-v2.md` §4): seven codes are
+ * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a, в наряде GEN-2b и в GEN-3, `docs/plan-v2.md` §4): ten codes are
  * fatal — the learner would get a broken card: a line served otherwise than the model wrote it, a frame whose filler
  * makes it ungrammatical, a check or a listening question that cannot be dealt, an exchange said by the wrong
  * speakers, an exchange whose closing message asks, an exchange that says a frame with a filler another exchange
- * already said. A lesson with any of them is not dealt until P2R repairs the card at their address — at most two
- * cards a day; a fatal finding left after that, or one that stands at no card a repair can take, fails the day with
- * its code. Nothing else is fatal.
+ * already said — or material the learner already learned on an earlier day of the plan: a word, a frame said the same
+ * way — or a word of the day that is an abbreviation, with nothing to translate. A lesson with any of them is not dealt until P2R repairs the card at their address — at most two cards a day; a
+ * fatal finding left after that, or one that stands at no card a repair can take, fails the day with its code. Nothing
+ * else is fatal.
  *
  * The cards go in the order a repair reaches furthest: a frame first (its lines are assembled from it, so a
  * repaired frame may put them right), then a whole exchange (its lines and its check come back with it), then
- * learner lines, checks, listening questions.
+ * learner lines, checks, listening questions, and a word last — a word changes nothing else of the day.
  */
 final class LessonGate
 {
@@ -29,11 +30,14 @@ final class LessonGate
         LessonCodes::EXCHANGE_SHAPE,
         LessonCodes::EXCHANGE_SECOND_QUESTION,
         LessonCodes::EXCHANGE_REPEATS,
+        LessonCodes::VOCAB_KNOWN_REPEAT,
+        LessonCodes::FRAME_KNOWN_REPEAT,
+        LessonCodes::VOCAB_ABBREVIATION,
     ];
 
     public const MAX_CARDS = 2;
 
-    private const ORDER = [LessonCard::FRAME => 0, LessonCard::EXCHANGE => 1, LessonCard::LINE => 2, LessonCard::CHECK => 3, LessonCard::LISTENING => 4];
+    private const ORDER = [LessonCard::FRAME => 0, LessonCard::EXCHANGE => 1, LessonCard::LINE => 2, LessonCard::CHECK => 3, LessonCard::LISTENING => 4, LessonCard::TERM => 5];
 
     public static function isFatal(string $code): bool
     {

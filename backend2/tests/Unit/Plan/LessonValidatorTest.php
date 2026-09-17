@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
@@ -15,18 +16,19 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day.v4.5`, docs/plan-v2.md §4).
+ * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day.v4.6`, docs/plan-v2.md §4).
  *
- * The clean fixture lesson breaks nothing; every row below breaks ONE rule of the prompt in it and names
- * the code that must count the breach — the defect each code exists to catch, run against the code. A
- * rule the validator stops reading fails its own row. The words of both languages are the deployment's packs
- * (`config/lesson/lang`): ru the learner's, en the target.
+ * The clean fixture lesson breaks nothing but the one v4.6 rule it predates ({@see planFixtureWarnings()}); every row below
+ * breaks ONE rule of the prompt in it and names the code that must count the breach — the defect each code exists to
+ * catch, run against the code. A rule the validator stops reading fails its own row. The words of both languages are the
+ * deployment's packs (`config/lesson/lang`): ru the learner's, en the target. What the story so far forbids is read
+ * against an earlier day of the plan (наряд GEN-3).
  */
 
 /** @return array<string, mixed> */
 function lvPayload(): array
 {
-    return FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8));
+    return FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
 }
 
 /** @return list<LessonViolation> */
@@ -36,13 +38,26 @@ function lvRun(array $payload, ?VoiceGender $gender = null, ?LessonValidationCon
 }
 
 /** @return list<string> */
-function lvCodes(array $payload, ?VoiceGender $gender = null): array
+function lvCodes(array $payload, ?VoiceGender $gender = null, ?LessonValidationContext $context = null): array
 {
-    return array_values(array_unique(array_map(static fn (LessonViolation $v): string => $v->code, lvRun($payload, $gender))));
+    return array_values(array_unique(array_map(static fn (LessonViolation $v): string => $v->code, lvRun($payload, $gender, $context))));
+}
+
+/** @return list<string> `code@address` of every finding */
+function lvAt(array $payload, ?LessonValidationContext $context = null): array
+{
+    return array_map(static fn (LessonViolation $v): string => "{$v->code}@{$v->address}", lvRun($payload, null, $context));
+}
+
+/** The clean lesson told in an order where its frame p6 is never said twice in a row ({@see planCleanLesson()}). */
+function lvApart(): array
+{
+    return planCleanLesson(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
 }
 
 it('finds nothing in a lesson that keeps every rule', function () {
-    expect(lvRun(lvPayload()))->toBe([]);
+    expect(lvRun(lvApart()))->toBe([])
+        ->and(lvAt(lvPayload()))->toBe(planFixtureWarnings());
 });
 
 /** @return array<string, array{0: string, 1: Closure}> a description → the code and the break */
@@ -309,8 +324,58 @@ function lvBreaks(): array
 
         return $p;
     }],
+    'an abbreviation as a word of the day' => [LessonCodes::VOCAB_ABBREVIATION, static function (array $p): array {
+        $p['vocabulary'][5]['term_target'] = 'MRI';
+
+        return $p;
+    }],
+    'two frames of one native pattern' => [LessonCodes::FRAME_TWIN, static function (array $p): array {
+        $p['phrases'][4]['frame_native'] = 'У него болит ___.';
+
+        return $p;
+    }],
+    'one frame in two exchanges in a row' => [LessonCodes::FRAME_ADJACENT_REPEAT, static function (array $p): array {
+        $p['dialogue'][1]['messages'][1]['phrase_id'] = 'p1';
+        $p['dialogue'][1]['messages'][1]['text_target'] = 'It hurts in his neck.';
+
+        return $p;
+    }],
     ];
 }
+
+/**
+ * THE STORY SO FAR (наряд GEN-3): a description → the code, the break of the clean lesson, and the day the learner had
+ * before it.
+ *
+ * @return array<string, array{0: string, 1: Closure, 2: Closure(): LessonValidationContext}>
+ */
+function lvStoryBreaks(): array
+{
+    $dayOne = static fn (): LessonValidationContext => lessonContext('ru', 'en', null, new EarlierDays([planEarlierDay()]));
+
+    return [
+        'a word the learner learned on day 1' => [LessonCodes::VOCAB_KNOWN_REPEAT, static fn (array $p): array => $p, $dayOne],
+        'a frame the learner learned on day 1' => [LessonCodes::FRAME_KNOWN_REPEAT, static fn (array $p): array => $p, $dayOne],
+        'a native pattern of a frame of day 1, said another way in the target' => [LessonCodes::FRAME_KNOWN_NATIVE_REPEAT, static function (array $p): array {
+            $p['phrases'][1]['frame_target'] = 'The pain began ___.';
+            $p['dialogue'][1]['messages'][1]['text_target'] = 'The pain began three days ago.';
+
+            return $p;
+        }, $dayOne],
+        'a partner of the same role with another voice than on day 1' => [LessonCodes::ROLE_GENDER_CHANGED, static function (array $p): array {
+            $p['role_gender'] = 'male';
+
+            return $p;
+        }, $dayOne],
+    ];
+}
+
+dataset('one thing an earlier day taught', lvStoryBreaks());
+
+it('counts what the story so far already taught by its code', function (string $code, Closure $break, Closure $context) {
+    expect(lvCodes($break(lvPayload()), null, $context()))->toContain($code)
+        ->and(lvCodes($break(lvPayload())))->not->toContain($code);
+})->with('one thing an earlier day taught');
 
 dataset('one broken rule', lvBreaks());
 
@@ -319,14 +384,14 @@ it('counts the one rule a lesson breaks by its code', function (string $code, Cl
 })->with('one broken rule');
 
 // A code with no row of its own is a code nothing proves it counts. The seam judge's code is a model's, not a rule's
-// (LessonSeamJudge, `LessonObservationTest`). Доработка GEN-2b: «кодов становится 50: 7 фатальных, 43 предупреждения» —
-// no code is about the speaking key any more, the key is the server's.
-it('has a broken rule for every one of its fifty codes', function () {
-    $named = array_map(static fn (array $row): string => $row[0], array_values(lvBreaks()));
+// (LessonSeamJudge, `LessonObservationTest`). Доработка GEN-2b: no code is about the speaking key any more, the key is the
+// server's. Наряд GEN-3: «фатальных кодов становится 10» — seven codes more, fifty-seven in all.
+it('has a broken rule for every one of its fifty-seven codes', function () {
+    $named = array_map(static fn (array $row): string => $row[0], [...array_values(lvBreaks()), ...array_values(lvStoryBreaks())]);
 
     expect(array_values(array_diff(LessonCodes::validated(), $named)))->toBe([])
-        ->and(count(LessonCodes::all()))->toBe(50)
-        ->and(count(array_unique(LessonCodes::all())))->toBe(50)
+        ->and(count(LessonCodes::all()))->toBe(57)
+        ->and(count(array_unique(LessonCodes::all())))->toBe(57)
         ->and(array_filter(LessonCodes::all(), static fn (string $code): bool => str_starts_with($code, 'key.')))->toBe([])
         ->and(LessonCodes::JUDGED)->toBe([LessonCodes::FILLER_NATIVE_SEAM]);
 });
@@ -425,7 +490,7 @@ it('skips a check whose language has no pack and writes the skip down, finding n
     // No pack at all, on either side: nothing but the language-free rules, and no rule reads a key it was not given.
     $none = new LessonValidationContext(8, 8, LanguagePack::none('xx'), LanguagePack::none('yy'));
     $found = lvRun(lvBreaks()['a filler that is a clause'][1](lvPayload()), null, $none);
-    expect($found)->toBe([])
+    expect(array_map(static fn (LessonViolation $v): string => "{$v->code}@{$v->address}", $found))->toBe(planFixtureWarnings())
         ->and($none->skips->codes())->toContain(LessonCodes::FILLER_IS_CLAUSE, LessonCodes::EXCHANGE_SECOND_QUESTION, LessonCodes::FILLER_UNGRAMMATICAL);
     foreach (lvBreaks() as [$code, $break]) {
         lvRun($break(lvPayload()), null, new LessonValidationContext(8, 8, LanguagePack::none('xx'), LanguagePack::none('yy')));
@@ -489,4 +554,79 @@ it('knows a closing question by its word order when its question mark is gone, a
     expect($at($unmarked))->toBe(['x7'])
         ->and($at($statement))->toBe([])
         ->and($at(lvPayload()))->toBe([]);
+});
+
+// Наряд GEN-3, v4.6: «a frame used twice … is not used in two exchanges in a row». Catches a count of a frame said twice
+// with an exchange between (the lesson's own «say the pattern twice» — no warning), and a lost count of two in a row.
+it('counts a frame in two exchanges in a row at the later one, and not a frame said twice apart', function () {
+    $atAdjacent = static fn (array $p): array => array_values(array_filter(lvAt($p), static fn (string $f): bool => str_starts_with($f, LessonCodes::FRAME_ADJACENT_REPEAT.'@')));
+
+    expect($atAdjacent(lvPayload()))->toBe(['frame.adjacent_repeat@x8'])
+        ->and($atAdjacent(lvApart()))->toBe([]);
+});
+
+// Наряд GEN-3, v4.6 FRAMES: «one pattern = one frame … the TARGET_LANGUAGE pattern or the NATIVE_LANGUAGE pattern». Catches
+// a twin missed because the case, the spaces or the closing mark differ, a twin by the native pattern alone missed, and
+// one frame said in two exchanges (p6) taken for a twin.
+it('knows two frames of one pattern in either language, case, spaces and the closing mark aside, and not one frame said twice', function () {
+    $target = lvApart();
+    $target['phrases'][4]['frame_target'] = 'it  hurts in his ___';
+    $native = lvApart();
+    $native['phrases'][4]['frame_native'] = 'у него   болит ___';
+
+    expect(lvAt($target))->toContain('frame.twin@p5')
+        ->and(lvAt($native))->toContain('frame.twin@p5')
+        ->and(lvAt(lvApart()))->toBe([]);
+});
+
+// Наряд GEN-3: «vocab.known_repeat / frame.known_repeat — совпадает с термином / каркасом любого прошлого готового дня
+// плана; нормализация та же, что у сверки реплика↔каркас: регистр, пробелы, знак конца не участвует; frame.known_native_repeat
+// — совпал только frame_native». Catches a repeat missed for a capital letter, a space or a full stop, a native-only
+// match counted as the fatal code, a day with no earlier days finding anything, and a finding without its card.
+it('holds the words and frames an earlier day taught, case, spaces and the closing mark aside, and a native pattern alone only warns', function () {
+    $taught = lvPayload();
+    $taught['vocabulary'][0]['term_target'] = 'Lower  back';
+    $taught['phrases'][0]['frame_target'] = 'IT HURTS IN HIS ___';
+    $taught['phrases'][0]['slot']['fillers'][0]['target'] = 'Lower  back';
+    $taught['dialogue'][0]['messages'][1]['text_target'] = 'IT HURTS IN HIS Lower  back';
+    $dayOne = lessonContext('ru', 'en', null, new EarlierDays([planEarlierDay()]));
+
+    $found = lvAt($taught, $dayOne);
+    $known = static fn (string $code): array => array_values(array_filter($found, static fn (string $f): bool => str_starts_with($f, $code.'@')));
+
+    expect($known(LessonCodes::VOCAB_KNOWN_REPEAT))->toBe(['vocab.known_repeat@v1', 'vocab.known_repeat@v2', 'vocab.known_repeat@v3', 'vocab.known_repeat@v4', 'vocab.known_repeat@v5', 'vocab.known_repeat@v6', 'vocab.known_repeat@v7', 'vocab.known_repeat@v8'])
+        ->and($known(LessonCodes::FRAME_KNOWN_REPEAT))->toBe(['frame.known_repeat@p1', 'frame.known_repeat@p2', 'frame.known_repeat@p3', 'frame.known_repeat@p4', 'frame.known_repeat@p5', 'frame.known_repeat@p6'])
+        ->and($known(LessonCodes::FRAME_KNOWN_NATIVE_REPEAT))->toBe([])
+        ->and(array_values(array_filter(
+            lvAt(lvStoryBreaks()['a native pattern of a frame of day 1, said another way in the target'][1](lvPayload()), $dayOne),
+            static fn (string $f): bool => str_contains($f, '@p2') && str_starts_with($f, 'frame.known'),
+        )))->toBe(['frame.known_native_repeat@p2'])
+        ->and(array_filter(lvAt($taught), static fn (string $f): bool => str_starts_with($f, 'vocab.known') || str_starts_with($f, 'frame.known')))->toBe([]);
+});
+
+// Наряд GEN-3: «role_gender.changed — пол собеседника отличается от прошлого дня с той же ролью». Catches a partner of
+// ANOTHER role counted (a nurse after a female doctor may be a man), a same gender counted, and a changed voice missed.
+it('reads the partner\'s gender only against an earlier day of the same role', function () {
+    $male = lvPayload();
+    $male['role_gender'] = 'male';
+    $days = new EarlierDays([planEarlierDay(1, null, 'doctor', VoiceGender::Female)]);
+
+    expect(lvAt($male, lessonContext('ru', 'en', null, $days, 'Doctor')))->toContain('role_gender.changed@lesson')
+        ->and(lvCodes($male, null, lessonContext('ru', 'en', null, $days, 'Nurse')))->not->toContain(LessonCodes::ROLE_GENDER_CHANGED)
+        ->and(lvCodes(lvPayload(), null, lessonContext('ru', 'en', null, $days, 'Doctor')))->not->toContain(LessonCodes::ROLE_GENDER_CHANGED);
+});
+
+// Наряд GEN-3: «vocab.abbreviation — term_target аббревиатура или акроним (две и больше заглавных подряд, с точками или слэшем:
+// API, CI/CD, U.S.)». Catches an acronym taught as a word — with dots, with a slash, inside a chunk, in any alphabet — and
+// a word with one capital (X-ray, iPhone) or a hyphen (Wi-Fi) taken for one.
+it('counts an abbreviation or an acronym as a word of the day, and not a word with one capital', function () {
+    $at = static function (string $term): bool {
+        $p = lvApart();
+        $p['vocabulary'][5]['term_target'] = $term;
+
+        return in_array('vocab.abbreviation@v6', lvAt($p), true);
+    };
+
+    expect(array_map($at, ['API', 'CI/CD', 'U.S.', 'HR manager', 'ЖКХ']))->toBe([true, true, true, true, true])
+        ->and(array_map($at, ['X-ray', 'iPhone', 'Wi-Fi', 'sick note']))->toBe([false, false, false, false]);
 });

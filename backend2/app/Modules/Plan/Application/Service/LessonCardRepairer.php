@@ -8,9 +8,7 @@ use App\Modules\Plan\Application\Dto\LessonCardRepairOutcome;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
-use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
-use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Domain\Check\LessonCodes;
@@ -20,30 +18,39 @@ use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
 use App\Modules\Plan\Domain\Exception\SceneNotFound;
 use App\Modules\Plan\Domain\Lesson\Exchange;
+use App\Modules\Plan\Domain\Lesson\ExchangeCheck;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 use App\Modules\Plan\Domain\Lesson\LessonCardContext;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
+use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
+use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Lesson\Phrase;
+use App\Modules\Plan\Domain\Lesson\VocabularyItem;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
+use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Shared\Domain\Service\LanguageName;
 use Throwable;
 
 /**
- * P2R — THE REPAIR OF ONE CARD (наряды GEN-2a, GEN-2b). Asked two ways: by the lesson build for a card a fatal
+ * P2R — THE REPAIR OF ONE CARD (наряды GEN-2a, GEN-2b, GEN-3). Asked two ways: by the lesson build for a card a fatal
  * finding holds ({@see LessonGateKeeper}, before the lesson is stored), and by the `plan:repair-card` command for a
  * stored lesson.
  *
  * The findings at the card (or only the named codes) go to the model with the card and the part of the lesson the
- * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text. Card and
+ * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text — a whole
+ * exchange's NEIGHBOURS, and what the earlier days of the plan taught (EARLIER_DAYS: their frames and words). Card and
  * context are the answer as the server reads it ({@see LessonAssembly::said()}): the filler found in each line, the
  * marks of what the lines say, the key of the frame — the model's own `filler`, marks and key are shown to nobody.
  * The model answers with the card — an exchange may bring the frame its line stands on (`frame_update`), and the two
- * go in together or not at all; the card is parsed to its shape, put into the answer, and the whole answer is
- * validated again. Nothing is written here: the build stores what passed its gate, the command writes only on
- * `--apply` ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
+ * go in together or not at all; a learner line must stand on a frame of the lesson (the schema no longer names the
+ * day's frames — its ids are the same for every call, so the vendor's prompt cache holds it). The card is parsed to its
+ * shape, put into the answer, spoken in the plan's roles, and the whole answer is validated again. A repaired WORD is
+ * checked again by the server before it counts: `used_in` true, not a word of an earlier day, not an abbreviation, not twice
+ * in the day —
+ * else the repair is refused like one off the card's shape. Nothing is written here: the build stores what passed its
+ * gate, the command writes only on `--apply` ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
  */
 final readonly class LessonCardRepairer
 {
@@ -53,8 +60,7 @@ final readonly class LessonCardRepairer
         private PlanModelPort $model,
         private LessonValidator $validator,
         private LessonParser $parser,
-        private LearnerGender $gender,
-        private PlanConfig $config,
+        private LessonRequests $requests,
         private LessonContexts $contexts,
     ) {}
 
@@ -78,19 +84,7 @@ final readonly class LessonCardRepairer
             return self::nothing(LessonCardRepairOutcome::NOT_A_CARD, $address, $card?->kind, 'no lesson, or no repairable card at this address');
         }
 
-        $counts = $this->config->countsFor($plan->level());
-        $request = new LessonRequest(
-            topic: $scene->titleNative(),
-            topicDescription: $scene->topicDescription(),
-            targetLanguage: LanguageName::of($plan->targetLang()->value),
-            nativeLanguage: LanguageName::of($plan->nativeLang()->value),
-            level: $plan->level(),
-            learnerGender: $this->gender->of($plan->userId()),
-            vocabularyCount: $counts['vocabulary'],
-            dialogueCount: $counts['dialogue'],
-            targetLangCode: $plan->targetLang()->value,
-            nativeLangCode: $plan->nativeLang()->value,
-        );
+        $request = $this->requests->for($plan, $scene);
         $context = $this->contexts->of($request);
 
         $outcome = $this->repairIn($answer, $card, $this->validator->run($answer, $context), $context, $request, $codes);
@@ -137,11 +131,14 @@ final readonly class LessonCardRepairer
             card: $before,
             context: LessonCardContext::of($read, $card),
             findings: $findings,
-            frameIds: array_map(static fn (Phrase $p): string => $p->id, $answer->phrases),
+            neighbours: $card->kind === LessonCard::EXCHANGE ? LessonCardContext::neighbours($read, $card) : null,
+            earlierDays: $request->earlierDays,
             targetLanguage: $request->targetLanguage,
             nativeLanguage: $request->nativeLanguage,
             level: $request->level,
             learnerGender: $request->learnerGender,
+            dialogueCount: $request->dialogueCount,
+            vocabularyCount: $request->vocabularyCount,
         );
         try {
             $reply = $this->model->repairLessonCard($repairRequest);
@@ -161,6 +158,7 @@ final readonly class LessonCardRepairer
             /** @var array<string, mixed> $raw */
             $repairedCard = $this->parser->card($card->kind, $raw);
             $frameUpdate = $card->kind === LessonCard::EXCHANGE ? $this->parser->frameUpdate($rawFrame) : null;
+            self::assertStandsOnAFrame($answer, $repairedCard);
             $repaired = $repairedCard instanceof Exchange
                 ? $card->replaceExchange($answer, $repairedCard, $frameUpdate)
                 : $card->replace($answer, $repairedCard);
@@ -171,7 +169,15 @@ final readonly class LessonCardRepairer
             return self::offSchema($card, $before, $raw, $atCard, $found, $reply, $e->getMessage(), is_array($rawFrame) ? $rawFrame : null);
         }
 
+        $repaired = $repaired->withRoles($request->roles);
         $after = $this->validator->run($repaired, $context);
+        if ($card->kind === LessonCard::TERM && ($refused = self::wordRefused($repaired, $card, $after)) !== []) {
+            return new LessonCardRepairOutcome(
+                LessonCardRepairOutcome::REFUSED, $card->address, $card->kind, $before, $card->of($repaired),
+                self::rows($atCard), [], null, [], count($found), $reply->costUsd, $reply->latencyMs, $reply->promptVersion,
+                implode('; ', $refused),
+            );
+        }
 
         return new LessonCardRepairOutcome(
             status: LessonCardRepairOutcome::REPAIRED,
@@ -189,6 +195,48 @@ final readonly class LessonCardRepairer
             promptVersion: $reply->promptVersion,
             frameUpdate: $frameUpdate?->toArray(),
         );
+    }
+
+    /**
+     * A learner line of a repaired card stands on a frame of THIS lesson, or on none when it is a rescue — the schema holds
+     * only the ids a day may have, so the server holds the rest.
+     */
+    private static function assertStandsOnAFrame(Lesson $answer, Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion|VocabularyItem $card): void
+    {
+        $line = match (true) {
+            $card instanceof Exchange => $card->learner(),
+            $card instanceof Message => $card,
+            default => null,
+        };
+        if ($line?->phraseId !== null && $answer->phrase($line->phraseId) === null) {
+            throw ModelAnswerOffSchema::at('card.phrase_id', "«{$line->phraseId}» names no frame of the lesson");
+        }
+    }
+
+    /**
+     * Why the server refuses a repaired word (P2R v1.2, наряд GEN-3): what its own check of the word still finds — a
+     * `used_in` that is not true, a word an earlier day taught, an abbreviation — and a word the day already lists under
+     * another id.
+     *
+     * @param  list<LessonViolation>  $after  the validator's findings over the lesson with the repaired word
+     * @return list<string>
+     */
+    private static function wordRefused(Lesson $repaired, LessonCard $card, array $after): array
+    {
+        $out = [];
+        foreach ($after as $violation) {
+            if ($violation->address === $card->address && in_array($violation->code, [LessonCodes::VOCAB_USED_IN_WRONG, LessonCodes::VOCAB_KNOWN_REPEAT, LessonCodes::VOCAB_ABBREVIATION], true)) {
+                $out[] = "{$violation->code}: {$violation->detail}";
+            }
+        }
+        $word = $repaired->vocabularyItem($card->frameId);
+        foreach ($repaired->vocabulary as $other) {
+            if ($word !== null && $other->id !== $word->id && FrameText::identity($other->termTarget) === FrameText::identity($word->termTarget)) {
+                $out[] = "«{$word->termTarget}» is already the day's word {$other->id}";
+            }
+        }
+
+        return $out;
     }
 
     /**
