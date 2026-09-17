@@ -56,7 +56,7 @@
 `PlanViews` / `PlanView` / `PlanJson` (`catch_up`, `building`), `DayRouteView`, `DayWindowViews`, `GetDayRoomHandler`,
 `WindowStatus::Building`; `openapi/openapi.yaml`.
 
-### Документы (третий коммит)
+### Документы (коммит `c9569adc`)
 
 `docs/plan-v2.md`, `docs/plan-api.md`, `docs/prompts/REGISTRY.md`, `docs/DECISIONS.md` (корень репо), `docs/ROADMAP.md`,
 `docs/session-handoff.md`, README модулей Plan, Observability, Generation, Admin, `openapi/openapi-admin.yaml` (см. §4, п. 16), этот
@@ -407,4 +407,6 @@ lesson_day.v4.6`, в отчёте голоса у дня 2 — строки v4.6
 |---|---|
 | `a51c0b4d` | генерация: урок v4.6, P2R v1.2, история и роли, коды, журнал вызовов, таймауты, песочница job'ом (+ wt_admin) |
 | `ce3154b7` | расписание: открытие от открытия, «догоняем», сборка N+1 на закрытии, `building` |
-| документы | см. сдачу: канон, контракт админки, реестр, DECISIONS 330–336, ROADMAP, handoff, README модулей, отчёт, выгрузки, правки тестов после мутаций |
+| `c9569adc` | документы: канон, контракт админки, реестр, DECISIONS 330–336, ROADMAP, handoff, README модулей, отчёт, выгрузки, правки тестов после мутаций |
+
+Хеш коммита документов вписан следующим коммитом (как в SESSION-1c).
