@@ -12,7 +12,7 @@ Branch: `main`. Last updated: 2026-09-17. Закрыт наряд **BACK-TAILS-1
 тронут, $0. Отчёт — `docs/research/back-tails-1/README.md`; решения — DECISIONS пп. **337–345** и шесть записей в
 «Отменено». Ворота: OpenAPI ok ×2, deptrac 0, PHPStan 0, Pest **2 305 passed**; мутации **18 из 18**
 (`docs/research/back-tails-1/mutations.md`); `invariant-reviewer` — CLEAN; `flutter analyze` — чисто. Коммиты:
-`018259df` (код) и следующий за ним (документы); наряд лёг поверх коммитов параллельного SESSION-2b.
+`018259df` (код), `32a2cb95` (документы); наряд лёг поверх коммитов параллельного SESSION-2b.
 
 Что сделано: `speak_retell` → «Повтори свою реплику» на реплике УЧЕНИКА с клиентским зачётом (серверный пересказ снесён,
 `slot_judge.v2`); варианты `listen_predict` — реплики дня со звуком; «Поймай число» — только числа и количества
