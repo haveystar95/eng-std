@@ -347,9 +347,6 @@ enum SlotLook {
   /// Filler in ink in a brass slot.
   filled,
 
-  /// The filler has just been put in — a 15 % sage backing in a brass slot (32-1, 600 ms).
-  highlight,
-
   /// Passed — sage.
   sage,
 
@@ -497,13 +494,12 @@ class SessionFrameText extends StatelessWidget {
     final (border, fill, textColor) = onInk
         ? switch (look) {
             SlotLook.empty => (AppColors.brassInk, AppColors.sessionWindowFillOnInk, AppColors.paper),
-            SlotLook.filled || SlotLook.highlight => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.paper),
+            SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.paper),
             SlotLook.sage => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.sessionSageOnInk),
             SlotLook.wrong => (AppColors.paper, Colors.transparent, AppColors.paper),
           }
         : switch (look) {
             SlotLook.empty || SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
-            SlotLook.highlight => (AppColors.brassInk, AppColors.sessionSageWash, AppColors.ink),
             SlotLook.sage => (AppColors.verdictKnown, AppColors.sessionSageWash, AppColors.verdictKnown),
             SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),
           };
