@@ -16,7 +16,7 @@
             "date": "<date>",
             "label_native": "сегодня"
         },
-        "cards_total": 85,
+        "cards_total": 83,
         "cards_done": 0,
         "minutes_spent": 0,
         "opened_at": "<datetime>",
@@ -4352,7 +4352,7 @@
         },
         {
             "stage": "dialogue",
-            "total": 15,
+            "total": 13,
             "done": 0,
             "state": "locked",
             "cards": [
@@ -5532,6 +5532,25 @@
                             "voice_hint": "Do we need an X-ray?",
                             "voice_blind": "Do we need ___?"
                         },
+                        "correct": "o2",
+                        "options": [
+                            {
+                                "id": "o1",
+                                "text": "Верх или низ спины"
+                            },
+                            {
+                                "id": "o2",
+                                "text": "Это просто растяжение мышцы"
+                            },
+                            {
+                                "id": "o3",
+                                "text": "Клиника закрыта"
+                            },
+                            {
+                                "id": "o4",
+                                "text": "Сломана кость"
+                            }
+                        ],
                         "exchange": {
                             "ref": "x7",
                             "kind": "ask",
@@ -5563,7 +5582,8 @@
                             },
                             "text_native": "Нет, при растяжении мышцы рентген не нужен.",
                             "text_target": "No, an X-ray is not needed for a muscle strain."
-                        }
+                        },
+                        "question_native": "Почему рентген не нужен?"
                     },
                     "result": null,
                     "attempts": 0,
@@ -5578,66 +5598,6 @@
                     "id": "ulid-0108",
                     "stage": "dialogue",
                     "position": 13,
-                    "kind": "dialogue_partner",
-                    "unit": {
-                        "kind": "exchange",
-                        "ref": "x7"
-                    },
-                    "source": "today",
-                    "source_day": null,
-                    "retry_of": null,
-                    "payload": {
-                        "correct": "o2",
-                        "options": [
-                            {
-                                "id": "o1",
-                                "text": "Верх или низ спины"
-                            },
-                            {
-                                "id": "o2",
-                                "text": "Это просто растяжение мышцы"
-                            },
-                            {
-                                "id": "o3",
-                                "text": "Клиника закрыта"
-                            },
-                            {
-                                "id": "o4",
-                                "text": "Сломана кость"
-                            }
-                        ],
-                        "exchange": {
-                            "ref": "x7",
-                            "kind": "ask",
-                            "step": 7
-                        },
-                        "scene_id": "ulid-0003",
-                        "partner_line": {
-                            "ref": "x7",
-                            "audio": {
-                                "ref": "x7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0107",
-                                "duration_ms": 3290,
-                                "voice": "partner"
-                            },
-                            "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                            "text_target": "No, an X-ray is not needed for a muscle strain."
-                        },
-                        "question_native": "Почему рентген не нужен?"
-                    },
-                    "result": null,
-                    "attempts": 0,
-                    "response": null,
-                    "unit_kind": "exchange",
-                    "unit_ref": "x7",
-                    "source_day_id": null,
-                    "answered_at": null,
-                    "returns": false
-                },
-                {
-                    "id": "ulid-0109",
-                    "stage": "dialogue",
-                    "position": 14,
                     "kind": "dialogue_ask",
                     "unit": {
                         "kind": "exchange",
@@ -5749,6 +5709,25 @@
                             "voice_hint": "Do we need a follow-up appointment?",
                             "voice_blind": "Do we need ___?"
                         },
+                        "correct": "o1",
+                        "options": [
+                            {
+                                "id": "o1",
+                                "text": "Если боль не пройдёт через семь дней"
+                            },
+                            {
+                                "id": "o2",
+                                "text": "Верх или низ спины"
+                            },
+                            {
+                                "id": "o3",
+                                "text": "Завтра утром"
+                            },
+                            {
+                                "id": "o4",
+                                "text": "Через год"
+                            }
+                        ],
                         "exchange": {
                             "ref": "x8",
                             "kind": "ask",
@@ -5774,66 +5753,7 @@
                             "ref": "x8",
                             "audio": {
                                 "ref": "x8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0110",
-                                "duration_ms": 2660,
-                                "voice": "partner"
-                            },
-                            "text_native": "Только если через неделю ещё будет болеть.",
-                            "text_target": "Only if it still hurts after one week."
-                        }
-                    },
-                    "result": null,
-                    "attempts": 0,
-                    "response": null,
-                    "unit_kind": "exchange",
-                    "unit_ref": "x8",
-                    "source_day_id": null,
-                    "answered_at": null,
-                    "returns": false
-                },
-                {
-                    "id": "ulid-0111",
-                    "stage": "dialogue",
-                    "position": 15,
-                    "kind": "dialogue_partner",
-                    "unit": {
-                        "kind": "exchange",
-                        "ref": "x8"
-                    },
-                    "source": "today",
-                    "source_day": null,
-                    "retry_of": null,
-                    "payload": {
-                        "correct": "o1",
-                        "options": [
-                            {
-                                "id": "o1",
-                                "text": "Если боль не пройдёт через семь дней"
-                            },
-                            {
-                                "id": "o2",
-                                "text": "Верх или низ спины"
-                            },
-                            {
-                                "id": "o3",
-                                "text": "Завтра утром"
-                            },
-                            {
-                                "id": "o4",
-                                "text": "Через год"
-                            }
-                        ],
-                        "exchange": {
-                            "ref": "x8",
-                            "kind": "ask",
-                            "step": 8
-                        },
-                        "scene_id": "ulid-0003",
-                        "partner_line": {
-                            "ref": "x8",
-                            "audio": {
-                                "ref": "x8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0110",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0109",
                                 "duration_ms": 2660,
                                 "voice": "partner"
                             },
@@ -5860,7 +5780,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "ulid-0112",
+                    "id": "ulid-0110",
                     "stage": "listen",
                     "position": 1,
                     "kind": "listen_dialogue",
@@ -6073,7 +5993,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x8",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0110",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0109",
                                     "duration_ms": 2660,
                                     "voice": "partner"
                                 },
@@ -6095,7 +6015,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0113",
+                    "id": "ulid-0111",
                     "stage": "listen",
                     "position": 2,
                     "kind": "listen_question",
@@ -6143,7 +6063,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0114",
+                    "id": "ulid-0112",
                     "stage": "listen",
                     "position": 3,
                     "kind": "listen_question",
@@ -6191,7 +6111,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0115",
+                    "id": "ulid-0113",
                     "stage": "listen",
                     "position": 4,
                     "kind": "listen_question",
@@ -6239,7 +6159,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0116",
+                    "id": "ulid-0114",
                     "stage": "listen",
                     "position": 5,
                     "kind": "listen_review",
@@ -6452,7 +6372,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x8",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0110",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0109",
                                     "duration_ms": 2660,
                                     "voice": "partner"
                                 },
@@ -6497,7 +6417,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0117",
+                    "id": "ulid-0115",
                     "stage": "listen",
                     "position": 6,
                     "kind": "listen_predict",
@@ -6513,15 +6433,39 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Только если через неделю ещё будет болеть."
+                                "ref": "x6",
+                                "audio": {
+                                    "ref": "x6",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0103",
+                                    "duration_ms": 2590,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Ему нужен покой и грелка.",
+                                "text_target": "He should rest and use a heating pad."
                             },
                             {
                                 "id": "o2",
-                                "text": "Похоже на растяжение мышцы, так что ему нужен покой и грелка."
+                                "ref": "x8",
+                                "audio": {
+                                    "ref": "x8",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0109",
+                                    "duration_ms": 2660,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Только если через неделю ещё будет болеть.",
+                                "text_target": "Only if it still hurts after one week."
                             },
                             {
                                 "id": "o3",
-                                "text": "Нет, при растяжении мышцы рентген не нужен."
+                                "ref": "x7",
+                                "audio": {
+                                    "ref": "x7",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0107",
+                                    "duration_ms": 3290,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
+                                "text_target": "No, an X-ray is not needed for a muscle strain."
                             }
                         ],
                         "exchange": {
@@ -6563,7 +6507,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0118",
+                    "id": "ulid-0116",
                     "stage": "listen",
                     "position": 7,
                     "kind": "listen_predict",
@@ -6579,15 +6523,39 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Похоже на растяжение мышцы, так что ему нужен покой и грелка."
+                                "ref": "x7",
+                                "audio": {
+                                    "ref": "x7",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0107",
+                                    "duration_ms": 3290,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
+                                "text_target": "No, an X-ray is not needed for a muscle strain."
                             },
                             {
                                 "id": "o2",
-                                "text": "Нет, при растяжении мышцы рентген не нужен."
+                                "ref": "x6",
+                                "audio": {
+                                    "ref": "x6",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0103",
+                                    "duration_ms": 2590,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Ему нужен покой и грелка.",
+                                "text_target": "He should rest and use a heating pad."
                             },
                             {
                                 "id": "o3",
-                                "text": "Только если через неделю ещё будет болеть."
+                                "ref": "x8",
+                                "audio": {
+                                    "ref": "x8",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0109",
+                                    "duration_ms": 2660,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Только если через неделю ещё будет болеть.",
+                                "text_target": "Only if it still hurts after one week."
                             }
                         ],
                         "exchange": {
@@ -6611,7 +6579,7 @@
                             "ref": "x8",
                             "audio": {
                                 "ref": "x8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0110",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0109",
                                 "duration_ms": 2660,
                                 "voice": "partner"
                             },
@@ -6629,7 +6597,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0119",
+                    "id": "ulid-0117",
                     "stage": "listen",
                     "position": 8,
                     "kind": "listen_pace",
@@ -6673,7 +6641,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0120",
+                    "id": "ulid-0118",
                     "stage": "listen",
                     "position": 9,
                     "kind": "listen_number",
@@ -6690,7 +6658,7 @@
                             "role": "partner",
                             "audio": {
                                 "ref": "x8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0110",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0109",
                                 "duration_ms": 2660,
                                 "voice": "partner"
                             },
@@ -6706,11 +6674,11 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Раньше"
+                                "text": "Два дня"
                             },
                             {
                                 "id": "o2",
-                                "text": "Сегодня"
+                                "text": "Неделе"
                             },
                             {
                                 "id": "o3",
@@ -6737,7 +6705,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "ulid-0121",
+                    "id": "ulid-0119",
                     "stage": "speak",
                     "position": 1,
                     "kind": "speak_answer",
@@ -6850,7 +6818,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0122",
+                    "id": "ulid-0120",
                     "stage": "speak",
                     "position": 2,
                     "kind": "speak_answer",
@@ -6963,7 +6931,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0123",
+                    "id": "ulid-0121",
                     "stage": "speak",
                     "position": 3,
                     "kind": "speak_answer",
@@ -7076,7 +7044,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0124",
+                    "id": "ulid-0122",
                     "stage": "speak",
                     "position": 4,
                     "kind": "speak_answer",
@@ -7143,7 +7111,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0125",
+                    "id": "ulid-0123",
                     "stage": "speak",
                     "position": 5,
                     "kind": "speak_answer",
@@ -7256,7 +7224,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0126",
+                    "id": "ulid-0124",
                     "stage": "speak",
                     "position": 6,
                     "kind": "speak_answer",
@@ -7369,7 +7337,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0127",
+                    "id": "ulid-0125",
                     "stage": "speak",
                     "position": 7,
                     "kind": "speak_echo",
@@ -7412,46 +7380,46 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0128",
+                    "id": "ulid-0126",
                     "stage": "speak",
                     "position": 8,
                     "kind": "speak_retell",
                     "unit": {
                         "kind": "exchange",
-                        "ref": "x1"
+                        "ref": "x8"
                     },
                     "source": "today",
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "judge": true,
-                        "reveal": {
-                            "text_native": "Где болит: вверху спины или в пояснице?",
-                            "text_target": "Where does it hurt: his upper back or his lower back?"
-                        },
                         "exchange": {
-                            "ref": "x1",
-                            "kind": "answer",
-                            "step": 1
+                            "ref": "x8",
+                            "kind": "ask",
+                            "step": 8
+                        },
+                        "own_line": {
+                            "key": "Do we need",
+                            "ref": "x8b",
+                            "audio": {
+                                "ref": "x8b",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                                "duration_ms": 2450,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p6",
+                            "text_native": "Нам нужно прийти на повторный приём?",
+                            "text_target": "Do we need a follow-up appointment?",
+                            "filler_index": 1
                         },
                         "scene_id": "ulid-0003",
-                        "partner_line": {
-                            "ref": "x1",
-                            "audio": {
-                                "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0089",
-                                "duration_ms": 3710,
-                                "voice": "partner"
-                            },
-                            "text_native": "Где болит: вверху спины или в пояснице?",
-                            "text_target": "Where does it hurt: his upper back or his lower back?"
-                        }
+                        "coverage_min": 0.7,
+                        "expected_text": "Do we need a follow-up appointment?"
                     },
                     "result": null,
                     "attempts": 0,
                     "response": null,
                     "unit_kind": "exchange",
-                    "unit_ref": "x1",
+                    "unit_ref": "x8",
                     "source_day_id": null,
                     "answered_at": null,
                     "returns": false
@@ -7460,7 +7428,7 @@
         }
     ],
     "metrics": {
-        "cards_total": 85,
+        "cards_total": 83,
         "minutes_spent": 0
     },
     "program": [
@@ -8233,7 +8201,7 @@
                         "partner": {
                             "text": "Only if it still hurts after one week.",
                             "translation": "Только если через неделю ещё будет болеть.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0110"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0109"
                         },
                         "learner": {
                             "text": "Do we need a follow-up appointment?",

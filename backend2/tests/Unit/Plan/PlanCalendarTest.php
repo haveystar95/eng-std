@@ -33,11 +33,15 @@ it('refuses a plan outside one to ten days', function () {
         ->and(fn () => PlanCalendar::layout(11))->toThrow(InvalidArgumentException::class);
 });
 
-it('counts the days until the event and clamps them to the plan range', function () {
+// Canon (наряд BACK-TAILS-1 §3.4, docs/plan-v2.md §5): «день события — учебный», the same day «догоняем» counts when it
+// opens the days left one after another. Catches the two readings drifting apart again: a plan laid out one day shorter
+// than the calendar it is then opened against — the learner asked for four days before Friday's interview, was given
+// three, and Friday itself had room for the fourth.
+it('counts the days up to and including the event, and clamps them to the plan range', function () {
     $today = new DateTimeImmutable('2026-09-10');
 
-    expect(PlanCalendar::daysUntil($today, new DateTimeImmutable('2026-09-13')))->toBe(3)
-        // The event's own day is not a study day; today alone is still one day.
+    expect(PlanCalendar::daysUntil($today, new DateTimeImmutable('2026-09-13')))->toBe(4)
+        // The event today: that day is the one study day there is room for.
         ->and(PlanCalendar::daysUntil($today, new DateTimeImmutable('2026-09-10')))->toBe(1)
         ->and(PlanCalendar::daysUntil($today, new DateTimeImmutable('2026-09-01')))->toBe(1)
         ->and(PlanCalendar::daysUntil($today, new DateTimeImmutable('2026-12-01')))->toBe(10);

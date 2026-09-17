@@ -38,7 +38,9 @@ final readonly class DayPace
         'phrase_own_slot' => 25,
         'dialogue_partner' => 15,
         'dialogue_answer' => 30,
-        'dialogue_ask' => 30,
+        // The ask says a line AND asks the exchange's check (наряд BACK-TAILS-1 §1.5): the seconds of the two cards
+        // it was made of, 30 + 15.
+        'dialogue_ask' => 45,
         'dialogue_rescue' => 15,
         'listen_dialogue' => 110,
         'listen_question' => 12,

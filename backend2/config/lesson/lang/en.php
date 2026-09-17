@@ -23,6 +23,9 @@ return [
     // The writing a reading of the target is spelled in — read only when this is the learner's language.
     'script' => null,
 
+    // One letter of that writing, matched alone — a native-side key (наряд BACK-TAILS-1 §3.2).
+    'script_letters' => null,
+
     // The marks a sentence ends with, and what each says. «Does it end with a question?», «how many
     // sentences?», «does the native frame end the way the target frame ends?» are asked with these.
     'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'],
@@ -62,6 +65,9 @@ return [
 
     // Time words of the learner's language, for «is this answer a number or a time» — a native-side key.
     'time_pattern' => null,
+
+    // The units an amount is counted in — a native-side key: what «Поймай число» may offer as an option.
+    'amount_pattern' => null,
 
     // The prompt's STOP LIST (numbers, family, time words, colours, be / have / go) and plain words a learner
     // knows at any level of the plan: not vocabulary.

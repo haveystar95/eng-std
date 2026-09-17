@@ -117,7 +117,9 @@ return [
         'phrase_own_slot' => 25,
         'dialogue_partner' => 15,
         'dialogue_answer' => 30,
-        'dialogue_ask' => 30,
+        // The ask carries the exchange's check too since наряд BACK-TAILS-1 §1.5 — the two cards merged, and so do
+        // their seconds: 30 said aloud + 15 tapped, exactly what `dialogue_ask` and `dialogue_partner` cost apart.
+        'dialogue_ask' => 45,
         'dialogue_rescue' => 15,
         'listen_dialogue' => 110,
         'listen_question' => 12,

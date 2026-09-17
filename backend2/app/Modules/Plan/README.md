@@ -194,7 +194,7 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v1`; `lesson_day.v4.6`
+  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v2`; `lesson_day.v4.6`
   and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
@@ -215,7 +215,7 @@ reads plan tables.
   where `used_in` says), else it fails `fatal: <codes>`. A failed lesson is asked for again only by the learner's
   retry — no open, close, reschedule or extension rebuilds it. A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
-  table under its own prompt version (`slot_judge.v1`) and has that one code only: it judges a learner's attempt,
+  table under its own prompt version (`slot_judge.v2`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene.
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN), `plan:repair-card`
   (P2R by hand — Presentation/Console).

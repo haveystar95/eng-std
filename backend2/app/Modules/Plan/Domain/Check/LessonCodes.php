@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.7`; наряды GEN-2a, GEN-2b и его доработка, GEN-3) — fifty-seven.
- * Every breach is counted by code; nine of them are fatal — the day is not dealt until a repair takes their card
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.7`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
+ * BACK-TAILS-1) — fifty-eight.
+ * Every breach is counted by code; TEN of them are fatal — the day is not dealt until a repair takes their card
  * ({@see LessonGate}) — and the other 48 are warnings: counted and kept. One code is not the validator's but the seam
  * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}). Six codes read the story
  * so far or the day as a whole (GEN-3): a word or a frame an earlier day taught, a frame whose native pattern an earlier
@@ -38,6 +39,9 @@ final class LessonCodes
     public const LISTENING_SHAPE = 'listening.shape';
 
     public const PRONUNCIATION_SCRIPT = 'pronunciation.script';
+
+    /** A reading spelled with the LETTERS of another writing — «ֆоутoуз» (наряд BACK-TAILS-1 §3.2). Fatal. */
+    public const PRONUNCIATION_FOREIGN_SCRIPT = 'pronunciation.foreign_script';
 
     // Frames.
     public const FRAME_COUNT = 'frame.count';
@@ -161,7 +165,7 @@ final class LessonCodes
     {
         return [
             self::DIALOGUE_COUNT, self::VOCAB_COUNT, self::EXCHANGE_SHAPE, self::EXCHANGE_SECOND_QUESTION, self::EXCHANGE_REPEATS,
-            self::CHECK_SHAPE, self::LISTENING_SHAPE, self::PRONUNCIATION_SCRIPT,
+            self::CHECK_SHAPE, self::LISTENING_SHAPE, self::PRONUNCIATION_SCRIPT, self::PRONUNCIATION_FOREIGN_SCRIPT,
             self::FRAME_COUNT, self::FRAME_UNUSED, self::FRAME_TOO_LONG, self::FRAME_NO_SLOT_SHARE,
             self::FRAME_NATIVE_ALTERNATIVES, self::FRAME_NO_END_PUNCT, self::FRAME_NATIVE_PUNCT, self::FRAME_UNRESOLVED_PRONOUN,
             self::FRAME_NATIVE_AGREEMENT, self::FRAME_TWIN, self::FRAME_ADJACENT_REPEAT,

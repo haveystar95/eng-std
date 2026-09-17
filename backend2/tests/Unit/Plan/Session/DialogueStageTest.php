@@ -107,8 +107,8 @@ function s1dlgCorrectText(array $payload): string
 }
 
 // D-17 (canvas 33-6), разд. 2: answer → partner, answer; the rescue right after x5 stands between x5's two cards;
-// ask → ask, partner.
-it('deals the visit in its order — x1..x4 partner and answer, x5 partner, x6 rescue, x5 answer, x7 and x8 ask then partner', function () {
+// ask → ONE card, `dialogue_ask`, which carries the exchange's check itself (наряд BACK-TAILS-1 §1.5, кадр 33-5).
+it('deals the visit in its order — x1..x4 partner and answer, x5 partner, x6 rescue, x5 answer, then x7 and x8 as one ask each', function () {
     $scene = s1dlgScene();
     $drafts = (new DialogueStage)->build($scene);
 
@@ -118,8 +118,8 @@ it('deals the visit in its order — x1..x4 partner and answer, x5 partner, x6 r
         'dialogue_partner:x3', 'dialogue_answer:x3',
         'dialogue_partner:x4', 'dialogue_answer:x4',
         'dialogue_partner:x5', 'dialogue_rescue:x6', 'dialogue_answer:x5',
-        'dialogue_ask:x7', 'dialogue_partner:x7',
-        'dialogue_ask:x8', 'dialogue_partner:x8',
+        'dialogue_ask:x7',
+        'dialogue_ask:x8',
     ]);
     foreach ($drafts as $draft) {
         expect($draft->unitKind)->toBe(UnitKind::Exchange)
@@ -136,12 +136,13 @@ it('deals the visit in its order — x1..x4 partner and answer, x5 partner, x6 r
         ->and((new DialogueStage)->build(s1dlgScene()))->toEqual($drafts);
 });
 
-// Canon 33-5: in an ask the learner speaks first and the partner's answer sounds after — the ask card, then the
-// partner card on that answer.
-it('deals an ask as the learner\'s own line first, then the partner\'s answer to understand', function () {
+// Canon 33-5 (наряд BACK-TAILS-1 §1.5): the learner speaks first, the partner's answer sounds with its text closed, and
+// the check of that exchange is asked ON THE SAME CARD — same keys, same names as `dialogue_partner`, same options and
+// same seed. Catches the check card coming back for an ask (one screen dealt as two) and the ask keeping the voice keys
+// while losing the check.
+it('deals an ask as one card: the learner\'s own line, the partner\'s answer, and the exchange\'s own check on it', function () {
     $drafts = (new DialogueStage)->build(s1dlgScene());
     $ask = s1dlgCard($drafts, 'dialogue_ask', 'x8')->payload;
-    $partner = s1dlgCard($drafts, 'dialogue_partner', 'x8')->payload;
 
     expect($ask['own_line'])->toBe([
         'ref' => 'x8b',
@@ -161,9 +162,37 @@ it('deals an ask as the learner\'s own line first, then the partner\'s answer to
         ])
         ->and($ask['frame']['ref'])->toBe('p6')
         ->and(s1dlgCard($drafts, 'dialogue_ask', 'x7')->payload['own_line']['filler_index'])->toBe(0)
-        ->and($partner['partner_line'])->toBe($ask['partner_line'])
-        ->and($partner['question_native'])->toBe('Когда нужно прийти снова?')
-        ->and(s1dlgCorrectText($partner))->toBe('Если боль не пройдёт через семь дней');
+        // The check rides on the ask itself, under the names `dialogue_partner` uses.
+        ->and($ask['question_native'])->toBe('Когда нужно прийти снова?')
+        ->and(s1dlgCorrectText($ask))->toBe('Если боль не пройдёт через семь дней')
+        ->and(array_column($ask['options'], 'id'))->toBe(['o1', 'o2', 'o3', 'o4'])
+        ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind->value === 'dialogue_partner' && $d->unitRef === 'x8'))->toBe([])
+        // The voice keys stay: it is still the card the learner says their line on.
+        ->and(array_keys($ask))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'coverage_min', 'question_native', 'options', 'correct']);
+});
+
+// Canon (наряд BACK-TAILS-1 §1.5, терпимость §6): «три ключа проверки приходят вместе или не приходят вовсе». Catches
+// an ask card dealt with a half-built check — a question with nothing to choose between — and an ask card lost
+// altogether because its check could not be built: the learner's own line is what that card is for.
+it('deals the ask without the three check keys when its check cannot be built, and never half of them', function () {
+    // The visit is the two asks alone, and x8's three options read alike — case and spaces aside, one option. The only
+    // other exchange is x7, and its right option is taken as the fourth, so x8 is left with two: the check is built.
+    $alike = static fn (Exchange $e): Exchange => $e->withCheck(new ExchangeCheck(
+        $e->check->textTarget, $e->check->textNative,
+        [new CheckOption('a', 'Через неделю'), new CheckOption('b', 'через неделю'), new CheckOption('c', ' ЧЕРЕЗ НЕДЕЛЮ ')],
+        0, $e->check->explanationNative,
+    ));
+    $two = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => [
+        s1dlgStep($x, 7)->withStep(1), $alike(s1dlgStep($x, 8))->withStep(2),
+    ]));
+    expect(array_keys(s1dlgCard($two, 'dialogue_ask', 'x2')->payload))->toContain('question_native');
+
+    // The ask ALONE: no other exchange to take a fourth option from, and its own three read as one — nothing to ask.
+    $alone = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => [$alike(s1dlgStep($x, 8))->withStep(1)]));
+    $ask = s1dlgCard($alone, 'dialogue_ask', 'x1')->payload;
+
+    expect(array_keys($ask))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'coverage_min'])
+        ->and(array_intersect(['question_native', 'options', 'correct'], array_keys($ask)))->toBe([]);
 });
 
 // Canon: a rescue is ONE card; the line not caught is the partner's line of the exchange before; the partner repeats.
@@ -203,7 +232,7 @@ it('deals a rescue once — inside the answer before it, at its own place after 
     $afterAsk = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => [
         s1dlgStep($x, 1), s1dlgStep($x, 7)->withStep(2), s1dlgStep($x, 6)->withStep(3),
     ]));
-    expect(s1dlgOrder($afterAsk))->toBe(['dialogue_partner:x1', 'dialogue_answer:x1', 'dialogue_ask:x2', 'dialogue_partner:x2', 'dialogue_rescue:x3'])
+    expect(s1dlgOrder($afterAsk))->toBe(['dialogue_partner:x1', 'dialogue_answer:x1', 'dialogue_ask:x2', 'dialogue_rescue:x3'])
         ->and(s1dlgCard($afterAsk, 'dialogue_rescue', 'x3')->payload['asked_line']['text_target'])->toBe('No, an X-ray is not needed for a muscle strain.')
         ->and(s1dlgCard($afterAsk, 'dialogue_rescue', 'x3')->payload['asked_line']['ref'])->toBe('x2');
 
@@ -227,12 +256,14 @@ it('deals no card for an exchange with one message, and does not pull a one-mess
         'dialogue_partner:x2', 'dialogue_answer:x2',
         'dialogue_partner:x4', 'dialogue_answer:x4',
         'dialogue_partner:x5', 'dialogue_answer:x5',
-        'dialogue_ask:x7', 'dialogue_partner:x7',
-        'dialogue_ask:x8', 'dialogue_partner:x8',
+        'dialogue_ask:x7',
+        'dialogue_ask:x8',
     ]);
 });
 
-it('deals only the partner card for an answer or an ask whose learner line stands on no frame of the scene', function () {
+// An ANSWER keeps its check card when the learner line stands on no frame; an ASK loses everything — the check lived on
+// the card the frame carries (наряд BACK-TAILS-1 §1.5).
+it('deals only the partner card for an answer on no frame, and nothing at all for such an ask', function () {
     $drafts = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => array_map(
         static fn (Exchange $e): Exchange => match ($e->step) {
             2 => s1dlgOnFrame($e, 'p99'),
@@ -248,8 +279,7 @@ it('deals only the partner card for an answer or an ask whose learner line stand
         'dialogue_partner:x3', 'dialogue_answer:x3',
         'dialogue_partner:x4', 'dialogue_answer:x4',
         'dialogue_partner:x5', 'dialogue_rescue:x6', 'dialogue_answer:x5',
-        'dialogue_partner:x7',
-        'dialogue_ask:x8', 'dialogue_partner:x8',
+        'dialogue_ask:x8',
     ]);
 });
 
@@ -354,9 +384,11 @@ it('keeps the exact keys of every dialogue card and of the pieces they show', fu
         ->and(array_keys($partner['partner_line']['audio']))->toBe($audio)
         ->and($partner['partner_line']['audio'])->toBe(['ref' => 'x2', 'voice' => 'partner', 'url' => null, 'duration_ms' => null]);
 
+    // The ask carries the three keys of the check after its own (наряд BACK-TAILS-1 §1.5); the answer does not.
     foreach ([s1dlgCard($drafts, 'dialogue_answer', 'x2'), s1dlgCard($drafts, 'dialogue_ask', 'x7')] as $card) {
         $p = $card->payload;
-        expect(array_keys($p))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'coverage_min'])
+        $voice = ['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'coverage_min'];
+        expect(array_keys($p))->toBe($card->kind->value === 'dialogue_ask' ? [...$voice, 'question_native', 'options', 'correct'] : $voice)
             ->and(array_keys($p['partner_line']))->toBe($line)
             ->and(array_keys($p['own_line']))->toBe(['ref', 'text_target', 'text_native', 'frame_ref', 'filler_index', 'key', 'audio'])
             ->and($p['own_line']['audio']['voice'])->toBe('learner')

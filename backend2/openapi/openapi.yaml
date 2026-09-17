@@ -2157,10 +2157,11 @@ paths:
             `dialogue_partner`, `listen_question`, `listen_predict`, `listen_number`) — all four:
             `passed`, `hinted`, `failed`, `skipped`;
           * spoken (`word_repeat`, `phrase_repeat`, `phrase_other_slot`, `dialogue_answer`,
-            `dialogue_ask`, `speak_echo`) — `passed`, `hinted`, `skipped`; the voice never `failed`:
+            `dialogue_ask`, `speak_echo`, `speak_retell`) — `passed`, `hinted`, `skipped`; the voice
+            never `failed`:
             two attempts without coverage are a skip — a lapse only on `phrase_repeat` and
             `phrase_other_slot` (SESSION-1d, п. 327: the copy and the return above), nothing on the rest;
-          * judged (`phrase_own_slot`, `speak_answer`, `speak_retell`) — only `skipped`: the pass is
+          * judged (`phrase_own_slot`, `speak_answer`) — only `skipped`: the pass is
             the judge's (`POST …/judge`), never the client's word;
           * walkthrough (`word_intro`, `phrase_intro`, `dialogue_rescue`, `listen_dialogue`,
             `listen_review`, `listen_pace`) — `passed` or `skipped`, never right or wrong.
@@ -2224,11 +2225,12 @@ paths:
       tags: [Plans]
       summary: «Судья окна» — the server's verdict on one spoken attempt
       description: >-
-        The one pass a client cannot write itself (наряд SESSION-1a, разд. 4). `phrase_own_slot`,
-        `speak_answer` and `speak_retell` are judged by MEANING: send what the recogniser heard
+        The one pass a client cannot write itself (наряд SESSION-1a, разд. 4). `phrase_own_slot` and
+        `speak_answer` are judged by MEANING: send what the recogniser heard
         (`heard` — present, and possibly empty: silence is an attempt too) and whether the frame was
         on screen before the attempt (`hinted`), and the server rules. Every other kind is 422
-        `plan_card_not_judged`.
+        `plan_card_not_judged` — `speak_retell` among them since наряд BACK-TAILS-1 §1.1: it says the
+        learner's own line back, and the client counts its coverage without the network.
 
 
         The code rules first, and for free: the words of the frame outside its slot must be covered
@@ -3494,7 +3496,7 @@ components:
         hinted_at: { type: [string, 'null'], maxLength: 40, description: 'Какая подсказка была открыта до ответа — почему итог `hinted`' }
         slot_value: { type: [string, 'null'], maxLength: 200, description: 'Что клиент считает сказанным в окне каркаса' }
         filler_index: { type: [integer, 'null'], minimum: 0, maximum: 9, description: 'Какое наполнение каркаса выбрано чипом' }
-        mode: { type: [string, 'null'], enum: [chips, tiles, voice_hint, voice_blind, null], description: 'В каком режиме карточка пройдена — чипы, плитки, голос по подсказке или вслепую' }
+        mode: { type: [string, 'null'], enum: [chips, tiles, voice_hint, voice_blind, rounds, null], description: 'В каком режиме карточка пройдена — чипы, плитки, голос по подсказке, вслепую или серией раундов (хвост SESSION-1b: фраза вслух по разным наполнениям в одной карточке)' }
         no_mic: { type: [boolean, 'null'], description: 'Микрофона не было — карточка пройдена без голоса' }
 
     PlanCardResponse:
@@ -3528,7 +3530,7 @@ components:
         reason_native: { type: [string, 'null'], description: 'Одна фраза на родном, чего не хватило; null при зачёте' }
         by: { type: string, enum: [code, model, unavailable], description: 'Кто вынес вердикт' }
         model: { type: [string, 'null'], description: 'Имя модели, если звали её' }
-        prompt_version: { type: [string, 'null'], description: 'Версия промта судьи — `slot_judge.v1`' }
+        prompt_version: { type: [string, 'null'], description: 'Версия промта судьи — `slot_judge.v2`' }
         cost_usd: { type: [string, 'null'], description: 'Цена вызова, шесть знаков после точки' }
         latency_ms: { type: [integer, 'null'], description: 'Сколько отвечала модель' }
         tokens_in: { type: [integer, 'null'] }
@@ -3678,6 +3680,21 @@ components:
       properties:
         id: { type: string, description: '`o1`…`o4` в порядке показа — этим же id назван верный' }
         text: { type: string, description: 'Что написано на варианте' }
+        audio: { $ref: '#/components/schemas/PlanCardAudio' }
+
+    PlanCardLineOption:
+      type: object
+      description: >-
+        Вариант, который есть РЕПЛИКА дня (наряд BACK-TAILS-1 §1.2, `listen_predict`): `id` вида `o1` в
+        показанном порядке, имя реплики, оба текста и звук. До ответа клиент даёт слушать и текстов не
+        показывает; верный назван в `correct` тем же `id`. Тексты цели у вариантов не совпадают между
+        собой без учёта регистра.
+      required: [id, ref, text_target, text_native, audio]
+      properties:
+        id: { type: string, description: '`o1`…`o3` в порядке показа — этим же id назван верный' }
+        ref: { type: string, description: 'Имя реплики визита — `x3` (агент) или `x3b` (ученик)' }
+        text_target: { type: string, description: 'Реплика на языке цели — показывают после ответа' }
+        text_native: { type: string, description: 'Её перевод — показывают после ответа' }
         audio: { $ref: '#/components/schemas/PlanCardAudio' }
 
     PlanCardPayloadWordIntro:
@@ -4092,8 +4109,19 @@ components:
       title: dialogue_ask
       additionalProperties: false
       description: >-
-        Спроси первым (33-5): ученик говорит, ответ партнёра звучит после. Данные те же, что у
-        `dialogue_answer` — по форме payload их не различить, различает `kind`.
+        Спроси первым (33-5): ученик говорит, ответ партнёра звучит после — и тут же проверка
+        понимания этого обмена (наряд BACK-TAILS-1 §1.5). Одна карточка, один экран: реплика ученика,
+        закрытый текст ответа агента, вопрос и четыре варианта, текст открывается после ответа.
+        Отдельной карточки проверки у ask-обменов больше нет. Голосовые ключи — как у
+        `dialogue_answer`; `question_native`, `options` и `correct` — те же имена и то же правило
+        состава, что у `dialogue_partner`. Итог карточки — голосовой (`passed` / `hinted` /
+        `skipped`); выбор варианта клиент зачитывает сам по `correct`.
+
+
+        Три ключа проверки приходят **вместе или не приходят вовсе**: у обмена, чью проверку не
+        собрать (варианты совпали по тексту, и выбирать не из чего), карточка раздаётся без них —
+        реплика ученика есть, а спрашивать нечего. Обязательными их не делает `required`: иначе
+        сервер отдавал бы payload мимо своей же схемы (терпимость сборки, `docs/plan-v2.md` §6).
       required: [scene_id, exchange, partner_line, own_line, frame, modes, coverage_min]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
@@ -4117,6 +4145,12 @@ components:
             voice_hint: { type: string, description: 'Своя реплика целиком — подсказка на экране' }
             voice_blind: { type: string, description: 'Каркас с пустым окном' }
         coverage_min: { type: number, description: 'Доля слов каркаса (без окна) для зачёта' }
+        question_native: { type: string, description: 'Вопрос проверки на родном — про ответ агента, звучащий на этой же карточке' }
+        options:
+          type: array
+          description: 'Четыре варианта на родном: три от проверки этого обмена и верный вариант самого дальнего обмена — правило `dialogue_partner`'
+          items: { $ref: '#/components/schemas/PlanCardOption' }
+        correct: { type: string, description: '`id` верного варианта' }
 
     PlanCardPayloadDialogueRescue:
       type: object
@@ -4212,7 +4246,11 @@ components:
       type: object
       title: listen_predict
       additionalProperties: false
-      description: 'Предскажи ответ (34-5): своя реплика-вопрос звучит и показана, ученик выбирает, что ответит партнёр. Реплику партнёра открывают после ответа.'
+      description: >-
+        «Что прозвучит в ответ?» (34-5, наряд BACK-TAILS-1 §1.2): своя реплика-вопрос звучит и
+        показана, ученик выбирает на СЛУХ, что ответит агент. Варианты — не строки на родном, а
+        реплики дня: у каждого `text_target`, `text_native` и звук. До ответа клиент даёт слушать и
+        текстов не показывает, после — открывает оба. Неверно — окончательно, без копии.
       required: [scene_id, exchange, own_line, options, correct, partner_line]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
@@ -4220,8 +4258,8 @@ components:
         own_line: { $ref: '#/components/schemas/PlanCardLine' }
         options:
           type: array
-          description: 'Три варианта на родном — перевод ответа партнёра этого обмена и переводы двух других его реплик той же формы (вопрос к вопросу, утверждение к утверждению; не хватает — любые); неверно — окончательно, без копии'
-          items: { $ref: '#/components/schemas/PlanCardOption' }
+          description: 'Три реплики агента: та, что реально звучит в ответ (верная), и две другие того же рода — отвечающие ученику (обмены `ask` и `rescue`); таких не хватает — добор репликами той же формы, потом любыми'
+          items: { $ref: '#/components/schemas/PlanCardLineOption' }
         correct: { type: string, description: '`id` верного варианта' }
         partner_line: { $ref: '#/components/schemas/PlanCardLine' }
 
@@ -4244,7 +4282,11 @@ components:
       type: object
       title: listen_number
       additionalProperties: false
-      description: 'Число или время на слух (34-7): звучит реплика с числом, ученик выбирает его значение на родном. Зачёт у клиента по `correct`.'
+      description: >-
+        «Поймай число» (34-7): звучит реплика с числом, ученик выбирает его значение на родном. Зачёт
+        у клиента по `correct`. Варианты — только числа и количества дня (наряд BACK-TAILS-1 §1.3):
+        числительное или единица, в которой что-то считают («через неделю», «два дня»); «сегодня»,
+        «завтра», «раньше» — не числа и вариантами не бывают.
       required: [scene_id, line, span, options, correct]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
@@ -4257,7 +4299,7 @@ components:
           maxItems: 2
         options:
           type: array
-          description: 'Три значения на родном: верное и два других числа или времени этого дня'
+          description: 'Три значения на родном: верное и два других числа или количества этого дня'
           items: { $ref: '#/components/schemas/PlanCardOption' }
         correct: { type: string, description: '`id` верного варианта' }
 
@@ -4305,21 +4347,18 @@ components:
       title: speak_retell
       additionalProperties: false
       description: >-
-        Перескажи своими словами (35-4): реплика звучит, текст скрыт, ученик пересказывает её на
-        родном. Зачёт ТОЛЬКО сервером (`judge: true`); текст открывают после вердикта.
-      required: [scene_id, exchange, partner_line, reveal, judge]
+        «Повтори свою реплику» (35-4, наряд BACK-TAILS-1 §1.1): звучит СВОЯ реплика ученика, её текст
+        цели закрыт, перевод оставлен подсказкой смысла — ученик говорит её вслух, и текст цели
+        открывается после попытки. Зачёт у клиента: покрытие сказанного целиком по `coverage_min`,
+        без сети. Сервер эту карточку не судит — `POST …/judge` на неё отвечает 422
+        `plan_card_not_judged`.
+      required: [scene_id, exchange, own_line, expected_text, coverage_min]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange: { $ref: '#/components/schemas/PlanCardExchange' }
-        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
-        reveal:
-          type: object
-          description: 'Что показать после вердикта'
-          required: [text_target, text_native]
-          properties:
-            text_target: { type: string, description: 'Реплика на языке цели' }
-            text_native: { type: string, description: 'Её перевод' }
-        judge: { type: boolean, description: 'Всегда true: зачёт этой карточки пишет сервер' }
+        own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
+        expected_text: { type: string, description: 'Что должно прозвучать — своя реплика целиком' }
+        coverage_min: { type: number, description: 'Доля её слов для зачёта — 1.0 или 0.7' }
 
     PlanDayCards:
       type: object

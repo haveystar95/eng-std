@@ -17,12 +17,14 @@ declare(strict_types=1);
 */
 return [
     'script' => null,
+    'script_letters' => null,
     'sentence_ends' => null,
     'question_word_order' => null,
     'function_words' => null,
     'word_forms' => null,
     'number_pattern' => null,
     'time_pattern' => null,
+    'amount_pattern' => null,
     'everyday_words' => null,
     'ordinary_heads' => null,
     'closers' => null,

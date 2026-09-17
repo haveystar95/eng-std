@@ -54,7 +54,7 @@ final class LrpCapturingCatalog implements ContentModelCatalog
         return [];
     }
 
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null): ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ContentModelPort
     {
         $catalog = $this;
 

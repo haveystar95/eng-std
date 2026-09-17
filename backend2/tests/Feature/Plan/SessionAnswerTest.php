@@ -168,12 +168,11 @@ it('refuses a result the kind cannot have with 422 plan_card_result_not_allowed,
 });
 
 // Canon (разд. 3): «Пропустить» → skipped обычным POST — the one thing the client writes on a judged card.
-it('lets a judged card be given up — skipped on phrase_own_slot, speak_answer and speak_retell — and a voice be passed with a hint', function () {
+it('lets a judged card be given up — skipped on phrase_own_slot and speak_answer — and a voice be passed with a hint', function () {
     $day = s1aDay($this);
     $given = [
         s1aDeal($day, CardKind::PhraseOwnSlot, UnitKind::Phrase, 'p2', 1),
         s1aDeal($day, CardKind::SpeakAnswer, UnitKind::Exchange, 'x1', 1),
-        s1aDeal($day, CardKind::SpeakRetell, UnitKind::Exchange, 'x3', 2),
     ];
     foreach ($given as $card) {
         s1aAnswer($this, $day, $card->id()->value, 'skipped', 2)->assertOk()
@@ -182,9 +181,16 @@ it('lets a judged card be given up — skipped on phrase_own_slot, speak_answer 
             ->assertJsonPath('data.requeued', null);
     }
     $voice = s1aDeal($day, CardKind::DialogueAsk, UnitKind::Exchange, 'x4', 1);
+    // «Повтори свою реплику» is a voice card now (наряд BACK-TAILS-1 §1.1): the client passes it itself.
+    $retell = s1aDeal($day, CardKind::SpeakRetell, UnitKind::Exchange, 'x3', 2);
 
     s1aAnswer($this, $day, $voice->id()->value, 'hinted')->assertOk()->assertJsonPath('data.card.result', 'hinted');
-    expect(DB::table('day_cards')->where('day_id', $day['dayId'])->where('result', 'skipped')->count())->toBe(3);
+    s1aAnswer($this, $day, $retell->id()->value, 'passed', 2)->assertOk()
+        ->assertJsonPath('data.card.result', 'passed')
+        ->assertJsonPath('data.requeued', null);
+    s1aAnswer($this, $day, s1aDeal($day, CardKind::SpeakRetell, UnitKind::Exchange, 'x5', 3)->id()->value, 'failed')
+        ->assertStatus(422)->assertJsonPath('code', 'plan_card_result_not_allowed');
+    expect(DB::table('day_cards')->where('day_id', $day['dayId'])->where('result', 'skipped')->count())->toBe(2);
 });
 
 // Canon (D-30): «response: heard, hinted_at, slot_value, filler_index, mode, no_mic — только эти ключи». Catches a
@@ -208,9 +214,14 @@ it('keeps what the answer left — only the keys of the contract — and gives i
         ->and($cards[$silent->id()->value]['response'])->toBeNull();
 
     $other = s1aDeal($day, CardKind::PhraseRepeat, UnitKind::Phrase, 'p2', 3);
-    s1aAnswer($this, $day, $other->id()->value, 'passed', 1, ['mode' => 'shouting'])->assertStatus(422)->assertJsonValidationErrors(['response.mode']);
-    s1aAnswer($this, $day, $other->id()->value, 'passed', 1, ['filler_index' => 12])->assertStatus(422)->assertJsonValidationErrors(['response.filler_index']);
-    s1aAnswer($this, $day, $other->id()->value, 'passed', 1, ['heard' => str_repeat('a', 1001)])->assertStatus(422)->assertJsonValidationErrors(['response.heard']);
+    // Хвост SESSION-1b (§15.1 п. 12), закрыт нарядом BACK-TAILS-1 §2.1: the client walks a phrase said aloud in a series
+    // of rounds and could not say so — the server refused the word and the mode was lost.
+    s1aAnswer($this, $day, $other->id()->value, 'passed', 2, ['mode' => 'rounds'])->assertOk()
+        ->assertJsonPath('data.card.response.mode', 'rounds');
+    $third = s1aDeal($day, CardKind::PhraseRepeat, UnitKind::Phrase, 'p3', 4);
+    s1aAnswer($this, $day, $third->id()->value, 'passed', 1, ['mode' => 'shouting'])->assertStatus(422)->assertJsonValidationErrors(['response.mode']);
+    s1aAnswer($this, $day, $third->id()->value, 'passed', 1, ['filler_index' => 12])->assertStatus(422)->assertJsonValidationErrors(['response.filler_index']);
+    s1aAnswer($this, $day, $third->id()->value, 'passed', 1, ['heard' => str_repeat('a', 1001)])->assertStatus(422)->assertJsonValidationErrors(['response.heard']);
 });
 
 // Canon (разд. 3; D-06): «неверно первый раз → failed и копия в конец этапа (requeued, retry_of); второй раз → returns».

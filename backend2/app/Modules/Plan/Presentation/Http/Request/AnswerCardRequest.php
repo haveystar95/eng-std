@@ -17,8 +17,12 @@ use Illuminate\Validation\Rule;
  */
 final class AnswerCardRequest extends FormRequest
 {
-    /** The modes a card can be walked in — the client's choice by level and «Без подсказок» (разд. 0). */
-    public const MODES = ['chips', 'tiles', 'voice_hint', 'voice_blind'];
+    /**
+     * The modes a card can be walked in — the client's choice by level and «Без подсказок» (разд. 0), plus `rounds`
+     * (хвост SESSION-1b, §15.1 п. 12): a phrase said aloud twice in one card, once per filler, which the client
+     * already walks and could not name, because the server refused the word.
+     */
+    public const MODES = ['chips', 'tiles', 'voice_hint', 'voice_blind', 'rounds'];
 
     /** @var list<string> the keys of `response` that are stored */
     private const RESPONSE_KEYS = ['heard', 'hinted_at', 'slot_value', 'filler_index', 'mode', 'no_mic'];

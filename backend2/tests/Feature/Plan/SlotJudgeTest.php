@@ -34,9 +34,10 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Sleep;
 
 /**
- * THE SLOT JUDGE OVER HTTP (`POST …/cards/{card}/judge`, наряд SESSION-1a, разд. 4): the code before the model, the model
- * only for the slot or the retelling, the code's word when the model is silent or the day's cap is spent — and the
- * verdict written on the card without a transaction held across the call.
+ * THE SLOT JUDGE OVER HTTP (`POST …/cards/{card}/judge`, наряд SESSION-1a, разд. 4; наряд BACK-TAILS-1 §1.1): the code
+ * before the model, the model only for the slot, the code's word when the model is silent or the day's cap is spent —
+ * and the verdict written on the card without a transaction held across the call. Two kinds are judged and no more:
+ * `speak_retell` says the learner's own line back and the client counts its coverage.
  *
  * The cards are inserted by the test with the payloads the registry deals (§4 of the SPEC), so the judge is checked
  * against the frames of the fake lesson whatever the assembly deals around them.
@@ -148,22 +149,6 @@ function sjOwnSlot(): array
     ];
 }
 
-/** @return array<string, mixed> `speak_retell` of the partner's long line of exchange 5 */
-function sjRetell(): array
-{
-    return [
-        'exchange' => ['ref' => 'x5', 'step' => 5, 'kind' => 'answer'],
-        'partner_line' => [
-            'ref' => 'x5',
-            'text_target' => 'It looks like a muscle strain, so he should rest and use a heating pad.',
-            'text_native' => 'Похоже на растяжение мышцы, так что ему нужен покой и грелка.',
-            'audio' => sjAudio('x5'),
-        ],
-        'reveal' => ['text_target' => 'It looks like a muscle strain, so he should rest and use a heating pad.', 'text_native' => 'Похоже на растяжение мышцы, так что ему нужен покой и грелка.'],
-        'judge' => true,
-    ];
-}
-
 /** @return \Illuminate\Testing\TestResponse<\Symfony\Component\HttpFoundation\Response> */
 function sjJudge(object $ctx, array $day, string $cardId, ?string $heard, bool $hinted = false, int $number = 1): Illuminate\Testing\TestResponse
 {
@@ -191,7 +176,7 @@ function sjSorted(array $value): array
 function sjUnavailableHits(): int
 {
     return (int) DB::table('plan_check_counters')
-        ->where('prompt_version', 'slot_judge.v1')->where('check_name', 'judge.unavailable')->where('action', 'counted')
+        ->where('prompt_version', 'slot_judge.v2')->where('check_name', 'judge.unavailable')->where('action', 'counted')
         ->value('hits');
 }
 
@@ -242,9 +227,9 @@ function sjJudgeCatalog(ContentModelPort $port): ContentModelCatalog
             return [$this->port];
         }
 
-        public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null): ?ContentModelPort
+        public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ?ContentModelPort
         {
-            $this->asked[] = ['provider' => $provider, 'model' => $model, 'purpose' => $purpose, 'timeout' => $timeoutSeconds, 'retries' => $retries];
+            $this->asked[] = ['provider' => $provider, 'model' => $model, 'purpose' => $purpose, 'timeout' => $timeoutSeconds, 'retries' => $retries, 'journal' => $journalPurpose];
 
             return $this->port;
         }
@@ -365,8 +350,7 @@ it('asks the model about a value the lesson does not know — with the inputs of
         ->and($day['model']->slotJudgeCalls)->toBe(1);
 
     $request = $day['model']->slotJudgeRequests[0];
-    expect($request->task)->toBe('answer')
-        ->and($request->targetLanguage)->toBe('English')
+    expect($request->targetLanguage)->toBe('English')
         ->and($request->nativeLanguage)->toBe('Russian')
         ->and($request->level)->toBe('intermediate')
         ->and($request->partnerLine)->toBe('Where does it hurt: his upper back or his lower back?')
@@ -382,7 +366,7 @@ it('asks the model about a value the lesson does not know — with the inputs of
         'slot_value' => 'left knee',
         'hinted' => true,
         'judge' => [
-            'accepted' => true, 'reason_native' => null, 'by' => 'model', 'model' => FakePlanModel::MODEL, 'prompt_version' => 'slot_judge.v1',
+            'accepted' => true, 'reason_native' => null, 'by' => 'model', 'model' => FakePlanModel::MODEL, 'prompt_version' => 'slot_judge.v2',
             'cost_usd' => '0.000000', 'latency_ms' => 1, 'tokens_in' => 350, 'tokens_out' => 40,
         ],
     ]));
@@ -445,51 +429,6 @@ it('accepts on the code\'s word when the model is silent or off the shape, the w
         ->and(sjUnavailableHits())->toBe(2);
 });
 
-it('always asks the model about a retelling — no frame, no examples — and never keeps a slot; a silent model accepts it', function () {
-    $day = sjOpenDay($this, static function (SlotJudgeRequest $r, int $call): array {
-        if ($call === 2) {
-            throw new RuntimeException('silence');
-        }
-
-        return ['accepted' => true, 'slot_value' => 'растяжение', 'reason_native' => null];
-    });
-    $card = sjDeal($day, CardKind::SpeakRetell, sjRetell(), UnitKind::Exchange, 'x5');
-    $second = sjDeal($day, CardKind::SpeakRetell, sjRetell(), UnitKind::Exchange, 'x5');
-
-    // Even a retelling that «covers» nothing by code goes to the model: there is no frame to cover.
-    $data = sjJudge($this, $day, $card, 'это растяжение, нужен покой и грелка', hinted: true)->assertOk()->json('data');
-    expect($data)->toMatchArray(['accepted' => true, 'slot_value' => null, 'reason_native' => null, 'result' => 'hinted', 'attempts' => 1])
-        ->and(sjStored($card)['judge']['by'])->toBe('model')
-        ->and(sjStored($card)['slot_value'])->toBeNull();
-
-    $request = $day['model']->slotJudgeRequests[0];
-    expect($request->task)->toBe('retell')
-        ->and($request->partnerLine)->toBe('It looks like a muscle strain, so he should rest and use a heating pad.')
-        ->and($request->partnerLineNative)->toBe('Похоже на растяжение мышцы, так что ему нужен покой и грелка.')
-        ->and([$request->pattern, $request->patternNative, $request->slotHint, $request->exampleValues])->toBe(['', '', '', ''])
-        ->and($request->heard)->toBe('это растяжение, нужен покой и грелка');
-
-    $silent = sjJudge($this, $day, $second, 'что-то про спину')->assertOk()->json('data');
-    expect($silent)->toMatchArray(['accepted' => true, 'slot_value' => null, 'result' => 'passed'])
-        ->and(sjStored($second)['judge']['by'])->toBe('unavailable')
-        ->and($day['model']->slotJudgeCalls)->toBe(2)
-        ->and(sjUnavailableHits())->toBe(1);
-});
-
-it('refuses a retelling that was never said, by code, without spending a call', function () {
-    $day = sjOpenDay($this);
-    $card = sjDeal($day, CardKind::SpeakRetell, sjRetell(), UnitKind::Exchange, 'x5');
-
-    // The retell has no frame to cover, so silence would otherwise reach the degraded pass and be accepted for nothing.
-    $data = sjJudge($this, $day, $card, '')->assertOk()->json('data');
-
-    expect($data)->toMatchArray(['accepted' => false, 'slot_value' => null, 'result' => null, 'attempts' => 1])
-        ->and($data['reason_native'])->toBe('Я ничего не услышал — перескажи своими словами')
-        ->and(sjStored($card)['judge']['by'])->toBe('code')
-        ->and($day['model']->slotJudgeCalls)->toBe(0)
-        ->and(sjUnavailableHits())->toBe(0);
-});
-
 it('judges only the judged kinds, only an open card on a day in progress, only the learner\'s own plan', function () {
     $day = sjOpenDay($this);
     $choose = sjDeal($day, CardKind::WordChoose, [
@@ -499,10 +438,22 @@ it('judges only the judged kinds, only an open card on a day in progress, only t
         'correct' => 'o1',
     ], UnitKind::Word, 'v1');
     $answer = sjDeal($day, CardKind::SpeakAnswer, sjSpeakAnswer(), UnitKind::Exchange, 'x1');
+    $retell = sjDeal($day, CardKind::SpeakRetell, [
+        'exchange' => ['ref' => 'x5', 'step' => 5, 'kind' => 'answer'],
+        'own_line' => ['ref' => 'x5b', 'text_target' => 'It started two days ago.', 'text_native' => 'Началось два дня назад.', 'frame_ref' => 'p2', 'filler_index' => 0, 'key' => 'It started', 'audio' => sjAudio('x5b')],
+        'expected_text' => 'It started two days ago.',
+        'coverage_min' => 0.7,
+    ], UnitKind::Exchange, 'x5');
 
     sjJudge($this, $day, $choose, 'lower back')->assertStatus(422)
         ->assertJsonPath('code', 'plan_card_not_judged')
         ->assertJsonPath('meta.kind', 'word_choose');
+
+    // «Повтори свою реплику» left the judge with `speak_retell` itself (наряд BACK-TAILS-1 §1.1): a call on it would be
+    // a paid verdict on a coverage the client already counted.
+    sjJudge($this, $day, $retell, 'it started two days ago')->assertStatus(422)
+        ->assertJsonPath('code', 'plan_card_not_judged')
+        ->assertJsonPath('meta.kind', 'speak_retell');
 
     // The body: `heard` present (null is silence), `hinted` a boolean.
     $this->withHeader('Authorization', "Bearer {$day['token']}")
@@ -578,27 +529,27 @@ it('builds the call on the judge model with one attempt, its own timeout, the st
         judgeModel: 'gpt-5.4-mini',
         slotJudgeTimeout: 8,
     );
-    $request = new SlotJudgeRequest('answer', 'English', 'Russian', 'intermediate', 'Where?', 'Где?', 'It hurts in his ___.', 'У него болит ___.', 'где болит', 'neck; shoulder', 'It hurts in his knee');
+    $request = new SlotJudgeRequest('English', 'Russian', 'intermediate', 'Where?', 'Где?', 'It hurts in his ___.', 'У него болит ___.', 'где болит', 'neck; shoulder', 'It hurts in his knee');
     $reply = $builder->judgeSlot($request);
 
     $system = (new PlanPromptFiles)->slotJudgeSystem();
-    expect($catalog->asked)->toBe([['provider' => ProviderId::OpenAi, 'model' => 'gpt-5.4-mini', 'purpose' => 'plan', 'timeout' => 8, 'retries' => 1]])
+    expect($catalog->asked)->toBe([['provider' => ProviderId::OpenAi, 'model' => 'gpt-5.4-mini', 'purpose' => 'plan', 'timeout' => 8, 'retries' => 1, 'journal' => 'judge']])
         ->and($port->calls)->toHaveCount(1)
         ->and($port->calls[0]['prompt']->text)->toBe($system)
-        ->and($port->calls[0]['prompt']->version)->toBe('slot_judge.v1')
+        ->and($port->calls[0]['prompt']->version)->toBe('slot_judge.v2')
         ->and($port->calls[0]['prompt']->sha256)->toBe(hash('sha256', $system))
         ->and($port->calls[0]['prompt']->shape)->toBe(PromptShape::Full)
         ->and($port->calls[0]['schema'])->toBe(PlanSchemas::slotJudge())
         ->and($port->calls[0]['user'])->toBe((new PlanPromptFiles)->slotJudgeUser($request))
         ->and($reply->payload)->toBe(['accepted' => true, 'slot_value' => 'knee', 'reason_native' => null])
-        ->and($reply->promptVersion)->toBe('slot_judge.v1')
+        ->and($reply->promptVersion)->toBe('slot_judge.v2')
         ->and($reply->model)->toBe('gpt-5.4-mini-2026')
         ->and($reply->costUsd)->toBe('0.000150')
         ->and($reply->latencyMs)->toBe(812)
-        ->and($builder->slotJudgePromptVersion())->toBe('slot_judge.v1');
+        ->and($builder->slotJudgePromptVersion())->toBe('slot_judge.v2');
 
     Log::shouldHaveReceived('info')->withArgs(static fn (string $message, array $context): bool => $message === 'plan.slot_judge'
-        && $context === ['prompt_version' => 'slot_judge.v1', 'model' => 'gpt-5.4-mini-2026', 'task' => 'answer', 'tokens_in' => 420, 'tokens_out' => 18, 'cost_usd' => '0.000150', 'latency_ms' => 812])->once();
+        && $context === ['prompt_version' => 'slot_judge.v2', 'model' => 'gpt-5.4-mini-2026', 'tokens_in' => 420, 'tokens_out' => 18, 'cost_usd' => '0.000150', 'latency_ms' => 812])->once();
 });
 
 it('threads plan.slot_judge.timeout from config into the builder the container makes', function () {
@@ -622,7 +573,7 @@ it('lets a caller of the content catalogue ask for one attempt, and keeps the es
     config(['services.openai.api_key' => 'test-key']);
     Sleep::fake();
     Http::fake(['api.openai.com/*' => Http::response('busy', 503)]);
-    $prompt = new RenderedPrompt('rules', 'slot_judge.v1', PromptShape::Full, hash('sha256', 'rules'));
+    $prompt = new RenderedPrompt('rules', 'slot_judge.v2', PromptShape::Full, hash('sha256', 'rules'));
     $schema = PlanSchemas::slotJudge();
 
     $once = app(ContentModelCatalog::class)->get(ProviderId::OpenAi, 'gpt-5.4-mini', 'plan', 8, 1);

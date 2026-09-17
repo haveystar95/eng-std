@@ -146,8 +146,8 @@ final class PlanSchemas
     }
 
     /**
-     * THE SLOT JUDGE (`slot_judge.v1`, наряд SESSION-1a, разд. 4): the prompt's OUTPUT — whether the attempt passes,
-     * the words that stood in the slot (null for a retelling) and, for a refusal, one sentence to the learner. The
+     * THE SLOT JUDGE (`slot_judge.v2`, наряд SESSION-1a, разд. 4): the prompt's OUTPUT — whether the attempt passes,
+     * the words that stood in the slot and, for a refusal, one sentence to the learner. The
      * judge re-checks the shape on read: a vendor that let an off-shape answer through gets the code's verdict.
      *
      * @return array<string, mixed>

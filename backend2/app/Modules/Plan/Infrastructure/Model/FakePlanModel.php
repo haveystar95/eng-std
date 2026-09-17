@@ -118,11 +118,11 @@ final class FakePlanModel implements PlanModelPort
             ? ($this->slotJudge)($request, $this->slotJudgeCalls)
             : [
                 'accepted' => true,
-                'slot_value' => $request->task === SlotJudgeRequest::TASK_RETELL ? null : $request->heard,
+                'slot_value' => $request->heard,
                 'reason_native' => null,
             ];
 
-        return new ModelReply($payload, 'slot_judge.v1', self::MODEL, 350, 40, '0.000000', 1, '');
+        return new ModelReply($payload, 'slot_judge.v2', self::MODEL, 350, 40, '0.000000', 1, '');
     }
 
     public function planPromptVersion(): string
@@ -142,7 +142,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function slotJudgePromptVersion(): string
     {
-        return 'slot_judge.v1';
+        return 'slot_judge.v2';
     }
 
     public function lessonPromptVersion(): string

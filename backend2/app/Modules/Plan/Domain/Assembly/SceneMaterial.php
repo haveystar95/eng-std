@@ -10,6 +10,7 @@ use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\Message;
+use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
@@ -98,6 +99,41 @@ final readonly class SceneMaterial
             if ($filler['voicedAs'] === $phrase->ref()) {
                 return $filler['index'];
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * THE MODEL'S OWN TRANSLATION OF THE SENTENCE A FILLER MAKES (наряд BACK-TAILS-1 §2.3): the `text_native` of the
+     * learner line that says this frame with this filler — null when no line of the visit says it.
+     *
+     * A card that shows «Болит уже два дня» in Russian should show what the model wrote for that line, not the native
+     * pattern glued to the native filler: the model translated a whole sentence and made it read, the glue only puts
+     * two strings next to each other and leaves «Это у него уже уже три дня» where the case does not fit. The assembly
+     * stays for the fillers the dialogue never says — there is no line of theirs to quote, and the seam judge is the
+     * one that reads those ({@see \App\Modules\Plan\Domain\Check\Lesson\NativeRules}).
+     *
+     * A line said after CONVERSATIONAL GLUE is not quoted either: the card shows the frame's own sentence («He will
+     * rest at home.»), and the model's translation is of the longer line it wrote («Хорошо, он будет отдыхать дома.»).
+     * The two sides of one card must say the same thing, and the glue is on one of them only — the target's glue the
+     * server can see and cut, the native's it cannot.
+     */
+    public function nativeLineOf(string $phraseRef, int $index): ?string
+    {
+        $frame = $this->phraseTerm($phraseRef)?->frame() ?? $this->lesson->phrase($phraseRef);
+        $filler = $frame?->fillers()[$index] ?? null;
+        if ($frame === null || $filler === null) {
+            return null;
+        }
+        foreach ($this->lesson->exchanges as $exchange) {
+            $learner = $exchange->learner();
+            if ($learner === null || $learner->phraseId !== $phraseRef || $frame->filler($learner->filler) !== $filler) {
+                continue;
+            }
+            $said = FrameText::line($frame, $learner->textTarget);
+
+            return $said['glue'] !== '' || trim($learner->textNative) === '' ? null : $learner->textNative;
         }
 
         return null;

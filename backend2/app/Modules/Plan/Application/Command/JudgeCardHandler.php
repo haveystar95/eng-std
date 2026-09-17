@@ -23,8 +23,8 @@ use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
- * Judges one attempt at a card judged by meaning (`phrase_own_slot`, `speak_answer`, `speak_retell` — наряд SESSION-1a,
- * разд. 4) and writes the ruling on the card.
+ * Judges one attempt at a card judged by meaning — `phrase_own_slot` and `speak_answer` (наряд SESSION-1a, разд. 4;
+ * `speak_retell` left the set with наряд BACK-TAILS-1 §1.1) — and writes the ruling on the card.
  *
  * In three steps, because the ruling may take a model's eight seconds and a row lock must not: the card is found and
  * checked WITHOUT a lock (whose plan, which day, which kind, still open); the judge rules outside any transaction

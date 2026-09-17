@@ -32,8 +32,8 @@ interface PlanModelPort
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply;
 
     /**
-     * The slot judge (`slot_judge.v1`, наряд SESSION-1a, разд. 4): `{accepted, slot_value, reason_native}` — what the
-     * learner put into the slot and whether it answers, or whether a retelling keeps the partner's meaning. ONE
+     * The slot judge (`slot_judge.v2`, наряд SESSION-1a, разд. 4): `{accepted, slot_value, reason_native}` — what the
+     * learner put into the slot and whether it answers. ONE
      * attempt within the judge's own timeout, synchronously inside the learner's request; a silence throws.
      */
     public function judgeSlot(SlotJudgeRequest $request): ModelReply;

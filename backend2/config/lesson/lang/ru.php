@@ -17,6 +17,11 @@ return [
     // mark U+0301 — nothing else («пáспорт» with a Latin «á» leaves the script).
     'script' => '/^[\p{Cyrillic}\p{N}\p{P}\s\x{0301}]*$/u',
 
+    // One LETTER of a reading, matched alone: only these are the learner's own alphabet. A letter that is not one
+    // of them is fatal, not untidy — «ֆоутoуз» cannot be read at all. Spaces, hyphens, apostrophes and the slot's
+    // underscores are no letters and are not matched here.
+    'script_letters' => '/^[\p{Cyrillic}]$/u',
+
     'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'],
 
     // The word order of a question — a target-language key, not written for Russian.
@@ -44,6 +49,11 @@ return [
 
     // Time and duration words — units, parts of the day, days, months, «вчера», «назад», «через».
     'time_pattern' => '/^(?:назад|спустя|тому|через|раньше|позже|скоро|недавно|давно|сейчас|потом|секунд\w*|минут\w*|час|часа|часов|часу|сутк\w*|суток|ден[ьи]|дня|дней|дн[её]м|недел\w*|месяц\w*|год|года|году|годы|лет|утр[оау]\w*|вечер\w*|ноч\w*|полдень|полночь|вчера|вчерашн\w*|сегодня|сегодняшн\w*|завтра|завтрашн\w*|позавчера|послезавтра|понедельник\w*|вторник\w*|сред[ауы]|четверг\w*|пятниц\w*|суббот\w*|воскресень\w*|январ\w*|феврал\w*|март\w*|апрел\w*|ма[йя]|июн\w*|июл\w*|август\w*|сентябр\w*|октябр\w*|ноябр\w*|декабр\w*|выходн\w*)$/u',
+
+    // The units something is COUNTED in — what makes a value an amount and not a date («через неделю», «два дня»
+    // against «сегодня», «в пятницу»). Read by «Поймай число» (34-7) for its options: numerals are amounts by
+    // `number_pattern`, these words are amounts without one. Parts of the day, weekdays and months are not here.
+    'amount_pattern' => '/^(?:секунд\w*|минут\w*|час|часа|часов|часу|сутк\w*|суток|ден[ьи]|дня|дней|недел\w*|месяц\w*|год|года|году|годы|лет|раз|раза|градус\w*|процент\w*|метр\w*|килограмм\w*|грамм\w*|литр\w*|миллиграмм\w*|таблет\w*|капл[ьия]\w*)$/u',
 
     // Target-language keys: not written for Russian.
     'everyday_words' => null,

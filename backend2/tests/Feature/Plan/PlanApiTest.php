@@ -86,11 +86,14 @@ it('shortens the plan to the event date and says so', function () {
     $build = planCreate($this, $token, ['days_total' => 8, 'event_date' => $eventDate]);
     $plan = planRead($this, $token, $build['id']);
 
-    expect($plan['days_total'])->toBe(3)
+    // Three days to the event and the event's own day, which is a study day (наряд BACK-TAILS-1 §3.4): four.
+    // `days_left` stays the count of days BEFORE it — that is what «До приёма · 3 дня» says.
+    expect($plan['days_total'])->toBe(4)
         ->and($plan['days_requested'])->toBe(8)
         ->and($plan['days_shortened_from'])->toBe(8)
         ->and($plan['days_left'])->toBe(3)
         ->and($plan['until_phrase'])->toBe('До приёма · 3 дня')
+        // 4 days lay out as [scene, scene, review, rehearsal] — two scenes, as three days gave.
         ->and($build['scenes_count'])->toBe(2);
 });
 

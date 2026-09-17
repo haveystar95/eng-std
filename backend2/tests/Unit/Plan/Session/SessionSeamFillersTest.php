@@ -246,7 +246,8 @@ it('says no copy and no return with a hidden filler, and builds no card on one',
 });
 
 // Canon (SESSION-1e, разд. 4): «нигде, где виден его родной текст» — the value of a number card's wrong option is read off the
-// fillers too. Catches a hidden filler's native value offered beside the number of the visit.
+// fillers too. Catches a hidden filler's native value offered beside the number of the visit. Наряд BACK-TAILS-1 §1.3
+// narrowed what an option may be at all, so the filler to hide here is an AMOUNT: «два дня», which the card would offer.
 it('leaves the value of a hidden filler out of listen_number', function () {
     $shown = [];
     $hidden = [];
@@ -255,12 +256,12 @@ it('leaves the value of a hidden filler out of listen_number', function () {
         foreach (array_column(ListenCards::number(s1sScene([], null, $id))?->payload['options'] ?? [], 'text') as $text) {
             $shown[$text] = true;
         }
-        foreach (array_column(ListenCards::number(s1sScene(['p2.f2', 'p2.f3'], null, $id))?->payload['options'] ?? [], 'text') as $text) {
+        foreach (array_column(ListenCards::number(s1sScene(['p5.f2'], null, $id))?->payload['options'] ?? [], 'text') as $text) {
             $hidden[$text] = true;
         }
     }
 
-    // p2's «вчера вечером» and «сегодня утром» are values of the day — until the judge says their sentences do not read.
-    expect(array_intersect(array_keys($shown), ['Вчера вечером', 'Сегодня утром']))->not->toBe([])
-        ->and(array_intersect(array_keys($hidden), ['Вчера вечером', 'Сегодня утром']))->toBe([]);
+    // p5's «два дня» is a value of the day — until the judge says its sentence does not read.
+    expect(array_intersect(array_keys($shown), ['Два дня']))->not->toBe([])
+        ->and(array_intersect(array_keys($hidden), ['Два дня']))->toBe([]);
 });

@@ -15,7 +15,8 @@ use App\Modules\Plan\Domain\Lesson\Lesson;
 /**
  * THE SHAPE OF THE VISIT: the ordered counts, two messages per exchange opened by its initiator, a
  * closing message that is no question, three options with a real right one, readings in the
- * learner's own script. What the strict schema cannot say (it holds no list lengths, п. 202).
+ * learner's own script — and in the learner's own LETTERS, which is a stricter thing and a fatal one
+ * ({@see readings()}). What the strict schema cannot say (it holds no list lengths, п. 202).
  *
  * «A question» is the target's question mark and a reading's script is the learner's language's — both read off
  * their packs; the counts and shapes need no language.
@@ -87,10 +88,23 @@ final class StructureRules implements LessonRule
         return [...$out, ...self::readings($answer, $context)];
     }
 
-    /** @return list<LessonViolation> */
+    /**
+     * The readings of the day — a frame's, a filler's, a word's, a learner line's — against the learner's own writing.
+     *
+     * Two codes read them, and the difference is what is out of place. A LETTER of another alphabet
+     * ({@see LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT}, наряд BACK-TAILS-1 §3.2) is FATAL: «ֆоутoуз» is not a reading
+     * the learner can read, and the card would put it under the word and ask them to say it — so the day waits for a
+     * repair of the card at that address (a frame `p3`, a filler `p3.f2` — its frame, a word `v4`, a line `B3`).
+     * Anything else out of the script — a digit, a mark the writing does not use — stays the warning it was
+     * ({@see LessonCodes::PRONUNCIATION_SCRIPT}): it reads, it is only untidy. A reading with both gets both.
+     *
+     * @return list<LessonViolation>
+     */
     private static function readings(Lesson $answer, LessonValidationContext $context): array
     {
-        if (! $context->reads(LessonCodes::PRONUNCIATION_SCRIPT, LanguageSide::Native, 'script')) {
+        $script = $context->reads(LessonCodes::PRONUNCIATION_SCRIPT, LanguageSide::Native, 'script');
+        $letters = $context->reads(LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT, LanguageSide::Native, 'script_letters');
+        if (! $script && ! $letters) {
             return [];
         }
         /** @var list<array{0: string, 1: string|null}> $readings */
@@ -112,7 +126,18 @@ final class StructureRules implements LessonRule
         $words = $context->nativeWords();
         $out = [];
         foreach ($readings as [$address, $reading]) {
-            if ($reading !== null && ! $words->readsInScript($reading)) {
+            if ($reading === null) {
+                continue;
+            }
+            $foreign = $letters ? $words->foreignLetters($reading) : [];
+            if ($foreign !== []) {
+                $out[] = new LessonViolation(
+                    LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT,
+                    $address,
+                    "the reading «{$reading}» is spelled with letters of another writing: «".implode('», «', $foreign).'»',
+                );
+            }
+            if ($script && ! $words->readsInScript($reading)) {
                 $out[] = new LessonViolation(LessonCodes::PRONUNCIATION_SCRIPT, $address, "the reading «{$reading}» leaves the native script");
             }
         }

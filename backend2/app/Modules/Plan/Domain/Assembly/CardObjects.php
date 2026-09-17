@@ -196,7 +196,9 @@ final class CardObjects
     /**
      * The fillers of a frame in the slot's order, as every card shows them: `{index, target, native,
      * pronunciation_native, in_dialogue, native_line, audio}`. `native_line` is the whole sentence in the learner's
-     * language — the frame's translation with the filler's, ending as the phrase ends; `in_dialogue` is the served mark
+     * language — the MODEL'S OWN translation of the line that says it, when a line of the visit does
+     * ({@see SceneMaterial::nativeLineOf()}, наряд BACK-TAILS-1 §2.3), else the frame's translation with the filler's,
+     * ending as the phrase ends; `in_dialogue` is the served mark
      * (what the dialogue says); `audio` is the file the frame said with this filler is voiced as
      * ({@see SpokenLines::fillers()}, `voicedAs`: the filler the phrase itself is said with sounds as the phrase `p1`,
      * every other one as `p1.f2`), null for a filler the frame cannot be said with.
@@ -229,7 +231,8 @@ final class CardObjects
                 'native' => $filler->native,
                 'pronunciation_native' => $filler->pronunciationNative,
                 'in_dialogue' => $filler->inDialogue,
-                'native_line' => FrameText::withEndMarkOf(FrameText::fill($frame->frameNative, $filler->native), $phrase->textNative()),
+                'native_line' => $scene->nativeLineOf($phrase->ref(), $index)
+                    ?? FrameText::withEndMarkOf(FrameText::fill($frame->frameNative, $filler->native), $phrase->textNative()),
                 'audio' => isset($voiced[$index]) ? Audio::of($voiced[$index]) : null,
             ];
         }
@@ -240,16 +243,20 @@ final class CardObjects
     /**
      * The phrase as it is said — the frame with the filler of its first dialogue line, which is what the term's own
      * texts already are: `{filler_index, text_target, text_native, pronunciation_native, audio}`. A frame without a
-     * slot is said as itself (`filler_index` null).
+     * slot is said as itself (`filler_index` null). Its translation is the MODEL'S OWN for the line that says it
+     * (наряд BACK-TAILS-1 §2.3) — the term's stored `text_native` is the native pattern glued to the native filler,
+     * and the line is a sentence somebody wrote.
      *
      * @return array{filler_index: int|null, text_target: string, text_native: string, pronunciation_native: string|null, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}}
      */
     public static function said(SceneMaterial $scene, PlanTerm $phrase): array
     {
+        $index = $scene->saidIndex($phrase);
+
         return [
-            'filler_index' => $scene->saidIndex($phrase),
+            'filler_index' => $index,
             'text_target' => $phrase->textTarget(),
-            'text_native' => $phrase->textNative(),
+            'text_native' => ($index === null ? null : $scene->nativeLineOf($phrase->ref(), $index)) ?? $phrase->textNative(),
             'pronunciation_native' => $phrase->pronunciationNative(),
             'audio' => Audio::of($phrase->ref()),
         ];

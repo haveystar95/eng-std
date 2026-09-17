@@ -125,7 +125,7 @@ function s1daSnapshot(array $cards): array
 // Canon (разд. 2; SESSION-1d «Фразы» через разные окна): the day's stages, counted exactly on the clean lesson. Catches a
 // stage dealing a card too many or too few — a lost spacing slot, a recognition too many or too few, a second
 // phrase_combine, a rescue dealt twice, a listen card per ask missing, a seventh speak_answer.
-it('deals the clean lesson in five stages of exactly 24, 29, 15, 9 and 8 cards, at either level', function (PlanLevel $level) {
+it('deals the clean lesson in five stages of exactly 24, 29, 13, 9 and 8 cards, at either level', function (PlanLevel $level) {
     $cards = s1daDeal(s1daScene($level), $level);
     $words = s1daIn($cards, Stage::Words);
     $phrases = s1daIn($cards, Stage::Phrases);
@@ -159,12 +159,13 @@ it('deals the clean lesson in five stages of exactly 24, 29, 15, 9 and 8 cards, 
     }
 
     // Dialogue: x1–x4 answer → partner + answer (8); x5 answer followed by the rescue x6 → partner(x5), rescue(x6),
-    // answer(x5) (3, D-17); x7, x8 ask → ask + partner (4). 8 + 3 + 4 = 15.
+    // answer(x5) (3, D-17); x7, x8 ask → ONE card each, which carries the check itself (2, наряд BACK-TAILS-1 §1.5).
+    // 8 + 3 + 2 = 13.
     expect(s1daShape(s1daIn($cards, Stage::Dialogue)))->toBe([
         'dialogue_partner@x1', 'dialogue_answer@x1', 'dialogue_partner@x2', 'dialogue_answer@x2',
         'dialogue_partner@x3', 'dialogue_answer@x3', 'dialogue_partner@x4', 'dialogue_answer@x4',
         'dialogue_partner@x5', 'dialogue_rescue@x6', 'dialogue_answer@x5',
-        'dialogue_ask@x7', 'dialogue_partner@x7', 'dialogue_ask@x8', 'dialogue_partner@x8',
+        'dialogue_ask@x7', 'dialogue_ask@x8',
     ])
         // Listen: the visit (1) + a question each (3) + the review (1) + a prediction per ask exchange (2) + the pace
         // line (1) + the number («three days ago», 1) = 9. Every card is the day's, the questions each their own L{n}.
@@ -175,12 +176,13 @@ it('deals the clean lesson in five stages of exactly 24, 29, 15, 9 and 8 cards, 
         ->and(array_unique(array_map(static fn (DayCard $c): string => $c->unitKind()->value, s1daIn($cards, Stage::Listen))))->toBe(['day'])
         // Speak: speak_answer on the seven eligible exchanges (x1–x5, x7, x8; the rescue has no frame), the first six
         // kept; the echo on the longest partner line of ≤ 18 words the pace line (x3) did not take (x5, 14 words);
-        // the retell on the next longest (x1 and x7 tie at 10 words → the lower step). 6 + 1 + 1 = 8.
+        // the retell on the learner's own line of x8 — the one exchange the six answers left (наряд BACK-TAILS-1 §1.1).
+        // 6 + 1 + 1 = 8.
         ->and(s1daShape(s1daIn($cards, Stage::Speak)))->toBe([
             'speak_answer@x1', 'speak_answer@x2', 'speak_answer@x3', 'speak_answer@x4', 'speak_answer@x5', 'speak_answer@x7',
-            'speak_echo@x5', 'speak_retell@x1',
+            'speak_echo@x5', 'speak_retell@x8',
         ])
-        ->and(count($cards))->toBe(24 + 29 + 15 + 9 + 8);
+        ->and(count($cards))->toBe(24 + 29 + 13 + 9 + 8);
 
     foreach (Stage::ordered() as $stage) {
         expect(array_map(static fn (DayCard $c): int => $c->position(), s1daIn($cards, $stage)))->toBe(range(1, count(s1daIn($cards, $stage))));
@@ -241,7 +243,7 @@ it('deals the returns once each at the end of their stage: a word as word_choose
         ->and(count($phrases))->toBe(29 + 4)
         ->and(s1daShape(array_slice($phrases, 29)))->toBe(['phrase_slot_listen@p2', 'phrase_choose_back@p4', 'phrase_repeat@p3', $firstOfP5.'@p5'])
         ->and(array_slice($phrases, 28, 1)[0]->kind())->toBe(CardKind::PhraseCombine)
-        ->and(count(s1daIn($cards, Stage::Dialogue)))->toBe(15)
+        ->and(count(s1daIn($cards, Stage::Dialogue)))->toBe(13)
         ->and(count(s1daIn($cards, Stage::Listen)))->toBe(9)
         ->and(count($speak))->toBe(8 + 1)
         ->and(end($speak)->unitRef())->toBe('x4')
@@ -360,7 +362,7 @@ it('computes the day metrics from a dealt day: dealt, done, minutes without the 
 
     $metrics = (new DayMetricsCalculator)->calculate($cards);
 
-    expect($metrics->cardsTotal)->toBe(85)
+    expect($metrics->cardsTotal)->toBe(83)
         ->and($metrics->cardsDone)->toBe(20)
         ->and($metrics->minutesSpent)->toBe(9);
 });

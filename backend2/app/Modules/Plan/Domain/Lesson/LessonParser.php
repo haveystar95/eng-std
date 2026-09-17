@@ -16,9 +16,11 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
  * and the validator runs on the parsed lesson.
  *
- * One thing is put right on the way, and only one (доработка GEN-3): a native frame and a filler's native text lose the
- * space before the mark they end with ({@see FrameText::withEndMarkClosed()}) — «Всего ___ .» is read as «Всего ___.» by
- * the validator, the seam judge, the repair and every card, whatever the stored answer says.
+ * One thing is put right on the way, and only one (доработка GEN-3; both sides since наряд BACK-TAILS-1 §3.1): a frame —
+ * `frame_target` and `frame_native` — and a filler's native text lose the space before the mark they end with
+ * ({@see FrameText::withEndMarkClosed()}) — «I work ___ .» is read as «I work ___.» by the validator, the seam judge,
+ * the repair and every card, whatever the stored answer says. The target side was left out of the first pass and a card
+ * showed the gap.
  */
 final class LessonParser
 {
@@ -232,7 +234,7 @@ final class LessonParser
         return new Phrase(
             id: $this->string($row, 'id', $path),
             kind: $kind,
-            frameTarget: $this->string($row, 'frame_target', $path),
+            frameTarget: FrameText::withEndMarkClosed($this->string($row, 'frame_target', $path)),
             frameNative: FrameText::withEndMarkClosed($this->stringOrEmpty($row, 'frame_native')),
             pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
             slot: $slot,

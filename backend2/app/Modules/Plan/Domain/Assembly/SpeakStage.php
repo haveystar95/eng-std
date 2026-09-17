@@ -8,6 +8,7 @@ use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Service\Shuffle;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\UnitStates;
+use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
@@ -18,8 +19,11 @@ use App\Modules\Plan\Domain\ValueObject\UnitKind;
  *
  * A scene day deals `speak_answer` on the complete `answer`/`ask` exchanges whose learner line stands on a frame of
  * the day, in the order of the visit, at most {@see MAX_ANSWERS}; then `speak_echo` on the longest partner line of at
- * most eighteen words that `listen_pace` did not take, and `speak_retell` on the next longest — the lines are picked by
- * {@see PartnerLines}, the helper the listening stage picks its pace line with, so the two stages cannot share a line.
+ * most eighteen words that `listen_pace` did not take ({@see PartnerLines}, the helper the listening stage picks its
+ * pace line with, so the two stages cannot share a line); and last `speak_retell` — «Повтори свою реплику» (наряд
+ * BACK-TAILS-1 §1.1, кадр 35-4) — on a line of the LEARNER'S own: the longest of a complete `answer`/`ask` exchange
+ * that no `speak_answer` of this day already took ({@see freeLearnerLine()}). The learner hears themselves, sees only
+ * the translation, and says the line back; the client passes it by coverage, without the network.
  *
  * The review and the rehearsal deal `speak_answer` only, over every eligible exchange of their scenes, capped and
  * picked by a seeded shuffle — a day dealt twice is the same day — and served back in the order of the visit.
@@ -35,24 +39,60 @@ final class SpeakStage
     /** @return list<CardDraft> */
     public function build(SceneMaterial $scene): array
     {
-        $out = array_slice(array_values($this->eligible($scene)), 0, self::MAX_ANSWERS);
+        $answers = $this->eligible($scene);
+        $out = array_slice(array_values($answers), 0, self::MAX_ANSWERS);
 
         $pace = PartnerLines::pace($scene);
-        $taken = $pace === null ? [] : [$pace['step']];
-        foreach ([CardKind::SpeakEcho, CardKind::SpeakRetell] as $kind) {
-            $line = PartnerLines::longest($scene, PartnerLines::SPEAK_MAX_WORDS, $taken);
-            $exchange = $line === null ? null : $scene->exchange($line['step']);
-            if ($line === null || $exchange === null) {
-                break;
+        $echo = PartnerLines::longest($scene, PartnerLines::SPEAK_MAX_WORDS, $pace === null ? [] : [$pace['step']]);
+        $echoExchange = $echo === null ? null : $scene->exchange($echo['step']);
+        if ($echo !== null && $echoExchange !== null) {
+            $out[] = new CardDraft(
+                CardKind::SpeakEcho, UnitKind::Exchange, SpokenLines::exchangeRef($echoExchange->step),
+                SpeakCards::echoLine($scene, $echoExchange, $echo['message']),
+            );
+        }
+
+        $retell = self::freeLearnerLine($scene, array_slice(array_keys($answers), 0, self::MAX_ANSWERS));
+        if ($retell !== null) {
+            $payload = SpeakCards::retell($scene, $retell, $scene->target);
+            if ($payload !== null) {
+                $out[] = new CardDraft(CardKind::SpeakRetell, UnitKind::Exchange, SpokenLines::exchangeRef($retell->step), $payload);
             }
-            $taken[] = $line['step'];
-            $payload = $kind === CardKind::SpeakEcho
-                ? SpeakCards::echoLine($scene, $exchange, $line['message'])
-                : SpeakCards::retell($scene, $exchange, $line['message']);
-            $out[] = new CardDraft($kind, UnitKind::Exchange, SpokenLines::exchangeRef($exchange->step), $payload);
         }
 
         return $out;
+    }
+
+    /**
+     * The exchange whose learner line `speak_retell` says again (наряд BACK-TAILS-1 §1.1): the longest learner line of
+     * at most {@see PartnerLines::SPEAK_MAX_WORDS} words among the complete `answer`/`ask` exchanges — between two of
+     * one length the lower step — passing over the exchanges this day already deals a `speak_answer` on, so the stage
+     * never asks for the same line twice. Null when every line is taken or none is there: a rescue line is walked
+     * through in «Диалог» and is not a line of the learner's own to say again.
+     *
+     * @param  list<int>  $answered  the steps dealt as `speak_answer` today
+     */
+    private static function freeLearnerLine(SceneMaterial $scene, array $answered): ?Exchange
+    {
+        $taken = array_fill_keys($answered, true);
+        $best = null;
+        $bestCount = 0;
+        foreach ($scene->lesson->exchanges as $exchange) {
+            $learner = $exchange->learner();
+            if ($exchange->kind === ExchangeKind::Rescue || $learner === null || $exchange->partner() === null || isset($taken[$exchange->step])) {
+                continue;
+            }
+            $count = Words::count($learner->textTarget);
+            if ($count === 0 || $count > PartnerLines::SPEAK_MAX_WORDS) {
+                continue;
+            }
+            if ($best === null || $count > $bestCount) {
+                $best = $exchange;
+                $bestCount = $count;
+            }
+        }
+
+        return $best;
     }
 
     /**

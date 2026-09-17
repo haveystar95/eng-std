@@ -29,17 +29,63 @@ final class DialogueCards
     public const SLOW_RATE = 0.75;
 
     /**
-     * `dialogue_partner` (33-1): what did the partner mean — the three options of the exchange's own check, and a
-     * fourth that is surely wrong here because it is right elsewhere: the right option of the check of the exchange
-     * FARTHEST from this one by step (between two as far — the lower step), skipping one that reads like any of the
-     * three, case and spaces aside — the next farthest then. No partner line, no right option or nothing to choose
-     * between — no card.
+     * `dialogue_partner` (33-1): what did the partner mean — the exchange's own check ({@see check()}), asked of an
+     * `answer` exchange, where the partner speaks first. No partner line, no right option or nothing to choose between
+     * — no card.
      */
     public static function partner(SceneMaterial $scene, Exchange $exchange): ?CardDraft
     {
         $partnerLine = CardObjects::partnerLine($exchange);
+        $check = self::check($scene, $exchange);
+        if ($partnerLine === null || $check === null) {
+            return null;
+        }
+
+        return self::draft(CardKind::DialoguePartner, $exchange, [
+            'scene_id' => $scene->sceneId->value,
+            'exchange' => CardObjects::exchange($exchange),
+            'partner_line' => $partnerLine,
+            ...$check,
+        ]);
+    }
+
+    /** `dialogue_answer` (33-2 / 33-3 / 33-4): the partner speaks, the learner answers with their own line. */
+    public static function answer(SceneMaterial $scene, Exchange $exchange): ?CardDraft
+    {
+        return self::spoken(CardKind::DialogueAnswer, $scene, $exchange);
+    }
+
+    /**
+     * `dialogue_ask` (33-5): the learner speaks first, the partner's answer sounds after — AND the exchange's check is
+     * asked on the same card (наряд BACK-TAILS-1 §1.5): the answer sounds with its text closed, the learner says what
+     * they understood of it, and the text opens with the right option marked. One screen, one card — the ask exchange
+     * no longer deals a `dialogue_partner` of its own.
+     *
+     * The check is the same object, key for key, as `dialogue_partner`'s — `question_native`, `options`, `correct`,
+     * built by the same rule and the same seed ({@see check()}) — so the client draws one thing in two places. An
+     * exchange whose check cannot be dealt (no right option, nothing to choose between) still deals the voice card,
+     * without those three keys: the learner's own line is what this card is for.
+     */
+    public static function ask(SceneMaterial $scene, Exchange $exchange): ?CardDraft
+    {
+        return self::spoken(CardKind::DialogueAsk, $scene, $exchange, self::check($scene, $exchange) ?? []);
+    }
+
+    /**
+     * THE CHECK OF ONE EXCHANGE as a card asks it: the question on the learner's own language, the three options of
+     * the exchange's own check and a fourth that is surely wrong here because it is right elsewhere — the right option
+     * of the check of the exchange FARTHEST from this one by step (between two as far — the lower step), skipping one
+     * that reads like any of the three, case and spaces aside, the next farthest then.
+     *
+     * One place for both cards that ask it ({@see partner()}, {@see ask()}), one seed per exchange — a day dealt twice
+     * puts the options in the same order. Null when the exchange has no right option or nothing to choose between.
+     *
+     * @return array{question_native: string, options: list<array<string, mixed>>, correct: string}|null
+     */
+    private static function check(SceneMaterial $scene, Exchange $exchange): ?array
+    {
         $right = $exchange->check->correctOption();
-        if ($partnerLine === null || $right === null) {
+        if ($right === null) {
             return null;
         }
 
@@ -60,26 +106,11 @@ final class DialogueCards
             return null;
         }
 
-        return self::draft(CardKind::DialoguePartner, $exchange, [
-            'scene_id' => $scene->sceneId->value,
-            'exchange' => CardObjects::exchange($exchange),
-            'partner_line' => $partnerLine,
+        return [
             'question_native' => $exchange->check->textNative,
             'options' => $chosen['options'],
             'correct' => $chosen['correct'],
-        ]);
-    }
-
-    /** `dialogue_answer` (33-2 / 33-3 / 33-4): the partner speaks, the learner answers with their own line. */
-    public static function answer(SceneMaterial $scene, Exchange $exchange): ?CardDraft
-    {
-        return self::spoken(CardKind::DialogueAnswer, $scene, $exchange);
-    }
-
-    /** `dialogue_ask` (33-5): the learner speaks first, the partner's answer sounds after — the same data as an answer. */
-    public static function ask(SceneMaterial $scene, Exchange $exchange): ?CardDraft
-    {
-        return self::spoken(CardKind::DialogueAsk, $scene, $exchange);
+        ];
     }
 
     /**
@@ -112,8 +143,10 @@ final class DialogueCards
      * window is anyone's — so `coverage_min` is measured on {@see FrameParts::part()}, and `modes` holds every way in:
      * the fillers as chips (a frame without a slot has none), the line itself as the hint, the frame with its empty
      * window blind. A learner line on no frame of the scene deals no voice card.
+     *
+     * @param  array<string, mixed>  $extra  keys the kind adds after its own — the check of an `ask` (§1.5)
      */
-    private static function spoken(CardKind $kind, SceneMaterial $scene, Exchange $exchange): ?CardDraft
+    private static function spoken(CardKind $kind, SceneMaterial $scene, Exchange $exchange, array $extra = []): ?CardDraft
     {
         $partnerLine = CardObjects::partnerLine($exchange);
         $ownLine = CardObjects::ownLine($scene, $exchange);
@@ -136,6 +169,7 @@ final class DialogueCards
                 'voice_blind' => $pattern->frameTarget,
             ],
             'coverage_min' => (new SpeechCoverage)->minFor(FrameParts::part($pattern->frameTarget), $scene->target),
+            ...$extra,
         ]);
     }
 

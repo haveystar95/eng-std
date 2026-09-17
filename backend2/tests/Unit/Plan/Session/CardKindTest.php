@@ -48,9 +48,9 @@ it('counts every kind exactly one way: choice, spoken, judged or walkthrough', f
     }
 
     expect(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isJudged())))
-        ->toBe([CardKind::PhraseOwnSlot, CardKind::SpeakAnswer, CardKind::SpeakRetell])
+        ->toBe([CardKind::PhraseOwnSlot, CardKind::SpeakAnswer])
         ->and(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isSpoken())))
-        ->toBe([CardKind::WordRepeat, CardKind::PhraseRepeat, CardKind::PhraseOtherSlot, CardKind::DialogueAnswer, CardKind::DialogueAsk, CardKind::SpeakEcho])
+        ->toBe([CardKind::WordRepeat, CardKind::PhraseRepeat, CardKind::PhraseOtherSlot, CardKind::DialogueAnswer, CardKind::DialogueAsk, CardKind::SpeakEcho, CardKind::SpeakRetell])
         ->and(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isWalkthrough())))
         ->toBe([CardKind::WordIntro, CardKind::PhraseIntro, CardKind::DialogueRescue, CardKind::ListenDialogue, CardKind::ListenReview, CardKind::ListenPace]);
 });
@@ -64,7 +64,8 @@ it('lets the client write only the results the kind can have', function () {
 
     expect($allowed(CardKind::SpeakAnswer))->toBe(['skipped'])
         ->and($allowed(CardKind::PhraseOwnSlot))->toBe(['skipped'])
-        ->and($allowed(CardKind::SpeakRetell))->toBe(['skipped'])
+        // «Повтори свою реплику» is a voice card since наряд BACK-TAILS-1 §1.1: the client counts its coverage.
+        ->and($allowed(CardKind::SpeakRetell))->toBe(['passed', 'hinted', 'skipped'])
         ->and($allowed(CardKind::ListenPace))->toBe(['passed', 'skipped'])
         ->and($allowed(CardKind::DialogueRescue))->toBe(['passed', 'skipped'])
         ->and($allowed(CardKind::WordIntro))->toBe(['passed', 'skipped'])

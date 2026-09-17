@@ -25,14 +25,35 @@ fi
 cmd="$(printf '%s' "$input" | jq -r '.tool_input.command // ""')"
 cwd="$(printf '%s' "$input" | jq -r '.cwd // "."')"
 
-# Only gate real commits. (Skip `git log`, `git commit --help`, etc.)
+# Only gate real commits. `git commit` is NOT a literal substring of every commit: git takes options
+# before the subcommand, and `git -C <path> commit -m …` matched nothing here and walked straight past
+# the gates (хвост SESSION-1b, закрыт нарядом BACK-TAILS-1 §2.4). So: find a `git` word, skip the
+# options that may stand between it and the subcommand, and look at the subcommand itself.
+subcommand="$(printf '%s' "$cmd" | awk '
+  { for (i = 1; i <= NF; i++) if ($i == "git" || $i ~ /\/git$/) {
+      j = i + 1
+      while (j <= NF) {
+        if ($j == "-C" || $j == "-c" || $j == "--namespace") { j += 2; continue }   # option with a value
+        if ($j ~ /^-/) { j++; continue }                                            # option without one
+        break
+      }
+      if (j <= NF) { print $j; exit }
+    } }')"
+[ "$subcommand" = "commit" ] || exit 0
 case "$cmd" in
-  *"git commit"*) : ;;
-  *) exit 0 ;;
+  *"--help"*|*"--dry-run"*) exit 0 ;;
 esac
-case "$cmd" in
-  *"--help"*|*"commit --dry-run"*) exit 0 ;;
-esac
+
+# Where that commit will run: `git -C <path>` (the last one wins, as git resolves them in order) or
+# `--work-tree=<path>`, else the session's own directory. Without this the gates would be run against
+# the wrong working tree — green over code that is not the code being committed.
+gitdir="$(printf '%s' "$cmd" | awk '
+  { for (i = 1; i < NF; i++) {
+      if ($i == "-C") last = $(i + 1)
+      else if ($i ~ /^--work-tree=/) { sub(/^--work-tree=/, "", $i); last = $i }
+    } }
+  END { print last }')"
+[ -n "$gitdir" ] && cwd="$gitdir"
 
 # Explicit, loud bypass for a deliberate WIP commit.
 if [ "${SKIP_GATES:-}" = "1" ]; then
@@ -40,6 +61,8 @@ if [ "${SKIP_GATES:-}" = "1" ]; then
   exit 0
 fi
 
+# A path that is no repository is git's own problem — it will refuse the commit itself, and there is
+# nothing here to gate.
 repo="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)" || exit 0
 cd "$repo" || exit 0
 

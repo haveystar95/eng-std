@@ -573,9 +573,11 @@ it('says every frame of phrase_combine whole — the right one with the filler i
     // x1 says; p1 answers x2 with «shoulder» and x3 with «neck» (first said, in x1, with «lower back»); p5 is said «for two days».
     $scene = s1pScene(static function (array $payload): array {
         $payload['dialogue'][0]['messages'][0]['text_target'] = 'Tell me where it hurts.';
-        foreach ([1 => 'It hurts in his shoulder.', 2 => 'It hurts in his neck.'] as $i => $text) {
+        // Both sides of a line move together: the card shows the model's own translation of it (наряд BACK-TAILS-1 §2.3).
+        foreach ([1 => ['It hurts in his shoulder.', 'У него болит плечо.'], 2 => ['It hurts in his neck.', 'У него болит шея.']] as $i => [$text, $native]) {
             $payload['dialogue'][$i]['messages'][1]['phrase_id'] = 'p1';
             $payload['dialogue'][$i]['messages'][1]['text_target'] = $text;
+            $payload['dialogue'][$i]['messages'][1]['text_native'] = $native;
         }
         $payload['dialogue'][4]['messages'][1]['text_target'] = 'Okay, he will rest for two days.';
 
@@ -734,6 +736,37 @@ it('lays out the frame, every filler with the file it sounds as, and the said ph
         ->and($p6['said']['text_target'])->toBe('Do we need an X-ray?')
         ->and($p6['frame']['kind'])->toBe('ask')
         ->and(CardObjects::fillers($scene, s1pTerm($scene, 'p3'))[1]['native_line'])->toBe('Боль ноющая, когда он наклоняется.');
+});
+
+// Canon (наряд BACK-TAILS-1 §2.3): «перевод реплики для сказанного наполнения — text_native реплики модели, а не сборка
+// «родной каркас + родное наполнение»». The model translated a whole sentence and made it read; the glue of two strings
+// leaves «Это у него уже уже три дня». Catches the assembly served where a line of the visit says the filler — and the
+// quote taken from a line said after conversational glue, where the target side of the card has no glue and the native
+// side would.
+it('shows the model\'s own translation of a line for the filler it says, and the assembly for every other', function () {
+    $scene = s1pScene(static function (array $payload): array {
+        // x1 says p1 with «lower back» and the model writes a sentence of its own, not «У него болит поясница.».
+        $payload['dialogue'][0]['messages'][1]['text_native'] = 'Поясница у него болит.';
+        // x5 says p5 with «at home» AFTER glue: its translation is of the longer line.
+        $payload['dialogue'][4]['messages'][1]['text_target'] = 'Okay, he will rest at home.';
+        $payload['dialogue'][4]['messages'][1]['text_native'] = 'Хорошо, он будет отдыхать дома.';
+
+        return $payload;
+    });
+    $p1 = CardObjects::fillers($scene, s1pTerm($scene, 'p1'));
+    $p5 = CardObjects::fillers($scene, s1pTerm($scene, 'p5'));
+
+    expect(array_column($p1, 'native_line'))->toBe([
+        // Said in x1: the model's line.
+        'Поясница у него болит.',
+        // Said by no line: the frame's translation with the filler's.
+        'У него болит шея.',
+        'У него болит плечо.',
+    ])
+        ->and(CardObjects::said($scene, s1pTerm($scene, 'p1'))['text_native'])->toBe('Поясница у него болит.')
+        // The glued line is not quoted: the card shows «He will rest at home.», and its translation has no «Хорошо».
+        ->and($p5[0]['native_line'])->toBe('Он будет отдыхать дома.')
+        ->and(CardObjects::said($scene, s1pTerm($scene, 'p5'))['text_native'])->toBe('Он будет отдыхать дома.');
 });
 
 it('asks phrase_assemble for the frame\'s words and two words of the frames after it, lower-cased but «I»', function () {

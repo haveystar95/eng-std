@@ -13,6 +13,7 @@ use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
+use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
@@ -169,6 +170,33 @@ it('waits 180 seconds for the answer of every plan call and 10 seconds for the c
     $model->judgeNativeSeams(new NativeSeamJudgeRequest('Russian', [['id' => 'p1.f1', 'pattern' => 'x', 'value' => 'y', 'sentence' => 'z']]));
 
     expect($options)->toBe([[180, 10], [180, 10], [180, 10], [180, 10]]);
+});
+
+// Canon (наряд BACK-TAILS-1 §3.3): «назначение вызова различать — plan / lesson / repair / judge, а не «plan» на всё».
+// The MONEY is one budget and stays `plan` in the request log — the cost screen must not split in two — but the journal
+// names each call for what it is. Catches a journal that says «plan» on every row, where a lost call cannot be told
+// from the lesson it was, and catches the finer name leaking into `api_request_logs`, whose CHECK constraint would
+// drop the row and lose the spend (the same hole the `term_reading` whitelist migration was written to close).
+it('names each plan call in the journal — plan, lesson, repair, judge — while the spend stays one purpose', function () {
+    config(['plan.model.driver' => 'openai', 'services.openai.api_key' => 'test-key']);
+    app()->forgetInstance(PlanModelPort::class);
+    Http::fake(fn () => Http::response(mcjAnswer(), 200));
+    $model = app(PlanModelPort::class);
+    $lesson = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
+
+    $model->buildPlan(new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, 2));
+    $model->buildLesson($lesson);
+    $model->repairLessonCard(new LessonCardRepairRequest('p1', 'frame', [], [], [], null, new EarlierDays, 'English', 'Russian', PlanLevel::Beginner, null, 8, 8));
+    $model->judgeNativeSeams(new NativeSeamJudgeRequest('Russian', [['id' => 'p1.f1', 'pattern' => 'x', 'value' => 'y', 'sentence' => 'z']]));
+    $model->judgeSlot(new SlotJudgeRequest('English', 'Russian', 'beginner', 'Where?', 'Где?', 'It hurts ___.', 'Болит ___.', 'где', 'neck', 'it hurts here'));
+
+    expect(DB::table('model_calls')->orderBy('started_at')->pluck('purpose')->all())
+        ->toBe(['plan', 'lesson', 'repair', 'judge', 'judge'])
+        // The request log knows one purpose, the one its CHECK constraint allows — and it recorded ALL FIVE calls.
+        // A finer name reaching this column does not raise: the writer swallows the CHECK violation and the spend of
+        // that call is simply not recorded, which is the hole the `term_reading` whitelist migration was written for.
+        ->and(DB::table('api_request_logs')->where('direction', 'outbound')->pluck('purpose')->all())
+        ->toBe(['plan', 'plan', 'plan', 'plan', 'plan']);
 });
 
 // Addendum C: «таймаут job'а выше таймаута клиента с запасом; автоповтора job'а после таймаута нет». Catches a job killed

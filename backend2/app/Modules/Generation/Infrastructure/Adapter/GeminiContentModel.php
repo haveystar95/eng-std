@@ -52,8 +52,11 @@ final readonly class GeminiContentModel implements ContentModelPort
          * event listener far from the code that decided to spend — so it has to travel
          * with the adapter, and the default keeps every existing caller unchanged.
          */
+        /** What the request log calls this spend; the journal of model calls says the same unless `$journalPurpose` differs. */
         private string $purpose = 'generation',
         private int $retries = 4,
+        /** What the JOURNAL calls this call — finer than the money label when the caller needs it (наряд BACK-TAILS-1 §3.3). */
+        private ?string $journalPurpose = null,
     ) {}
 
     public function provider(): ProviderId
@@ -83,7 +86,7 @@ final readonly class GeminiContentModel implements ContentModelPort
         $response = $this->calls->send(
             ProviderId::Gemini,
             $this->model,
-            $this->purpose,
+            $this->journalPurpose ?? $this->purpose,
             $this->timeoutSeconds,
             $body,
             fn () => $this->context->run($this->purpose, null, fn () => Http::withHeaders(['x-goog-api-key' => $this->apiKey])

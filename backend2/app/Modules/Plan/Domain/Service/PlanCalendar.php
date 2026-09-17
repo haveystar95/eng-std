@@ -58,12 +58,17 @@ final class PlanCalendar
     }
 
     /**
-     * How many days the calendar has room for before the event: the event's own day is not a study
-     * day, and a plan always has at least one day — today.
+     * How many days the calendar has room for up to and including the event: THE EVENT'S OWN DAY IS A STUDY DAY
+     * (наряд BACK-TAILS-1 §3.4) — the same day «догоняем» counts ({@see \App\Modules\Plan\Domain\Entity\Plan::isCatchingUp()},
+     * GEN-3 §11), where the days left open one after another on it. The two read the calendar the same way now: an
+     * event three days off has room for four days, not three. A plan always has at least one day — today.
+     *
+     * Only a plan being LAID OUT reads this ({@see \App\Modules\Plan\Domain\Entity\Plan::fitDays()}): plans already
+     * made keep the length they were made with.
      */
     public static function daysUntil(DateTimeImmutable $today, DateTimeImmutable $eventDate): int
     {
-        return max(self::MIN_DAYS, min(self::MAX_DAYS, self::calendarDaysBetween($today, $eventDate)));
+        return max(self::MIN_DAYS, min(self::MAX_DAYS, self::calendarDaysBetween($today, $eventDate) + 1));
     }
 
     /**

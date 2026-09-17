@@ -132,14 +132,19 @@ enum CardKind: string
     public function isSpoken(): bool
     {
         return in_array($this, [
-            self::WordRepeat, self::PhraseRepeat, self::PhraseOtherSlot, self::DialogueAnswer, self::DialogueAsk, self::SpeakEcho,
+            self::WordRepeat, self::PhraseRepeat, self::PhraseOtherSlot, self::DialogueAnswer, self::DialogueAsk,
+            self::SpeakEcho, self::SpeakRetell,
         ], true);
     }
 
-    /** A slot or a retelling judged by meaning — the pass is the server's verdict (`…/judge`), never the client's word. */
+    /**
+     * A slot said aloud and judged by meaning — the pass is the server's verdict (`…/judge`), never the client's word.
+     * `speak_retell` is no longer among them (наряд BACK-TAILS-1 §1.1): it says the learner's own line back, and
+     * coverage of that line is a thing the client counts itself.
+     */
     public function isJudged(): bool
     {
-        return in_array($this, [self::PhraseOwnSlot, self::SpeakAnswer, self::SpeakRetell], true);
+        return in_array($this, [self::PhraseOwnSlot, self::SpeakAnswer], true);
     }
 
     /** Read, heard or tapped through: it produces no answer, so it is walked or skipped, never right or wrong. */

@@ -51,6 +51,10 @@ interface ContentModelCatalog
      *        attempt within its 8 seconds, and past them the verdict is the code's — a retry would
      *        only double the wait for an answer nobody reads any more. Null keeps the adapter's own
      *        escalating retries, which every other caller wants.
+     * @param  string|null  $journalPurpose  what the JOURNAL of model calls should say this call was for, when that is
+     *        finer than the spend label. The learning plan's every call is `plan` money, but four different things
+     *        (наряд BACK-TAILS-1 §3.3) — the plan, a lesson, a repair, a judge — and a journal that called them all
+     *        `plan` could not say which of them a lost call had been. Null: the journal says what the log says.
      */
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null): ?ContentModelPort;
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ?ContentModelPort;
 }

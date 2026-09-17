@@ -38,7 +38,7 @@ final class PlanPromptFiles
     private const JUDGE_FILE = 'lesson_seam_judge.v1.1.md';
 
     /** The slot judge of the day's spoken cards (наряд SESSION-1a, разд. 4) — accepted byte for byte from the order. */
-    public const SLOT_JUDGE_FILE = 'slot_judge.v1.md';
+    public const SLOT_JUDGE_FILE = 'slot_judge.v2.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
@@ -183,7 +183,6 @@ final class PlanPromptFiles
     public function slotJudgeUser(SlotJudgeRequest $request): string
     {
         return implode("\n", [
-            'TASK: '.$request->task,
             'TARGET_LANGUAGE: '.$request->targetLanguage,
             'NATIVE_LANGUAGE: '.$request->nativeLanguage,
             'LEVEL: '.$request->level,

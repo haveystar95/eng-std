@@ -10,13 +10,16 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 /**
  * «Диалог» (наряд SESSION-1a, разд. 1–2; SPEC §4, D-17): the visit, exchange by exchange, in its order.
  *
- * An `answer` deals `dialogue_partner` then `dialogue_answer` — understand, then reply; an `ask` deals `dialogue_ask`
- * then `dialogue_partner` on the answer — the learner speaks first; a `rescue` deals one `dialogue_rescue`. An answer
+ * An `answer` deals `dialogue_partner` then `dialogue_answer` — understand, then reply; an `ask` deals ONE card,
+ * `dialogue_ask`, which carries the exchange's check itself (наряд BACK-TAILS-1 §1.5, кадр 33-5: the learner asks, the
+ * partner's answer sounds with its text closed, the question on it is asked there, and the text opens after) — the
+ * separate check card an ask used to deal is gone; a `rescue` deals one `dialogue_rescue`. An answer
  * followed at once by a rescue is the canvas' 33-6: the learner hears the partner, does not catch it, asks again,
  * and only then replies — `partner(k)`, `rescue(k+1)`, `answer(k)`, and the rescue is not dealt a second time.
  *
  * An exchange with fewer than its two messages (a partner and a learner) is only a bubble of the feed and deals
- * nothing; an answer or an ask whose learner line stands on no frame of the scene deals only its `dialogue_partner`.
+ * nothing; an ANSWER whose learner line stands on no frame of the scene deals only its `dialogue_partner`, and an ASK
+ * whose learner line does the same deals nothing at all — its check lived on the card the frame carries.
  */
 final class DialogueStage
 {
@@ -42,7 +45,6 @@ final class DialogueStage
                     break;
                 case ExchangeKind::Ask:
                     $drafts[] = DialogueCards::ask($scene, $exchange);
-                    $drafts[] = DialogueCards::partner($scene, $exchange);
                     break;
                 case ExchangeKind::Rescue:
                     $drafts[] = DialogueCards::rescue($scene, $exchange, $exchanges[$i - 1] ?? null);

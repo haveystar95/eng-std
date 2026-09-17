@@ -65,13 +65,14 @@ function shrTitles(Plan $plan): array
     return $titles;
 }
 
-it('shortens the plan to the days left before the event, keeping what was asked', function () {
+// 10.09 → 14.09: four days before the event and the event's own day, which is a study day too (наряд BACK-TAILS-1 §3.4).
+it('shortens the plan to the days left up to and including the event, keeping what was asked', function () {
     $plan = shrPlan(10, '2026-09-14');
 
-    expect($plan->daysTotal())->toBe(4)
+    expect($plan->daysTotal())->toBe(5)
         ->and($plan->daysRequested())->toBe(10)
         ->and($plan->daysShortenedFrom())->toBe(10)
-        ->and(count($plan->days()))->toBe(4);
+        ->and(count($plan->days()))->toBe(5);
 });
 
 it('keeps the plan length when the event is far enough away', function () {

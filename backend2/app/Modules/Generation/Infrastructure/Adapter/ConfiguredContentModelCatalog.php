@@ -100,7 +100,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         return $out;
     }
 
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null): ?ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ?ContentModelPort
     {
         $row = $this->config[$provider->value];
         $key = trim($row['key']);
@@ -123,6 +123,10 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         // every caller but the learning plan wants.
         $purpose = $purpose !== null && trim($purpose) !== '' ? trim($purpose) : 'generation';
 
+        // The journal may name the call more finely than the money does (наряд BACK-TAILS-1 §3.3); null means it
+        // names it the same.
+        $journalPurpose = $journalPurpose !== null && trim($journalPurpose) !== '' ? trim($journalPurpose) : $purpose;
+
         // Null keeps the adapters' escalating retries; a caller's own number is the attempts, never fewer than one.
         $attempts = $retries === null ? self::DEFAULT_ATTEMPTS : max(1, $retries);
 
@@ -135,6 +139,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 baseUrl: $row['base'],
                 timeoutSeconds: $timeout,
                 purpose: $purpose,
+                journalPurpose: $journalPurpose,
                 retries: $attempts,
             ),
             ProviderId::Anthropic => new AnthropicContentModel(
@@ -145,6 +150,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 baseUrl: $row['base'],
                 timeoutSeconds: $timeout,
                 purpose: $purpose,
+                journalPurpose: $journalPurpose,
                 retries: $attempts,
             ),
             // OpenAI and xAI speak the same wire format — see OpenAiCompatibleContentModel.
@@ -157,6 +163,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 baseUrl: $row['base'],
                 timeoutSeconds: $timeout,
                 purpose: $purpose,
+                journalPurpose: $journalPurpose,
                 retries: $attempts,
             ),
         };

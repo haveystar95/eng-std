@@ -26,7 +26,9 @@ use Throwable;
 /**
  * The plan's model calls over Generation's vendor seam: the prompt file is the system side, the inputs
  * are the user side, the schema is enforced by the vendor, and the request log labels the spend
- * `plan`. Each call is built with the plan's own timeout, not the comparison stack's.
+ * `plan` — one budget — while the journal of model calls names each call for what it is: `plan`, `lesson`,
+ * `repair`, `judge` (наряд BACK-TAILS-1 §3.3). Each call is built with the plan's own timeout, not the comparison
+ * stack's.
  *
  * Five calls, each on its own model (`config/plan.php`): the plan, the lesson and the repair of one card on the
  * strong model (a cheaper repair did not repair as well — report GEN-2b), the seam judge a step cheaper (a verdict
@@ -39,7 +41,21 @@ use Throwable;
  */
 final readonly class ContentModelPlanBuilder implements PlanModelPort
 {
+    /** What the plan's spend is called in the request log — one budget, one label. */
     public const PURPOSE = 'plan';
+
+    /**
+     * What the JOURNAL of model calls calls each of them (наряд BACK-TAILS-1 §3.3). The money is one purpose; the
+     * calls are four different things, and a lost row that said only «plan» could not be told from the others when
+     * the vendor's invoice is read against it.
+     */
+    public const JOURNAL_PLAN = 'plan';
+
+    public const JOURNAL_LESSON = 'lesson';
+
+    public const JOURNAL_REPAIR = 'repair';
+
+    public const JOURNAL_JUDGE = 'judge';
 
     /** The slot judge's attempts: one (D-28) — past its timeout the code rules, a retry would only lengthen the wait. */
     public const SLOT_JUDGE_ATTEMPTS = 1;
@@ -63,7 +79,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
 
     public function buildPlan(PlanRequest $request): ModelReply
     {
-        $model = $this->model($this->planModel, $this->planTimeout);
+        $model = $this->model($this->planModel, $this->planTimeout, journalPurpose: self::JOURNAL_PLAN);
         $text = $this->prompts->planSystem();
         $prompt = new RenderedPrompt($text, $this->prompts->planVersion(), PromptShape::Full, hash('sha256', $text));
 
@@ -72,7 +88,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
 
     public function buildLesson(LessonRequest $request): ModelReply
     {
-        $model = $this->model($this->lessonModel, $this->lessonTimeout);
+        $model = $this->model($this->lessonModel, $this->lessonTimeout, journalPurpose: self::JOURNAL_LESSON);
         $text = $this->prompts->lessonSystem();
         $prompt = new RenderedPrompt($text, $this->prompts->lessonVersion(), PromptShape::Full, hash('sha256', $text));
 
@@ -83,7 +99,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
 
     public function repairLessonCard(LessonCardRepairRequest $request): ModelReply
     {
-        $model = $this->model($this->repairModel, $this->lessonTimeout);
+        $model = $this->model($this->repairModel, $this->lessonTimeout, journalPurpose: self::JOURNAL_REPAIR);
         $text = $this->prompts->repairSystem($request->kind);
         $prompt = new RenderedPrompt($text, $this->prompts->repairVersion(), PromptShape::Full, hash('sha256', $text));
         $schema = PlanSchemas::lessonCard($request->kind, $request->dialogueCount, $request->vocabularyCount);
@@ -93,7 +109,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
 
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
     {
-        $model = $this->model($this->judgeModel, $this->lessonTimeout);
+        $model = $this->model($this->judgeModel, $this->lessonTimeout, journalPurpose: self::JOURNAL_JUDGE);
         $text = $this->prompts->judgeSystem();
         $prompt = new RenderedPrompt($text, $this->prompts->judgeVersion(), PromptShape::Full, hash('sha256', $text));
 
@@ -102,7 +118,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
 
     public function judgeSlot(SlotJudgeRequest $request): ModelReply
     {
-        $model = $this->model($this->judgeModel, max(1, $this->slotJudgeTimeout), self::SLOT_JUDGE_ATTEMPTS);
+        $model = $this->model($this->judgeModel, max(1, $this->slotJudgeTimeout), self::SLOT_JUDGE_ATTEMPTS, self::JOURNAL_JUDGE);
         $text = $this->prompts->slotJudgeSystem();
         $prompt = new RenderedPrompt($text, $this->prompts->slotJudgeVersion(), PromptShape::Full, hash('sha256', $text));
 
@@ -113,7 +129,6 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
             Log::warning('plan.slot_judge', [
                 'prompt_version' => $prompt->version,
                 'model' => $this->judgeModel,
-                'task' => $request->task,
                 'latency_ms' => (int) round((hrtime(true) - $startedAt) / 1_000_000),
                 'error' => mb_substr($e->getMessage(), 0, 300),
             ]);
@@ -124,7 +139,6 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
         Log::info('plan.slot_judge', [
             'prompt_version' => $reply->promptVersion,
             'model' => $reply->model,
-            'task' => $request->task,
             'tokens_in' => $reply->tokensIn,
             'tokens_out' => $reply->tokensOut,
             'cost_usd' => $reply->costUsd,
@@ -159,9 +173,9 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
         return $this->prompts->slotJudgeVersion();
     }
 
-    private function model(string $name, int $timeout, ?int $attempts = null): ContentModelPort
+    private function model(string $name, int $timeout, ?int $attempts = null, ?string $journalPurpose = null): ContentModelPort
     {
-        $port = $this->catalog->get($this->provider, $name, self::PURPOSE, $timeout, $attempts);
+        $port = $this->catalog->get($this->provider, $name, self::PURPOSE, $timeout, $attempts, $journalPurpose);
         if ($port === null) {
             throw PlanModelUnavailable::because("провайдер «{$this->provider->value}» не настроен (нет ключа)");
         }

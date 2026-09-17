@@ -100,8 +100,15 @@ function lvBreaks(): array
 
         return $p;
     }],
-    'a reading in Latin letters' => [LessonCodes::PRONUNCIATION_SCRIPT, static function (array $p): array {
-        $p['vocabulary'][1]['pronunciation_native'] = 'sharp';
+    // A symbol leaves the script without leaving the ALPHABET: the warning alone, not the fatal code.
+    'a reading outside the script but in its own letters' => [LessonCodes::PRONUNCIATION_SCRIPT, static function (array $p): array {
+        $p['vocabulary'][1]['pronunciation_native'] = 'шарп +';
+
+        return $p;
+    }],
+    // Наряд BACK-TAILS-1 §3.2: a LETTER of another writing is fatal — «ֆоутoуз» is nothing the learner can read.
+    'a reading with letters of another writing' => [LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT, static function (array $p): array {
+        $p['vocabulary'][1]['pronunciation_native'] = 'ֆоутoуз';
 
         return $p;
     }],
@@ -385,13 +392,13 @@ it('counts the one rule a lesson breaks by its code', function (string $code, Cl
 
 // A code with no row of its own is a code nothing proves it counts. The seam judge's code is a model's, not a rule's
 // (LessonSeamJudge, `LessonObservationTest`). Доработка GEN-2b: no code is about the speaking key any more, the key is the
-// server's. Наряд GEN-3: «фатальных кодов становится 10» — seven codes more, fifty-seven in all.
-it('has a broken rule for every one of its fifty-seven codes', function () {
+// server's. Наряд GEN-3 added seven codes; наряд BACK-TAILS-1 §3.2 one more — fifty-eight in all.
+it('has a broken rule for every one of its fifty-eight codes', function () {
     $named = array_map(static fn (array $row): string => $row[0], [...array_values(lvBreaks()), ...array_values(lvStoryBreaks())]);
 
     expect(array_values(array_diff(LessonCodes::validated(), $named)))->toBe([])
-        ->and(count(LessonCodes::all()))->toBe(57)
-        ->and(count(array_unique(LessonCodes::all())))->toBe(57)
+        ->and(count(LessonCodes::all()))->toBe(58)
+        ->and(count(array_unique(LessonCodes::all())))->toBe(58)
         ->and(array_filter(LessonCodes::all(), static fn (string $code): bool => str_starts_with($code, 'key.')))->toBe([])
         ->and(LessonCodes::JUDGED)->toBe([LessonCodes::FILLER_NATIVE_SEAM]);
 });
@@ -475,7 +482,8 @@ it('skips a check whose language has no pack and writes the skip down, finding n
     )));
     // `frame.no_end_punct` reads both sides: the target frame is still read for the Romanian learner, the native one is not.
     $native = [
-        LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::FRAME_NO_END_PUNCT, LessonCodes::FRAME_NATIVE_PUNCT, LessonCodes::FRAME_NATIVE_AGREEMENT,
+        LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT,
+        LessonCodes::FRAME_NO_END_PUNCT, LessonCodes::FRAME_NATIVE_PUNCT, LessonCodes::FRAME_NATIVE_AGREEMENT,
         LessonCodes::LISTENING_SAME_EXCHANGE, LessonCodes::LISTENING_NO_LEARNER_VALUE, LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER,
         LessonCodes::NATIVE_GENDERED_PAST,
     ];

@@ -108,13 +108,20 @@ final class ListenCards
     }
 
     /**
-     * 34-5: an ask exchange — the learner's question sounds with its text, and the learner guesses what the partner
-     * will answer: the translation of the partner's own answer among the translations of two other partner lines of
-     * the day (SESSION-1a, хвост — the exchange's check stays with `dialogue_partner`, so the day never shows one set
-     * of options twice). The wrong lines are of the answer's own FORM (SESSION-1d): a question beside a question, a
-     * statement beside a statement — whether a line asks is the mark its text ends with by the target pack's
-     * `sentence_ends`; too few of that form — any others top it up, and that is no fault. Which lines is a shuffle seeded
-     * by the card's address; the partner's answer opens after.
+     * 34-5 «Что прозвучит в ответ?»: an ask exchange — the learner's question sounds with its text, and the learner
+     * guesses what the partner will answer.
+     *
+     * THE OPTIONS ARE LINES OF THE DAY, NOT SENTENCES ON THE LEARNER'S OWN LANGUAGE (наряд BACK-TAILS-1 §1.2, кадр
+     * 34-5): each carries `text_target`, `text_native` and its sound, and the client plays them and shows no text until
+     * the answer — so the choice is made by ear, the way the visit is heard. The right one is the line that really
+     * sounds in answer, the partner's line of THIS exchange.
+     *
+     * The wrong ones are two other lines of the partner OF THE SAME ROLE IN THE VISIT — lines that answer the learner:
+     * the partner's line of another `ask` (and of a `rescue`, where the learner also speaks first). Two such lines are
+     * not always there — a lesson is asked for two asks at the least, not four — so a day short of them tops up with
+     * the partner's remaining lines OF THE ANSWER'S OWN FORM (SESSION-1d: a question beside a question, a statement
+     * beside a statement, by the target pack's `sentence_ends`), and only then with any others. Which of the equals is
+     * a shuffle seeded by the card's address; two options never share their target text.
      */
     public static function predict(SceneMaterial $scene, Exchange $exchange): ?CardDraft
     {
@@ -123,24 +130,28 @@ final class ListenCards
         if ($exchange->kind !== ExchangeKind::Ask || $own === null || $partner === null) {
             return null;
         }
-        $candidates = [];
-        foreach ($scene->partnerLines() as $line) {
-            if ($line['step'] !== $exchange->step) {
-                $candidates[] = $line['message'];
-            }
-        }
         $seed = $scene->seed('x'.$exchange->step.':predict');
         $asks = $scene->asks($partner->textTarget);
-        $same = [];
+        $answers = [];
+        $sameForm = [];
         $other = [];
-        foreach (Shuffle::seeded($seed.':others', $candidates) as $message) {
-            if ($scene->asks($message->textTarget) === $asks) {
-                $same[] = ['text' => $message->textNative];
+        foreach (Shuffle::seeded($seed.':others', self::otherPartnerLines($scene, $exchange->step)) as $line) {
+            $option = CardObjects::line($scene->exchange($line['step']) ?? $exchange, $line['message']);
+            if ($line['answers']) {
+                $answers[] = $option;
+            } elseif ($scene->asks($line['message']->textTarget) === $asks) {
+                $sameForm[] = $option;
             } else {
-                $other[] = ['text' => $message->textNative];
+                $other[] = $option;
             }
         }
-        $chosen = Options::choose($seed, ['text' => $partner->textNative], [...$same, ...$other], self::PREDICT_OPTIONS);
+        $chosen = Options::choose(
+            $seed,
+            CardObjects::line($exchange, $partner),
+            [...$answers, ...$sameForm, ...$other],
+            self::PREDICT_OPTIONS,
+            'text_target',
+        );
         if (count($chosen['options']) < Options::MIN) {
             return null;
         }
@@ -152,6 +163,26 @@ final class ListenCards
             'correct' => $chosen['correct'],
             'partner_line' => CardObjects::line($exchange, $partner),
         ]);
+    }
+
+    /**
+     * The partner's lines of every exchange but `$step`, each saying whether it ANSWERS the learner — the partner
+     * speaks second there, which is what an `ask` and a `rescue` are ({@see predict()}).
+     *
+     * @return list<array{step: int, message: Message, answers: bool}>
+     */
+    private static function otherPartnerLines(SceneMaterial $scene, int $step): array
+    {
+        $out = [];
+        foreach ($scene->partnerLines() as $line) {
+            $exchange = $scene->exchange($line['step']);
+            if ($line['step'] === $step || $exchange === null) {
+                continue;
+            }
+            $out[] = [...$line, 'answers' => ! $exchange->partnerStarts()];
+        }
+
+        return $out;
     }
 
     /** 34-6: the partner's longest line of at most ten words, at two tempos — the line «Говорю сам» never takes. */

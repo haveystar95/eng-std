@@ -415,6 +415,27 @@ final readonly class LanguageWords
     }
 
     /**
+     * The LETTERS of the reading that belong to another writing (`script_letters`, наряд BACK-TAILS-1 §3.2) — each one
+     * once, in the order they stand. Only letters are looked at: a digit or a mark is a matter for `script`, and the
+     * one thing a learner cannot do is read an alphabet they do not know («ֆоутoуз» — an Armenian ֆ and two Latin o's
+     * among the Cyrillic).
+     *
+     * @return list<string>
+     */
+    public function foreignLetters(string $reading): array
+    {
+        $letters = $this->pack->pattern('script_letters');
+        $out = [];
+        foreach (preg_split('//u', $reading, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $character) {
+            if (preg_match('/^\p{L}$/u', $character) === 1 && preg_match($letters, $character) !== 1) {
+                $out[$character] = true;
+            }
+        }
+
+        return array_keys($out);
+    }
+
+    /**
      * The gendered past forms a line says about the learner (`gendered_past_pattern`, its first group).
      *
      * @return list<string>

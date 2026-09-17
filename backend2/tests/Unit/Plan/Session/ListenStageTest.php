@@ -85,6 +85,23 @@ function s1lRight(array $payload): string
     return array_column($payload['options'], 'text', 'id')[$payload['correct']];
 }
 
+/**
+ * The options of `listen_predict`, which are LINES and not strings (наряд BACK-TAILS-1 §1.2) — their translations.
+ *
+ * @param  array<string, mixed>  $payload
+ * @return list<string>
+ */
+function s1lLines(array $payload): array
+{
+    return array_column($payload['options'], 'text_native');
+}
+
+/** @param array<string, mixed> $payload the translation of the line that really sounds in answer */
+function s1lRightLine(array $payload): string
+{
+    return array_column($payload['options'], 'text_native', 'id')[$payload['correct']];
+}
+
 /** @return list<string> a question's wrong options in the order they are served */
 function s1lWrong(ListeningQuestion $question): array
 {
@@ -262,8 +279,12 @@ it('reads no exchange for a question in a learner language without a pack, and d
 });
 
 // D-19: a guess at the partner's answer on every ask exchange, from that exchange's own check.
-// Canon (SESSION-1a, хвост — D-19 снят): the options are translations of partner lines, never the exchange's check.
-it('predicts the partner\'s answer on ask exchanges only, among the translations of two other partner lines', function () {
+// Canon (SESSION-1a, хвост — D-19 снят): the options are partner lines, never the exchange's check. Наряд BACK-TAILS-1
+// §1.2 (кадр 34-5 «Что прозвучит в ответ?»): an option IS a line of the day — `text_target`, `text_native` and its
+// sound — so the choice is made by ear and the texts open after; the wrong ones are lines of the SAME ROLE, the
+// partner answering the learner (an `ask`, a `rescue`). Catches options gone back to bare native strings — a card the
+// learner reads instead of hears — and a wrong option taken from a line that answers nobody.
+it('predicts the partner\'s answer on ask exchanges only, among two other lines that answer the learner', function () {
     $scene = s1lScene();
     $predicts = s1lCards($scene, CardKind::ListenPredict);
 
@@ -273,10 +294,11 @@ it('predicts the partner\'s answer on ask exchanges only, among the translations
     ]);
     foreach ($predicts as $card) {
         $exchange = $scene->exchange($card->payload['exchange']['step']);
-        $others = [];
+        // The partner answers the learner where the learner opened: the asks and the rescue.
+        $answering = [];
         foreach ($scene->partnerLines() as $line) {
-            if ($line['step'] !== $exchange->step) {
-                $others[] = mb_strtolower($line['message']->textNative);
+            if ($line['step'] !== $exchange->step && ! $scene->exchange($line['step'])->partnerStarts()) {
+                $answering[] = mb_strtolower($line['message']->textNative);
             }
         }
         $checkTexts = array_map(static fn ($o): string => $o->textNative, $exchange->check->options);
@@ -291,12 +313,19 @@ it('predicts the partner\'s answer on ask exchanges only, among the translations
                 'text_native' => $exchange->partner()->textNative, 'audio' => Audio::of('x'.$exchange->step),
             ])
             ->and($card->payload['options'])->toHaveCount(3)
-            ->and(s1lRight($card->payload))->toBe($exchange->partner()->textNative);
-        $wrong = array_values(array_filter(s1lTexts($card->payload), static fn (string $t): bool => $t !== $exchange->partner()->textNative));
+            // Every option is a line with both its texts and its sound — nothing to read before the answer.
+            ->and(array_map(static fn (array $o): array => array_keys($o), $card->payload['options']))
+            ->each->toBe(['id', 'ref', 'text_target', 'text_native', 'audio'])
+            ->and(s1lRightLine($card->payload))->toBe($exchange->partner()->textNative);
+        foreach ($card->payload['options'] as $option) {
+            expect($option['audio'])->toBe(Audio::of($option['ref']))
+                ->and($option['audio']['voice'])->toBe('partner');
+        }
+        $wrong = array_values(array_filter(s1lLines($card->payload), static fn (string $t): bool => $t !== $exchange->partner()->textNative));
         expect($wrong)->toHaveCount(2)
-            ->and(array_unique(array_map(mb_strtolower(...), s1lTexts($card->payload))))->toHaveCount(3);
+            ->and(array_unique(array_map(mb_strtolower(...), array_column($card->payload['options'], 'text_target'))))->toHaveCount(3);
         foreach ($wrong as $text) {
-            expect(in_array(mb_strtolower($text), $others, true))->toBeTrue($text)
+            expect(in_array(mb_strtolower($text), $answering, true))->toBeTrue($text)
                 ->and(in_array($text, $checkTexts, true))->toBeFalse($text);
         }
     }
@@ -313,10 +342,11 @@ it('predicts the partner\'s answer on ask exchanges only, among the translations
     expect(array_map(static fn (CardDraft $d): string => $d->payload['exchange']['ref'], s1lCards($answered, CardKind::ListenPredict)))->toBe(['x8']);
 });
 
-// Canon (SESSION-1d, 5.3): «ложные варианты той же формы, что верный — вопрос к вопросу, утверждение к утверждению (знак
-// вопроса по sentence_ends пакета цели); подходящих не хватает — добираются любые». Catches a question offered beside a
-// statement while statements are there, and a card left short when the form runs out.
-it('predicts among lines of the answer\'s own form — statements beside a statement, questions beside a question — topped up with any', function () {
+// Canon (SESSION-1d, 5.3): «ложные варианты той же формы, что верный — вопрос к вопросу, утверждение к утверждению»;
+// наряд BACK-TAILS-1 §1.2 puts the SAME ROLE first and leaves the form as the top-up rule after it. A lesson is asked
+// for two asks at the least, not four, so the lines that answer the learner run out — and then the form decides.
+// Catches the top-up gone: a card left short, or one taking a question where a statement was there.
+it('tops a predict up by the answer\'s own form when the lines that answer the learner run out', function () {
     $asks = static fn (SceneMaterial $scene, string $native): bool => (function () use ($scene, $native): bool {
         foreach ($scene->partnerLines() as $line) {
             if ($line['message']->textNative === $native) {
@@ -327,38 +357,33 @@ it('predicts among lines of the answer\'s own form — statements beside a state
         return false;
     })();
 
-    // On the clean lesson both answers (x7, x8) are statements, and four of the other lines are questions (x1–x4).
-    $scene = s1lScene();
-    foreach (s1lCards($scene, CardKind::ListenPredict) as $card) {
-        expect(array_map(static fn (string $t): bool => $asks($scene, $t), s1lTexts($card->payload)))->toBe([false, false, false], $card->payload['exchange']['ref']);
-    }
+    // The rescue turned into an answer: x7's only same-role line left is x8's, and the second option is topped up.
+    $onlyAsks = s1lScene(payload: static function (array $answer): array {
+        $answer['dialogue'][5]['kind'] = 'answer';
+        $answer['dialogue'][5]['initiator'] = 'A';
+        $answer['dialogue'][5]['messages'] = array_reverse($answer['dialogue'][5]['messages']);
 
-    // x8 answered with a question: its wrong options are questions too.
+        return $answer;
+    });
+    $x7 = s1lCards($onlyAsks, CardKind::ListenPredict)[0]->payload;
+    expect($x7['options'])->toHaveCount(3)
+        // Both answers of the visit are statements, and the top-up keeps to statements while statements are there.
+        ->and(array_map(static fn (string $t): bool => $asks($onlyAsks, $t), s1lLines($x7)))->toBe([false, false, false]);
+
+    // x8 answered with a question and the rescue gone: the top-up takes questions.
     $question = s1lScene(payload: static function (array $answer): array {
+        $answer['dialogue'][5]['kind'] = 'answer';
+        $answer['dialogue'][5]['initiator'] = 'A';
+        $answer['dialogue'][5]['messages'] = array_reverse($answer['dialogue'][5]['messages']);
         $answer['dialogue'][7]['messages'][1]['text_target'] = 'Do you want a note for school?';
         $answer['dialogue'][7]['messages'][1]['text_native'] = 'Вам нужна справка для школы?';
 
         return $answer;
     });
     $x8 = s1lCards($question, CardKind::ListenPredict)[1]->payload;
-    expect(s1lRight($x8))->toBe('Вам нужна справка для школы?')
-        ->and(array_map(static fn (string $t): bool => $asks($question, $t), s1lTexts($x8)))->toBe([true, true, true]);
-
-    // Only one other question left: it is taken, and a statement tops the card up.
-    $short = s1lScene(payload: static function (array $answer): array {
-        $answer['dialogue'][7]['messages'][1]['text_target'] = 'Do you want a note for school?';
-        $answer['dialogue'][7]['messages'][1]['text_native'] = 'Вам нужна справка для школы?';
-        foreach ([1, 2, 3] as $i) {
-            $answer['dialogue'][$i]['messages'][0]['text_target'] = rtrim($answer['dialogue'][$i]['messages'][0]['text_target'], '?').'.';
-        }
-
-        return $answer;
-    });
-    $topped = s1lCards($short, CardKind::ListenPredict)[1]->payload;
-    expect($topped['options'])->toHaveCount(3)
-        ->and(array_values(array_filter(s1lTexts($topped), static fn (string $t): bool => $t !== 'Вам нужна справка для школы?')))
-        ->toContain('Где болит: вверху спины или в пояснице?')
-        ->and(count(array_filter(s1lTexts($topped), static fn (string $t): bool => $asks($short, $t))))->toBe(2);
+    expect(s1lRightLine($x8))->toBe('Вам нужна справка для школы?')
+        // x7's answer is the one same-role line; the second is a question, by form.
+        ->and(count(array_filter(s1lLines($x8), static fn (string $t): bool => $asks($question, $t))))->toBe(2);
 });
 
 // Canon: the partner's longest line of at most ten words; between equals the lower step.
@@ -408,9 +433,11 @@ it('asks the number of the visit — the line, its place in the text, the value 
         ->and($payload['options'])->toHaveCount(3)
         ->and(s1lRight($payload))->toBe('Через неделю')
         ->and(array_unique(array_map(mb_strtolower(...), $texts)))->toHaveCount(3)
-        // Of its own kind first: times beside a time, not «Три дня назад» or «Два дня».
-        ->and($texts)->not->toContain('Три дня назад')
-        ->and($texts)->not->toContain('Два дня');
+        // Наряд BACK-TAILS-1 §1.3, кадр 34-7: «варианты — числа и количества, разбирать остальное не нужно». Every
+        // option says a numeral or a counted unit; a date on the calendar and an adverb of time are not values to catch.
+        ->and($texts)->toEqualCanonicalizing(['Через неделю', 'Три дня назад', 'Неделе'])
+        ->and($texts)->not->toContain('Сегодня')
+        ->and($texts)->not->toContain('Раньше');
 });
 
 it('takes, between lines of one length that say a number, the lower step and in one exchange the partner', function () {
@@ -477,29 +504,41 @@ it('deals the number card with exactly two other values and none with one', func
         ->and(s1lCards(s1lScene(payload: $fewer(false)), CardKind::ListenNumber))->toBe([]);
 });
 
-it('prefers another value of the same kind even when values of the other kind come first', function () {
-    // One time-only value is left («Сегодня утром») beside two with a number: it is always among the options.
+// Canon (наряд BACK-TAILS-1 §1.3): «только числа и количества дня; «сегодня/завтра» — не числа». Catches the day's
+// dates coming back as options — «Сегодня» offered against «Через неделю» is not a number heard wrong, it is a question
+// about something else — and catches the rule swallowing a real amount with no numeral in it.
+it('offers no date and no adverb of time, and keeps an amount that has no numeral in it', function () {
+    // «сегодня утром» is a time of the day, «через неделю» an amount: only the second may be an option.
     $scene = s1lScene(payload: static function (array $answer): array {
         $answer['dialogue'][1]['messages'][0]['text_native'] = 'Когда это началось?';
         $answer['phrases'][1]['slot']['fillers'][1]['native'] = 'накануне';
 
         return $answer;
     });
+    $texts = s1lTexts(s1lOne($scene, CardKind::ListenNumber));
 
-    expect(s1lTexts(s1lOne($scene, CardKind::ListenNumber)))->toContain('Сегодня утром');
+    expect($texts)->not->toContain('Сегодня утром')
+        ->and($texts)->not->toContain('Накануне')
+        ->and($texts)->toContain('Через неделю');
 });
 
 it('reads a value as a run of number and time words standing together', function () {
     $ru = NumberValues::of(lessonPacks()->for('ru'));
     $en = NumberValues::of(lessonPacks()->for('en'));
 
+    // A run is read the same as ever — any number OR time word marks the line and its span; `amount` is the narrower
+    // mark an OPTION is picked by (наряд BACK-TAILS-1 §1.3): «завтра» is a run, and no option.
     expect($ru?->runs('Приходите завтра в 10:30, или через два дня.'))->toBe([
-        ['start' => 10, 'end' => 16, 'text' => 'завтра', 'words' => 1, 'number' => false],
-        ['start' => 19, 'end' => 24, 'text' => '10:30', 'words' => 2, 'number' => true],
-        ['start' => 30, 'end' => 43, 'text' => 'через два дня', 'words' => 3, 'number' => true],
+        ['start' => 10, 'end' => 16, 'text' => 'завтра', 'words' => 1, 'number' => false, 'amount' => false],
+        ['start' => 19, 'end' => 24, 'text' => '10:30', 'words' => 2, 'number' => true, 'amount' => true],
+        ['start' => 30, 'end' => 43, 'text' => 'через два дня', 'words' => 3, 'number' => true, 'amount' => true],
     ])
         ->and($ru?->value('Приходите завтра в 10:30, или через два дня.'))->toBe(['text' => 'Через два дня', 'number' => true])
         ->and($ru?->values('два, три'))->toBe([['text' => 'Два', 'number' => true], ['text' => 'Три', 'number' => true]])
+        // An amount with no numeral in it is one; a date and an adverb of time are not values at all.
+        ->and($ru?->value('Приходите через неделю.'))->toBe(['text' => 'Через неделю', 'number' => false])
+        ->and($ru?->values('сегодня или завтра'))->toBe([])
+        ->and($ru?->value('Приходите завтра.'))->toBeNull()
         ->and($ru?->value('Кашель'))->toBeNull()
         ->and($en?->says('after one week'))->toBeTrue()
         ->and($en?->says('last night'))->toBeFalse()

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Assembly;
 
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Message;
@@ -11,8 +12,8 @@ use App\Modules\Plan\Domain\Service\FrameParts;
 use App\Modules\Plan\Domain\Service\SpeechCoverage;
 
 /**
- * THE PAYLOADS OF «ГОВОРЮ САМ» (наряд SESSION-1a, разд. 1; SPEC §4, 26–28) — what `speak_answer`, `speak_echo` and
- * `speak_retell` carry, key for key. Which exchange and which line get a card is {@see SpeakStage}'s business; this
+ * THE PAYLOADS OF «ГОВОРЮ САМ» (наряд SESSION-1a, разд. 1; SPEC §4, 26–28; наряд BACK-TAILS-1 §1.1) — what
+ * `speak_answer`, `speak_echo` and `speak_retell` carry, key for key. Which exchange and which line get a card is {@see SpeakStage}'s business; this
  * class only writes down what the card needs, so a returned exchange, the review and the rehearsal deal exactly the
  * card the scene day deals.
  *
@@ -79,19 +80,28 @@ final class SpeakCards
     }
 
     /**
-     * `speak_retell` (кадр 35-4): the partner's line is heard and retold in the learner's own language — judged by
-     * meaning; the text is revealed after the verdict.
+     * `speak_retell` — «Повтори свою реплику» (кадр 35-4, наряд BACK-TAILS-1 §1.1): the learner's OWN line of the
+     * exchange sounds, its target text closed, its translation left on the screen as the sense of it, and the learner
+     * says it back. The client passes it by the coverage of the WHOLE line — there is no frame here and no window, so
+     * nothing is counted apart — and the target text opens after the attempt; the server judges nothing.
      *
-     * @return array<string, mixed>
+     * Null when the exchange has no learner line: there is nothing to repeat.
+     *
+     * @return array<string, mixed>|null
      */
-    public static function retell(SceneMaterial $scene, Exchange $exchange, Message $partner): array
+    public static function retell(SceneMaterial $scene, Exchange $exchange, LanguagePack $target): ?array
     {
+        $ownLine = CardObjects::ownLine($scene, $exchange);
+        if ($ownLine === null) {
+            return null;
+        }
+
         return [
             'scene_id' => $scene->sceneId->value,
             'exchange' => CardObjects::exchange($exchange),
-            'partner_line' => CardObjects::line($exchange, $partner),
-            'reveal' => ['text_target' => $partner->textTarget, 'text_native' => $partner->textNative],
-            'judge' => true,
+            'own_line' => $ownLine,
+            'expected_text' => $ownLine['text_target'],
+            'coverage_min' => (new SpeechCoverage)->minFor($ownLine['text_target'], $target),
         ];
     }
 }
