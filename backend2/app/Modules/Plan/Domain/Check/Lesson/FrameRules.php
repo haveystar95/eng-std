@@ -15,7 +15,7 @@ use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE FRAMES (`lesson_day.v4.6`, FRAMES): as many as half to all of the answer/ask exchanges, each said at least
+ * THE FRAMES (`lesson_day.v4.7`, FRAMES): as many as half to all of the answer/ask exchanges, each said at least
  * once, at most seven words outside the slot, at most a third without a slot, a native rendering with no
  * «в/на»-style alternatives that ends the way the frame ends; a frame that stands alone — no pronoun it leans on
  * without a thing it stands for; a native frame with no word that agrees with its slot («___ разрешён?»).

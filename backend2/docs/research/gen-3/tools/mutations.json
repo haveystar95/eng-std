@@ -111,7 +111,7 @@
     "tests": [
       {
         "path": "tests/Unit/Plan/LessonGateTest.php",
-        "filter": "holds the day for exactly the ten fatal codes"
+        "filter": "holds the day for exactly the nine fatal codes"
       }
     ]
   },
@@ -120,12 +120,12 @@
     "rule": "frame.known_native_repeat — только предупреждение",
     "defect": "совпавший родной каркас держит день",
     "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
-    "find": "        LessonCodes::VOCAB_ABBREVIATION,\n    ];",
-    "replace": "        LessonCodes::VOCAB_ABBREVIATION,\n        LessonCodes::FRAME_KNOWN_NATIVE_REPEAT,\n    ];",
+    "find": "        LessonCodes::FRAME_KNOWN_REPEAT,\n    ];",
+    "replace": "        LessonCodes::FRAME_KNOWN_REPEAT,\n        LessonCodes::FRAME_KNOWN_NATIVE_REPEAT,\n    ];",
     "tests": [
       {
         "path": "tests/Unit/Plan/LessonGateTest.php",
-        "filter": "holds the day for exactly the ten fatal codes"
+        "filter": "holds the day for exactly the nine fatal codes"
       }
     ]
   },
@@ -186,16 +186,16 @@
     ]
   },
   {
-    "name": "14. аббревиатура — предупреждение",
-    "rule": "vocab.abbreviation фатален",
-    "defect": "аббревиатура — предупреждение",
+    "name": "14. аббревиатура снова фатальна",
+    "rule": "vocab.abbreviation — предупреждение (доработка)",
+    "defect": "аббревиатура держит день",
     "file": "app/Modules/Plan/Domain/Check/LessonGate.php",
-    "find": "        LessonCodes::VOCAB_ABBREVIATION,\n    ];",
-    "replace": "    ];",
+    "find": "        LessonCodes::FRAME_KNOWN_REPEAT,\n    ];",
+    "replace": "        LessonCodes::FRAME_KNOWN_REPEAT,\n        LessonCodes::VOCAB_ABBREVIATION,\n    ];",
     "tests": [
       {
         "path": "tests/Unit/Plan/LessonGateTest.php",
-        "filter": "holds the day for exactly the ten fatal codes"
+        "filter": "holds the day for exactly the nine fatal codes"
       }
     ]
   },
@@ -242,16 +242,16 @@
     ]
   },
   {
-    "name": "18. починённое слово-аббревиатура принимается",
-    "rule": "перепроверка term: не аббревиатура",
-    "defect": "починённое слово-аббревиатура принимается",
+    "name": "18. перепроверка слова отказывает аббревиатуре",
+    "rule": "перепроверка term: аббревиатура — не причина отказа (доработка)",
+    "defect": "починённое слово-аббревиатура отвергается",
     "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
-    "find": ", LessonCodes::VOCAB_ABBREVIATION], true)",
-    "replace": "], true)",
+    "find": "[LessonCodes::VOCAB_USED_IN_WRONG, LessonCodes::VOCAB_KNOWN_REPEAT], true)",
+    "replace": "[LessonCodes::VOCAB_USED_IN_WRONG, LessonCodes::VOCAB_KNOWN_REPEAT, LessonCodes::VOCAB_ABBREVIATION], true)",
     "tests": [
       {
         "path": "tests/Feature/Plan/StoryBuildTest.php",
-        "filter": "refuses a repaired word"
+        "filter": "takes a repaired word that is an abbreviation"
       }
     ]
   },
@@ -536,6 +536,105 @@
       {
         "path": "tests/Feature/Admin/AdminPlaygroundTest.php",
         "filter": "starts a run without calling the model"
+      }
+    ]
+  },
+  {
+    "name": "39. починке каркаса цитируется тождество родного шаблона",
+    "rule": "FINDINGS починки каркаса — без находок о родном шаблоне (доработка)",
+    "defect": "находки родного близнеца уходят в починку",
+    "file": "app/Modules/Plan/Application/Service/LessonCardRepairer.php",
+    "find": "static fn (LessonViolation $v): bool => $card->cites($v, $answer)",
+    "replace": "static fn (LessonViolation $v): bool => true",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/StoryBuildTest.php",
+        "filter": "tells the repair of a learned frame"
+      },
+      {
+        "path": "tests/Feature/Plan/LessonRepairTest.php",
+        "filter": "asks nothing for a frame whose only finding"
+      }
+    ]
+  },
+  {
+    "name": "40. близнец по цели тоже не цитируется",
+    "rule": "близнец по TARGET_LANGUAGE починке цитируется",
+    "defect": "любой frame.twin вырезается из FINDINGS",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonCard.php",
+    "find": "        if ($violation->code !== LessonCodes::FRAME_TWIN) {\n            return true;\n        }",
+    "replace": "        if ($violation->code !== LessonCodes::FRAME_TWIN) {\n            return true;\n        }\n\n        return false;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonCardTest.php",
+        "filter": "tells a frame repair every finding"
+      }
+    ]
+  },
+  {
+    "name": "41. known_native_repeat цитируется починке",
+    "rule": "frame.known_native_repeat починке каркаса не цитируется",
+    "defect": "родное совпадение с прошлым днём уходит в FINDINGS",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonCard.php",
+    "find": "        if ($violation->code === LessonCodes::FRAME_KNOWN_NATIVE_REPEAT) {\n            return false;\n        }",
+    "replace": "",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonCardTest.php",
+        "filter": "tells a frame repair every finding"
+      }
+    ]
+  },
+  {
+    "name": "42. фильтр задевает не каркасы",
+    "rule": "фильтр FINDINGS — только у карточки каркаса",
+    "defect": "обмен не получает находку с кодом родного шаблона",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonCard.php",
+    "find": "        if ($this->kind !== self::FRAME) {\n            return true;\n        }\n",
+    "replace": "",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonCardTest.php",
+        "filter": "tells a frame repair every finding"
+      }
+    ]
+  },
+  {
+    "name": "43. разбор не закрывает знак конца родного каркаса",
+    "rule": "frame_native без пробела перед знаком конца (доработка)",
+    "defect": "«Всего ___ .» доходит до карточек и судьи",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonParser.php",
+    "find": "            frameNative: FrameText::withEndMarkClosed($this->stringOrEmpty($row, 'frame_native')),",
+    "replace": "            frameNative: $this->stringOrEmpty($row, 'frame_native'),",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonNativeMarksTest.php"
+      }
+    ]
+  },
+  {
+    "name": "44. разбор не закрывает знак конца родного наполнения",
+    "rule": "native наполнения без пробела перед знаком конца (доработка)",
+    "defect": "«три дня назад .» остаётся",
+    "file": "app/Modules/Plan/Domain/Lesson/LessonParser.php",
+    "find": "                    native: FrameText::withEndMarkClosed($this->stringOrEmpty($f, 'native')),",
+    "replace": "                    native: $this->stringOrEmpty($f, 'native'),",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonNativeMarksTest.php"
+      }
+    ]
+  },
+  {
+    "name": "45. пробел снимается и перед знаком не в конце",
+    "rule": "снимается только пробел перед знаком, которым текст кончается",
+    "defect": "«Что с ним ? — ___ !» теряет внутренний пробел",
+    "file": "app/Modules/Plan/Domain/Service/FrameText.php",
+    "find": "preg_replace('/\\s+([.!?…]+)$/u', '$1', trim($text))",
+    "replace": "preg_replace('/\\s+([.!?…]+)/u', '$1', trim($text))",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonNativeMarksTest.php"
       }
     ]
   }

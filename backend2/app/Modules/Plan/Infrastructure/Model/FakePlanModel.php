@@ -67,7 +67,7 @@ final class FakePlanModel implements PlanModelPort
         private readonly ?Closure $lesson = null,
         private readonly ?Closure $repair = null,
         private readonly string $planVersion = 'plan-builder-v2',
-        private readonly string $lessonVersion = 'lesson_day.v4.6',
+        private readonly string $lessonVersion = 'lesson_day.v4.7',
         private readonly ?Closure $judge = null,
         private readonly ?Closure $slotJudge = null,
     ) {}
@@ -96,7 +96,7 @@ final class FakePlanModel implements PlanModelPort
         $this->repairRequests[] = $request;
         $payload = $this->repair !== null ? ($this->repair)($request, $this->repairCalls) : ['card' => $request->card];
 
-        return new ModelReply($payload, 'lesson_card_repair.v1.2', self::MODEL, 900, 300, '0.000000', 3, '');
+        return new ModelReply($payload, 'lesson_card_repair.v1.3', self::MODEL, 900, 300, '0.000000', 3, '');
     }
 
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
@@ -132,7 +132,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function repairPromptVersion(): string
     {
-        return 'lesson_card_repair.v1.2';
+        return 'lesson_card_repair.v1.3';
     }
 
     public function judgePromptVersion(): string
@@ -216,7 +216,7 @@ final class FakePlanModel implements PlanModelPort
     }
 
     /**
-     * THE CLEAN LESSON (`lesson_day.v4.6`): a doctor's visit with a child's back pain, written to break
+     * THE CLEAN LESSON (`lesson_day.v4.7`): a doctor's visit with a child's back pain, written to break
      * no rule the validator counts — the fixture every plan test deals its days from, and the baseline a
      * test breaks one rule of.
      *

@@ -16,7 +16,7 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day.v4.6`, docs/plan-v2.md §4).
+ * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day.v4.7`, docs/plan-v2.md §4).
  *
  * The clean fixture lesson breaks nothing but the one v4.6 rule it predates ({@see planFixtureWarnings()}); every row below
  * breaks ONE rule of the prompt in it and names the code that must count the breach — the defect each code exists to
@@ -622,8 +622,9 @@ it('reads the partner\'s gender only against an earlier day of the same role', f
 });
 
 // Наряд GEN-3: «vocab.abbreviation — term_target аббревиатура или акроним (две и больше заглавных подряд, с точками или слэшем:
-// API, CI/CD, U.S.)». Catches an acronym taught as a word — with dots, with a slash, inside a chunk, in any alphabet — and
-// a word with one capital (X-ray, iPhone) or a hyphen (Wi-Fi) taken for one.
+// API, CI/CD, U.S.)»; доработка: «предупреждение — судит модель, код только считает». Catches an acronym word of the day left
+// uncounted — with dots, with a slash, inside a chunk, in any alphabet — and a word with one capital (X-ray, iPhone) or a
+// hyphen (Wi-Fi) counted as one.
 it('counts an abbreviation or an acronym as a word of the day, and not a word with one capital', function () {
     $at = static function (string $term): bool {
         $p = lvApart();

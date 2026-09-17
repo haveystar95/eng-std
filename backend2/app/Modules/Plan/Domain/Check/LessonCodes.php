@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.6`; наряды GEN-2a, GEN-2b и его доработка, GEN-3) — fifty-seven.
- * Every breach is counted by code; ten of them are fatal — the day is not dealt until a repair takes their card
- * ({@see LessonGate}) — and the other 47 are warnings: counted and kept. One code is not the validator's but the seam
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.7`; наряды GEN-2a, GEN-2b и его доработка, GEN-3) — fifty-seven.
+ * Every breach is counted by code; nine of them are fatal — the day is not dealt until a repair takes their card
+ * ({@see LessonGate}) — and the other 48 are warnings: counted and kept. One code is not the validator's but the seam
  * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}). Six codes read the story
  * so far or the day as a whole (GEN-3): a word or a frame an earlier day taught, a frame whose native pattern an earlier
  * day taught, two frames of one pattern, one frame in two exchanges in a row, a partner who changed gender; and one reads a
- * word of the day itself — an abbreviation, which has nothing to translate.
+ * word of the day itself — an abbreviation, a word only when the learner's language has an everyday word for it.
  *
  * No code is about the speaking key: the key is the server's, taken from the frame (`docs/plan-v2.md` §3а).
  *

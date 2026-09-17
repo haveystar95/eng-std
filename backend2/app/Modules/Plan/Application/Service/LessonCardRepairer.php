@@ -39,7 +39,8 @@ use Throwable;
  * stored lesson.
  *
  * The findings at the card (or only the named codes) go to the model with the card and the part of the lesson the
- * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text — a whole
+ * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text; a frame is not
+ * told that its NATIVE pattern is the same as another's ({@see LessonCard::cites()}) — a whole
  * exchange's NEIGHBOURS, and what the earlier days of the plan taught (EARLIER_DAYS: their frames and words). Card and
  * context are the answer as the server reads it ({@see LessonAssembly::said()}): the filler found in each line, the
  * marks of what the lines say, the key of the frame — the model's own `filler`, marks and key are shown to nobody.
@@ -47,8 +48,7 @@ use Throwable;
  * go in together or not at all; a learner line must stand on a frame of the lesson (the schema no longer names the
  * day's frames — its ids are the same for every call, so the vendor's prompt cache holds it). The card is parsed to its
  * shape, put into the answer, spoken in the plan's roles, and the whole answer is validated again. A repaired WORD is
- * checked again by the server before it counts: `used_in` true, not a word of an earlier day, not an abbreviation, not twice
- * in the day —
+ * checked again by the server before it counts: `used_in` true, not a word of an earlier day, not twice in the day —
  * else the repair is refused like one off the card's shape. Nothing is written here: the build stores what passed its
  * gate, the command writes only on `--apply` ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
  */
@@ -121,9 +121,13 @@ final readonly class LessonCardRepairer
         if ($atCard === [] && $codes === []) {
             return self::nothing(LessonCardRepairOutcome::NOTHING_TO_REPAIR, $card->address, $card->kind, 'the validator finds nothing at this card', $before, count($found));
         }
+        $cited = array_values(array_filter($atCard, static fn (LessonViolation $v): bool => $card->cites($v, $answer)));
+        if ($cited === [] && $atCard !== []) {
+            return self::nothing(LessonCardRepairOutcome::NOTHING_TO_REPAIR, $card->address, $card->kind, 'only the native pattern is the same as another frame\'s — a native rendering is a translation (P2R v1.3)', $before, count($found));
+        }
         $findings = $atCard === []
             ? array_map(static fn (string $code): array => ['code' => $code, 'detail' => 'named by the session'], $codes)
-            : array_map(static fn (LessonViolation $v): array => ['code' => $v->code, 'detail' => "{$v->address}: {$v->detail}"], $atCard);
+            : array_map(static fn (LessonViolation $v): array => ['code' => $v->code, 'detail' => "{$v->address}: {$v->detail}"], $cited);
 
         $repairRequest = new LessonCardRepairRequest(
             address: $card->address,
@@ -215,8 +219,9 @@ final readonly class LessonCardRepairer
 
     /**
      * Why the server refuses a repaired word (P2R v1.2, наряд GEN-3): what its own check of the word still finds — a
-     * `used_in` that is not true, a word an earlier day taught, an abbreviation — and a word the day already lists under
-     * another id.
+     * `used_in` that is not true, a word an earlier day taught — and a word the day already lists under another id. An
+     * abbreviation is no reason (доработка GEN-3): whether the learner's language has an everyday word for it is the
+     * model's to judge (P2R v1.3), the validator only counts it.
      *
      * @param  list<LessonViolation>  $after  the validator's findings over the lesson with the repaired word
      * @return list<string>
@@ -225,7 +230,7 @@ final readonly class LessonCardRepairer
     {
         $out = [];
         foreach ($after as $violation) {
-            if ($violation->address === $card->address && in_array($violation->code, [LessonCodes::VOCAB_USED_IN_WRONG, LessonCodes::VOCAB_KNOWN_REPEAT, LessonCodes::VOCAB_ABBREVIATION], true)) {
+            if ($violation->address === $card->address && in_array($violation->code, [LessonCodes::VOCAB_USED_IN_WRONG, LessonCodes::VOCAB_KNOWN_REPEAT], true)) {
                 $out[] = "{$violation->code}: {$violation->detail}";
             }
         }

@@ -16,10 +16,12 @@ use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE DAY'S WORDS (`lesson_day.v4.6`, VOCABULARY): `used_in` names places that exist and really
+ * THE DAY'S WORDS (`lesson_day.v4.7`, VOCABULARY): `used_in` names places that exist and really
  * carry the term; at least half the items stand in the learner's frames or fillers; no item inside
- * another; no free combination of ordinary words as a «chunk», no plain everyday word as a word; no abbreviation or
- * acronym — «there is nothing to translate» (наряд GEN-3, fatal: the card of such a word teaches nothing).
+ * another; no free combination of ordinary words as a «chunk», no plain everyday word as a word; an abbreviation or an
+ * acronym only when the learner's language has an everyday word for it (ATM → банкомат, PIN → ПИН-код), never one with
+ * none (API, CI/CD, HR) — `vocab.abbreviation`, a warning (доработка GEN-3, решение архитектора): whether the learner's
+ * language has such a word is the model's to judge by the prompt's rule, the code only counts the abbreviation.
  *
  * An abbreviation is read by its letters, in any language that has capitals: two capitals or more in a row, with or without
  * a dot or a slash between them — API, CI/CD, U.S.; one capital («X-ray», «iPhone») is not one. The free combination and
@@ -46,7 +48,7 @@ final class VocabularyRules implements LessonRule
             }
 
             if (self::isAbbreviation($item->termTarget)) {
-                $out[] = new LessonViolation(LessonCodes::VOCAB_ABBREVIATION, $item->id, "«{$item->termTarget}» is an abbreviation or an acronym — there is nothing to translate");
+                $out[] = new LessonViolation(LessonCodes::VOCAB_ABBREVIATION, $item->id, "«{$item->termTarget}» is an abbreviation or an acronym — a word of the day only when the learner's language has an everyday word for it");
             }
 
             $tokens = Words::tokens($item->termTarget);

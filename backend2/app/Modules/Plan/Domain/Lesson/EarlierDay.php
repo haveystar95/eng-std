@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Domain\Lesson;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * ONE DAY OF THE STORY SO FAR (`lesson_day.v4.6`, EARLIER_DAYS; наряд GEN-3): a content day of the plan whose lesson is
+ * ONE DAY OF THE STORY SO FAR (`lesson_day.v4.7`, EARLIER_DAYS; наряд GEN-3): a content day of the plan whose lesson is
  * written, as the next day's lesson reads it — the day's number, the scene's title in the target language, the partner's
  * role with the gender the day was spoken with, the dialogue line by line (who speaks, the target text only), the frames
  * in both languages and the words.

@@ -575,7 +575,7 @@ final class Plan
     }
 
     /**
-     * THE STORY SO FAR of a scene (`lesson_day.v4.6`, EARLIER_DAYS; наряд GEN-3): the scene days of this plan before the
+     * THE STORY SO FAR of a scene (`lesson_day.v4.7`, EARLIER_DAYS; наряд GEN-3): the scene days of this plan before the
      * scene's day whose lesson is written (ready, or waiting for its photos), in the order of the calendar — none for the
      * first scene day, and none for a scene no day holds. Each is read off its served lesson, the partner's gender as the
      * day was spoken ({@see PlanScene::partnerVoiceGender()}, the default cast when it has none).

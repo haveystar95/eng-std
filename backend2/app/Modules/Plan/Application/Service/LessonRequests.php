@@ -12,7 +12,7 @@ use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Shared\Domain\Service\LanguageName;
 
 /**
- * THE LESSON REQUEST OF A SCENE (`lesson_day.v4.6`; наряды GEN-2a, GEN-3) — one way to put the prompt's inputs together, for
+ * THE LESSON REQUEST OF A SCENE (`lesson_day.v4.7`; наряды GEN-2a, GEN-3) — one way to put the prompt's inputs together, for
  * the build of a day and for the repair of a stored day's card alike:
  *
  *  - TOPIC — the scene's native title; TOPIC_DESCRIPTION — its brief, then the plan's goal in the learner's own words

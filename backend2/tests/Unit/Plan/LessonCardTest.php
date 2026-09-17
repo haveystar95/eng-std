@@ -131,3 +131,26 @@ it('puts a repaired word back under its own id, at its place, and nowhere else',
         ->and($repaired?->exchanges)->toEqual($answer->exchanges)
         ->and($repaired?->phrases)->toEqual($answer->phrases);
 });
+
+// Доработка GEN-3, P2R v1.3: «тождество при починке только по TARGET_LANGUAGE, родной каркас — перевод»; решение архитектора:
+// «лишними были только находки о тождестве родного шаблона (known_native_repeat, twin по родному)». Catches a frame repair told
+// its native pattern is another's, a twin of the TARGET pattern kept from it (that one is the repair's to fix), any other
+// finding of the frame dropped, and the filter reaching a card that is not a frame.
+it('tells a frame repair every finding but that its native pattern is another frame\'s', function () {
+    $answer = (new LessonParser)->parse((static function (): array {
+        $p = FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+        $p['phrases'][4]['frame_native'] = $p['phrases'][1]['frame_native'];
+        $p['phrases'][5]['frame_target'] = $p['phrases'][0]['frame_target'];
+
+        return $p;
+    })());
+    $cites = static fn (string $address, string $code, string $at): bool => LessonCard::at($address)?->cites(new LessonViolation($code, $at, ''), $answer) ?? false;
+
+    expect($cites('p5', 'frame.twin', 'p5'))->toBeFalse()
+        ->and($cites('p6', 'frame.twin', 'p6'))->toBeTrue()
+        ->and($cites('p5', 'frame.known_native_repeat', 'p5'))->toBeFalse()
+        ->and($cites('p5', 'frame.known_repeat', 'p5'))->toBeTrue()
+        ->and($cites('p5', 'frame.native_agreement', 'p5'))->toBeTrue()
+        ->and($cites('p5', 'filler.ungrammatical', 'p5.f2'))->toBeTrue()
+        ->and($cites('x5', 'frame.known_native_repeat', 'x5'))->toBeTrue();
+});

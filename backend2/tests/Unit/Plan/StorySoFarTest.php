@@ -23,7 +23,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE STORY SO FAR (`lesson_day.v4.6`, EARLIER_DAYS; наряд GEN-3): what day N of a plan is told of the days before it — the
+ * THE STORY SO FAR (`lesson_day.v4.7`, EARLIER_DAYS; наряд GEN-3): what day N of a plan is told of the days before it — the
  * scene days whose lessons are written, in the calendar's order, each with its dialogue line by line, its frames in both
  * languages and its words — and in whose roles its lesson is spoken: the learner's of the plan, the partner's of the scene.
  */
@@ -63,7 +63,7 @@ function ssWrite(PlanScene $scene, int $story, VoiceGender $gender = VoiceGender
     $earlier = new EarlierDays(array_fill(0, $story - 1, planEarlierDay()));
     $payload = FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), $earlier));
     $payload['role_gender'] = $gender->value;
-    $scene->acceptLesson((new LessonParser)->parse($payload), lessonPacks()->for('en'), new ModelCall('lesson_day.v4.6', 'test', 'fake', '0.000000', 1, 1), [], new DateTimeImmutable('2026-09-17T10:00:00Z'));
+    $scene->acceptLesson((new LessonParser)->parse($payload), lessonPacks()->for('en'), new ModelCall('lesson_day.v4.7', 'test', 'fake', '0.000000', 1, 1), [], new DateTimeImmutable('2026-09-17T10:00:00Z'));
 }
 
 // Наряд GEN-3, §2: «EARLIER_DAYS — все содержательные дни этого плана с готовым уроком, раньше текущего, по порядку; на первый

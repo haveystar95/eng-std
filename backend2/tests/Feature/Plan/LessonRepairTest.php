@@ -103,6 +103,29 @@ it('asks nothing for a card the validator finds nothing at, or an address that i
         ->and(Artisan::output())->toContain('status: not_a_card');
 });
 
+// Доработка GEN-3, P2R v1.3: «тождество при починке только по TARGET_LANGUAGE, родной каркас — перевод»; решение архитектора:
+// находки о тождестве родного шаблона починке не цитируются. Catches a paid repair asked for a frame whose only finding is
+// that its plain native translation is another frame's — a repair v1.3 forbids to make — and a finding of it told to the model.
+it('asks nothing for a frame whose only finding is a native pattern another frame shares', function () {
+    $fake = new FakePlanModel(lesson: static function ($request): array {
+        $p = planCleanLesson($request);
+        $p['phrases'][4]['frame_native'] = $p['phrases'][1]['frame_native'];
+
+        return $p;
+    });
+    app()->instance(PlanModelPort::class, $fake);
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->value('id');
+    $stored = array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", json_decode((string) DB::table('plan_scenes')->where('id', $sceneId)->value('checks_json'), true));
+
+    Artisan::call('plan:repair-card', ['scene' => $sceneId, 'address' => 'p5']);
+
+    expect($stored)->toContain('frame.twin@p5')
+        ->and($fake->repairCalls)->toBe(0)
+        ->and(Artisan::output())->toContain('status: nothing_to_repair');
+});
+
 it('keeps the stored lesson when the repaired card is not the card\'s shape', function () {
     [$fake, , , $sceneId] = lrBuild($this, static fn (): array => ['card' => ['id' => 'p1']]);
     $before = DB::table('plan_scenes')->where('id', $sceneId)->value('lesson_json');

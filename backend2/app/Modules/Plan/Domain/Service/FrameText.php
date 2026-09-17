@@ -109,6 +109,15 @@ final class FrameText
         return rtrim((string) preg_replace(self::END_MARK, '', trim($text)));
     }
 
+    /**
+     * `$text` with no space before the mark it ends with — «Всего ___ .» is «Всего ___.» (доработка GEN-3): a space there is
+     * typography the model left, not a word, and a card would show it. Trimmed; nothing else of the text changes.
+     */
+    public static function withEndMarkClosed(string $text): string
+    {
+        return (string) preg_replace('/\s+([.!?…]+)$/u', '$1', trim($text));
+    }
+
     /** `$text` with the closing mark of `$from` when it has none of its own — what a frame written without one borrows. */
     public static function withEndMarkOf(string $text, string $from): string
     {

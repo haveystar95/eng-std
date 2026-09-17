@@ -39,7 +39,7 @@ function sbTeachesSharpAgain(LessonRequest $request): array
     $p = planCleanLesson($request);
     if (! $request->earlierDays->isEmpty()) {
         $p['vocabulary'][1]['term_target'] = 'sharp';
-        // An acronym the day says, so that a repair may take it for a word and only the acronym rule refuses it.
+        // An acronym the day says, so that a repair may take it for a word.
         $p['dialogue'][2]['messages'][0]['text_target'] .= ' An MRI is not needed yet.';
     }
 
@@ -107,10 +107,10 @@ it('holds day 2 for a word day 1 taught, repairs that word and stores the day', 
         ->and($words['v5'])->toBe('heating pad-2');
 });
 
-// Наряд GEN-3, §5: «перепроверка после term: used_in точен, термина нет среди прошлых дней и в словаре дня дважды» (дополнение: «и
-// не аббревиатура»); «иначе — как любая неудавшаяся починка». Catches a repaired word stored that is an acronym, a word of day 1,
-// a word the day already has, or a word the lesson never says — each one a card that teaches nothing or teaches twice.
-it('refuses a repaired word that is an acronym, a learned word, a word the day already has or a word the lesson never says', function (array $word) {
+// Наряд GEN-3, §5: «перепроверка после term: used_in точен, термина нет среди прошлых дней и в словаре дня дважды»; «иначе — как
+// любая неудавшаяся починка». Catches a repaired word stored that is a word of day 1, a word the day already has, or a word the
+// lesson never says — each one a card that teaches nothing or teaches twice.
+it('refuses a repaired word that is a learned word, a word the day already has or a word the lesson never says', function (array $word) {
     $fake = new FakePlanModel(
         lesson: sbTeachesSharpAgain(...),
         repair: static fn (): array => ['card' => [
@@ -124,8 +124,67 @@ it('refuses a repaired word that is an acronym, a learned word, a word the day a
         ->and($scenes[1]->fail_reason)->toBe('fatal: vocab.known_repeat')
         ->and(planRead($this, $token, $id)['scenes'][1]['lesson_status'])->toBe('failed');
 })->with([
-    'an acronym' => [['term_target' => 'MRI', 'used_in' => ['A3']]],
     'a word of day 1' => [['term_target' => 'lower back', 'used_in' => ['p1', 'A1']]],
     'a word of the day under another id' => [['term_target' => 'fever-2', 'used_in' => ['p4', 'A7']]],
     'a word the lesson never says' => [['term_target' => 'crutches', 'used_in' => ['p3']]],
 ]);
+
+// Доработка GEN-3: «vocab.abbreviation — из фатальных в предупреждения: аббревиатура допустима словом дня, если в NATIVE_LANGUAGE
+// есть обычное слово (ATM → банкомат, PIN → ПИН-код); судит модель по правилу v4.7, код только считает». Catches a repaired word
+// refused for being an acronym — a paid repair thrown away and the day failed over a word the model was allowed to choose — and
+// an acronym left uncounted.
+it('takes a repaired word that is an abbreviation, and only counts it', function () {
+    $fake = new FakePlanModel(
+        lesson: sbTeachesSharpAgain(...),
+        repair: static fn (): array => ['card' => [
+            'id' => 'v2', 'term_target' => 'MRI', 'translation_native' => 'МРТ', 'pronunciation_native' => 'эм-ар-ай',
+            'definition_target' => 'a scan that shows the inside of the body', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['A3'],
+        ]],
+    );
+    [, , $scenes] = sbTwoDays($this, $fake);
+    $words = array_column(json_decode((string) $scenes[1]->lesson_json, true)['vocabulary'] ?? [], 'term_target', 'id');
+    $found = array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", json_decode((string) $scenes[1]->checks_json, true) ?? []);
+
+    expect($fake->repairCalls)->toBe(1)
+        ->and($scenes[1]->lesson_status)->toBe('ready')
+        ->and($words['v2'] ?? null)->toBe('MRI')
+        ->and($found)->toContain('vocab.abbreviation@v2');
+});
+
+// Доработка GEN-3: «в FINDINGS починки каркаса по frame.known_repeat цитировать только совпадение frame_target — в v1.3 тождество
+// при починке только по TARGET_LANGUAGE, родной каркас — перевод»; решение архитектора: «лишними были только находки о тождестве
+// родного шаблона (known_native_repeat, twin по родному) — они и толкали модель выдумывать „Что с ним? — ___.“; швы и фатальные
+// находки наполнений резать нельзя». Catches a frame repair told that its native pattern is another frame's — the model then
+// bends a plain translation into a device — and a repair not told what else is wrong with the frame.
+it('tells the repair of a learned frame its target match and the frame\'s other findings, not a native pattern it shares', function () {
+    $fake = new FakePlanModel(
+        lesson: static function (LessonRequest $request): array {
+            $p = planCleanLesson($request);
+            if (! $request->earlierDays->isEmpty()) {
+                // Day 1's frame said again, with no closing mark, and with the native pattern of day 2's own p2.
+                $p['phrases'][4]['frame_target'] = 'He will rest ___';
+                $p['phrases'][4]['frame_native'] = $p['phrases'][1]['frame_native'];
+                $p['dialogue'][4]['messages'][1]['text_target'] = 'Okay, he will rest at home.';
+            }
+
+            return $p;
+        },
+        repair: static function (LessonCardRepairRequest $request): array {
+            $card = $request->card;
+            $card['frame_target'] = 'He is going to rest ___.';
+
+            return ['card' => $card];
+        },
+    );
+    [, , $scenes] = sbTwoDays($this, $fake);
+    $told = $fake->repairRequests[0]->findings ?? [];
+    $stored = array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", json_decode((string) $scenes[1]->checks_json, true));
+
+    // The native twin is there — it outlives the repair as the warning it is — and still the repair was not told it.
+    expect($stored)->toContain('frame.twin@p5')
+        ->and($fake->repairCalls)->toBe(1)
+        ->and($fake->repairRequests[0]->address)->toBe('p5')
+        ->and(array_column($told, 'code'))->toEqualCanonicalizing(['frame.no_end_punct', 'frame.known_repeat'])
+        ->and(implode(' ', array_column($told, 'detail')))->toContain('«He will rest ___»')->not->toContain('Началось')
+        ->and($scenes[1]->lesson_status)->toBe('ready');
+});

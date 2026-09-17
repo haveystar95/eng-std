@@ -12,8 +12,7 @@ use App\Modules\Plan\Domain\Lesson\Lesson;
  * nothing at the address (and no code was named); `not_a_card` — the address names no repairable card;
  * `off_schema` — the model's card is not the card's shape, or an exchange's `frame_update` does not fit it, or a learner
  * line names no frame of the lesson (the call is paid for all the same, and nothing is put in); `refused` — a repaired
- * word the server's own check does not take: `used_in` untrue, a word of an earlier day, an abbreviation, a word twice in
- * the day (P2R
+ * word the server's own check does not take: `used_in` untrue, a word of an earlier day, a word twice in the day (P2R
  * v1.2, наряд GEN-3; paid for, nothing put in, `note` says why). `frameUpdate` — the frame a repaired exchange came with.
  */
 final readonly class LessonCardRepairOutcome

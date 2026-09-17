@@ -9,7 +9,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1.2`): the card by its address and kind, as the answer holds it; what
+ * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1.3`): the card by its address and kind, as the answer holds it; what
  * the validator found broken in it (code and English detail — never another card's text); the part of the lesson the
  * card needs to fit the visit ({@see \App\Modules\Plan\Domain\Lesson\LessonCardContext}, never the whole answer); for a
  * whole exchange its NEIGHBOURS — the exchanges before and after it, null at the edge of the visit; the story so far,

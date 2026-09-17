@@ -22,7 +22,7 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * WHAT THE LESSON AND THE REPAIR OF A CARD SEND (`lesson_day.v4.6`, `lesson_card_repair.v1.2`; наряд GEN-3): the new inputs
+ * WHAT THE LESSON AND THE REPAIR OF A CARD SEND (`lesson_day.v4.7`, `lesson_card_repair.v1.3`; наряд GEN-3): the new inputs
  * of a day — the roles, the story so far — in the prompt's own format; a repair's NEIGHBOURS and the short story; and a
  * request built for the vendor's prompt cache — the rules and the schema first and byte for byte the same between two days,
  * everything that varies after them.
@@ -182,8 +182,8 @@ it('finds every section a repair of each kind quotes in the lesson prompt it quo
             expect(lrpPrompts()->lessonSection($heading))->toStartWith($heading);
         }
     }
-    expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.6')
-        ->and(lrpPrompts()->repairVersion())->toBe('lesson_card_repair.v1.2');
+    expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.7')
+        ->and(lrpPrompts()->repairVersion())->toBe('lesson_card_repair.v1.3');
 });
 
 /** The clean lesson told with p6 apart, so no exchange carries a warning of its own — the payload repairs are asked of. */

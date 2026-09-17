@@ -51,7 +51,7 @@ final class PlanSchemas
     }
 
     /**
-     * `lesson_day.v4.6`'s STRICT OUTPUT SCHEMA, keys in its order (the same structure as v4.4 and v4.5 — the versions changed
+     * `lesson_day.v4.7`'s STRICT OUTPUT SCHEMA, keys in its order (the same structure as v4.4 and v4.5 — the versions changed
      * rules and inputs, not fields). Enums hold what the vendor can hold: the kinds, the speakers, the gender, and every
      * reference — a frame id is one of `p1…pN` (N = DIALOGUE_COUNT, the most frames a day can have) or null, a
      * vocabulary id one of `v1…vM`, a `used_in` entry a frame id or a partner line `A1…AN`. `in_dialogue` is a
@@ -93,7 +93,7 @@ final class PlanSchemas
     }
 
     /**
-     * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1.2`): `{card}` in the shape that card has in the lesson, with the
+     * THE REPAIR OF ONE CARD (P2R, `lesson_card_repair.v1.3`): `{card}` in the shape that card has in the lesson, with the
      * lesson schema's own enums — every id a day of these counts may have, never the ids of THIS day or the card's own
      * address. The schema is the first thing the vendor reads, before the rules, and one that changed from card to card
      * would keep the rules out of its prompt cache (наряд GEN-3); the server holds what the enums no longer say — a card

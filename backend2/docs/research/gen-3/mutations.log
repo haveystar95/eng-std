@@ -11,11 +11,11 @@
 - 11. один каркас в любых двух обменах считается «подряд»: FAILED (caught)
 - 12. пол сверяется с любым прошлым днём: FAILED (caught)
 - 13. аббревиатура только из подряд идущих заглавных: FAILED (caught)
-- 14. аббревиатура — предупреждение: FAILED (caught)
+- 14. аббревиатура снова фатальна: FAILED (caught)
 - 15. NEIGHBOURS не уходят в вызов: FAILED (caught)
 - 16. блок NEIGHBOURS не пишется в сообщение: FAILED (caught)
 - 17. P2R получает диалоги прошлых дней целиком: FAILED (caught)
-- 18. починённое слово-аббревиатура принимается: FAILED (caught)
+- 18. перепроверка слова отказывает аббревиатуре: FAILED (caught)
 - 19. повтор слова дня под другим id принимается: FAILED (caught)
 - 20. тема дня дописывается в системное сообщение: FAILED (caught)
 - 21. в схеме починки id карточки — enum адреса: FAILED (caught)
@@ -36,6 +36,13 @@
 - 36. сборка ставится мимо NextDayAccess: FAILED (caught)
 - 37. открытие дня снова ставит урок следующего: FAILED (caught)
 - 38. вызов песочницы делается в самом запросе: FAILED (caught)
+- 39. починке каркаса цитируется тождество родного шаблона: FAILED (caught)
+- 40. близнец по цели тоже не цитируется: FAILED (caught)
+- 41. known_native_repeat цитируется починке: FAILED (caught)
+- 42. фильтр задевает не каркасы: FAILED (caught)
+- 43. разбор не закрывает знак конца родного каркаса: FAILED (caught)
+- 44. разбор не закрывает знак конца родного наполнения: FAILED (caught)
+- 45. пробел снимается и перед знаком не в конце: FAILED (caught)
 - 1. первому дню уходит пустая история вместо «none»: FAILED (caught)
     Tests:    1 failed (3 assertions)
     Failed asserting that 'TOPIC: Звонок агенту\n
@@ -75,7 +82,7 @@
 - 13. аббревиатура только из подряд идущих заглавных: FAILED (caught)
     Tests:    1 failed (1 assertions)
     Failed asserting that two arrays are identical.
-- 14. аббревиатура — предупреждение: FAILED (caught)
+- 14. аббревиатура снова фатальна: FAILED (caught)
     Tests:    1 failed (1 assertions)
     Failed asserting that two arrays are equal.
 - 15. NEIGHBOURS не уходят в вызов: FAILED (caught)
@@ -87,11 +94,11 @@
 - 17. P2R получает диалоги прошлых дней целиком: FAILED (caught)
     Tests:    1 failed (5 assertions)
     Failed asserting that 2 is identical to 1.
-- 18. починённое слово-аббревиатура принимается: FAILED (caught)
-    Tests:    1 failed, 3 passed (394 assertions)
+- 18. перепроверка слова отказывает аббревиатуре: FAILED (caught)
+    Tests:    1 failed (96 assertions)
     Failed asserting that two strings are identical.
 - 19. повтор слова дня под другим id принимается: FAILED (caught)
-    Tests:    1 failed, 3 passed (393 assertions)
+    Tests:    1 failed, 2 passed (294 assertions)
     Failed asserting that two strings are identical.
 - 20. тема дня дописывается в системное сообщение: FAILED (caught)
     Tests:    1 failed (1 assertions)
@@ -150,3 +157,24 @@
 - 38. вызов песочницы делается в самом запросе: FAILED (caught)
     Tests:    1 failed (2 assertions)
     Failed asserting that an array is empty.
+- 39. починке каркаса цитируется тождество родного шаблона: FAILED (caught)
+    Tests:    1 failed (98 assertions) | Tests:    1 failed (3 assertions)
+    Failed asserting that two arrays are equal. | Failed asserting that 1 is identical to 0.
+- 40. близнец по цели тоже не цитируется: FAILED (caught)
+    Tests:    1 failed (2 assertions)
+    Failed asserting that false is true.
+- 41. known_native_repeat цитируется починке: FAILED (caught)
+    Tests:    1 failed (3 assertions)
+    Failed asserting that true is false.
+- 42. фильтр задевает не каркасы: FAILED (caught)
+    Tests:    1 failed (7 assertions)
+    Failed asserting that false is true.
+- 43. разбор не закрывает знак конца родного каркаса: FAILED (caught)
+    Tests:    1 failed (1 assertions)
+    Failed asserting that two strings are identical.
+- 44. разбор не закрывает знак конца родного наполнения: FAILED (caught)
+    Tests:    1 failed (3 assertions)
+    Failed asserting that two strings are identical.
+- 45. пробел снимается и перед знаком не в конце: FAILED (caught)
+    Tests:    1 failed (5 assertions)
+    Failed asserting that two strings are identical.

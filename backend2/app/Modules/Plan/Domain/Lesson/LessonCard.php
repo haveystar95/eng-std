@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Lesson;
 
+use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Service\FrameText;
 
@@ -67,6 +68,34 @@ final readonly class LessonCard
         }
 
         return ($other = self::at($violation->address)) !== null && $other->address === $this->address;
+    }
+
+    /**
+     * Is a finding about this card one its repair is told? A frame is repaired to a different TARGET pattern, and its native
+     * rendering is the plain translation of the new frame even when that coincides with another frame's native text (P2R
+     * v1.3, доработка GEN-3): the native pattern's identity — `frame.known_native_repeat`, a `frame.twin` whose target pattern
+     * is its own — is no finding to repair, and told it the model makes the native text differ by a device («Что с ним? —
+     * ___.»). A twin that shares the TARGET pattern with another frame of `$answer` is told. Every other finding is.
+     */
+    public function cites(LessonViolation $violation, Lesson $answer): bool
+    {
+        if ($this->kind !== self::FRAME) {
+            return true;
+        }
+        if ($violation->code === LessonCodes::FRAME_KNOWN_NATIVE_REPEAT) {
+            return false;
+        }
+        if ($violation->code !== LessonCodes::FRAME_TWIN) {
+            return true;
+        }
+        $frame = $answer->phrase($this->frameId);
+        foreach ($answer->phrases as $other) {
+            if ($frame !== null && $other->id !== $frame->id && FrameText::identity($other->frameTarget) === FrameText::identity($frame->frameTarget)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

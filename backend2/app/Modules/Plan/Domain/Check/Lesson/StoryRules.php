@@ -12,7 +12,7 @@ use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Service\FrameText;
 
 /**
- * THE STORY SO FAR (`lesson_day.v4.6`, THE STORY SO FAR; наряд GEN-3): a day of a plan is the next day of one story, and
+ * THE STORY SO FAR (`lesson_day.v4.7`, THE STORY SO FAR; наряд GEN-3): a day of a plan is the next day of one story, and
  * what the learner learned on the earlier days is learned.
  *
  *  - a word of an earlier day listed again — `vocab.known_repeat` (fatal: the learner would be taught it twice);

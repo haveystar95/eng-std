@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
+use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The model's JSON → a {@see Lesson} (`lesson_day.v4.6`). Strict about SHAPE only: a missing key, a
+ * The model's JSON → a {@see Lesson} (`lesson_day.v4.7`). Strict about SHAPE only: a missing key, a
  * wrong type, an unknown kind or speaker, an empty required string is a reply that is not the
  * requested schema, and that is the model's refusal, not a finding ({@see ModelAnswerOffSchema}).
  * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
  * and the validator runs on the parsed lesson.
+ *
+ * One thing is put right on the way, and only one (доработка GEN-3): a native frame and a filler's native text lose the
+ * space before the mark they end with ({@see FrameText::withEndMarkClosed()}) — «Всего ___ .» is read as «Всего ___.» by
+ * the validator, the seam judge, the repair and every card, whatever the stored answer says.
  */
 final class LessonParser
 {
@@ -216,7 +221,7 @@ final class LessonParser
                 }
                 $fillers[] = new Filler(
                     target: $this->string($f, 'target', "{$path}.slot.fillers[{$index}]"),
-                    native: $this->stringOrEmpty($f, 'native'),
+                    native: FrameText::withEndMarkClosed($this->stringOrEmpty($f, 'native')),
                     pronunciationNative: $this->stringOrEmpty($f, 'pronunciation_native'),
                     inDialogue: $inDialogue,
                 );
@@ -228,7 +233,7 @@ final class LessonParser
             id: $this->string($row, 'id', $path),
             kind: $kind,
             frameTarget: $this->string($row, 'frame_target', $path),
-            frameNative: $this->stringOrEmpty($row, 'frame_native'),
+            frameNative: FrameText::withEndMarkClosed($this->stringOrEmpty($row, 'frame_native')),
             pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
             slot: $slot,
         );

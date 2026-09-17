@@ -14,8 +14,8 @@ use RuntimeException;
 
 /**
  * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
- * (`plan-builder-v2`, `lesson_day.v4.6`) — a rename is a version bump and nothing else is. The previous lesson and repair
- * files stay beside the current ones (`lesson_day.v4.5`, `lesson_card_repair.v1.1`): going back is one constant.
+ * (`plan-builder-v2`, `lesson_day.v4.7`) — a rename is a version bump and nothing else is. The previous lesson and repair
+ * files stay beside the current ones (`lesson_day.v4.7`, `lesson_card_repair.v1.3`): going back is one constant.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
  * author used to try the prompt by hand; that section is cut out and the real inputs go in the
@@ -31,9 +31,9 @@ final class PlanPromptFiles
 {
     private const PLAN_FILE = 'plan-builder-v2.md';
 
-    private const LESSON_FILE = 'lesson_day.v4.6.md';
+    private const LESSON_FILE = 'lesson_day.v4.7.md';
 
-    private const REPAIR_FILE = 'lesson_card_repair.v1.2.md';
+    private const REPAIR_FILE = 'lesson_card_repair.v1.3.md';
 
     private const JUDGE_FILE = 'lesson_seam_judge.v1.1.md';
 
@@ -96,20 +96,14 @@ final class PlanPromptFiles
 
     /**
      * P2R's rules for one card kind: the repair wrapper with the lesson prompt's own sections for that
-     * kind quoted in place of `{{rules}}` — the sections the lesson prompt has, so that going back to the previous lesson
-     * prompt (which has no THE STORY SO FAR) is still its one constant.
+     * kind quoted in place of `{{rules}}`; a heading the lesson prompt does not have is a broken prompt pair, not a rule to
+     * leave out.
      *
      * @param  'frame'|'exchange'|'line'|'check'|'listening'|'term'  $kind
      */
     public function repairSystem(string $kind): string
     {
-        $sections = [];
-        foreach (self::REPAIR_SECTIONS[$kind] as $heading) {
-            $section = $this->findLessonSection($heading);
-            if ($section !== null) {
-                $sections[] = $section;
-            }
-        }
+        $sections = array_map($this->lessonSection(...), self::REPAIR_SECTIONS[$kind]);
 
         return str_replace('{{rules}}', implode("\n\n---\n\n", $sections), $this->text(self::REPAIR_FILE));
     }
@@ -209,11 +203,6 @@ final class PlanPromptFiles
      */
     public function lessonSection(string $heading): string
     {
-        return $this->findLessonSection($heading) ?? throw new RuntimeException("Lesson prompt has no section «{$heading}»");
-    }
-
-    private function findLessonSection(string $heading): ?string
-    {
         foreach (explode("\n---\n", $this->text(self::LESSON_FILE)) as $part) {
             $part = trim($part);
             if (str_starts_with($part, $heading)) {
@@ -221,7 +210,7 @@ final class PlanPromptFiles
             }
         }
 
-        return null;
+        throw new RuntimeException("Lesson prompt has no section «{$heading}»");
     }
 
     /** The plan builder's rules — the file without its TEST INPUT tail. */

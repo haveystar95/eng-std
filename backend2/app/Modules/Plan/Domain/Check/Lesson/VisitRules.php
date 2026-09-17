@@ -13,7 +13,7 @@ use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Service\FrameText;
 
 /**
- * ONE VISIT, NO STEP TWICE (`lesson_day.v4.6`, NATURAL ORDER OF ONE VISIT): «no two exchanges ask the same thing,
+ * ONE VISIT, NO STEP TWICE (`lesson_day.v4.7`, NATURAL ORDER OF ONE VISIT): «no two exchanges ask the same thing,
  * and a frame used twice takes two different fillers (exchange 8 must not repeat exchange 2's "How much is the
  * deposit?")». What a code can tell of «the same thing» is the same frame said with the same filler — the filler the
  * server finds in each line — and a frame with no slot said twice is the same sentence twice. A line on a slot that

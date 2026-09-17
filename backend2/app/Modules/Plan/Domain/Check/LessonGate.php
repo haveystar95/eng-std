@@ -7,12 +7,14 @@ namespace App\Modules\Plan\Domain\Check;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 
 /**
- * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a, в наряде GEN-2b и в GEN-3, `docs/plan-v2.md` §4): ten codes are
+ * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a, в наряде GEN-2b и в GEN-3, `docs/plan-v2.md` §4): nine codes are
  * fatal — the learner would get a broken card: a line served otherwise than the model wrote it, a frame whose filler
  * makes it ungrammatical, a check or a listening question that cannot be dealt, an exchange said by the wrong
  * speakers, an exchange whose closing message asks, an exchange that says a frame with a filler another exchange
  * already said — or material the learner already learned on an earlier day of the plan: a word, a frame said the same
- * way — or a word of the day that is an abbreviation, with nothing to translate. A lesson with any of them is not dealt until P2R repairs the card at their address — at most two cards a day; a
+ * way. An abbreviation as a word of the day is not among them (доработка GEN-3): it is a word when the learner's language
+ * has an everyday one for it, and that is the model's to judge. A lesson with any of them is not dealt until P2R repairs
+ * the card at their address — at most two cards a day; a
  * fatal finding left after that, or one that stands at no card a repair can take, fails the day with its code. Nothing
  * else is fatal.
  *
@@ -32,7 +34,6 @@ final class LessonGate
         LessonCodes::EXCHANGE_REPEATS,
         LessonCodes::VOCAB_KNOWN_REPEAT,
         LessonCodes::FRAME_KNOWN_REPEAT,
-        LessonCodes::VOCAB_ABBREVIATION,
     ];
 
     public const MAX_CARDS = 2;
