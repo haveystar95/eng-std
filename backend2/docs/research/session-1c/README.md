@@ -355,5 +355,5 @@ xcrun devicectl device install app --device BD079C78-4F7D-57BC-88DC-4214DF357282
 
 - Код: **`db629da2`** — `feat(plan): SESSION-1c — Диалог, Слушаю и отвечаю, Говорю сам, итог дня 30-7` (47 файлов,
   +7103 / −293).
-- Документы: коммит этого отчёта, следующий за кодом (хеш — в истории `git log`, `docs(plan): SESSION-1c — отчёт,
-  снимки, design-map`).
+- Документы: **`31dcdd5d`** — `docs(plan): SESSION-1c — отчёт, снимки, design-map` (58 файлов, +372 / −8; отчёт,
+  56 снимков `shots/`, `docs/design/design-map.md`).
