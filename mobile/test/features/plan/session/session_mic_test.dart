@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/plan/session/speech_coverage.dart';
-import 'package:eng_std/data/plan/session/speech_stop.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/data/speech/speech_turn.dart';
 import 'package:eng_std/features/plan/session/session_mic.dart';
@@ -62,79 +60,77 @@ class _DrivenRecognizer implements SpeechRecognizer {
   }
 }
 
-/// THE PHONE'S ROAD OF AN EARLY STOP (SESSION-1b′, item 6): the recognizer's partial results go through [SessionMic]
-/// and [SpeechTurn]; once the card's [SessionMic.autoStop] says the partial result passes, an unchanged partial
-/// result stops the recording after that pause — without waiting for silence.
+/// RECORD UNTIL THE PAUSE, NOT UNTIL THE KEY (work order SESSION-2a §3): the recognizer's partial results go through
+/// [SessionMic] and [SpeechTurn] to the screen only; the recording closes on 1 s of silence after the last word or on a
+/// tap, and only then is the whole transcript handed to the card.
 void main() {
-  final en = SpeechCoverage.articlesFor('en');
-
-  ({SessionMic mic, _DrivenRecognizer recognizer, List<MicTurn> turns}) micFor(
-    String expected,
-    Duration? Function(String partial) autoStop,
-  ) {
+  ({SessionMic mic, _DrivenRecognizer recognizer, List<MicTurn> turns}) micFor(String expected) {
     final recognizer = _DrivenRecognizer();
     final turns = <MicTurn>[];
-    final mic = SessionMic(recognizer: recognizer, localeId: 'en_US', expected: expected)
-      ..onTurn = turns.add
-      ..autoStop = autoStop;
+    final mic = SessionMic(recognizer: recognizer, localeId: 'en_US', expected: expected)..onTurn = turns.add;
     addTearDown(mic.dispose);
     return (mic: mic, recognizer: recognizer, turns: turns);
   }
 
-  // CATCHES: a covered phrase that still waits for 2 s of silence (the phone felt slow) and a stop that ignores a
-  // partial result still changing.
-  testWidgets('voice: covered → stop 500 ms after the last change of the partial result', (tester) async {
-    final m = micFor('lower back', (partial) => SpeechStop.voice(partial, (h) => SpeechCoverage.covers(h, 'lower back', 1.0, en)));
+  // CATCHES: «Answer in your own words» accepting «smaller» mid-sentence and cutting the owner off (17.09).
+  testWidgets('recording until the pause, not until the key: a covered key keeps the recording open', (tester) async {
+    final m = micFor('smaller');
     unawaited(m.mic.tap());
     await tester.pump();
     expect(m.mic.state, MicState.listening);
 
-    m.recognizer.say('lower');
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(m.recognizer.stops, 0, reason: 'not covered — no early stop');
+    m.recognizer.say('I would like a smaller');
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(m.turns, isEmpty, reason: 'the key is covered, but the speaker has not paused yet');
+    expect(m.recognizer.stops, 0);
 
-    m.recognizer.say('lower back');
-    await tester.pump(const Duration(milliseconds: 300));
-    m.recognizer.say('lower back please');
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(m.turns, isEmpty, reason: 'the partial result changed — the 500 ms start over');
-    await tester.pump(const Duration(milliseconds: 190));
-    expect(m.turns, isEmpty);
+    m.recognizer.say('I would like a smaller room with a view');
+    await tester.pump(const Duration(milliseconds: 990));
+    expect(m.turns, isEmpty, reason: 'the pause is counted from the LAST word');
     await tester.pump(const Duration(milliseconds: 20));
     await tester.pump();
-    expect(m.recognizer.stops, 1);
     expect(m.turns.single.outcome, SpeechTurnOutcome.heard);
-    expect(m.turns.single.transcript, 'lower back please');
+    expect(m.turns.single.transcript, 'I would like a smaller room with a view', reason: 'the whole of it goes to grading');
   });
 
-  testWidgets('voice: never covered — no early stop, the recording stays open', (tester) async {
-    final m = micFor('lower back', (partial) => SpeechStop.voice(partial, (h) => SpeechCoverage.covers(h, 'lower back', 1.0, en)));
+  // CATCHES: «Say what you heard» taking the first of two sentences.
+  testWidgets('recording until the pause: two sentences with a short breath between them are one answer', (tester) async {
+    final m = micFor('It is near the station. The rent is low.');
+    unawaited(m.mic.tap());
+    await tester.pump();
+    m.recognizer.say('It is near the station.');
+    await tester.pump(const Duration(milliseconds: 600));
+    m.recognizer.say('It is near the station. The rent is low.');
+    await tester.pump(const Duration(milliseconds: 1010));
+    await tester.pump();
+    expect(m.turns.single.transcript, 'It is near the station. The rent is low.');
+  });
+
+  testWidgets('recording until the pause: a tap closes it at once with what was heard', (tester) async {
+    final m = micFor('lower back');
     unawaited(m.mic.tap());
     await tester.pump();
     m.recognizer.say('lower');
-    await tester.pump(const Duration(milliseconds: 1900));
-    expect(m.turns, isEmpty);
-    expect(m.recognizer.stops, 0);
-    expect(m.mic.state, MicState.listening, reason: 'only silence (or a tap) closes an uncovered recording');
+    await tester.pump(const Duration(milliseconds: 300));
     await m.mic.tap();
     await tester.pump();
+    expect(m.recognizer.stops, 1);
     expect(m.turns.single.transcript, 'lower');
   });
 
-  // CATCHES: the judge asked on the frame alone.
-  testWidgets('judge: the frame and a word after it → stop after 800 ms', (tester) async {
-    final m = micFor('It started', (partial) => SpeechStop.judge(partial, 'It started', 1.0, en));
+  testWidgets('recording until the pause: silence before the first word never closes it', (tester) async {
+    final m = micFor('lower back');
     unawaited(m.mic.tap());
     await tester.pump();
-    m.recognizer.say('It started');
-    await tester.pump(const Duration(milliseconds: 1000));
-    expect(m.turns, isEmpty, reason: 'the frame alone — keep listening');
-
-    m.recognizer.say('It started last night');
-    await tester.pump(const Duration(milliseconds: 790));
+    await tester.pump(const Duration(seconds: 4));
     expect(m.turns, isEmpty);
-    await tester.pump(const Duration(milliseconds: 20));
+    expect(m.mic.state, MicState.listening);
+    await m.mic.tap();
     await tester.pump();
-    expect(m.turns.single.transcript, 'It started last night');
+  });
+
+  test('the session pause is about one second, with no floor after the first word', () {
+    expect(SessionMic.turnConfig.silenceAfterSpeech.inMilliseconds, inInclusiveRange(900, 1000));
+    expect(SessionMic.turnConfig.minWaitBeforeSilence, Duration.zero);
   });
 }

@@ -149,11 +149,14 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
       }
       if (!mounted) return;
     }
-    // DAY SESSION (work orders SESSION-1b, SESSION-1c): «Start», «Continue» and «Once more» lead into one session —
-    // it reads the day itself and stops at the first unanswered card, or at the day summary (30-7) when every card is
-    // answered; «Close the day» there pops back here, and the window reads the day and the plan again.
+    // DAY SESSION (work orders SESSION-1b, SESSION-1c): «Start» and «Continue» lead into the session — it reads the
+    // day itself and stops at the first unanswered card, or at the day summary (30-7) when every card is answered;
+    // «Close the day» there pops back here, and the window reads the day and the plan again. «Once more» replays a
+    // stage on the phone and ends on the day summary again, without sending anything (SESSION-2a §4).
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => SessionScreen(plan: _plan, number: current.day.number)),
+      MaterialPageRoute(
+        builder: (_) => SessionScreen(plan: _plan, number: current.day.number, replay: action == WindowAction.again),
+      ),
     );
     if (!mounted) return;
     ref.invalidate(dayRoomProvider(_address));

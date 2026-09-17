@@ -39,7 +39,9 @@ class Pronouncer {
   /// интро-карточка зовут один и тот же `speak`. Развести их по вызывающим значило бы шесть раз
   /// написать одно правило и один раз забыть.
   final LineAudioCache? _lines;
-  bool _audioSessionReady = false;
+
+  /// The category the audio session was last raised in (`playback` / `playAndRecord`); null — not raised.
+  IosTextToSpeechAudioCategory? _sessionCategory;
   // Cache what we've already pushed to the engine so a repeat speak() is ONE platform-channel call
   // (speak) instead of three (setLanguage + setSpeechRate + speak). The redundant round-trips were a
   // per-answer stall that landed on the card-transition animation (F20).
@@ -92,8 +94,13 @@ class Pronouncer {
   /// So: raise the session once here, keep it up for the session, and drop it once in [release].
   /// Ducking now lasts for the whole training session instead of flickering per word, which is
   /// also the better behaviour for someone training with music on.
-  Future<void> warmUp({required String targetLang}) async {
+  ///
+  /// [recording] — the screen records as well as speaks (the day session, SESSION-2a §1): the session is raised in
+  /// `playAndRecord` with the recognizer's own options, so a recording starts and stops inside it and never swaps the
+  /// category or deactivates the session under a line that is still sounding (the fork's `sessionOwnedByApp`).
+  Future<void> warmUp({required String targetLang, bool recording = false}) async {
     _released = false;
+    _recording = recording;
     await _configureIosAudioSession();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await _tts.autoStopSharedSession(false);
@@ -142,8 +149,8 @@ class Pronouncer {
   ///
   /// [awaitDone] — ВЕРНУТЬСЯ, КОГДА РЕПЛИКА ДОИГРАЛА (наряд DAY-FIX-3, Ч.1.1): микрофон прогона
   /// открывается по концу воспроизведения, и «сказать» без «дождаться» ему не поможет. Файл
-  /// отвечает концом сам (нативный плеер держит результат до `didFinish`); синтезатор — своим
-  /// обработчиком завершения, а если тот молчит (тесты, чужой движок) — по оценке длины текста.
+  /// отвечает концом сам (`AudioMixer.speak` — доиграл или оборван); синтезатор — своим
+  /// обработчиком завершения и отмены; сторож [_silentEngineCeiling] — только для движка, который не ответил вовсе.
   Future<void> speakText(
     String text, {
     required String targetLang,
@@ -172,7 +179,7 @@ class Pronouncer {
       if (utterance != null && !started) _finishUtterance();
     }
     if (utterance == null) return;
-    if (started) _armUtteranceGuard(line);
+    if (started) _armUtteranceGuard();
     await utterance;
   }
 
@@ -195,18 +202,17 @@ class Pronouncer {
   /// Голос отпущен экраном ({@see release}); снимается следующим [warmUp].
   bool _released = false;
 
-  /// Страховка от движка, который взял реплику и не сказал, что кончил: ~350 мс на слово плюс
-  /// секунда на разгон, но не дольше двенадцати секунд — реплика в двенадцать слов не звучит
-  /// дольше. Заводится ПОСЛЕ того, как движок взял реплику: до этого ждать нечего, а таймер,
-  /// заведённый под вызов, который никогда не вернётся (тесты), висел бы вечно.
-  void _armUtteranceGuard(String line) {
+  /// A ceiling for an engine that took the line and never said it ended — not an estimate of the line: the end is
+  /// the synthesiser's completion or cancel handler (SESSION-2a §1, «playing» ends when the sound does). An estimate
+  /// by words ended a slow line while it was still sounding.
+  static const Duration _silentEngineCeiling = Duration(seconds: 30);
+
+  /// Armed AFTER the engine took the line: before that there is nothing to wait for, and a timer armed under a call
+  /// that never returns (tests) would hang forever.
+  void _armUtteranceGuard() {
     _utteranceGuard?.cancel();
     if (_utterance == null || _released) return;
-    final words = line.split(RegExp(r'\s+')).length;
-    _utteranceGuard = Timer(
-      Duration(milliseconds: (1000 + words * 350).clamp(1200, 12000)),
-      _finishUtterance,
-    );
+    _utteranceGuard = Timer(_silentEngineCeiling, _finishUtterance);
   }
 
   void _finishUtterance() {
@@ -265,12 +271,24 @@ class Pronouncer {
   /// The trade is deliberate: a pronounced word now plays over the user's music rather than
   /// lowering it (F20-r2).
   Future<void> _configureIosAudioSession() async {
-    if (_audioSessionReady || defaultTargetPlatform != TargetPlatform.iOS) return;
-    _audioSessionReady = true;
-    await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    final category = _recording ? IosTextToSpeechAudioCategory.playAndRecord : IosTextToSpeechAudioCategory.playback;
+    if (_sessionCategory == category) return;
+    _sessionCategory = category;
+    await _tts.setIosAudioCategory(category, [
       IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+      // The recognizer's own options (`SpeechToTextPlugin.listenForSpeech`): the same set, so a recording finds the
+      // session as it wants it and leaves it alone.
+      if (_recording) ...[
+        IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+        IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+        IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+      ],
     ], IosTextToSpeechAudioMode.defaultMode);
   }
+
+  /// The screen records as well as speaks ([warmUp]).
+  bool _recording = false;
 
   /// Push a locale to the engine, and only when it actually changes (a repeat [speak] is then ONE
   /// channel call, not two — F20).
@@ -320,7 +338,8 @@ class Pronouncer {
     _released = true;
     await stop();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      _audioSessionReady = false;
+      _sessionCategory = null;
+      _recording = false;
       // Hand the plugin back to its DEFAULT self-deactivating behaviour BEFORE dropping the
       // session. `autoStopSharedSession` lives on the plugin's native singleton, so leaving it
       // false would apply to every other speaker in the app — the collection screen owns a

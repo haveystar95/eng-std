@@ -35,7 +35,8 @@ enum _Player { idle, playing, paused, done }
 
 /// THE VISIT PLAYER (34-1): two roles as circles (the scene's photo — the partner, the learner's circle), a brass ring
 /// with a pulse on the one that speaks; the bar with the exchange marks (`exchange_step`) and the time (`total_ms`, or
-/// the sum of the lines' `duration_ms`); the files play one after another as one stream. «In parts» pauses after every
+/// the sum of the lines' `duration_ms`); the files play one after another as one stream, 300 ms apart
+/// ([AppMotion.sessionVisitLineGap]). «In parts» pauses after every
 /// exchange — «Continue»; «Once more» starts over; no text of the lines. Listened to the end — «Next» → `passed`.
 class ListenDialogueCard extends StatefulWidget {
   const ListenDialogueCard({super.key, required this.env, required this.payload});
@@ -109,6 +110,10 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
           _state = _Player.paused;
         });
         return;
+      }
+      if (i < _lines.length - 1) {
+        await Future<void>.delayed(AppMotion.sessionVisitLineGap);
+        if (!mounted || run != _run) return;
       }
     }
     _frame?.cancel();
@@ -764,7 +769,8 @@ class _ListenPaceCardState extends State<ListenPaceCard> {
 // ── 34-7 ──────────────────────────────────────────────────────────────────────────────────────────
 
 /// CATCH THE NUMBER (34-7): the line with a number sounds, its text closed (a wave and «listen» 44 on the plate); the
-/// question is the client's — the contract sends none; three options in the native language. After the answer the
+/// question «Which number did you hear?» is the client's — the contract sends none; three options in the native
+/// language. After the answer the
 /// text opens in the plate with the number (`span`) marked — sage when caught, brass when missed; no copy.
 class ListenNumberCard extends StatefulWidget {
   const ListenNumberCard({super.key, required this.env, required this.payload});
@@ -860,7 +866,7 @@ class _ListenNumberCardState extends State<ListenNumberCard> with ChoiceCardStat
                     const SizedBox(height: 6),
                     ConstrainedBox(
                       constraints: const BoxConstraints(minHeight: 68),
-                      child: Align(alignment: Alignment.centerLeft, child: Text(l.planSessionWhatHeard, style: AppTextSession.question)),
+                      child: Align(alignment: Alignment.centerLeft, child: Text(l.planSessionWhichNumber, style: AppTextSession.question)),
                     ),
                   ],
                 ),

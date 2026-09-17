@@ -11,7 +11,6 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
-import '../../../../data/plan/session/speech_stop.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
 import '../parts/session_tiles.dart';
@@ -51,7 +50,7 @@ TextRange? _keyIn(String text, String? key) {
 /// UNDERSTAND THE PARTNER (33-1): the partner's line sounds once when the card opens; its bubble holds a wave, the
 /// text is closed; four paraphrases in the native language (template 30-9). Correct — the text opens in the bubble,
 /// auto-advance after 600 ms; wrong — an outline on the chosen one, sage on the correct one, «Next». The task line is
-/// the server's `question_native`: the options answer it.
+/// «Answer the question» (SESSION-2a §5), the server's `question_native` stands under it: the options answer it.
 class DialoguePartnerCard extends StatefulWidget {
   const DialoguePartnerCard({super.key, required this.env, required this.payload});
 
@@ -94,7 +93,7 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
     return CardLayout(
       feed: true,
       bodyGap: 16,
-      task: SessionTask(p.questionNative),
+      task: SessionTask(AppLocalizations.of(context).planSessionTaskAnswerQuestion, companion: p.questionNative),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -181,13 +180,6 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
 
   @override
   bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.articles);
-
-  /// With the line on screen — stop once the whole line is covered; blind — once the frame and a word of the slot
-  /// are heard (the frame alone would cut the slot); a frame without a slot — once it is covered.
-  @override
-  Duration? stopAfter(String partial) => _mode == DialogueMode.voiceHint
-      ? SpeechStop.voice(partial, (h) => SpeechCoverage.covers(h, p.modes.voiceHint, SpeechCoverage.minFor(p.modes.voiceHint, env.articles), env.articles))
-      : SpeechStop.judge(partial, _framePart, p.coverageMin, env.articles, slot: p.frame.hasSlot);
 
   @override
   String? get responseMode => _mode.wire;
@@ -276,8 +268,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
       task: SessionTask(switch (_mode) {
         _ when _ask => l.planSessionTaskAskSelf,
         DialogueMode.chips => l.planSessionTaskCollectAnswer,
-        DialogueMode.voiceHint => l.planSessionTaskSayAnswer,
-        DialogueMode.voiceBlind => l.planSessionTaskAnswerVoice,
+        DialogueMode.voiceHint || DialogueMode.voiceBlind => l.planSessionTaskSayLine,
       }),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

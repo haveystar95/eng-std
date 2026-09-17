@@ -12,7 +12,6 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
-import '../../../../data/plan/session/speech_stop.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
@@ -49,10 +48,8 @@ mixin _JudgedCardState<T extends StatefulWidget> on State<T> {
 
   void onVerdict(SessionJudgeOutcome outcome) {}
 
-  void initJudgedMic(String expected, List<String> contextual, Duration? Function(String partial) autoStop) {
-    mic = env.makeMic(expected, contextual)
-      ..onTurn = _onTurn
-      ..autoStop = autoStop;
+  void initJudgedMic(String expected, List<String> contextual) {
+    mic = env.makeMic(expected, contextual)..onTurn = _onTurn;
     mic.addListener(_onMic);
   }
 
@@ -218,13 +215,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
   @override
   void initState() {
     super.initState();
-    initJudgedMic(
-      _framePart,
-      [p.ownLine.textTarget, _framePart, for (final f in p.frame.fillers) f.target],
-      // The frame said and at least one word of the slot — an 800 ms pause, then the judge; a frame without a slot —
-      // covered is enough.
-      (partial) => SpeechStop.judge(partial, _framePart, p.coverageMin, env.articles, slot: p.frame.hasSlot),
-    );
+    initJudgedMic(_framePart, [p.ownLine.textTarget, _framePart, for (final f in p.frame.fillers) f.target]);
     mic.addListener(_onRecording);
     final line = p.partnerLine;
     if (line != null) {
@@ -623,9 +614,8 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with _JudgedCardState
   @override
   void initState() {
     super.initState();
-    // Nothing to match word by word in the native language: no expected text, no hint words for the recognizer; a
-    // retelling has no frame — any word heard and an 800 ms pause close the recording.
-    initJudgedMic('', const [], (partial) => SpeechStop.judge(partial, '', 1.0, const {}));
+    // Nothing to match word by word in the native language: no expected text, no hint words for the recognizer.
+    initJudgedMic('', const []);
     _autoplay = autoplayOnce(this, env, p.partnerLine.audio, p.partnerLine.textTarget, _key);
   }
 

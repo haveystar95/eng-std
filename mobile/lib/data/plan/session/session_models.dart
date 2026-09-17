@@ -1469,6 +1469,22 @@ class SessionCard {
 
   bool get isAnswered => result != null;
 
+  /// The card as it was dealt — no result, no attempts, nothing heard; `returns` stays the server's fact about the
+  /// unit. For «Once more» (SESSION-2a §4), which walks a stage again on the phone only.
+  SessionCard fresh() => SessionCard(
+    id: id,
+    stage: stage,
+    position: position,
+    kind: kind,
+    unit: unit,
+    returned: returned,
+    sourceDay: sourceDay,
+    retryOf: retryOf,
+    payload: payload,
+    attempts: 0,
+    returns: returns,
+  );
+
   /// Null — the kind is unknown to this build: the card is skipped, and there is no request about it. A known
   /// kind with a broken payload — [SessionContractError].
   static SessionCard? fromJson(Map<String, dynamic> j) {

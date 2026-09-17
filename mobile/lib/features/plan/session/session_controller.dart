@@ -20,6 +20,13 @@ enum SessionPhase {
   /// The day did not load — «Retry».
   failed,
 
+  /// The day's lesson is still being written (409 `plan_day_building`, or `plan_lesson_not_ready` with a lesson that
+  /// is not failed): the «building the lesson» plate, the plan is polled until the lesson is ready (GEN-3 §11).
+  building,
+
+  /// The day's lesson failed to build (`lesson_status: failed`): the plate with «Retry» — the lesson, not the plan.
+  lessonFailed,
+
   /// Stage entry (30-1).
   entry,
 
@@ -37,6 +44,8 @@ enum SessionPhase {
 abstract interface class SessionBackend {
   Future<SessionDay> day(String planId, int number);
   Future<void> open(String planId, int number);
+  Future<Plan> plan(String planId);
+  Future<Plan> retryLesson(String planId, String sceneId);
   Future<SessionAnswerOutcome> answer(String planId, int number, String cardId, SessionAnswer answer);
   Future<SessionJudgeOutcome> judge(String planId, int number, String cardId, {required String heard, required bool hinted});
   Future<SessionDay> close(String planId, int number);
@@ -53,6 +62,12 @@ class ApiSessionBackend implements SessionBackend {
 
   @override
   Future<void> open(String planId, int number) => api.openPlanDay(planId, number);
+
+  @override
+  Future<Plan> plan(String planId) => api.plan(planId);
+
+  @override
+  Future<Plan> retryLesson(String planId, String sceneId) => api.retryPlanLesson(planId, sceneId);
 
   @override
   Future<SessionAnswerOutcome> answer(String planId, int number, String cardId, SessionAnswer answer) =>
@@ -74,13 +89,20 @@ class ApiSessionBackend implements SessionBackend {
 /// ([AnswerOutbox]); the next card does not open until the queue is empty ([next]). The copy after a first failure
 /// is placed at the end of the stage by the server's answer — the listening stage deals none. «Close the day» is
 /// the server's `POST …/close` ([closeDay]).
+///
+/// «ONCE MORE» RESTARTS THE STAGE ([replay], work order SESSION-2a §4): the window's `again` opens the session on the
+/// entry of «Speak myself» (the stage the contract names; a day without it — its last stage with cards) with that
+/// stage's cards unanswered on the phone. Nothing is sent — no answer, no judge, no close — and the day's progress is
+/// untouched; after the stage summary the session stands on the day summary again, drawn from the server's day.
 class SessionController extends ChangeNotifier {
   SessionController({
     required this.backend,
     required this.plan,
     required this.number,
     this.store,
+    this.replay = false,
     Duration Function(int failures)? outboxBackoff,
+    this.lessonPollEvery = const Duration(seconds: 3),
   }) {
     outbox = AnswerOutbox(
       send: (cardId, answer) => backend.answer(plan.id, number, cardId, answer),
@@ -92,6 +114,12 @@ class SessionController extends ChangeNotifier {
   final Plan plan;
   final int number;
   final PlanStore? store;
+
+  /// «Once more» on a passed day — see the class.
+  final bool replay;
+
+  /// How often the plan is asked about a lesson that is still being written.
+  final Duration lessonPollEvery;
   late final AnswerOutbox outbox;
 
   SessionPhase _phase = SessionPhase.loading;
@@ -122,7 +150,29 @@ class SessionController extends ChangeNotifier {
   /// of the stage) never reached the phone. Before the next card the day is re-read.
   bool _resync = false;
 
+  /// The plan as last read — the next day's status on the day summary, the day of the «building» plate.
+  Plan? _freshPlan;
+  Timer? _lessonPoll;
+
+  /// The scene whose lesson failed — «Retry» asks for it again.
+  String? _failedScene;
+  bool _retrying = false;
+
   SessionPhase get phase => _phase;
+
+  /// The plan as the server last said it — [plan] until the session read it again.
+  Plan get currentPlan => _freshPlan ?? plan;
+
+  /// The day after this one, as the latest plan names it — «Day N — building / ready» on 30-7; null — the last day.
+  PlanDayRoute? get nextDay {
+    for (final d in currentPlan.days) {
+      if (d.number == number + 1) return d;
+    }
+    return null;
+  }
+
+  /// «Retry» on a failed lesson is on its way.
+  bool get retrying => _retrying;
   Object? get error => _error;
   SessionDay? get day => _day;
   SessionQueue? get queue => _queue;
@@ -157,27 +207,121 @@ class SessionController extends ChangeNotifier {
     return read > answered ? read : answered;
   }
 
-  /// Read the day and stand at the entry of the first unfinished stage; every card answered — the day summary.
+  /// Read the day and stand at the entry of the first unfinished stage; every card answered — the day summary. A lesson
+  /// still being written — the «building» plate and a poll; a lesson that failed — the plate with «Retry».
   Future<void> load() async {
+    _lessonPoll?.cancel();
     _phase = SessionPhase.loading;
     _error = null;
     _notify();
     try {
       var day = await backend.day(plan.id, number);
-      if (!day.dealt && day.day.status != PlanDayStatus.closed) {
+      if (!replay && !day.dealt && day.day.status != PlanDayStatus.closed) {
         await backend.open(plan.id, number);
         day = await backend.day(plan.id, number);
       }
+      if (_disposed) return;
       _setDay(day);
       _noHints = await store?.noHints(plan.id) ?? false;
-      final open = _queue!.firstOpenStage();
-      _stage = open ?? _lastStageWithCards();
-      _phase = open == null && day.dealt ? SessionPhase.daySummary : SessionPhase.entry;
+      if (replay) {
+        _startReplay(day);
+      } else {
+        final open = _queue!.firstOpenStage();
+        _stage = open ?? _lastStageWithCards();
+        _phase = open == null && day.dealt ? SessionPhase.daySummary : SessionPhase.entry;
+      }
     } catch (e) {
-      _error = e;
-      _phase = SessionPhase.failed;
+      if (_disposed) return;
+      _onLoadError(e);
     }
+    if (_phase == SessionPhase.daySummary) unawaited(_readPlan());
     _notify();
+  }
+
+  void _onLoadError(Object e) {
+    final meta = problemMetaOf(e);
+    switch (problemCodeOf(e)) {
+      case 'plan_lesson_not_ready' when meta['lesson_status'] == 'failed':
+        _failedScene = meta['scene_id'] as String?;
+        _phase = SessionPhase.lessonFailed;
+      case 'plan_day_building' || 'plan_lesson_not_ready':
+        _phase = SessionPhase.building;
+        _armLessonPoll();
+      default:
+        _error = e;
+        _phase = SessionPhase.failed;
+    }
+  }
+
+  /// Ask the plan whether the lesson is written: ready — read the day; failed — the plate with «Retry»; still being
+  /// written, or no answer — ask again later.
+  void _armLessonPoll() {
+    _lessonPoll?.cancel();
+    _lessonPoll = Timer(lessonPollEvery, () => unawaited(_pollLesson()));
+  }
+
+  Future<void> _pollLesson() async {
+    if (_disposed || _phase != SessionPhase.building) return;
+    final day = await _readPlan();
+    if (_disposed || _phase != SessionPhase.building) return;
+    if (day == null || day.lessonBuilding) {
+      _armLessonPoll();
+    } else if (day.lessonFailed) {
+      _failedScene = day.sceneId;
+      _phase = SessionPhase.lessonFailed;
+      _notify();
+    } else {
+      await load();
+    }
+  }
+
+  /// Read the plan again; returns this day as it now reads, null — no answer.
+  Future<PlanDayRoute?> _readPlan() async {
+    try {
+      final fresh = await backend.plan(plan.id);
+      if (_disposed) return null;
+      _freshPlan = fresh;
+      _notify();
+      for (final d in fresh.days) {
+        if (d.number == number) return d;
+      }
+    } catch (e) {
+      debugPrint('[session] plan read: $e');
+    }
+    return null;
+  }
+
+  /// «Retry» on a failed lesson: the server writes the lesson again, the plate returns to «building».
+  Future<void> retryLesson() async {
+    final scene = _failedScene ?? _dayRoute?.sceneId;
+    if (_retrying || scene == null) return;
+    _retrying = true;
+    _notify();
+    try {
+      _freshPlan = await backend.retryLesson(plan.id, scene);
+      if (_disposed) return;
+      _phase = SessionPhase.building;
+      _armLessonPoll();
+    } catch (e) {
+      debugPrint('[session] lesson retry: $e');
+    }
+    _retrying = false;
+    _notify();
+  }
+
+  PlanDayRoute? get _dayRoute {
+    for (final d in currentPlan.days) {
+      if (d.number == number) return d;
+    }
+    return null;
+  }
+
+  /// «Once more»: the stage the contract's `again` names — «Speak myself»; a day without it — its last stage with cards.
+  void _startReplay(SessionDay day) {
+    final stage = _queue!.hasCards(PlanStage.speak) ? PlanStage.speak : _lastStageWithCards();
+    _queue = SessionQueue.replaying(day.stages, stage);
+    _stage = stage;
+    _phase = SessionPhase.entry;
   }
 
   void _setDay(SessionDay day) {
@@ -212,12 +356,16 @@ class SessionController extends ChangeNotifier {
     _notify();
   }
 
-  /// A card's answer: marked locally, to the server — via the queue of deferred answers.
+  /// A card's answer: marked locally, to the server — via the queue of deferred answers. A replay sends nothing.
   void submit(SessionCard card, SessionAnswer answer) {
     if (!SessionRules.mayWrite(card.kind, answer.result)) {
       throw StateError('${card.kind.wire} may not write ${answer.result.wire}');
     }
     _queue?.markAnswered(card, answer.result, answer.attempts);
+    if (replay) {
+      _notify();
+      return;
+    }
     outbox.enqueue(card.id, answer, (outcome, failure) {
       if (outcome != null) {
         _queue?.apply(answered: outcome.card, requeued: outcome.requeued);
@@ -236,6 +384,14 @@ class SessionController extends ChangeNotifier {
   /// on screen before this attempt (`speak_answer`: 5 s of silence or «Hint»); the server then writes `hinted`. A
   /// network error — an exception to the caller.
   Future<SessionJudgeOutcome> judge(SessionCard card, String heard, {bool hinted = false}) async {
+    // A replay asks nobody: the card was judged when the day was walked, and the server would refuse it
+    // (`plan_card_answered`, `plan_day_not_open`). What was said counts — it changes nothing on the server.
+    if (replay) {
+      final said = heard.trim().isNotEmpty;
+      if (said) _queue?.markAnswered(card, SessionResult.passed, 1);
+      _notify();
+      return SessionJudgeOutcome(accepted: said, result: said ? SessionResult.passed : null, attempts: 1);
+    }
     final outcome = await backend.judge(plan.id, number, card.id, heard: heard, hinted: hinted);
     if (outcome.accepted && outcome.card != null) _queue?.apply(answered: outcome.card);
     _notify();
@@ -260,7 +416,7 @@ class SessionController extends ChangeNotifier {
       _card = null;
       _phase = SessionPhase.summary;
       _notify();
-      unawaited(_refreshAfterStage());
+      if (!replay) unawaited(_refreshAfterStage());
       return;
     }
     _card = next;
@@ -292,16 +448,19 @@ class SessionController extends ChangeNotifier {
     }
   }
 
-  /// The stage after the current one — on the stage summary.
-  PlanStage? get nextStage => _queue?.stageAfter(_stage);
+  /// The stage after the current one — on the stage summary. A replay has none: it returns to the day summary.
+  PlanStage? get nextStage => replay ? null : _queue?.stageAfter(_stage);
 
   /// «Next» on the stage summary — entry to the next stage; after the last stage («Day done», 35-6) — the day
-  /// summary (30-7).
+  /// summary (30-7). After a replay — the day summary again, from the server's day, not the replayed answers.
   void continueAfterSummary() {
     final next = nextStage;
     _card = null;
     if (next == null) {
+      final day = _day;
+      if (replay && day != null) _setDay(day);
       _phase = SessionPhase.daySummary;
+      unawaited(_readPlan());
     } else {
       _stage = next;
       _phase = SessionPhase.entry;
@@ -354,6 +513,7 @@ class SessionController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _lessonPoll?.cancel();
     outbox.removeListener(_notify);
     outbox.dispose();
     super.dispose();

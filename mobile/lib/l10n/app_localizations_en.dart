@@ -2745,6 +2745,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planPlateCtaStart => 'Start';
 
   @override
+  String planPlateLabelCatchUp(int n) {
+    return 'Day $n · catching up';
+  }
+
+  @override
   String planPlateBuildingTitle(int n) {
     return 'Building day $n';
   }
@@ -3496,7 +3501,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskWhatAnswer => 'What will you answer?';
 
   @override
-  String get planSessionTaskSayOwn => 'Say it whole — pick the meaning yourself';
+  String get planSessionTaskSayOwn => 'Choose what goes in and say the whole phrase';
 
   @override
   String get planSessionBrowWord => 'Word';
@@ -3669,9 +3674,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionLoadFailed => 'The day didn\'t load';
 
   @override
-  String get planSessionLessonBuilding => 'Building the day · about a minute';
-
-  @override
   String planSessionLeftExchanges(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -3709,10 +3711,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskCollectAnswer => 'Build your answer';
 
   @override
-  String get planSessionTaskSayAnswer => 'Say your answer aloud';
+  String get planSessionTaskSayLine => 'Say your line';
 
   @override
-  String get planSessionTaskAnswerVoice => 'Answer by voice';
+  String get planSessionTaskAnswerQuestion => 'Answer the question';
 
   @override
   String get planSessionTaskAskSelf => 'Ask it yourself';
@@ -3800,6 +3802,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionTaskCatchNumber => 'Catch the number';
+
+  @override
+  String get planSessionWhichNumber => 'Which number did you hear?';
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Answer in your own words';

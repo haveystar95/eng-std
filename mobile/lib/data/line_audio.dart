@@ -35,6 +35,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'audio_loader.dart';
+import 'audio_mixer.dart';
 import 'config.dart';
 
 /// One line the server can play from a file: what it says, and where the file is.
@@ -57,12 +58,10 @@ typedef VoiceTrouble = ({int downloads, int silentFallbacks, String? lastReason}
 class LineAudioCache {
   LineAudioCache({
     Dio? http,
-    MethodChannel? channel,
     Directory? directory,
     String? Function()? bearer,
     Duration? retryBackoff,
   }) : _http = http ?? Dio(),
-       _channel = channel ?? const MethodChannel('com.denis.engstd/line_audio'),
        _given = directory,
        // ignore: prefer_initializing_formals
        _bearer = bearer,
@@ -70,7 +69,6 @@ class LineAudioCache {
        _retryBackoff = retryBackoff;
 
   final Dio _http;
-  final MethodChannel _channel;
 
   /// ТОКЕН — СПРАШИВАЕТСЯ В МОМЕНТ ЗАПРОСА, а не передаётся снимком.
   ///
@@ -351,7 +349,7 @@ class LineAudioCache {
       return false;
     }
     try {
-      await _channel.invokeMethod<void>('play', {'path': path});
+      await AudioMixer.speak(path);
       // Какой файл прозвучал — видно в логе устройства: живой прогон иначе не отличит голос сервера от телефона.
       debugPrint('[line-audio] play «$text» ${p.basename(path)}');
 
@@ -371,11 +369,11 @@ class LineAudioCache {
   }
 
   /// Play a file by path — the day session (work order SESSION-1b) knows a card's sound by its URL, not by
-  /// its text. [rate] — playback rate (0.85× on "Say it aloud"). Waits for the file to end; false — nothing
-  /// to play with (not iOS, the file is gone), call the system voice.
+  /// its text. [rate] — playback rate (0.85× on "Say it aloud"). Waits until the file has ended or was cut
+  /// ([AudioMixer.speak]); false — nothing to play with (not iOS, the file is gone), call the system voice.
   Future<bool> playFile(String path, {double rate = 1.0}) async {
     try {
-      await _channel.invokeMethod<void>('play', {'path': path, if (rate != 1.0) 'rate': rate});
+      await AudioMixer.speak(path, rate: rate);
 
       return true;
     } on PlatformException catch (e) {
@@ -389,11 +387,5 @@ class LineAudioCache {
     }
   }
 
-  Future<void> stop() async {
-    try {
-      await _channel.invokeMethod<void>('stop');
-    } on MissingPluginException {
-      // nothing to stop
-    }
-  }
+  Future<void> stop() => AudioMixer.stopSpeech();
 }

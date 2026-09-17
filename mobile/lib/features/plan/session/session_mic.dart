@@ -30,15 +30,17 @@ enum MicState {
 typedef MicTurn = ({String transcript, SpeechTurnOutcome outcome});
 
 /// SESSION CARD MICROPHONE (work order SESSION-1b, canvas 30-3) — on top of the existing recording engine
-/// ([SpeechTurn]: recording only on a tap, 2 s of silence after speech closes the recording, a length guard,
-/// gluing of recognizer chunks). Here only the button state and the live line; the card computes the pass from
-/// [onTurn] and answers with [settle].
+/// ([SpeechTurn]: recording only on a tap, a length guard, gluing of recognizer chunks). Here only the button state
+/// and the live line; the card computes the pass from [onTurn] and answers with [settle].
 ///
-/// Early stop (polish pass SESSION-1b′, item 6): the card provides [autoStop] — how long to wait on an unchanged
-/// partial result once it already passes ([SpeechStop]); if it does not pass, 2 s of silence closes the recording.
+/// RECORD UNTIL THE PAUSE, NOT UNTIL THE KEY (work order SESSION-2a §3): a recording is closed only by a pause in the
+/// speech ([turnConfig] — 1 s of silence after the last word) or by a tap on the button, and only then is the whole
+/// of what was said handed to the card. The partial result is for the screen and never decides anything: an early
+/// stop on the first covered key cut the owner mid-sentence («smaller» in «Answer in your own words», the first of
+/// two sentences in «Say what you heard»). The pass rule did not change — the moment it is applied did.
 ///
 /// Debug door [submitDebug] — the debug build's «what was heard» field on the simulator, where there is no
-/// microphone: the text takes the same road — early stop or silence, then the final transcript.
+/// microphone: the text takes the same road — the pause, then the final transcript.
 class SessionMic extends ChangeNotifier {
   SessionMic({
     required this._recognizer,
@@ -64,13 +66,11 @@ class SessionMic extends ChangeNotifier {
   /// The recording is closed — the card judges and calls [settle].
   void Function(MicTurn turn)? onTurn;
 
-  /// How long to wait on an unchanged partial result before stopping; null — wait for silence.
-  Duration? Function(String partial)? autoStop;
-
-  /// Silence without coverage — same as the recording engine.
-  static final Duration silence = const SpeechTurnConfig().silenceAfterSpeech;
-
-  Timer? _stopTimer;
+  /// The day session's recording: closed by a 1 s pause after the speech — however early it comes.
+  static const SpeechTurnConfig turnConfig = SpeechTurnConfig(
+    silenceAfterSpeech: Duration(milliseconds: 1000),
+    minWaitBeforeSilence: Duration.zero,
+  );
 
   MicState _state = MicState.idle;
   String _partial = '';
@@ -117,7 +117,7 @@ class SessionMic extends ChangeNotifier {
     _closed = false;
     _set(MicState.listening);
     SessionSounds.play(SessionSounds.micOn);
-    final turn = SpeechTurn(_recognizer, diagnostics: _diagnostics);
+    final turn = SpeechTurn(_recognizer, config: turnConfig, diagnostics: _diagnostics);
     _turn = turn;
     SpeechTurnResult result;
     try {
@@ -128,7 +128,6 @@ class SessionMic extends ChangeNotifier {
         onPartial: (text) {
           if (_turn != turn) return;
           _partial = text;
-          _armStop(() => unawaited(turn.stop()));
           _notify();
         },
         // iOS reports decibels roughly from −2 to 10.
@@ -142,7 +141,6 @@ class SessionMic extends ChangeNotifier {
       result = const SpeechTurnResult(SpeechTurnOutcome.unavailable);
     }
     if (_disposed || _turn != turn) return;
-    _stopTimer?.cancel();
     _turn = null;
     _level = 0;
     if (result.outcome == SpeechTurnOutcome.unavailable) {
@@ -155,16 +153,6 @@ class SessionMic extends ChangeNotifier {
     _closed = true;
     _notify();
     onTurn?.call((transcript: result.transcript, outcome: result.outcome));
-  }
-
-  /// The partial result changed: passes — stop recording after [autoStop]; does not — wait for silence.
-  void _armStop(void Function() stop) {
-    _stopTimer?.cancel();
-    final wait = autoStop?.call(_partial);
-    if (wait == null) return;
-    _stopTimer = Timer(wait, () {
-      if (!_disposed && _state == MicState.listening && !_closed) stop();
-    });
   }
 
   /// The card's verdict on a closed recording.
@@ -202,9 +190,8 @@ class SessionMic extends ChangeNotifier {
     _blockedInSettings = probe?.blockedInSettings ?? false;
   }
 
-  /// DEBUG FIELD «WHAT WAS HEARD» (debug build only): the text acts as a partial result that no longer changes:
-  /// passes — the recording stops after [autoStop], does not — after the silence [silence]; then the final
-  /// transcript goes to the card.
+  /// DEBUG FIELD «WHAT WAS HEARD» (debug build only): the text acts as a partial result that no longer changes: the
+  /// recording closes after the pause of [turnConfig], then the final transcript goes to the card.
   void submitDebug(String text) {
     if (!kDebugMode) return;
     final heard = text.trim();
@@ -213,13 +200,12 @@ class SessionMic extends ChangeNotifier {
     _turn = null;
     if (turn != null) unawaited(turn.cancel());
     _debugClose?.cancel();
-    _stopTimer?.cancel();
     _partial = heard;
     _level = 0;
     _closed = false;
     _set(MicState.listening);
     SessionSounds.play(SessionSounds.micOn);
-    _debugClose = Timer(autoStop?.call(heard) ?? silence, () {
+    _debugClose = Timer(turnConfig.silenceAfterSpeech, () {
       if (_disposed) return;
       _closed = true;
       _notify();
@@ -241,7 +227,6 @@ class SessionMic extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _debugClose?.cancel();
-    _stopTimer?.cancel();
     final turn = _turn;
     _turn = null;
     if (turn != null) unawaited(turn.cancel());

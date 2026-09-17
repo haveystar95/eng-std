@@ -32,8 +32,8 @@ void main() {
       await pumpCard(tester, probeEnv(card, probe), size: entry.value);
       expect(tester.takeException(), isNull, reason: 'idle: no overflow');
       final idle = rectOf(tester, 'own-slot-chips');
-      expect(find.text('тап — говорить'), findsOneWidget);
-      expect(idle.bottom, lessThanOrEqualTo(tester.getRect(find.text('тап — говорить')).top));
+      expect(find.text('тап — говорить'), findsNothing, reason: 'no caption under the chips — the task line says it (SESSION-2a §5)');
+      expect(idle.bottom, lessThanOrEqualTo(tester.getRect(find.text('Пропустить')).top));
 
       await tester.tap(find.byKey(const ValueKey('chip-1')));
       await tester.pump();
@@ -47,8 +47,8 @@ void main() {
       expectBelowChips(tester, 'session-live-line');
       expect(rectOf(tester, 'own-slot-chips').top, greaterThanOrEqualTo(0), reason: 'the lifted row is still on screen');
 
-      // The frame and words after it → an 800 ms pause → the judge → pass: the «heard» line in sage.
-      await tester.pump(const Duration(milliseconds: 850));
+      // The pause after the speech → the judge → pass: the «heard» line in sage.
+      await tester.pump(const Duration(milliseconds: 1010));
       await tester.pump();
       expect(probe.judged, ['It started last night when he came home']);
       expect(find.byKey(const ValueKey('session-heard-line')), findsOneWidget);
@@ -61,8 +61,8 @@ void main() {
     testWidgets('${entry.key}: idle — the chip row sits right above the idle voice zone', (tester) async {
       await pumpCard(tester, probeEnv(card, CardProbe()), size: entry.value);
       final chips = rectOf(tester, 'own-slot-chips');
-      final tap = tester.getRect(find.text('тап — говорить'));
-      expect(tap.top - chips.bottom, lessThan(16 + 40), reason: 'no recording-height reserve between the chips and «tap to speak»');
+      final skip = tester.getRect(find.text('Пропустить'));
+      expect(skip.top - chips.bottom, lessThan(16 + 40), reason: 'no recording-height reserve between the chips and «Skip»');
       await settleCard(tester);
     });
 
@@ -74,7 +74,7 @@ void main() {
       await enterHeard(tester, long);
       expectBelowChips(tester, 'session-live-line');
 
-      await tester.pump(const Duration(milliseconds: 850));
+      await tester.pump(const Duration(milliseconds: 1010));
       await tester.pump();
       expect(probe.judged, [long]);
       expect(find.byKey(const ValueKey('own-slot-reason')), findsOneWidget);

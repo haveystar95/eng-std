@@ -42,7 +42,7 @@ void main() {
       expect(find.text('подскажу каркас — окно твоё'), findsOneWidget);
 
       await enterHeard(tester, 'It started last night');
-      await tester.pump(const Duration(milliseconds: 850));
+      await tester.pump(const Duration(milliseconds: 1010));
       await tester.pump();
       expect(probe.judged, ['It started last night']);
       expect(probe.hinted, [true]);
@@ -196,7 +196,7 @@ void main() {
       expect(voice.played, ['x1@1.0']);
 
       await enterHeard(tester, 'Где болит вверху или в пояснице');
-      await tester.pump(const Duration(milliseconds: 850));
+      await tester.pump(const Duration(milliseconds: 1010));
       await tester.pump();
       expect(probe.judged, ['Где болит вверху или в пояснице']);
       expect(probe.hinted, [false]);

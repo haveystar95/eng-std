@@ -101,6 +101,18 @@ interface dependency, tests, example app) is byte-for-byte the pub.dev release.
 
   **Upstream-worthy:** yes — this is a defect in upstream, not a local preference. Track with SLV-5.
 
+- **A session the app already runs in `playAndRecord` is left alone** (наряд SESSION-2a §1 — the third
+  fork-local change). Upstream swaps the category to `playAndRecord` on every `listen` and, on every stop,
+  restores the remembered category and calls `setActive(false, .notifyOthersOnDeactivation)`. Deactivating the
+  session stops every player in the app without a completion callback: on the phone (17.09) the partner's reply,
+  started the moment a voice answer was accepted, was cut by the stop of the recording that had just ended, and its
+  bubble stayed «playing». The day session now raises its session in `playAndRecord` with the recognizer's own
+  options (`Pronouncer.warmUp(recording: true)`); `listenForSpeech` sees that category, sets `sessionOwnedByApp`,
+  and neither swaps the category nor restores or deactivates it on stop. Any other category — the old behaviour,
+  byte for byte.
+
+  **Upstream-worthy:** as an option, perhaps; as is, it is this app's session ownership rule.
+
 ### Android — untouched
 
 Per this task's scope (the app is iOS-only), the Android Kotlin plugin was not modified. It
@@ -109,7 +121,7 @@ argument is silently and safely dropped there.
 
 ## For the next update
 
-When bumping this fork to a newer upstream `speech_to_text` release: re-apply the two changes
+When bumping this fork to a newer upstream `speech_to_text` release: re-apply the changes
 above (`lib/speech_to_text.dart`'s `listen()`/`_startListening`, and the Swift
 `contextualStrings` plumbing) against the new version, re-diff `MethodChannelSpeechToText.listen()`
 in whatever `speech_to_text_platform_interface` version pairs with it (the argument map this fork

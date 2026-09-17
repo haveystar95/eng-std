@@ -38,6 +38,12 @@ class _Backend implements SessionBackend {
   Future<void> open(String planId, int number) async {}
 
   @override
+  Future<Plan> plan(String planId) async => _plan();
+
+  @override
+  Future<Plan> retryLesson(String planId, String sceneId) async => _plan();
+
+  @override
   Future<SessionAnswerOutcome> answer(String planId, int number, String cardId, SessionAnswer answer) => throw UnimplementedError();
 
   @override
@@ -107,7 +113,7 @@ Future<void> _open(WidgetTester tester, _Backend backend) async {
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
   final messenger = tester.binding.defaultBinaryMessenger;
-  for (final name in ['flutter_tts', 'com.denis.engstd/line_audio', 'com.denis.engstd/app_info']) {
+  for (final name in ['flutter_tts', 'com.denis.engstd/app_info']) {
     messenger.setMockMethodCallHandler(MethodChannel(name), (call) async => null);
     addTearDown(() => messenger.setMockMethodCallHandler(MethodChannel(name), null));
   }

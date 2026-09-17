@@ -28,6 +28,16 @@ class SessionQueue {
   SessionQueue(List<SessionStageCards> stages)
     : _cards = {for (final s in stages) s.stage: List.of(s.cards)};
 
+  /// «Once more» (SESSION-2a §4): the day as it is, except [stage] — its cards as they were dealt, unanswered on the
+  /// phone, and without the copies a first failure added: the stage is walked again, not its retries.
+  SessionQueue.replaying(List<SessionStageCards> stages, PlanStage stage)
+    : _cards = {
+        for (final s in stages)
+          s.stage: s.stage == stage
+              ? [for (final c in s.cards) if (c.retryOf == null) c.fresh()]
+              : List.of(s.cards),
+      };
+
   final Map<PlanStage, List<SessionCard>> _cards;
 
   /// The stage's cards by `position`.

@@ -3574,6 +3574,15 @@
   "@planPlateCtaStart": {
     "description": "Плита дня, кнопка (plan.plate.cta.start); окно дня — одна кнопка внизу у не начатого дня (allowed_action = start, 23-0a)."
   },
+  "planPlateLabelCatchUp": "День {n} · догоняем",
+  "@planPlateLabelCatchUp": {
+    "description": "Плита дня, лейбл латунью у дня плана, который догоняет дату события (catch_up сервера, наряд SESSION-2a §6): следующий день открывается сразу после закрытия предыдущего.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "planPlateBuildingTitle": "Собираем день {n}",
   "@planPlateBuildingTitle": {
     "description": "Строка вместо этапов, пока день пишется (кадр 22-5a, plan.plate.building.title).",
@@ -4675,9 +4684,9 @@
   "@planSessionTaskWhatAnswer": {
     "description": "Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′)."
   },
-  "planSessionTaskSayOwn": "Скажи целиком — значение выбери сам",
+  "planSessionTaskSayOwn": "Выбери, что вставить, и скажи фразу целиком",
   "@planSessionTaskSayOwn": {
-    "description": "Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′)."
+    "description": "Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′; текст — SESSION-2a §5)."
   },
   "planSessionBrowWord": "Слово",
   "@planSessionBrowWord": {
@@ -4895,10 +4904,6 @@
   "@planSessionLoadFailed": {
     "description": "Сессия: вход, когда сервер не ответил."
   },
-  "planSessionLessonBuilding": "Собираем день · около минуты",
-  "@planSessionLessonBuilding": {
-    "description": "Сессия: вход, пока урок дня ещё пишется (409 plan_lesson_not_ready)."
-  },
   "planSessionLeftExchanges": "{n, plural, one{ещё {n} реплика} few{ещё {n} реплики} many{ещё {n} реплик} other{ещё {n} реплики}}",
   "@planSessionLeftExchanges": {
     "description": "Сессия, шапка (30-2) этапов «Диалог» и «Говорю сам»: сколько обменов ещё не закрыто.",
@@ -4937,13 +4942,13 @@
   "@planSessionTaskCollectAnswer": {
     "description": "Сессия, строка задания 33-2: ответ собеседнику чипами (beginner)."
   },
-  "planSessionTaskSayAnswer": "Скажи ответ вслух",
-  "@planSessionTaskSayAnswer": {
-    "description": "Сессия, строка задания 33-3: ответ голосом, реплика на экране (intermediate)."
+  "planSessionTaskSayLine": "Скажи свою реплику",
+  "@planSessionTaskSayLine": {
+    "description": "Сессия, строка задания 33-3 и 33-4: реплика ученика голосом — с репликой на экране и вслепую (наряд SESSION-2a §5)."
   },
-  "planSessionTaskAnswerVoice": "Ответь голосом",
-  "@planSessionTaskAnswerVoice": {
-    "description": "Сессия, строка задания 33-4: ответ голосом вслепую — каркас с пустым окном («Без подсказок»). Канва — «Ответь врачу»: склонения роли контракт не отдаёт."
+  "planSessionTaskAnswerQuestion": "Ответь на вопрос",
+  "@planSessionTaskAnswerQuestion": {
+    "description": "Сессия, строка задания 33-1: вопрос на понимание реплики собеседника; сам вопрос сервера (question_native) — строкой под заданием (наряд SESSION-2a §5)."
   },
   "planSessionTaskAskSelf": "Спроси сам",
   "@planSessionTaskAskSelf": {
@@ -5059,6 +5064,10 @@
   "planSessionTaskCatchNumber": "Поймай число",
   "@planSessionTaskCatchNumber": {
     "description": "Сессия, строка задания 34-7: число в реплике на слух."
+  },
+  "planSessionWhichNumber": "Какое число прозвучало?",
+  "@planSessionWhichNumber": {
+    "description": "Сессия, «Поймай число» (34-7): текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2a §5)."
   },
   "planSessionTaskAnswerOwnWords": "Ответь своими словами",
   "@planSessionTaskAnswerOwnWords": {

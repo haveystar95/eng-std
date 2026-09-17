@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/audio_mixer.dart';
 import 'package:eng_std/data/line_audio.dart';
 import 'package:eng_std/data/models.dart' show AppUser;
 import 'package:eng_std/data/plan/plan_models.dart';
@@ -73,7 +74,7 @@ class _QuietPronouncer extends Pronouncer {
   _QuietPronouncer() : super();
 
   @override
-  Future<void> warmUp({required String targetLang}) async {}
+  Future<void> warmUp({required String targetLang, bool recording = false}) async {}
 
   @override
   Future<void> speakText(String text, {required String targetLang, bool slow = false, bool awaitDone = false}) async {}
@@ -223,10 +224,9 @@ Future<void> enterHeard(WidgetTester tester, String text) async {
   await tester.pump();
 }
 
-/// Say [text] through the «what was heard» field and wait until the recording stops and goes to grading: a passing
-/// text stops after 500 ms (a judge-graded one after 800 ms), a failing one after 2 s of silence; the default
-/// [hold] covers all of them.
-Future<void> sayDebug(WidgetTester tester, String text, {Duration hold = const Duration(milliseconds: 2050)}) async {
+/// Say [text] through the «what was heard» field and wait until the recording closes on the pause and goes to grading
+/// (SESSION-2a §3: 1 s of silence, whatever was said).
+Future<void> sayDebug(WidgetTester tester, String text, {Duration hold = const Duration(milliseconds: 1050)}) async {
   await enterHeard(tester, text);
   await tester.pump(hold);
 }
@@ -252,19 +252,19 @@ bool dockEnabled(WidgetTester tester, String label) {
 }
 
 /// The session's sounds as a session opened them: [SessionSounds] loaded against a mocked
-/// [SessionSounds.channel]; returns the names played, in order.
+/// [AudioMixer.channel]; returns the names played, in order.
 List<String> recordSessionSounds(WidgetTester tester) {
   final sounds = <String>[];
   final messenger = tester.binding.defaultBinaryMessenger;
-  messenger.setMockMethodCallHandler(SessionSounds.channel, (call) async {
-    if (call.method == 'play') sounds.add('${(call.arguments as Map)['sound']}');
+  messenger.setMockMethodCallHandler(AudioMixer.channel, (call) async {
+    if (call.method == 'playEffect') sounds.add('${(call.arguments as Map)['name']}');
     return null;
   });
   SessionSounds.resetForTest();
   unawaited(SessionSounds.load());
   addTearDown(() {
     SessionSounds.resetForTest();
-    messenger.setMockMethodCallHandler(SessionSounds.channel, null);
+    messenger.setMockMethodCallHandler(AudioMixer.channel, null);
   });
   return sounds;
 }

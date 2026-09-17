@@ -2874,6 +2874,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planPlateCtaStart => 'Начать';
 
   @override
+  String planPlateLabelCatchUp(int n) {
+    return 'День $n · догоняем';
+  }
+
+  @override
   String planPlateBuildingTitle(int n) {
     return 'Собираем день $n';
   }
@@ -3656,7 +3661,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskWhatAnswer => 'Что ты ответишь?';
 
   @override
-  String get planSessionTaskSayOwn => 'Скажи целиком — значение выбери сам';
+  String get planSessionTaskSayOwn => 'Выбери, что вставить, и скажи фразу целиком';
 
   @override
   String get planSessionBrowWord => 'Слово';
@@ -3836,9 +3841,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionLoadFailed => 'День не загрузился';
 
   @override
-  String get planSessionLessonBuilding => 'Собираем день · около минуты';
-
-  @override
   String planSessionLeftExchanges(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -3880,10 +3882,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskCollectAnswer => 'Собери ответ';
 
   @override
-  String get planSessionTaskSayAnswer => 'Скажи ответ вслух';
+  String get planSessionTaskSayLine => 'Скажи свою реплику';
 
   @override
-  String get planSessionTaskAnswerVoice => 'Ответь голосом';
+  String get planSessionTaskAnswerQuestion => 'Ответь на вопрос';
 
   @override
   String get planSessionTaskAskSelf => 'Спроси сам';
@@ -3973,6 +3975,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionTaskCatchNumber => 'Поймай число';
+
+  @override
+  String get planSessionWhichNumber => 'Какое число прозвучало?';
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Ответь своими словами';

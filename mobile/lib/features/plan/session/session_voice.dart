@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/audio_loader.dart';
+import '../../../data/audio_mixer.dart';
 import '../../../data/line_audio.dart';
 import '../../../data/plan/session/session_models.dart';
 import '../../../data/pronouncer.dart';
@@ -16,7 +17,8 @@ import '../../../data/pronouncer.dart';
 /// (`AudioLoader`: disk, six downloads, retries) as the window's: a window opened before the session has already
 /// put them on disk.
 ///
-/// [playing] — what is sounding now (the key the caller gave): the «Listen» waves live off it.
+/// [playing] — what is sounding now (the key the caller gave): the «Listen» waves live off it. It is cleared when the
+/// sound has actually ended or been cut — the engine answers [play] at that moment (SESSION-2a §1), never a timer.
 class SessionVoice {
   SessionVoice({required LineAudioCache lines, required this.targetLang, Pronouncer? pronouncer})
     : _lines = lines,
@@ -35,7 +37,8 @@ class SessionVoice {
   int _serial = 0;
   bool _released = false;
 
-  Future<void> warmUp() => _pronouncer.warmUp(targetLang: targetLang);
+  /// The session records as well as speaks: the audio session is raised for both at once (SESSION-2a §1).
+  Future<void> warmUp() => _pronouncer.warmUp(targetLang: targetLang, recording: true);
 
   /// Download the cards' sounds to disk — waits for nothing.
   Future<void> prepare(Iterable<CardAudio> audios) async {
@@ -95,6 +98,8 @@ class SessionVoice {
     _released = true;
     _serial++;
     await _lines.stop();
+    // The engine stops before the session is let go: a session with running output refuses to deactivate.
+    await AudioMixer.pause();
     await _pronouncer.release();
     playing.dispose();
   }

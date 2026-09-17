@@ -52,9 +52,13 @@ class PlanDayPlateView extends StatelessWidget {
 
     // Кадр 22-5a: день ещё пишется — на месте этапов строка о сроке и разрешение уйти. Кнопки
     // здесь НЕТ: нажимать пока не на что, а приглушённая кнопка обещала бы, что скоро можно.
+    // «Day 3 · catching up» (GEN-3 `catch_up`): the next day opens as soon as this one closes — said on the day's
+    // own plate, the closed day's plate names the next one by its date anyway.
+    final label = plan.catchUp ? l.planPlateLabelCatchUp(day.number) : l.planPlateLabel(day.number);
+
     if (day.lessonBuilding) {
       return DayPlate(
-        label: l.planPlateLabel(day.number),
+        label: label,
         title: title,
         meta: cardsMeta(l),
         cover: cover,
@@ -70,7 +74,7 @@ class PlanDayPlateView extends StatelessWidget {
     // Кадр 22-5c: день не собрался — маршрут остаётся, потерян только день, и действие одно.
     if (day.lessonFailed) {
       return DayPlate(
-        label: l.planPlateLabel(day.number),
+        label: label,
         title: title,
         meta: cardsMeta(l),
         cover: cover,
@@ -105,7 +109,7 @@ class PlanDayPlateView extends StatelessWidget {
     }
 
     return DayPlate(
-      label: l.planPlateLabel(day.number),
+      label: label,
       title: title,
       meta: cardsMeta(l),
       cover: cover,

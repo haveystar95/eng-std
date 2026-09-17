@@ -5,12 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/app_settings.dart';
+import 'package:eng_std/data/audio_mixer.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/theme/feedback.dart';
 
 /// «Sounds in the session» (SESSION-1b′, item 5; the owner's decisions of 16.09) — on by default, stored on the
-/// device, independent of «Sounds»; off — the session registers none of the six sounds at all.
+/// device, independent of «Sounds»; off — the session loads none of the six sounds at all.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late AppDatabase db;
@@ -20,15 +21,15 @@ void main() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     calls.clear();
     SessionSounds.resetForTest();
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(SessionSounds.channel, (call) async {
-      calls.add(call.method == 'play' ? 'play ${(call.arguments as Map)['sound']}' : call.method);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(AudioMixer.channel, (call) async {
+      calls.add(call.method == 'playEffect' ? 'play ${(call.arguments as Map)['name']}' : call.method);
       return null;
     });
   });
   tearDown(() async {
     SessionSounds.resetForTest();
     AppFeedback.soundsEnabled = true;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(SessionSounds.channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(AudioMixer.channel, null);
     await db.close();
   });
 
@@ -64,7 +65,7 @@ void main() {
   // CATCHES: sounds registered although the owner switched them off, a play before the session loaded them, a
   // switch-off in the middle of a session that leaves them registered.
   group('SessionSounds', () {
-    test('a session registers the six sounds, plays by name and releases them', () async {
+    test('a session loads the six sounds, plays by name and releases them', () async {
       SessionSounds.play(SessionSounds.correct);
       expect(calls, isEmpty, reason: 'nothing is registered before the session opens');
       await SessionSounds.load();
@@ -74,10 +75,10 @@ void main() {
       await SessionSounds.release();
       SessionSounds.play(SessionSounds.ready);
       await pumpEventQueue();
-      expect(calls, ['load', 'play miss', 'play stage_done', 'release']);
+      expect(calls, ['loadEffects', 'play miss', 'play stage_done', 'releaseEffects']);
     });
 
-    test('switched off — nothing is registered and nothing sounds', () async {
+    test('switched off — nothing is loaded and nothing sounds', () async {
       SessionSounds.enabled = false;
       await SessionSounds.load();
       SessionSounds.verdict(correct: true);
@@ -91,26 +92,33 @@ void main() {
       await pumpEventQueue();
       SessionSounds.play(SessionSounds.micOn);
       await pumpEventQueue();
-      expect(calls, ['load', 'release']);
+      expect(calls, ['loadEffects', 'releaseEffects']);
     });
 
-    // CATCHES: a name the native side does not load, a file missing from the bundle — a silent session.
-    test('the six names are the owner\'s mp3 in the bundle and the native side loads each', () {
-      const names = [
-        SessionSounds.correct,
-        SessionSounds.miss,
-        SessionSounds.micOn,
-        SessionSounds.stageDone,
-        SessionSounds.dayDone,
-        SessionSounds.ready,
-      ];
-      expect(names, ['correct', 'miss', 'mic_on', 'stage_done', 'day_done', 'ready']);
-      final native = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+    // CATCHES: a name without its file in the bundle — a silent session.
+    test('the six names are the owner\'s mp3 in the bundle', () {
+      expect(SessionSounds.all, ['correct', 'miss', 'mic_on', 'stage_done', 'day_done', 'ready']);
       expect(File('pubspec.yaml').readAsStringSync(), contains('- assets/sounds/'));
-      for (final name in names) {
+      for (final name in SessionSounds.all) {
         expect(File('assets/sounds/$name.mp3').existsSync(), isTrue, reason: name);
-        expect(native, contains('"$name"'), reason: '$name is in the native list');
       }
+    });
+
+    // CATCHES: «то громко, то тихо» — a short sound whose level is left to the route or the ringer.
+    test('a short sound always asks for the same level, and it is under the speech', () async {
+      final levels = <Object?>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(AudioMixer.channel, (call) async {
+        if (call.method == 'playEffect') levels.add((call.arguments as Map)['level']);
+        return null;
+      });
+      await SessionSounds.load();
+      for (var i = 0; i < 5; i++) {
+        SessionSounds.verdict(correct: i.isEven);
+      }
+      await pumpEventQueue();
+      expect(levels, List.filled(5, AudioLevels.effect));
+      expect(AudioLevels.effect, lessThan(AudioLevels.speech));
+      expect(AudioLevels.effect, inInclusiveRange(0.35, 0.4));
     });
   });
 }

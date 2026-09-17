@@ -4215,6 +4215,12 @@ abstract class AppLocalizations {
   /// **'Начать'**
   String get planPlateCtaStart;
 
+  /// Плита дня, лейбл латунью у дня плана, который догоняет дату события (catch_up сервера, наряд SESSION-2a §6): следующий день открывается сразу после закрытия предыдущего.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {n} · догоняем'**
+  String planPlateLabelCatchUp(int n);
+
   /// Строка вместо этапов, пока день пишется (кадр 22-5a, plan.plate.building.title).
   ///
   /// In ru, this message translates to:
@@ -5349,10 +5355,10 @@ abstract class AppLocalizations {
   /// **'Что ты ответишь?'**
   String get planSessionTaskWhatAnswer;
 
-  /// Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′).
+  /// Сессия, своё окно (32-9): задание; окно пустое, наполнение — чипом или своим словом (наряд SESSION-1b′; текст — SESSION-2a §5).
   ///
   /// In ru, this message translates to:
-  /// **'Скажи целиком — значение выбери сам'**
+  /// **'Выбери, что вставить, и скажи фразу целиком'**
   String get planSessionTaskSayOwn;
 
   /// Сессия, лист вопроса (30-9, 31-3): бровь над словом.
@@ -5607,12 +5613,6 @@ abstract class AppLocalizations {
   /// **'День не загрузился'**
   String get planSessionLoadFailed;
 
-  /// Сессия: вход, пока урок дня ещё пишется (409 plan_lesson_not_ready).
-  ///
-  /// In ru, this message translates to:
-  /// **'Собираем день · около минуты'**
-  String get planSessionLessonBuilding;
-
   /// Сессия, шапка (30-2) этапов «Диалог» и «Говорю сам»: сколько обменов ещё не закрыто.
   ///
   /// In ru, this message translates to:
@@ -5655,17 +5655,17 @@ abstract class AppLocalizations {
   /// **'Собери ответ'**
   String get planSessionTaskCollectAnswer;
 
-  /// Сессия, строка задания 33-3: ответ голосом, реплика на экране (intermediate).
+  /// Сессия, строка задания 33-3 и 33-4: реплика ученика голосом — с репликой на экране и вслепую (наряд SESSION-2a §5).
   ///
   /// In ru, this message translates to:
-  /// **'Скажи ответ вслух'**
-  String get planSessionTaskSayAnswer;
+  /// **'Скажи свою реплику'**
+  String get planSessionTaskSayLine;
 
-  /// Сессия, строка задания 33-4: ответ голосом вслепую — каркас с пустым окном («Без подсказок»). Канва — «Ответь врачу»: склонения роли контракт не отдаёт.
+  /// Сессия, строка задания 33-1: вопрос на понимание реплики собеседника; сам вопрос сервера (question_native) — строкой под заданием (наряд SESSION-2a §5).
   ///
   /// In ru, this message translates to:
-  /// **'Ответь голосом'**
-  String get planSessionTaskAnswerVoice;
+  /// **'Ответь на вопрос'**
+  String get planSessionTaskAnswerQuestion;
 
   /// Сессия, строка задания 33-5: ученик спрашивает первым. Канва — «Спроси про работу»: текста задания контракт не отдаёт, клиент формулирует сам.
   ///
@@ -5816,6 +5816,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Поймай число'**
   String get planSessionTaskCatchNumber;
+
+  /// Сессия, «Поймай число» (34-7): текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2a §5).
+  ///
+  /// In ru, this message translates to:
+  /// **'Какое число прозвучало?'**
+  String get planSessionWhichNumber;
 
   /// Сессия, строка задания 35-2 и 35-5. Канва — «Ответь врачу»: склонения роли контракт не отдаёт.
   ///

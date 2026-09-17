@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/audio_mixer.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
@@ -17,7 +18,7 @@ import 'package:eng_std/theme/theme.dart';
 /// the point is precisely that it is NOT a speaking-only affordance.
 ///
 /// Two channels now: the haptic still goes out on `flutter/platform`, while the sound is our own
-/// `AppFeedback.channel` into `AppDelegate.swift`. Both are mocked so the pair can be asserted
+/// `AudioMixer.channel` into `AppDelegate.swift`. Both are mocked so the pair can be asserted
 /// together — which is how they are meant to be read, and how a mode that buzzes without a sound
 /// would be caught.
 void main() {
@@ -34,7 +35,7 @@ void main() {
       platformCalls.add(call);
       return null;
     });
-    messenger.setMockMethodCallHandler(AppFeedback.channel, (call) async {
+    messenger.setMockMethodCallHandler(AudioMixer.channel, (call) async {
       soundCalls.add(call);
       return null;
     });
@@ -43,7 +44,7 @@ void main() {
   tearDown(() {
     final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(SystemChannels.platform, null);
-    messenger.setMockMethodCallHandler(AppFeedback.channel, null);
+    messenger.setMockMethodCallHandler(AudioMixer.channel, null);
   });
 
   /// The verdict's haptic — the LAST one, not all of them: tapping an option fires Material's own
@@ -58,9 +59,9 @@ void main() {
   String? sound() {
     if (soundCalls.isEmpty) return null;
     final call = soundCalls.last;
-    expect(call.method, 'play');
+    expect(call.method, 'playEffect');
 
-    return (call.arguments as Map)['sound'] as String?;
+    return (call.arguments as Map)['name'] as String?;
   }
 
   SessionCard choiceCard() => SessionCard(
@@ -134,7 +135,7 @@ void main() {
     tester,
   ) async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      AppFeedback.channel,
+      AudioMixer.channel,
       (call) async {
         throw PlatformException(code: 'no_sound', message: 'unknown sound');
       },

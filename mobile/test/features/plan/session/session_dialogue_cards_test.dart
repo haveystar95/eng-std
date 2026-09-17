@@ -94,7 +94,7 @@ void main() {
     testWidgets('intermediate — voice with the line: the key underlined; the frame covered, any slot — passed (voice_hint)', (tester) async {
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(dialogueAt(2), probe));
-      expect(find.text('Скажи ответ вслух'), findsOneWidget);
+      expect(find.text('Скажи свою реплику'), findsOneWidget);
       expect(find.text('У него болит поясница.'), findsOneWidget);
       final line = tester.widget<SessionFrameText>(find.byType(SessionFrameText).first);
       expect(line.before, 'It hurts in his lower back.');
@@ -114,7 +114,7 @@ void main() {
       for (final level in PlanLevel.values) {
         final probe = CardProbe();
         await pumpCard(tester, probeEnv(dialogueAt(2), probe, level: level, noHints: true));
-        expect(find.text('Ответь голосом'), findsOneWidget, reason: level.name);
+        expect(find.text('Скажи свою реплику'), findsOneWidget, reason: level.name);
         expect(find.text('It hurts in his lower back.'), findsNothing);
         expect(ownFrame(tester).look, SlotLook.empty);
         expect(find.byType(SessionTile), findsNothing, reason: 'no chips');

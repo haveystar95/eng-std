@@ -96,28 +96,28 @@ void main() {
       await settleCard(tester);
     });
 
-    // RULE (SESSION-1b′, item 6): a recording that already passes stops after 500 ms of an unchanged partial result,
-    // without waiting for silence; a recording that does not pass is closed by 2 s of silence.
-    // CATCHES: a stop that waits for silence on a covered phrase, and a stop that cuts an uncovered one early.
-    testWidgets('word_repeat: full coverage stops after 500 ms; no coverage waits for 2 s of silence', (tester) async {
+    // RULE (SESSION-2a §3): recording until the pause, not until the key — a covered phrase is graded after the 1 s
+    // pause like any other, never on the partial result.
+    // CATCHES: an early stop on coverage (the owner cut mid-sentence), and a pause that no longer closes a recording.
+    testWidgets('recording until the pause, not until the key: word_repeat is graded after 1 s of silence, covered or not', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.wordRepeat);
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
       await enterHeard(tester, 'lowerback');
-      await tester.pump(const Duration(milliseconds: 450));
-      expect(probe.answers, isEmpty, reason: 'still recording at 450 ms');
+      await tester.pump(const Duration(milliseconds: 950));
+      expect(probe.answers, isEmpty, reason: 'covered, but the pause has not run out — still recording');
       await tester.pump(const Duration(milliseconds: 60));
-      expect(results(probe), [SessionResult.passed], reason: 'glued «lowerback» covers both words — stop at 500 ms');
+      expect(results(probe), [SessionResult.passed], reason: 'glued «lowerback» covers both words — graded after the pause');
       await settleCard(tester);
 
       final miss = CardProbe();
       await pumpCard(tester, probeEnv(card, miss));
       await enterHeard(tester, 'lower');
-      await tester.pump(const Duration(milliseconds: 1900));
-      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: 'no coverage — no early stop');
+      await tester.pump(const Duration(milliseconds: 950));
+      expect(find.text('не расслышал, ещё раз'), findsNothing);
       expect(miss.answers, isEmpty);
-      await tester.pump(const Duration(milliseconds: 150));
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: '2 s of silence close the recording');
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the same 1 s pause closes an uncovered recording');
       await settleCard(tester);
     });
 
@@ -367,6 +367,31 @@ void main() {
       await settleCard(tester);
     });
 
+    // RULE (SESSION-2a §2): «Choose the translation» plays its phrase by itself when the card opens, like the other
+    // phrase trainers; the word's 31-3 plays its word. CATCHES: the owner's 17.09 pass — the line did not play.
+    testWidgets('«Choose the translation» plays itself on open: phrase_choose_back and word_choose term_to_native', (tester) async {
+      final phrase = QuietVoice();
+      final phraseCard = fixtureCard(intermediate, SessionKind.phraseChooseBack);
+      await pumpCard(tester, probeEnv(phraseCard, CardProbe(), voice: phrase));
+      expect(phrase.played, isEmpty, reason: 'not before the card change has settled');
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(phrase.played, ['${(phraseCard.payload as PhraseChooseBackPayload).audio?.ref ?? '-'}@1.0']);
+      expect(phrase.fallbacks, ['It started three days ago.']);
+      await settleCard(tester);
+      expect(phrase.played, hasLength(1), reason: 'once');
+
+      final word = QuietVoice();
+      await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.wordChoose), CardProbe(), voice: word));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(word.fallbacks, ['fever']);
+      await settleCard(tester);
+
+      final reverse = QuietVoice();
+      await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.wordChoose, skip: 1), CardProbe(), voice: reverse));
+      await settleCard(tester);
+      expect(reverse.played, isEmpty, reason: '31-4 has no sound on the question');
+    });
+
     testWidgets('phrase_slot (32-4): a filler into the slot; correct — the slot in sage', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseSlot);
       final probe = CardProbe();
@@ -451,18 +476,18 @@ void main() {
       expect(task.style?.color, AppColors.tertiary, reason: 'the rest of the sentence is gray');
 
       await enterHeard(tester, 'it hurts in his neck');
-      await tester.pump(const Duration(milliseconds: 1900));
-      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: 'the slot is not covered — no early stop');
-      await tester.pump(const Duration(milliseconds: 150));
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: '2 s of silence; the frame alone does not pass');
+      await tester.pump(const Duration(milliseconds: 950));
+      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: 'still recording until the pause');
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the pause; the frame alone does not pass');
       expect(probe.answers, isEmpty);
 
       await enterHeard(tester, 'It hurts in his shoulder');
-      await tester.pump(const Duration(milliseconds: 450));
-      expect(frameLine(tester).slot, isNull, reason: 'still recording at 450 ms — nothing graded yet');
+      await tester.pump(const Duration(milliseconds: 950));
+      expect(frameLine(tester).slot, isNull, reason: 'covered, still recording until the pause — nothing graded yet');
       await tester.pump(const Duration(milliseconds: 60));
       await tester.pump();
-      expect(frameLine(tester).slot, 'shoulder', reason: 'frame and slot covered — stop after 500 ms; the heard filler fills the slot');
+      expect(frameLine(tester).slot, 'shoulder', reason: 'graded after the pause; the heard filler fills the slot');
       expect(frameLine(tester).look, SlotLook.sage);
       expect(probe.answers, isEmpty, reason: 'round 1 of 2 — the answer waits for round 2');
 
@@ -472,7 +497,7 @@ void main() {
       final round2 = tester.widget<Text>(find.byKey(const ValueKey('other-slot-task'))).textSpan! as TextSpan;
       expect(round2.toPlainText(), 'У него болит шея.');
       await enterHeard(tester, 'It hurts in his neck');
-      await tester.pump(const Duration(milliseconds: 510));
+      await tester.pump(const Duration(milliseconds: 1010));
       expect(results(probe), [SessionResult.passed]);
       await tester.pump();
       expect(frameLine(tester).slot, 'neck');
@@ -585,16 +610,16 @@ void main() {
       await settleCard(tester);
     });
 
-    // RULE (SESSION-1b′, item 4): the slot is EMPTY when the card opens; a known chip fills the slot without
-    // darkening and leaves the microphone waiting for the whole phrase; the frame and a word after it — the judge
-    // is asked after an 800 ms pause.
+    // RULE (SESSION-1b′, item 4; SESSION-2a §3): the slot is EMPTY when the card opens; a known chip fills the slot
+    // without darkening and leaves the microphone waiting for the whole phrase; the judge is asked after the pause.
     // CATCHES: a slot pre-filled on open, a chip that asks the judge by itself, a chip that turns ink.
-    testWidgets('phrase_own_slot (32-9): empty slot; a chip fills it and waits for the phrase; the judge after 800 ms', (tester) async {
+    testWidgets('phrase_own_slot (32-9): empty slot; a chip fills it and waits for the phrase; the judge after the pause', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseOwnSlot);
       final probe = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'last night', result: SessionResult.passed, attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Скажи целиком — значение выбери сам'), findsOneWidget);
+      expect(find.text('Выбери, что вставить, и скажи фразу целиком'), findsOneWidget);
+      expect(find.text('тап — говорить'), findsNothing, reason: 'no caption under the chips (SESSION-2a §5)');
       expect(find.text('СВОЁ ОКНО'), findsOneWidget);
       expect(find.text('Началось ___.'), findsOneWidget);
       expect(find.text('ит стартид ___'), findsOneWidget);
@@ -609,9 +634,9 @@ void main() {
       expect(probe.judged, isEmpty, reason: 'a chip is not an answer — the microphone waits for the whole phrase');
 
       await enterHeard(tester, 'It started last night');
-      await tester.pump(const Duration(milliseconds: 750));
-      expect(probe.judged, isEmpty, reason: 'the judge is asked after an 800 ms pause');
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 950));
+      expect(probe.judged, isEmpty, reason: 'the judge is asked after the pause');
+      await tester.pump(const Duration(milliseconds: 60));
       await tester.pump();
       expect(probe.judged, ['It started last night']);
       expect(probe.answers, isEmpty, reason: 'the server records a judge-graded pass');
@@ -636,7 +661,7 @@ void main() {
 
       await enterHeard(tester, 'It started yesterday');
       expect(frameLine(tester).slot, 'yesterday', reason: 'the words after the frame fill the slot live');
-      await tester.pump(const Duration(milliseconds: 850));
+      await tester.pump(const Duration(milliseconds: 1010));
       await tester.pump();
       expect(probe.judged, ['It started yesterday']);
       expect(frameLine(tester).slot, 'yesterday', reason: 'frozen in the slot while the judge thinks');

@@ -11,7 +11,6 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
-import '../../../../data/plan/session/speech_stop.dart';
 import '../../../../data/plan/session/voice_rounds.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
@@ -406,7 +405,8 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
 
 // ── 32-3 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// BACK TRANSLATION (32-3, template 30-9): the target phrase with sound and reading — four native options.
+/// BACK TRANSLATION (32-3, template 30-9): the target phrase with sound and reading — four native options. The phrase
+/// plays by itself once when the card opens, like every phrase trainer with a sound (SESSION-2a §2).
 class PhraseChooseBackCard extends StatefulWidget {
   const PhraseChooseBackCard({super.key, required this.env, required this.payload});
 
@@ -418,11 +418,27 @@ class PhraseChooseBackCard extends StatefulWidget {
 }
 
 class _PhraseChooseBackCardState extends State<PhraseChooseBackCard> with ChoiceCardState<PhraseChooseBackCard> {
+  static const _key = 'choose-back';
+
+  Timer? _autoplay;
+
   @override
   CardEnv get env => widget.env;
 
   @override
   ChoicePayload get choice => widget.payload;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoplay = autoplayOnce(this, env, widget.payload.audio, widget.payload.textTarget, _key);
+  }
+
+  @override
+  void dispose() {
+    _autoplay?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -434,7 +450,7 @@ class _PhraseChooseBackCardState extends State<PhraseChooseBackCard> with Choice
       task: SessionTask(l.planSessionTaskChooseTranslation),
       body: _PhraseSheet(
         plate: _PhrasePlate(
-          listen: CardListen(env: env, audio: p.audio, fallback: p.textTarget, playKey: 'choose-back'),
+          listen: CardListen(env: env, audio: p.audio, fallback: p.textTarget, playKey: _key),
           child: SessionFrameText.plain(p.textTarget, style: AppTextSession.frame),
         ),
         footer: _PhraseFooter(eyebrow: l.planSessionBrowPhrase, reading: p.pronunciationNative),
@@ -731,9 +747,6 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
     });
     return parts.frame && parts.slot;
   }
-
-  @override
-  bool wouldAccept(String heard) => SessionRules.roundAccepted(widget.payload, _current, heard, env.articles);
 
   @override
   void onRoundStarted(int round) => setState(() {
@@ -1162,10 +1175,7 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
       _framePart,
       for (final f in p.chips) f.target,
       ...p.examples,
-    ])
-      ..onTurn = _onTurn
-      // The frame is said and at least one word follows it: stop after an 800 ms pause and ask the judge.
-      ..autoStop = (partial) => SpeechStop.judge(partial, _framePart, p.coverageMin, widget.env.articles);
+    ])..onTurn = _onTurn;
     _mic.addListener(_onMic);
   }
 
@@ -1371,10 +1381,10 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
     );
   }
 
-  /// Minimum height of the voice zone under the chips — its idle state: «tap to speak», «Skip», the 72 button and
-  /// the 14 gaps. Reserving the recording height (224) instead cut the sheet's footer on an 844 pt phone (simulator
-  /// pass of SESSION-1b′).
-  static const double _voiceZone = 144;
+  /// Minimum height of the voice zone under the chips — its idle state: «Skip», the 72 button and the 14 gaps (no
+  /// «tap to speak» caption since SESSION-2a §5). Reserving the recording height (224) instead cut the sheet's footer
+  /// on an 844 pt phone (simulator pass of SESSION-1b′).
+  static const double _voiceZone = 126;
 
   /// The debug-build «what was heard» field with the gap above it.
   static const double _debugFieldHeight = 46;
@@ -1426,6 +1436,8 @@ class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
       expected: _framePart,
       onSkip: _done || _judging ? null : () => _skip(),
       heardText: _heardLine(),
+      // No «tap to speak» under the chips: the task line says what to do (SESSION-2a §5).
+      showIdleCaption: false,
     );
   }
 

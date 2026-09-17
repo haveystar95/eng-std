@@ -12,6 +12,8 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outbox.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/data/plan/session/session_queue.dart';
+import 'package:eng_std/data/plan/session/session_rules.dart';
+import 'package:eng_std/data/plan/session/session_summary.dart';
 import 'package:eng_std/features/plan/session/session_controller.dart';
 
 /// THE SESSION QUEUE (work order SESSION-1b §1 and §6): the copy after a failure goes to the end of the stage;
@@ -62,6 +64,20 @@ class _FakeBackend implements SessionBackend {
 
   @override
   Future<void> open(String planId, int number) async => opens++;
+
+  /// `GET /plans/{id}` answers in turn; the last one repeats.
+  final List<Plan> plans = [];
+  int planReads = 0;
+  final List<String> retries = [];
+
+  @override
+  Future<Plan> plan(String planId) async => plans[planReads < plans.length ? planReads++ : plans.length - 1];
+
+  @override
+  Future<Plan> retryLesson(String planId, String sceneId) async {
+    retries.add(sceneId);
+    return plans.last;
+  }
 
   @override
   Future<SessionAnswerOutcome> answer(String planId, int number, String cardId, SessionAnswer answer) {
@@ -400,6 +416,165 @@ void main() {
     });
   });
 
+  group('SessionController · SESSION-2a', () {
+    Plan planWithDay(Map<String, dynamic> day, {bool catchUp = false}) => Plan.fromJson({
+      ...(_plan().raw),
+      'catch_up': catchUp,
+      'days': [
+        {
+          'id': 'ulid-day-1',
+          'number': 1,
+          'type': 'scene',
+          'slot': {'code': 'today'},
+          'cards_total': 0,
+          'cards_done': 0,
+          'minutes_spent': 0,
+          'scene_id': 'ulid-0003',
+          ...day,
+        },
+      ],
+    });
+
+    DioException problem(String code, Map<String, dynamic> meta) => DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      type: DioExceptionType.badResponse,
+      response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 409, data: {'code': code, 'meta': meta}),
+    );
+
+    // CATCHES: «Once more» throwing the owner onto the day summary (17.09), a replay that writes answers, asks the
+    // judge or re-reads the day over the replayed stage, and a replay that leaves the replayed answers on the summary.
+    test('«Once more» restarts the stage: «Speak myself» unanswered on the phone, nothing sent, then the day summary again', () async {
+      final closed = _allAnswered(_raw());
+      (closed['day'] as Map<String, dynamic>)['status'] = 'closed';
+      final backend = _FakeBackend([closed]);
+      final session = SessionController(backend: backend, plan: _plan(), number: 1, replay: true);
+      await session.load();
+      expect(session.phase, SessionPhase.entry, reason: 'not the day summary');
+      expect(session.stage, PlanStage.speak);
+      expect(session.queue!.isDone(PlanStage.words), isTrue, reason: 'the other stages stay as walked');
+      final speak = session.queue!.cardsOf(PlanStage.speak);
+      expect(speak.where((c) => c.isAnswered), isEmpty);
+      expect(speak.where((c) => c.retryOf != null), isEmpty, reason: 'the stage, not its retries');
+      expect(backend.opens, 0, reason: 'a passed day is not opened again');
+
+      session.startStage();
+      while (session.phase == SessionPhase.card) {
+        final card = session.card!;
+        if (SessionRules.mayWrite(card.kind, SessionResult.passed)) {
+          session.submit(card, const SessionAnswer(result: SessionResult.passed, attempts: 1));
+        } else {
+          final verdict = await session.judge(card, 'It started last night');
+          expect(verdict.accepted, isTrue);
+        }
+        await session.next();
+      }
+      expect(session.phase, SessionPhase.summary);
+      expect(session.nextStage, isNull, reason: 'a replay does not walk on to another stage');
+      expect(backend.answers, isEmpty);
+      expect(backend.judged, isEmpty);
+      expect(backend.gets, 1, reason: 'the replayed stage is not re-read over');
+
+      session.continueAfterSummary();
+      expect(session.phase, SessionPhase.daySummary);
+      expect(session.queue!.cardsOf(PlanStage.speak), hasLength(closed['stages'].last['cards'].length));
+      expect(session.queue!.isDone(PlanStage.speak), isTrue, reason: 'the summary is the server\'s day');
+      expect(await session.closeDay(), isTrue, reason: 'a closed day is not closed again');
+      expect(backend.closes, 0);
+      session.dispose();
+    });
+
+    // CATCHES: 409 plan_day_building shown as «did not load», a plate that never turns into the day, a failed lesson
+    // with no way out.
+    test('a day being built: the building plate, the plan polled until ready, then the day; failed — «Retry» the lesson', () {
+      fakeAsync((async) {
+        final backend = _FakeBackend([_raw()]);
+        var gets = 0;
+        final building = _BuildingBackend(backend, until: () => gets++ < 1, error: problem('plan_day_building', {'day': 1, 'lesson_status': 'building'}))
+          ..inner.plans.addAll([
+            planWithDay({'status': 'building', 'lesson_status': 'building'}),
+            planWithDay({'status': 'open', 'lesson_status': 'ready'}),
+          ]);
+        final session = SessionController(backend: building, plan: _plan(), number: 1, lessonPollEvery: const Duration(seconds: 3));
+        unawaited(session.load());
+        async.flushMicrotasks();
+        expect(session.phase, SessionPhase.building);
+        expect(session.error, isNull, reason: 'not an error on screen');
+        async.elapse(const Duration(seconds: 3));
+        expect(session.phase, SessionPhase.building, reason: 'the plan still says building');
+        async.elapse(const Duration(seconds: 3));
+        expect(session.phase, SessionPhase.entry, reason: 'ready — the day is read and walked');
+        session.dispose();
+
+        final failing = _FakeBackend([_raw()])..plans.add(planWithDay({'status': 'open', 'lesson_status': 'building'}));
+        final failed = _BuildingBackend(
+          failing,
+          until: () => true,
+          error: problem('plan_lesson_not_ready', {'scene_id': 'ulid-0003', 'lesson_status': 'failed'}),
+        );
+        final retry = SessionController(backend: failed, plan: _plan(), number: 1);
+        unawaited(retry.load());
+        async.flushMicrotasks();
+        expect(retry.phase, SessionPhase.lessonFailed);
+        unawaited(retry.retryLesson());
+        async.flushMicrotasks();
+        expect(failing.retries, ['ulid-0003']);
+        expect(retry.phase, SessionPhase.building);
+        retry.dispose();
+      });
+    });
+
+    test('plan_lesson_not_ready with a lesson still building — the same building plate, not an error', () async {
+      final backend = _BuildingBackend(
+        _FakeBackend([_raw()]),
+        until: () => true,
+        error: problem('plan_lesson_not_ready', {'scene_id': 'ulid-0003', 'lesson_status': 'building'}),
+      );
+      final session = SessionController(backend: backend, plan: _plan(), number: 1);
+      await session.load();
+      expect(session.phase, SessionPhase.building);
+      session.dispose();
+    });
+
+    // CATCHES: «Day 2 — building» taken from the plan the window was opened with, or said of a lesson nobody asked for.
+    test('the next day on the day summary — the status the latest plan states', () {
+      PlanDayRoute next(Map<String, dynamic> j) => PlanDayRoute.fromJson({
+        'id': 'd2',
+        'number': 2,
+        'type': 'scene',
+        'slot': {'code': 'tomorrow'},
+        'cards_total': 0,
+        'cards_done': 0,
+        'minutes_spent': 0,
+        ...j,
+      });
+      expect(SessionSummaries.nextDayLesson(next({'status': 'building', 'lesson_status': null})), NextDayLesson.building);
+      expect(SessionSummaries.nextDayLesson(next({'status': 'locked', 'lesson_status': 'building'})), NextDayLesson.building);
+      expect(SessionSummaries.nextDayLesson(next({'status': 'locked', 'lesson_status': 'ready'})), NextDayLesson.ready);
+      expect(SessionSummaries.nextDayLesson(next({'status': 'locked', 'lesson_status': 'failed'})), isNull);
+      expect(SessionSummaries.nextDayLesson(next({'status': 'locked', 'lesson_status': null})), isNull, reason: 'not asked for yet');
+      expect(SessionSummaries.nextDayLesson(null), isNull);
+    });
+
+    test('catch_up and a building day are read off the contract', () {
+      final plan = planWithDay({'status': 'building', 'lesson_status': null}, catchUp: true);
+      expect(plan.catchUp, isTrue);
+      expect(plan.days.single.status, PlanDayStatus.building);
+      expect(plan.days.single.lessonBuilding, isTrue);
+      expect(_plan().catchUp, isFalse);
+    });
+
+    test('the day summary reads the plan again — the next day as the server states it now', () async {
+      final backend = _FakeBackend([_allAnswered(_raw())])..plans.add(planWithDay({'status': 'in_progress', 'lesson_status': 'ready'}));
+      final session = SessionController(backend: backend, plan: _plan(), number: 1);
+      await session.load();
+      await pumpEventQueue();
+      expect(session.phase, SessionPhase.daySummary);
+      expect(backend.planReads, 1);
+      expect(session.currentPlan.days, hasLength(1));
+      session.dispose();
+    });
+  });
+
   group('AnswerOutbox', () {
     test('network down — the answer waits, «no connection»; network back — it goes, the queue is empty', () {
       fakeAsync((async) {
@@ -467,4 +642,39 @@ void main() {
       expect(AnswerOutbox.classify(_status(422, 'plan_card_result_not_allowed')), OutboxFailure.permanent);
     });
   });
+}
+
+/// [inner], except that opening the day fails with [error] while [until] says so.
+class _BuildingBackend implements SessionBackend {
+  _BuildingBackend(this.inner, {required this.until, required this.error});
+
+  final _FakeBackend inner;
+  final bool Function() until;
+  final Object error;
+
+  @override
+  Future<SessionDay> day(String planId, int number) async {
+    if (until()) throw error;
+    return inner.day(planId, number);
+  }
+
+  @override
+  Future<void> open(String planId, int number) => inner.open(planId, number);
+
+  @override
+  Future<Plan> plan(String planId) => inner.plan(planId);
+
+  @override
+  Future<Plan> retryLesson(String planId, String sceneId) => inner.retryLesson(planId, sceneId);
+
+  @override
+  Future<SessionAnswerOutcome> answer(String planId, int number, String cardId, SessionAnswer answer) =>
+      inner.answer(planId, number, cardId, answer);
+
+  @override
+  Future<SessionJudgeOutcome> judge(String planId, int number, String cardId, {required String heard, required bool hinted}) =>
+      inner.judge(planId, number, cardId, heard: heard, hinted: hinted);
+
+  @override
+  Future<SessionDay> close(String planId, int number) => inner.close(planId, number);
 }

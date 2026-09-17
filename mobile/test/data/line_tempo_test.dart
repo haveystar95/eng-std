@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/audio_mixer.dart';
 import 'package:eng_std/data/line_audio.dart';
 import 'package:eng_std/data/pronouncer.dart';
 
@@ -19,7 +20,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const tts = MethodChannel('flutter_tts');
-  const player = MethodChannel('com.denis.engstd/line_audio');
+  const player = AudioMixer.channel;
 
   late List<MethodCall> ttsCalls;
   late List<MethodCall> playerCalls;
@@ -78,7 +79,7 @@ void main() {
     playerCalls.clear();
     await Pronouncer(null, cache).speakText('Thanks for joining today.', targetLang: 'en');
 
-    expect(playerCalls.map((c) => c.method), contains('play'));
+    expect(playerCalls.map((c) => c.method), contains('playSpeech'));
     expect(ttsCalls.map((c) => c.method), isNot(contains('speak')));
   });
 

@@ -306,9 +306,9 @@ class _WordRepeatCardState extends State<WordRepeatCard> with VoiceCardState<Wor
 
 // ── 31-3 / 31-4 ───────────────────────────────────────────────────────────────────────────────────
 
-/// CHOICE OF FOUR (template 30-9): `term_to_native` (31-3) — photo, word and sound on the question, options in the
-/// native language; `native_to_term` (31-4) — photo and translation without sound, options — target words with
-/// their own sound.
+/// CHOICE OF FOUR (template 30-9): `term_to_native` (31-3) — photo, word and sound on the question (it plays by itself
+/// once when the card opens, SESSION-2a §2), options in the native language; `native_to_term` (31-4) — photo and
+/// translation without sound, options — target words with their own sound.
 class WordChooseCard extends StatefulWidget {
   const WordChooseCard({super.key, required this.env, required this.payload});
 
@@ -320,11 +320,28 @@ class WordChooseCard extends StatefulWidget {
 }
 
 class _WordChooseCardState extends State<WordChooseCard> with ChoiceCardState<WordChooseCard> {
+  static const _promptKey = 'choose-prompt';
+
+  Timer? _autoplay;
+
   @override
   CardEnv get env => widget.env;
 
   @override
   ChoicePayload get choice => widget.payload;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.payload;
+    if (p.termToNative) _autoplay = autoplayOnce(this, env, p.promptAudio, p.promptTextTarget ?? '', _promptKey);
+  }
+
+  @override
+  void dispose() {
+    _autoplay?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -342,7 +359,7 @@ class _WordChooseCardState extends State<WordChooseCard> with ChoiceCardState<Wo
         eyebrow: forward ? l.planSessionBrowWord : l.planSessionBrowTranslation,
         eyebrowTrailing: eyebrowTrailing(l),
         text: Text(text, style: AppTextSession.question),
-        listen: forward ? CardListen(env: env, audio: p.promptAudio, fallback: text, playKey: 'choose-prompt') : null,
+        listen: forward ? CardListen(env: env, audio: p.promptAudio, fallback: text, playKey: _promptKey) : null,
       ),
       bottom: optionsDock(
         context,

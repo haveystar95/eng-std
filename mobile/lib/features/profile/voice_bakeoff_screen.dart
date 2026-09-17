@@ -27,6 +27,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../data/audio_mixer.dart';
 import '../../data/pronouncer.dart';
 
 /// Реплики образца — те же строки, что озвучены в `docs/research/tts-1/samples/`.
@@ -67,7 +68,6 @@ class _VoiceBakeoffScreenState extends State<VoiceBakeoffScreen> {
   /// БЕЗ кэша реплик: этот экран играет образцы, а не озвучку плана, и системный ряд обязан быть
   /// именно системным. Темп — тот же, которым читаются реплики в уроке.
   final _pronouncer = Pronouncer();
-  static const _channel = MethodChannel('com.denis.engstd/line_audio');
 
   String? _playing;
   Timer? _sequence;
@@ -82,7 +82,7 @@ class _VoiceBakeoffScreenState extends State<VoiceBakeoffScreen> {
   void dispose() {
     _sequence?.cancel();
     unawaited(_pronouncer.release());
-    unawaited(_channel.invokeMethod<void>('stop').catchError((_) {}));
+    unawaited(AudioMixer.stopSpeech());
     super.dispose();
   }
 
@@ -108,13 +108,7 @@ class _VoiceBakeoffScreenState extends State<VoiceBakeoffScreen> {
     _sequence?.cancel();
     _sequence = null;
     await _pronouncer.stop();
-    try {
-      await _channel.invokeMethod<void>('stop');
-    } on PlatformException {
-      // nothing was playing
-    } on MissingPluginException {
-      // not iOS
-    }
+    await AudioMixer.stopSpeech();
     if (mounted) setState(() => _playing = null);
   }
 
@@ -134,7 +128,7 @@ class _VoiceBakeoffScreenState extends State<VoiceBakeoffScreen> {
     if (path == null || !mounted) return;
     setState(() => _playing = '$prefix#$lineKey');
     try {
-      await _channel.invokeMethod<void>('play', {'path': path});
+      await AudioMixer.speak(path);
     } on PlatformException {
       if (mounted) setState(() => _playing = null);
     } on MissingPluginException {

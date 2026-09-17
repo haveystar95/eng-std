@@ -28,6 +28,7 @@ class SpeechTurnConfig {
     this.reopenGap = const Duration(milliseconds: 120),
     this.deadChannelWindow = const Duration(seconds: 1),
     this.deadChannelStrikes = 3,
+    this.minWaitBeforeSilence = const Duration(seconds: 5),
   });
 
   final Duration silenceAfterSpeech;
@@ -47,7 +48,10 @@ class SpeechTurnConfig {
   ///
   /// Между «нажал» и первым словом лежит вдох, взгляд на подсказку и решение. Тишина, закрывшая
   /// запись раньше, отдаёт на зачёт пустоту — то есть делает ход за человека.
-  static const minWaitBeforeSilence = Duration(seconds: 5);
+  ///
+  /// A field, not a constant (SESSION-2a §3): the day session closes a recording on the pause after the speech
+  /// alone — silence before the first word never closes a recording anyway (the silence timer starts on a word).
+  final Duration minWaitBeforeSilence;
 
   /// Сколько запись реально живёт — см. [minMaxRecording].
   Duration get effectiveMaxRecording =>
@@ -72,6 +76,7 @@ class SpeechTurnConfig {
     Duration? reopenGap,
     Duration? deadChannelWindow,
     int? deadChannelStrikes,
+    Duration? minWaitBeforeSilence,
   }) => SpeechTurnConfig(
     silenceAfterSpeech: silenceAfterSpeech ?? this.silenceAfterSpeech,
     maxRecording: maxRecording ?? this.maxRecording,
@@ -79,6 +84,7 @@ class SpeechTurnConfig {
     reopenGap: reopenGap ?? this.reopenGap,
     deadChannelWindow: deadChannelWindow ?? this.deadChannelWindow,
     deadChannelStrikes: deadChannelStrikes ?? this.deadChannelStrikes,
+    minWaitBeforeSilence: minWaitBeforeSilence ?? this.minWaitBeforeSilence,
   );
 }
 
@@ -387,7 +393,7 @@ class SpeechTurn {
   void _armSilence() {
     _silenceTimer?.cancel();
     final since = _openedAt == null ? Duration.zero : _now().difference(_openedAt!);
-    final floor = SpeechTurnConfig.minWaitBeforeSilence - since;
+    final floor = config.minWaitBeforeSilence - since;
     final wait = config.silenceAfterSpeech > floor ? config.silenceAfterSpeech : floor;
     _silenceTimer = Timer(wait, () {
       if (!isListening) return;

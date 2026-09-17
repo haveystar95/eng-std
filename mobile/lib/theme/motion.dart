@@ -204,6 +204,10 @@ abstract final class AppMotion {
   /// «Player · time bar» — a 250 ms frame, linear; the exchange marks do not move.
   static const sessionPlayerFrame = Duration(milliseconds: 250);
 
+  /// «Listen and answer», the whole visit as one stream: a pause between two lines (work order SESSION-2a §5, +300 ms
+  /// over what the files carry) — the ring holds on the speaker who has just finished.
+  static const sessionVisitLineGap = Duration(milliseconds: 300);
+
   /// «Active role pulse» — period 1600 ms, ease-out, only while playing.
   static const sessionRolePulse = Duration(milliseconds: 1600);
 

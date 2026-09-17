@@ -8,8 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/day_plate.dart';
 
-import '../../../data/api_client.dart';
 import '../../../data/app_version.dart';
 import '../../../data/languages.dart' show sttLocaleFor;
 import '../../../data/plan/plan_models.dart';
@@ -37,12 +37,14 @@ import 'session_voice.dart';
 ///
 /// Every stage has its screens. The server is the source of truth: every entry reads the day anew and continues from
 /// the first unanswered card; a day with every card answered opens on its summary. «Close the day» returns to the day
-/// window, which reads the plan again.
+/// window, which reads the plan again. [replay] — «Once more» on a passed day: the stage is walked again on the phone,
+/// nothing is sent, and the day summary follows (SESSION-2a §4).
 class SessionScreen extends ConsumerStatefulWidget {
-  const SessionScreen({super.key, required this.plan, required this.number, this.backend});
+  const SessionScreen({super.key, required this.plan, required this.number, this.backend, this.replay = false});
 
   final Plan plan;
   final int number;
+  final bool replay;
 
   /// The session server; null — the real API. A test substitutes its own.
   final SessionBackend? backend;
@@ -68,6 +70,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       plan: widget.plan,
       number: widget.number,
       store: ref.read(planStoreProvider),
+      replay: widget.replay,
     )..addListener(_onSession);
     _voice = SessionVoice(lines: ref.read(lineAudioCacheProvider), targetLang: widget.plan.targetLang);
     unawaited(_voice.warmUp().catchError((Object _) {}));
@@ -99,7 +102,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     if (!mounted) return;
     final phase = _session.phase;
     if (phase != _lastPhase) {
-      if (phase == SessionPhase.failed && problemCodeOf(_session.error) == 'plan_lesson_not_ready') _waitedForLesson = true;
+      if (phase == SessionPhase.building) _waitedForLesson = true;
       // The day is ready after waiting for its lesson to be built.
       if (phase == SessionPhase.entry && _waitedForLesson) {
         _waitedForLesson = false;
@@ -184,19 +187,16 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     switch (_session.phase) {
       case SessionPhase.loading:
         return const Center(child: CircularProgressIndicator(color: AppColors.ink));
+      case SessionPhase.building || SessionPhase.lessonFailed:
+        return _lessonPlate(context);
       case SessionPhase.failed:
-        final building = problemCodeOf(_session.error) == 'plan_lesson_not_ready';
         return Center(
           child: Padding(
             padding: const EdgeInsets.all(kSessionGutter),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  building ? l.planSessionLessonBuilding : l.planSessionLoadFailed,
-                  textAlign: TextAlign.center,
-                  style: AppTextSession.body,
-                ),
+                Text(l.planSessionLoadFailed, textAlign: TextAlign.center, style: AppTextSession.body),
                 const SizedBox(height: 18),
                 SessionDockButton(label: l.planTabRetry, onTap: () => unawaited(_session.load())),
                 const SizedBox(height: 8),
@@ -214,6 +214,49 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       case SessionPhase.daySummary:
         return _daySummary(context);
     }
+  }
+
+  /// The day whose lesson is not there (GEN-3 §11): the plate the plan tab shows — «Building day N» while the server
+  /// writes it (no button, no error: the session asks the plan until it is ready), «The day did not come together»
+  /// with «Retry» when it failed.
+  Widget _lessonPlate(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final plan = _session.currentPlan;
+    final route = plan.days.where((d) => d.number == widget.number).firstOrNull;
+    final title = (route == null ? null : (route.titleNative ?? plan.sceneOf(route)?.titleNative)) ?? plan.displayTitle;
+    final failed = _session.phase == SessionPhase.lessonFailed;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: () => Navigator.of(context).maybePop(), label: l.planSessionClose)),
+          Expanded(
+            child: Center(
+              child: DayPlate(
+                key: ValueKey(failed ? 'session-lesson-failed' : 'session-lesson-building'),
+                label: plan.catchUp ? l.planPlateLabelCatchUp(widget.number) : l.planPlateLabel(widget.number),
+                title: title,
+                stages: const [],
+                notice: failed
+                    ? DayPlateNotice(title: l.planPlateFailedTitle, sub: l.planPlateFailedSub(widget.number))
+                    : DayPlateNotice(
+                        title: l.planPlateBuildingTitle(widget.number),
+                        sub: l.planPlateBuildingSub,
+                        preloaderLines: [l.planEntryPreviewLine1, l.planEntryPreviewLine2, l.planEntryPreviewLine3],
+                      ),
+                footer: failed
+                    ? DayPlateFooter.button(
+                        label: l.planPlateCtaRetry,
+                        onTap: _session.retrying ? null : () => unawaited(_session.retryLesson()),
+                      )
+                    : const DayPlateFooter.none(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<StageRow> _rows({required PlanStage current}) {
@@ -435,17 +478,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   Widget _daySummary(BuildContext context) {
     final l = AppLocalizations.of(context);
     final q = _session.queue!;
-    final nextDay = SessionSummaries.nextDay(widget.plan, widget.number);
+    final nextDay = _session.nextDay;
     return SessionDaySummary(
       title: l.planSessionDayDoneTitle(l.planMinutesCount(_session.dayMinutes)),
       stages: [for (final s in PlanStage.known) if (q.hasCards(s)) s],
       stageName: (s) => SessionTexts.stage(l, s),
       returnsLine: SessionTexts.dayReturns(l, SessionSummaries.dayReturns(q)),
-      nextDay: nextDay == null
-          ? null
-          : nextDay.lessonStatus == LessonStatus.ready
-          ? l.planSessionNextDayReady(nextDay.number)
-          : l.planSessionNextDayBuilding(nextDay.number),
+      nextDay: switch (SessionSummaries.nextDayLesson(nextDay)) {
+        null => null,
+        NextDayLesson.ready => l.planSessionNextDayReady(nextDay!.number),
+        NextDayLesson.building => l.planSessionNextDayBuilding(nextDay!.number),
+      },
       scene: _session.scene,
       closing: _session.closing,
       closeFailed: _session.closeFailed,

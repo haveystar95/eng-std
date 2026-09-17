@@ -222,9 +222,8 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
           // The card prints the transcript live and grades it word by word; invented commas and
           // full stops only make the two disagree about what was said.
           autoPunctuation: false,
-          // iOS mutes system sounds and haptics while a recording session is active; the verdict sound
-          // of a voice answer plays the moment the recording is stopped, before the plugin has let the
-          // session go (SESSION-1b′, owner's check: the verdict must be heard right after the stop).
+          // iOS mutes haptics while a recording session is active; the verdict's haptic lands the moment the
+          // recording is stopped (SESSION-1b′). Its sound goes through the app's own engine (SESSION-2a §1).
           enableHapticFeedback: true,
         ),
         // See this method's own doc comment: the vendored fork's addition, and the actual fix for

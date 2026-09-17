@@ -50,9 +50,11 @@ enum PlanDayType {
   };
 }
 
-/// `PlanDayRoute.status` — EFFECTIVE for today, the server says.
+/// `PlanDayRoute.status` — EFFECTIVE for today, the server says. [building] (GEN-3 §11): the day is next in line and
+/// its lesson, ordered when the day before it closed, is not back yet — no button, ask again.
 enum PlanDayStatus {
   locked,
+  building,
   open,
   inProgress,
   closed,
@@ -60,6 +62,7 @@ enum PlanDayStatus {
 
   static PlanDayStatus fromWire(String? s) => switch (s) {
     'locked' => locked,
+    'building' => building,
     'open' => open,
     'in_progress' => inProgress,
     'closed' => closed,
@@ -470,9 +473,10 @@ class PlanDayRoute {
   bool get isClosed => status == PlanDayStatus.closed;
   bool get isInProgress => status == PlanDayStatus.inProgress;
 
-  /// A day whose lesson the server is still writing (кадр 22-5a), or failed to (22-5c).
+  /// A day whose lesson the server is still writing (кадр 22-5a), or failed to (22-5c). The day's own `building`
+  /// status (GEN-3 §11) says so too, whatever its lesson status reads.
   bool get lessonBuilding =>
-      lessonStatus == LessonStatus.building || lessonStatus == LessonStatus.pending;
+      status == PlanDayStatus.building || lessonStatus == LessonStatus.building || lessonStatus == LessonStatus.pending;
   bool get lessonFailed => lessonStatus == LessonStatus.failed;
 }
 
@@ -585,6 +589,7 @@ class Plan {
     this.currentDay,
     this.startedAt,
     this.finishedAt,
+    this.catchUp = false,
   });
 
   final String id;
@@ -633,6 +638,9 @@ class Plan {
   final DateTime? startedAt;
   final DateTime? finishedAt;
 
+  /// `catch_up` (GEN-3 §11) — «догоняем»: no day waits for its date, the next opens as soon as the one before closes.
+  final bool catchUp;
+
   /// The JSON as it arrived — what the tab caches for the offline read.
   final Map<String, dynamic> raw;
 
@@ -680,6 +688,7 @@ class Plan {
     versions: PlanVersions.fromJson(j['versions'] as Map<String, dynamic>?),
     startedAt: DateTime.tryParse((j['started_at'] as String?) ?? ''),
     finishedAt: DateTime.tryParse((j['finished_at'] as String?) ?? ''),
+    catchUp: j['catch_up'] == true,
     raw: j,
   );
 

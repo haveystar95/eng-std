@@ -1,25 +1,13 @@
-import AudioToolbox
 import AVFoundation
 import Flutter
 import Speech
 import UIKit
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, AVAudioPlayerDelegate {
-  /// The four sounds of the day — «верно», «неверно», «этап закрыт», «день закрыт» (токен-лист
-  /// 4к-3) — registered with AudioServices once each and kept for the app's life (QA-22, DAY-UI). Keyed by the name Dart sends, so `AppFeedback` names a SOUND and never a file path.
-  ///
-  /// Cached deliberately: `AudioServicesCreateSystemSoundID` reads and parses the file, and doing
-  /// that on every answer would put file I/O on the main thread at the exact moment the card is
-  /// animating its verdict. Two sounds, a few KB each, created on first use and never disposed —
-  /// `AudioServicesDisposeSystemSoundID` would only ever run at app teardown, where it buys
-  /// nothing.
-  private var soundIds: [String: SystemSoundID] = [:]
-
-  /// THE DAY SESSION'S SOUNDS (SESSION-1b′, item 5; the owner's files and decision of 16.09) — see
-  /// `SessionSounds` in `lib/theme/feedback.dart`. Registered while a session is open, keyed by name.
-  private var sessionSoundIds: [String: SystemSoundID] = [:]
-  private static let sessionSoundNames = ["correct", "miss", "mic_on", "stage_done", "day_done", "ready"]
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  /// Every sound of the app — lines, phrases, words and the short sounds — plays through this one engine
+  /// (work order SESSION-2a §1); see `AudioMixer` below and `lib/data/audio_mixer.dart`.
+  private let audioMixer = AudioMixer()
 
   /// ССЫЛКИ `engstd://…` (наряд DAY-UI) — см. `lib/data/deep_links.dart`. Ссылка холодного старта
   /// лежит здесь, пока Dart не спросит `initial`; тёплая уходит в канал сразу.
@@ -76,9 +64,7 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     // `applicationRegistrar` is the app's own registrar (as opposed to a per-plugin one) — this is
     // an application-level channel, not a plugin, so that is the right messenger to hang it on.
-    registerFeedbackSoundChannel(engineBridge.applicationRegistrar.messenger())
-    registerSessionSoundsChannel(engineBridge.applicationRegistrar.messenger())
-    registerLineAudioChannel(engineBridge.applicationRegistrar.messenger())
+    audioMixer.register(engineBridge.applicationRegistrar.messenger())
     registerSpeechProbeChannel(engineBridge.applicationRegistrar.messenger())
     registerLinksChannel(engineBridge.applicationRegistrar.messenger())
     registerPushChannel(engineBridge.applicationRegistrar.messenger())
@@ -210,270 +196,295 @@ import UIKit
     @unknown default: return "unknown"
     }
   }
+}
 
-  /// ОЗВУЧКА РЕПЛИКИ, сделанная сервером заранее (наряд TTS-1) — см. `lib/data/line_audio.dart`.
-  ///
-  /// Почему снова нативный канал, а не пакет-плеер: тот же довод, что и у звука вердикта выше, плюс
-  /// один новый. Тренажёр весь стоит на `AVSpeechSynthesizer`, который держит СВОЮ аудиосессию
-  /// (`playback` + `mixWithOthers`, поднятую один раз на всю посадку в `Pronouncer.warmUp`), и
-  /// пакет-плеер поднял бы вторую — со своими категориями, своим временем жизни и своей манерой
-  /// деактивировать сессию после каждого файла. Ровно эта деактивация уже стоила проекта ~600 мс
-  /// заморозки на каждом произнесённом слове (F20). `AVAudioPlayer` без единой настройки сессии
-  /// играет в ТУ ЖЕ сессию, которую поднял синтезатор, и делить им нечего.
-  ///
-  /// Плеер один и переиспользуется: реплики звучат по одной, а вторая начатая перебивает первую —
-  /// то же поведение, что и `Pronouncer.stop()` перед каждой фразой.
-  private var linePlayer: AVAudioPlayer?
+/// THE APP'S ONE AUDIO ENGINE (work order SESSION-2a §1) — the Dart side is `lib/data/audio_mixer.dart`.
+///
+/// Speech (the server file of a line, a phrase, a word) and the short sounds (verdict, microphone, stage, day) are
+/// player nodes of ONE `AVAudioEngine` and meet in its main mixer. A short sound is scheduled on a node of its own:
+/// it never touches the speech node or the audio session, so it cannot stop a line — it plays over it. The level of
+/// every sound arrives with the call (the constants are `AudioLevels` in Dart) and is set on the node, so a sound is
+/// as loud the tenth time as the first; the system-sound path it replaces followed the ringer and the route instead.
+///
+/// `playSpeech` answers when the line has ACTUALLY ended: `true` — played to the end, `false` — cut (`stopSpeech`,
+/// the next line, an interruption of the audio session, the engine stopped by a configuration change). No timer
+/// anywhere on this path: «playing» on the screen ends when the sound does.
+///
+/// The session itself is not configured here: `Pronouncer.warmUp` sets it (`playAndRecord` + `mixWithOthers` for the
+/// day session, so the recognizer never has to change it — see `packages/speech_to_text/UPSTREAM.md`).
+final class AudioMixer {
+  private let engine = AVAudioEngine()
+  private let speechNode = AVAudioPlayerNode()
+  private let pace = AVAudioUnitTimePitch()
+  private var effectNodes: [AVAudioPlayerNode] = []
+  private var nextEffectNode = 0
+  private var effects: [String: AVAudioPCMBuffer] = [:]
 
-  /// РЕЗУЛЬТАТ `play` ОТДАЁТСЯ, КОГДА ФАЙЛ ДОИГРАЛ (наряд DAY-FIX-3, Ч.1.1): микрофон прогона
-  /// открывается по концу реплики собеседника, и Dart ждёт именно этого ответа. `stop` и новая
-  /// `play` закрывают предыдущее ожидание сразу — перебитая реплика кончилась.
-  private var linePlayResult: FlutterResult?
+  /// The Dart call waiting for the current line to end.
+  private var speechResult: FlutterResult?
 
-  private func finishLinePlay() {
-    let pending = linePlayResult
-    linePlayResult = nil
-    pending?(nil)
+  /// Grows with every line and every cut: a completion that arrives for an older line is ignored.
+  private var speechSerial = 0
+
+  /// Every buffer is brought to this format before it is scheduled, so the graph is wired once and never rewired.
+  private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2)!
+
+  /// Short sounds that may overlap (the microphone cue and a verdict).
+  private static let effectVoices = 3
+
+  /// Leading silence below −50 dBFS is cut from a short sound; 2 ms are kept before the first audible frame.
+  private static let silenceThreshold: Float = 0.003_16
+
+  private var observers: [NSObjectProtocol] = []
+
+  init() {
+    engine.attach(speechNode)
+    engine.attach(pace)
+    engine.connect(speechNode, to: pace, format: format)
+    engine.connect(pace, to: engine.mainMixerNode, format: format)
+    for _ in 0..<Self.effectVoices {
+      let node = AVAudioPlayerNode()
+      engine.attach(node)
+      engine.connect(node, to: engine.mainMixerNode, format: format)
+      effectNodes.append(node)
+    }
+    let center = NotificationCenter.default
+    // A route or format change stops the engine by itself and no completion arrives for what was playing.
+    observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+      self?.cutSpeech()
+    })
+    observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+      let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+      if raw == AVAudioSession.InterruptionType.began.rawValue { self?.cutSpeech() }
+    })
   }
 
-  private func registerLineAudioChannel(_ messenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(
-      name: "com.denis.engstd/line_audio", binaryMessenger: messenger)
+  deinit {
+    observers.forEach(NotificationCenter.default.removeObserver)
+  }
 
+  func register(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "com.denis.engstd/audio_mixer", binaryMessenger: messenger)
     channel.setMethodCallHandler { [weak self] call, result in
-      guard let self = self else {
-        result(FlutterError(code: "gone", message: "no app delegate", details: nil))
+      guard let self else {
+        result(nil)
         return
       }
-
+      let args = call.arguments as? [String: Any] ?? [:]
       switch call.method {
-      case "stop":
-        self.linePlayer?.stop()
-        self.linePlayer = nil
-        self.finishLinePlay()
+      case "playSpeech": self.playSpeech(args, result)
+      case "stopSpeech":
+        self.cutSpeech()
         result(nil)
-
-      case "play":
-        guard let path = (call.arguments as? [String: Any])?["path"] as? String else {
-          result(FlutterError(code: "bad_args", message: "expected a `path`", details: nil))
-          return
-        }
-        // Путь приходит ИЗ НАШЕГО кэша, который эта же сборка и наполняет (файлы лежат в Application
-        // Support). Проверка на существование — не безопасность, а честный ответ: файла может не
-        // быть после чистки диска, и тогда Dart играет системным голосом вместо тишины.
-        guard FileManager.default.fileExists(atPath: path) else {
-          result(FlutterError(code: "no_file", message: "no audio at \(path)", details: nil))
-          return
-        }
-
-        // RATE (work order SESSION-1b): "Say it aloud" plays the sample at 0.85× — the server voice is always
-        // at normal pace (DECISIONS item 318), slowing down is the client's job. `enableRate` is set before
-        // `prepareToPlay`, otherwise AVAudioPlayer silently ignores the rate.
-        let rate = ((call.arguments as? [String: Any])?["rate"] as? NSNumber)?.floatValue ?? 1.0
-
-        do {
-          self.linePlayer?.stop()
-          self.finishLinePlay()
-          let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
-          self.linePlayer = player
-          player.delegate = self
-          if rate != 1.0 {
-            player.enableRate = true
-            player.rate = max(0.5, min(2.0, rate))
-          }
-          player.prepareToPlay()
-          self.linePlayResult = result
-          if !player.play() {
-            self.linePlayResult = nil
-            result(FlutterError(code: "play_failed", message: "player refused to start", details: nil))
-          }
-        } catch {
-          result(FlutterError(code: "play_failed", message: error.localizedDescription, details: nil))
-        }
-
-      default:
-        result(FlutterMethodNotImplemented)
+      case "loadEffects": self.loadEffects(args, result)
+      case "playEffect": self.playEffect(args, result)
+      case "releaseEffects":
+        for name in args["names"] as? [String] ?? [] { self.effects.removeValue(forKey: name) }
+        result(nil)
+      case "pause":
+        self.cutSpeech()
+        self.effectNodes.forEach { $0.stop() }
+        self.engine.stop()
+        result(nil)
+      default: result(FlutterMethodNotImplemented)
       }
     }
   }
 
-  func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-    if player === linePlayer { finishLinePlay() }
+  private func level(_ args: [String: Any], default value: Float) -> Float {
+    max(0, min(1, (args["level"] as? NSNumber)?.floatValue ?? value))
   }
 
-  func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
-    if player === linePlayer { finishLinePlay() }
-  }
-
-  /// `AppFeedback`'s side of the verdict sound — see `lib/theme/feedback.dart`.
-  ///
-  /// Why AudioServices rather than an audio package: this is a UI sound, and the system-sound path
-  /// is what makes it BEHAVE like one — it honours the ringer/silent switch on its own, it does not
-  /// touch or need an AVAudioSession (so it cannot duck, interrupt or fight the trainer's own TTS
-  /// session, which holds `playAndRecord` for the whole training screen), and it costs no pub
-  /// dependency. A player package would have given us all three problems to solve by hand.
-  private func registerFeedbackSoundChannel(_ messenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(
-      name: "com.denis.engstd/feedback_sound", binaryMessenger: messenger)
-
-    channel.setMethodCallHandler { [weak self] call, result in
-      guard call.method == "play" else {
-        result(FlutterMethodNotImplemented)
-        return
-      }
-      guard let self = self,
-        let name = (call.arguments as? [String: Any])?["sound"] as? String
-      else {
-        result(FlutterError(code: "bad_args", message: "expected a `sound` name", details: nil))
-        return
-      }
-      guard let id = self.soundId(for: name) else {
-        // A missing asset is a build problem, not a runtime state to handle — but it must never
-        // take the answer down with it, so it is reported and the card carries on silently.
-        result(FlutterError(code: "no_sound", message: "unknown sound \(name)", details: nil))
-        return
-      }
-      AudioServicesPlaySystemSound(id)
-      result(nil)
+  private func running() -> Bool {
+    if engine.isRunning { return true }
+    do {
+      engine.prepare()
+      try engine.start()
+      return true
+    } catch {
+      NSLog("[audio-mixer] engine did not start: \(error.localizedDescription)")
+      return false
     }
   }
 
-  /// The cached SystemSoundID for [name], creating it on first use. Nil when the asset is not in
-  /// the bundle or AudioServices refuses it.
-  private func soundId(for name: String) -> SystemSoundID? {
-    if let existing = soundIds[name] { return existing }
-    // Only the two names this app actually ships — the channel argument comes from our own Dart,
-    // but a lookup keyed by an arbitrary string is a file-path parameter in disguise.
-    guard ["verdict_correct", "verdict_wrong", "stage_closed", "day_closed"].contains(name) else { return nil }
+  // MARK: speech
 
-    let key = FlutterDartProject.lookupKey(forAsset: "assets/sounds/\(name).wav")
-    guard let path = Bundle.main.path(forResource: key, ofType: nil) else { return nil }
-
-    var id: SystemSoundID = 0
-    let status = AudioServicesCreateSystemSoundID(URL(fileURLWithPath: path) as CFURL, &id)
-    guard status == kAudioServicesNoError else { return nil }
-
-    soundIds[name] = id
-    return id
-  }
-
-  /// `SessionSounds`' side (SESSION-1b′, item 5): `load` decodes the owner's six mp3 from `assets/sounds/` into
-  /// memory, cuts the leading silence, writes each as a PCM CAF into the temporary directory (the asset files are
-  /// never touched) and registers it as a system sound; `play` plays one by name; `release` disposes them.
-  ///
-  /// A system sound, not a player: it follows the silent switch by itself (the app's session is `.playback` for
-  /// the voice, so a player would sound in silent mode), it mixes with the partner's line instead of cutting it,
-  /// and a decoded, trimmed PCM file starts without the mp3 decoder's delay.
-  private func registerSessionSoundsChannel(_ messenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(
-      name: "com.denis.engstd/session_sounds", binaryMessenger: messenger)
-
-    channel.setMethodCallHandler { [weak self] call, result in
-      guard let self = self else {
-        result(nil)
-        return
-      }
-      switch call.method {
-      case "load":
-        DispatchQueue.global(qos: .userInitiated).async {
-          var loaded: [String: SystemSoundID] = [:]
-          for name in Self.sessionSoundNames {
-            if let id = self.decodeSessionSound(name) { loaded[name] = id }
-          }
-          DispatchQueue.main.async {
-            for (name, id) in loaded {
-              if let old = self.sessionSoundIds[name] { AudioServicesDisposeSystemSoundID(old) }
-              self.sessionSoundIds[name] = id
-            }
-            result(loaded.count)
-          }
-        }
-      case "play":
-        guard let name = (call.arguments as? [String: Any])?["sound"] as? String,
-          let id = self.sessionSoundIds[name]
-        else {
+  private func playSpeech(_ args: [String: Any], _ result: @escaping FlutterResult) {
+    guard let path = args["path"] as? String else {
+      result(FlutterError(code: "bad_args", message: "expected a `path`", details: nil))
+      return
+    }
+    // The path comes from our own cache. A missing file is an honest answer (the disk was cleaned): Dart then reads
+    // the line with the system voice instead of silence.
+    guard FileManager.default.fileExists(atPath: path) else {
+      result(FlutterError(code: "no_file", message: "no audio at \(path)", details: nil))
+      return
+    }
+    let volume = level(args, default: 1)
+    // RATE: «Say it aloud» plays the sample at 0.85×, the listening stage at 0.75× — the server voice is always at
+    // normal pace (DECISIONS item 318); the time-pitch unit keeps the pitch.
+    let rate = max(0.5, min(2.0, (args["rate"] as? NSNumber)?.floatValue ?? 1))
+    // The line before this one is cut the moment this one is asked for, not when it starts.
+    cutSpeech()
+    let serial = speechSerial
+    let target = format
+    DispatchQueue.global(qos: .userInitiated).async {
+      let buffer = Self.decode(URL(fileURLWithPath: path), to: target)
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        // Cut or replaced while decoding: this line never sounds.
+        guard serial == self.speechSerial else {
           result(false)
           return
         }
-        AudioServicesPlaySystemSound(id)
-        result(true)
-      case "release":
-        for id in self.sessionSoundIds.values { AudioServicesDisposeSystemSoundID(id) }
-        self.sessionSoundIds.removeAll()
-        try? FileManager.default.removeItem(at: Self.sessionSoundsDirectory)
-        result(nil)
-      default:
-        result(FlutterMethodNotImplemented)
+        guard let buffer else {
+          result(FlutterError(code: "play_failed", message: "undecodable audio", details: nil))
+          return
+        }
+        guard self.running() else {
+          result(FlutterError(code: "play_failed", message: "engine not running", details: nil))
+          return
+        }
+        self.speechNode.volume = volume
+        self.pace.rate = rate
+        self.speechResult = result
+        self.speechNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] _ in
+          DispatchQueue.main.async {
+            guard let self, serial == self.speechSerial else { return }
+            self.finishSpeech(ended: true)
+          }
+        }
+        self.speechNode.play()
       }
     }
   }
 
-  private static var sessionSoundsDirectory: URL {
-    FileManager.default.temporaryDirectory.appendingPathComponent("session_sounds", isDirectory: true)
+  /// Whatever line is sounding or being prepared stops, and whoever waits for it hears `false`.
+  private func cutSpeech() {
+    speechSerial += 1
+    speechNode.stop()
+    finishSpeech(ended: false)
   }
 
-  /// One of the owner's mp3 → a trimmed PCM CAF in the temporary directory → a system sound. Nil when the asset is
-  /// missing or does not decode.
-  private func decodeSessionSound(_ name: String) -> SystemSoundID? {
-    let key = FlutterDartProject.lookupKey(forAsset: "assets/sounds/\(name).mp3")
-    guard let path = Bundle.main.path(forResource: key, ofType: nil),
-      let file = try? AVAudioFile(forReading: URL(fileURLWithPath: path)),
-      let buffer = AVAudioPCMBuffer(
-        pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length))
-    else { return nil }
-    do { try file.read(into: buffer) } catch { return nil }
-    guard let samples = buffer.floatChannelData, buffer.frameLength > 0 else { return nil }
+  private func finishSpeech(ended: Bool) {
+    let pending = speechResult
+    speechResult = nil
+    pending?(ended)
+  }
 
+  // MARK: short sounds
+
+  /// `{effects: {name: asset}}` — decoded in the background and kept by name; answers how many decoded.
+  private func loadEffects(_ args: [String: Any], _ result: @escaping FlutterResult) {
+    let wanted = args["effects"] as? [String: String] ?? [:]
+    let target = format
+    DispatchQueue.global(qos: .userInitiated).async {
+      var loaded: [String: AVAudioPCMBuffer] = [:]
+      for (name, asset) in wanted {
+        if let buffer = Self.decodeAsset(asset, to: target) { loaded[name] = buffer }
+      }
+      DispatchQueue.main.async { [weak self] in
+        self?.effects.merge(loaded) { _, new in new }
+        result(loaded.count)
+      }
+    }
+  }
+
+  /// `{name, asset, level}` — a sound not loaded yet is decoded on the spot from `asset`.
+  private func playEffect(_ args: [String: Any], _ result: @escaping FlutterResult) {
+    guard let name = args["name"] as? String else {
+      result(FlutterError(code: "bad_args", message: "expected a `name`", details: nil))
+      return
+    }
+    var buffer = effects[name]
+    if buffer == nil, let asset = args["asset"] as? String {
+      buffer = Self.decodeAsset(asset, to: format)
+      effects[name] = buffer
+    }
+    guard let buffer, running() else {
+      result(false)
+      return
+    }
+    let node = effectNodes[nextEffectNode]
+    nextEffectNode = (nextEffectNode + 1) % effectNodes.count
+    node.stop()
+    node.volume = level(args, default: 0.38)
+    node.scheduleBuffer(buffer, completionHandler: nil)
+    node.play()
+    result(true)
+  }
+
+  // MARK: decoding
+
+  /// A bundled asset (`assets/sounds/correct.mp3`) with its leading silence cut; the asset file itself is untouched.
+  private static func decodeAsset(_ asset: String, to format: AVAudioFormat) -> AVAudioPCMBuffer? {
+    let key = FlutterDartProject.lookupKey(forAsset: asset)
+    guard let path = Bundle.main.path(forResource: key, ofType: nil),
+      let buffer = decode(URL(fileURLWithPath: path), to: format)
+    else { return nil }
+    return trimLeadingSilence(buffer)
+  }
+
+  /// Any file iOS can read → float stereo at 44.1 kHz: the sample rate by `AVAudioConverter` with the channel count
+  /// kept, then a mono file is copied into both channels (a converter's default channel map would put it left only).
+  private static func decode(_ url: URL, to format: AVAudioFormat) -> AVAudioPCMBuffer? {
+    guard let file = try? AVAudioFile(forReading: url),
+      let source = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length))
+    else { return nil }
+    do { try file.read(into: source) } catch { return nil }
+    guard source.frameLength > 0 else { return nil }
+
+    let channels = source.format.channelCount
+    var resampled = source
+    if source.format.sampleRate != format.sampleRate || source.format.commonFormat != .pcmFormatFloat32 || source.format.isInterleaved {
+      guard let middle = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate, channels: channels),
+        let converter = AVAudioConverter(from: source.format, to: middle),
+        let out = AVAudioPCMBuffer(
+          pcmFormat: middle,
+          frameCapacity: AVAudioFrameCount(Double(source.frameLength) * format.sampleRate / source.format.sampleRate) + 1024)
+      else { return nil }
+      var fed = false
+      var error: NSError?
+      let status = converter.convert(to: out, error: &error) { _, inputStatus in
+        if fed {
+          inputStatus.pointee = .endOfStream
+          return nil
+        }
+        fed = true
+        inputStatus.pointee = .haveData
+        return source
+      }
+      guard status != .error, out.frameLength > 0 else { return nil }
+      resampled = out
+    }
+
+    guard let stereo = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: resampled.frameLength),
+      let from = resampled.floatChannelData, let to = stereo.floatChannelData
+    else { return nil }
+    let frames = Int(resampled.frameLength)
+    stereo.frameLength = resampled.frameLength
+    for c in 0..<2 {
+      to[c].update(from: from[min(c, Int(channels) - 1)], count: frames)
+    }
+    return stereo
+  }
+
+  private static func trimLeadingSilence(_ buffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+    guard let samples = buffer.floatChannelData else { return nil }
     let frames = Int(buffer.frameLength)
     let channels = Int(buffer.format.channelCount)
-    let rate = buffer.format.sampleRate
-    // Only the leading silence goes: audible = above −50 dBFS in any channel, 2 ms are kept before the first
-    // audible frame; the tail stays as the owner made it.
-    let threshold: Float = 0.003_16
     func audible(_ frame: Int) -> Bool {
-      for c in 0..<channels where abs(samples[c][frame]) > threshold { return true }
+      for c in 0..<channels where abs(samples[c][frame]) > silenceThreshold { return true }
       return false
     }
     guard let first = (0..<frames).first(where: audible) else { return nil }
-    let start = max(0, first - Int(rate * 0.002))
-    let end = frames
-
-    guard let trimmed = AVAudioPCMBuffer(
-      pcmFormat: buffer.format, frameCapacity: AVAudioFrameCount(end - start))
-    else { return nil }
-    trimmed.frameLength = AVAudioFrameCount(end - start)
+    let start = max(0, first - Int(buffer.format.sampleRate * 0.002))
+    if start == 0 { return buffer }
+    guard let trimmed = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: AVAudioFrameCount(frames - start)) else { return nil }
+    trimmed.frameLength = AVAudioFrameCount(frames - start)
     for c in 0..<channels {
-      trimmed.floatChannelData![c].update(from: samples[c] + start, count: end - start)
+      trimmed.floatChannelData![c].update(from: samples[c] + start, count: frames - start)
     }
-
-    let directory = Self.sessionSoundsDirectory
-    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    let url = directory.appendingPathComponent("\(name).caf")
-    guard writePcmCaf(trimmed, to: url) else { return nil }
-
-    var id: SystemSoundID = 0
-    guard AudioServicesCreateSystemSoundID(url as CFURL, &id) == kAudioServicesNoError else { return nil }
-    return id
-  }
-
-  /// Writes [buffer] as 16-bit PCM CAF; the file is closed when this returns (the writer goes out of scope).
-  private func writePcmCaf(_ buffer: AVAudioPCMBuffer, to url: URL) -> Bool {
-    try? FileManager.default.removeItem(at: url)
-    let settings: [String: Any] = [
-      AVFormatIDKey: kAudioFormatLinearPCM,
-      AVSampleRateKey: buffer.format.sampleRate,
-      AVNumberOfChannelsKey: buffer.format.channelCount,
-      AVLinearPCMBitDepthKey: 16,
-      AVLinearPCMIsFloatKey: false,
-      AVLinearPCMIsBigEndianKey: false,
-    ]
-    do {
-      let writer = try AVAudioFile(
-        forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
-      try writer.write(from: buffer)
-      return true
-    } catch {
-      return false
-    }
+    return trimmed
   }
 }

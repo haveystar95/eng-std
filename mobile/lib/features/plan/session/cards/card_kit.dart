@@ -11,7 +11,6 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
-import '../../../../data/plan/session/speech_stop.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_choice.dart';
@@ -329,15 +328,8 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   /// Pass for what was heard — the kind's rule (may update the card's screen).
   bool accepts(String heard);
 
-  /// The same rule without side effects — for stopping the recording early on a partial result.
-  bool wouldAccept(String heard) => accepts(heard);
-
   /// Passed — the card shows its own «heard».
   void onAccepted(String heard) {}
-
-  /// How long to wait on an unchanged partial result before stopping; null — wait for silence. By default: passed on
-  /// a partial result — the recording stops after 500 ms without waiting for silence (1b′, item 6).
-  Duration? stopAfter(String partial) => SpeechStop.voice(partial, wouldAccept);
 
   /// `response.mode` of the answer — the dialogue's voice mode (SESSION-1c); null — none.
   String? get responseMode => null;
@@ -350,9 +342,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   void onAttempt(String heard, {required bool accepted}) {}
 
   void initVoice() {
-    mic = env.makeMic(expectedSpeech, contextual)
-      ..onTurn = _onTurn
-      ..autoStop = stopAfter;
+    mic = env.makeMic(expectedSpeech, contextual)..onTurn = _onTurn;
     mic.addListener(_onMic);
   }
 

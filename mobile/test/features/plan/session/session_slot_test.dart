@@ -92,9 +92,9 @@ void main() {
     });
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(other, probe), size: narrow);
-    // Graded 500 ms after the words; the passed round stays 600 ms before round 2 (item 12) — check inside that beat.
+    // Graded after the 1 s pause; the passed round stays 600 ms before round 2 (item 12) — check inside that beat.
     await enterHeard(tester, 'It hurts in his $apartment');
-    await tester.pump(const Duration(milliseconds: 510));
+    await tester.pump(const Duration(milliseconds: 1010));
     await tester.pump();
     expect(probe.answers, isEmpty, reason: 'round 1 of 2 passed — the slot shows what was heard');
     expectSlotFits(tester, apartment);
@@ -110,7 +110,7 @@ void main() {
     await tester.pump();
     await enterHeard(tester, 'It started $appointment');
     expectSlotFits(tester, appointment);
-    await tester.pump(const Duration(milliseconds: 850));
+    await tester.pump(const Duration(milliseconds: 1010));
     await tester.pump();
     expect(probe.judged, ['It started $appointment']);
     expectSlotFits(tester, appointment);

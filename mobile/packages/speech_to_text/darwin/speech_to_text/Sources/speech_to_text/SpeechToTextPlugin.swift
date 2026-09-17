@@ -90,6 +90,9 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
   #if os(iOS)
     private var rememberedAudioCategory: AVAudioSession.Category?
     private var rememberedAudioCategoryOptions: AVAudioSession.CategoryOptions?
+    /// The app already runs its session in `playAndRecord` (fork-local, SESSION-2a): the recognizer uses it as it is
+    /// and leaves it as it found it — no category swap, no deactivation, either of which stops the app's playing audio.
+    private var sessionOwnedByApp = false
     private let audioSession = AVAudioSession.sharedInstance()
   #endif
 
@@ -484,6 +487,9 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
         "Error removing trap: %{PUBLIC}@", log: pluginLog, type: .error, error.localizedDescription)
     }
     #if os(iOS)
+      if sessionOwnedByApp {
+        sessionOwnedByApp = false
+      } else {
       do {
         if let rememberedAudioCategory = rememberedAudioCategory,
           let rememberedAudioCategoryOptions = rememberedAudioCategoryOptions
@@ -501,6 +507,7 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
       } catch {
         os_log(
           "Error deactivation: %{PUBLIC}@", log: pluginLog, type: .info, error.localizedDescription)
+      }
       }
 
     #endif
@@ -549,11 +556,14 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
       }
 
       #if os(iOS)
-        rememberedAudioCategory = self.audioSession.category
-        rememberedAudioCategoryOptions = self.audioSession.categoryOptions
-        try self.audioSession.setCategory(
-          AVAudioSession.Category.playAndRecord,
-          options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP, .mixWithOthers])
+        sessionOwnedByApp = self.audioSession.category == .playAndRecord
+        if !sessionOwnedByApp {
+          rememberedAudioCategory = self.audioSession.category
+          rememberedAudioCategoryOptions = self.audioSession.categoryOptions
+          try self.audioSession.setCategory(
+            AVAudioSession.Category.playAndRecord,
+            options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP, .mixWithOthers])
+        }
         //            try self.audioSession.setMode(AVAudioSession.Mode.measurement)
         if sampleRate > 0 {
           try self.audioSession.setPreferredSampleRate(Double(sampleRate))

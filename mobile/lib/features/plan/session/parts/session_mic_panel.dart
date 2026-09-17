@@ -36,6 +36,7 @@ class SessionMicPanel extends StatelessWidget {
     this.heardText,
     this.liveLine = MicLiveLine.target,
     this.idleCaption,
+    this.showIdleCaption = true,
     this.listeningCaption,
     this.heardCaption,
     this.top,
@@ -67,6 +68,9 @@ class SessionMicPanel extends StatelessWidget {
   /// Captions instead of «tap to speak» / «go ahead, I'm listening» / «heard».
   final String? idleCaption;
   final String? listeningCaption;
+
+  /// False — no caption in the idle state at all: the card's task line already says what to do (32-9, SESSION-2a §5).
+  final bool showIdleCaption;
   final String? heardCaption;
 
   /// Over everything in the panel — the frame hint (35-2, 35-5).
@@ -107,7 +111,9 @@ class SessionMicPanel extends StatelessWidget {
       if (children.isNotEmpty) gap();
       switch (state) {
         case MicState.idle || MicState.unavailable:
-          children.add(Text(idleCaption ?? l.planSessionMicTap, key: const ValueKey('session-mic-caption'), style: AppTextSession.meta));
+          if (showIdleCaption) {
+            children.add(Text(idleCaption ?? l.planSessionMicTap, key: const ValueKey('session-mic-caption'), style: AppTextSession.meta));
+          }
           skipOrExits(active: true);
         case MicState.listening:
           switch (liveLine) {

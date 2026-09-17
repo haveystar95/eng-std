@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
+import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/session_harness.dart';
 
@@ -33,6 +34,14 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
+      expect(voice.played, ['x1@1.0'], reason: 'the first line starts');
+      // The first line started at 280 ms (the autoplay delay): the next one waits until 580.
+      await tester.pump(const Duration(milliseconds: 270));
+      expect(voice.played, ['x1@1.0'], reason: 'the lines stand 300 ms apart (SESSION-2a §5)');
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(voice.played, ['x1@1.0', 'x1b@1.0']);
+      await tester.pump(AppMotion.sessionVisitLineGap * 14);
+      await tester.pump();
       expect(voice.played, [
         for (final ref in ['x1', 'x1b', 'x2', 'x2b', 'x3', 'x3b', 'x4', 'x4b', 'x5', 'x5b', 'x6b', 'x6', 'x7b', 'x7', 'x8b', 'x8']) '$ref@1.0',
       ]);
@@ -50,15 +59,18 @@ void main() {
       await pumpCard(tester, probeEnv(listenAt(1), CardProbe(), voice: voice, day: day));
       await tester.tap(find.byKey(const ValueKey('player-by-parts')));
       await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(AppMotion.sessionVisitLineGap);
       await tester.pump();
       expect(voice.played, ['x1@1.0', 'x1b@1.0']);
       expect(find.text('пауза · обмен 1'), findsOneWidget);
       await tapText(tester, 'Продолжить');
+      await tester.pump(AppMotion.sessionVisitLineGap);
       await tester.pump();
       expect(voice.played, ['x1@1.0', 'x1b@1.0', 'x2@1.0', 'x2b@1.0']);
       expect(find.text('пауза · обмен 2'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('player-again')));
       await tester.pump();
+      await tester.pump(AppMotion.sessionVisitLineGap);
       await tester.pump();
       expect(voice.played.skip(4).take(2), ['x1@1.0', 'x1b@1.0'], reason: '«Once more» starts over');
       await settleCard(tester);

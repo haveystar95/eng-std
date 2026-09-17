@@ -12,6 +12,9 @@ import 'session_queue.dart';
 /// The day's units coming back tomorrow, by kind.
 typedef DayReturns = ({int words, int phrases, int exchanges});
 
+/// What the day summary says about the next day's lesson.
+enum NextDayLesson { building, ready }
+
 abstract final class SessionSummaries {
   /// The listening questions — the choices of «Listen and answer».
   static const Set<SessionKind> listenQuestions = {SessionKind.listenQuestion, SessionKind.listenPredict, SessionKind.listenNumber};
@@ -54,11 +57,13 @@ abstract final class SessionSummaries {
     return (words: words, phrases: phrases, exchanges: exchanges);
   }
 
-  /// The day after [number] on the plan's route — the «Day N+1» line of 30-7; null — [number] is the last day.
-  static PlanDayRoute? nextDay(Plan plan, int number) {
-    for (final d in plan.days) {
-      if (d.number == number + 1) return d;
-    }
+  /// The «Day N+1» line of 30-7, as the contract states the next day (SESSION-2a §6) — nothing derived on the phone:
+  /// its lesson written (`lesson_status: ready`, the day not `building`) — «ready»; the server writing it (`status:
+  /// building`, or the lesson `building` / `pending`) — «building»; failed, not asked for yet, or no next day — no line.
+  static NextDayLesson? nextDayLesson(PlanDayRoute? next) {
+    if (next == null || next.lessonFailed) return null;
+    if (next.lessonBuilding) return NextDayLesson.building;
+    if (next.lessonStatus == LessonStatus.ready) return NextDayLesson.ready;
     return null;
   }
 }

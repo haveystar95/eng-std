@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/audio_mixer.dart';
 import 'package:eng_std/data/line_audio.dart';
 import 'package:eng_std/data/plan/day_providers.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
@@ -163,10 +164,10 @@ void _muteVoice(WidgetTester tester, WindowServer server) {
 
     return call.method == 'speak' ? 0 : 1;
   });
-  messenger.setMockMethodCallHandler(const MethodChannel('com.denis.engstd/line_audio'), (_) async => null);
+  messenger.setMockMethodCallHandler(AudioMixer.channel, (_) async => null);
   addTearDown(() {
     messenger.setMockMethodCallHandler(const MethodChannel('flutter_tts'), null);
-    messenger.setMockMethodCallHandler(const MethodChannel('com.denis.engstd/line_audio'), null);
+    messenger.setMockMethodCallHandler(AudioMixer.channel, null);
   });
 }
 
