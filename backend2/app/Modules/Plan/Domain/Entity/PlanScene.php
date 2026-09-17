@@ -207,6 +207,12 @@ final class PlanScene
         return $this->lessonStatus === LessonStatus::Pending;
     }
 
+    /** The lesson is not written yet — asked for, being written, or waiting for its photos (наряд GEN-3 §11). */
+    public function isAwaitingLesson(): bool
+    {
+        return in_array($this->lessonStatus, [LessonStatus::Pending, LessonStatus::Building, LessonStatus::Illustrating], true);
+    }
+
     public function isReady(): bool
     {
         return $this->lessonStatus === LessonStatus::Ready && $this->lesson !== null;

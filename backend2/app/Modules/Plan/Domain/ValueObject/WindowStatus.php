@@ -9,7 +9,8 @@ namespace App\Modules\Plan\Domain\ValueObject;
  *
  * `locked` is not a state the window draws — a locked day never opens it — it is what the day
  * says when something asks for the window of a day that may not be walked, so the client refuses
- * honestly instead of drawing a start button over it.
+ * honestly instead of drawing a start button over it. `building` — the day is next in line and its lesson is still being
+ * written (наряд GEN-3 §11): no button, the client asks again.
  */
 enum WindowStatus: string
 {
@@ -17,14 +18,16 @@ enum WindowStatus: string
     case InProgress = 'in_progress';
     case Passed = 'passed';
     case Locked = 'locked';
+    case Building = 'building';
 
     /**
      * From the day's EFFECTIVE status. Day one of a plan that is built and not started reads as not
      * started: its «Начать» starts the plan first (13.09, «Начать» в кабинете неначатого плана).
      */
-    public static function of(DayStatus $effective, PlanStatus $plan, int $number): self
+    public static function of(DayStatus $effective, PlanStatus $plan, int $number, bool $building): self
     {
         return match (true) {
+            $building => self::Building,
             $effective === DayStatus::Closed => self::Passed,
             $effective === DayStatus::InProgress => self::InProgress,
             $effective === DayStatus::Open => self::NotStarted,
@@ -40,7 +43,7 @@ enum WindowStatus: string
             self::NotStarted => WindowAction::Start,
             self::InProgress => WindowAction::Continue,
             self::Passed => $hasSpeakStage ? WindowAction::Again : null,
-            self::Locked => null,
+            self::Locked, self::Building => null,
         };
     }
 }

@@ -60,6 +60,7 @@ final class PlanJson
             'route_summary' => $p->routeSummary,
             'summary' => $p->summary,
             'reminder_hour' => $p->reminderHour,
+            'catch_up' => $p->catchUp,
             'learner_role_target' => $p->learnerRoleTarget,
             'learner_role_native' => $p->learnerRoleNative,
             'cover_image' => $p->coverImage,

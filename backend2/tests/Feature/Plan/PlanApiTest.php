@@ -136,8 +136,8 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
         // The registry's word card carries its photo inside the term (наряд SESSION-1a, разд. 1), resolved at read time.
         ->and($day['cards'][0]['payload']['term']['image']['url'])->not->toBeNull();
 
-    // Opening day 1 wrote day 2's lesson (§4).
-    expect(planRead($this, $token, $id)['days'][1]['lesson_status'])->toBe('ready');
+    // Opening day 1 asks the model for nothing (наряд GEN-3 §11): day 2's lesson is asked for when day 1 closes.
+    expect(planRead($this, $token, $id)['days'][1]['lesson_status'])->toBe('pending');
 
     // The room: five stages, the first one current.
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
@@ -191,8 +191,11 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
     $mine = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/collections')->assertOk()->json('data');
     expect(array_column($mine, 'id'))->not->toContain($tab['collection_id']);
 
-    // Day 2 waits for tomorrow.
-    expect($tab['days'][1]['slot']['code'])->toBe('tomorrow')
+    // Closing day 1 wrote day 2's lesson; day 2 waits for the calendar day after day 1 was opened — tomorrow.
+    expect($tab['days'][1]['lesson_status'])->toBe('ready')
+        ->and($tab['days'][1]['status'])->toBe('locked')
+        ->and($tab['catch_up'])->toBeFalse()
+        ->and($tab['days'][1]['slot']['code'])->toBe('tomorrow')
         ->and($tab['days'][1]['slot']['label_native'])->toBe('завтра');
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/2/open")
         ->assertStatus(409)->assertJsonPath('code', 'plan_day_locked');

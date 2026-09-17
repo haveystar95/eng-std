@@ -15,6 +15,7 @@ use App\Modules\Plan\Domain\Repository\PlanEventRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Service\NotificationRules;
 use App\Modules\Plan\Domain\Service\PlanEventRules;
+use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -92,7 +93,8 @@ final readonly class RunNotificationTickHandler
             return;
         }
         $day = $plan->currentDay();
-        $waiting = $day !== null && $day->isAvailableOn($today);
+        $waiting = $day !== null && ! $plan->isDayBuilding($day)
+            && in_array($plan->effectiveDayStatus($day, $today), [DayStatus::Open, DayStatus::InProgress], true);
         if (! $waiting) {
             return;
         }

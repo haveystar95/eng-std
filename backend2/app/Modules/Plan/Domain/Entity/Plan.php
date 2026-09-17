@@ -8,6 +8,7 @@ use App\Modules\Plan\Domain\Blueprint\Blueprint;
 use App\Modules\Plan\Domain\Blueprint\PlanTitles;
 use App\Modules\Plan\Domain\Blueprint\SceneBrief;
 use App\Modules\Plan\Domain\Exception\CoreSceneNotRemovable;
+use App\Modules\Plan\Domain\Exception\PlanDayBuilding;
 use App\Modules\Plan\Domain\Exception\PlanDayLocked;
 use App\Modules\Plan\Domain\Exception\PlanDayNotFound;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
@@ -392,6 +393,10 @@ final class Plan
 
     /**
      * Start (or continue) a day. Returns the day; the caller deals its cards if it has none yet.
+     *
+     * A day opens when the day before it is closed, its lesson is written, and its calendar day has come — the day after
+     * the day before it was OPENED, in the learner's calendar ({@see closeDay()}) — or at once while the plan is catching
+     * up with its event ({@see isCatchingUp()}; `docs/plan-v2.md` §5, наряд GEN-3 §11).
      */
     public function openDay(int $number, DateTimeImmutable $today, DateTimeImmutable $now): PlanDay
     {
@@ -409,7 +414,10 @@ final class Plan
         if ($previous !== null && ! $previous->isClosed()) {
             throw PlanDayLocked::behindDay($number, $number - 1);
         }
-        if (! $day->isAvailableOn($today)) {
+        if ($this->isDayBuilding($day)) {
+            throw PlanDayBuilding::day($number, $this->sceneOf($day)?->lessonStatus()->wire() ?? 'building');
+        }
+        if (! $day->isAvailableOn($today) && ! $this->isCatchingUp($today)) {
             throw PlanDayLocked::untilDate($number, $day->opensOn()?->format('Y-m-d') ?? $today->format('Y-m-d'));
         }
 
@@ -418,7 +426,11 @@ final class Plan
         return $day;
     }
 
-    /** Close a day: metrics written, the next day unlocked from tomorrow (the learner's calendar). */
+    /**
+     * Close a day: metrics written, and the next day dated — the calendar day after THIS day was opened, in the learner's
+     * calendar (наряд GEN-3 §11: opened at 23:00, closed at 01:00 — the next day is there at 01:00). Returns the next day,
+     * whose lesson the caller asks for.
+     */
     public function closeDay(int $number, DayMetrics $metrics, DateTimeImmutable $today, DateTimeImmutable $now): ?PlanDay
     {
         $this->assertStatus('close day', [PlanStatus::Active, PlanStatus::Overdue]);
@@ -426,12 +438,75 @@ final class Plan
         if ($day->status() !== DayStatus::InProgress) {
             throw PlanDayNotOpen::day($number, $day->status());
         }
+        $opened = ($day->openedAt() ?? $now)->setTimezone($today->getTimezone());
         $day->close($now, $metrics);
 
         $next = $this->days[$number] ?? null;
-        $next?->unlockOn($today->setTime(0, 0)->modify('+1 day'));
+        $next?->unlockOn($opened->setTime(0, 0)->modify('+1 day'));
 
         return $next;
+    }
+
+    /**
+     * «ДОГОНЯЕМ» (наряд GEN-3 §11): the calendar days left until the event, the event's own day included, are no more than the
+     * days of the plan not passed yet — no day waits for its calendar day, the next one opens as soon as the one before it
+     * closes. The event's day is a study day: on it the days left open one after another. A plan with no event date never
+     * catches up; after the event date the calendar rules again.
+     */
+    public function isCatchingUp(DateTimeImmutable $today): bool
+    {
+        if ($this->eventDate === null || $this->eventDate->format('Y-m-d') < $today->format('Y-m-d')) {
+            return false;
+        }
+        $left = count(array_filter($this->days, static fn (PlanDay $d): bool => ! $d->isClosed()));
+
+        return PlanCalendar::calendarDaysBetween($today, $this->eventDate) + 1 <= $left;
+    }
+
+    /**
+     * A day waiting for its lesson (наряд GEN-3 §11): the next day of a live plan — the one after the last closed day, or
+     * day 1 — is a scene day whose lesson is not written yet (asked for, being written, waiting for its photos). It is not
+     * `locked` and not `failed`: the client shows «собираем урок» and asks again; opening it is 409 `plan_day_building`.
+     */
+    public function isDayBuilding(PlanDay $day): bool
+    {
+        if (! $this->status->isLive() || ! in_array($day->status(), [DayStatus::Locked, DayStatus::Open], true)) {
+            return false;
+        }
+        $previous = $day->number() > 1 ? $this->day($day->number() - 1) : null;
+        $scene = $day->type() === DayType::Scene ? $this->sceneOf($day) : null;
+
+        return ($previous === null || $previous->isClosed()) && $scene !== null && $scene->isAwaitingLesson();
+    }
+
+    /**
+     * The day's status for today, not as stored: a locked day whose day before it is closed and whose calendar day has
+     * come — or whose plan is catching up — reads `open`.
+     */
+    public function effectiveDayStatus(PlanDay $day, DateTimeImmutable $today): DayStatus
+    {
+        if ($day->status() !== DayStatus::Locked) {
+            return $day->status();
+        }
+        $previous = $day->number() > 1 ? $this->day($day->number() - 1) : null;
+        $previousClosed = $previous === null || $previous->isClosed();
+
+        return $previousClosed && $this->status->isLive() && ($day->isAvailableOn($today) || $this->isCatchingUp($today))
+            ? DayStatus::Open
+            : DayStatus::Locked;
+    }
+
+    /**
+     * The scene whose lesson the learner's current day waits for, when nobody has asked for it — a plan's day 1 before its
+     * start, or a scene an extension laid on the day the learner is on. The days after it get theirs when the day before
+     * them closes (наряд GEN-3 §11), never here.
+     */
+    public function currentSceneWithoutLesson(): ?PlanScene
+    {
+        $current = $this->currentDay();
+        $scene = $current !== null && $current->type() === DayType::Scene ? $this->sceneOf($current) : null;
+
+        return $scene !== null && $scene->needsLesson() ? $scene : null;
     }
 
     public function day(int $number): PlanDay

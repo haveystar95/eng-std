@@ -152,6 +152,7 @@ it('never lets the core be removed from the preview', function () {
 it('cannot be shortened below the days already walked', function () {
     $plan = shrPlan(5);
     shrBlueprint($plan);
+    planWriteLessons($plan);
     $today = new DateTimeImmutable('2026-09-10');
     $now = new DateTimeImmutable('2026-09-10T10:00:00Z');
     $plan->start($now, $today);
@@ -172,6 +173,7 @@ it('cannot be shortened below the days already walked', function () {
 it('opens days one per calendar day: day two waits for tomorrow', function () {
     $plan = shrPlan(3);
     shrBlueprint($plan);
+    planWriteLessons($plan);
     $today = new DateTimeImmutable('2026-09-10');
     $now = new DateTimeImmutable('2026-09-10T10:00:00Z');
     $plan->start($now, $today);

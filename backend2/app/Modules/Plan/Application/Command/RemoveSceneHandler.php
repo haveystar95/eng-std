@@ -7,7 +7,6 @@ namespace App\Modules\Plan\Application\Command;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
-use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 final readonly class RemoveSceneHandler
@@ -26,13 +25,9 @@ final readonly class RemoveSceneHandler
             $plan->removeScene($command->sceneId);
             $this->plans->save($plan);
 
-            // Day 1's lesson is written before the start; if day 1 just became a review, the first
-            // scene day moves and its lesson is what should be waiting.
-            $first = $plan->day(1);
-            $day = $first->type() === DayType::Scene ? $first : $plan->nextSceneDayAfter(1);
-            $scene = $day === null ? null : $plan->sceneOf($day);
-
-            return $scene !== null && $scene->needsLesson() ? $scene->id() : null;
+            // Day 1's lesson is written with the plan; a day 1 that just became a review has none to write, and the scene
+            // day after it gets its lesson when day 1 closes (наряд GEN-3 §11).
+            return $plan->currentSceneWithoutLesson()?->id();
         });
 
         if ($nextSceneId !== null) {

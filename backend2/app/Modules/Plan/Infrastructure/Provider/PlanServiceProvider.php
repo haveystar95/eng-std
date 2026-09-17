@@ -59,12 +59,14 @@ use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Plan\Application\Port\LearnerDevices;
 use App\Modules\Plan\Application\Port\LearnerHabits;
+use App\Modules\Plan\Application\Port\NextDayAccess;
 use App\Modules\Plan\Application\Port\NotifiablePlans;
 use App\Modules\Plan\Application\Port\NotificationDispatcher;
 use App\Modules\Plan\Application\Port\NotificationLog;
 use App\Modules\Plan\Application\Port\PushSender;
 use App\Modules\Plan\Domain\Repository\PlanEventRepository;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerDevices;
+use App\Modules\Plan\Infrastructure\Adapter\EveryNextDayAllowed;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerHabits;
 use App\Modules\Plan\Infrastructure\Adapter\QueuedNotificationDispatcher;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentNotifiablePlans;
@@ -104,6 +106,8 @@ final class PlanServiceProvider extends ServiceProvider
         $this->app->bind(NotificationDispatcher::class, QueuedNotificationDispatcher::class);
         $this->app->bind(LearnerDevices::class, IdentityLearnerDevices::class);
         $this->app->bind(LearnerHabits::class, IdentityLearnerHabits::class);
+        // Whether the learner may have the next day — asked before its lesson is (наряд GEN-3 §11); PAY-1 replaces this.
+        $this->app->bind(NextDayAccess::class, EveryNextDayAllowed::class);
         // No APNs key → dry mode. The same queue and the same log either way; only this door changes.
         $this->app->bind(PushSender::class, function (Container $app): PushSender {
             $key = trim((string) config('services.apns.key_p8', ''));

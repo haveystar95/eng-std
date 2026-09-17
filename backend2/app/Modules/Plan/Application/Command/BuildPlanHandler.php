@@ -16,7 +16,6 @@ use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
-use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
 use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
@@ -157,18 +156,14 @@ final readonly class BuildPlanHandler
         $this->queueFirstLesson($extended);
     }
 
-    /** Day 1's lesson is written before «Начать»; after a start the next open scene day is what waits. */
+    /**
+     * Day 1's lesson is written with the plan, before «Начать»; after an extension, a scene laid on the day the learner is on.
+     * The days after it get theirs when the day before them closes (наряд GEN-3 §11).
+     */
     private function queueFirstLesson(Plan $plan): void
     {
-        $current = $plan->currentDay();
-        if ($current === null) {
-            return;
-        }
-        $day = $current->sceneId() !== null && $current->type() === DayType::Scene
-            ? $current
-            : $plan->nextSceneDayAfter($current->number());
-        $scene = $day === null ? null : $plan->sceneOf($day);
-        if ($scene !== null && $scene->needsLesson()) {
+        $scene = $plan->currentSceneWithoutLesson();
+        if ($scene !== null) {
             $this->dispatcher->buildLesson($scene->id());
         }
     }

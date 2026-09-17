@@ -55,11 +55,9 @@ final readonly class ReschedulePlanHandler
                 $rebuilt = $this->journal->record($plan->id(), $plan->userId(), $kind, payload: ['from' => $daysBefore, 'to' => $plan->daysTotal()]);
             }
 
-            $current = $plan->currentDay();
-            $next = $current === null ? null : ($current->sceneId() !== null ? $current : $plan->nextSceneDayAfter($current->number()));
-            $scene = $next === null ? null : $plan->sceneOf($next);
-
-            return [$result['scenes_to_add'], $scene !== null && $scene->needsLesson() ? $scene->id() : null];
+            // Only the day the learner is on may lack its lesson here (a scene laid on it); the days after it get theirs when
+            // the day before them closes (наряд GEN-3 §11).
+            return [$result['scenes_to_add'], $plan->currentSceneWithoutLesson()?->id()];
         });
 
         [$scenesToAdd, $lessonFor] = $outcome;

@@ -90,12 +90,15 @@ const WINDOW_FULL_DAY = ['words' => [24, 0], 'phrases' => [19, 0], 'dialogue' =>
 const WINDOW_WALKED_DAY = ['words' => [24, 24], 'phrases' => [19, 19], 'dialogue' => [15, 15], 'listen' => [9, 3], 'speak' => [8, 0]];
 
 it('reads the day in one of three words — day one of a built, unstarted plan is «не начат», any other locked day is refused', function () {
-    expect(WindowStatus::of(DayStatus::Open, PlanStatus::Active, 2))->toBe(WindowStatus::NotStarted)
-        ->and(WindowStatus::of(DayStatus::InProgress, PlanStatus::Active, 2))->toBe(WindowStatus::InProgress)
-        ->and(WindowStatus::of(DayStatus::Closed, PlanStatus::Finished, 2))->toBe(WindowStatus::Passed)
-        ->and(WindowStatus::of(DayStatus::Locked, PlanStatus::Ready, 1))->toBe(WindowStatus::NotStarted)
-        ->and(WindowStatus::of(DayStatus::Locked, PlanStatus::Ready, 2))->toBe(WindowStatus::Locked)
-        ->and(WindowStatus::of(DayStatus::Locked, PlanStatus::Active, 3))->toBe(WindowStatus::Locked);
+    expect(WindowStatus::of(DayStatus::Open, PlanStatus::Active, 2, false))->toBe(WindowStatus::NotStarted)
+        ->and(WindowStatus::of(DayStatus::InProgress, PlanStatus::Active, 2, false))->toBe(WindowStatus::InProgress)
+        ->and(WindowStatus::of(DayStatus::Closed, PlanStatus::Finished, 2, false))->toBe(WindowStatus::Passed)
+        ->and(WindowStatus::of(DayStatus::Locked, PlanStatus::Ready, 1, false))->toBe(WindowStatus::NotStarted)
+        ->and(WindowStatus::of(DayStatus::Locked, PlanStatus::Ready, 2, false))->toBe(WindowStatus::Locked)
+        ->and(WindowStatus::of(DayStatus::Locked, PlanStatus::Active, 3, false))->toBe(WindowStatus::Locked)
+        // Наряд GEN-3 §11: a day next in line whose lesson is still being written has no button, whatever its date says.
+        ->and(WindowStatus::of(DayStatus::Open, PlanStatus::Active, 2, true))->toBe(WindowStatus::Building)
+        ->and(WindowStatus::Building->action(true))->toBeNull();
 });
 
 it('has one action per status — «Ещё раз» only for a passed day that has something to say aloud', function () {

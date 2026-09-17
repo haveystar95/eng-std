@@ -94,7 +94,7 @@ it('writes a lesson with the learner\'s gender as the profile says it now and th
     DB::table('profiles')->where('user_id', $user->id)->update(['gender' => 'female']);
     $plan = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/plans/current')->assertOk()->json('data');
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
-    planOpenDay($this, $token, $plan['id'], 1);
+    planWalkDay($this, $token, $plan['id'], 1);
 
     [$first, $second] = $fake->lessonRequests;
     $prompts = new PlanPromptFiles(app_path('Modules/Plan/Infrastructure/Prompt'));

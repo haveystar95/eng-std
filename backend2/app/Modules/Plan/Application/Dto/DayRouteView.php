@@ -7,6 +7,8 @@ namespace App\Modules\Plan\Application\Dto;
 /** One day on the route: what it is, whether it may be walked, and how it went if it was. */
 final readonly class DayRouteView
 {
+    public const BUILDING = 'building';
+
     /**
      * @param  list<RouteStageView>  $stages  only the stages the day has, in walking order
      */
@@ -14,7 +16,10 @@ final readonly class DayRouteView
         public string $id,
         public int $number,
         public string $type,
-        /** `locked` | `open` | `in_progress` | `closed` — effective for today, not the stored value */
+        /**
+         * `locked` | `building` | `open` | `in_progress` | `closed` — effective for today, not the stored value; `building` — the
+         * day is next in line and its lesson is still being written (наряд GEN-3 §11)
+         */
         public string $status,
         public ?string $sceneId,
         public ?string $titleNative,

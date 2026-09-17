@@ -532,6 +532,25 @@ function planFixtureWarnings(): array
 }
 
 /**
+ * Every scene of a plan in hand gets the fake's clean lesson, its photos found — a plan whose days may be opened as far as
+ * their lessons go (наряд GEN-3 §11: a day next in line without its lesson is `building`).
+ */
+function planWriteLessons(App\Modules\Plan\Domain\Entity\Plan $plan): void
+{
+    foreach ($plan->scenes() as $scene) {
+        $request = new App\Modules\Plan\Application\Dto\LessonRequest('x', 'x', 'English', 'Russian', $plan->level(), null, 8, 8, App\Modules\Plan\Infrastructure\Model\FakePlanModel::roles(), $plan->earlierDaysOf($scene->id()));
+        $scene->acceptLesson(
+            (new App\Modules\Plan\Domain\Lesson\LessonParser)->parse(App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload($request)),
+            lessonPacks()->for('en'),
+            new App\Modules\Plan\Domain\ValueObject\ModelCall('lesson_day.v4.6', 'test', 'fake', '0.000000', 1, 1),
+            [],
+            new DateTimeImmutable('2026-09-10T09:00:00Z'),
+        );
+        $scene->finishIllustration();
+    }
+}
+
+/**
  * The fake's lesson for a request told so that it breaks no rule of v4.6 either: its exchanges 4 and 7 change places (and
  * the words' `used_in` with them), so frame p6 is said in exchanges 4 and 8, never twice in a row. The lesson a test asks
  * for «no findings» of.

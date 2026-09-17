@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Port\LearnerCalendar;
+use App\Modules\Plan\Application\Port\NextDayAccess;
 use App\Modules\Plan\Application\Port\PlanCollectionWriter;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\PlanAccess;
@@ -25,9 +26,15 @@ use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
- * «День пройден»: metrics, the next day unlocked for tomorrow, the day's words into the plan's
- * collection — and a `day_passed` line in the plan's journal, in the same transaction (PLAN-UI-3;
- * the order's «PlanDayPassing» is this handler). `day_passed` is journal-only: no letter.
+ * «День пройден»: metrics, the next day dated (the calendar day after this one was OPENED), the day's words into the plan's
+ * collection — and a `day_passed` line in the plan's journal, in the same transaction (PLAN-UI-3; the order's
+ * «PlanDayPassing» is this handler). `day_passed` is journal-only: no letter.
+ *
+ * THE ONE PLACE A DAY'S LESSON IS ASKED FOR AFTER THE PLAN IS BUILT (наряд GEN-3 §11): closing day N asks for the lesson of day
+ * N+1 — when N+1 is a scene day, its lesson was never asked for, and the learner may have that day ({@see NextDayAccess},
+ * always yes before PAY-1). Once: the day is closed under the plan's row lock, and closing it again is 409
+ * `plan_day_not_open` before anything is queued. A review or the rehearsal is not built, but closing one asks, by the same
+ * rule, for the scene day after it.
  */
 final readonly class CloseDayHandler
 {
@@ -40,6 +47,7 @@ final readonly class CloseDayHandler
         private DayMetricsCalculator $metrics,
         private LearnerCalendar $calendar,
         private PlanDispatcher $dispatcher,
+        private NextDayAccess $nextDay,
         private Clock $clock,
         private TransactionManager $tx,
         private PlanEventJournal $journal,
@@ -86,9 +94,9 @@ final readonly class CloseDayHandler
             $this->plans->save($plan);
             $passed = $this->journal->record($plan->id(), $plan->userId(), PlanEventKind::DayPassed, $day->id(), $day->number());
 
-            $nextScene = $next === null ? null : $plan->sceneOf($next);
+            $nextScene = $next !== null && $next->type() === DayType::Scene ? $plan->sceneOf($next) : null;
 
-            return $nextScene !== null && $nextScene->needsLesson() ? $nextScene->id() : null;
+            return $nextScene !== null && $nextScene->needsLesson() && $this->nextDay->nextDayAllowed($plan, $next) ? $nextScene->id() : null;
         });
 
         if ($nextSceneId !== null) {

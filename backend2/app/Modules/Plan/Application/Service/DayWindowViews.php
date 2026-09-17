@@ -72,9 +72,9 @@ final readonly class DayWindowViews
     ) {}
 
     /** @param list<DayCard> $cards */
-    public function of(Plan $plan, PlanDay $day, DayStatus $effective, ?SceneView $scene, array $cards): DayWindowView
+    public function of(Plan $plan, PlanDay $day, DayStatus $effective, bool $building, ?SceneView $scene, array $cards): DayWindowView
     {
-        $status = WindowStatus::of($effective, $plan->status(), $day->number());
+        $status = WindowStatus::of($effective, $plan->status(), $day->number(), $building);
         $stages = DayWindowStages::of($cards, RouteStages::dealtBy($day->type()), $status, $this->pace);
         $states = UnitStates::of($cards);
         $ownScene = $plan->sceneOf($day);

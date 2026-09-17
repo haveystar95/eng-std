@@ -2102,10 +2102,12 @@ paths:
       description: >-
         The first call deals the cards (the composition is fixed before the day starts, docs/plan-v2.md §6);
         every call returns the whole list with each card's state, so a client that reconnects holds
-        the day. Opening day N queues the lesson of the next scene day. 409 `plan_day_locked` while
-        the previous day is not closed (`meta.blocked_by_day`) or the calendar has not turned
-        (`meta.opens_on`); 409 `plan_lesson_not_ready` while the scene's lesson is building or
-        failed (`meta.lesson_status`).
+        the day. Opening asks the model for nothing: the next day's lesson is asked for when THIS day
+        closes (GEN-3 §11). 409 `plan_day_locked` while the previous day is not closed
+        (`meta.blocked_by_day`) or its calendar day has not come — the day after the previous day was
+        OPENED, in the learner's calendar, and no lock at all while the plan catches up with its event
+        (`meta.opens_on`); 409 `plan_day_building` while the day is next in line and its lesson is not
+        back yet (`meta.lesson_status`); 409 `plan_lesson_not_ready` when the lesson failed.
       parameters:
         - $ref: '#/components/parameters/PlanId'
         - $ref: '#/components/parameters/PlanDayNumber'
@@ -2893,13 +2895,16 @@ components:
 
     PlanDayRoute:
       type: object
-      description: One day on the route. `status` is EFFECTIVE for today — a locked day whose date has come and whose predecessor is closed reads `open`.
+      description: >-
+        One day on the route. `status` is EFFECTIVE for today — a locked day whose predecessor is closed and whose date has come
+        (or whose plan catches up, `catch_up`) reads `open`; a day next in line whose lesson is not back yet reads `building`
+        (not `locked`, not `failed`: no button, ask again — GEN-3 §11).
       required: [id, number, type, status, slot, cards_total, cards_done, minutes_spent]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
         number: { type: integer, minimum: 1, maximum: 10 }
         type: { type: string, enum: [scene, review, rehearsal] }
-        status: { type: string, enum: [locked, open, in_progress, closed] }
+        status: { type: string, enum: [locked, building, open, in_progress, closed] }
         scene_id: { type: [string, 'null'] }
         title_native: { type: [string, 'null'], description: '≤ 18 characters by the prompt''s rule; the client ellipsises a longer one' }
         title_target: { type: [string, 'null'] }
@@ -2966,7 +2971,7 @@ components:
         arrives ready: `until_phrase` («До приёма · 5 дней»), `overdue_native` («Приём был вчера»),
         `route_summary` («5 дней · 3 ситуации, 1 повторение, репетиция»), the day slots. Dates and
         numbers are raw; the client formats them.
-      required: [id, status, goal_text, target_lang, native_lang, level, days_total, days_requested, route_summary, days, scenes, rescue_kit, cost_usd, versions, created_at]
+      required: [id, status, goal_text, target_lang, native_lang, level, days_total, days_requested, route_summary, days, scenes, rescue_kit, cost_usd, versions, created_at, catch_up]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
         status: { type: string, enum: [building, unclear, failed, ready, active, finished, overdue], description: '`overdue` is derived — an active plan whose event date has passed' }
@@ -2985,6 +2990,12 @@ components:
         until_phrase: { type: [string, 'null'], description: 'The countdown header, ready — null without a date or once the event has passed' }
         overdue_native: { type: [string, 'null'], description: 'The prompt''s own sentence, present only while the plan is overdue' }
         route_summary: { type: string }
+        catch_up:
+          type: boolean
+          description: >-
+            «Догоняем» (GEN-3 §11): the calendar days left until the event, its own day included, are no more than the days
+            not passed — no day waits for its date, the next one opens as soon as the one before it closes. Always false
+            without an event date and after it.
         reminder_hour:
           type: integer
           minimum: 8
@@ -3257,10 +3268,11 @@ components:
             image_tone: { type: string, pattern: '^#[0-9A-F]{6}$' }
             status:
               type: string
-              enum: [not_started, in_progress, passed, locked]
+              enum: [not_started, in_progress, passed, locked, building]
               description: >-
                 One word for the day. Day one of a built, unstarted plan is `not_started` («Начать»
                 starts the plan first). `locked` is not a window state: the client refuses to draw it.
+                `building` — the day is next in line and its lesson is not back yet: no `allowed_action`, ask again.
             minutes_estimate: { type: [integer, 'null'], description: 'What the day still asks for — all of it before the start, what is left while walked; null once passed or without cards' }
             minutes_spent: { type: [integer, 'null'], description: 'A passed day only' }
             goals:

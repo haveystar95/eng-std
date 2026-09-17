@@ -19,7 +19,6 @@ use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
-use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -71,7 +70,7 @@ final readonly class GetDayRoomHandler
             // progress. A day not yet opened has nothing to count.
             metrics: $dealt ? new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent) : null,
             program: $this->program($cards),
-            window: $this->windows->of($plan, $day, DayStatus::from($route->status), $sceneView, $cards),
+            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards),
         );
     }
 

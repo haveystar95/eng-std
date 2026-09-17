@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Port\LearnerCalendar;
-use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
@@ -16,8 +15,9 @@ use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
- * Opens day N: the aggregate decides whether it may open, the dealer writes its cards once, and
- * the lesson of the NEXT scene day is queued the moment this one opens (`docs/plan-v2.md` §4).
+ * Opens day N: the aggregate decides whether it may open (the day before it closed, its lesson written, its calendar day
+ * come or the plan catching up), and the dealer writes its cards once. Nothing is asked of the model here: the next day's
+ * lesson is asked for when this day CLOSES ({@see CloseDayHandler}, наряд GEN-3 §11).
  */
 final readonly class OpenDayHandler
 {
@@ -27,7 +27,6 @@ final readonly class OpenDayHandler
         private DayCardRepository $cards,
         private DayDealer $dealer,
         private LearnerCalendar $calendar,
-        private PlanDispatcher $dispatcher,
         private Clock $clock,
         private TransactionManager $tx,
     ) {}
@@ -37,7 +36,7 @@ final readonly class OpenDayHandler
         $now = $this->clock->now();
         $today = $this->calendar->todayFor($command->actorId, $now);
 
-        [$dayId, $nextSceneId] = $this->tx->run(function () use ($command, $today, $now): array {
+        return $this->tx->run(function () use ($command, $today, $now): PlanDayId {
             $plan = $this->access->ownedForUpdate($command->planId, $command->actorId);
             $day = $plan->openDay($command->number, $today, $now);
 
@@ -48,16 +47,7 @@ final readonly class OpenDayHandler
             }
             $this->plans->save($plan);
 
-            $next = $plan->nextSceneDayAfter($day->number());
-            $scene = $next === null ? null : $plan->sceneOf($next);
-
-            return [$day->id(), $scene !== null && $scene->needsLesson() ? $scene->id() : null];
+            return $day->id();
         });
-
-        if ($nextSceneId !== null) {
-            $this->dispatcher->buildLesson($nextSceneId);
-        }
-
-        return $dayId;
     }
 }

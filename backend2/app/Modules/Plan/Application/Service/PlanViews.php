@@ -111,6 +111,7 @@ final readonly class PlanViews
             // One reminder hour for the server's tick and the phone's local reminders — the rule is
             // Identity's `UsualVisitTime` (usual visit hour, 19:00 without visits, never before 08:00).
             reminderHour: intdiv($this->habits->usualVisitMinutes($plan->userId()), 60),
+            catchUp: $plan->isCatchingUp($today),
         );
     }
 
@@ -198,7 +199,7 @@ final readonly class PlanViews
     private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline): DayRouteView
     {
         $scene = $plan->sceneOf($day);
-        $status = $this->effectiveDayStatus($plan, $day, $today);
+        $status = $plan->effectiveDayStatus($day, $today);
         $current = $plan->currentDay();
         $availableToday = $current !== null && $current->id()->equals($day->id())
             && ($status === DayStatus::Open || $status === DayStatus::InProgress);
@@ -208,7 +209,8 @@ final readonly class PlanViews
             id: $day->id()->value,
             number: $day->number(),
             type: $day->type()->value,
-            status: $status->value,
+            // A day next in line whose lesson is still being written is `building` (наряд GEN-3 §11) — not locked, not failed.
+            status: $plan->isDayBuilding($day) ? DayRouteView::BUILDING : $status->value,
             sceneId: $scene?->id()->value,
             titleNative: $scene?->titleNative(),
             titleTarget: $scene?->titleTarget(),
@@ -261,20 +263,6 @@ final readonly class PlanViews
     private static function imageArray(?Image $image): ?array
     {
         return $image === null ? null : [...$image->toArray(), 'tone' => $image->tone];
-    }
-
-    /** A locked day whose date has come and whose predecessor is closed reads as `open`. */
-    private function effectiveDayStatus(Plan $plan, PlanDay $day, DateTimeImmutable $today): DayStatus
-    {
-        if ($day->status() !== DayStatus::Locked) {
-            return $day->status();
-        }
-        $previous = $day->number() > 1 ? $plan->day($day->number() - 1) : null;
-        $previousClosed = $previous === null || $previous->isClosed();
-
-        return $previousClosed && $day->isAvailableOn($today) && $plan->status()->isLive()
-            ? DayStatus::Open
-            : DayStatus::Locked;
     }
 
     /**

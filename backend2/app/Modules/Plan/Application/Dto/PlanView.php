@@ -50,5 +50,7 @@ final readonly class PlanView
         public ?string $summary = null,
         /** Local hour of the daily reminder and «сегодня разговор» (8…23; 19 without visits). */
         public int $reminderHour = 19,
+        /** «Догоняем» (наряд GEN-3 §11): the days left until the event are no more than the days not passed — no day waits for its date. */
+        public bool $catchUp = false,
     ) {}
 }

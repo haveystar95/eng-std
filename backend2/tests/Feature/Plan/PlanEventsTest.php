@@ -65,13 +65,13 @@ it('writes plan_ready when the build finishes and sends «План готов» 
         && $context['tokens'] === 0);
 });
 
-it('writes day_ready for day 2 when opening day 1 builds its lesson, and says «День 2 собран» — catches a day that was built with nobody told', function () {
+it('writes day_ready for day 2 when closing day 1 builds its lesson, and says «День 2 собран» — catches a day that was built with nobody told', function () {
     Log::spy();
     [, $token] = planLearner();
     $build = planCreate($this, $token, ['days_total' => 5]);
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$build['id']}/start")->assertOk();
 
-    planOpenDay($this, $token, $build['id'], 1);
+    planWalkDay($this, $token, $build['id'], 1);
 
     $day2 = DB::table('plan_events')->where('plan_id', $build['id'])->where('kind', 'day_ready')->where('day_number', 2)->first();
     expect($day2)->not->toBeNull()
