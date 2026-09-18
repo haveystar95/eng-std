@@ -139,7 +139,9 @@ class CardLayout extends StatelessWidget {
     this.feed = false,
   });
 
-  final Widget task;
+  /// The task line at the top of the screen; null — this card says what to do inside its own body (the check of a
+  /// dialogue puts its question beside the bubble it asks about, FIX-1 доработка).
+  final Widget? task;
   final Widget body;
 
   /// THE CONVERSATION SO FAR, above the card's own rows (series 33, [feed] only) — the ONLY part of the field that
@@ -195,8 +197,7 @@ class CardLayout extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        task,
-        SizedBox(height: bodyGap),
+        if (task case final line?) ...[line, SizedBox(height: bodyGap)],
         Flexible(
           child: SingleChildScrollView(
             // The newest line is the one that matters: the view rests at the bottom and older lines stand above it.
@@ -214,7 +215,7 @@ class CardLayout extends StatelessWidget {
     // Under an overlay dock the field is not clipped: the bottom that did not fit is covered by the dock itself.
     clipBehavior: dock == null || !overlayDock ? Clip.hardEdge : Clip.none,
     slivers: [
-      if (!taskInBody)
+      if (!taskInBody && task != null)
         SliverPadding(
           padding: EdgeInsets.fromLTRB(kSessionGutter, taskGap, kSessionGutter, 0),
           sliver: SliverToBoxAdapter(child: task),
@@ -222,13 +223,13 @@ class CardLayout extends StatelessWidget {
       SliverFillRemaining(
         hasScrollBody: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(kSessionGutter, taskInBody ? taskGap : bodyGap, kSessionGutter, dock == null ? 16 : 0),
+          padding: EdgeInsets.fromLTRB(kSessionGutter, taskInBody || task == null ? taskGap : bodyGap, kSessionGutter, dock == null ? 16 : 0),
           child: switch ((taskInBody, centerBody)) {
             (true, _) => Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [task, SizedBox(height: bodyGap), body],
+                children: [if (task case final line?) ...[line, SizedBox(height: bodyGap)], body],
               ),
             ),
             (false, true) => Center(child: body),

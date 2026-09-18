@@ -88,6 +88,30 @@ class SessionTask extends StatelessWidget {
   );
 }
 
+/// THE QUESTION OF A CHECK, WHERE THE THING IT ASKS ABOUT IS (33-1, 33-5; наряд FIX-1, доработка).
+///
+/// The task line small above it, the question itself in the card's own question type (Literata 26) — one block with
+/// the closed bubble under it and the options in the dock. It stands in the card's BODY, not in the task line of the
+/// screen: at the top edge, in grey 13, over a conversation of six exchanges, the question read as chrome and the
+/// learner was left with four options and nothing to answer (живой проход 18.09).
+class SessionCheckQuestion extends StatelessWidget {
+  const SessionCheckQuestion({super.key, required this.task, required this.question});
+
+  final String task;
+  final String question;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(task, style: AppTextSession.task),
+      const SizedBox(height: 6),
+      Text(question, key: const ValueKey('check-question'), style: AppTextSession.question),
+    ],
+  );
+}
+
 /// BRASS WAVE — the bars are live only while [playing], static afterwards (table «Timing · session»).
 class SessionWave extends StatefulWidget {
   const SessionWave({super.key, required this.heights, this.barWidth = 3, this.width, this.playing = false, this.color = AppColors.brassInk});

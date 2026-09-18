@@ -112,6 +112,22 @@ void main() {
     await settleCard(tester);
   });
 
+  // Тот же блок у 33-1 — экран, который владелец и видел живьём (проверка обмена x6).
+  testWidgets('07 диалог: проверка реплики собеседника (33-1) на шестом обмене', (tester) async {
+    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+    final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
+    for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 9)) {
+      c['result'] = 'passed';
+      c['attempts'] = 1;
+    }
+    final cards = SessionDay.fromJson(raw).stageOf(PlanStage.dialogue)!.cards;
+    final card = cards.firstWhere((c) => c.position == 9);
+    await pumpCardShot(tester, () => probeEnv(card, CardProbe(), feed: DialogueFeed.before(cards, card)));
+    await tester.pump(const Duration(milliseconds: 300));
+    await shoot(tester, '07-dialogue-partner-question');
+    await settleCard(tester);
+  });
+
   // ── §6 · «Скажи целиком»: круг значения и круг своего слова ───────────────────────────────────
   testWidgets('02 «Скажи целиком»: круг значения, плашки — состояние', (tester) async {
     await pumpCardShot(tester, () => probeEnv(fixtureCard(day, SessionKind.phraseOtherSlot), CardProbe()));

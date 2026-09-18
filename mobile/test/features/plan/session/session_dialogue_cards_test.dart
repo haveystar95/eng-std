@@ -9,6 +9,7 @@ import 'package:eng_std/data/plan/session/dialogue_feed.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/features/plan/session/parts/session_bits.dart';
+import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
 import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
 
@@ -221,7 +222,7 @@ void main() {
       await tester.pump();
 
       final task = tester.getRect(find.text('Ответь на вопрос'));
-      final question = tester.getRect(find.text(check.questionNative));
+      final question = tester.getRect(find.byKey(const ValueKey('check-question')));
       final reply = tester.getRect(find.byKey(const ValueKey('reply-wave')));
       final option = tester.getRect(find.byKey(ValueKey('option-${check.options.first.id}')));
       expect(task.top, greaterThanOrEqualTo(0), reason: 'the task line is on the screen');
@@ -229,6 +230,12 @@ void main() {
       expect(task.bottom, lessThanOrEqualTo(question.top), reason: 'задание над вопросом');
       expect(question.bottom, lessThanOrEqualTo(reply.top), reason: 'вопрос над закрытым пузырём');
       expect(reply.bottom, lessThanOrEqualTo(option.top), reason: 'варианты внизу');
+
+      // ДОРАБОТКА FIX-1: вопрос — КРУПНО, стилем вопроса карточки, и стоит ОДНИМ БЛОКОМ с пузырём, а не серой
+      // строкой у верхней кромки экрана. ЛОВИТ: возврат вопроса в строку задания (meta 13) и отрыв его от пузыря.
+      expect(tester.widget<Text>(find.byKey(const ValueKey('check-question'))).style, AppTextSession.question);
+      expect(reply.top - question.bottom, lessThan(32), reason: 'вопрос прямо над пузырём, а не через всю ленту');
+      expect(question.top, greaterThan(200), reason: 'блок стоит у пузыря, а не у верхней кромки');
     });
 
     // ПРАВИЛО: наряд FIX-1 §1 — вопрос и варианты принадлежат обмену ЭТОЙ карточки, а не соседнему.

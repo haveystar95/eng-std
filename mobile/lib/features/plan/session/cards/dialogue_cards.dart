@@ -52,8 +52,11 @@ TextRange? _keyIn(String text, String? key) {
 
 /// UNDERSTAND THE PARTNER (33-1): the partner's line sounds once when the card opens; its bubble holds a wave, the
 /// text is closed; four paraphrases in the native language (template 30-9). Correct — the text opens in the bubble,
-/// auto-advance after 600 ms; wrong — an outline on the chosen one, sage on the correct one, «Next». The task line is
-/// «Answer the question» (SESSION-2a §5), the server's `question_native` stands under it: the options answer it.
+/// auto-advance after 600 ms; wrong — an outline on the chosen one, sage on the correct one, «Next».
+///
+/// The server's `question_native` is the QUESTION OF THE CARD and stands where the thing it asks about is — right
+/// above the closed bubble, in the card's question type, with «Answer the question» small over it
+/// ([SessionCheckQuestion], FIX-1 доработка). The screen has no task line of its own any more.
 class DialoguePartnerCard extends StatefulWidget {
   const DialoguePartnerCard({super.key, required this.env, required this.payload});
 
@@ -96,11 +99,15 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
     return CardLayout(
       feed: true,
       bodyGap: 16,
-      task: SessionTask(AppLocalizations.of(context).planSessionTaskAnswerQuestion, companion: p.questionNative),
+      // THE QUESTION STANDS WITH THE BUBBLE IT ASKS ABOUT (FIX-1 доработка) — see [SessionCheckQuestion]; the grey
+      // task line at the top edge of the screen is gone from this card.
+      task: null,
       above: _feed(env),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          SessionCheckQuestion(task: AppLocalizations.of(context).planSessionTaskAnswerQuestion, question: p.questionNative),
+          const SizedBox(height: 12),
           SessionPartnerRow(
             bubble: ValueListenableBuilder<Object?>(
               valueListenable: env.voice.playing,
@@ -140,8 +147,9 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
 ///
 /// AN `ask` (33-5) IS THE WHOLE EXCHANGE ON ONE CARD (work order SESSION-2b §2, contract BACK-TAILS-1 §1.5): after the
 /// pass the partner's reply appears and sounds with its TEXT CLOSED — a wave and «listen» 44 — and the card asks the
-/// check the payload carries (`question_native`, four options, `correct`): the task line becomes «Answer the question»
-/// and the options stand in the dock. A choice opens the reply's text in the same bubble and marks the right option;
+/// check the payload carries (`question_native`, four options, `correct`): the question stands over the closed reply
+/// in the card's question type and the options in the dock, and the screen's own task line steps aside for it
+/// (FIX-1 доработка). A choice opens the reply's text in the same bubble and marks the right option;
 /// correct — away by itself, wrong — «Next», as in every other check. The choice is graded on the phone and sent
 /// nowhere: the card's own result is the voice one, already recorded. A card without the check (the day could not
 /// build it) opens the text at once, as before.
@@ -353,14 +361,15 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
         ? _closedReply(p.partnerLine!)
         : _partnerRow(env, p.partnerLine!, playKey: _ask ? _replyKey : 'partner-line');
     final rows = _ask
-        ? [own, if (_reply && partner != null) SessionAppear(child: partner)]
+        ? [own, if (_reply && partner != null) SessionAppear(child: _checking ? _withQuestion(l, partner) : partner)]
         : [?partner, own];
     return CardLayout(
       feed: true,
       bodyGap: 16,
       fadeStop: _mode == DialogueMode.chips ? 0.34 : 0.30,
+      // The check's question is not a line at the top of the screen: it stands with the closed reply ([_withQuestion]).
       task: _checking
-          ? SessionTask(l.planSessionTaskAnswerQuestion, companion: _check!.questionNative)
+          ? null
           : SessionTask(switch (_mode) {
               _ when _ask => l.planSessionTaskSayLine,
               DialogueMode.chips => l.planSessionTaskCollectAnswer,
@@ -412,6 +421,17 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
         return SessionBubble(own: true, translation: slot.native, child: _frame(style, slot: slot.target, look: SlotLook.filled));
     }
   }
+
+  /// THE CHECK AS ONE BLOCK (33-5, FIX-1 доработка): the task line, the question in the card's own question type,
+  /// and right under them the reply the question is about — closed while it is being asked, open after the choice.
+  Widget _withQuestion(AppLocalizations l, Widget reply) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      SessionCheckQuestion(task: l.planSessionTaskAnswerQuestion, question: _check!.questionNative),
+      const SizedBox(height: 12),
+      reply,
+    ],
+  );
 
   /// The partner's reply with its text CLOSED (33-5): a wave in the bubble and «listen» 44 beside it — the learner
   /// answers the check by ear.
