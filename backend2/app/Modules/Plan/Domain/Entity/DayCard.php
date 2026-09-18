@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\Exception\CardAlreadyAnswered;
+use App\Modules\Plan\Domain\Exception\CardChoiceNotAllowed;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
 use App\Modules\Plan\Domain\ValueObject\CardSource;
@@ -99,19 +100,28 @@ final class DayCard
      * listening has no next day to return to. Any other skip, a walkthrough, a judged card given up on: an answer,
      * and nothing more.
      *
+     * A card that CARRIES a choice beside its own answer (`dialogue_ask`, наряд BACK-TAILS-1, доработка §1) takes it
+     * as `$choice` — the id of the option chosen. The two halves are answered together and read apart: the result is
+     * the voice's and is written as it came, and the lapse is the choice's ({@see CardKind::lapses()}). The choice is
+     * kept with the rest of what the attempt left, under `response.choice`. A choice on a card that cannot take one —
+     * another kind, a `dialogue_ask` dealt without its check, an option the card does not offer — is refused
+     * ({@see CardChoiceNotAllowed}): a lapse decided on an option nobody can name would deal a copy and return an
+     * exchange over nothing.
+     *
      * @param  array<string, mixed>|null  $response
      */
-    public function answer(CardResult $result, int $attempts, ?array $response, DateTimeImmutable $now): bool
+    public function answer(CardResult $result, int $attempts, ?array $response, DateTimeImmutable $now, ?string $choice = null): bool
     {
         if ($this->result !== null) {
             throw CardAlreadyAnswered::withId($this->id);
         }
+        $choiceRight = $choice === null ? null : $this->choiceIsRight($choice);
         $this->result = $result;
         $this->attempts = max(1, $attempts);
         $this->answeredAt = $now;
-        $this->response = $response;
+        $this->response = $choice === null ? $response : [...$response ?? [], 'choice' => $choice];
 
-        if (! $this->kind->lapses($result, $this->attempts, ($response['no_mic'] ?? false) === true)) {
+        if (! $this->kind->lapses($result, $this->attempts, ($response['no_mic'] ?? false) === true, $choiceRight)) {
             return false;
         }
         if ($this->retryOf === null && $this->kind->requeues()) {
@@ -120,6 +130,25 @@ final class DayCard
         $this->returns = $this->unitKind->returns() && $this->source === CardSource::Today;
 
         return false;
+    }
+
+    /**
+     * Is the option the client named the right one? Throws when the card cannot take a choice at all, when it was
+     * dealt without its check, or when no option of its own goes by that id.
+     */
+    private function choiceIsRight(string $choice): bool
+    {
+        $options = is_array($this->payload['options'] ?? null) ? $this->payload['options'] : [];
+        $correct = $this->payload['correct'] ?? null;
+        $ids = array_values(array_filter(array_map(
+            static fn (mixed $option): mixed => is_array($option) ? $option['id'] ?? null : null,
+            $options,
+        ), is_string(...)));
+        if (! $this->kind->hasChoice() || ! is_string($correct) || ! in_array($choice, $ids, true)) {
+            throw CardChoiceNotAllowed::of($this->kind, $choice);
+        }
+
+        return $choice === $correct;
     }
 
     /**

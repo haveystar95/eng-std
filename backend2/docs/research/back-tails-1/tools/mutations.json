@@ -78,8 +78,8 @@
     "rule": "варианты — только числа и количества (§1.3)",
     "defect": "количеством считается любое значение времени",
     "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
-    "find": "        return array_values(array_filter($this->runs($text), static fn (array $run): bool => $run['amount']));",
-    "replace": "        return $this->runs($text);",
+    "find": "            if ($run['amount']) {",
+    "replace": "            if (true) {",
     "tests": [
       {
         "path": "tests/Unit/Plan/Session/ListenStageTest.php",
@@ -267,6 +267,90 @@
       {
         "path": "tests/Unit/Plan/PlanShorteningTest.php",
         "filter": "shortens the plan to the days left"
+      }
+    ]
+  },
+  {
+    "name": "19. неверный выбор на ask-обмене остаётся без последствий",
+    "rule": "неверный выбор на ask-обмене возвращает обмен (доработка §1)",
+    "defect": "выбор не считается промахом",
+    "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+    "find": "            $this->hasChoice() => $choiceRight === false,",
+    "replace": "            $this->hasChoice() => false,",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/SessionAnswerTest.php",
+        "filter": "returns the exchange on a wrong choice"
+      }
+    ]
+  },
+  {
+    "name": "20. выбор на ask-обмене портит голосовой итог",
+    "rule": "голосовой итог карточки не трогается выбором (доработка §1)",
+    "defect": "промахом считается и голос",
+    "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+    "find": "            $this->hasChoice() => $choiceRight === false,",
+    "replace": "            $this->hasChoice() => $choiceRight === false || $result === CardResult::Skipped,",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/SessionAnswerTest.php",
+        "filter": "returns the exchange on a wrong choice"
+      }
+    ]
+  },
+  {
+    "name": "21. выбор принимается на любой карточке и по любому id",
+    "rule": "choice не принимается там, где его нечем прочесть (доработка §1)",
+    "defect": "неизвестный вариант молча читается как неверный",
+    "file": "app/Modules/Plan/Domain/Entity/DayCard.php",
+    "find": "        if (! $this->kind->hasChoice() || ! is_string($correct) || ! in_array($choice, $ids, true)) {\n            throw CardChoiceNotAllowed::of($this->kind, $choice);\n        }",
+    "replace": "        if (false) {\n            throw CardChoiceNotAllowed::of($this->kind, $choice);\n        }",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/SessionAnswerTest.php",
+        "filter": "refuses a choice the card cannot read"
+      }
+    ]
+  },
+  {
+    "name": "22. количество снова голое существительное",
+    "rule": "вариант «Поймай число» — количество в форме реплики, с предлогом и определением (доработка §2)",
+    "defect": "прогон не растёт влево",
+    "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
+    "find": "                $out[] = $this->withPrefix($text, $run);",
+    "replace": "                $out[] = $run;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "offers an amount in the form"
+      }
+    ]
+  },
+  {
+    "name": "23. количество растёт влево по любому слову",
+    "rule": "растёт только по словам, которые его несут, и только вплотную (доработка §2)",
+    "defect": "проверка слова-носителя снята",
+    "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
+    "find": "                || preg_match($this->amountPrefix, LanguagePack::normal($word)) !== 1) {",
+    "replace": "                || false) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "offers an amount in the form"
+      }
+    ]
+  },
+  {
+    "name": "24. предлог удлиняет значение и делает его «самым длинным»",
+    "rule": "длина значения — длина самого количества (доработка §2)",
+    "defect": "слова-носители считаются в длину",
+    "file": "app/Modules/Plan/Domain/Assembly/NumberValues.php",
+    "find": "        return [...$run, 'start' => $start, 'text' => mb_substr($text, $start, $run['end'] - $start)];",
+    "replace": "        $grown = mb_substr($text, $start, $run['end'] - $start);\n\n        return [...$run, 'start' => $start, 'text' => $grown, 'words' => Words::count($grown)];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/ListenStageTest.php",
+        "filter": "offers an amount in the form"
       }
     ]
   }

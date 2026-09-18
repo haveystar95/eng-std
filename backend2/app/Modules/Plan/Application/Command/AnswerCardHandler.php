@@ -68,7 +68,7 @@ final readonly class AnswerCardHandler
                 throw CardResultNotAllowed::of($card->kind(), $command->result);
             }
 
-            $requeue = $card->answer($command->result, $command->attempts, $command->response, $now);
+            $requeue = $card->answer($command->result, $command->attempts, $command->response, $now, $command->choice);
             $this->cards->save($card);
 
             $dealt = $this->cards->forDay($day->id());

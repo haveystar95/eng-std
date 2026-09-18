@@ -83,6 +83,7 @@ final class PlanDayController
             attempts: (int) $data['attempts'],
             actorId: $actor,
             response: $request->cardResponse(),
+            choice: $request->cardChoice(),
         ));
 
         $views = $this->cardViews->forCards(

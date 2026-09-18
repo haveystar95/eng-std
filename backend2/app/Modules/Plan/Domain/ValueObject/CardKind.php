@@ -92,13 +92,23 @@ enum CardKind: string
     }
 
     /**
+     * A card that asks a CHOICE beside what it is mainly for: `dialogue_ask`, which carries the exchange's check since
+     * наряд BACK-TAILS-1 §1.5. Its own result is the voice's; the choice is judged apart and is the only thing on it
+     * that can lapse ({@see lapses()}).
+     */
+    public function hasChoice(): bool
+    {
+        return $this === self::DialogueAsk;
+    }
+
+    /**
      * A lapse is dealt once more at the end of its stage — except in «Слушаю и отвечаю»: its review (34-3) shows every
      * answer, so a copy after it would test what the learner has just been shown (SESSION-1a, хвост). There the first
-     * failure is the only one.
+     * failure is the only one. A card with a choice comes back like the choice card it swallowed.
      */
     public function requeues(): bool
     {
-        return ($this->isChoice() && $this->stage() !== Stage::Listen) || $this->lapsesOnSkip();
+        return ($this->isChoice() && $this->stage() !== Stage::Listen) || $this->lapsesOnSkip() || $this->hasChoice();
     }
 
     /**
@@ -115,10 +125,19 @@ enum CardKind: string
      * wrong; a phrase said aloud given up on after two attempts ({@see SPOKEN_LAPSE_ATTEMPTS}) — not a skip before the
      * second attempt, and not a skip for want of a microphone (`no_mic`): the learner's will and a dead microphone
      * prove nothing (DECISIONS п. 327). Nothing else is.
+     *
+     * On a card that CARRIES a choice ({@see hasChoice()}) the lapse is the choice and nothing else: `dialogue_ask`
+     * swallowed the check card of its exchange (наряд BACK-TAILS-1 §1.5), and the consequence the check card had —
+     * a copy, then the exchange back tomorrow — went with it. Its voice result stays what the voice always was: two
+     * attempts without coverage are a skip, and a skip is no lapse. A card dealt without its check, or answered
+     * without a choice, lapses over nothing.
+     *
+     * @param  bool|null  $choiceRight  whether the option chosen is the right one; null when none was sent
      */
-    public function lapses(CardResult $result, int $attempts, bool $noMic): bool
+    public function lapses(CardResult $result, int $attempts, bool $noMic, ?bool $choiceRight = null): bool
     {
         return match (true) {
+            $this->hasChoice() => $choiceRight === false,
             $this->isChoice() => $result === CardResult::Failed,
             $this->lapsesOnSkip() => $result === CardResult::Skipped && $attempts >= self::SPOKEN_LAPSE_ATTEMPTS && ! $noMic,
             default => false,

@@ -435,7 +435,8 @@ it('asks the number of the visit — the line, its place in the text, the value 
         ->and(array_unique(array_map(mb_strtolower(...), $texts)))->toHaveCount(3)
         // Наряд BACK-TAILS-1 §1.3, кадр 34-7: «варианты — числа и количества, разбирать остальное не нужно». Every
         // option says a numeral or a counted unit; a date on the calendar and an adverb of time are not values to catch.
-        ->and($texts)->toEqualCanonicalizing(['Через неделю', 'Три дня назад', 'Неделе'])
+        // …and every option is the amount as its line says it (доработка §2): «На этой неделе», never «Неделе».
+        ->and($texts)->toEqualCanonicalizing(['Через неделю', 'Три дня назад', 'На этой неделе'])
         ->and($texts)->not->toContain('Сегодня')
         ->and($texts)->not->toContain('Раньше');
 });
@@ -520,6 +521,28 @@ it('offers no date and no adverb of time, and keeps an amount that has no numera
     expect($texts)->not->toContain('Сегодня утром')
         ->and($texts)->not->toContain('Накануне')
         ->and($texts)->toContain('Через неделю');
+});
+
+// Canon (наряд BACK-TAILS-1, доработка §2): «вариант — количество в той форме, в какой оно стоит в реплике, вместе с
+// предлогом и определением («на этой неделе», «через неделю», «два дня»), не голое существительное». Catches the bare
+// noun the first pass offered — «Неделе» out of «на этой неделе», a form nobody says, put on a card as an answer — and
+// catches the growth run wild: a word that does not carry the amount, or one taken across a comma or from the right.
+it('offers an amount in the form the line says it — with the preposition and the determiner before it', function () {
+    $ru = NumberValues::of(lessonPacks()->for('ru'));
+
+    expect(array_column($ru?->values('Началось сегодня или раньше на этой неделе?') ?? [], 'text'))->toBe(['На этой неделе'])
+        ->and(array_column($ru?->values('Только если через неделю ещё будет болеть.') ?? [], 'text'))->toBe(['Через неделю'])
+        ->and(array_column($ru?->values('Болит уже два дня.') ?? [], 'text'))->toBe(['Два дня'])
+        ->and($ru?->value('Приходите в следующий понедельник на два часа.'))->toBe(['text' => 'На два часа', 'number' => true])
+        // Not across a mark, and never to the right: «и» is no carrier, and «после» stands after the amount here.
+        ->and(array_column($ru?->values('Подождите, два дня и не больше.') ?? [], 'text'))->toBe(['Два дня'])
+        ->and(array_column($ru?->values('Три дня после приёма.') ?? [], 'text'))->toBe(['Три дня']);
+
+    // The length a value is picked by stays the amount's own: «на этой неделе» is three words on the page and one
+    // amount word, so the two-word «три дня» is still the longest value of the line.
+    expect($ru?->value('На этой неделе, а до этого три дня подряд.'))->toBe(['text' => 'Три дня', 'number' => true])
+        ->and(array_column($ru?->values('На этой неделе, а до этого три дня подряд.') ?? [], 'text'))
+        ->toBe(['На этой неделе', 'Три дня']);
 });
 
 it('reads a value as a run of number and time words standing together', function () {

@@ -14,6 +14,12 @@ use Illuminate\Validation\Rule;
  * and whether there was no microphone. Only these keys are kept — anything else the client sends is dropped, not
  * stored. An empty string arrives as null (the global `ConvertEmptyStringsToNull`), so every text is nullable: silence
  * is a response too.
+ *
+ * Beside them, and NOT inside `response`, one more field: `choice` — the id of the option chosen on a card that
+ * carries a check of its own (`dialogue_ask`, наряд BACK-TAILS-1, доработка §1). It stands next to `result` because it
+ * has the consequences `result` has — a wrong one deals a copy and returns the exchange — while `response` is what the
+ * attempt left for the eye. Whether this card may take one at all is the card's business, not the shape's
+ * ({@see \App\Modules\Plan\Domain\Entity\DayCard::answer()}).
  */
 final class AnswerCardRequest extends FormRequest
 {
@@ -38,6 +44,7 @@ final class AnswerCardRequest extends FormRequest
         return [
             'result' => ['required', Rule::enum(CardResult::class)],
             'attempts' => ['required', 'integer', 'min:1', 'max:20'],
+            'choice' => ['sometimes', 'nullable', 'string', 'regex:/^o\d{1,2}$/'],
             'response' => ['sometimes', 'nullable', 'array'],
             'response.heard' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'response.hinted_at' => ['sometimes', 'nullable', 'string', 'max:40'],
@@ -46,6 +53,14 @@ final class AnswerCardRequest extends FormRequest
             'response.mode' => ['sometimes', 'nullable', Rule::in(self::MODES)],
             'response.no_mic' => ['sometimes', 'nullable', 'boolean'],
         ];
+    }
+
+    /** The id of the option chosen, as the client named it; null when none was sent. */
+    public function cardChoice(): ?string
+    {
+        $choice = $this->validated('choice');
+
+        return is_string($choice) && $choice !== '' ? $choice : null;
     }
 
     /**

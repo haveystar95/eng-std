@@ -82,12 +82,35 @@ function s1aDeal(array $day, CardKind $kind, UnitKind $unit, string $ref, int $p
  * @param  array{token: string, id: string, dayId: string, sceneId: string}  $day
  * @param  array<string, mixed>|null  $response
  */
-function s1aAnswer(object $ctx, array $day, string $cardId, string $result, int $attempts = 1, ?array $response = null): TestResponse
+function s1aAnswer(object $ctx, array $day, string $cardId, string $result, int $attempts = 1, ?array $response = null, ?string $choice = null): TestResponse
 {
     return $ctx->withHeader('Authorization', "Bearer {$day['token']}")->postJson(
         "/api/v1/plans/{$day['id']}/days/1/cards/{$cardId}/answer",
-        ['result' => $result, 'attempts' => $attempts] + ($response === null ? [] : ['response' => $response]),
+        ['result' => $result, 'attempts' => $attempts]
+            + ($response === null ? [] : ['response' => $response])
+            + ($choice === null ? [] : ['choice' => $choice]),
     );
+}
+
+/**
+ * The payload of a `dialogue_ask` as the dealer writes it since наряд BACK-TAILS-1 §1.5: the voice half and the
+ * exchange's check on the same card, the right option `o2`.
+ *
+ * @return array<string, mixed>
+ */
+function s1aAskCard(int $step): array
+{
+    return [
+        'exchange' => ['ref' => "x{$step}", 'step' => $step, 'kind' => 'ask'],
+        'partner_line' => ['ref' => "x{$step}", 'text_target' => 'Only if it still hurts.', 'text_native' => 'Только если будет болеть.', 'audio' => Audio::of("x{$step}")],
+        'own_line' => ['ref' => "x{$step}b", 'text_target' => 'Do we need an X-ray?', 'text_native' => 'Нам нужно сделать рентген?', 'frame_ref' => 'p6', 'filler_index' => 0, 'key' => 'Do we need', 'audio' => Audio::of("x{$step}b")],
+        'frame' => ['ref' => 'p6', 'kind' => 'ask', 'frame_target' => 'Do we need ___?', 'frame_native' => 'Нам нужно ___?', 'frame_pronunciation_native' => 'ду ви нид ___', 'slot' => null],
+        'modes' => ['chips' => [], 'voice_hint' => 'Do we need an X-ray?', 'voice_blind' => 'Do we need ___?'],
+        'coverage_min' => 0.7,
+        'question_native' => 'Когда нужно прийти снова?',
+        'options' => [['id' => 'o1', 'text' => 'Завтра утром'], ['id' => 'o2', 'text' => 'Если боль не пройдёт'], ['id' => 'o3', 'text' => 'Через год'], ['id' => 'o4', 'text' => 'Верх или низ спины']],
+        'correct' => 'o2',
+    ];
 }
 
 /** @return array<string, mixed> a choice of four, the right one `o3` */
@@ -222,6 +245,77 @@ it('keeps what the answer left — only the keys of the contract — and gives i
     s1aAnswer($this, $day, $third->id()->value, 'passed', 1, ['mode' => 'shouting'])->assertStatus(422)->assertJsonValidationErrors(['response.mode']);
     s1aAnswer($this, $day, $third->id()->value, 'passed', 1, ['filler_index' => 12])->assertStatus(422)->assertJsonValidationErrors(['response.filler_index']);
     s1aAnswer($this, $day, $third->id()->value, 'passed', 1, ['heard' => str_repeat('a', 1001)])->assertStatus(422)->assertJsonValidationErrors(['response.heard']);
+});
+
+// Canon (наряд BACK-TAILS-1, доработка §1): «неверный выбор на ask-обмене возвращает обмен, голосовой итог не трогает».
+// The check card of an `ask` was swallowed by `dialogue_ask` (§1.5), and with it went its consequence — a copy at the
+// end of the stage, and on the copy's failure the exchange back tomorrow. Catches a wrong choice left without
+// consequences (the trainer the ask lost when its check card was removed), a choice counted as the voice's failure
+// (the voice never fails — two attempts without coverage are a skip), and a right choice that deals a copy anyway.
+it('returns the exchange on a wrong choice of an ask card and leaves its voice result alone', function () {
+    $day = s1aDay($this);
+    $ask = s1aDeal($day, CardKind::DialogueAsk, UnitKind::Exchange, 'x7', 1, s1aAskCard(7));
+
+    // Said aloud and passed; the option chosen is wrong — the voice result stands, the card comes back once.
+    $first = s1aAnswer($this, $day, $ask->id()->value, 'passed', 2, ['heard' => 'do we need an x-ray'], 'o3')
+        ->assertOk()->json('data');
+
+    expect($first['card']['result'])->toBe('passed')
+        ->and($first['card']['attempts'])->toBe(2)
+        ->and($first['card']['response']['choice'])->toBe('o3')
+        ->and($first['card']['response']['heard'])->toBe('do we need an x-ray')
+        ->and($first['requeued'])->not->toBeNull()
+        ->and($first['requeued']['kind'])->toBe('dialogue_ask')
+        ->and($first['requeued']['retry_of'])->toBe($ask->id()->value)
+        ->and($first['requeued']['payload']['correct'])->toBe('o2')
+        // The copy is reshuffled, and the right option keeps its id.
+        ->and(array_column($first['requeued']['payload']['options'], 'text', 'id')['o2'])->toBe('Если боль не пройдёт')
+        ->and($first['unit']['returns_tomorrow'])->toBeFalse();
+
+    // The copy answered with a wrong choice too: the exchange comes back tomorrow.
+    $second = s1aAnswer($this, $day, $first['requeued']['id'], 'skipped', 2, null, 'o1')->assertOk()->json('data');
+
+    expect($second['card']['result'])->toBe('skipped')
+        ->and($second['requeued'])->toBeNull()
+        ->and($second['unit']['returns_tomorrow'])->toBeTrue()
+        ->and($second['unit']['returns_day'])->toBe(2);
+
+    // A RIGHT choice is no lapse, whatever the voice did: no copy, nothing returned.
+    // Position 3: the copy of the card above already took 2.
+    $other = s1aDeal($day, CardKind::DialogueAsk, UnitKind::Exchange, 'x8', 3, s1aAskCard(8));
+    $right = s1aAnswer($this, $day, $other->id()->value, 'skipped', 2, null, 'o2')->assertOk()->json('data');
+
+    expect($right['requeued'])->toBeNull()
+        ->and($right['unit']['returns_tomorrow'])->toBeFalse()
+        ->and(DB::table('day_cards')->where('unit_ref', 'x8')->where('returns', true)->count())->toBe(0);
+});
+
+// Canon (доработка §1): «результат выбора отсутствует, если проверки у карточки нет» — and a choice nobody can read is
+// refused before the card is touched. Catches a lapse decided on an option that is not the card's, a choice taken on a
+// kind that asks none, and one taken on an ask dealt without its check (the three keys come together or not at all).
+it('refuses a choice the card cannot read, and leaves the card unanswered', function () {
+    $day = s1aDay($this);
+    $noCheck = s1aAskCard(7);
+    unset($noCheck['question_native'], $noCheck['options'], $noCheck['correct']);
+    $refused = [
+        [s1aDeal($day, CardKind::DialogueAsk, UnitKind::Exchange, 'x7', 1, s1aAskCard(7)), 'o9'],
+        [s1aDeal($day, CardKind::DialogueAsk, UnitKind::Exchange, 'x8', 2, $noCheck), 'o1'],
+        [s1aDeal($day, CardKind::DialogueAnswer, UnitKind::Exchange, 'x1', 3, s1aAskCard(1)), 'o2'],
+        [s1aDeal($day, CardKind::WordChoose, UnitKind::Word, 'v1', 4, s1aChoice('v1')), 'o3'],
+    ];
+
+    foreach ($refused as [$card, $choice]) {
+        s1aAnswer($this, $day, $card->id()->value, 'skipped', 1, null, $choice)
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'plan_card_choice_not_allowed')
+            ->assertJsonPath('meta.kind', $card->kind()->value)
+            ->assertJsonPath('meta.choice', $choice);
+    }
+    // A choice of no shape at all is refused by the request, before anything is looked up.
+    s1aAnswer($this, $day, $refused[0][0]->id()->value, 'skipped', 1, null, 'третий')
+        ->assertStatus(422)->assertJsonValidationErrors(['choice']);
+
+    expect(DB::table('day_cards')->where('day_id', $day['dayId'])->whereNotNull('result')->count())->toBe(0);
 });
 
 // Canon (разд. 3; D-06): «неверно первый раз → failed и копия в конец этапа (requeued, retry_of); второй раз → returns».

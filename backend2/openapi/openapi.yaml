@@ -2182,6 +2182,18 @@ paths:
               properties:
                 result: { type: string, enum: [passed, hinted, failed, skipped] }
                 attempts: { type: integer, minimum: 1, maximum: 20 }
+                choice:
+                  type: [string, 'null']
+                  pattern: '^o\d{1,2}$'
+                  description: >-
+                    `id` выбранного варианта на карточке, которая несёт проверку рядом со своим
+                    заданием — сейчас только `dialogue_ask` (наряд BACK-TAILS-1 §1.5). Стоит рядом с
+                    `result`, а не внутри `response`, потому что у него ТЕ ЖЕ последствия, что у
+                    `result` выбора: неверный — копия карточки в конец этапа, на копии — возврат
+                    обмена на следующий день; голосовой итог при этом не меняется. Не отправляется,
+                    если у карточки проверки нет (три ключа проверки приходят вместе или не приходят
+                    вовсе) или вид её не несёт — иначе 422 `plan_card_choice_not_allowed`
+                    (`meta.kind`, `meta.choice`). Сервер возвращает его в `card.response.choice`.
                 response:
                   oneOf:
                     - $ref: '#/components/schemas/PlanCardAnswerResponse'
@@ -2205,7 +2217,8 @@ paths:
         '422':
           description: >-
             `plan_card_result_not_allowed` — the kind does not take this result (`meta.kind`,
-            `meta.result`, RFC 7807); or the body itself is invalid (Laravel shape).
+            `meta.result`, RFC 7807); `plan_card_choice_not_allowed` — the card has no such option to
+            choose (`meta.kind`, `meta.choice`); or the body itself is invalid (Laravel shape).
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
@@ -3498,6 +3511,7 @@ components:
         filler_index: { type: [integer, 'null'], minimum: 0, maximum: 9, description: 'Какое наполнение каркаса выбрано чипом' }
         mode: { type: [string, 'null'], enum: [chips, tiles, voice_hint, voice_blind, rounds, null], description: 'В каком режиме карточка пройдена — чипы, плитки, голос по подсказке, вслепую или серией раундов (хвост SESSION-1b: фраза вслух по разным наполнениям в одной карточке)' }
         no_mic: { type: [boolean, 'null'], description: 'Микрофона не было — карточка пройдена без голоса' }
+        choice: { type: [string, 'null'], description: '`id` варианта, выбранного на карточке с проверкой (`dialogue_ask`) — сервер кладёт сюда то, что пришло в `choice` тела запроса' }
 
     PlanCardResponse:
       type: object

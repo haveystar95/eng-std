@@ -66,8 +66,10 @@ return [
     // Time words of the learner's language, for «is this answer a number or a time» — a native-side key.
     'time_pattern' => null,
 
-    // The units an amount is counted in — a native-side key: what «Поймай число» may offer as an option.
+    // The units an amount is counted in, and what carries one — native-side keys: what «Поймай число» may offer as
+    // an option, and in what form.
     'amount_pattern' => null,
+    'amount_prefix' => null,
 
     // The prompt's STOP LIST (numbers, family, time words, colours, be / have / go) and plain words a learner
     // knows at any level of the plan: not vocabulary.

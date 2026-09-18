@@ -25,6 +25,7 @@ return [
     'number_pattern' => null,
     'time_pattern' => null,
     'amount_pattern' => null,
+    'amount_prefix' => null,
     'everyday_words' => null,
     'ordinary_heads' => null,
     'closers' => null,

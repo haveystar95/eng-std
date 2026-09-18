@@ -91,7 +91,7 @@ it('returns a word, a frame and an exchange — never the day', function () {
 // Canon (SESSION-1d, DECISIONS п. 327): «провал произнесения = skipped с attempts ≥ 2 и без no_mic — только phrase_repeat и
 // phrase_other_slot; «Пропустить» до второй попытки и отказ микрофона — без последствий». Catches any skip counted as a
 // lapse, a lapse without the second attempt, a dead microphone counted against the learner, and the rule spread to the
-// other voice cards.
+// other voice cards. Наряд BACK-TAILS-1, доработка §1: on `dialogue_ask` the lapse is the choice and nothing else.
 it('counts a lapse: a wrong choice, or a phrase said aloud given up on after two attempts with a microphone — nothing else', function () {
     foreach ([CardKind::PhraseRepeat, CardKind::PhraseOtherSlot] as $kind) {
         expect($kind->lapses(CardResult::Skipped, 2, false))->toBeTrue($kind->value)
@@ -104,10 +104,21 @@ it('counts a lapse: a wrong choice, or a phrase said aloud given up on after two
             // The voice still never writes `failed` (422): a lapse of the voice is a skip.
             ->and($kind->allows(CardResult::Failed))->toBeFalse($kind->value);
     }
-    foreach ([CardKind::WordRepeat, CardKind::DialogueAnswer, CardKind::DialogueAsk, CardKind::SpeakEcho, CardKind::PhraseOwnSlot, CardKind::SpeakAnswer] as $kind) {
+    foreach ([CardKind::WordRepeat, CardKind::DialogueAnswer, CardKind::SpeakEcho, CardKind::PhraseOwnSlot, CardKind::SpeakAnswer, CardKind::SpeakRetell] as $kind) {
         expect($kind->lapses(CardResult::Skipped, 2, false))->toBeFalse($kind->value)
             ->and($kind->requeues())->toBeFalse($kind->value);
     }
+    // `dialogue_ask` carries the check of its exchange (наряд BACK-TAILS-1 §1.5), so the ONE thing that lapses on it is
+    // the CHOICE — never its voice, whatever the voice did, and never a choice that was right or was not sent.
+    expect(CardKind::DialogueAsk->lapses(CardResult::Skipped, 2, false))->toBeFalse()
+        ->and(CardKind::DialogueAsk->lapses(CardResult::Passed, 1, false, false))->toBeTrue()
+        ->and(CardKind::DialogueAsk->lapses(CardResult::Skipped, 2, false, false))->toBeTrue()
+        ->and(CardKind::DialogueAsk->lapses(CardResult::Skipped, 2, false, true))->toBeFalse()
+        ->and(CardKind::DialogueAsk->requeues())->toBeTrue()
+        ->and(CardKind::DialogueAsk->hasChoice())->toBeTrue()
+        ->and(CardKind::DialogueAsk->allows(CardResult::Failed))->toBeFalse()
+        // No other kind carries one: a choice sent to them is refused, not judged.
+        ->and(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->hasChoice())))->toBe([CardKind::DialogueAsk]);
     expect(CardKind::WordChoose->lapses(CardResult::Failed, 1, false))->toBeTrue()
         ->and(CardKind::WordChoose->lapses(CardResult::Skipped, 2, false))->toBeFalse()
         ->and(CardKind::PhraseSlot->lapses(CardResult::Failed, 1, true))->toBeTrue()

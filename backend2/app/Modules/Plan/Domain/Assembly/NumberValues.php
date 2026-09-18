@@ -24,6 +24,12 @@ use App\Modules\Plan\Domain\Service\Words;
  * «через неделю» and «два дня» are values to catch and «сегодня», «завтра», «раньше» are not. The reading of the line
  * itself ({@see says()}, {@see runs()}) is untouched: a line is found by any number OR time it says, and the span
  * marked in it is the first such run — what the option asks about is a narrower thing than what the ear hears.
+ *
+ * AND AN OPTION IS THE AMOUNT AS THE LINE SAYS IT (доработка наряда): with the preposition and the determiner that
+ * carry it — «на этой неделе», «через неделю», «два дня» — never the bare noun. A run of amount words alone gave
+ * «Неделе» out of «на этой неделе»: a form nobody says, offered as an answer. The words that may stand before a value
+ * and belong to it are the native pack's `amount_prefix`; they are read only to the LEFT, and only while they stand
+ * next to each other with nothing but spaces between.
  */
 final readonly class NumberValues
 {
@@ -34,6 +40,7 @@ final readonly class NumberValues
         private ?string $numberPattern,
         private ?string $timePattern,
         private ?string $amountPattern,
+        private ?string $amountPrefix,
     ) {}
 
     /**
@@ -45,8 +52,9 @@ final readonly class NumberValues
         $number = $pack->has('number_pattern') ? $pack->pattern('number_pattern') : null;
         $time = $pack->has('time_pattern') ? $pack->pattern('time_pattern') : null;
         $amount = $pack->has('amount_pattern') ? $pack->pattern('amount_pattern') : null;
+        $prefix = $pack->has('amount_prefix') ? $pack->pattern('amount_prefix') : null;
 
-        return $number === null && $time === null ? null : new self($number, $time, $amount);
+        return $number === null && $time === null ? null : new self($number, $time, $amount, $prefix);
     }
 
     /** Does the text say a number or a time anywhere? */
@@ -142,13 +150,47 @@ final readonly class NumberValues
     }
 
     /**
-     * The runs that say an amount — a numeral or a counted unit.
+     * The runs that say an amount — a numeral or a counted unit — each grown to the left over the words that carry it
+     * ({@see withPrefix()}). The length in `words` stays the amount's own: which run is the LONGEST must not turn on
+     * how many prepositions stand before it.
      *
      * @return list<array{start: int, end: int, text: string, words: int, number: bool, amount: bool}>
      */
     private function amounts(string $text): array
     {
-        return array_values(array_filter($this->runs($text), static fn (array $run): bool => $run['amount']));
+        $out = [];
+        foreach ($this->runs($text) as $run) {
+            if ($run['amount']) {
+                $out[] = $this->withPrefix($text, $run);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The run with the words that carry it: every word right before it that the pack calls a prefix of an amount — a
+     * preposition, a determiner — taken while they stand one after another with nothing but spaces between. A pack
+     * without the key grows nothing: no other language's prepositions are borrowed.
+     *
+     * @param  array{start: int, end: int, text: string, words: int, number: bool, amount: bool}  $run
+     * @return array{start: int, end: int, text: string, words: int, number: bool, amount: bool}
+     */
+    private function withPrefix(string $text, array $run): array
+    {
+        if ($this->amountPrefix === null) {
+            return $run;
+        }
+        $start = $run['start'];
+        foreach (array_reverse(Words::spans($text)) as [$wordStart, $wordEnd, $word]) {
+            if ($wordEnd > $start || trim(mb_substr($text, $wordEnd, $start - $wordEnd)) !== ''
+                || preg_match($this->amountPrefix, LanguagePack::normal($word)) !== 1) {
+                continue;
+            }
+            $start = $wordStart;
+        }
+
+        return [...$run, 'start' => $start, 'text' => mb_substr($text, $start, $run['end'] - $start)];
     }
 
     private function isNumber(string $word): bool

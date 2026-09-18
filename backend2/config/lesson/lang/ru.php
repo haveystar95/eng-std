@@ -55,6 +55,11 @@ return [
     // `number_pattern`, these words are amounts without one. Parts of the day, weekdays and months are not here.
     'amount_pattern' => '/^(?:секунд\w*|минут\w*|час|часа|часов|часу|сутк\w*|суток|ден[ьи]|дня|дней|недел\w*|месяц\w*|год|года|году|годы|лет|раз|раза|градус\w*|процент\w*|метр\w*|килограмм\w*|грамм\w*|литр\w*|миллиграмм\w*|таблет\w*|капл[ьия]\w*)$/u',
 
+    // What carries an amount and is said WITH it — prepositions and determiners standing right before it. «Поймай
+    // число» offers a value in the form the line says it («на этой неделе», «через неделю»), never the bare noun
+    // («Неделе»), so the option grows to the left over these words. Read only to the left, and only next to the value.
+    'amount_prefix' => '/^(?:на|в|во|за|через|до|после|с|со|по|около|примерно|спустя|этой|этот|эту|эти|этим|этих|прошл\w*|следующ\w*|ближайш\w*|т[ое]й|кажд\w*)$/u',
+
     // Target-language keys: not written for Russian.
     'everyday_words' => null,
     'ordinary_heads' => null,
