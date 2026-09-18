@@ -4669,16 +4669,24 @@
     "description": "Сессия, окно · вставь наполнение (32-4): задание."
   },
   "planSessionTaskSayPhrase": "Скажи фразу вслух",
+  "planSessionTaskSayEachMeaning": "Скажи фразу с каждым значением",
+  "@planSessionTaskSayEachMeaning": {
+    "description": "Сессия, «Скажи целиком» (32-7): задание — фраза говорится с каждым значением окна по очереди (наряд FIX-1 §6)."
+  },
+  "planSessionOwnWordNow": "а теперь со своим словом",
+  "@planSessionOwnWordNow": {
+    "description": "Сессия, «Скажи целиком» (32-7): подпись под заданием в последнем круге — значение в окне своё (наряд FIX-1 §6)."
+  },
+  "planSessionStateReplay": "повтор",
+  "@planSessionStateReplay": {
+    "description": "Сессия в режиме повтора («Ещё раз» с итога дня): состояние этапа в списке на входе (наряд FIX-1 §5)."
+  },
   "@planSessionTaskSayPhrase": {
     "description": "Сессия, «Повтори вслух» (32-6): задание."
   },
   "planSessionTaskWhatAnswer": "Что ты ответишь?",
   "@planSessionTaskWhatAnswer": {
     "description": "Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′)."
-  },
-  "planSessionTaskSayOwn": "Выбери, что вставить, и скажи фразу целиком",
-  "@planSessionTaskSayOwn": {
-    "description": "Сессия, «Скажи целиком» (32-7) и своё окно (32-9): задание; значение выбирается плашкой, сказать нужно фразу целиком (наряд SESSION-2b §1)."
   },
   "planSessionBrowWord": "Слово",
   "@planSessionBrowWord": {
@@ -4707,10 +4715,6 @@
   "planSessionBrowAssembled": "Собрано",
   "@planSessionBrowAssembled": {
     "description": "Сессия, комбинация собрана (32-8): бровь."
-  },
-  "planSessionBrowOwnSlot": "Своё окно",
-  "@planSessionBrowOwnSlot": {
-    "description": "Сессия, своё окно (32-9): бровь."
   },
   "planSessionBrowPartnerAsks": "{role} · спрашивает",
   "@planSessionBrowPartnerAsks": {
@@ -4796,10 +4800,6 @@
   "planSessionNoMicAllow": "Разрешить",
   "@planSessionNoMicAllow": {
     "description": "Сессия, «нет разрешения · экран» (30-3): кнопка — спросить систему или открыть настройки."
-  },
-  "planSessionOwnChip": "своё…",
-  "@planSessionOwnChip": {
-    "description": "Сессия, своё окно (32-9): чип с микрофоном рядом с известными наполнениями."
   },
   "planSessionByMeaning": "по смыслу ✓",
   "@planSessionByMeaning": {
@@ -5077,10 +5077,6 @@
   "planSessionWhichNumber": "Какое число прозвучало?",
   "@planSessionWhichNumber": {
     "description": "Сессия, «Поймай число» (34-7): текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2a §5)."
-  },
-  "planSessionReplayNoGrade": "повтор без оценки",
-  "@planSessionReplayNoGrade": {
-    "description": "Сессия в режиме повтора («Ещё раз» с итога дня): подпись под заданием у свободных ответов — сказанное никуда не идёт (наряд SESSION-2b §4)."
   },
   "planSessionTaskAnswerOwnWords": "Ответь своими словами",
   "@planSessionTaskAnswerOwnWords": {

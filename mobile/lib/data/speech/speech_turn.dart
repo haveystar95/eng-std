@@ -22,15 +22,20 @@ import 'speech_recognizer.dart';
 @immutable
 class SpeechTurnConfig {
   const SpeechTurnConfig({
-    this.silenceAfterSpeech = const Duration(seconds: 2),
+    this.silenceAfterSpeech = const Duration(seconds: 1),
     this.maxRecording = const Duration(seconds: 15),
     this.echoCoverage = 0.7,
     this.reopenGap = const Duration(milliseconds: 120),
     this.deadChannelWindow = const Duration(seconds: 1),
     this.deadChannelStrikes = 3,
-    this.minWaitBeforeSilence = const Duration(seconds: 5),
+    this.minWaitBeforeSilence = Duration.zero,
+    this.enginePause = const Duration(seconds: 3),
   });
 
+  /// ОДНО ПРАВИЛО НА ВСЕ МИКРОФОНЫ ПРИЛОЖЕНИЯ (наряд FIX-1, п. 3): запись закрывает секунда тишины
+  /// после последнего слова — или тап. Секунда стоит ЗДЕСЬ, в значении по умолчанию, а не у каждого
+  /// вызывающего: пока у коллекций было своё число (2 с) и свой пол (5 с), а у дня своё, «микрофон»
+  /// означал в приложении три разные вещи.
   final Duration silenceAfterSpeech;
   final Duration maxRecording;
   final double echoCoverage;
@@ -52,6 +57,14 @@ class SpeechTurnConfig {
   /// A field, not a constant (SESSION-2a §3): the day session closes a recording on the pause after the speech
   /// alone — silence before the first word never closes a recording anyway (the silence timer starts on a word).
   final Duration minWaitBeforeSilence;
+
+  /// ПАУЗА, КОТОРУЮ ОТДАЮТ ПЛАГИНУ, — НЕ НАШЕ ПРАВИЛО (наряд FIX-1, п. 3).
+  ///
+  /// `pauseFor` закрывает окно ПЛАГИНА, и пока оно равнялось [silenceAfterSpeech], плагин выигрывал
+  /// гонку у движка: микрофон закрывался ровно на границе нашего правила, переоткрытие занимало свои
+  /// сотни миллисекунд, и середина фразы уходила в глухоту. Здесь оно заведомо больше: окно плагина
+  /// — потолок, а запись закрывает движок.
+  final Duration enginePause;
 
   /// Сколько запись реально живёт — см. [minMaxRecording].
   Duration get effectiveMaxRecording =>
@@ -77,6 +90,7 @@ class SpeechTurnConfig {
     Duration? deadChannelWindow,
     int? deadChannelStrikes,
     Duration? minWaitBeforeSilence,
+    Duration? enginePause,
   }) => SpeechTurnConfig(
     silenceAfterSpeech: silenceAfterSpeech ?? this.silenceAfterSpeech,
     maxRecording: maxRecording ?? this.maxRecording,
@@ -85,6 +99,7 @@ class SpeechTurnConfig {
     deadChannelWindow: deadChannelWindow ?? this.deadChannelWindow,
     deadChannelStrikes: deadChannelStrikes ?? this.deadChannelStrikes,
     minWaitBeforeSilence: minWaitBeforeSilence ?? this.minWaitBeforeSilence,
+    enginePause: enginePause ?? this.enginePause,
   );
 }
 
@@ -180,6 +195,13 @@ class SpeechTurn {
   Timer? _silenceTimer;
   Timer? _recordingTimer;
 
+  /// Отсчёт тишины уже перезапускали из-за глухоты переоткрытия — для ЭТОГО слова второй раз не
+  /// перезапустят: плагин, закрывающийся мгновенно, иначе отодвигал бы конец записи бесконечно.
+  bool _deafCompensated = false;
+
+  /// Окно плагина закрыто и ещё не переоткрыто — микрофон глух.
+  bool _deaf = false;
+
   /// Когда микрофон открылся — от него меряется сторож записи и пол [minWaitBeforeSilence].
   DateTime? _openedAt;
 
@@ -215,6 +237,8 @@ class SpeechTurn {
     _chunks.clear();
     _partial = '';
     _firstWordAt = null;
+    _deafCompensated = false;
+    _deaf = false;
     _openedAt = _now();
     _echoes = 0;
     _closing = false;
@@ -271,14 +295,23 @@ class SpeechTurn {
       }
       reopening = true;
       _partial = '';
+      // ГЛУХОТА НЕ СЧИТАЕТСЯ ТИШИНОЙ (наряд FIX-1, п. 3). Между закрытием плагина на своей запинке и
+      // открытием следующего окна микрофон не слышит НИЧЕГО, а человек в это время договаривает — и
+      // именно этот промежуток добирал нашу секунду и закрывал запись на первом куске («Can I see»,
+      // «Heat», «It is»). Он возвращается сроку тишины — но не больше одного окна тишины на слово,
+      // иначе плагин, закрывающийся мгновенно, отодвигал бы конец записи бесконечно.
+      if (_deaf) {
+        _deaf = false;
+        _extendForDeafness();
+      }
       final openedAt = _now();
       final attempt = await _recognizer.listenOnce(
         expected: expected,
         localeId: localeId,
         // Окно плагина — не правило, а потолок: запись закрывает движок. Плагину отдаётся столько,
-        // сколько запись вообще может длиться, и его же пауза после речи.
+        // сколько запись вообще может длиться, и пауза заведомо длиннее нашей ([enginePause]).
         timeout: config.effectiveMaxRecording,
-        pauseFor: config.silenceAfterSpeech,
+        pauseFor: config.enginePause,
         contextualStrings: contextualStrings,
         onLevel: onLevel,
         onPartial: (text) {
@@ -301,6 +334,8 @@ class SpeechTurn {
           onPartial?.call(transcript);
         },
       );
+      // Окно плагина закрылось — с этого мгновения и до следующего открытия микрофон глух.
+      _deaf = true;
       if (turn.isCompleted || _closing) return;
 
       switch (attempt.outcome) {
@@ -322,6 +357,7 @@ class SpeechTurn {
             _echoes++;
             _chunks.clear();
             _firstWordAt = null;
+            _deafCompensated = false;
             _silenceTimer?.cancel();
             _silenceTimer = null;
             // «Слушаю…» БЕЗ ТЕКСТА выглядит одинаково у мёртвого микрофона и у исправного, который
@@ -387,10 +423,23 @@ class SpeechTurn {
     }
   }
 
-  /// ТИШИНА ПОСЛЕ РЕЧИ — и не раньше [SpeechTurnConfig.minWaitBeforeSilence] от начала записи
-  /// (Ч.2.2). Пол здесь, а не в вызывающем: человек, сказавший первое слово на второй секунде,
-  /// имеет право на паузу, и запись, закрытая на четвёртой, отдаёт на зачёт полфразы.
+  /// ТИШИНА ПОСЛЕ РЕЧИ — [SpeechTurnConfig.silenceAfterSpeech] от последнего нового слова, и не
+  /// раньше [SpeechTurnConfig.minWaitBeforeSilence] от начала записи, где этот пол задан.
   void _armSilence() {
+    _deafCompensated = false;
+    _scheduleSilence();
+  }
+
+  /// МИКРОФОН СНОВА ЖИВ ПОСЛЕ ГЛУХОТЫ (наряд FIX-1, п. 3): отсчёт тишины начинается с этого
+  /// мгновения, а не с последнего слова, услышанного до закрытия окна. Один раз на слово — второго
+  /// перезапуска нет, иначе у записи не осталось бы конца.
+  void _extendForDeafness() {
+    if (_firstWordAt == null || _silenceTimer == null || _deafCompensated) return;
+    _deafCompensated = true;
+    _scheduleSilence();
+  }
+
+  void _scheduleSilence() {
     _silenceTimer?.cancel();
     final since = _openedAt == null ? Duration.zero : _now().difference(_openedAt!);
     final floor = config.minWaitBeforeSilence - since;

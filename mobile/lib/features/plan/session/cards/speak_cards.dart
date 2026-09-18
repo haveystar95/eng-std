@@ -279,7 +279,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       feed: true,
       bodyGap: 16,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskAnswerOwnWords, companion: env.replayNote(l)),
+      task: SessionTask(l.planSessionTaskAnswerOwnWords),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -307,10 +307,14 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       return SessionBubble(
         own: true,
         translation: filler?.nativeLine ?? (slot == null ? p.taskNative : null),
-        footer: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(l.planSessionByMeaning, key: const ValueKey('speak-by-meaning'), style: AppTextSession.meta.copyWith(color: AppColors.sessionSageOnInk)),
-        ),
+        // «By meaning ✓» is the JUDGE's verdict, and a replay has no judge (FIX-1 §5): the pass there is the
+        // phone's coverage, which says nothing about meaning.
+        footer: env.judgedHere
+            ? Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(l.planSessionByMeaning, key: const ValueKey('speak-by-meaning'), style: AppTextSession.meta.copyWith(color: AppColors.sessionSageOnInk)),
+              )
+            : null,
         child: p.frame.hasSlot && slot != null
             ? SessionFrameText(before: parts.before, after: parts.after, style: style, slot: slot, look: SlotLook.sage, onInk: true)
             : Text(p.frame.hasSlot ? heard : p.frame.frameTarget, style: style.copyWith(color: AppColors.sessionSageOnInk)),
@@ -657,7 +661,7 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with VoiceCardState<S
       bodyGap: 12,
       centerBody: true,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskRetell, companion: env.replayNote(l)),
+      task: SessionTask(l.planSessionTaskRetell),
       body: ValueListenableBuilder<Object?>(
         valueListenable: env.voice.playing,
         builder: (_, playing, _) => SessionLineSheet(

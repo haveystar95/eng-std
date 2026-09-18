@@ -80,7 +80,8 @@ class CardEnv {
   final bool advancing;
 
   /// «Once more» from the day summary (SESSION-2a §4): the stage is walked again on the phone and nothing is sent.
-  /// A free answer says so under its task — there is nobody to grade it ([replayNote]).
+  /// The cards grade as they always do — the phone's coverage takes the judge's place (FIX-1 §5), so a replay is a
+  /// pass like any other and only its result goes nowhere.
   final bool replay;
 
   /// The day's frame as a whole phrase by its `ref` ([SessionDay.frameSentence]) — the «Combination» options.
@@ -113,11 +114,9 @@ class CardEnv {
   /// After the second failure the unit comes back tomorrow — the server said so in its answer.
   bool get returnsTomorrow => outcome?.unit.returnsTomorrow ?? false;
 
-  /// «Replay, not graded» under the task of a FREE answer (32-9, 35-2, 35-4) while the stage is being walked again:
-  /// the judge is not asked and nothing goes to the server, so the card must not promise a verdict. Null — the card
-  /// is graded as usual.
-  String? replayNote(AppLocalizations l) =>
-      replay && card.kind.grading == SessionGrading.judge ? l.planSessionReplayNoGrade : null;
+  /// The judge is the server's, so a replay has none: what it says about a free answer is the phone's own coverage
+  /// ([SessionRules.replayAccepted]), and «by meaning ✓» — a verdict only the judge can give — is not shown.
+  bool get judgedHere => !replay;
 }
 
 /// SHARED CARD LAYOUT: the task line on top, the material sheet (pinned to the task line or centred in the free
@@ -129,6 +128,7 @@ class CardLayout extends StatelessWidget {
     super.key,
     required this.task,
     required this.body,
+    this.above,
     this.bottom,
     this.centerBody = false,
     this.taskInBody = false,
@@ -141,6 +141,16 @@ class CardLayout extends StatelessWidget {
 
   final Widget task;
   final Widget body;
+
+  /// THE CONVERSATION SO FAR, above the card's own rows (series 33, [feed] only) — the ONLY part of the field that
+  /// may be scrolled out of sight. It takes what is left after the task line and the card's own rows and scrolls
+  /// inside that, resting on its newest line.
+  ///
+  /// It is a slot of its own, and that is the whole point (work order FIX-1 §1): while the conversation stood inside
+  /// [body], a long one pushed the task line and the question off the top of the screen — four options and nothing
+  /// saying what they answer (the live pass of 18.09, exchange x6). The canvas draws the check with no conversation
+  /// above it at all (33-1, 33-5 «ответ закрыт · вопрос»); here it stays, one scroll away.
+  final Widget? above;
   final Widget? bottom;
 
   /// The sheet centred in the free field (voice cards, tiles) rather than under the task line.
@@ -152,7 +162,7 @@ class CardLayout extends StatelessWidget {
 
   /// A conversation (series 33, 34-3, 34-5, 35-2, SESSION-1c): the task line and the bubbles are one group pinned
   /// to the dock — it grows upward, the beginning is reached by scrolling up, the air stands above the task (the
-  /// canvas's own exception to «no empty field»).
+  /// canvas's own exception to «no empty field»). What grows is [above]; the task line and [body] always stand.
   final bool feed;
 
   /// The dock lies over the field (default). `false` — the dock sits flush under the field, the field is clipped
@@ -170,28 +180,35 @@ class CardLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dock = bottom;
-    final field = feed
-        ? CustomScrollView(
-            reverse: true,
-            clipBehavior: dock == null || !overlayDock ? Clip.hardEdge : Clip.none,
-            slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  // 16 of air above the dock's solid part (33-1: the group stands 16 over the dock).
-                  padding: EdgeInsets.fromLTRB(kSessionGutter, taskGap, kSessionGutter, dock == null ? 16 : SessionDock.topInset + 16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [task, SizedBox(height: bodyGap), body],
-                  ),
-                ),
-              ),
-            ],
-          )
-        : _field(dock);
+    final field = feed ? _feedField(dock) : _field(dock);
     return _withDock(field, dock);
   }
+
+  /// THE FIELD OF A CONVERSATION CARD. THE TASK LINE NEVER SCROLLS AWAY (FIX-1 §1): it and the question under it
+  /// stand outside the scrolling area, and the conversation with the card's own rows takes what is left of the
+  /// field, resting on its newest line — the beginning is one scroll up. Everything fits — the group hugs the dock
+  /// with the air above the task, exactly as before.
+  Widget _feedField(Widget? dock) => Padding(
+    // 16 of air above the dock's solid part (33-1: the group stands 16 over the dock).
+    padding: EdgeInsets.fromLTRB(kSessionGutter, taskGap, kSessionGutter, dock == null ? 16 : SessionDock.topInset + 16),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        task,
+        SizedBox(height: bodyGap),
+        Flexible(
+          child: SingleChildScrollView(
+            // The newest line is the one that matters: the view rests at the bottom and older lines stand above it.
+            reverse: true,
+            child: above == null
+                ? body
+                : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [above!, body]),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _field(Widget? dock) => CustomScrollView(
     // Under an overlay dock the field is not clipped: the bottom that did not fit is covered by the dock itself.
@@ -342,8 +359,17 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   /// Pass for what was heard — the kind's rule (may update the card's screen).
   bool accepts(String heard);
 
+  /// THE VERDICT ON WHAT WAS HEARD, which may take time: the own-word round of «Say it whole» asks the slot judge
+  /// over the network (FIX-1 §6), and the microphone stays closed until it answers. Everything else answers at once
+  /// out of [accepts].
+  Future<bool> grade(String heard) async => accepts(heard);
+
   /// Passed — the card shows its own «heard».
   void onAccepted(String heard) {}
+
+  /// The last attempt is spent and none passed — the card is closed as `skipped`. What the exchange still owes the
+  /// learner happens here (33-5: the partner's reply sounds and its check is asked all the same, FIX-1 §1).
+  void onMissedOut(String heard) {}
 
   /// `response.mode` of the answer — the dialogue's voice mode (SESSION-1c); null — none.
   String? get responseMode => null;
@@ -407,12 +433,14 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     if (mounted) setState(() {});
   }
 
-  void _onTurn(MicTurn turn) {
+  Future<void> _onTurn(MicTurn turn) async {
     if (_done || _roundPassed || !mounted) return;
     _heard = turn.transcript;
     _attempts++;
     _roundAttempts++;
-    final ok = turn.outcome == SpeechTurnOutcome.heard && accepts(turn.transcript);
+    final ok = turn.outcome == SpeechTurnOutcome.heard && await grade(turn.transcript);
+    // The judge answers over the network: the card may be gone, or closed by «Skip», by the time it does.
+    if (!mounted || _done || _roundPassed) return;
     onAttempt(turn.transcript, accepted: ok);
     if (ok) {
       mic.settle(accepted: true);
@@ -444,6 +472,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
       _done = true;
       skippedAfterMisses = true;
       submitAnswer(SessionAnswer(result: SessionResult.skipped, attempts: _attempts, response: _response(heard: turn.transcript)));
+      onMissedOut(turn.transcript);
     }
     setState(() {});
   }
@@ -481,6 +510,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     String? heardText,
     bool liveLineInDock = true,
     bool showIdleCaption = true,
+    String? missedCaption,
   }) {
     final l = AppLocalizations.of(context);
     // Second attempt without a pass: «once more» is no longer offered — only «Next».
@@ -494,6 +524,8 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
       showHeardLine: showHeardLine,
       heardText: heardText,
       showIdleCaption: showIdleCaption,
+      // The judge's reason stands where «didn't catch that» would (32-7's own-word round, FIX-1 §6).
+      missedCaption: missedCaption == null || missedCaption.isEmpty ? null : missedCaption,
       liveLine: liveLineInDock ? MicLiveLine.target : MicLiveLine.none,
     );
   }

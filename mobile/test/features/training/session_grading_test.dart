@@ -2,6 +2,8 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/speech/speech_turn.dart';
+
 /// Locks the client's instant check to the server `AnswerGrader`'s normalisation + single-typo
 /// rule, so the feedback is never stricter than the server (invariant). Anything the server would
 /// accept, [SessionGrader.check] must also accept (correct or typo); it may be more lenient, but
@@ -284,41 +286,22 @@ void main() {
     });
   });
 
-  group(
-    'SpokenAnswer.windowFor — the recording window follows the LENGTH of what is said (QA-21)',
-    () {
-      test('a one- or two-word term keeps the short window', () {
-        for (final term in ['evoke', 'boarding pass']) {
-          final w = SpokenAnswer.windowFor(asksForExample: false, term: term);
-          expect(w.listenFor, SpokenAnswer.wordFormListenFor, reason: term);
-          expect(w.pauseFor, SpokenAnswer.wordFormPauseFor, reason: term);
-        }
-      });
+  group('One microphone rule — the per-form recording window is gone (наряд FIX-1, п. 3)', () {
+    test('«длинность» is still a rule, and it is only about GRADING now', () {
+      expect(SpokenAnswer.longTermWords, 3);
+      expect(SpokenAnswer.isLongTerm('take a photo'), isTrue); // 3
+      expect(SpokenAnswer.isLongTerm('team player'), isFalse); // 2
+      expect(SpokenAnswer.isLongTerm('   '), isFalse); // no words at all
+    });
 
-      test('a term of three words or more gets the sentence-sized window', () {
-        // The live case: an 8s/2s window cut this off after the first word («Heard: When»).
-        final w = SpokenAnswer.windowFor(
-          asksForExample: false,
-          term: 'Where do you see yourself in five years?',
-        );
-        expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
-        expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
-      });
-
-      test('the threshold is exactly SpokenAnswer.longTermWords, counted in words', () {
-        expect(SpokenAnswer.longTermWords, 3);
-        expect(SpokenAnswer.isLongTerm('take a photo'), isTrue); // 3
-        expect(SpokenAnswer.isLongTerm('team player'), isFalse); // 2
-        expect(SpokenAnswer.isLongTerm('   '), isFalse); // no words at all
-      });
-
-      test('the example form always gets the long window, however short its term', () {
-        final w = SpokenAnswer.windowFor(asksForExample: true, term: 'evoke');
-        expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
-        expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
-      });
-    },
-  );
+    test('every microphone records by the one rule: a second of silence, and no floor under it', () {
+      const config = SpeechTurnConfig();
+      expect(config.silenceAfterSpeech, const Duration(seconds: 1));
+      expect(config.minWaitBeforeSilence, Duration.zero);
+      // The plugin's own pause is deliberately longer than ours — it is a ceiling, not the rule.
+      expect(config.enginePause > config.silenceAfterSpeech, isTrue);
+    });
+  });
 
   group('SpokenAnswer.gradesByCoverage — long spoken answers are judged by coverage (QA-22)', () {
     test('a phrase-shaped term on the word form is coverage-graded', () {
@@ -340,20 +323,17 @@ void main() {
       expect(SpokenAnswer.gradesByCoverage(asksForExample: true, term: 'evoke'), isTrue);
     });
 
-    test('it is the SAME «длинность» rule the recording window uses — one source, never two', () {
+    test('it is the SAME «длинность» rule, one source, never two', () {
       for (final term in [
         'evoke',
         'team player',
         'take a photo',
         'How do you deal with conflict?',
       ]) {
-        final longWindow =
-            SpokenAnswer.windowFor(asksForExample: false, term: term).listenFor ==
-            SpokenAnswer.exampleFormListenFor;
         expect(
           SpokenAnswer.gradesByCoverage(asksForExample: false, term: term),
-          longWindow,
-          reason: 'a term recorded like a sentence must be graded like one: $term',
+          SpokenAnswer.isLongTerm(term),
+          reason: 'a term long enough to be a sentence must be graded like one: $term',
         );
       }
     });

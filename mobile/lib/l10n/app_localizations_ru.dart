@@ -3652,10 +3652,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskSayPhrase => 'Скажи фразу вслух';
 
   @override
-  String get planSessionTaskWhatAnswer => 'Что ты ответишь?';
+  String get planSessionTaskSayEachMeaning => 'Скажи фразу с каждым значением';
 
   @override
-  String get planSessionTaskSayOwn => 'Выбери, что вставить, и скажи фразу целиком';
+  String get planSessionOwnWordNow => 'а теперь со своим словом';
+
+  @override
+  String get planSessionStateReplay => 'повтор';
+
+  @override
+  String get planSessionTaskWhatAnswer => 'Что ты ответишь?';
 
   @override
   String get planSessionBrowWord => 'Слово';
@@ -3677,9 +3683,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionBrowAssembled => 'Собрано';
-
-  @override
-  String get planSessionBrowOwnSlot => 'Своё окно';
 
   @override
   String planSessionBrowPartnerAsks(String role) {
@@ -3739,9 +3742,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionNoMicAllow => 'Разрешить';
-
-  @override
-  String get planSessionOwnChip => 'своё…';
 
   @override
   String get planSessionByMeaning => 'по смыслу ✓';
@@ -3983,9 +3983,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionWhichNumber => 'Какое число прозвучало?';
-
-  @override
-  String get planSessionReplayNoGrade => 'повтор без оценки';
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Ответь своими словами';

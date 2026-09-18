@@ -85,31 +85,32 @@ void main() {
     await settleCard(tester);
   });
 
-  testWidgets('32-7 phrase_other_slot: the heard long filler in sage', (tester) async {
+  testWidgets('32-7 «Скажи целиком»: the round\'s long meaning, then what was heard, in the window', (tester) async {
     final other = card('phrase_other_slot', (p) {
-      // The chosen meaning stands in the slot from the start (SESSION-2b) — it is the filler that must be long.
-      filler(p, 2)['target'] = apartment;
-      p['slot_expected'] = apartment;
-      p['expected_text'] = 'It hurts in his $apartment.';
+      // The FIRST round's meaning is the one that must be long: the rounds walk the fillers in order (FIX-1 §6).
+      filler(p, 0)['target'] = apartment;
     });
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(other, probe), size: narrow);
-    // The slot is filled from the start (SESSION-2b): first the chosen meaning, then what was heard.
     expectSlotFits(tester, apartment);
     await sayDebug(tester, 'It hurts in his $apartment');
     await tester.pump();
-    expect(probe.answers.single.result, SessionResult.passed);
+    expect(probe.answers, isEmpty, reason: 'a round is not an answer');
     expectSlotFits(tester, apartment);
     await settleCard(tester);
   });
 
-  testWidgets('32-9 phrase_own_slot: live words with the caret, then the judge\'s long value in sage', (tester) async {
+  testWidgets('32-7 own word: live words with the caret, then the judge\'s long value in sage', (tester) async {
     final own = card('phrase_own_slot', (_) {});
     final probe = CardProbe()
       ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: appointment, result: SessionResult.passed, attempts: 1);
     await pumpCard(tester, probeEnv(own, probe), size: narrow);
-    await tester.tap(find.byKey(const ValueKey('chip-own')));
-    await tester.pump();
+    // Through the three meanings of the card to the round of the learner's own word.
+    for (final said in ['It started three days ago', 'It started last night', 'It started this morning']) {
+      await sayDebug(tester, said);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+    }
     await enterHeard(tester, 'It started $appointment');
     expectSlotFits(tester, appointment);
     await tester.pump(const Duration(milliseconds: 1010));

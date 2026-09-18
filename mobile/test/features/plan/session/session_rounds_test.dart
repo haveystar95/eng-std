@@ -76,32 +76,36 @@ void main() {
     expect(probe.nexts, 1);
   });
 
-  // RULE (SESSION-2b §1): 32-7 asks ONCE — the chip chooses the meaning, and two misses close the card as `skipped`,
-  // with the chosen meaning in the answer. No round header and no second forced filler.
-  // CATCHES: rounds coming back to the card (the chip's choice taken away), misses counted per round.
-  testWidgets('phrase_other_slot: no rounds — two misses close the card, the chosen meaning in the answer', (tester) async {
+  // RULE (наряд FIX-1 §6): 32-7 идёт КРУГАМИ по значениям окна, и две неудачи в любом круге закрывают карточку
+  // `skipped` — правило попыток у голосовой карточки одно на все круги.
+  // CATCHES: попытки, которые считаются на всю карточку, а не на круг, и карточка, пережившая две неудачи подряд.
+  testWidgets('phrase_other_slot: two misses in a round close the card, the round\'s meaning in the answer', (tester) async {
     final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(card, probe));
-    expect(find.byKey(const ValueKey('voice-round')), findsNothing, reason: 'one round');
-    await tester.tap(find.byKey(const ValueKey('chip-1')));
+    // Round 1 — the first meaning of the window.
+    expect(slotOf(tester), 'lower back');
+    await sayDebug(tester, 'It hurts in his lower back');
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(slotOf(tester), 'neck', reason: 'the next meaning moved into the window');
 
     await sayDebug(tester, 'hello');
+    await tester.pump();
     expect(probe.answers, isEmpty, reason: 'one miss — once more');
-    expect(slotOf(tester), 'neck', reason: 'the chosen meaning stays in the slot');
+    expect(slotOf(tester), 'neck', reason: 'the round keeps its meaning');
     await sayDebug(tester, 'it hurts in his shoulder');
-    expect(results(probe), [SessionResult.skipped], reason: 'the chosen meaning was not said twice');
+    await tester.pump();
+    expect(results(probe), [SessionResult.skipped], reason: 'the round\'s meaning was not said twice');
     final answer = probe.answers.single;
-    expect(answer.attempts, 2);
-    expect(answer.response?.fillerIndex, 1, reason: 'the meaning the learner chose');
+    expect(answer.attempts, 3, reason: 'attempts are counted over the card, misses over the round');
+    expect(answer.response?.fillerIndex, 0, reason: 'the last meaning actually said');
     expect(find.text('Дальше'), findsOneWidget);
     await settleCard(tester);
   });
 
-  // CATCHES: a chip row on a frame with a single visible meaning (there is nothing to choose), and an answer that
-  // names a filler the card never offered.
-  testWidgets('one visible filler — no chips, the answer at once', (tester) async {
+  // CATCHES: a chip row on a frame with a single meaning, and a card that never reaches its own-word round.
+  testWidgets('one meaning — one round and the own word after it', (tester) async {
     final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
     final json = [
       for (final stage in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
@@ -110,11 +114,17 @@ void main() {
     slot['fillers'] = [(slot['fillers'] as List).cast<Map<String, dynamic>>().firstWhere((f) => f['index'] == 2)];
     final probe = CardProbe();
     await pumpCard(tester, probeEnv(SessionCard.fromJson(json)!, probe));
-    expect(find.byKey(const ValueKey('voice-round')), findsNothing);
-    expect(find.byKey(const ValueKey('chip-2')), findsNothing, reason: 'one meaning — nothing to choose');
+    expect(find.byKey(const ValueKey('chip-0')), findsNothing, reason: 'the frame has one meaning');
     await sayDebug(tester, 'It hurts in his shoulder');
+    await tester.pump();
+    expect(probe.answers, isEmpty, reason: 'the own word is still to come');
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.text('а теперь со своим словом'), findsOneWidget);
+
+    await sayDebug(tester, 'It hurts in his knee');
+    await tester.pump();
     expect(results(probe), [SessionResult.passed]);
-    expect(probe.answers.single.response?.fillerIndex, 2, reason: 'the only meaning of the frame');
+    expect(probe.answers.single.response?.fillerIndex, isNull, reason: 'the own word is nobody\'s meaning');
     await settleCard(tester);
   });
 }

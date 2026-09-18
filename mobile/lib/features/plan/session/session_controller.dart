@@ -11,6 +11,7 @@ import '../../../data/plan/session/session_outbox.dart';
 import '../../../data/plan/session/session_outcomes.dart';
 import '../../../data/plan/session/session_queue.dart';
 import '../../../data/plan/session/session_rules.dart';
+import '../../../data/plan/session/speech_coverage.dart';
 
 /// Where the session stands.
 enum SessionPhase {
@@ -135,6 +136,10 @@ class SessionController extends ChangeNotifier {
 
   /// Server answers by card id — «comes back tomorrow» on the card after the second failure.
   final Map<String, SessionAnswerOutcome> _outcomes = {};
+
+  /// Attempts at a free answer during a replay, by card id — the judge counts them on the server, and a replay has
+  /// no server to count them.
+  final Map<String, int> _replayAttempts = {};
 
   /// A stage's minutes from the latest answer in that stage — the stage summary (30-6).
   final Map<PlanStage, int> _stageMinutes = {};
@@ -385,12 +390,14 @@ class SessionController extends ChangeNotifier {
   /// network error — an exception to the caller.
   Future<SessionJudgeOutcome> judge(SessionCard card, String heard, {bool hinted = false}) async {
     // A replay asks nobody: the card was judged when the day was walked, and the server would refuse it
-    // (`plan_card_answered`, `plan_day_not_open`). What was said counts — it changes nothing on the server.
+    // (`plan_card_answered`, `plan_day_not_open`). The PHONE grades it instead — by coverage, exactly as it grades
+    // every voice card (FIX-1 §5). Before this, any sound at all passed: the first word heard closed the card.
     if (replay) {
-      final said = heard.trim().isNotEmpty;
-      if (said) _queue?.markAnswered(card, SessionResult.passed, 1);
+      final attempts = _replayAttempts.update(card.id, (n) => n + 1, ifAbsent: () => 1);
+      final accepted = SessionRules.replayAccepted(card.payload, heard, SpeechCoverage.articlesFor(plan.targetLang));
+      if (accepted) _queue?.markAnswered(card, SessionResult.passed, attempts);
       _notify();
-      return SessionJudgeOutcome(accepted: said, result: said ? SessionResult.passed : null, attempts: 1);
+      return SessionJudgeOutcome(accepted: accepted, result: accepted ? SessionResult.passed : null, attempts: attempts);
     }
     final outcome = await backend.judge(plan.id, number, card.id, heard: heard, hinted: hinted);
     if (outcome.accepted && outcome.card != null) _queue?.apply(answered: outcome.card);

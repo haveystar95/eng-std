@@ -13,7 +13,6 @@ import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/data/speech/speech_diagnostics.dart';
 import 'package:eng_std/data/speech/speech_turn.dart';
 import 'package:eng_std/features/training/session/intro_card.dart';
-import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 /// The intro card's optional echo: listen, say something kind, write nothing.
@@ -335,11 +334,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // ПЛАГИНУ ОТДАЮТСЯ ЧИСЛА ДВИЖКА — то же правило, что у карточки говорения (DAY-FIX-3, Ч.1.3):
-      // окно плагина это ПОТОЛОК, а не правило, и закрывает попытку движок. Пауза после речи
-      // остаётся той, которую просит длина слова, — это и есть «то же окно, что у говорения».
+      // окно плагина это ПОТОЛОК, а не правило, и закрывает попытку движок. И пауза, которую он
+      // получает, — тоже потолок, длиннее нашей секунды (наряд FIX-1, п. 3).
       const engine = SpeechTurnConfig();
       expect(recognizer.timeoutsPerCall.first, engine.effectiveMaxRecording);
-      expect(recognizer.pauseForsPerCall.first, SpokenAnswer.wordFormPauseFor);
+      expect(recognizer.pauseForsPerCall.first, engine.enginePause);
       expect(recognizer.contextualStringsPerCall.first, ['reservation']);
     });
 

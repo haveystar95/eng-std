@@ -14,8 +14,9 @@ import 'session_chrome.dart';
 /// A stage's status in the list of five (30-1).
 enum StageRowStatus { done, current, ahead }
 
-/// A row of the stage list.
-typedef StageRow = ({PlanStage stage, StageRowStatus status, bool started});
+/// A row of the stage list. [replay] — the stage is being walked a second time («Once more» from the day summary):
+/// its cards stand unanswered on the phone, and «not started» was the wrong word for that (FIX-1 §5).
+typedef StageRow = ({PlanStage stage, StageRowStatus status, bool started, bool replay});
 
 /// STAGE ENTRY (canvas 30-1): back arrow, scene strip, the stage name in Literata, description, «≈ N min», five
 /// stage dots (the current one in brass), the list of five stages with statuses, «No hints», «Start». In the footer,
@@ -174,6 +175,7 @@ class _StageListRow extends StatelessWidget {
     final current = row.status == StageRowStatus.current;
     final status = switch (row.status) {
       StageRowStatus.done => l.planSessionStateDone,
+      StageRowStatus.current when row.replay => l.planSessionStateReplay,
       StageRowStatus.current => row.started ? l.planWindowStateInProgress : l.planWindowStateNotStarted,
       StageRowStatus.ahead => l.planSessionStateAhead,
     };

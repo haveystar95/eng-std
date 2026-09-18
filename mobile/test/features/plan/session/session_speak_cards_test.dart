@@ -238,22 +238,32 @@ void main() {
   // under its task — the judge is not asked and nothing goes to the server. A graded card says nothing of the kind.
   // CATCHES: the caption missing in a replay (the card promises a verdict it will not get), and the caption standing
   // on an ordinary walk or on a card the client grades itself.
+  // RULE (наряд FIX-1 §5): в повторе судьи НЕТ — карточку свободного ответа судит телефон покрытием, как обычный
+  // проход, и «по смыслу ✓» — вердикт судьи — в повторе не пишется. Подпись «повтор без оценки» снята вместе с
+  // правилом, которое её требовало: оценка есть, на сервер она не уходит.
+  // CATCHES: возврат «любая речь = зачёт» и значка «по смыслу ✓», нарисованного без судьи.
   group('replay of a stage', () {
-    testWidgets('a free answer says «replay, not graded»; a graded card and an ordinary walk say nothing', (tester) async {
+    testWidgets('«by meaning ✓» is not shown in a replay — there is no judge to say it', (tester) async {
+      final probe = CardProbe()
+        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'my back', result: SessionResult.passed, attempts: 1);
+      await pumpCard(tester, probeEnv(speakAt(2), probe, replay: true));
+      await sayDebug(tester, 'It hurts in my back');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('speak-by-meaning')), findsNothing);
+      await settleCard(tester);
+
+      final walk = CardProbe()
+        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'my back', result: SessionResult.passed, attempts: 1);
+      await pumpCard(tester, probeEnv(speakAt(2), walk));
+      await sayDebug(tester, 'It hurts in my back');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('speak-by-meaning')), findsOneWidget, reason: 'an ordinary walk has a judge');
+      await settleCard(tester);
+    });
+
+    testWidgets('the note «replay, not graded» is gone: a replay grades like an ordinary walk', (tester) async {
       await pumpCard(tester, probeEnv(speakAt(2), CardProbe(), replay: true));
-      expect(find.text('повтор без оценки'), findsOneWidget, reason: '35-2 is judged by meaning');
-      await settleCard(tester);
-
-      await pumpCard(tester, probeEnv(speakAt(8), CardProbe(), replay: true));
-      expect(find.text('повтор без оценки'), findsNothing, reason: '35-4 is graded by coverage since BACK-TAILS-1 §1.1');
-      await settleCard(tester);
-
-      await pumpCard(tester, probeEnv(speakAt(7), CardProbe(), replay: true));
-      expect(find.text('повтор без оценки'), findsNothing, reason: '35-3 (the echo) is graded by coverage on the phone');
-      await settleCard(tester);
-
-      await pumpCard(tester, probeEnv(speakAt(2), CardProbe()));
-      expect(find.text('повтор без оценки'), findsNothing, reason: 'an ordinary walk is graded');
+      expect(find.text('повтор без оценки'), findsNothing);
       await settleCard(tester);
     });
   });

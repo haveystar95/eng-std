@@ -75,7 +75,7 @@ void main() {
       await SessionSounds.release();
       SessionSounds.play(SessionSounds.ready);
       await pumpEventQueue();
-      expect(calls, ['loadEffects', 'play miss', 'play stage_done', 'releaseEffects']);
+      expect(calls, ['warmUp', 'loadEffects', 'play miss', 'play stage_done', 'releaseEffects']);
     });
 
     test('switched off — nothing is loaded and nothing sounds', () async {
@@ -92,7 +92,7 @@ void main() {
       await pumpEventQueue();
       SessionSounds.play(SessionSounds.micOn);
       await pumpEventQueue();
-      expect(calls, ['loadEffects', 'releaseEffects']);
+      expect(calls, ['warmUp', 'loadEffects', 'releaseEffects']);
     });
 
     // CATCHES: a name without its file in the bundle — a silent session.

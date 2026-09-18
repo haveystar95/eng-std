@@ -195,6 +195,19 @@ abstract final class SessionRules {
     _ => false,
   };
 
+  /// THE PHONE'S VERDICT WHERE THERE IS NO JUDGE TO ASK — «Once more» from the day summary (FIX-1 §5). The server
+  /// refuses a judged card of a walked day (`plan_card_answered`), so a replay grades a free answer the way every
+  /// voice card is graded: the frame's own words covered by `coverage_min`. What went into the window is anyone's —
+  /// that is what the judge was for, and a replay does not pretend to have one.
+  ///
+  /// Before this, a replay accepted ANY speech at all — the first sound heard closed the card as a pass.
+  static bool replayAccepted(CardPayload payload, String heard, Set<String> articles) => switch (payload) {
+    SpeakAnswerPayload(:final frame, :final coverageMin) ||
+    PhraseOwnSlotPayload(:final frame, :final coverageMin) =>
+      SpeechCoverage.covers(heard, framePart(frame.frameTarget), coverageMin, articles),
+    _ => voiceAccepted(payload, heard, articles),
+  };
+
   /// THE FRAME'S OWN WORDS — the frame outside its slot, without the closing mark: what must be heard for the frame
   /// to have been said, whatever went into the slot. A mirror of the server's `FrameParts::part()`:
   /// `I'd like a ___, please.` → `I'd like a, please`.

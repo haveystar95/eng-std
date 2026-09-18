@@ -270,6 +270,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
               ? StageRowStatus.done
               : StageRowStatus.ahead,
           started: q != null && q.cardsOf(s).any((c) => c.isAnswered),
+          replay: widget.replay && s == current,
         ),
     ];
   }

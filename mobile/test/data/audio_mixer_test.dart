@@ -59,7 +59,8 @@ void main() {
     await SessionSounds.load();
     SessionSounds.verdict(correct: true);
     await pumpEventQueue();
-    expect(calls.map((c) => c.method), ['playSpeech', 'loadEffects', 'playEffect']);
+    // `warmUp` — the engine is started before anything has to sound, off the platform thread (наряд FIX-1, п. 2).
+    expect(calls.map((c) => c.method), ['playSpeech', 'warmUp', 'loadEffects', 'playEffect']);
     expect(calls.map((c) => c.method), isNot(contains('stopSpeech')), reason: 'a short sound never cuts the speech');
     expect((calls.last.arguments as Map)['level'], AudioLevels.effect);
     expect(v.playing.value, 'reply', reason: 'the line is still sounding');

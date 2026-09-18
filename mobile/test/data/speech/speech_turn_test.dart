@@ -74,11 +74,9 @@ class _DrivenRecognizer implements SpeechRecognizer {
 
 /// ДВИЖОК ОДНОЙ ЗАПИСИ — замки правил Ч.2 наряда SPEECH-2 (и того, что от DAY-FIX-3 уцелело).
 void main() {
-  const config = SpeechTurnConfig(
-    silenceAfterSpeech: Duration(seconds: 2),
-    maxRecording: Duration(seconds: 15),
-    reopenGap: Duration(milliseconds: 100),
-  );
+  // Числа движка — его собственные (наряд FIX-1, п. 3: секунда тишины, пола ожидания нет); тест
+  // трогает только окно переоткрытия, чтобы им можно было управлять.
+  const config = SpeechTurnConfig(reopenGap: Duration(milliseconds: 100));
 
   // ПРАВИЛО: DAY-FIX-3, Ч.1.2 — плагин не владеет концом попытки; результаты копятся в склейку.
   // ЛОВИТ: возврат к «finalResult = конец ответа». iOS ставит его на любой запинке короче трёх
@@ -101,12 +99,12 @@ void main() {
       expect(mic.opened, 2);
       expect(result, isNull);
 
-      // …человек договаривает — и запись закрывается склейкой, но НЕ РАНЬШЕ пола ожидания (Ч.2.2).
-      fake.elapse(const Duration(milliseconds: 800));
+      // …человек договаривает — и запись закрывается склейкой через секунду после последнего слова.
+      fake.elapse(const Duration(milliseconds: 300));
       mic.say('hurts');
-      fake.elapse(const Duration(seconds: 2));
-      expect(result, isNull, reason: 'тишина закрыла запись раньше пятой секунды');
-      fake.elapse(const Duration(seconds: 3));
+      fake.elapse(const Duration(milliseconds: 500));
+      expect(result, isNull, reason: 'тишина закрыла запись раньше своей секунды');
+      fake.elapse(const Duration(milliseconds: 700));
 
       expect(result?.outcome, SpeechTurnOutcome.heard);
       expect(result?.transcript, 'my back hurts');
@@ -145,10 +143,10 @@ void main() {
     });
   });
 
-  // ПРАВИЛО: Ч.2.2 — до первого звука запись живёт не меньше пяти секунд.
-  // ЛОВИТ: тишину, закрывшую запись через две секунды после единственного вырвавшегося слова.
-  // Между «нажал» и фразой лежит вдох; запись, закрытая на нём, отдаёт на зачёт полфразы.
-  test('тишина не закрывает запись раньше пяти секунд от нажатия', () {
+  // ПРАВИЛО: наряд FIX-1, п. 3 — ОДНО правило на все микрофоны приложения: запись закрывает секунда
+  // тишины после последнего слова или тап, и оценивается сказанное целиком.
+  // ЛОВИТ: возврат пола ожидания в пять секунд и любую «свою» паузу у отдельного экрана.
+  test('запись закрывает секунда тишины после последнего слова — и пола под ней нет', () {
     fakeAsync((fake) {
       final mic = _DrivenRecognizer();
       final turn = SpeechTurn(mic, config: config);
@@ -157,12 +155,58 @@ void main() {
       fake.flushMicrotasks();
 
       mic.say('I');
-      fake.elapse(const Duration(seconds: 2, milliseconds: 500));
-      expect(result, isNull, reason: 'две секунды тишины закрыли запись на первой секунде');
+      fake.elapse(const Duration(milliseconds: 800));
+      expect(result, isNull, reason: 'запись закрылась раньше секунды тишины');
 
-      fake.elapse(const Duration(seconds: 3));
+      fake.elapse(const Duration(milliseconds: 400));
       expect(result?.outcome, SpeechTurnOutcome.heard);
       expect(result?.transcript, 'I');
+    });
+  });
+
+  // ДЕФЕКТ: «термин из двух слов режется до первого» (живой проход 18.09, микрофон в коллекциях).
+  // ПРАВИЛО: наряд FIX-1, п. 3 — глухота переоткрытия не считается тишиной.
+  // ЛОВИТ: отсчёт тишины, который идёт от последнего слова СКВОЗЬ закрытый микрофон. Плагин
+  // закрывался на запинке после первого слова, переоткрытие занимало свои сотни миллисекунд, и эта
+  // глухота добирала нашу секунду, пока человек договаривал второе слово.
+  test('термин из двух слов не режется до первого: глухота переоткрытия не считается тишиной', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: const SpeechTurnConfig(reopenGap: Duration(milliseconds: 700)));
+      SpeechTurnResult? result;
+      turn.listen(expected: const ['boarding pass'], localeId: 'en_US').then((r) => result = r);
+      fake.flushMicrotasks();
+
+      // iOS закрыл попытку на первом слове термина.
+      mic.say('boarding');
+      mic.close(const SpeechAttempt.heard('boarding'));
+      // Пока микрофон переоткрывается, он глух — а человек договаривает.
+      fake.elapse(const Duration(milliseconds: 900));
+      expect(result, isNull, reason: 'запись закрылась, пока микрофон был глух');
+
+      // Микрофон снова жив и слышит конец термина.
+      mic.say('pass');
+      fake.elapse(const Duration(milliseconds: 1200));
+      expect(result?.outcome, SpeechTurnOutcome.heard);
+      expect(result?.transcript, 'boarding pass');
+    });
+  });
+
+  // ПРАВИЛО: наряд FIX-1, п. 3 — пауза, которую получает ПЛАГИН, заведомо длиннее нашей: его окно
+  // это потолок, а не правило.
+  // ЛОВИТ: `pauseFor: silenceAfterSpeech`, из-за которого плагин выигрывал гонку у движка и
+  // закрывал микрофон ровно на границе нашего правила.
+  test('плагину отдают паузу длиннее нашей — запись закрывает движок, а не он', () {
+    fakeAsync((fake) {
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config);
+      unawaited(turn.listen(expected: const [], localeId: 'en_US'));
+      fake.flushMicrotasks();
+
+      expect(mic.pauseFors.first, config.enginePause);
+      expect(config.enginePause > config.silenceAfterSpeech, isTrue);
+      unawaited(turn.cancel());
+      fake.flushMicrotasks();
     });
   });
 
@@ -177,17 +221,17 @@ void main() {
       turn.listen(expected: const [], localeId: 'en_US').then((r) => result = r);
       fake.flushMicrotasks();
 
-      // Человек говорит без пауз по слову в секунду — тишина не срабатывает ни разу.
+      // Человек говорит без пауз по слову в полсекунды — тишина не срабатывает ни разу.
       final words = <String>[];
-      for (var i = 0; i < 20; i++) {
+      for (var i = 0; i < 40; i++) {
         words.add('w$i');
         mic.say(words.join(' '));
-        fake.elapse(const Duration(seconds: 1));
-        if (i < 14) expect(result, isNull, reason: 'секунда ${i + 1} записи — она ещё открыта');
+        fake.elapse(const Duration(milliseconds: 500));
+        if (i < 29) expect(result, isNull, reason: 'полсекунды № ${i + 1} записи — она ещё открыта');
       }
 
       expect(result?.outcome, SpeechTurnOutcome.heard);
-      expect(result?.transcript.split(' ').length, 15, reason: 'ровно 15 секунд записи');
+      expect(result?.transcript.split(' ').length, 30, reason: 'ровно 15 секунд записи');
     });
   });
 

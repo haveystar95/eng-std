@@ -16,7 +16,6 @@ import '../../../data/speech/speech_grading_config.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import '../../../data/speech/speech_turn.dart';
 import 'session_exercise.dart';
-import 'session_grading.dart';
 import 'spoken_line.dart';
 
 /// The zeroth rung of the acquisition ladder: the word is SHOWN, not asked (кадр 16b).
@@ -198,13 +197,10 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
     });
 
     final term = widget.card.answerText;
-    // Окно то же, что у говорения слова такой длины: фразоподобный термин требует
-    // «предложенческого» (QA-21). Движку оно отдаётся паузой после речи — правилом закрытия
-    // попытки владеет он, а не плагин.
-    final window = SpokenAnswer.windowFor(asksForExample: false, term: term);
     final turn = SpeechTurn(
       _recognizer,
-      config: SpeechTurnConfig(silenceAfterSpeech: window.pauseFor),
+      // One rule for every microphone (FIX-1 §3): the pause that closes a recording is the engine's default.
+      config: const SpeechTurnConfig(),
       diagnostics: _diagnostics,
     );
     _turn = turn;

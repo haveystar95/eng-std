@@ -3492,10 +3492,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskSayPhrase => 'Say the phrase aloud';
 
   @override
-  String get planSessionTaskWhatAnswer => 'What will you answer?';
+  String get planSessionTaskSayEachMeaning => 'Say the phrase with each meaning';
 
   @override
-  String get planSessionTaskSayOwn => 'Choose what goes in and say the whole phrase';
+  String get planSessionOwnWordNow => 'and now with your own word';
+
+  @override
+  String get planSessionStateReplay => 'replay';
+
+  @override
+  String get planSessionTaskWhatAnswer => 'What will you answer?';
 
   @override
   String get planSessionBrowWord => 'Word';
@@ -3517,9 +3523,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionBrowAssembled => 'Assembled';
-
-  @override
-  String get planSessionBrowOwnSlot => 'Your slot';
 
   @override
   String planSessionBrowPartnerAsks(String role) {
@@ -3579,9 +3582,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionNoMicAllow => 'Allow';
-
-  @override
-  String get planSessionOwnChip => 'your own…';
 
   @override
   String get planSessionByMeaning => 'by meaning ✓';
@@ -3810,9 +3810,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionWhichNumber => 'Which number did you hear?';
-
-  @override
-  String get planSessionReplayNoGrade => 'replay, not graded';
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Answer in your own words';

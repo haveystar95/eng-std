@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -12,12 +11,9 @@ import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
 import '../../../../data/plan/session/voice_rounds.dart';
-import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_choice.dart';
-import '../parts/session_mic_panel.dart';
 import '../parts/session_tiles.dart';
-import '../session_mic.dart';
 import '../session_texts.dart';
 import 'card_kit.dart';
 import 'word_cards.dart' show autoplayOnce, kAutoplayDelay, kRepeatRate;
@@ -117,16 +113,13 @@ class _PhraseSheet extends StatelessWidget {
   );
 }
 
-/// A row of filler chips 40: the chosen one is ink, the rest paper (32-1, 32-7); [outlined] — the chips of «my own
-/// slot» (32-9), which fill the slot instead of choosing a meaning.
+/// A row of filler chips 40: the chosen one is ink, the rest paper (32-1, 32-8).
 class _FillerChips extends StatelessWidget {
-  const _FillerChips({super.key, required this.fillers, required this.selected, required this.onTap, this.extra, this.outlined = false});
+  const _FillerChips({required this.fillers, required this.selected, required this.onTap});
 
   final List<CardFiller> fillers;
   final int? selected;
   final ValueChanged<CardFiller>? onTap;
-  final Widget? extra;
-  final bool outlined;
 
   @override
   Widget build(BuildContext context) => Wrap(
@@ -138,11 +131,9 @@ class _FillerChips extends StatelessWidget {
           key: ValueKey('chip-${f.index}'),
           text: f.target,
           height: 40,
-          outlined: outlined,
           selected: selected == f.index,
           onTap: onTap == null ? null : () => onTap!(f),
         ),
-      ?extra,
     ],
   );
 }
@@ -711,65 +702,158 @@ class _Rounds extends StatelessWidget {
 
 // ── 32-7 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// SAY IT WHOLE · CHOOSE THE MEANING (32-7): task line — «Choose what goes in and say the whole phrase». The chips
-/// only CHOOSE: one is always chosen and stands in the brass slot of the English line, and under the phrase the
-/// whole native sentence with that meaning. The microphone is the only action on the card — no sound on the sheet
-/// and no caption under the chips. Pass — coverage of the phrase with the chosen filler AND all of that filler's
-/// words; on a pass the frame is in sage and the slot holds what was heard, in sage. The answer carries the chosen
-/// `filler_index`.
-class PhraseOtherSlotCard extends StatefulWidget {
-  const PhraseOtherSlotCard({super.key, required this.env, required this.payload});
+/// SAY IT WHOLE (32-7, work order FIX-1 §6) — THE ONE TRAINER OF A FRAME WITH A WINDOW. The window shows a meaning,
+/// the learner says the WHOLE phrase, a pass moves the next meaning into the window, and so on through every meaning
+/// the card carries (2–3); the last round is «and now with your own word» — the former «my own slot» (32-9), which
+/// has no screen of its own any more.
+///
+/// The chips are not a choice but a STATE: said · now · ahead. Nothing on this card is tapped except the microphone.
+///
+/// The two payloads it is dealt differ in ONE thing, and the contract decides it: who may pass the own word.
+/// `phrase_other_slot` is a voice kind and the phone grades it (the frame's own words covered, and something said in
+/// the window); `phrase_own_slot` is a judged kind whose pass only the server may write (`…/judge`), so that round
+/// asks the judge and the client sends no answer of its own on a pass.
+class PhraseSayWholeCard extends StatefulWidget {
+  /// `phrase_other_slot` — the phone grades every round.
+  PhraseSayWholeCard.other({super.key, required this.env, required PhraseOtherSlotPayload payload})
+    : frame = payload.frame,
+      coverageMin = payload.coverageMin,
+      phraseKey = payload.key,
+      judged = false,
+      hints = const [],
+      expectedText = payload.expectedText,
+      slotExpected = payload.slotExpected,
+      dealtFiller = payload.fillerIndex;
+
+  /// `phrase_own_slot` — the own word goes to the slot judge.
+  PhraseSayWholeCard.own({super.key, required this.env, required PhraseOwnSlotPayload payload})
+    : frame = payload.frame,
+      coverageMin = payload.coverageMin,
+      phraseKey = payload.key,
+      judged = true,
+      hints = payload.examples,
+      expectedText = null,
+      slotExpected = null,
+      dealtFiller = null;
 
   final CardEnv env;
-  final PhraseOtherSlotPayload payload;
+  final CardFrame frame;
+  final double coverageMin;
+
+  /// The phrase's key words — underlined in the frame.
+  final String? phraseKey;
+
+  /// The own word is the judge's to pass (`phrase_own_slot`).
+  final bool judged;
+
+  /// Words the recognizer should expect beyond the frame (`examples`).
+  final List<String> hints;
+
+  /// The server's strings for the filler the card was dealt with; null — the payload carries none.
+  final String? expectedText;
+  final String? slotExpected;
+  final int? dealtFiller;
 
   @override
-  State<PhraseOtherSlotCard> createState() => _PhraseOtherSlotCardState();
+  State<PhraseSayWholeCard> createState() => _PhraseSayWholeCardState();
 }
 
-class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCardState<PhraseOtherSlotCard> {
+class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardState<PhraseSayWholeCard> {
+  /// The rounds: every meaning of the window, then the learner's own word (null). A frame without a window has the
+  /// one round of saying it as it stands.
+  late final List<CardFiller?> _rounds = _roundsOf(widget.frame);
+
+  static List<CardFiller?> _roundsOf(CardFrame frame) {
+    final rounds = <CardFiller?>[...frame.fillers, if (frame.hasSlot) null];
+    return rounds.isEmpty ? const [null] : rounds;
+  }
+
+  /// How the last attempt of this round went — the frame and the window separately (the sage of a pass).
   ({bool frame, bool slot})? _parts;
 
-  /// What went into the slot on a pass — the heard words beyond the frame.
+  /// What went into the window on a pass — the heard words beyond the frame, or the judge's value.
   String? _heardSlot;
 
-  /// The chip the learner chose; null — the filler the card came with.
-  CardFiller? _chosen;
+  /// Why the judge did not accept the own word; null — nothing was rejected.
+  String? _reason;
 
-  PhraseOtherSlotPayload get p => widget.payload;
+  CardFiller? get _filler => _rounds[round];
+
+  /// The last round — «and now with your own word».
+  bool get _own => _filler == null;
+
+  String get _framePart => SessionRules.framePart(widget.frame.frameTarget);
+
+  /// The card was dealt with this meaning, so the server's own strings describe it best.
+  bool get _dealt => _filler != null && _filler!.index == widget.dealtFiller;
 
   @override
   CardEnv get env => widget.env;
 
-  /// There is something to choose from: a slot with more than one meaning.
-  bool get _choosable => p.frame.hasSlot && p.frame.fillers.length > 1;
+  @override
+  int get roundCount => _rounds.length;
 
-  /// What stands in the slot — always one: the chosen chip, the card's own filler, otherwise the first.
-  CardFiller? get _filler => _chosen ?? p.frame.filler(p.fillerIndex) ?? p.frame.fillers.firstOrNull;
+  @override
+  int? fillerIndexOfRound(int round) => _rounds[round]?.index;
 
-  /// The card's own filler is said with the server's own strings; another chip — the frame with that chip.
-  bool get _ownFiller {
-    final f = _filler;
-    return f == null || f.index == p.fillerIndex;
+  @override
+  String get expectedSpeech {
+    final filler = _filler;
+    if (filler == null) return _framePart;
+    return _dealt ? widget.expectedText ?? widget.frame.filledWith(filler.target) : widget.frame.filledWith(filler.target);
   }
 
-  @override
-  String get expectedSpeech => _ownFiller ? p.expectedText : p.frame.filledWith(_filler!.target);
-
-  /// All of these words must be heard — the meaning in the slot.
-  String get _slotExpected => _ownFiller ? p.slotExpected : _filler!.target;
+  /// All of these words must be heard — the meaning in the window; the own round has none of its own.
+  String get _slotExpected => _dealt ? widget.slotExpected ?? _filler!.target : _filler?.target ?? '';
 
   @override
-  int? get answerFillerIndex => _filler?.index;
+  List<String> get contextual => [
+    expectedSpeech,
+    _framePart,
+    for (final f in widget.frame.fillers) f.target,
+    ...widget.hints,
+  ];
 
   @override
   bool accepts(String heard) {
-    final parts = SessionRules.otherSlotParts(p, heard, env.articles, expectedText: expectedSpeech, slotExpected: _slotExpected);
+    final frameSaid = SpeechCoverage.covers(heard, expectedSpeech, widget.coverageMin, env.articles);
+    final slot = _slotWordsOf(heard, widget.frame, '');
+    // The window: a known meaning is heard whole; the own word is whatever was said beyond the frame — that there
+    // WAS something is the phone's whole claim about it (the meaning is the judge's, where there is one).
+    final slotSaid = _own ? slot.isNotEmpty : SpeechCoverage.covers(heard, _slotExpected, SpeechCoverage.all, env.articles);
     setState(() {
-      _parts = parts;
-      _heardSlot = _slotWordsOf(heard, p.frame, _slotExpected);
+      _parts = (frame: frameSaid, slot: slotSaid);
+      _heardSlot = slot.isEmpty ? null : slot;
     });
-    return parts.frame && parts.slot;
+    return frameSaid && slotSaid;
+  }
+
+  /// The own word of a judged card is the JUDGE's to pass: the microphone stays closed until the verdict, and a
+  /// rejection stands under the microphone in the judge's own words.
+  @override
+  Future<bool> grade(String heard) async {
+    if (!_own || !widget.judged) return accepts(heard);
+    if (!accepts(heard)) return false;
+    try {
+      final outcome = await env.judge(heard);
+      if (!mounted) return false;
+      setState(() {
+        _reason = outcome.accepted ? null : (outcome.reasonNative ?? '');
+        if (outcome.accepted && outcome.slotValue != null) _heardSlot = outcome.slotValue;
+      });
+      return outcome.accepted;
+    } catch (e) {
+      if (mounted) setState(() => _reason = AppLocalizations.of(context).planSessionOffline);
+      return false;
+    }
+  }
+
+  /// A JUDGED PASS IS THE SERVER'S: the judge wrote the card's answer when it accepted the own word, and this client
+  /// may not write `passed` on a judged kind at all (`CardKind::allows`). A skip is the client's, as always.
+  @override
+  void submitAnswer(SessionAnswer answer) {
+    if (widget.judged && answer.result == SessionResult.passed) return;
+    env.submit(answer);
   }
 
   @override
@@ -779,19 +863,24 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
   }
 
   @override
+  void onRoundStarted(int round) {
+    _parts = null;
+    _heardSlot = null;
+    _reason = null;
+  }
+
+  @override
   void dispose() {
     disposeVoice();
     super.dispose();
   }
 
-  /// Another chip: the slot, the native sentence and what the microphone listens for change together.
-  void _pick(CardFiller f) {
-    setState(() {
-      _chosen = f;
-      _parts = null;
-      _heardSlot = null;
-    });
-    refreshVoice();
+  /// The key in the frame — case-insensitive; not found — no underline.
+  TextRange? get _keyRange {
+    final key = widget.phraseKey;
+    if (key == null) return null;
+    final at = widget.frame.parts.before.toLowerCase().indexOf(key.toLowerCase());
+    return at < 0 ? null : TextRange(start: at, end: at + key.length);
   }
 
   @override
@@ -799,39 +888,89 @@ class _PhraseOtherSlotCardState extends State<PhraseOtherSlotCard> with VoiceCar
     final noMic = noMicBody((s) => SessionTexts.stage(AppLocalizations.of(context), s));
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
+    final passed = _parts?.frame == true && _parts?.slot == true && (done || roundPassed);
+    final listening = mic.isListening;
     final filler = _filler;
-    final parts = done && !skippedAfterMisses ? _parts : null;
-    final chipsOpen = !done && !mic.isListening;
+    // The own word fills the window as it is said, and stays there while the judge thinks; a known meaning stands in
+    // the window from the start of its round.
+    final live = _own && listening && !mic.closed ? _slotWordsOf(mic.partial, widget.frame, '') : null;
+    final shown = passed
+        ? (_heardSlot ?? _slotExpected)
+        : _own
+        ? (live != null ? (live.isEmpty ? null : live) : _heardSlot)
+        : filler?.target;
     return CardLayout(
       bodyGap: 12,
-      centerBody: true,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskSayOwn),
+      // The dock grows and shrinks across the states of a recording, and the chips are the card's own progress:
+      // nothing of the field may end up under it (the same reason 32-9 had before the two were merged).
+      overlayDock: false,
+      task: SessionTask(l.planSessionTaskSayEachMeaning, companion: _own ? l.planSessionOwnWordNow : null),
       body: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _PhraseSheet(
             plate: _PhrasePlate(
-              child: SessionFrameText.frame(
-                p.frame,
+              child: SessionFrameText(
+                before: widget.frame.parts.before,
+                after: widget.frame.parts.after,
                 style: AppTextSession.frame,
-                frameColor: parts?.frame == true ? AppColors.verdictKnown : null,
-                slot: parts?.slot == true ? (_heardSlot ?? _slotExpected) : filler?.target,
-                look: parts?.slot == true ? SlotLook.sage : SlotLook.filled,
+                window: widget.frame.hasSlot,
+                frameColor: passed && _parts?.frame == true ? AppColors.verdictKnown : null,
+                slot: shown,
+                look: passed ? SlotLook.sage : (shown == null ? SlotLook.empty : SlotLook.filled),
+                caret: _own && listening && !mic.closed,
+                underline: _keyRange,
               ),
             ),
-            footer: _PhraseFooter(native: _native(p.frame, filler), nativeStyle: AppTextSession.body),
+            // No reading line on this sheet (as on 32-7 before the merge): the card carries the row of meanings under
+            // it, and the two have to stand above the microphone on an 844 pt phone.
+            footer: _PhraseFooter(
+              native: _own ? widget.frame.frameNative : _native(widget.frame, filler),
+              nativeStyle: AppTextSession.body,
+            ),
           ),
-          if (_choosable) ...[
+          if (widget.frame.hasSlot) ...[
             const SizedBox(height: 20),
-            _FillerChips(fillers: p.frame.fillers, selected: filler?.index, onTap: chipsOpen ? _pick : null),
+            _RoundChips(fillers: widget.frame.fillers, round: round, rounds: _rounds),
           ],
         ],
       ),
-      bottom: voiceDock(context, showIdleCaption: false),
+      bottom: voiceDock(context, showIdleCaption: false, missedCaption: _reason),
     );
   }
+}
+
+/// THE CHIPS OF «SAY IT WHOLE» — a STATE, not a choice (FIX-1 §6): said (a sage check), now (ink), ahead (an
+/// outline). The own-word round has no chip of its own — the row is then all checks, and the task line says what
+/// is left to do.
+class _RoundChips extends StatelessWidget {
+  const _RoundChips({required this.fillers, required this.round, required this.rounds});
+
+  final List<CardFiller> fillers;
+  final int round;
+  final List<CardFiller?> rounds;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final f in fillers)
+        if (rounds.indexWhere((r) => r?.index == f.index) case final at when at >= 0)
+          SessionTile(
+            key: ValueKey('chip-${f.index}'),
+            text: f.target,
+            height: 40,
+            outlined: true,
+            selected: at == round,
+            trailing: at < round
+                ? const Icon(LucideIcons.check, size: 16, color: AppColors.verdictKnown)
+                : null,
+          ),
+    ],
+  );
 }
 
 /// The heard words beyond the frame [frame] in speech order — what goes into the slot; empty — [fallback].
@@ -1107,341 +1246,4 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
       ),
     );
   }
-}
-
-// ── 32-9 ──────────────────────────────────────────────────────────────────────────────────────────
-
-/// OWN SLOT (32-9, phone pass of SESSION-1b′, item 4): the window is EMPTY when the card opens. A known filler
-/// chip puts its filler into the window without darkening and leaves the microphone waiting for the whole
-/// phrase; «your own…» keeps the window empty with a caret and starts recording, the words heard after the frame
-/// stand frozen in the window until the verdict. Whatever was said goes to the slot judge; accepted — the
-/// window turns sage with the judge's value and «by meaning ✓», rejected — the reason with «Try again» /
-/// «Skip». `hinted` is always false: the frame is always on screen.
-class PhraseOwnSlotCard extends StatefulWidget {
-  const PhraseOwnSlotCard({super.key, required this.env, required this.payload});
-
-  final CardEnv env;
-  final PhraseOwnSlotPayload payload;
-
-  @override
-  State<PhraseOwnSlotCard> createState() => _PhraseOwnSlotCardState();
-}
-
-class _PhraseOwnSlotCardState extends State<PhraseOwnSlotCard> {
-  late final SessionMic _mic;
-  SessionJudgeOutcome? _verdict;
-  String? _reason;
-  bool _judging = false;
-  bool _done = false;
-  int _attempts = 0;
-  String _heard = '';
-  int? _chip;
-  bool _ownChip = false;
-  bool _noMicReported = false;
-
-  PhraseOwnSlotPayload get p => widget.payload;
-
-  String get _framePart => (p.frame.parts.before + p.frame.parts.after).trim();
-
-  @override
-  void initState() {
-    super.initState();
-    _mic = widget.env.makeMic(_framePart, [
-      _framePart,
-      for (final f in p.chips) f.target,
-      ...p.examples,
-    ])..onTurn = _onTurn;
-    _mic.addListener(_onMic);
-  }
-
-  @override
-  void dispose() {
-    _mic.removeListener(_onMic);
-    _mic.dispose();
-    super.dispose();
-  }
-
-  void _onMic() {
-    final noMic = _mic.state == MicState.unavailable;
-    if (noMic != _noMicReported) {
-      _noMicReported = noMic;
-      widget.env.reportNoMic(noMic);
-    }
-    if (mounted) setState(() {});
-  }
-
-  void _onTurn(MicTurn turn) {
-    if (turn.outcome != SpeechTurnOutcome.heard || turn.transcript.trim().isEmpty) {
-      _attempts++;
-      _mic.settle(accepted: false);
-      setState(() => _reason = null);
-      return;
-    }
-    unawaited(_judge(turn.transcript));
-  }
-
-  Future<void> _judge(String heard) async {
-    if (_judging || _done) return;
-    setState(() {
-      _judging = true;
-      _reason = null;
-      _heard = heard;
-    });
-    try {
-      final verdict = await widget.env.judge(heard);
-      if (!mounted) return;
-      _attempts = verdict.attempts;
-      if (verdict.accepted) {
-        _mic.settle(accepted: true);
-        AppHaptics.success();
-        SessionSounds.verdict(correct: true);
-        setState(() {
-          _verdict = verdict;
-          _done = true;
-          _judging = false;
-        });
-        unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
-          if (mounted) unawaited(widget.env.next());
-        }));
-      } else {
-        _mic.settle(accepted: false);
-        AppHaptics.warning();
-        SessionSounds.verdict(correct: false);
-        setState(() {
-          _reason = verdict.reasonNative;
-          _judging = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      _mic.settle(accepted: false);
-      setState(() {
-        _reason = AppLocalizations.of(context).planSessionOffline;
-        _judging = false;
-      });
-    }
-  }
-
-  /// A known filler: into the window, the chip stays light, the microphone waits for the whole phrase.
-  void _pickChip(CardFiller f) {
-    if (_judging || _done) return;
-    if (_mic.state == MicState.missed) _mic.reset();
-    _mic.expected = p.frame.filledWith(f.target);
-    setState(() {
-      _chip = f.index;
-      _ownChip = false;
-      _reason = null;
-    });
-  }
-
-  /// «your own…»: the window stays empty with a caret, recording starts.
-  void _pickOwn() {
-    if (_judging || _done) return;
-    _mic.expected = _framePart;
-    setState(() {
-      _ownChip = true;
-      _chip = null;
-      _reason = null;
-    });
-    unawaited(_mic.tap());
-  }
-
-  void _tryAgain() {
-    _mic.reset();
-    _mic.expected = _framePart;
-    setState(() {
-      _reason = null;
-      _chip = null;
-      _ownChip = false;
-    });
-  }
-
-  void _skip({bool noMic = false}) {
-    if (_done) return;
-    _done = true;
-    widget.env.submit(SessionAnswer(
-      result: SessionResult.skipped,
-      attempts: _attempts < 1 ? 1 : _attempts,
-      response: SessionResponse(heard: _heard.isEmpty ? null : _heard, noMic: noMic ? true : null),
-    ));
-    widget.env.reportNoMic(false);
-    unawaited(widget.env.next());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final env = widget.env;
-    if (_mic.state == MicState.unavailable) {
-      return SessionNoMicView(
-        stageName: (s) => SessionTexts.stage(l, s),
-        onSkip: () => _skip(noMic: true),
-        onAllow: () async {
-          final ok = await _mic.askAgain();
-          if (!ok && _mic.blockedInSettings) await env.openSettings();
-        },
-      );
-    }
-    final accepted = _verdict?.accepted == true;
-    final listening = _mic.state == MicState.listening;
-    final chosen = _slotFromChip();
-    final slotValue = accepted ? (_verdict!.slotValue ?? chosen) : null;
-    // Recording «your own…»: the words said after the frame fill the window live; once the recording is closed
-    // and waiting for the judge they stay there frozen instead of vanishing until the verdict. A chosen chip
-    // keeps its filler in the window.
-    final liveSlot = listening && chosen == null ? _slotWords(_mic.partial) : null;
-    final shownSlot = slotValue ?? chosen ?? (liveSlot == null || liveSlot.isEmpty ? null : liveSlot);
-    // «your own…» is selected while its attempt is recorded or judged and stays selected after a voice pass.
-    final ownSelected = _chip == null && (_ownChip || listening || _judging || accepted);
-    // The chips and everything the microphone says are ONE column at the bottom: the live line runs UNDER the
-    // chip row and can never lie over it — idle, recording or verdict (screenshot fixes of 1b). The sheet above
-    // never reaches into that zone; when it does not fit it scrolls.
-    return CardLayout(
-      bodyGap: 12,
-      fadeStop: 0.12,
-      overlayDock: false,
-      task: SessionTask(l.planSessionTaskSayOwn, companion: env.replayNote(l)),
-      body: _PhraseSheet(
-        plate: _PhrasePlate(
-          child: SessionFrameText.frame(
-            p.frame,
-            style: AppTextSession.frame,
-            frameColor: accepted || (listening && _framePartHeard) ? AppColors.verdictKnown : null,
-            slot: shownSlot,
-            look: accepted ? SlotLook.sage : (shownSlot != null ? SlotLook.filled : SlotLook.empty),
-            caret: listening && !_mic.closed && chosen == null,
-          ),
-        ),
-        footer: _PhraseFooter(
-          eyebrow: l.planSessionBrowOwnSlot,
-          reading: p.frame.framePronunciationNative,
-          native: accepted ? l.planSessionByMeaning : p.frame.frameNative,
-          nativeStyle: accepted ? AppTextSession.body.copyWith(color: AppColors.verdictKnown) : null,
-        ),
-      ),
-      bottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _FillerChips(
-            key: const ValueKey('own-slot-chips'),
-            fillers: p.chips,
-            selected: null,
-            outlined: true,
-            onTap: _judging || _done || listening ? null : _pickChip,
-            extra: SessionTile(
-              key: const ValueKey('chip-own'),
-              text: l.planSessionOwnChip,
-              height: 40,
-              outlined: true,
-              selected: ownSelected,
-              trailing: Icon(LucideIcons.mic, size: 16, color: ownSelected ? AppColors.paper : AppColors.ink),
-              onTap: _judging || _done || listening ? null : _pickOwn,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // The zone is at least as tall as its idle state, content pinned to the bottom: a shorter state (the judge's
-          // reason) does not pull the chip row down; recording grows the zone and lifts the row, never covers it.
-          ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: _voiceZone + (kDebugMode ? _debugFieldHeight : 0)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [_dock(context)],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Minimum height of the voice zone under the chips — its idle state: «Skip», the 72 button and the 14 gaps (no
-  /// «tap to speak» caption since SESSION-2a §5). Reserving the recording height (224) instead cut the sheet's footer
-  /// on an 844 pt phone (simulator pass of SESSION-1b′).
-  static const double _voiceZone = 126;
-
-  /// The debug-build «what was heard» field with the gap above it.
-  static const double _debugFieldHeight = 46;
-
-  /// The frame outside the slot has already been said — live, only for the line's colour (the pass is the judge's).
-  bool get _framePartHeard =>
-      _mic.partial.isNotEmpty && SpeechCoverage.covers(_mic.partial, _framePart, p.coverageMin, widget.env.articles);
-
-  String? _slotFromChip() {
-    for (final f in p.chips) {
-      if (f.index == _chip) return f.target;
-    }
-    return null;
-  }
-
-  /// The heard words beyond the frame — so that the slot fills live (screen only, the pass is the judge's).
-  String _slotWords(String heard) {
-    final frameWords = SpeechCoverage.words(_framePart).toSet();
-    return heard
-        .split(RegExp(r'\s+'))
-        .where((w) {
-          final tokens = SpeechCoverage.words(w);
-          return tokens.isNotEmpty && !tokens.every(frameWords.contains);
-        })
-        .join(' ');
-  }
-
-  Widget _dock(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    if (_reason != null && !_done) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(_reason!, key: const ValueKey('own-slot-reason'), textAlign: TextAlign.center, style: AppTextSession.meta),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _TextButton(label: l.planSessionTryAgain, color: AppColors.brassInk, onTap: _tryAgain),
-              const SizedBox(width: 24),
-              _TextButton(label: l.planSessionSkip, onTap: _skip),
-            ],
-          ),
-        ],
-      );
-    }
-    return SessionMicPanel(
-      mic: _mic,
-      expected: _framePart,
-      onSkip: _done || _judging ? null : () => _skip(),
-      heardText: _heardLine(),
-      // No «tap to speak» under the chips: the task line says what to do (SESSION-2a §5).
-      showIdleCaption: false,
-    );
-  }
-
-  /// The «heard» line after a pass — the frame with the judge's slot value.
-  String? _heardLine() {
-    final v = _verdict;
-    if (v == null || !v.accepted) return null;
-    final value = v.slotValue ?? _slotFromChip();
-    return value == null ? _heard : p.frame.filledWith(value).replaceAll(RegExp(r'[.?!…]+$'), '');
-  }
-}
-
-class _TextButton extends StatelessWidget {
-  const _TextButton({required this.label, required this.onTap, this.color});
-
-  final String label;
-  final VoidCallback onTap;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Text(label, style: AppTextSession.skip.copyWith(color: color)),
-      ),
-    ),
-  );
 }

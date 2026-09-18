@@ -42,6 +42,10 @@ abstract final class AudioMixer {
   /// Cut the line that is sounding; whoever waits on [speak] gets false.
   static Future<void> stopSpeech() => _quietly('stopSpeech');
 
+  /// START THE ENGINE BEFORE ANYTHING HAS TO SOUND (FIX-1 §2). Starting it costs hundreds of milliseconds after a
+  /// route change, and the screen that pays for it is the one that asked for the sound. Answers whether it runs.
+  static Future<bool> warmUp() async => await _quietly<bool>('warmUp') ?? false;
+
   /// Decode short sounds ahead of their first play: name → bundled asset. Answers how many decoded.
   static Future<int> loadEffects(Map<String, String> assets) async =>
       (await _quietly<int>('loadEffects', {'effects': assets})) ?? 0;

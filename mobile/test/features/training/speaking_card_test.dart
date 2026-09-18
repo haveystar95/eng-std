@@ -588,7 +588,7 @@ void main() {
 
         await record(tester);
 
-        expect(recognizer.pauseForsPerCall.first, config.silenceAfterSpeech, reason: card.answer);
+        expect(recognizer.pauseForsPerCall.first, config.enginePause, reason: card.answer);
         expect(recognizer.timeoutsPerCall.first, config.effectiveMaxRecording, reason: card.answer);
       }
     });

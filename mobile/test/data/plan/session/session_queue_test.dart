@@ -463,8 +463,12 @@ void main() {
         if (SessionRules.mayWrite(card.kind, SessionResult.passed)) {
           session.submit(card, const SessionAnswer(result: SessionResult.passed, attempts: 1));
         } else {
-          final verdict = await session.judge(card, 'It started last night');
+          // THE PHONE GRADES A REPLAY (наряд FIX-1 §5): coverage of the frame's own words, not «any sound at all».
+          final missed = await session.judge(card, 'привет как дела');
+          expect(missed.accepted, isFalse, reason: 'a replay is graded, not waved through');
+          final verdict = await session.judge(card, SessionRules.expectedSpeech(card.payload));
           expect(verdict.accepted, isTrue);
+          expect(verdict.attempts, 2, reason: 'the attempts of this card are counted on the phone');
         }
         await session.next();
       }

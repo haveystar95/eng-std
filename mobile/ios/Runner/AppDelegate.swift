@@ -220,6 +220,14 @@ final class AudioMixer {
   private var nextEffectNode = 0
   private var effects: [String: AVAudioPCMBuffer] = [:]
 
+  /// EVERY TOUCH OF THE ENGINE HAPPENS HERE, AND NEVER ON THE UI THREAD (work order FIX-1 §2).
+  ///
+  /// `AVAudioEngine.start()` builds the audio graph against the hardware and takes hundreds of milliseconds after a
+  /// route or format change — and the recogniser causes one at every voice card, which stopped this engine and left
+  /// the next sound to start it again. On the platform thread that is a frozen screen, and it landed exactly where
+  /// the owner saw it: on the change of card in «Dialogue» and «Speak myself», where every card records.
+  private let work = DispatchQueue(label: "com.denis.engstd.audio-mixer", qos: .userInitiated)
+
   /// The Dart call waiting for the current line to end.
   private var speechResult: FlutterResult?
 
@@ -235,32 +243,56 @@ final class AudioMixer {
   /// Leading silence below −50 dBFS is cut from a short sound; 2 ms are kept before the first audible frame.
   private static let silenceThreshold: Float = 0.003_16
 
+  /// A SHORT SOUND ENDS IN A FADE, NOT ON A CLIFF (work order FIX-1 §4): a buffer that stops on a non-zero sample
+  /// is a step in the signal, and a step is the click the owner heard at the end of «верно». 12 ms is short enough
+  /// not to be heard as a fade and long enough to leave no edge.
+  private static let fadeOutSeconds = 0.012
+
   private var observers: [NSObjectProtocol] = []
 
   init() {
-    engine.attach(speechNode)
-    engine.attach(pace)
-    engine.connect(speechNode, to: pace, format: format)
-    engine.connect(pace, to: engine.mainMixerNode, format: format)
-    for _ in 0..<Self.effectVoices {
-      let node = AVAudioPlayerNode()
-      engine.attach(node)
-      engine.connect(node, to: engine.mainMixerNode, format: format)
-      effectNodes.append(node)
-    }
+    wire()
     let center = NotificationCenter.default
-    // A route or format change stops the engine by itself and no completion arrives for what was playing.
+    // A route or format change stops the engine by itself and no completion arrives for what was playing. The engine
+    // is brought back UP here — left dead, it was started by the next sound, on the platform thread.
     observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
-      self?.cutSpeech()
+      guard let self else { return }
+      self.work.async {
+        self.cutSpeech()
+        self.wire()
+        _ = self.running()
+      }
     })
     observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+      guard let self else { return }
       let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
-      if raw == AVAudioSession.InterruptionType.began.rawValue { self?.cutSpeech() }
+      if raw == AVAudioSession.InterruptionType.began.rawValue { self.work.async { self.cutSpeech() } }
     })
   }
 
   deinit {
     observers.forEach(NotificationCenter.default.removeObserver)
+  }
+
+  /// Attach and connect the nodes — at start-up, and again after a configuration change, which breaks connections
+  /// made against the old format.
+  private func wire() {
+    if speechNode.engine == nil {
+      engine.attach(speechNode)
+      engine.attach(pace)
+    }
+    engine.connect(speechNode, to: pace, format: format)
+    engine.connect(pace, to: engine.mainMixerNode, format: format)
+    if effectNodes.isEmpty {
+      for _ in 0..<Self.effectVoices {
+        let node = AVAudioPlayerNode()
+        engine.attach(node)
+        effectNodes.append(node)
+      }
+    }
+    for node in effectNodes {
+      engine.connect(node, to: engine.mainMixerNode, format: format)
+    }
   }
 
   func register(_ messenger: FlutterBinaryMessenger) {
@@ -271,24 +303,34 @@ final class AudioMixer {
         return
       }
       let args = call.arguments as? [String: Any] ?? [:]
-      switch call.method {
-      case "playSpeech": self.playSpeech(args, result)
-      case "stopSpeech":
-        self.cutSpeech()
-        result(nil)
-      case "loadEffects": self.loadEffects(args, result)
-      case "playEffect": self.playEffect(args, result)
-      case "releaseEffects":
-        for name in args["names"] as? [String] ?? [] { self.effects.removeValue(forKey: name) }
-        result(nil)
-      case "pause":
-        self.cutSpeech()
-        self.effectNodes.forEach { $0.stop() }
-        self.engine.stop()
-        result(nil)
-      default: result(FlutterMethodNotImplemented)
+      // Nothing below runs on the platform thread: the engine is slow exactly when the screen is busy.
+      self.work.async {
+        switch call.method {
+        case "playSpeech": self.playSpeech(args, result)
+        case "stopSpeech":
+          self.cutSpeech()
+          self.answer(result, nil)
+        case "warmUp":
+          self.answer(result, self.running())
+        case "loadEffects": self.loadEffects(args, result)
+        case "playEffect": self.playEffect(args, result)
+        case "releaseEffects":
+          for name in args["names"] as? [String] ?? [] { self.effects.removeValue(forKey: name) }
+          self.answer(result, nil)
+        case "pause":
+          self.cutSpeech()
+          self.effectNodes.forEach { $0.stop() }
+          self.engine.stop()
+          self.answer(result, nil)
+        default: self.answer(result, FlutterMethodNotImplemented)
+        }
       }
     }
+  }
+
+  /// A channel answer belongs to the platform thread, wherever it was decided.
+  private func answer(_ result: @escaping FlutterResult, _ value: Any?) {
+    DispatchQueue.main.async { result(value) }
   }
 
   private func level(_ args: [String: Any], default value: Float) -> Float {
@@ -298,8 +340,12 @@ final class AudioMixer {
   private func running() -> Bool {
     if engine.isRunning { return true }
     do {
+      let started = CFAbsoluteTimeGetCurrent()
       engine.prepare()
       try engine.start()
+      // The number this line prints is the freeze this queue exists to keep off the screen — it is worth seeing in
+      // a live pass.
+      NSLog("[audio-mixer] engine started in %.0f ms", (CFAbsoluteTimeGetCurrent() - started) * 1000)
       return true
     } catch {
       NSLog("[audio-mixer] engine did not start: \(error.localizedDescription)")
@@ -311,13 +357,13 @@ final class AudioMixer {
 
   private func playSpeech(_ args: [String: Any], _ result: @escaping FlutterResult) {
     guard let path = args["path"] as? String else {
-      result(FlutterError(code: "bad_args", message: "expected a `path`", details: nil))
+      answer(result, FlutterError(code: "bad_args", message: "expected a `path`", details: nil))
       return
     }
     // The path comes from our own cache. A missing file is an honest answer (the disk was cleaned): Dart then reads
     // the line with the system voice instead of silence.
     guard FileManager.default.fileExists(atPath: path) else {
-      result(FlutterError(code: "no_file", message: "no audio at \(path)", details: nil))
+      answer(result, FlutterError(code: "no_file", message: "no audio at \(path)", details: nil))
       return
     }
     let volume = level(args, default: 1)
@@ -327,36 +373,30 @@ final class AudioMixer {
     // The line before this one is cut the moment this one is asked for, not when it starts.
     cutSpeech()
     let serial = speechSerial
-    let target = format
-    DispatchQueue.global(qos: .userInitiated).async {
-      let buffer = Self.decode(URL(fileURLWithPath: path), to: target)
-      DispatchQueue.main.async { [weak self] in
-        guard let self else { return }
-        // Cut or replaced while decoding: this line never sounds.
-        guard serial == self.speechSerial else {
-          result(false)
-          return
-        }
-        guard let buffer else {
-          result(FlutterError(code: "play_failed", message: "undecodable audio", details: nil))
-          return
-        }
-        guard self.running() else {
-          result(FlutterError(code: "play_failed", message: "engine not running", details: nil))
-          return
-        }
-        self.speechNode.volume = volume
-        self.pace.rate = rate
-        self.speechResult = result
-        self.speechNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] _ in
-          DispatchQueue.main.async {
-            guard let self, serial == self.speechSerial else { return }
-            self.finishSpeech(ended: true)
-          }
-        }
-        self.speechNode.play()
+    guard let buffer = Self.decode(URL(fileURLWithPath: path), to: format) else {
+      answer(result, FlutterError(code: "play_failed", message: "undecodable audio", details: nil))
+      return
+    }
+    // Cut or replaced while decoding: this line never sounds.
+    guard serial == speechSerial else {
+      answer(result, false)
+      return
+    }
+    guard running() else {
+      answer(result, FlutterError(code: "play_failed", message: "engine not running", details: nil))
+      return
+    }
+    speechNode.volume = volume
+    pace.rate = rate
+    speechResult = result
+    speechNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] _ in
+      guard let self else { return }
+      self.work.async {
+        guard serial == self.speechSerial else { return }
+        self.finishSpeech(ended: true)
       }
     }
+    speechNode.play()
   }
 
   /// Whatever line is sounding or being prepared stops, and whoever waits for it hears `false`.
@@ -369,31 +409,29 @@ final class AudioMixer {
   private func finishSpeech(ended: Bool) {
     let pending = speechResult
     speechResult = nil
-    pending?(ended)
+    if let pending { answer(pending, ended) }
   }
 
   // MARK: short sounds
 
-  /// `{effects: {name: asset}}` — decoded in the background and kept by name; answers how many decoded.
+  /// `{effects: {name: asset}}` — decoded and kept by name; answers how many decoded.
   private func loadEffects(_ args: [String: Any], _ result: @escaping FlutterResult) {
     let wanted = args["effects"] as? [String: String] ?? [:]
-    let target = format
-    DispatchQueue.global(qos: .userInitiated).async {
-      var loaded: [String: AVAudioPCMBuffer] = [:]
-      for (name, asset) in wanted {
-        if let buffer = Self.decodeAsset(asset, to: target) { loaded[name] = buffer }
-      }
-      DispatchQueue.main.async { [weak self] in
-        self?.effects.merge(loaded) { _, new in new }
-        result(loaded.count)
+    var loaded = 0
+    for (name, asset) in wanted where effects[name] == nil {
+      if let buffer = Self.decodeAsset(asset, to: format) {
+        effects[name] = buffer
+        loaded += 1
       }
     }
+    answer(result, loaded)
   }
 
-  /// `{name, asset, level}` — a sound not loaded yet is decoded on the spot from `asset`.
+  /// `{name, asset, level}` — a sound not loaded yet is decoded on the spot (on this queue, never on the platform
+  /// thread: a first «верно» in the collections trainer used to decode an mp3 under the verdict).
   private func playEffect(_ args: [String: Any], _ result: @escaping FlutterResult) {
     guard let name = args["name"] as? String else {
-      result(FlutterError(code: "bad_args", message: "expected a `name`", details: nil))
+      answer(result, FlutterError(code: "bad_args", message: "expected a `name`", details: nil))
       return
     }
     var buffer = effects[name]
@@ -402,7 +440,7 @@ final class AudioMixer {
       effects[name] = buffer
     }
     guard let buffer, running() else {
-      result(false)
+      answer(result, false)
       return
     }
     let node = effectNodes[nextEffectNode]
@@ -411,18 +449,20 @@ final class AudioMixer {
     node.volume = level(args, default: 0.38)
     node.scheduleBuffer(buffer, completionHandler: nil)
     node.play()
-    result(true)
+    answer(result, true)
   }
 
   // MARK: decoding
 
-  /// A bundled asset (`assets/sounds/correct.mp3`) with its leading silence cut; the asset file itself is untouched.
+  /// A bundled asset (`assets/sounds/correct.mp3`) with its leading silence cut and a fade at the end; the asset
+  /// file itself is untouched.
   private static func decodeAsset(_ asset: String, to format: AVAudioFormat) -> AVAudioPCMBuffer? {
     let key = FlutterDartProject.lookupKey(forAsset: asset)
     guard let path = Bundle.main.path(forResource: key, ofType: nil),
-      let buffer = decode(URL(fileURLWithPath: path), to: format)
+      let buffer = decode(URL(fileURLWithPath: path), to: format),
+      let trimmed = trimLeadingSilence(buffer)
     else { return nil }
-    return trimLeadingSilence(buffer)
+    return fadeOut(trimmed)
   }
 
   /// Any file iOS can read → float stereo at 44.1 kHz: the sample rate by `AVAudioConverter` with the channel count
@@ -486,5 +526,21 @@ final class AudioMixer {
       trimmed.floatChannelData![c].update(from: samples[c] + start, count: frames - start)
     }
     return trimmed
+  }
+
+  /// The last [fadeOutSeconds] of the buffer ramped down to zero, in place — see [fadeOutSeconds].
+  private static func fadeOut(_ buffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer {
+    guard let samples = buffer.floatChannelData else { return buffer }
+    let frames = Int(buffer.frameLength)
+    let ramp = min(frames, Int(buffer.format.sampleRate * fadeOutSeconds))
+    guard ramp > 1 else { return buffer }
+    let channels = Int(buffer.format.channelCount)
+    for i in 0..<ramp {
+      let gain = Float(ramp - i) / Float(ramp)
+      for c in 0..<channels {
+        samples[c][frames - ramp + i] *= gain
+      }
+    }
+    return buffer
   }
 }

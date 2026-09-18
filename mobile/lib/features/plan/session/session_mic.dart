@@ -66,11 +66,10 @@ class SessionMic extends ChangeNotifier {
   /// The recording is closed — the card judges and calls [settle].
   void Function(MicTurn turn)? onTurn;
 
-  /// The day session's recording: closed by a 1 s pause after the speech — however early it comes.
-  static const SpeechTurnConfig turnConfig = SpeechTurnConfig(
-    silenceAfterSpeech: Duration(milliseconds: 1000),
-    minWaitBeforeSilence: Duration.zero,
-  );
+  /// ONE RULE FOR EVERY MICROPHONE OF THE APP (FIX-1 §3) — a second of silence after the speech, or a tap; the
+  /// numbers live in [SpeechTurnConfig]'s own defaults, so the session, the collections trainer and the intro echo
+  /// cannot drift apart again.
+  static const SpeechTurnConfig turnConfig = SpeechTurnConfig();
 
   MicState _state = MicState.idle;
   String _partial = '';

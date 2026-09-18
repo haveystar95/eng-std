@@ -200,6 +200,101 @@ void main() {
       expect(probe.nexts, 1);
     });
 
+    // ДЕФЕКТ: «варианты без вопроса» (живой проход 18.09, обмены x5/x6): на экране четыре варианта, а строки задания
+    // «Ответь на вопрос» и самого вопроса нет — отвечать не на что, и варианты читаются как чужие.
+    // ПРАВИЛО: наряд FIX-1 §1 — порядок кадра 33-5 стоит на экране целиком: реплика ученика → закрытый ответ →
+    // задание и вопрос над ним → варианты внизу, какой бы длинной ни была лента разговора.
+    testWidgets('варианты без вопроса: задание и вопрос стоят на экране, лента уезжает под них', (tester) async {
+      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
+      for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 12)) {
+        c['result'] = 'passed';
+        c['attempts'] = 1;
+      }
+      final cards = SessionDay.fromJson(raw).stageOf(PlanStage.dialogue)!.cards;
+      final card = cards.firstWhere((c) => c.position == 12);
+      final check = (card.payload as DialogueAnswerPayload).check!;
+      final feed = DialogueFeed.before(cards, card);
+      expect(feed.length, greaterThan(6), reason: 'the conversation is long enough to push the task off the old layout');
+      await pumpCard(tester, probeEnv(card, CardProbe(), feed: feed), size: const Size(390, 844));
+      await sayDebug(tester, 'Do we need an X-ray');
+      await tester.pump();
+
+      final task = tester.getRect(find.text('Ответь на вопрос'));
+      final question = tester.getRect(find.text(check.questionNative));
+      final reply = tester.getRect(find.byKey(const ValueKey('reply-wave')));
+      final option = tester.getRect(find.byKey(ValueKey('option-${check.options.first.id}')));
+      expect(task.top, greaterThanOrEqualTo(0), reason: 'the task line is on the screen');
+      expect(question.bottom, lessThanOrEqualTo(844), reason: 'and so is the question');
+      expect(task.bottom, lessThanOrEqualTo(question.top), reason: 'задание над вопросом');
+      expect(question.bottom, lessThanOrEqualTo(reply.top), reason: 'вопрос над закрытым пузырём');
+      expect(reply.bottom, lessThanOrEqualTo(option.top), reason: 'варианты внизу');
+    });
+
+    // ПРАВИЛО: наряд FIX-1 §1 — вопрос и варианты принадлежат обмену ЭТОЙ карточки, а не соседнему.
+    // ЛОВИТ: вопрос, взятый из следующей карточки дня (ровно так это и читалось на телефоне: на «What are the
+    // neighbors like?» стояли варианты про автобусную остановку — вопрос соседнего обмена, уехавший за верх).
+    testWidgets('вопрос и варианты — того обмена, который ведёт карточка', (tester) async {
+      final card = dialogueAt(12);
+      final check = (card.payload as DialogueAnswerPayload).check!;
+      // The check of another exchange of the same day — none of it may appear on this card.
+      final other = (dialogueAt(1).payload as DialoguePartnerPayload);
+      await pumpCard(tester, probeEnv(card, CardProbe(), feed: DialogueFeed.before(day.stageOf(PlanStage.dialogue)!.cards, card)));
+      await sayDebug(tester, 'Do we need an X-ray');
+      await tester.pump();
+      expect(find.text(check.questionNative), findsOneWidget);
+      expect(find.text(other.questionNative), findsNothing, reason: 'the question of another exchange');
+      for (final o in other.options) {
+        if (check.options.any((own) => own.text == o.text)) continue;
+        expect(find.text(o.text), findsNothing, reason: 'the option «${o.text}» belongs to another exchange');
+      }
+      await settleCard(tester);
+    });
+
+    // ДЕФЕКТ: «ответ агента открывается текстом сразу и не озвучивается» (живой проход 18.09, обмен x5): микрофон
+    // срезал реплику, карточка закрылась `skipped` — и ответ собеседника ученик встретил простым текстом в ленте
+    // СЛЕДУЮЩЕЙ карточки, ни разу не услышав его.
+    // ПРАВИЛО: наряд FIX-1 §1 — обмен доигрывается до конца и после двух неудач: ответ приходит закрытым пузырём,
+    // звучит, и проверка задаётся; ответ карточки (`skipped`) ждёт выбора и уходит вместе с ним.
+    testWidgets('после двух неудач ответ всё равно приходит закрытым и звучит, и проверка задаётся', (tester) async {
+      final probe = CardProbe();
+      final voice = QuietVoice();
+      final card = dialogueAt(12);
+      final check = (card.payload as DialogueAnswerPayload).check!;
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
+      await sayDebug(tester, 'hello');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('reply-wave')), findsNothing, reason: 'one miss — the exchange goes on');
+      await sayDebug(tester, 'how are you');
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply comes closed');
+      expect(voice.played, contains('x7@1.0'), reason: 'and sounds by itself');
+      expect(find.text('Ответь на вопрос'), findsOneWidget);
+      expect(find.text(check.questionNative), findsOneWidget);
+      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing, reason: 'the text stays closed');
+      expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');
+
+      await tapText(tester, check.options.firstWhere((o) => o.id == check.correct).text);
+      await tester.pump();
+      expect(results(probe), [SessionResult.skipped], reason: 'the voice result is what it was');
+      expect(probe.answers.single.choice, check.correct);
+      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
+      await settleCard(tester);
+    });
+
+    // CATCHES: «Skip» that keeps the learner on the exchange it was tapped to leave.
+    testWidgets('«Пропустить» закрывает карточку сразу — проверка не задаётся', (tester) async {
+      final probe = CardProbe();
+      await pumpCard(tester, probeEnv(dialogueAt(12), probe));
+      await tapText(tester, 'Пропустить');
+      await tester.pump();
+      expect(results(probe), [SessionResult.skipped]);
+      expect(probe.answers.single.choice, isNull);
+      expect(probe.nexts, 1);
+      await settleCard(tester);
+    });
+
     // CATCHES: a card without the check left without a way out (the day could not build one — the three keys are
     // absent together).
     testWidgets('no check in the payload — the reply opens at once and «Next» stands under it', (tester) async {
@@ -297,9 +392,11 @@ void main() {
       await settleCard(tester);
     });
 
-    // CATCHES: a conversation taller than the screen measured a line short per bubble (the bubble's 274 cap left out of
-    // its measured height) and cut at the bottom instead of scrolling back to its beginning.
-    testWidgets('the last exchange on a small phone: nothing cut, the beginning is reached by scrolling up', (tester) async {
+    // DEFECT: «варианты без вопроса» (живой проход 18.09, обмен x6). ПРАВИЛО: наряд FIX-1 §1 — строка задания и
+    // вопрос под ней НЕ уезжают за верх экрана, как бы ни выросла лента: прокручивается только разговор.
+    // CATCHES: the group that used to hold the task line and the bubbles together — with six exchanges above it, the
+    // task and the question stood off the screen and the learner was left with four options and no question.
+    testWidgets('the last exchange on a small phone: the task and the question stand, the beginning is a scroll up', (tester) async {
       final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       final all = (dialogue['cards'] as List).cast<Map<String, dynamic>>();
@@ -313,12 +410,17 @@ void main() {
       expect(tester.takeException(), isNull);
       final first = find.text('Where does it hurt: his upper back or his lower back?');
       expect(tester.getRect(first).top, lessThan(0), reason: 'the beginning stands above the screen');
-      expect(tester.getRect(find.byType(SessionTask)).bottom, lessThan(667), reason: 'the current exchange stands on the screen');
+      final task = tester.getRect(find.byType(SessionTask));
+      expect(task.top, greaterThanOrEqualTo(0), reason: 'the task line is on the screen, whatever the conversation does');
+      expect(task.bottom, lessThan(667));
+      // …and so is the exchange the card is running: it stands under the task, not above the top edge.
+      expect(tester.getRect(find.byType(SessionOwnRow).last).bottom, lessThanOrEqualTo(667.0));
 
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, 20000));
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 20000));
       await tester.pump(const Duration(seconds: 1));
       expect(tester.takeException(), isNull);
       expect(tester.getRect(first).top, greaterThanOrEqualTo(0), reason: 'scrolled back to the beginning');
+      expect(tester.getRect(find.byType(SessionTask)).top, greaterThanOrEqualTo(0), reason: 'the task did not move with it');
       await settleCard(tester);
     });
   });

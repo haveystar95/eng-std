@@ -275,7 +275,15 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // never on the first listening card, whose whole content is the sound (F20-r).
     // The pairs are not resolved yet, so this primes the engine with the session's fallback; every
     // utterance sets the language of the card it belongs to before speaking.
-    unawaited(_pronouncer.warmUp(targetLang: _sessionLang));
+    //
+    // `recording: true` — THIS SCREEN RECORDS TOO (наряд FIX-1, п. 3). The session is raised in
+    // `playAndRecord` with the recognizer's own options, so the speech plugin finds it as it wants it
+    // and leaves it alone (`sessionOwnedByApp`). Without that, every reopening of the microphone —
+    // and one turn reopens it several times — swapped the category and deactivated the session
+    // mid-word: a two-word term came back as its first word, and the answer was marked wrong.
+    unawaited(_pronouncer.warmUp(targetLang: _sessionLang, recording: true));
+    // The owner's six sounds — decoded while the trainer is open, as the day session does (FIX-1 §4).
+    unawaited(AppFeedback.load());
     // F20: warm the first few cards' photos up front so opening photo cards aren't cold network
     // loads (the lag the user saw was photo cards fetching + decoding late).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -363,6 +371,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // Hands the iOS audio session back (and un-ducks other audio) exactly once, here — not after
     // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
     unawaited(_pronouncer.release());
+    unawaited(AppFeedback.release());
     _roleSpeaking.dispose();
     _scroll.dispose();
     super.dispose();

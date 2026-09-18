@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -487,35 +485,57 @@ void main() {
     // microphone is the only action; the native sentence, what is said and what is graded all follow the chosen chip.
     // CATCHES: an empty window on open (the old layout), a «tap to speak» caption under the chips, a card that keeps
     // grading the filler it came with after another chip was chosen.
-    testWidgets('phrase_other_slot (32-7): the chip chooses the meaning — slot, sentence and grading follow it', (tester) async {
+    // RULE (наряд FIX-1 §6): «Скажи целиком» — ОДИН тренажёр окна. Значения встают в окно по очереди, ученик
+    // говорит фразу целиком с каждым, последний круг — своё слово. Плашки не выбирают, а показывают состояние:
+    // сказано · сейчас · впереди.
+    // CATCHES: возврат выбора плашкой, круг, который не сменился после зачёта, и «своё окно» отдельным экраном.
+    testWidgets('phrase_other_slot (32-7): every meaning goes through the window, the own word last', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Выбери, что вставить, и скажи фразу целиком'), findsOneWidget);
-      expect(find.text('тап — говорить'), findsNothing, reason: 'the microphone is the only action');
-      expect(find.text('ОКНО'), findsNothing);
-      expect(frameLine(tester).slot, 'shoulder', reason: 'the card opens with its own filler in the slot');
-      expect(frameLine(tester).look, SlotLook.filled);
-      expect(chip(tester, 'chip-2').selected, isTrue);
-      expect(find.text('У него болит плечо.'), findsOneWidget);
+      expect(find.text('Скажи фразу с каждым значением'), findsOneWidget);
+      expect(find.text('Выбери, что вставить, и скажи фразу целиком'), findsNothing, reason: 'the chips choose nothing');
+      expect(frameLine(tester).slot, 'lower back', reason: 'the first meaning of the card stands in the window');
+      expect(chip(tester, 'chip-0').selected, isTrue, reason: '«now» is the chip of this round');
+      expect(chip(tester, 'chip-0').onTap, isNull, reason: 'a state, not a button');
+      expect(chip(tester, 'chip-1').selected, isFalse);
+      expect(find.text('У него болит поясница.'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('chip-1')));
+      // Round 1: the phrase with the first meaning; another meaning is not this round's phrase.
+      await sayDebug(tester, 'It hurts in his neck');
       await tester.pump();
+      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the round is graded on ITS meaning');
+      await sayDebug(tester, 'It hurts in his lower back');
+      await tester.pump();
+      expect(probe.answers, isEmpty, reason: 'a round is not an answer — the card has one');
+
+      // …and the next meaning moves into the window by itself.
+      await tester.pump(const Duration(milliseconds: 700));
       expect(frameLine(tester).slot, 'neck');
       expect(chip(tester, 'chip-1').selected, isTrue);
+      expect(chip(tester, 'chip-0').trailing, isNotNull, reason: 'the meaning already said is checked');
       expect(find.text('У него болит шея.'), findsOneWidget);
-
-      // The card was dealt for «shoulder» — after the chip it grades «neck».
-      await sayDebug(tester, 'It hurts in his shoulder');
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the chosen meaning was not said');
-      expect(probe.answers, isEmpty);
 
       await sayDebug(tester, 'It hurts in his neck');
       await tester.pump();
-      expect(results(probe), [SessionResult.passed]);
-      expect(probe.answers.single.response?.fillerIndex, 1, reason: 'the answer carries the chosen meaning');
-      expect(frameLine(tester).slot, 'neck', reason: 'the heard filler fills the slot');
-      expect(frameLine(tester).look, SlotLook.sage);
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(frameLine(tester).slot, 'shoulder');
+      await sayDebug(tester, 'It hurts in his shoulder');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+
+      // The last round — the learner's own word: no chip for it, the window is empty, the task says so.
+      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      expect(frameLine(tester).slot, isNull);
+      expect(frameLine(tester).look, SlotLook.empty);
+      for (final key in ['chip-0', 'chip-1', 'chip-2']) {
+        expect(chip(tester, key).selected, isFalse, reason: 'no meaning is current any more');
+      }
+      expect(probe.answers, isEmpty);
+
+      await sayDebug(tester, 'It hurts in his elbow');
+      await tester.pump();
+      expect(results(probe), [SessionResult.passed], reason: 'one answer for the whole card');
       await settleCard(tester);
     });
 
@@ -605,69 +625,60 @@ void main() {
       await settleCard(tester);
     });
 
-    // RULE (SESSION-1b′, item 4; SESSION-2a §3): the slot is EMPTY when the card opens; a known chip fills the slot
-    // without darkening and leaves the microphone waiting for the whole phrase; the judge is asked after the pause.
-    // CATCHES: a slot pre-filled on open, a chip that asks the judge by itself, a chip that turns ink.
-    testWidgets('phrase_own_slot (32-9): empty slot; a chip fills it and waits for the phrase; the judge after the pause', (tester) async {
+    // RULE (наряд FIX-1 §6): `phrase_own_slot` is the SAME trainer — the meanings first, the own word last. Only the
+    // own word is graded differently, and the contract decides that: a judged kind's pass is the server's, so that
+    // round asks `…/judge` and the client writes no `passed` of its own.
+    // CATCHES: a client-written pass on a judged kind (422 and a lost answer), a judge asked on a meaning round, and
+    // the return of «своё окно» as a screen of its own.
+    testWidgets('phrase_own_slot (32-9 is gone): the same trainer, and only its own word asks the judge', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseOwnSlot);
       final probe = CardProbe()
-        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'last night', result: SessionResult.passed, attempts: 1);
+        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'last week', result: SessionResult.passed, attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Выбери, что вставить, и скажи фразу целиком'), findsOneWidget);
-      expect(find.text('тап — говорить'), findsNothing, reason: 'no caption under the chips (SESSION-2a §5)');
-      expect(find.text('СВОЁ ОКНО'), findsOneWidget);
-      expect(find.text('Началось ___.'), findsOneWidget);
-      expect(find.text('ит стартид ___'), findsOneWidget);
-      expect(frameLine(tester).slot, isNull, reason: 'the slot is empty on open');
-      expect(frameLine(tester).look, SlotLook.empty);
-      expect(find.text('своё…'), findsOneWidget);
+      expect(find.text('Скажи фразу с каждым значением'), findsOneWidget);
+      expect(find.text('СВОЁ ОКНО'), findsNothing, reason: 'the eyebrow went with the separate trainer');
+      expect(find.text('своё…'), findsNothing, reason: 'the chip with the microphone is gone');
+      expect(frameLine(tester).slot, 'three days ago', reason: 'the first meaning stands in the window');
 
-      await tester.tap(find.byKey(const ValueKey('chip-1')));
+      await sayDebug(tester, 'It started three days ago');
       await tester.pump();
-      expect(frameLine(tester).slot, 'last night', reason: 'the chip fills the slot');
-      expect(chip(tester, 'chip-1').selected, isFalse, reason: 'the chip does not darken');
-      expect(probe.judged, isEmpty, reason: 'a chip is not an answer — the microphone waits for the whole phrase');
+      expect(probe.judged, isEmpty, reason: 'a meaning is graded on the phone');
+      await tester.pump(const Duration(milliseconds: 700));
+      await sayDebug(tester, 'It started last night');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+      await sayDebug(tester, 'It started this morning');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
 
-      await enterHeard(tester, 'It started last night');
-      await tester.pump(const Duration(milliseconds: 950));
-      expect(probe.judged, isEmpty, reason: 'the judge is asked after the pause');
-      await tester.pump(const Duration(milliseconds: 60));
+      // The own word: the judge, and nothing of ours on a pass.
+      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      await sayDebug(tester, 'It started last week');
       await tester.pump();
-      expect(probe.judged, ['It started last night']);
+      expect(probe.judged, ['It started last week']);
       expect(probe.answers, isEmpty, reason: 'the server records a judge-graded pass');
-      expect(find.text('по смыслу ✓'), findsOneWidget);
-      expect(frameLine(tester).look, SlotLook.sage);
       await settleCard(tester);
       expect(probe.nexts, 1);
     });
 
-    testWidgets('phrase_own_slot (32-9): «your own…» — caret while recording, the heard words frozen until the verdict; rejected — «Skip» → skipped', (tester) async {
+    // CATCHES: a rejection that looks like a pass, and a «Skip» that writes anything but `skipped`.
+    testWidgets('phrase_own_slot: the judge refuses — the reason stands under the microphone, «Skip» → skipped', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseOwnSlot);
       final probe = CardProbe()
-        ..judgeGate = Completer<void>()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про время.', attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
-
-      await tester.tap(find.byKey(const ValueKey('chip-own')));
-      await tester.pump();
-      expect(chip(tester, 'chip-own').selected, isTrue, reason: '«your own…» is selected while recording');
-      expect(frameLine(tester).slot, isNull);
-      expect(frameLine(tester).caret, isTrue, reason: 'an empty slot with a caret');
-
-      await enterHeard(tester, 'It started yesterday');
-      expect(frameLine(tester).slot, 'yesterday', reason: 'the words after the frame fill the slot live');
-      await tester.pump(const Duration(milliseconds: 1010));
-      await tester.pump();
-      expect(probe.judged, ['It started yesterday']);
-      expect(frameLine(tester).slot, 'yesterday', reason: 'frozen in the slot while the judge thinks');
-      expect(frameLine(tester).caret, isFalse);
-      expect(find.text('Ты сказал не про время.'), findsNothing);
-
-      probe.judgeGate!.complete();
+      for (final said in ['It started three days ago', 'It started last night', 'It started this morning']) {
+        await sayDebug(tester, said);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+      }
+      await sayDebug(tester, 'It started with a big noise');
       await tester.pump();
       await tester.pump();
+      expect(probe.judged, ['It started with a big noise']);
       expect(find.text('Ты сказал не про время.'), findsOneWidget);
-      expect(find.text('Ещё раз'), findsOneWidget);
+      expect(probe.answers, isEmpty);
+
       await tapText(tester, 'Пропустить');
       expect(results(probe), [SessionResult.skipped]);
       expect(probe.nexts, 1);
@@ -730,8 +741,8 @@ void main() {
 
       final rejected = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про время.', attempts: 1);
-      await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.phraseOwnSlot), rejected));
-      await sayDebug(tester, 'It started a headache');
+      await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.speakAnswer), rejected));
+      await sayDebug(tester, 'I have a headache');
       await tester.pump();
       expect(sounds, [SessionSounds.miss, SessionSounds.micOn, SessionSounds.correct, SessionSounds.micOn, SessionSounds.miss]);
       await settleCard(tester);

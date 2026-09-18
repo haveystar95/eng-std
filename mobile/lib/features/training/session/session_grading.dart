@@ -41,18 +41,13 @@ abstract final class SpokenAnswer {
   /// wrong is a verdict on the first try, like every other trainer.
   static const int maxChannelAttempts = 3;
 
-  /// The recording window, split by form (QA-20 — live device findings): the phone's old defaults
-  /// (8s listen / 2s pause, still what the WORD form uses) were tuned for a single word and too
-  /// tight for a whole sentence — a learner mid-sentence hesitation past 2s of silence, or still
-  /// reading past 8s, got cut off mid-answer, which then read as a wrong answer instead of an
-  /// unfinished one. The EXAMPLE form gets more of both: a real pause (thinking of the next word)
-  /// must not look like the end of the answer, and a full sentence needs time to say.
-  static const Duration wordFormListenFor = Duration(seconds: 8);
-  static const Duration wordFormPauseFor = Duration(seconds: 2);
-  static const Duration exampleFormListenFor = Duration(seconds: 15);
-  static const Duration exampleFormPauseFor = Duration(seconds: 3);
-
-  /// From how many words a TERM stops being a "word" for the recording window's purposes (QA-21).
+  /// From how many words a TERM stops being a "word" for grading (QA-21).
+  ///
+  /// THE RECORDING WINDOW IS NO LONGER ONE OF THIS RULE'S JOBS (наряд FIX-1, п. 3): every microphone
+  /// of the app now records until a second of silence or a tap, whatever is being said, and the pair
+  /// of windows that used to be picked here (8 s/2 s for a word, 15 s/3 s for a sentence) is gone
+  /// with the rule that picked them. What stays is the GRADING half — a phrase-shaped term is judged
+  /// by coverage, not by equality.
   ///
   /// The word/example split above is about which QUESTION the card asks, and it silently assumed
   /// the word form's answer is a word. It is not: a term can itself be a whole phrase («Where do
@@ -62,25 +57,14 @@ abstract final class SpokenAnswer {
   /// sentence-sized window even though the card is still the word form.
   static const int longTermWords = 3;
 
-  /// Does [term] need the sentence-sized recording window? See [longTermWords].
+  /// Is [term] long enough to be judged as a sentence? See [longTermWords].
   static bool isLongTerm(String term) => _wordCount(term) >= longTermWords;
-
-  /// The recording window for a card: the example form always reads a sentence, and the word form
-  /// looks at how long its own [term] is. Returned together so the two can never be picked from
-  /// different branches at the call site.
-  static ({Duration listenFor, Duration pauseFor}) windowFor({
-    required bool asksForExample,
-    required String term,
-  }) => asksForExample || isLongTerm(term)
-      ? (listenFor: exampleFormListenFor, pauseFor: exampleFormPauseFor)
-      : (listenFor: wordFormListenFor, pauseFor: wordFormPauseFor);
 
   /// Is this spoken answer judged by COVERAGE rather than by equality (QA-22)?
   ///
-  /// The same [longTermWords] rule that picks the recording window, deliberately reused rather than
-  /// re-derived: «длинность» has one definition, so a term that gets the sentence-sized window is
-  /// exactly the term that gets sentence-shaped grading. Two thresholds that could drift apart is
-  /// how a card ends up recording like a sentence and being marked like a word.
+  /// The same [longTermWords] rule, one definition of «длинность» for the whole trainer: two
+  /// thresholds that could drift apart is how a card ends up being read as a sentence and marked as
+  /// a word.
   ///
   /// Why coverage at all for a term: an on-device recogniser mangles a long utterance the same way
   /// whether the card called it a term or an example — it eats function words and guesses

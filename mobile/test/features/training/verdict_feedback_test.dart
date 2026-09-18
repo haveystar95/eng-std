@@ -111,9 +111,10 @@ void main() {
 
     expect(answers.single.verdict, LocalCheck.correct);
     expect(haptic(), 'HapticFeedbackType.lightImpact');
-    expect(sound(), AppFeedback.correctSound);
-    // Our own asset, not a system tick — the identifier the native side resolves to a bundled file.
-    expect(sound(), 'verdict_correct');
+    // ONE SET OF SOUNDS FOR THE WHOLE APP (наряд FIX-1, п. 4): the collections trainer plays the owner's own
+    // file, the same one the day session plays, at the same level — not the generated tone it used to.
+    expect(sound(), AppSounds.correct);
+    expect(sound(), 'correct');
   });
 
   testWidgets('a wrong answer plays the other sound and a heavier haptic', (tester) async {
@@ -127,8 +128,8 @@ void main() {
     expect(answers.single.verdict, LocalCheck.wrong);
     // A different pair from the accepted one — the two verdicts must never feel the same.
     expect(haptic(), 'HapticFeedbackType.mediumImpact');
-    expect(sound(), AppFeedback.wrongSound);
-    expect(sound(), 'verdict_wrong');
+    expect(sound(), AppSounds.miss);
+    expect(sound(), 'miss');
   });
 
   testWidgets('the sound is fire-and-forget — a native failure never takes the answer down', (
@@ -176,6 +177,6 @@ void main() {
 
     expect(answers.single.verdict, LocalCheck.correct);
     expect(haptic(), 'HapticFeedbackType.lightImpact');
-    expect(sound(), AppFeedback.correctSound);
+    expect(sound(), AppSounds.correct);
   });
 }

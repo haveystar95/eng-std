@@ -22,16 +22,18 @@ import 'word_cards.dart' show autoplayOnce;
 /// DIALOGUE — canvas series 33 (work order SESSION-1c, section 2): one exchange per card, in the order of the visit,
 /// with the conversation so far standing above it ([CardEnv.feed], 33-7) and growing from the bottom.
 
-/// The conversation above the card and the gap to the card's own bubbles.
-List<Widget> _feed(CardEnv env) => [
-  if (env.feed.isNotEmpty) ...[
-    SessionFeedView(
-      lines: env.feed,
-      listen: (line) => CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: 'feed-${line.ref}', size: 28, brass: true),
-    ),
-    const SizedBox(height: 16),
-  ],
-];
+/// The conversation above the card and the gap to the card's own bubbles — [CardLayout.above], the one part of the
+/// field that may scroll (FIX-1 §1); null — nothing has been said yet.
+Widget? _feed(CardEnv env) => env.feed.isEmpty
+    ? null
+    : Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: SessionFeedView(
+          lines: env.feed,
+          listen: (line) =>
+              CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: 'feed-${line.ref}', size: 28, brass: true),
+        ),
+      );
 
 /// The partner's bubble with its text and «listen» 28.
 Widget _partnerRow(CardEnv env, CardLine line, {required Object playKey, double rate = 1.0}) => SessionPartnerRow(
@@ -95,10 +97,10 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
       feed: true,
       bodyGap: 16,
       task: SessionTask(AppLocalizations.of(context).planSessionTaskAnswerQuestion, companion: p.questionNative),
+      above: _feed(env),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ..._feed(env),
           SessionPartnerRow(
             bubble: ValueListenableBuilder<Object?>(
               valueListenable: env.voice.playing,
@@ -227,11 +229,29 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
   /// A voice attempt passed (a «Skip» also closes the card, but is not a pass).
   bool _voicePassed = false;
 
+  /// «Skip» was tapped — the learner is leaving the exchange, so nothing of it is asked afterwards.
+  bool _left = false;
+
   @override
   void onAccepted(String heard) {
     _voicePassed = true;
     _heardSlot = _slotOf(heard);
     if (_ask) unawaited(_showReply());
+  }
+
+  /// BOTH ATTEMPTS SPENT — THE EXCHANGE STILL ANSWERS (FIX-1 §1). The reply comes in the same closed bubble and
+  /// sounds, and the check is asked as after a pass: the answer of the card (`skipped`) waits for the choice and
+  /// both fly together. Without it the learner met the reply only in the next card's conversation — open text that
+  /// never sounded (the live pass of 18.09, exchange x5).
+  @override
+  void onMissedOut(String heard) {
+    if (_ask) unawaited(_showReply());
+  }
+
+  @override
+  void skip({bool noMic = false}) {
+    _left = true;
+    super.skip(noMic: noMic);
   }
 
   /// The slot as heard: a filler of the frame said whole, otherwise the words beyond the frame; none — null.
@@ -259,12 +279,13 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     await env.voice.play(line.audio, fallback: line.textTarget, key: _replyKey);
   }
 
-  /// THE ANSWER OF AN ASK WITH A CHECK WAITS FOR THE CHOICE: the voice result is known when the learner speaks, the
-  /// choice when they answer the question, and the server takes both in one answer (`result` + `choice`). A card
-  /// without a check, and a `skipped` (the check never comes up), fly at once.
+  /// THE ANSWER OF AN ASK WITH A CHECK WAITS FOR THE CHOICE: the voice result is known when the learner speaks or
+  /// runs out of attempts, the choice when they answer the question, and the server takes both in one answer
+  /// (`result` + `choice`). A card without a check, one whose reply the day did not deal, and a «Skip» (the learner
+  /// left — the check never comes up) fly at once.
   @override
   void submitAnswer(SessionAnswer answer) {
-    if (_check == null || answer.result == SessionResult.skipped) {
+    if (_check == null || p.partnerLine == null || _left) {
       env.submit(answer);
       return;
     }
@@ -345,10 +366,10 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
               DialogueMode.chips => l.planSessionTaskCollectAnswer,
               DialogueMode.voiceHint || DialogueMode.voiceBlind => l.planSessionTaskSayLine,
             }),
+      above: _feed(env),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ..._feed(env),
           for (final (i, row) in rows.indexed) ...[if (i > 0) const SizedBox(height: 8), row],
         ],
       ),
@@ -575,10 +596,10 @@ class _DialogueRescueCardState extends State<DialogueRescueCard> {
       bodyGap: 16,
       fadeStop: 0.34,
       task: SessionTask(l.planSessionTaskRescue),
+      above: _feed(env),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ..._feed(env),
           if (asked != null)
             SessionPartnerRow(
               bubble: SessionBubble(
