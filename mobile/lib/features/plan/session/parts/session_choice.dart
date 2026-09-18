@@ -88,6 +88,94 @@ class SessionOption extends StatelessWidget {
   }
 }
 
+/// A SOUND OPTION (34-5, work order SESSION-2b §3): an option that is a LINE — before the answer it has no text at
+/// all, only a wave: grey while it has not been heard, brass once it has, alive while it plays. A tap plays it; a
+/// second tap on a heard one marks it with a brass outline and a check — that is what «This is the answer» sends.
+/// After the answer the sheet opens both texts, and the right one takes the sage wash and the check.
+class SessionSoundOption extends StatelessWidget {
+  const SessionSoundOption({
+    super.key,
+    required this.heard,
+    required this.playing,
+    required this.marked,
+    required this.onTap,
+    this.look,
+    this.textTarget,
+    this.textNative,
+  });
+
+  /// The line has been played to the end at least once.
+  final bool heard;
+  final bool playing;
+
+  /// Chosen as the answer, not yet sent.
+  final bool marked;
+  final VoidCallback? onTap;
+
+  /// After the answer — how this option settled; null — the answer is not given yet and the texts stay closed.
+  final OptionLook? look;
+  final String? textTarget;
+  final String? textNative;
+
+  @override
+  Widget build(BuildContext context) {
+    final answered = look != null;
+    final wash = look == OptionLook.correct || look == OptionLook.returns;
+    final trailing = switch (look) {
+      OptionLook.correct => const Icon(LucideIcons.check, size: 20, color: AppColors.verdictKnown),
+      OptionLook.returns => const SessionReturnDot(),
+      null when marked => const Icon(LucideIcons.check, size: 20, color: AppColors.brassInk),
+      _ => null,
+    };
+    return Semantics(
+      button: onTap != null,
+      label: textNative,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppMotion.sessionSageWash,
+          curve: AppMotion.easeOut,
+          constraints: BoxConstraints(minHeight: answered ? 80 : 56),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            color: wash ? AppColors.sessionSageWash : AppColors.paper,
+            borderRadius: BorderRadius.circular(16),
+            border: !answered && marked ? Border.all(color: AppColors.brassInk, width: 1.5) : null,
+            boxShadow: wash || (!answered && marked) ? null : kSessionSheetShadow,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: answered
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(textTarget ?? '', style: AppTextSession.target22),
+                          const SizedBox(height: 4),
+                          Text(textNative ?? '', style: AppTextSession.body),
+                        ],
+                      )
+                    : Align(
+                        alignment: Alignment.centerLeft,
+                        child: SessionWave(
+                          heights: SessionWave.five,
+                          width: 80,
+                          playing: playing,
+                          color: heard || playing ? AppColors.brassInk : AppColors.markerOutline,
+                        ),
+                      ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 12), trailing],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// QUESTION SHEET OF TEMPLATE 30-9 — one for all canvases: the top (photo / wave / text), eyebrow, a two-line
 /// Literata 26 text zone with «listen» 44, and a translation line 20.
 class SessionQuestionSheet extends StatelessWidget {

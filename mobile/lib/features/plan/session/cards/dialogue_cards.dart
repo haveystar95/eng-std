@@ -13,6 +13,7 @@ import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_coverage.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
+import '../parts/session_choice.dart';
 import '../parts/session_tiles.dart';
 import '../session_texts.dart';
 import 'card_kit.dart';
@@ -132,8 +133,16 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
 ///   covered → `passed` (`mode = voice_hint`);
 /// * blind voice — the frame with an empty slot; the frame covered, any slot → `passed` (`mode = voice_blind`).
 ///
-/// Two misses — `skipped`. The live line stands in the own bubble, not over the button. An `ask` (33-5): after the pass
-/// the partner's reply appears and sounds, then «Next»; an `answer` leaves by itself after a voice pass.
+/// Two misses — `skipped`. The live line stands in the own bubble, not over the button; an `answer` leaves by itself
+/// after a voice pass.
+///
+/// AN `ask` (33-5) IS THE WHOLE EXCHANGE ON ONE CARD (work order SESSION-2b §2, contract BACK-TAILS-1 §1.5): after the
+/// pass the partner's reply appears and sounds with its TEXT CLOSED — a wave and «listen» 44 — and the card asks the
+/// check the payload carries (`question_native`, four options, `correct`): the task line becomes «Answer the question»
+/// and the options stand in the dock. A choice opens the reply's text in the same bubble and marks the right option;
+/// correct — away by itself, wrong — «Next», as in every other check. The choice is graded on the phone and sent
+/// nowhere: the card's own result is the voice one, already recorded. A card without the check (the day could not
+/// build it) opens the text at once, as before.
 class DialogueAnswerCard extends StatefulWidget {
   const DialogueAnswerCard({super.key, required this.env, required this.payload});
 
@@ -158,9 +167,21 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
   /// `dialogue_ask`: the partner's reply has appeared.
   bool _reply = false;
 
+  /// The option chosen in the exchange's check (33-5); null — not answered yet.
+  String? _chosen;
+  int _shake = 0;
+
   DialogueAnswerPayload get p => widget.payload;
 
   bool get _ask => env.card.kind == SessionKind.dialogueAsk;
+
+  /// The check of this exchange — only an `ask` carries one, and only when the day could build it.
+  CardCheck? get _check => _ask ? p.check : null;
+
+  /// The check is on screen: the reply has come and there is something to ask.
+  bool get _checking => _reply && _check != null;
+
+  bool get _checkedRight => _chosen != null && _chosen == _check?.correct;
 
   String get _framePart => SessionRules.framePart(p.frame.frameTarget);
 
@@ -234,6 +255,35 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     await env.voice.play(line.audio, fallback: line.textTarget, key: _replyKey);
   }
 
+  /// The check's option (33-5). Nothing goes to the server: this card's result is the voice one, written when the
+  /// learner spoke — the server would refuse a second answer (`plan_card_answered`).
+  void _chooseCheck(String optionId) {
+    if (_chosen != null) return;
+    final correct = optionId == _check?.correct;
+    setState(() {
+      _chosen = optionId;
+      if (!correct) _shake++;
+    });
+    if (correct) {
+      AppHaptics.success();
+    } else {
+      AppHaptics.warning();
+    }
+    SessionSounds.verdict(correct: correct);
+    if (correct) {
+      unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
+        if (mounted) unawaited(env.next());
+      }));
+    }
+  }
+
+  OptionLook _lookOf(String optionId) {
+    if (_chosen == null) return OptionLook.idle;
+    if (optionId == _check?.correct) return OptionLook.correct;
+    if (optionId == _chosen) return OptionLook.wrong;
+    return OptionLook.settled;
+  }
+
   Future<void> _pickChip(CardFiller f) async {
     if (_chip != null) return;
     setState(() => _chip = f);
@@ -257,6 +307,8 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     // After a rescue of this line the partner's bubble already stands in the feed, before the slow repeat.
     final partner = p.partnerLine == null || (!_ask && DialogueFeed.partnerInFeed(env.feed, p.partnerLine))
         ? null
+        : _checking && _chosen == null
+        ? _closedReply(p.partnerLine!)
         : _partnerRow(env, p.partnerLine!, playKey: _ask ? _replyKey : 'partner-line');
     final rows = _ask
         ? [own, if (_reply && partner != null) SessionAppear(child: partner)]
@@ -265,11 +317,13 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
       feed: true,
       bodyGap: 16,
       fadeStop: _mode == DialogueMode.chips ? 0.34 : 0.30,
-      task: SessionTask(switch (_mode) {
-        _ when _ask => l.planSessionTaskAskSelf,
-        DialogueMode.chips => l.planSessionTaskCollectAnswer,
-        DialogueMode.voiceHint || DialogueMode.voiceBlind => l.planSessionTaskSayLine,
-      }),
+      task: _checking
+          ? SessionTask(l.planSessionTaskAnswerQuestion, companion: _check!.questionNative)
+          : SessionTask(switch (_mode) {
+              _ when _ask => l.planSessionTaskSayLine,
+              DialogueMode.chips => l.planSessionTaskCollectAnswer,
+              DialogueMode.voiceHint || DialogueMode.voiceBlind => l.planSessionTaskSayLine,
+            }),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -317,6 +371,19 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     }
   }
 
+  /// The partner's reply with its text CLOSED (33-5): a wave in the bubble and «listen» 44 beside it — the learner
+  /// answers the check by ear.
+  Widget _closedReply(CardLine line) => SessionPartnerRow(
+    bubble: ValueListenableBuilder<Object?>(
+      valueListenable: env.voice.playing,
+      builder: (_, playing, _) => SessionBubble(
+        own: false,
+        child: SessionWave(key: const ValueKey('reply-wave'), heights: SessionWave.five, width: 80, playing: playing == _replyKey),
+      ),
+    ),
+    listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _replyKey, size: 44, brass: true),
+  );
+
   /// The frame in the own bubble with its slot; the key — the frame's words before the slot — underlined in brass.
   Widget _frame(TextStyle style, {String? slot, required SlotLook look}) {
     final parts = p.frame.parts;
@@ -356,15 +423,20 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
           const SizedBox(height: 8),
           Text(l.planSessionAnyChip, style: AppTextSession.meta),
           const SizedBox(height: 14),
-          if (_ask && _reply) ...[_playingLine(l), const SizedBox(height: 14)],
-          SessionDockButton(
-            label: l.planSessionNext,
-            enabled: _chip != null,
-            busy: env.advancing,
-            onTap: _chip == null ? null : () => unawaited(env.next()),
-          ),
+          if (_checking) ..._checkDock(l) else ...[
+            if (_ask && _reply) ...[_playingLine(l), const SizedBox(height: 14)],
+            SessionDockButton(
+              label: l.planSessionNext,
+              enabled: _chip != null,
+              busy: env.advancing,
+              onTap: _chip == null ? null : () => unawaited(env.next()),
+            ),
+          ],
         ],
       );
+    }
+    if (_checking) {
+      return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: _checkDock(l));
     }
     if (_ask && _passed) {
       return Column(
@@ -378,6 +450,27 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
       );
     }
     return voiceDock(context, liveLineInDock: false);
+  }
+
+  /// The check's four options (33-5) and, after a wrong one, «Next» — the same dock as every other check.
+  List<Widget> _checkDock(AppLocalizations l) {
+    final check = _check!;
+    return [
+      for (final o in check.options) ...[
+        if (o != check.options.first) const SizedBox(height: 8),
+        SessionOption(
+          key: ValueKey('option-${o.id}'),
+          text: o.text,
+          look: _lookOf(o.id),
+          shake: o.id == _chosen ? _shake : 0,
+          onTap: _chosen == null ? () => _chooseCheck(o.id) : null,
+        ),
+      ],
+      if (_chosen != null && !_checkedRight) ...[
+        const SizedBox(height: 8),
+        SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+      ],
+    ];
   }
 
   /// «playing» under the partner's reply — the wave moves only while it sounds.

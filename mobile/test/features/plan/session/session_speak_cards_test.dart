@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -178,53 +176,60 @@ void main() {
   });
 
   group('35-4 speak_retell', () {
-    // CATCHES: a retelling recognized with the target language's hint words, a judge told the frame was hinted, the
-    // reveal before the verdict.
-    testWidgets('the native locale, no hint words; the judge with hinted = false; accepted — the sheet opens, «understood ✓»', (tester) async {
-      final completer = Completer<void>();
-      final probe = CardProbe()
-        ..judgeGate = completer
-        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, result: SessionResult.passed, attempts: 1);
+    // RULE (SESSION-2b §4, кадр 35-4, контракт BACK-TAILS-1 §1.1): the card says the LEARNER'S own line again —
+    // it sounds, its English text is closed, the translation under the plate is the hint of the meaning, and the
+    // pass is coverage on the phone: there is no judge on this card at all.
+    // CATCHES: a question sent to the judge (the server answers 422 and the card hangs), the English line shown
+    // before the attempt, and the partner's line taken instead of the learner's.
+    testWidgets('the learner\'s own line sounds with its text closed; coverage passes it, no judge', (tester) async {
+      final probe = CardProbe();
       final voice = QuietVoice();
-      await pumpCard(tester, probeEnv(speakAt(8), probe, voice: voice, localeId: 'ru_RU'));
-      expect(find.text('Скажи по-русски, что услышал'), findsOneWidget);
-      expect(find.text('на родном'), findsOneWidget);
-      expect(probe.mics.single.localeId, 'ru_RU');
-      expect(probe.mics.single.contextualStrings, isEmpty);
-      expect(probe.mics.single.expected, isEmpty);
+      final card = speakAt(8);
+      final p = card.payload as SpeakRetellPayload;
+      expect(p.ownLine.textTarget, 'Do we need a follow-up appointment?');
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
+      expect(find.text('Повтори свою реплику'), findsOneWidget);
+      expect(find.text('Нам нужно прийти на повторный приём?'), findsOneWidget, reason: 'the translation is the meaning');
+      expect(find.text(p.ownLine.textTarget), findsNothing, reason: 'the English line is closed');
+      expect(find.byKey(const ValueKey('retell-wave')), findsOneWidget);
+      expect(probe.mics.single.localeId, 'en_US', reason: 'said in the target language');
       await tester.pump(const Duration(milliseconds: 300));
-      expect(voice.played, ['x1@1.0']);
+      expect(voice.played, ['x8b@1.0'], reason: 'the learner\'s own file');
 
-      await enterHeard(tester, 'Где болит вверху или в пояснице');
-      await tester.pump(const Duration(milliseconds: 1010));
+      await sayDebug(tester, 'Do we need a follow up appointment');
       await tester.pump();
-      expect(probe.judged, ['Где болит вверху или в пояснице']);
-      expect(probe.hinted, [false]);
-      expect(find.byKey(const ValueKey('retell-text')), findsNothing, reason: 'nothing opens while the judge thinks');
-      completer.complete();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsOneWidget);
-      expect(find.text('Где болит: вверху спины или в пояснице?'), findsOneWidget);
-      expect(find.text('понял ✓'), findsOneWidget);
-      expect(probe.answers, isEmpty);
+      expect(probe.judged, isEmpty, reason: 'the judge is not asked any more');
+      expect(results(probe), [SessionResult.passed]);
+      expect(
+        tester.widget<SessionMarkedText>(find.byKey(const ValueKey('retell-text'))).text,
+        p.ownLine.textTarget,
+        reason: 'the line opens after the attempt, the heard words in sage',
+      );
+      expect(find.text('услышал'), findsOneWidget);
       await settleCard(tester);
-      expect(probe.nexts, 0);
+      expect(probe.nexts, 0, reason: 'the opened line waits for «Next»');
       await tapText(tester, 'Дальше');
       expect(probe.nexts, 1);
     });
 
-    testWidgets('rejected — the reason, «Try again» / «Skip» → skipped', (tester) async {
-      final probe = CardProbe()..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Смысл другой.', attempts: 1);
-      await pumpCard(tester, probeEnv(speakAt(8), probe, localeId: 'ru_RU'));
-      await sayDebug(tester, 'Когда можно вернуться на работу');
-      await tester.pump();
-      expect(find.text('Смысл другой.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('exit-again')), findsOneWidget);
-      expect(find.byKey(const ValueKey('exit-hint')), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('exit-skip')));
-      await tester.pump();
+    // CATCHES: a miss counted as a pass, a card that keeps asking after the second attempt, the line left closed on
+    // a skip (the learner never sees what they were saying).
+    testWidgets('two misses — skipped, the line opens too', (tester) async {
+      final probe = CardProbe();
+      final card = speakAt(8);
+      await pumpCard(tester, probeEnv(card, probe));
+      await sayDebug(tester, 'hello');
+      expect(probe.answers, isEmpty);
+      expect(find.text('не расслышал, ещё раз'), findsOneWidget);
+      await sayDebug(tester, 'nothing like it');
       expect(results(probe), [SessionResult.skipped]);
+      expect(probe.answers.single.attempts, 2);
+      expect(
+        tester.widget<SessionMarkedText>(find.byKey(const ValueKey('retell-text'))).text,
+        (card.payload as SpeakRetellPayload).ownLine.textTarget,
+      );
+      await tapText(tester, 'Дальше');
+      expect(probe.nexts, 1);
       await settleCard(tester);
     });
   });
@@ -239,8 +244,8 @@ void main() {
       expect(find.text('повтор без оценки'), findsOneWidget, reason: '35-2 is judged by meaning');
       await settleCard(tester);
 
-      await pumpCard(tester, probeEnv(speakAt(8), CardProbe(), replay: true, localeId: 'ru_RU'));
-      expect(find.text('повтор без оценки'), findsOneWidget, reason: '35-4 is judged by meaning');
+      await pumpCard(tester, probeEnv(speakAt(8), CardProbe(), replay: true));
+      expect(find.text('повтор без оценки'), findsNothing, reason: '35-4 is graded by coverage since BACK-TAILS-1 §1.1');
       await settleCard(tester);
 
       await pumpCard(tester, probeEnv(speakAt(7), CardProbe(), replay: true));

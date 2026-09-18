@@ -4942,10 +4942,6 @@
   "@planSessionTaskAnswerQuestion": {
     "description": "Сессия, строка задания 33-1: вопрос на понимание реплики собеседника; сам вопрос сервера (question_native) — строкой под заданием (наряд SESSION-2a §5)."
   },
-  "planSessionTaskAskSelf": "Спроси сам",
-  "@planSessionTaskAskSelf": {
-    "description": "Сессия, строка задания 33-5: ученик спрашивает первым. Канва — «Спроси про работу»: текста задания контракт не отдаёт, клиент формулирует сам."
-  },
   "planSessionTaskRescue": "Не понял — переспроси",
   "@planSessionTaskRescue": {
     "description": "Сессия, строка задания 33-6: «Не понял» в пузыре собеседника и медленный повтор. Канва — «Слушай назначение»: текста задания контракт не отдаёт."
@@ -5033,9 +5029,17 @@
   "@planSessionTaskWhereHeard": {
     "description": "Сессия, строка задания 34-3: разбор визита с подсветкой ответов."
   },
-  "planSessionTaskWhatNext": "Что прозвучит в ответ?",
-  "@planSessionTaskWhatNext": {
-    "description": "Сессия, строка задания 34-5: пауза-предсказание. Канва — «Что он скажет дальше?»: пол собеседника клиенту не известен."
+  "planSessionTaskListenChoose": "Послушай и выбери ответ",
+  "@planSessionTaskListenChoose": {
+    "description": "Сессия, строка задания 34-5: три озвучки без текста (наряд SESSION-2b §3)."
+  },
+  "planSessionWhatAnswerSounds": "Что прозвучит в ответ?",
+  "@planSessionWhatAnswerSounds": {
+    "description": "Сессия, 34-5: текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2b §3)."
+  },
+  "planSessionThisIsAnswer": "Это ответ",
+  "@planSessionThisIsAnswer": {
+    "description": "Сессия, 34-5: кнопка — отмеченная озвучка и есть ответ; активна только когда лист отмечен и прослушан."
   },
   "planSessionTaskNormalPace": "А теперь в обычном темпе",
   "@planSessionTaskNormalPace": {
@@ -5086,9 +5090,9 @@
   "@planSessionTaskRepeatPause": {
     "description": "Сессия, строка задания 35-3: эхо с задержкой."
   },
-  "planSessionTaskRetell": "Скажи по-русски, что услышал",
+  "planSessionTaskRetell": "Повтори свою реплику",
   "@planSessionTaskRetell": {
-    "description": "Сессия, строка задания 35-4: пересказ на родном. Канва — «…что он сказал»: пол собеседника клиенту не известен."
+    "description": "Сессия, строка задания 35-4: своя реплика звучит, текст закрыт, перевод — подсказка смысла (наряд SESSION-2b §4, контракт BACK-TAILS-1 §1.1)."
   },
   "planSessionBrowLine": "Реплика",
   "@planSessionBrowLine": {
@@ -5105,14 +5109,6 @@
   "planSessionWaiting": "жду",
   "@planSessionWaiting": {
     "description": "Сессия, 35-3: подпись над микрофоном в паузе 3 с (кольцо)."
-  },
-  "planSessionOnNative": "на родном",
-  "@planSessionOnNative": {
-    "description": "Сессия, 35-4: подпись над микрофоном — пересказ на родном языке."
-  },
-  "planSessionUnderstoodCheck": "понял ✓",
-  "@planSessionUnderstoodCheck": {
-    "description": "Сессия, 35-4: пересказ зачтён."
   },
   "planSessionHintSilence": "подскажу каркас — окно твоё",
   "@planSessionHintSilence": {

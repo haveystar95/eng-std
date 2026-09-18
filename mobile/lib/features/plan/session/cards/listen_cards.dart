@@ -587,9 +587,12 @@ class ListenReviewCard extends StatelessWidget {
 
 // ── 34-5 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// THE PAUSE-PREDICTION (34-5): the learner's own line sounds and stands in its bubble; the partner's bubble is empty
-/// and holds the wave-pause; three options in the native language. A choice — the partner's line opens in place and
-/// sounds; correct / wrong as in 30-9 (no copy); a correct answer leaves once the line has sounded.
+/// WHAT WILL THE ANSWER BE? (34-5, work order SESSION-2b §3 on the contract of BACK-TAILS-1 §1.2): the learner's own
+/// question sounds on the plate — a wave and «listen» 44, no text; under it the question «What will the answer be?»
+/// (the client's: the contract sends none). The three options are LINES with sound and no text: a tap plays one
+/// (grey wave — not heard yet, brass — heard, alive — playing), a second tap on a heard one marks it with a brass
+/// outline and a check. «This is the answer» is active only when a marked line has been heard. After the answer every
+/// sheet opens its English line and its translation, and the right one takes the sage wash and the check.
 class ListenPredictCard extends StatefulWidget {
   const ListenPredictCard({super.key, required this.env, required this.payload});
 
@@ -602,18 +605,20 @@ class ListenPredictCard extends StatefulWidget {
 
 class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardState<ListenPredictCard> {
   static const _ownKey = 'predict-own';
-  static const _partnerKey = 'predict-partner';
 
   Timer? _autoplay;
+
+  /// The options played to the end — their `id`.
+  final Set<String> _heard = {};
+
+  /// The option marked as the answer; null — nothing chosen yet.
+  String? _marked;
 
   @override
   CardEnv get env => widget.env;
 
   @override
   ChoicePayload get choice => widget.payload;
-
-  @override
-  bool get autoAdvanceOnCorrect => false;
 
   @override
   void initState() {
@@ -628,62 +633,89 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
     super.dispose();
   }
 
-  @override
-  void onChosen({required bool correct}) {
+  /// A tap on a sheet: it plays; a heard one that is tapped again becomes the answer to send.
+  Future<void> _tap(CardLineOption option) async {
     _autoplay?.cancel();
-    unawaited(_reveal(correct: correct));
-  }
-
-  Future<void> _reveal({required bool correct}) async {
-    final line = widget.payload.partnerLine;
+    if (!answered && _heard.contains(option.id) && _marked != option.id) {
+      setState(() => _marked = option.id);
+      AppHaptics.light();
+      return;
+    }
     await env.voice.stop();
     if (!mounted) return;
-    final started = DateTime.now();
-    await env.voice.play(line.audio, fallback: line.textTarget, key: _partnerKey);
-    if (!mounted || !correct) return;
-    final left = AppMotion.sessionAutoAdvance - DateTime.now().difference(started);
-    if (left > Duration.zero) await Future<void>.delayed(left);
-    if (mounted) unawaited(env.next());
+    await env.voice.play(option.audio, fallback: option.textTarget, key: 'predict-${option.id}');
+    if (!mounted) return;
+    setState(() => _heard.add(option.id));
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final p = widget.payload;
-    final partner = p.partnerLine;
+    final own = p.ownLine;
     return CardLayout(
-      feed: true,
-      bodyGap: 16,
-      task: SessionTask(l.planSessionTaskWhatNext),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SessionOwnRow(bubble: SessionBubble(own: true, text: p.ownLine.textTarget, translation: p.ownLine.textNative)),
-          const SizedBox(height: 8),
-          SessionPartnerRow(
-            bubble: ValueListenableBuilder<Object?>(
-              valueListenable: env.voice.playing,
-              builder: (_, playing, _) => SessionBubble(
-                own: false,
-                translation: answered ? partner.textNative : null,
-                child: AnimatedSwitcher(
-                  duration: AppMotion.sessionTextReveal,
-                  switchInCurve: AppMotion.sessionEaseOut,
-                  child: answered
-                      ? Text(partner.textTarget, key: const ValueKey('predict-text'), style: SessionBubble.lineStyle(own: false))
-                      : SessionWave(key: const ValueKey('predict-wave'), heights: SessionWave.five, width: 80, playing: playing == _ownKey),
+      bodyGap: 12,
+      task: SessionTask(l.planSessionTaskListenChoose),
+      body: ValueListenableBuilder<Object?>(
+        valueListenable: env.voice.playing,
+        builder: (_, playing, _) => SessionQuestionSheet(
+          media: Stack(
+            children: [
+              Positioned.fill(
+                child: SessionWavePlate(
+                  playing: playing == _ownKey,
+                  heights: SessionWave.five,
+                  label: l.planWindowListen,
+                  onTap: () => unawaited(env.voice.play(own.audio, fallback: own.textTarget, key: _ownKey)),
                 ),
               ),
-            ),
-            listen: answered
-                ? CardListen(env: env, audio: partner.audio, fallback: partner.textTarget, playKey: _partnerKey, size: 28, brass: true)
-                : CardListen(env: env, audio: p.ownLine.audio, fallback: p.ownLine.textTarget, playKey: _ownKey, size: 28, brass: true),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: CardListen(env: env, audio: own.audio, fallback: own.textTarget, playKey: _ownKey),
+              ),
+            ],
           ),
-        ],
+          eyebrow: l.planSessionBrowQuestion,
+          eyebrowTrailing: eyebrowTrailing(l),
+          text: Text(l.planSessionWhatAnswerSounds, style: AppTextSession.question),
+        ),
       ),
-      bottom: optionsDock(context),
+      bottom: _dock(l),
     );
   }
+
+  Widget _dock(AppLocalizations l) => ValueListenableBuilder<Object?>(
+    valueListenable: env.voice.playing,
+    builder: (_, playing, _) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final o in widget.payload.options) ...[
+          if (o != widget.payload.options.first) const SizedBox(height: 8),
+          SessionSoundOption(
+            key: ValueKey('option-${o.id}'),
+            heard: _heard.contains(o.id),
+            playing: playing == 'predict-${o.id}',
+            marked: _marked == o.id,
+            look: answered ? lookOf(o.id) : null,
+            textTarget: o.textTarget,
+            textNative: o.textNative,
+            onTap: () => unawaited(_tap(o)),
+          ),
+        ],
+        const SizedBox(height: 16),
+        if (answeredWrong)
+          SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
+        else if (!answered)
+          SessionDockButton(
+            label: l.planSessionThisIsAnswer,
+            enabled: _marked != null,
+            onTap: _marked == null ? null : () => choose(_marked!),
+          ),
+      ],
+    ),
+  );
 }
 
 // ── 34-6 ──────────────────────────────────────────────────────────────────────────────────────────

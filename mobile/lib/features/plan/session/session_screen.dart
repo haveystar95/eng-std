@@ -15,7 +15,6 @@ import '../../../data/languages.dart' show sttLocaleFor;
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/dialogue_feed.dart';
 import '../../../data/plan/session/session_models.dart';
-import '../../../data/plan/session/session_rules.dart';
 import '../../../data/plan/session/session_summary.dart';
 import '../../../data/providers.dart';
 import '../../profile/qa_report_button.dart' show QaReportHidden;
@@ -126,7 +125,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     setState(() {});
   }
 
-  /// The card's microphone in the card's recognition locale ([SessionRules.speechLang]).
+  /// The card's microphone in the target language's locale.
   SessionMic Function(String expected, List<String> contextual) _makeMic(String localeId) => (expected, contextual) {
     final strings = <String>{
       for (final s in contextual)
@@ -302,7 +301,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final card = _session.card!;
     final plan = widget.plan;
     final stageCards = q.cardsOf(stage);
-    final localeId = sttLocaleFor(SessionRules.speechLang(card.kind, targetLang: plan.targetLang, nativeLang: plan.nativeLang));
+    // Every kind is recognized in the target language: the native retelling died with BACK-TAILS-1 §1.1.
+    final localeId = sttLocaleFor(plan.targetLang);
     final env = CardEnv(
       card: card,
       voice: _voice,

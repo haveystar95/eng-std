@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/languages.dart' show sttLocaleFor;
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
@@ -56,7 +55,7 @@ void main() {
       SessionKind.listenNumber: choice,
       SessionKind.speakAnswer: judged,
       SessionKind.speakEcho: voice,
-      SessionKind.speakRetell: judged,
+      SessionKind.speakRetell: voice,
     };
 
     // CATCHES: a voice kind that may write `failed` (422 and a dropped answer), a judged kind that writes its own pass,
@@ -77,10 +76,20 @@ void main() {
     });
 
     test('the kinds are sorted by grading method as on the server', () {
-      for (final k in [SessionKind.phraseOwnSlot, SessionKind.speakAnswer, SessionKind.speakRetell]) {
+      for (final k in [SessionKind.phraseOwnSlot, SessionKind.speakAnswer]) {
         expect(k.grading, SessionGrading.judge, reason: k.wire);
       }
-      for (final k in [SessionKind.wordRepeat, SessionKind.phraseRepeat, SessionKind.phraseOtherSlot, SessionKind.dialogueAnswer, SessionKind.dialogueAsk, SessionKind.speakEcho]) {
+      // `speak_retell` left the judge with BACK-TAILS-1 §1.1: «Say your line again» is graded by coverage, and a
+      // question to `…/judge` on it comes back 422.
+      for (final k in [
+        SessionKind.wordRepeat,
+        SessionKind.phraseRepeat,
+        SessionKind.phraseOtherSlot,
+        SessionKind.dialogueAnswer,
+        SessionKind.dialogueAsk,
+        SessionKind.speakEcho,
+        SessionKind.speakRetell,
+      ]) {
         expect(k.grading, SessionGrading.voice, reason: k.wire);
       }
       for (final k in [SessionKind.dialogueRescue, SessionKind.listenDialogue, SessionKind.listenReview, SessionKind.listenPace]) {
@@ -99,17 +108,6 @@ void main() {
     final dialogue = day.stageOf(PlanStage.dialogue)!.cards;
     DialogueAnswerPayload answerOf(String exchange) =>
         dialogue.map((c) => c.payload).whereType<DialogueAnswerPayload>().firstWhere((p) => p.exchange.ref == exchange);
-
-    // CATCHES: a retelling recognized in English (the Russian speech comes back as garbage and the judge refuses it),
-    // and a target-language card listened to in the native locale.
-    test('the recognizer\'s language by kind: the target everywhere, the native language only for speak_retell', () {
-      for (final kind in SessionKind.values) {
-        final lang = SessionRules.speechLang(kind, targetLang: 'en', nativeLang: 'ru');
-        expect(lang, kind == SessionKind.speakRetell ? 'ru' : 'en', reason: kind.wire);
-      }
-      expect(sttLocaleFor(SessionRules.speechLang(SessionKind.speakRetell, targetLang: 'en', nativeLang: 'ru')), 'ru_RU');
-      expect(sttLocaleFor(SessionRules.speechLang(SessionKind.speakEcho, targetLang: 'en', nativeLang: 'ru')), 'en_US');
-    });
 
     // CATCHES: «No hints» that changes nothing, a beginner asked by voice, an intermediate given chips, and chips drawn
     // for a frame that has none.

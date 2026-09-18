@@ -52,8 +52,9 @@ void main() {
 
     final late = _dialogueAnsweredBefore(13);
     final feed = DialogueFeed.before(dialogueOf(late), at(late, 13));
-    // x7's partner reply is what dialogue_partner x7 (position 13) shows — not above it.
-    expect([for (final f in feed) f.line.ref], ['x1', 'x1b', 'x2', 'x2b', 'x3', 'x3b', 'x4', 'x4b', 'x5', 'x6b', 'x6', 'x5b', 'x7b']);
+    // Position 13 is the ask of x8 (BACK-TAILS-1 §1.5: an ask is one card), so the whole of x7 — the question and the
+    // reply the card before it showed — stands above.
+    expect([for (final f in feed) f.line.ref], ['x1', 'x1b', 'x2', 'x2b', 'x3', 'x3b', 'x4', 'x4b', 'x5', 'x6b', 'x6', 'x5b', 'x7b', 'x7']);
     expect(feed.where((f) => f.line.ref == 'x5'), hasLength(1), reason: 'the asked line of the rescue is x5 — once');
   });
 

@@ -22,12 +22,13 @@ import '../session_texts.dart';
 import 'card_kit.dart';
 import 'word_cards.dart' show autoplayOnce, kAutoplayDelay;
 
-/// SPEAK MYSELF — canvas series 35 (work order SESSION-1c, section 4): the learner answers the partner in their own
-/// words (judged by meaning), repeats a line after a pause, retells a line in the native language (judged by meaning).
+/// SPEAK MYSELF — canvas series 35 (work orders SESSION-1c §4, SESSION-2b §4): the learner answers the partner in
+/// their own words (judged by meaning), repeats a line after a pause, and says their own line of the exchange again
+/// (graded on the phone by coverage).
 
-/// The judge's verdict flow shared by the answer (35-2 / 35-5) and the retelling (35-4): the recording goes to
-/// `…/judge`; accepted — the card shows the pass; rejected — the reason and the exits over the microphone; «Skip» —
-/// `skipped` through the ordinary answer. The client never writes a judged pass itself.
+/// The judge's verdict flow of the answer (35-2 / 35-5): the recording goes to `…/judge`; accepted — the card shows
+/// the pass; rejected — the reason and the exits over the microphone; «Skip» — `skipped` through the ordinary answer.
+/// The client never writes a judged pass itself.
 mixin _JudgedCardState<T extends StatefulWidget> on State<T> {
   CardEnv get env;
 
@@ -586,11 +587,12 @@ class _PauseRingState extends State<_PauseRing> with SingleTickerProviderStateMi
 
 // ── 35-4 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// RETELL (35-4): the sheet of 35-3 — the partner's line sounds, its text closed; the recording is in the NATIVE
-/// language (the card's locale — [SessionRules.speechLang]), the live line in the native language stands under the
-/// sheet, over the microphone. The judge (`TASK retell` on the server, `hinted` always false): accepted — the sheet
-/// opens (`reveal`: the line and its translation), «understood ✓», a check, «Next»; rejected — the reason, «Try
-/// again» / «Skip».
+/// SAY YOUR LINE AGAIN (35-4, work order SESSION-2b §4 on the contract of BACK-TAILS-1 §1.1): the LEARNER'S own line
+/// of the exchange sounds when the card opens, its target text closed (a wave on the plate, «listen» 44 in the
+/// corner); under the plate its native text stands as the hint of the meaning. The microphone; the pass is coverage
+/// of `expected_text` by `coverage_min` — the same rule as the echo, and there is no judge on this card. After the
+/// attempt the target line opens in place of the wave, and the card waits for «Next»; two misses — `skipped`, the
+/// line opens too.
 class SpeakRetellCard extends StatefulWidget {
   const SpeakRetellCard({super.key, required this.env, required this.payload});
 
@@ -601,10 +603,12 @@ class SpeakRetellCard extends StatefulWidget {
   State<SpeakRetellCard> createState() => _SpeakRetellCardState();
 }
 
-class _SpeakRetellCardState extends State<SpeakRetellCard> with _JudgedCardState<SpeakRetellCard> {
+class _SpeakRetellCardState extends State<SpeakRetellCard> with VoiceCardState<SpeakRetellCard> {
   static const _key = 'retell-line';
 
   Timer? _autoplay;
+  String _lastHeard = '';
+  bool _passed = false;
 
   SpeakRetellPayload get p => widget.payload;
 
@@ -612,27 +616,43 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with _JudgedCardState
   CardEnv get env => widget.env;
 
   @override
+  String get expectedSpeech => p.expectedText;
+
+  @override
+  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.articles);
+
+  @override
+  bool get autoAdvanceOnPass => false;
+
+  @override
+  void onAttempt(String heard, {required bool accepted}) => _lastHeard = heard;
+
+  @override
+  void onAccepted(String heard) => _passed = true;
+
+  @override
   void initState() {
     super.initState();
-    // Nothing to match word by word in the native language: no expected text, no hint words for the recognizer.
-    initJudgedMic('', const []);
-    _autoplay = autoplayOnce(this, env, p.partnerLine.audio, p.partnerLine.textTarget, _key);
+    initVoice();
+    _autoplay = autoplayOnce(this, env, p.ownLine.audio, p.ownLine.textTarget, _key);
   }
 
   @override
   void dispose() {
     _autoplay?.cancel();
-    disposeJudgedMic();
+    disposeVoice();
     super.dispose();
   }
 
+  /// The answer is given — passed or two misses: the line opens.
+  bool get _revealed => _passed || skippedAfterMisses;
+
   @override
   Widget build(BuildContext context) {
-    final noMic = noMicView();
+    final noMic = noMicBody((s) => SessionTexts.stage(AppLocalizations.of(context), s));
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
-    final line = p.partnerLine;
-    final accepted = verdict?.accepted == true;
+    final line = p.ownLine;
     return CardLayout(
       bodyGap: 12,
       centerBody: true,
@@ -641,35 +661,36 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with _JudgedCardState
       body: ValueListenableBuilder<Object?>(
         valueListenable: env.voice.playing,
         builder: (_, playing, _) => SessionLineSheet(
-          revealed: accepted,
-          plate: accepted
-              ? Text(p.revealTarget, key: const ValueKey('retell-text'), style: AppTextSession.question.copyWith(letterSpacing: -0.26))
+          revealed: _revealed,
+          plate: _revealed
+              ? SessionMarkedText(
+                  key: const ValueKey('retell-text'),
+                  text: line.textTarget,
+                  style: AppTextSession.question.copyWith(letterSpacing: -0.26),
+                  marks: [for (final r in HeardWords.matched(line.textTarget, _lastHeard)) (start: r.start, end: r.end, look: MarkLook.sage)],
+                )
               : SessionPlateWave(key: const ValueKey('retell-wave'), playing: playing == _key),
           listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _key),
-          eyebrow: l.planSessionBrowLine,
-          meta: accepted ? null : l.planSessionTextClosed,
-          below: accepted
-              ? Padding(padding: const EdgeInsets.only(top: 4), child: Text(p.revealNative, key: const ValueKey('retell-native'), style: AppTextSession.body))
-              : null,
+          below: Text(line.textNative, key: const ValueKey('retell-native'), style: AppTextSession.body),
         ),
       ),
-      bottom: _dock(l, accepted: accepted),
+      bottom: _dock(l),
     );
   }
 
-  Widget _dock(AppLocalizations l, {required bool accepted}) {
-    if (accepted) {
+  Widget _dock(AppLocalizations l) {
+    if (_passed) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(child: Text(l.planSessionUnderstoodCheck, key: const ValueKey('retell-understood'), style: AppTextSession.meta)),
+          Center(child: Text(l.planSessionMicHeard, style: AppTextSession.meta)),
           const SizedBox(height: 14),
           Center(
             child: SessionTextExit(
               key: const ValueKey('retell-replay'),
               label: l.planSessionReplay,
-              onTap: () => unawaited(env.voice.play(p.partnerLine.audio, fallback: p.partnerLine.textTarget, key: _key)),
+              onTap: () => unawaited(env.voice.play(p.ownLine.audio, fallback: p.ownLine.textTarget, key: _key)),
             ),
           ),
           const SizedBox(height: 14),
@@ -677,26 +698,6 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with _JudgedCardState
         ],
       );
     }
-    if (rejected) {
-      return SessionMicPanel(
-        mic: mic,
-        expected: '',
-        onSkip: null,
-        liveLine: MicLiveLine.native,
-        missedCaption: (reason ?? '').trim().isEmpty ? l.planSessionNotThat : reason,
-        exits: [
-          SessionTextExit(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, brass: true, onTap: tryAgain),
-          SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, onTap: skip),
-        ],
-      );
-    }
-    return SessionMicPanel(
-      mic: mic,
-      expected: '',
-      onSkip: finished || judging ? null : skip,
-      liveLine: MicLiveLine.native,
-      idleCaption: l.planSessionOnNative,
-      listeningCaption: l.planSessionOnNative,
-    );
+    return voiceDock(context, showHeardLine: false);
   }
 }

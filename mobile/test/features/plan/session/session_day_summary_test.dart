@@ -187,8 +187,11 @@ void main() {
   });
 
   // CATCHES: a retelling recognized in the target language, an echo recognized in the native one.
-  testWidgets('the screen hands each card its recognition locale: speak_retell — ru_RU, speak_echo — en_US', (tester) async {
-    for (final (position, kind, locale) in [(8, SpeakRetellCard, 'ru_RU'), (7, SpeakEchoCard, 'en_US')]) {
+  // RULE (SESSION-2b §4, contract BACK-TAILS-1 §1.1): every card is recognized in the TARGET language — the native
+  // retelling is gone, 35-4 says the learner's own English line again.
+  // CATCHES: the native locale left on 35-4, which sends the recognizer after Russian and hears nothing.
+  testWidgets('the screen hands each card the target language: speak_retell and speak_echo — en_US', (tester) async {
+    for (final (position, kind, locale) in [(8, SpeakRetellCard, 'en_US'), (7, SpeakEchoCard, 'en_US')]) {
       await _open(tester, _Backend(_day(open: {'speak': {position}})));
       expect(find.text('Говорю сам'), findsWidgets);
       await tester.tap(find.text('Начать'));

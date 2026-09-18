@@ -3882,9 +3882,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskAnswerQuestion => 'Ответь на вопрос';
 
   @override
-  String get planSessionTaskAskSelf => 'Спроси сам';
-
-  @override
   String get planSessionTaskRescue => 'Не понял — переспроси';
 
   @override
@@ -3953,7 +3950,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskWhereHeard => 'Где это прозвучало';
 
   @override
-  String get planSessionTaskWhatNext => 'Что прозвучит в ответ?';
+  String get planSessionTaskListenChoose => 'Послушай и выбери ответ';
+
+  @override
+  String get planSessionWhatAnswerSounds => 'Что прозвучит в ответ?';
+
+  @override
+  String get planSessionThisIsAnswer => 'Это ответ';
 
   @override
   String get planSessionTaskNormalPace => 'А теперь в обычном темпе';
@@ -3991,7 +3994,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskRepeatPause => 'Повтори через паузу';
 
   @override
-  String get planSessionTaskRetell => 'Скажи по-русски, что услышал';
+  String get planSessionTaskRetell => 'Повтори свою реплику';
 
   @override
   String get planSessionBrowLine => 'Реплика';
@@ -4004,12 +4007,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionWaiting => 'жду';
-
-  @override
-  String get planSessionOnNative => 'на родном';
-
-  @override
-  String get planSessionUnderstoodCheck => 'понял ✓';
 
   @override
   String get planSessionHintSilence => 'подскажу каркас — окно твоё';

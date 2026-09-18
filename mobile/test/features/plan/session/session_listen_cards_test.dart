@@ -207,36 +207,69 @@ void main() {
   });
 
   group('34-5 listen_predict', () {
-    // CATCHES: the reply shown before the choice, a wrong choice that hides the reply, a correct one that leaves before
-    // the reply has sounded.
-    testWidgets('the own line sounds, the partner\'s bubble waits; a choice opens and plays the reply; wrong — «Next»', (tester) async {
+    // RULE (SESSION-2b §3, кадр 34-5, контракт BACK-TAILS-1 §1.2): the three options are LINES — before the answer
+    // the card only lets them be heard, no text at all; a tap plays, a second tap on a HEARD one marks it, and «This
+    // is the answer» is active only then. After the answer every sheet opens both texts and the right one is marked.
+    // CATCHES: texts of the options shown before the answer (the exercise becomes reading), «This is the answer»
+    // active on a sheet that was never played, and a mark set by the first tap.
+    testWidgets('three sounds without text; the second tap marks a heard one; «This is the answer» sends it', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
-      await pumpCard(tester, probeEnv(listenAt(6), probe, voice: voice));
+      final card = listenAt(6);
+      final options = (card.payload as ListenPredictPayload).options;
+      expect(options, hasLength(3));
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
+      expect(find.text('Послушай и выбери ответ'), findsOneWidget);
       expect(find.text('Что прозвучит в ответ?'), findsOneWidget);
-      expect(find.text('Do we need an X-ray?'), findsOneWidget);
-      expect(find.byKey(const ValueKey('predict-wave')), findsOneWidget);
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
+      for (final o in options) {
+        expect(find.text(o.textTarget), findsNothing, reason: 'no English before the answer');
+        expect(find.text(o.textNative), findsNothing, reason: 'and no translation either');
+      }
       await tester.pump(const Duration(milliseconds: 300));
-      expect(voice.played, ['x7b@1.0']);
+      expect(voice.played, ['x7b@1.0'], reason: 'the learner\'s own question sounds on open');
+      expect(dockEnabled(tester, 'Это ответ'), isFalse);
 
-      await tapText(tester, 'Нет, при растяжении мышцы рентген не нужен.');
+      final correct = options.firstWhere((o) => o.id == (card.payload as ListenPredictPayload).correct);
+      await tester.tap(find.byKey(ValueKey('option-${correct.id}')));
+      await tester.pump();
+      expect(voice.played.last, '${correct.audio!.ref}@1.0', reason: 'the first tap plays');
+      expect(dockEnabled(tester, 'Это ответ'), isFalse, reason: 'heard, but not marked yet');
+
+      await tester.tap(find.byKey(ValueKey('option-${correct.id}')));
+      await tester.pump();
+      expect(dockEnabled(tester, 'Это ответ'), isTrue, reason: 'the second tap marks the heard line');
+      expect(results(probe), isEmpty, reason: 'nothing is sent until the button');
+
+      await tapText(tester, 'Это ответ');
       await tester.pump();
       expect(results(probe), [SessionResult.passed]);
-      expect(voice.played.last, 'x7@1.0');
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
+      for (final o in options) {
+        expect(find.text(o.textTarget), findsOneWidget, reason: 'every sheet opens after the answer');
+        expect(find.text(o.textNative), findsOneWidget);
+      }
       await settleCard(tester);
       expect(probe.nexts, 1);
+    });
 
-      final wrong = CardProbe();
-      await pumpCard(tester, probeEnv(listenAt(6), wrong));
-      await tapText(tester, 'Только если через неделю ещё будет болеть.');
+    // CATCHES: a wrong answer that leaves by itself, and a card that lets a second answer through.
+    testWidgets('a wrong line — failed, the texts open, «Next» by hand', (tester) async {
+      final probe = CardProbe();
+      final card = listenAt(6);
+      final p = card.payload as ListenPredictPayload;
+      final wrong = p.options.firstWhere((o) => o.id != p.correct);
+      await pumpCard(tester, probeEnv(card, probe));
+      await tester.tap(find.byKey(ValueKey('option-${wrong.id}')));
       await tester.pump();
-      expect(results(wrong), [SessionResult.failed]);
+      await tester.tap(find.byKey(ValueKey('option-${wrong.id}')));
+      await tester.pump();
+      await tapText(tester, 'Это ответ');
+      await tester.pump();
+      expect(results(probe), [SessionResult.failed]);
+      expect(find.text(p.options.firstWhere((o) => o.id == p.correct).textTarget), findsOneWidget);
       await settleCard(tester);
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget, reason: 'the reply opens on a wrong choice too');
-      expect(wrong.nexts, 0);
+      expect(probe.nexts, 0, reason: 'a wrong answer waits for «Next»');
+      await tapText(tester, 'Дальше');
+      expect(probe.nexts, 1);
     });
   });
 
@@ -292,7 +325,8 @@ void main() {
 
       final wrong = CardProbe();
       await pumpCard(tester, probeEnv(listenAt(9), wrong));
-      await tapText(tester, 'Сегодня');
+      // The options are values now (BACK-TAILS-1 §1.3): a number beside numbers, a time beside times.
+      await tapText(tester, 'Два дня');
       expect(results(wrong), [SessionResult.failed]);
       await tester.pump(const Duration(milliseconds: 250));
       expect(tester.widget<SessionMarkedText>(find.byType(SessionMarkedText)).marks.single.look, MarkLook.brass);

@@ -5655,12 +5655,6 @@ abstract class AppLocalizations {
   /// **'Ответь на вопрос'**
   String get planSessionTaskAnswerQuestion;
 
-  /// Сессия, строка задания 33-5: ученик спрашивает первым. Канва — «Спроси про работу»: текста задания контракт не отдаёт, клиент формулирует сам.
-  ///
-  /// In ru, this message translates to:
-  /// **'Спроси сам'**
-  String get planSessionTaskAskSelf;
-
   /// Сессия, строка задания 33-6: «Не понял» в пузыре собеседника и медленный повтор. Канва — «Слушай назначение»: текста задания контракт не отдаёт.
   ///
   /// In ru, this message translates to:
@@ -5769,11 +5763,23 @@ abstract class AppLocalizations {
   /// **'Где это прозвучало'**
   String get planSessionTaskWhereHeard;
 
-  /// Сессия, строка задания 34-5: пауза-предсказание. Канва — «Что он скажет дальше?»: пол собеседника клиенту не известен.
+  /// Сессия, строка задания 34-5: три озвучки без текста (наряд SESSION-2b §3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Послушай и выбери ответ'**
+  String get planSessionTaskListenChoose;
+
+  /// Сессия, 34-5: текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2b §3).
   ///
   /// In ru, this message translates to:
   /// **'Что прозвучит в ответ?'**
-  String get planSessionTaskWhatNext;
+  String get planSessionWhatAnswerSounds;
+
+  /// Сессия, 34-5: кнопка — отмеченная озвучка и есть ответ; активна только когда лист отмечен и прослушан.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это ответ'**
+  String get planSessionThisIsAnswer;
 
   /// Сессия, строка задания 34-6.
   ///
@@ -5841,10 +5847,10 @@ abstract class AppLocalizations {
   /// **'Повтори через паузу'**
   String get planSessionTaskRepeatPause;
 
-  /// Сессия, строка задания 35-4: пересказ на родном. Канва — «…что он сказал»: пол собеседника клиенту не известен.
+  /// Сессия, строка задания 35-4: своя реплика звучит, текст закрыт, перевод — подсказка смысла (наряд SESSION-2b §4, контракт BACK-TAILS-1 §1.1).
   ///
   /// In ru, this message translates to:
-  /// **'Скажи по-русски, что услышал'**
+  /// **'Повтори свою реплику'**
   String get planSessionTaskRetell;
 
   /// Сессия, бровь листа 35-3 / 35-4.
@@ -5870,18 +5876,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'жду'**
   String get planSessionWaiting;
-
-  /// Сессия, 35-4: подпись над микрофоном — пересказ на родном языке.
-  ///
-  /// In ru, this message translates to:
-  /// **'на родном'**
-  String get planSessionOnNative;
-
-  /// Сессия, 35-4: пересказ зачтён.
-  ///
-  /// In ru, this message translates to:
-  /// **'понял ✓'**
-  String get planSessionUnderstoodCheck;
 
   /// Сессия, 35-2: подсказка-каркас встала сама после 5 с молчания.
   ///

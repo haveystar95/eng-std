@@ -3711,9 +3711,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskAnswerQuestion => 'Answer the question';
 
   @override
-  String get planSessionTaskAskSelf => 'Ask it yourself';
-
-  @override
   String get planSessionTaskRescue => 'Didn\'t catch it — ask again';
 
   @override
@@ -3780,7 +3777,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskWhereHeard => 'Where it was said';
 
   @override
-  String get planSessionTaskWhatNext => 'What will the answer be?';
+  String get planSessionTaskListenChoose => 'Listen and choose the answer';
+
+  @override
+  String get planSessionWhatAnswerSounds => 'What will the answer be?';
+
+  @override
+  String get planSessionThisIsAnswer => 'This is the answer';
 
   @override
   String get planSessionTaskNormalPace => 'Now at normal speed';
@@ -3831,12 +3834,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionWaiting => 'waiting';
-
-  @override
-  String get planSessionOnNative => 'in your language';
-
-  @override
-  String get planSessionUnderstoodCheck => 'understood ✓';
 
   @override
   String get planSessionHintSilence => 'here\'s the frame — the slot is yours';

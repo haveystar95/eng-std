@@ -26,7 +26,7 @@ enum SessionGrading {
   /// Voice: speech coverage by `coverage_min`, two attempts without a pass — `skipped`.
   voice,
 
-  /// By meaning — only the server, `POST …/judge`.
+  /// By meaning — only the server, `POST …/judge` (`phrase_own_slot`, `speak_answer`).
   judge,
 
   /// Walkthrough: «Got it» / «Next».
@@ -62,7 +62,7 @@ enum SessionKind {
   listenNumber('listen_number', PlanStage.listen, SessionGrading.choice),
   speakAnswer('speak_answer', PlanStage.speak, SessionGrading.judge),
   speakEcho('speak_echo', PlanStage.speak, SessionGrading.voice),
-  speakRetell('speak_retell', PlanStage.speak, SessionGrading.judge);
+  speakRetell('speak_retell', PlanStage.speak, SessionGrading.voice);
 
   const SessionKind(this.wire, this.stage, this.grading);
 
@@ -405,6 +405,47 @@ class CardOption {
 
   factory CardOption.fromJson(Map<String, dynamic> j) =>
       CardOption(id: _str(j, 'id'), text: _str(j, 'text'), audio: CardAudio.maybe(j['audio']));
+}
+
+/// AN OPTION THAT IS A LINE OF THE VISIT — `{id, ref, text_target, text_native, audio}` (`listen_predict`, 34-5,
+/// work order BACK-TAILS-1 §1.2). The card plays it and shows no text until the answer is given; [text] is the
+/// native one, so a plain option row can still draw it.
+class CardLineOption extends CardOption {
+  const CardLineOption({required super.id, required this.ref, required this.textTarget, required String textNative, super.audio})
+    : super(text: textNative);
+
+  /// The line's name in the visit — `x6`, `x7`…
+  final String ref;
+  final String textTarget;
+
+  String get textNative => text;
+
+  factory CardLineOption.fromJson(Map<String, dynamic> j) => CardLineOption(
+    id: _str(j, 'id'),
+    ref: _str(j, 'ref'),
+    textTarget: _str(j, 'text_target'),
+    textNative: _str(j, 'text_native'),
+    audio: CardAudio.maybe(j['audio']),
+  );
+}
+
+/// THE CHECK OF AN EXCHANGE ON THE CARD ITSELF (`dialogue_ask`, 33-5, BACK-TAILS-1 §1.5): the question about what
+/// the partner answered, four options in the native language and the id of the right one. The three keys come
+/// together or not at all — an exchange whose check the day could not build deals the card without them.
+class CardCheck {
+  const CardCheck({required this.questionNative, required this.options, required this.correct});
+
+  final String questionNative;
+  final List<CardOption> options;
+  final String correct;
+
+  /// Null — the card carries no check.
+  static CardCheck? maybe(Map<String, dynamic> j) {
+    final question = _nonEmpty(j['question_native']);
+    final correct = _nonEmpty(j['correct']);
+    if (question == null || correct == null || j['options'] is! List) return null;
+    return CardCheck(questionNative: question, options: _list(j, 'options', CardOption.fromJson), correct: correct);
+  }
 }
 
 /// A span `[start, end)` in characters of the string.
@@ -1095,6 +1136,7 @@ class DialogueAnswerPayload extends CardPayload {
     required this.frame,
     required this.modes,
     required this.coverageMin,
+    this.check,
   });
 
   final CardExchange exchange;
@@ -1103,6 +1145,10 @@ class DialogueAnswerPayload extends CardPayload {
   final CardFrame frame;
   final CardAnswerModes modes;
   final double coverageMin;
+
+  /// `dialogue_ask` (33-5) carries the check of its own exchange — the question about the partner's answer and four
+  /// options (BACK-TAILS-1 §1.5); null — an `answer` exchange, or an `ask` whose check the day could not build.
+  final CardCheck? check;
 
   @override
   Iterable<CardAudio> get audios => [?partnerLine?.audio, ?ownLine.audio];
@@ -1115,6 +1161,7 @@ class DialogueAnswerPayload extends CardPayload {
     frame: CardFrame.fromJson(_map(j, 'frame')),
     modes: CardAnswerModes.fromJson(_map(j, 'modes')),
     coverageMin: _num(j, 'coverage_min'),
+    check: CardCheck.maybe(j),
   );
 }
 
@@ -1257,20 +1304,23 @@ class ListenPredictPayload extends CardPayload with ChoicePayload {
 
   final CardExchange exchange;
   final CardLine ownLine;
+
+  /// Three LINES of the visit with their sound (BACK-TAILS-1 §1.2) — the card plays them and opens their texts only
+  /// after the answer.
   @override
-  final List<CardOption> options;
+  final List<CardLineOption> options;
   @override
   final String correct;
   final CardLine partnerLine;
 
   @override
-  Iterable<CardAudio> get audios => [?ownLine.audio, ?partnerLine.audio];
+  Iterable<CardAudio> get audios => [?ownLine.audio, ?partnerLine.audio, for (final o in options) ?o.audio];
 
   factory ListenPredictPayload.fromJson(Map<String, dynamic> j) => ListenPredictPayload(
     sceneId: _scene(j),
     exchange: CardExchange.fromJson(_map(j, 'exchange')),
     ownLine: CardLine.fromJson(_map(j, 'own_line')),
-    options: _list(j, 'options', CardOption.fromJson),
+    options: _list(j, 'options', CardLineOption.fromJson),
     correct: _str(j, 'correct'),
     partnerLine: CardLine.fromJson(_map(j, 'partner_line')),
   );
@@ -1397,29 +1447,29 @@ class SpeakRetellPayload extends CardPayload {
   const SpeakRetellPayload({
     required super.sceneId,
     required this.exchange,
-    required this.partnerLine,
-    required this.revealTarget,
-    required this.revealNative,
+    required this.ownLine,
+    required this.expectedText,
+    required this.coverageMin,
   });
 
   final CardExchange exchange;
-  final CardLine partnerLine;
-  final String revealTarget;
-  final String revealNative;
+
+  /// The LEARNER'S own line of the exchange (BACK-TAILS-1 §1.1): it sounds, its native text is the hint of the
+  /// meaning, and its target text opens after the attempt.
+  final CardOwnLine ownLine;
+  final String expectedText;
+  final double coverageMin;
 
   @override
-  Iterable<CardAudio> get audios => [?partnerLine.audio];
+  Iterable<CardAudio> get audios => [?ownLine.audio];
 
-  factory SpeakRetellPayload.fromJson(Map<String, dynamic> j) {
-    final reveal = _map(j, 'reveal');
-    return SpeakRetellPayload(
-      sceneId: _scene(j),
-      exchange: CardExchange.fromJson(_map(j, 'exchange')),
-      partnerLine: CardLine.fromJson(_map(j, 'partner_line')),
-      revealTarget: _str(reveal, 'text_target'),
-      revealNative: _str(reveal, 'text_native'),
-    );
-  }
+  factory SpeakRetellPayload.fromJson(Map<String, dynamic> j) => SpeakRetellPayload(
+    sceneId: _scene(j),
+    exchange: CardExchange.fromJson(_map(j, 'exchange')),
+    ownLine: CardOwnLine.fromJson(_map(j, 'own_line')),
+    expectedText: _str(j, 'expected_text'),
+    coverageMin: _num(j, 'coverage_min'),
+  );
 }
 
 // ──────────────────────────────────────────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 
 /// THE DAY SESSION CONTRACT AT THE CLIENT'S DOOR (work order SESSION-1b §6): both server fixtures
 /// (`backend2/docs/fixtures/day-doctor*.json` — the body of `GET /plans/{id}/days/1`, kept byte-for-byte by the
-/// server) parse in full — 170 cards since SESSION-1d (rebuilt by SESSION-1e), all 28 dealt kinds; a card of an
+/// server) parse in full — 166 cards since BACK-TAILS-1 (the ask exchange is one card now), all 28 dealt kinds; a card of an
 /// unknown kind is skipped without an error.
 Map<String, dynamic> _fixture(String name) =>
     jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
@@ -18,15 +18,15 @@ void main() {
   final intermediate = _fixture('day-doctor');
   final beginner = _fixture('day-doctor-beginner');
 
-  test('both fixtures parse in full: 85 + 85 cards, none skipped', () {
+  test('both fixtures parse in full: 83 + 83 cards, none skipped', () {
     final a = SessionDay.fromJson(intermediate);
     final b = SessionDay.fromJson(beginner);
 
     int count(SessionDay d) => d.stages.fold(0, (n, s) => n + s.cards.length);
-    expect(count(a), 85);
-    expect(count(b), 85);
+    expect(count(a), 83);
+    expect(count(b), 83);
     expect(a.skipped + b.skipped, 0);
-    expect(count(a) + count(b), 170);
+    expect(count(a) + count(b), 166);
   });
 
   test('the two fixtures carry all 28 dealt kinds', () {

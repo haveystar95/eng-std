@@ -141,22 +141,77 @@ void main() {
   });
 
   group('33-5 dialogue_ask', () {
-    // CATCHES: the partner's reply before the question, a reply that does not sound, an ask that leaves before the reply.
-    testWidgets('the learner first; after the pass the reply appears and sounds; «Next» by hand', (tester) async {
+    // RULE (SESSION-2b §2, кадр 33-5, контракт BACK-TAILS-1 §1.5): the whole exchange is ONE card — the learner asks
+    // by voice, the partner's reply comes with its TEXT CLOSED (a wave and «listen»), the card asks its own check,
+    // and only the answer opens the text and marks the right option.
+    // CATCHES: the reply's text shown before the check is answered (the question answers itself), a second answer
+    // sent to the server for the choice (409 `plan_card_answered`), a check asked before the learner has spoken.
+    testWidgets('the reply is closed until the check is answered; the choice sends nothing', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
-      await pumpCard(tester, probeEnv(dialogueAt(12), probe, voice: voice));
-      expect(find.text('Спроси сам'), findsOneWidget);
+      final card = dialogueAt(12);
+      final check = (card.payload as DialogueAnswerPayload).check!;
+      expect(check.options, hasLength(4));
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
+      expect(find.text('Скажи свою реплику'), findsOneWidget);
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
+      expect(find.text(check.questionNative), findsNothing, reason: 'the check waits for the learner to speak');
+
       await sayDebug(tester, 'Do we need an X-ray');
-      expect(results(probe), [SessionResult.passed]);
+      expect(results(probe), [SessionResult.passed], reason: 'the card\'s own result is the voice one');
+      await tester.pump();
+      expect(find.text('Ответь на вопрос'), findsOneWidget);
+      expect(find.text(check.questionNative), findsOneWidget);
+      expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply sounds with its text closed');
+      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
+      expect(voice.played, contains('x7@1.0'));
+      for (final o in check.options) {
+        expect(find.byKey(ValueKey('option-${o.id}')), findsOneWidget);
+      }
+
+      await tapText(tester, check.options.firstWhere((o) => o.id == check.correct).text);
+      await tester.pump();
+      expect(results(probe), [SessionResult.passed], reason: 'the choice is graded on the phone and sent nowhere');
+      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget, reason: 'the text opens');
+      await settleCard(tester);
+      expect(probe.nexts, 1, reason: 'a right answer leaves by itself, as in every other check');
+    });
+
+    // CATCHES: a wrong choice that leaves by itself, and one that keeps the reply closed (the learner never learns
+    // what was said).
+    testWidgets('a wrong option — the text opens anyway, «Next» by hand', (tester) async {
+      final probe = CardProbe();
+      final card = dialogueAt(12);
+      final check = (card.payload as DialogueAnswerPayload).check!;
+      await pumpCard(tester, probeEnv(card, probe));
+      await sayDebug(tester, 'Do we need an X-ray');
+      await tester.pump();
+      await tapText(tester, check.options.firstWhere((o) => o.id != check.correct).text);
       await tester.pump();
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
-      expect(voice.played, contains('x7@1.0'));
       await settleCard(tester);
-      expect(probe.nexts, 0, reason: 'the ask waits for «Next»');
+      expect(probe.nexts, 0);
       await tapText(tester, 'Дальше');
       expect(probe.nexts, 1);
+    });
+
+    // CATCHES: a card without the check left without a way out (the day could not build one — the three keys are
+    // absent together).
+    testWidgets('no check in the payload — the reply opens at once and «Next» stands under it', (tester) async {
+      final probe = CardProbe();
+      final bare = fixtureCardEdited('day-doctor', 'dialogue_ask', (p) {
+        p.remove('question_native');
+        p.remove('options');
+        p.remove('correct');
+      });
+      expect((bare.payload as DialogueAnswerPayload).check, isNull);
+      await pumpCard(tester, probeEnv(bare, probe));
+      await sayDebug(tester, 'Do we need an X-ray');
+      await tester.pump();
+      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
+      await tapText(tester, 'Дальше');
+      expect(probe.nexts, 1);
+      await settleCard(tester);
     });
   });
 

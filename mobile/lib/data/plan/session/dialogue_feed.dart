@@ -130,7 +130,9 @@ abstract final class DialogueFeed {
         final DialogueAnswerPayload p => [?p.partnerLine, saidOwnLine(p, card.response)],
         DialogueRescuePayload(:final rescueLine, :final partnerRepeat) => [rescueLine, partnerRepeat],
         SpeakAnswerPayload(:final partnerLine, :final ownLine) => [?partnerLine, ownLine],
-        SpeakEchoPayload(:final partnerLine) || SpeakRetellPayload(:final partnerLine) => [partnerLine],
+        SpeakEchoPayload(:final partnerLine) => [partnerLine],
+        // 35-4 carries the learner's own line only (BACK-TAILS-1 §1.1).
+        SpeakRetellPayload(:final ownLine) => [ownLine],
         _ => const <CardLine>[],
       };
       for (final line in lines) {

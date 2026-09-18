@@ -12,7 +12,7 @@ class SessionLineSheet extends StatelessWidget {
   const SessionLineSheet({
     super.key,
     required this.plate,
-    required this.eyebrow,
+    this.eyebrow,
     this.listen,
     this.meta,
     this.below,
@@ -22,7 +22,9 @@ class SessionLineSheet extends StatelessWidget {
 
   /// The plate's content — [SessionPlateWave] or the line's text.
   final Widget plate;
-  final String eyebrow;
+
+  /// The eyebrow over the text part; null — no eyebrow at all (35-4: the task line says what the card is).
+  final String? eyebrow;
   final Widget? listen;
   final String? meta;
   final Widget? below;
@@ -63,8 +65,11 @@ class SessionLineSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SessionEyebrow(eyebrow),
-              if (meta != null) ...[const SizedBox(height: 4), Text(meta!, key: const ValueKey('line-sheet-meta'), style: AppTextSession.meta)],
+              if (eyebrow case final text?) SessionEyebrow(text),
+              if (meta != null) ...[
+                if (eyebrow != null) const SizedBox(height: 4),
+                Text(meta!, key: const ValueKey('line-sheet-meta'), style: AppTextSession.meta),
+              ],
               ?below,
             ],
           ),

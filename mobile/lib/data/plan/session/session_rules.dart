@@ -103,8 +103,9 @@ abstract final class SessionRules {
     SessionKind.phraseOtherSlot ||
     SessionKind.dialogueAnswer ||
     SessionKind.dialogueAsk ||
-    SessionKind.speakEcho => _voice,
-    SessionKind.phraseOwnSlot || SessionKind.speakAnswer || SessionKind.speakRetell => _judged,
+    SessionKind.speakEcho ||
+    SessionKind.speakRetell => _voice,
+    SessionKind.phraseOwnSlot || SessionKind.speakAnswer => _judged,
     SessionKind.wordIntro ||
     SessionKind.phraseIntro ||
     SessionKind.dialogueRescue ||
@@ -187,6 +188,10 @@ abstract final class SessionRules {
       SpeechCoverage.covers(heard, framePart(frame.frameTarget), coverageMin, articles),
     SpeakEchoPayload(:final expectedText, :final coverageMin) =>
       SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
+    // «Say your line again» (35-4, BACK-TAILS-1 §1.1): the learner's own line covered whole — the same rule as the
+    // echo, and no judge.
+    SpeakRetellPayload(:final expectedText, :final coverageMin) =>
+      SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
     _ => false,
   };
 
@@ -217,11 +222,6 @@ abstract final class SessionRules {
     DialogueMode.chips || DialogueMode.voiceBlind => framePart(payload.frame.frameTarget),
   };
 
-  /// THE RECOGNIZER'S LANGUAGE BY KIND (SESSION-1c, section 1): the target language everywhere, except the retelling
-  /// (`speak_retell`), which is said in the native language.
-  static String speechLang(SessionKind kind, {required String targetLang, required String nativeLang}) =>
-      kind == SessionKind.speakRetell ? nativeLang : targetLang;
-
   /// The separate pass of `phrase_other_slot`: the frame (coverage of the phrase) and the slot (all the words of the
   /// meaning in it). [expectedText] and [slotExpected] — the chip the learner chose (32-7, SESSION-2b §1); by
   /// default the filler the card came with.
@@ -249,8 +249,8 @@ abstract final class SessionRules {
     PhraseOwnSlotPayload(:final frame) => frame.parts.before + frame.parts.after,
     DialogueAnswerPayload(:final ownLine) => ownLine.textTarget,
     SpeakEchoPayload(:final expectedText) => expectedText,
+    SpeakRetellPayload(:final expectedText) => expectedText,
     SpeakAnswerPayload(:final frame) => framePart(frame.frameTarget),
-    // The retelling is in the native language and judged by meaning — there is nothing to match word by word.
     _ => '',
   };
 
