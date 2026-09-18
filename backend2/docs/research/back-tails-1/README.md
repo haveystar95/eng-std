@@ -424,9 +424,11 @@ options: [ { id: "o1", ref: "x6", text_target, text_native, audio {ref, url, dur
 OpenAPI ok ×2 · deptrac 0 · PHPStan 0 · Pest **2 308 passed** · мутации **24 из 24** · `invariant-reviewer` **CLEAN**.
 Живых вызовов модели нет.
 
-Ревьюер пометил одно, и это **не дефект сервера, а половина клиента**: `mobile/.../dialogue_cards.dart` зачитывает
-выбор у себя («Nothing goes to the server: this card's result is the voice one») и `choice` не шлёт — пока он молчит,
-ни копии, ни возврата не происходит. Вынесено в ROADMAP как задача SESSION-2b и в handoff ниже.
+Ревьюер пометил одно, и это **не дефект сервера, а половина клиента**: `mobile/.../dialogue_cards.dart` зачитывал
+выбор у себя («Nothing goes to the server: this card's result is the voice one») и `choice` не слал — пока он молчал,
+ни копии, ни возврата не происходило. **Закрыто нарядом SESSION-2b** (`ced1b1bd`, отчёт
+`docs/research/session-2b/README.md`): локальный зачёт снят, ответ карточки ждёт выбора и уходит одним — `result` и
+`choice` (id варианта); карточка без проверки и «Пропустить» отвечают сразу, без `choice`.
 
 ## 7. Что осталось
 
