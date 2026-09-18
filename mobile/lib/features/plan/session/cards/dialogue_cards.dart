@@ -171,6 +171,10 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
   String? _chosen;
   int _shake = 0;
 
+  /// The voice answer of an ask with a check, waiting for the choice: both fly as ONE answer (BACK-TAILS-1 §1,
+  /// доработка — a wrong choice brings the exchange back, and the server reads it beside `result`).
+  SessionAnswer? _held;
+
   DialogueAnswerPayload get p => widget.payload;
 
   bool get _ask => env.card.kind == SessionKind.dialogueAsk;
@@ -255,8 +259,20 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     await env.voice.play(line.audio, fallback: line.textTarget, key: _replyKey);
   }
 
-  /// The check's option (33-5). Nothing goes to the server: this card's result is the voice one, written when the
-  /// learner spoke — the server would refuse a second answer (`plan_card_answered`).
+  /// THE ANSWER OF AN ASK WITH A CHECK WAITS FOR THE CHOICE: the voice result is known when the learner speaks, the
+  /// choice when they answer the question, and the server takes both in one answer (`result` + `choice`). A card
+  /// without a check, and a `skipped` (the check never comes up), fly at once.
+  @override
+  void submitAnswer(SessionAnswer answer) {
+    if (_check == null || answer.result == SessionResult.skipped) {
+      env.submit(answer);
+      return;
+    }
+    _held = answer;
+  }
+
+  /// The check's option (33-5): it goes to the server beside the voice result — a wrong one costs the exchange a
+  /// copy and then its return, exactly as the choice card it replaced.
   void _chooseCheck(String optionId) {
     if (_chosen != null) return;
     final correct = optionId == _check?.correct;
@@ -264,6 +280,11 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
       _chosen = optionId;
       if (!correct) _shake++;
     });
+    final held = _held;
+    if (held != null) {
+      _held = null;
+      env.submit(held.withChoice(optionId));
+    }
     if (correct) {
       AppHaptics.success();
     } else {
@@ -289,7 +310,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     setState(() => _chip = f);
     AppHaptics.success();
     SessionSounds.verdict(correct: true);
-    env.submit(SessionAnswer(result: SessionResult.passed, attempts: 1, response: SessionResponse(mode: DialogueMode.chips.wire, fillerIndex: f.index)));
+    submitAnswer(SessionAnswer(result: SessionResult.passed, attempts: 1, response: SessionResponse(mode: DialogueMode.chips.wire, fillerIndex: f.index)));
     await env.voice.play(f.audio, fallback: DialogueFeed.filledSentence(p.frame, f), key: 'chip-${f.index}');
     if (_ask && mounted) await _showReply();
   }

@@ -144,8 +144,9 @@ void main() {
     // RULE (SESSION-2b §2, кадр 33-5, контракт BACK-TAILS-1 §1.5): the whole exchange is ONE card — the learner asks
     // by voice, the partner's reply comes with its TEXT CLOSED (a wave and «listen»), the card asks its own check,
     // and only the answer opens the text and marks the right option.
-    // CATCHES: the reply's text shown before the check is answered (the question answers itself), a second answer
-    // sent to the server for the choice (409 `plan_card_answered`), a check asked before the learner has spoken.
+    // CATCHES: the reply's text shown before the check is answered (the question answers itself), an answer sent
+    // before the choice is known (the choice then has no way to the server — no copy, no return), a check asked
+    // before the learner has spoken.
     testWidgets('the reply is closed until the check is answered; the choice sends nothing', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
@@ -158,7 +159,7 @@ void main() {
       expect(find.text(check.questionNative), findsNothing, reason: 'the check waits for the learner to speak');
 
       await sayDebug(tester, 'Do we need an X-ray');
-      expect(results(probe), [SessionResult.passed], reason: 'the card\'s own result is the voice one');
+      expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');
       await tester.pump();
       expect(find.text('Ответь на вопрос'), findsOneWidget);
       expect(find.text(check.questionNative), findsOneWidget);
@@ -171,7 +172,8 @@ void main() {
 
       await tapText(tester, check.options.firstWhere((o) => o.id == check.correct).text);
       await tester.pump();
-      expect(results(probe), [SessionResult.passed], reason: 'the choice is graded on the phone and sent nowhere');
+      expect(results(probe), [SessionResult.passed], reason: 'the voice result, as it was when the learner spoke');
+      expect(probe.answers.single.choice, check.correct, reason: 'the choice rides beside it (BACK-TAILS-1 §1)');
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget, reason: 'the text opens');
       await settleCard(tester);
       expect(probe.nexts, 1, reason: 'a right answer leaves by itself, as in every other check');
@@ -186,8 +188,11 @@ void main() {
       await pumpCard(tester, probeEnv(card, probe));
       await sayDebug(tester, 'Do we need an X-ray');
       await tester.pump();
-      await tapText(tester, check.options.firstWhere((o) => o.id != check.correct).text);
+      final wrong = check.options.firstWhere((o) => o.id != check.correct);
+      await tapText(tester, wrong.text);
       await tester.pump();
+      expect(probe.answers.single.choice, wrong.id, reason: 'the server needs the wrong choice too — it returns the exchange');
+      expect(probe.answers.single.result, SessionResult.passed, reason: 'the voice result does not change with the choice');
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
       await settleCard(tester);
       expect(probe.nexts, 0);
@@ -208,6 +213,8 @@ void main() {
       await pumpCard(tester, probeEnv(bare, probe));
       await sayDebug(tester, 'Do we need an X-ray');
       await tester.pump();
+      expect(results(probe), [SessionResult.passed], reason: 'nothing to wait for — the answer flies at once');
+      expect(probe.answers.single.choice, isNull);
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
       await tapText(tester, 'Дальше');
       expect(probe.nexts, 1);

@@ -53,8 +53,7 @@ class CardEnv {
   final SessionVoice voice;
   final String targetLang;
 
-  /// Recognition locale of THIS card — `en_US`, and the native one for a retelling (`ru_RU`,
-  /// [SessionRules.speechLang]).
+  /// Recognition locale of THIS card — the target language's (`en_US`).
   final String localeId;
 
   /// The partner's role in the nominative case, as the server sent it (native «Receptionist»); empty — no role.
@@ -431,7 +430,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
         return;
       }
       _done = true;
-      env.submit(SessionAnswer(result: SessionResult.passed, attempts: _attempts, response: _response(heard: turn.transcript)));
+      submitAnswer(SessionAnswer(result: SessionResult.passed, attempts: _attempts, response: _response(heard: turn.transcript)));
       if (autoAdvanceOnPass) {
         unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
           if (mounted) unawaited(env.next());
@@ -444,17 +443,21 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     if (_roundAttempts >= SessionRules.voiceAttempts) {
       _done = true;
       skippedAfterMisses = true;
-      env.submit(SessionAnswer(result: SessionResult.skipped, attempts: _attempts, response: _response(heard: turn.transcript)));
+      submitAnswer(SessionAnswer(result: SessionResult.skipped, attempts: _attempts, response: _response(heard: turn.transcript)));
     }
     setState(() {});
   }
+
+  /// WHERE THE CARD'S ANSWER GOES. A card that must add something to the answer before it flies — 33-5 adds the
+  /// check's `choice` — overrides this, holds the answer and sends it itself.
+  void submitAnswer(SessionAnswer answer) => env.submit(answer);
 
   /// «Skip» at the microphone.
   void skip({bool noMic = false}) {
     if (_done) return;
     _done = true;
     unawaited(env.voice.stop());
-    env.submit(SessionAnswer(
+    submitAnswer(SessionAnswer(
       result: SessionResult.skipped,
       attempts: _attempts < 1 ? 1 : _attempts,
       response: _response(heard: _heard, noMic: noMic),

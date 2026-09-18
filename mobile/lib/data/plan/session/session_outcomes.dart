@@ -47,7 +47,7 @@ class SessionResponse {
 
 /// The body of `POST …/answer`: the result, the number of attempts, what is left of the attempt.
 class SessionAnswer {
-  const SessionAnswer({required this.result, required this.attempts, this.response});
+  const SessionAnswer({required this.result, required this.attempts, this.response, this.choice});
 
   final SessionResult result;
 
@@ -55,10 +55,21 @@ class SessionAnswer {
   final int attempts;
   final SessionResponse? response;
 
+  /// The id of the option chosen in a check that stands on the card BESIDE its own task — 33-5 (BACK-TAILS-1 §1,
+  /// доработка). It rides next to [result], not inside [response]: a wrong choice has the same consequences as a
+  /// wrong choice card (a copy at the end of the stage, then the exchange's return). Null — the card has no check.
+  final String? choice;
+
+  /// The same answer with the check's choice added — the voice result is recorded when the learner spoke, the
+  /// choice only when they answered the question, and both fly as ONE answer (33-5).
+  SessionAnswer withChoice(String optionId) =>
+      SessionAnswer(result: result, attempts: attempts, response: response, choice: optionId);
+
   Map<String, dynamic> toJson() => {
     'result': result.wire,
     'attempts': attempts < 1 ? 1 : attempts,
     if (response != null && !response!.isEmpty) 'response': response!.toJson(),
+    if (choice != null) 'choice': choice,
   };
 }
 
