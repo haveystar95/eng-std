@@ -312,6 +312,7 @@ final class AudioMixer {
     observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
       guard let self else { return }
       let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+      NSLog("[audio-mixer] session interruption %@", raw == AVAudioSession.InterruptionType.began.rawValue ? "began" : "ended")
       if raw == AVAudioSession.InterruptionType.began.rawValue { self.work.async { self.cutSpeech() } }
     })
   }
@@ -383,8 +384,22 @@ final class AudioMixer {
     max(0, min(1, (args["level"] as? NSNumber)?.floatValue ?? value))
   }
 
+  /// THE SESSION HAS TO BE ACTIVE FOR THE ENGINE TO SOUND. The mixer does not CONFIGURE the session — the category
+  /// is `Pronouncer`'s (SESSION-2a) — but it does insist that it is live: anything on this session can deactivate
+  /// it (the recogniser used to, on every stop), and then our output is silence with no error anywhere.
+  private func wakeSession() {
+    #if os(iOS)
+      do {
+        try AVAudioSession.sharedInstance().setActive(true)
+      } catch {
+        NSLog("[audio-mixer] session did not activate: \(error.localizedDescription)")
+      }
+    #endif
+  }
+
   private func running() -> Bool {
     if engine.isRunning { return true }
+    wakeSession()
     do {
       let started = CFAbsoluteTimeGetCurrent()
       engine.prepare()
@@ -447,6 +462,13 @@ final class AudioMixer {
     pace.rate = rate
     speechResult = result
     line = Line(path: path, volume: volume, rate: rate, startedAt: CFAbsoluteTimeGetCurrent(), mayRetry: mayRetry)
+    #if os(iOS)
+      // The one line that says WHY a lesson went silent, when it does: whose session it is and what shape it is in.
+      let session = AVAudioSession.sharedInstance()
+      NSLog(
+        "[audio-mixer] line starts · category %@ · other audio %@ · put back %@",
+        session.category.rawValue, session.isOtherAudioPlaying ? "yes" : "no", mayRetry ? "possible" : "spent")
+    #endif
     speechNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] _ in
       guard let self else { return }
       self.work.async {

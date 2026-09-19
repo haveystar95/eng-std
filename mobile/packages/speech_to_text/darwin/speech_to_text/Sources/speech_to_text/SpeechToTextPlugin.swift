@@ -487,9 +487,15 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
         "Error removing trap: %{PUBLIC}@", log: pluginLog, type: .error, error.localizedDescription)
     }
     #if os(iOS)
-      if sessionOwnedByApp {
-        sessionOwnedByApp = false
-      } else {
+      // FORK-LOCAL: THE SHARED SESSION IS NEVER DEACTIVATED HERE (see UPSTREAM.md).
+      //
+      // The app plays every line of a lesson through its own AVAudioEngine on this same session, and the
+      // recogniser closes the moment a voice card passes — which is exactly when the next line starts. Upstream's
+      // `setActive(false, .notifyOthersOnDeactivation)` silenced it: the partner's reply sounded for half a second
+      // and faded out (живой проход 19.09). The category is restored, because leaving `playAndRecord` behind is the
+      // plugin's own mess to clean up; the session itself is the app's, and only the app lets it go
+      // (`Pronouncer.release`, on leaving the screen).
+      sessionOwnedByApp = false
       do {
         if let rememberedAudioCategory = rememberedAudioCategory,
           let rememberedAudioCategoryOptions = rememberedAudioCategoryOptions
@@ -502,14 +508,8 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
           "Error stopping listen: %{PUBLIC}@", log: pluginLog, type: .error,
           error.localizedDescription)
       }
-      do {
-        try self.audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-      } catch {
-        os_log(
-          "Error deactivation: %{PUBLIC}@", log: pluginLog, type: .info, error.localizedDescription)
-      }
-      }
-
+      rememberedAudioCategory = nil
+      rememberedAudioCategoryOptions = nil
     #endif
     self.invokeFlutter(
       SwiftSpeechToTextCallbackMethods.notifyStatus, arguments: SpeechToTextStatus.done.rawValue)

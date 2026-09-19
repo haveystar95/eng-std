@@ -64,6 +64,24 @@ interface dependency, tests, example app) is byte-for-byte the pub.dev release.
 
 ### `darwin/speech_to_text/Sources/speech_to_text/SpeechToTextPlugin.swift`
 
+**`stopCurrentListen()` no longer deactivates the audio session** (наряд FIX-1, доработка 19.09.2026). Upstream ends
+every recording with
+
+```swift
+try self.audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+```
+
+and that is right for an app whose only audio IS the recogniser. This app plays every line of a lesson through its
+own `AVAudioEngine` on the same session, and the recogniser closes the moment a voice card passes — exactly when the
+next line starts. Deactivating the session there silenced it: on the phone the partner's reply sounded for half a
+second and faded to nothing, and «прослушать» played it fine afterwards (живой проход 19.09, кадр 33-5).
+
+The fork restores the category it remembered (the plugin's own mess) and stops there. The session is the app's: only
+`Pronouncer.release()` lets it go, on leaving the screen. `sessionOwnedByApp` (the earlier fork addition of
+SESSION-2a, which skipped the category swap when the app had already raised `playAndRecord`) stays as it is — with
+this change it only decides whether the category is touched, never the session's life.
+
+
 - `handle(_:result:)`'s `listen` case now reads an optional `contextualStrings` key
   (`[String]`, defaults to `[]` if absent — old callers with no key see identical behaviour) out
   of the call arguments and threads it through to `listenForSpeech(...)`.
