@@ -49,6 +49,28 @@ void main() {
   const audio = CardAudio(ref: 'x3', url: url, voice: 'partner');
 
   // CATCHES: the verdict sound after a voice answer cutting the partner's reply (the phone, 17.09).
+  // ДЕФЕКТ: «звук правильного ответа очень громкий» (живой проход 19.09).
+  // ПРАВИЛО (наряд FIX-1, доработка): «верно» играет тише остальных коротких — его файл сведён горячее (пик в
+  // потолок, RMS на 7 dB выше «miss» и на 10 — выше остальных), и на общем уровне он перекрикивал и реплику, и
+  // свою же семью. Уровень приезжает с вызовом, файлы владельца не тронуты.
+  // ЛОВИТ: возврат «верно» на общий уровень коротких.
+  test('«верно» звучит тише остальных коротких — уровень приезжает со звуком', () async {
+    await SessionSounds.load();
+    for (final sound in [SessionSounds.correct, SessionSounds.miss, SessionSounds.micOn, SessionSounds.stageDone]) {
+      SessionSounds.play(sound);
+    }
+    await pumpEventQueue();
+    final levels = {
+      for (final c in calls.where((c) => c.method == 'playEffect'))
+        (c.arguments as Map)['name'] as String: (c.arguments as Map)['level'] as double,
+    };
+    expect(levels[SessionSounds.correct], AudioLevels.correct);
+    expect(levels[SessionSounds.correct]! < levels[SessionSounds.miss]!, isTrue, reason: '«верно» тише «мимо»');
+    for (final other in [SessionSounds.miss, SessionSounds.micOn, SessionSounds.stageDone]) {
+      expect(levels[other], AudioLevels.effect, reason: 'остальные пятеро — на общем уровне');
+    }
+  });
+
   test('a short sound does not stop speech: it is mixed over the line, and the line keeps waiting for its end', () async {
     final v = voice();
     final playing = v.play(audio, fallback: 'Here is the kitchen.', key: 'reply');
@@ -62,7 +84,7 @@ void main() {
     // `warmUp` — the engine is started before anything has to sound, off the platform thread (наряд FIX-1, п. 2).
     expect(calls.map((c) => c.method), ['playSpeech', 'warmUp', 'loadEffects', 'playEffect']);
     expect(calls.map((c) => c.method), isNot(contains('stopSpeech')), reason: 'a short sound never cuts the speech');
-    expect((calls.last.arguments as Map)['level'], AudioLevels.effect);
+    expect((calls.last.arguments as Map)['level'], AudioLevels.correct);
     expect(v.playing.value, 'reply', reason: 'the line is still sounding');
 
     speech.complete(true);

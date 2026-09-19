@@ -104,7 +104,8 @@ void main() {
       }
     });
 
-    // CATCHES: «то громко, то тихо» — a short sound whose level is left to the route or the ringer.
+    // CATCHES: «то громко, то тихо» — a short sound whose level is left to the route or the ringer. The level is a
+    // constant of the sound (наряд FIX-1, доработка: «верно» тише остальных), never of the moment.
     test('a short sound always asks for the same level, and it is under the speech', () async {
       final levels = <Object?>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(AudioMixer.channel, (call) async {
@@ -116,8 +117,11 @@ void main() {
         SessionSounds.verdict(correct: i.isEven);
       }
       await pumpEventQueue();
-      expect(levels, List.filled(5, AudioLevels.effect));
+      expect(levels, [
+        for (var i = 0; i < 5; i++) i.isEven ? AudioLevels.correct : AudioLevels.effect,
+      ], reason: 'один и тот же звук — один и тот же уровень, сколько бы раз он ни прозвучал');
       expect(AudioLevels.effect, lessThan(AudioLevels.speech));
+      expect(AudioLevels.correct, lessThan(AudioLevels.effect));
       expect(AudioLevels.effect, inInclusiveRange(0.35, 0.4));
     });
   });

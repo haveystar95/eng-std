@@ -19,6 +19,14 @@ abstract final class AudioLevels {
   /// A short sound of a stage (verdict, microphone, stage and day done, day ready) — clearly under the speech it
   /// may overlap.
   static const double effect = 0.38;
+
+  /// «ВЕРНО» ИДЁТ ТИШЕ ОСТАЛЬНЫХ КОРОТКИХ (наряд FIX-1, доработка 19.09).
+  ///
+  /// Не вкусовая правка, а выравнивание по замеру шести файлов: у `correct.mp3` пик стоит в потолок (0 dBFS) и
+  /// RMS −14,8 dB против −21,8 у `miss` и −25 у остальных четырёх. На общем уровне 0,38 он и звучал «очень
+  /// громко» — громче не потому, что так решили, а потому, что файл сведён горячее. −7 dB возвращают его в семью;
+  /// сам файл при этом не тронут (правило «шесть mp3 владельца не менять и не нормализовать»).
+  static const double correct = 0.17;
 }
 
 abstract final class AudioMixer {
@@ -52,8 +60,8 @@ abstract final class AudioMixer {
 
   /// Play a short sound over whatever sounds. Not loaded yet — decoded from [asset] on the spot. Fire and forget: a
   /// sound that fails is not something the learner can act on.
-  static Future<void> playEffect(String name, String asset) =>
-      _quietly('playEffect', {'name': name, 'asset': asset, 'level': AudioLevels.effect});
+  static Future<void> playEffect(String name, String asset, {double level = AudioLevels.effect}) =>
+      _quietly('playEffect', {'name': name, 'asset': asset, 'level': level});
 
   /// Free decoded short sounds.
   static Future<void> releaseEffects(Iterable<String> names) => _quietly('releaseEffects', {'names': names.toList()});

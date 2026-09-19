@@ -248,6 +248,13 @@ final class AudioMixer {
   /// not to be heard as a fade and long enough to leave no edge.
   private static let fadeOutSeconds = 0.012
 
+  /// A LINE THAT STARTS SPEAKING TAKES THE ROOM (наряд FIX-1, доработка 19.09): a short sound still ringing is
+  /// faded out over these steps instead of sounding over the first words. «Верно» rings for 1,3 s, and in the
+  /// dialogue the partner's reply starts right after it — the sound was landing on the line the learner has to hear.
+  /// A ramp, not a `stop()`: a sound cut mid-buffer is the click this file already went to the trouble of removing.
+  private static let duckStep = 0.02
+  private static let duckSteps = 6
+
   private var observers: [NSObjectProtocol] = []
 
   init() {
@@ -370,8 +377,10 @@ final class AudioMixer {
     // RATE: «Say it aloud» plays the sample at 0.85×, the listening stage at 0.75× — the server voice is always at
     // normal pace (DECISIONS item 318); the time-pitch unit keeps the pitch.
     let rate = max(0.5, min(2.0, (args["rate"] as? NSNumber)?.floatValue ?? 1))
-    // The line before this one is cut the moment this one is asked for, not when it starts.
+    // The line before this one is cut the moment this one is asked for, not when it starts; a short sound still
+    // ringing gets out of its way.
     cutSpeech()
+    duckEffects()
     let serial = speechSerial
     guard let buffer = Self.decode(URL(fileURLWithPath: path), to: format) else {
       answer(result, FlutterError(code: "play_failed", message: "undecodable audio", details: nil))
@@ -410,6 +419,25 @@ final class AudioMixer {
     let pending = speechResult
     speechResult = nil
     if let pending { answer(pending, ended) }
+  }
+
+  /// Fade out whatever short sound is still ringing — see [duckStep]. A linear ramp from the level it is playing
+  /// at down to zero, then stop; `playEffect` sets the level again on the next sound.
+  private func duckEffects() {
+    let ringing = effectNodes.filter { $0.isPlaying }.map { (node: $0, from: $0.volume) }
+    guard !ringing.isEmpty else { return }
+    for step in 1...Self.duckSteps {
+      let gain = Float(Self.duckSteps - step) / Float(Self.duckSteps)
+      work.asyncAfter(deadline: .now() + Self.duckStep * Double(step)) {
+        for one in ringing where one.node.isPlaying {
+          if gain > 0 {
+            one.node.volume = one.from * gain
+          } else {
+            one.node.stop()
+          }
+        }
+      }
+    }
   }
 
   // MARK: short sounds

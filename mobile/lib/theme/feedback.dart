@@ -29,6 +29,10 @@ abstract final class AppSounds {
 
   /// The bundled file of a sound — the engine keeps it decoded under the same name.
   static String asset(String sound) => 'assets/sounds/$sound.mp3';
+
+  /// The level a sound plays at: the family's ([AudioLevels.effect]), and «correct» quieter — its file is mixed
+  /// hotter than the other five ([AudioLevels.correct]).
+  static double levelOf(String sound) => sound == correct ? AudioLevels.correct : AudioLevels.effect;
 }
 
 /// SOUND AND HAPTIC OF THE COLLECTIONS TRAINER (token list 4к-3, 4е; work order DAY-UI).
@@ -83,7 +87,7 @@ abstract final class AppFeedback {
   /// Fire and forget: a verdict is never held up by its own sound effect.
   static void _play(String sound) {
     if (!soundsEnabled) return;
-    unawaited(AudioMixer.playEffect(sound, AppSounds.asset(sound)));
+    unawaited(AudioMixer.playEffect(sound, AppSounds.asset(sound), level: AppSounds.levelOf(sound)));
   }
 }
 
@@ -139,7 +143,7 @@ abstract final class SessionSounds {
   /// Play one of the six. Not loaded (switch off, no session) — silence.
   static void play(String sound) {
     if (!_enabled || !_loaded) return;
-    unawaited(AudioMixer.playEffect(sound, AppSounds.asset(sound)));
+    unawaited(AudioMixer.playEffect(sound, AppSounds.asset(sound), level: AppSounds.levelOf(sound)));
   }
 
   /// The reaction to an answer: «correct» or «miss».
