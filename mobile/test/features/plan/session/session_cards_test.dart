@@ -691,13 +691,16 @@ void main() {
   // cards are silent; «Sounds in the session» off — nothing is registered and nothing sounds.
   // CATCHES: a sound on «Got it», a recording without its start sound, a sound that ignores the switch.
   group('Session sounds (30-4)', () {
+    // ЛОВИТ (живой проход 19.09): «возможно, там не один звук на правильный ответ». Ровно один — от нажатия до
+    // ухода карточки, включая автопереход: второй звук на том же ответе и слышался бы наложением.
     testWidgets('choice: correct and miss sound once each', (tester) async {
       final sounds = recordSessionSounds(tester);
       final card = fixtureCard(intermediate, SessionKind.wordChoose, skip: 1);
       await pumpCard(tester, probeEnv(card, CardProbe()));
       await tapText(tester, 'X-ray');
+      expect(sounds, [SessionSounds.correct], reason: 'один звук на ответ');
       await settleCard(tester);
-      expect(sounds, [SessionSounds.correct]);
+      expect(sounds, [SessionSounds.correct], reason: 'и автопереход своего не добавляет');
 
       await pumpCard(tester, probeEnv(card, CardProbe()));
       await tapText(tester, 'heating pad');

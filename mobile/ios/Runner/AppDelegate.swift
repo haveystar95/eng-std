@@ -248,12 +248,6 @@ final class AudioMixer {
   /// not to be heard as a fade and long enough to leave no edge.
   private static let fadeOutSeconds = 0.012
 
-  /// A LINE THAT STARTS SPEAKING TAKES THE ROOM (наряд FIX-1, доработка 19.09): a short sound still ringing is
-  /// faded out over these steps instead of sounding over the first words. «Верно» rings for 1,3 s, and in the
-  /// dialogue the partner's reply starts right after it — the sound was landing on the line the learner has to hear.
-  /// A ramp, not a `stop()`: a sound cut mid-buffer is the click this file already went to the trouble of removing.
-  private static let duckStep = 0.02
-  private static let duckSteps = 6
 
   private var observers: [NSObjectProtocol] = []
 
@@ -377,10 +371,14 @@ final class AudioMixer {
     // RATE: «Say it aloud» plays the sample at 0.85×, the listening stage at 0.75× — the server voice is always at
     // normal pace (DECISIONS item 318); the time-pitch unit keeps the pitch.
     let rate = max(0.5, min(2.0, (args["rate"] as? NSNumber)?.floatValue ?? 1))
-    // The line before this one is cut the moment this one is asked for, not when it starts; a short sound still
-    // ringing gets out of its way.
+    // The line before this one is cut the moment this one is asked for, not when it starts.
+    //
+    // A SHORT SOUND STILL RINGING IS LEFT ALONE (наряд FIX-1, доработка 19.09). It was ducked here for one build:
+    // «верно» was the hot file then, rang for 1,3 s and landed on the partner's reply. The owner heard the duck
+    // itself — «на последней доле секунды громкость меняется, как будто его что-то перебивает» — and he is right:
+    // a gain moving under a sound that is still playing is an artefact, not a mix. What made the duck necessary is
+    // gone: the verdict is the soft file now and plays at ≈ −37 dB, 15 dB under a line, so it cannot cover one.
     cutSpeech()
-    duckEffects()
     let serial = speechSerial
     guard let buffer = Self.decode(URL(fileURLWithPath: path), to: format) else {
       answer(result, FlutterError(code: "play_failed", message: "undecodable audio", details: nil))
@@ -421,25 +419,6 @@ final class AudioMixer {
     if let pending { answer(pending, ended) }
   }
 
-  /// Fade out whatever short sound is still ringing — see [duckStep]. A linear ramp from the level it is playing
-  /// at down to zero, then stop; `playEffect` sets the level again on the next sound.
-  private func duckEffects() {
-    let ringing = effectNodes.filter { $0.isPlaying }.map { (node: $0, from: $0.volume) }
-    guard !ringing.isEmpty else { return }
-    for step in 1...Self.duckSteps {
-      let gain = Float(Self.duckSteps - step) / Float(Self.duckSteps)
-      work.asyncAfter(deadline: .now() + Self.duckStep * Double(step)) {
-        for one in ringing where one.node.isPlaying {
-          if gain > 0 {
-            one.node.volume = one.from * gain
-          } else {
-            one.node.stop()
-          }
-        }
-      }
-    }
-  }
-
   // MARK: short sounds
 
   /// `{effects: {name: asset}}` — decoded and kept by name; answers how many decoded.
@@ -471,7 +450,10 @@ final class AudioMixer {
       answer(result, false)
       return
     }
-    let node = effectNodes[nextEffectNode]
+    // A VOICE THAT IS FREE, so a sound that is still ringing is never cut in the middle — that cut is a click, and
+    // this file spends a fade on the end of every sound to avoid exactly it. All three busy (three sounds inside a
+    // second): the oldest one gives way.
+    let node = effectNodes.first { !$0.isPlaying } ?? effectNodes[nextEffectNode]
     nextEffectNode = (nextEffectNode + 1) % effectNodes.count
     node.stop()
     node.volume = level(args, default: 0.38)
