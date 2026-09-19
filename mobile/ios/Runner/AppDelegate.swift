@@ -231,6 +231,19 @@ final class AudioMixer {
   /// The Dart call waiting for the current line to end.
   private var speechResult: FlutterResult?
 
+  /// THE LINE THAT IS SOUNDING NOW — kept so that an engine reconfigured under it can put it back (see the
+  /// `AVAudioEngineConfigurationChange` observer).
+  private struct Line {
+    let path: String
+    let volume: Float
+    let rate: Float
+    let startedAt: CFAbsoluteTime
+    /// A line already put back once is not put back again: two engines flipping formats must not loop.
+    let mayRetry: Bool
+  }
+
+  private var line: Line?
+
   /// Grows with every line and every cut: a completion that arrives for an older line is ignored.
   private var speechSerial = 0
 
@@ -248,20 +261,52 @@ final class AudioMixer {
   /// not to be heard as a fade and long enough to leave no edge.
   private static let fadeOutSeconds = 0.012
 
+  /// How long into a line a configuration change may still put it back from the start — see the observer. Long
+  /// enough for the case that matters (the change lands on the first frames of the line), short enough that nothing
+  /// the learner has already heard is repeated.
+  private static let putBackWithin = 0.6
+
 
   private var observers: [NSObjectProtocol] = []
 
   init() {
     wire()
     let center = NotificationCenter.default
-    // A route or format change stops the engine by itself and no completion arrives for what was playing. The engine
-    // is brought back UP here — left dead, it was started by the next sound, on the platform thread.
+    // A ROUTE OR FORMAT CHANGE MUST NOT EAT THE LINE (наряд FIX-1, доработка 19.09).
+    //
+    // The engine stops itself on a configuration change and no completion arrives for what was scheduled. Such a
+    // change is not rare here and it is not the user's doing: the recognizer closes its OWN engine the moment a
+    // voice card passes, the session switches out of recording, and iOS posts the change to every engine on it —
+    // exactly when the dialogue asks for the partner's reply. This handler used to answer that by cutting the line
+    // (`cutSpeech`), so the reply never sounded at all and the learner had to press «listen» to hear it (живой
+    // проход 19.09, кадр 33-5 «Can I see the kitchen?»).
+    //
+    // Now the engine is brought back up and the line is PUT BACK from the start — once, and only if it had barely
+    // begun: a change arriving at the end of a long line would otherwise play it twice.
     observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
       guard let self else { return }
       self.work.async {
-        self.cutSpeech()
+        let interrupted = self.line
+        let waiting = self.speechResult
+        // A line that was PLAYING loses its buffer with the engine, and its completion must not be believed any
+        // more — that is what the serial is for. A line still being DECODED is not touched: the serial it took is
+        // left alone, so it schedules itself into the engine that comes back up.
+        if interrupted != nil {
+          self.speechSerial += 1
+          self.speechNode.stop()
+          self.speechResult = nil
+          self.line = nil
+        }
         self.wire()
-        _ = self.running()
+        let up = self.running()
+        guard let again = interrupted, let waiting else { return }
+        let barelyBegun = CFAbsoluteTimeGetCurrent() - again.startedAt < Self.putBackWithin
+        if up, again.mayRetry, barelyBegun {
+          NSLog("[audio-mixer] engine reconfigured — the line is put back")
+          self.start(path: again.path, volume: again.volume, rate: again.rate, result: waiting, mayRetry: false)
+        } else {
+          self.answer(waiting, false)
+        }
       }
     })
     observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
@@ -379,6 +424,11 @@ final class AudioMixer {
     // a gain moving under a sound that is still playing is an artefact, not a mix. What made the duck necessary is
     // gone: the verdict is the soft file now and plays at ≈ −37 dB, 15 dB under a line, so it cannot cover one.
     cutSpeech()
+    start(path: path, volume: volume, rate: rate, result: result, mayRetry: true)
+  }
+
+  /// Decode, schedule, play — and remember what is sounding ([line]), so a configuration change can put it back.
+  private func start(path: String, volume: Float, rate: Float, result: @escaping FlutterResult, mayRetry: Bool) {
     let serial = speechSerial
     guard let buffer = Self.decode(URL(fileURLWithPath: path), to: format) else {
       answer(result, FlutterError(code: "play_failed", message: "undecodable audio", details: nil))
@@ -396,6 +446,7 @@ final class AudioMixer {
     speechNode.volume = volume
     pace.rate = rate
     speechResult = result
+    line = Line(path: path, volume: volume, rate: rate, startedAt: CFAbsoluteTimeGetCurrent(), mayRetry: mayRetry)
     speechNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] _ in
       guard let self else { return }
       self.work.async {
@@ -416,6 +467,7 @@ final class AudioMixer {
   private func finishSpeech(ended: Bool) {
     let pending = speechResult
     speechResult = nil
+    line = nil
     if let pending { answer(pending, ended) }
   }
 
