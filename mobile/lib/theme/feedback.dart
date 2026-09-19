@@ -7,8 +7,12 @@ import 'haptics.dart';
 
 /// THE APP'S SIX SOUNDS — the owner's files in `assets/sounds/`, and there are no others (work order FIX-1 §4).
 ///
-/// Every screen that makes a sound makes one of these, through the one audio engine ([AudioMixer]) at the one level
-/// ([AudioLevels.effect]), mixed over speech and never stopping it. The four generated tones the collections
+/// Every screen that makes a sound makes one of these, through the one audio engine ([AudioMixer]), mixed over speech
+/// and never stopping it; the level is the sound's own ([levelOf]) and never the moment's.
+///
+/// «ВЕРНО» И «ДЕНЬ ЗАКРЫТ» ПОМЕНЯЛИСЬ ФАЙЛАМИ 19.09 (решение владельца на живом прогоне): подтверждение ответа —
+/// мягкий аккорд, конец дня — звонкий колокольчик. Менялись файлы, а не имена: `correct.mp3` — по-прежнему тот
+/// звук, который слышно на верном ответе. The four generated tones the collections
 /// trainer used to play (`verdict_correct.wav` and its three siblings) are gone: they were louder than any line of
 /// the lesson and ended on a click, because a sound made by a generator ends where its last sample does.
 ///
@@ -30,9 +34,13 @@ abstract final class AppSounds {
   /// The bundled file of a sound — the engine keeps it decoded under the same name.
   static String asset(String sound) => 'assets/sounds/$sound.mp3';
 
-  /// The level a sound plays at: the family's ([AudioLevels.effect]), and «correct» quieter — its file is mixed
-  /// hotter than the other five ([AudioLevels.correct]).
-  static double levelOf(String sound) => sound == correct ? AudioLevels.correct : AudioLevels.effect;
+  /// The level a sound plays at: the family's ([AudioLevels.effect]), and two of its own — the verdict of a correct
+  /// answer (the most frequent sound of the app, and so the quietest) and the end of a day.
+  static double levelOf(String sound) => switch (sound) {
+    correct => AudioLevels.correct,
+    dayDone => AudioLevels.dayDone,
+    _ => AudioLevels.effect,
+  };
 }
 
 /// SOUND AND HAPTIC OF THE COLLECTIONS TRAINER (token list 4к-3, 4е; work order DAY-UI).

@@ -50,13 +50,13 @@ void main() {
 
   // CATCHES: the verdict sound after a voice answer cutting the partner's reply (the phone, 17.09).
   // ДЕФЕКТ: «звук правильного ответа очень громкий» (живой проход 19.09).
-  // ПРАВИЛО (наряд FIX-1, доработка): «верно» играет тише остальных коротких — его файл сведён горячее (пик в
-  // потолок, RMS на 7 dB выше «miss» и на 10 — выше остальных), и на общем уровне он перекрикивал и реплику, и
-  // свою же семью. Уровень приезжает с вызовом, файлы владельца не тронуты.
-  // ЛОВИТ: возврат «верно» на общий уровень коротких.
-  test('«верно» звучит тише остальных коротких — уровень приезжает со звуком', () async {
+  // ПРАВИЛО (наряд FIX-1, доработки): уровень — свойство ЗВУКА, а не момента. Шесть файлов владельца сведены
+  // по-разному, и два выбиваются: подтверждение ответа звучит тише всех (оно и самое частое), конец дня — тише
+  // общего уровня, потому что его файл звонкий. Файлы не нормализуются, уровень приезжает с вызовом.
+  // ЛОВИТ: возврат обоих на общий уровень коротких.
+  test('у «верно» и «день закрыт» свой уровень, остальные четыре — на общем', () async {
     await SessionSounds.load();
-    for (final sound in [SessionSounds.correct, SessionSounds.miss, SessionSounds.micOn, SessionSounds.stageDone]) {
+    for (final sound in SessionSounds.all) {
       SessionSounds.play(sound);
     }
     await pumpEventQueue();
@@ -65,9 +65,11 @@ void main() {
         (c.arguments as Map)['name'] as String: (c.arguments as Map)['level'] as double,
     };
     expect(levels[SessionSounds.correct], AudioLevels.correct);
+    expect(levels[SessionSounds.dayDone], AudioLevels.dayDone);
     expect(levels[SessionSounds.correct]! < levels[SessionSounds.miss]!, isTrue, reason: '«верно» тише «мимо»');
-    for (final other in [SessionSounds.miss, SessionSounds.micOn, SessionSounds.stageDone]) {
-      expect(levels[other], AudioLevels.effect, reason: 'остальные пятеро — на общем уровне');
+    expect(AudioLevels.dayDone, lessThan(AudioLevels.effect));
+    for (final other in [SessionSounds.miss, SessionSounds.micOn, SessionSounds.stageDone, SessionSounds.ready]) {
+      expect(levels[other], AudioLevels.effect, reason: 'остальные четыре — на общем уровне');
     }
   });
 
