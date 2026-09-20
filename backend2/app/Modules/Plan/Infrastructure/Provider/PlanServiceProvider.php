@@ -32,6 +32,8 @@ use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\Assembly\PhraseCards;
+use App\Modules\Plan\Domain\Assembly\PhrasesStage;
 use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\ValueObject\CheckModes;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -162,6 +164,7 @@ final class PlanServiceProvider extends ServiceProvider
                 rescueKit: $kit,
                 languages: $languages,
                 pace: $pace,
+                phrasesBudget: (int) config('plan.phrases_budget', PhrasesStage::BUDGET),
                 slotJudgeDailyCap: (int) config('plan.slot_judge.daily_cap', 60),
                 repeatMisses: (int) config('plan.speech.repeat_misses', 0),
             );
@@ -169,6 +172,15 @@ final class PlanServiceProvider extends ServiceProvider
 
         // THE PACE OF A DAY (SESSION-1a): seconds per card by kind, from `plan.pace` — tuned in config, never in code.
         $this->app->singleton(DayPace::class, fn (Container $app): DayPace => new DayPace($app->make(PlanConfig::class)->pace));
+
+        // THE CEILING OF «ФРАЗЫ» (решение архитектора 20.09): the stage trims itself against `plan.phrases_budget`.
+        // Bound because the budget is an int — autowiring would hand the stage its compiled-in default and the knob
+        // would look like it worked.
+        $this->app->bind(PhrasesStage::class, fn (Container $app): PhrasesStage => new PhrasesStage(
+            new PhraseCards,
+            $app->make(DayPace::class),
+            $app->make(PlanConfig::class)->phrasesBudget,
+        ));
 
         // THE SLOT JUDGE'S DAILY QUOTA (SESSION-1a): Redis in the stack, the process's memory under test
         // (phpunit.xml) — one instance per application, so a test's calls add up and the next test starts at zero.

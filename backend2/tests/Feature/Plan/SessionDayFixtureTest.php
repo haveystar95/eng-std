@@ -103,7 +103,7 @@ function s1fxSounds(mixed $value): array
 
 // Canon (разд. 6): «фикстура полного дня для клиента … детерминированные, тест держит их байт-в-байт». Catches any
 // change of the day's wire — a key, a value, an order — and a day that is not the same twice.
-it('holds day 1 of the clean doctor lesson byte for byte, every card of the registry in its stage', function (string $level, string $file) {
+it('holds day 1 of the clean doctor lesson byte for byte, every card of the registry in its stage', function (string $level, string $file, int $phrases) {
     s1fxVoice();
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2, 'level' => $level])['id'];
@@ -116,10 +116,10 @@ it('holds day 1 of the clean doctor lesson byte for byte, every card of the regi
     $sounds = s1fxSounds($cards);
 
     // What the file is for: the day of the registry, dealt and voiced — checked here, not only by eye.
-    // Диалог is 13 since наряд BACK-TAILS-1 §1.5: an ask deals one card, not two. «Фразы» is 24 since наряд FIX-2
-    // п. 5: «Скажи целиком» is a series of rounds and costs 75 s by `DayPace`, so no frame's THIRD recognition fits
-    // in the stage's 540 s any more — the budget doing exactly what it is for.
-    expect(array_map(static fn (array $s): int => count($s['cards']), $room['stages']))->toBe([24, 24, 13, 9, 8])
+    // Диалог is 13 since наряд BACK-TAILS-1 §1.5: an ask deals one card, not two. «Фразы» differs by level since the
+    // ceiling decision of 20.09: «Скажи целиком» is a series of rounds, the beginner's is two rounds and leaves the
+    // stage room for two THIRD recognitions under its 690 s, the intermediate's three fill it and give up round three.
+    expect(array_map(static fn (array $s): int => count($s['cards']), $room['stages']))->toBe([24, $phrases, 13, 9, 8])
         ->and(array_diff(array_unique(array_column($cards, 'kind')), array_map(static fn (CardKind $k): string => $k->value, CardKind::dealt())))->toBe([])
         ->and($sounds)->not->toBeEmpty()
         ->and(array_filter($sounds, static fn (array $s): bool => ! is_string($s['url']) || ! is_int($s['duration_ms'])))->toBe([]);
@@ -136,6 +136,6 @@ it('holds day 1 of the clean doctor lesson byte for byte, every card of the regi
     expect(is_file($path))->toBeTrue("{$file}.json is missing — run with UPDATE_SESSION_FIXTURES=1 once")
         ->and($json === (string) file_get_contents($path))->toBeTrue("the day differs from docs/fixtures/{$file}.json");
 })->with([
-    'intermediate' => ['intermediate', 'day-doctor'],
-    'beginner' => ['beginner', 'day-doctor-beginner'],
+    'intermediate' => ['intermediate', 'day-doctor', 24],
+    'beginner' => ['beginner', 'day-doctor-beginner', 26],
 ]);

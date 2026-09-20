@@ -2290,11 +2290,6 @@
                                 "task_native": "У него болит шея.",
                                 "filler_index": 1,
                                 "expected_text": "It hurts in his neck."
-                            },
-                            {
-                                "task_native": "У него болит плечо.",
-                                "filler_index": 2,
-                                "expected_text": "It hurts in his shoulder."
                             }
                         ],
                         "scene_id": "ulid-0003",
@@ -2787,11 +2782,6 @@
                                 "task_native": "Началось вчера вечером.",
                                 "filler_index": 1,
                                 "expected_text": "It started last night."
-                            },
-                            {
-                                "task_native": "Началось сегодня утром.",
-                                "filler_index": 2,
-                                "expected_text": "It started this morning."
                             }
                         ],
                         "scene_id": "ulid-0003",
@@ -3348,11 +3338,6 @@
                                 "task_native": "Боль ноющая, когда он наклоняется.",
                                 "filler_index": 1,
                                 "expected_text": "The pain is dull when he bends."
-                            },
-                            {
-                                "task_native": "Боль постоянная, когда он наклоняется.",
-                                "filler_index": 2,
-                                "expected_text": "The pain is constant when he bends."
                             }
                         ],
                         "scene_id": "ulid-0003",
@@ -3466,11 +3451,6 @@
                                 "task_native": "Он будет отдыхать два дня.",
                                 "filler_index": 1,
                                 "expected_text": "He will rest for two days."
-                            },
-                            {
-                                "task_native": "Он будет отдыхать после школы.",
-                                "filler_index": 2,
-                                "expected_text": "He will rest after school."
                             }
                         ],
                         "scene_id": "ulid-0003",

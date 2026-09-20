@@ -16,10 +16,17 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
  * table is the order's starting values, kept in `config/plan.php` (`plan.pace`) and tuned after the
  * phone; a kind the table does not name costs nothing rather than a guess. Minutes round up: a stage
  * with a card left never says «0».
+ *
+ * ONE KIND IS PRICED PER ROUND, and the card says how many it has: «Скажи целиком»
+ * (`phrase_other_slot`) is a series — value rounds and, when it has one, the learner's own word —
+ * and the stage's trimming ladder cuts rounds OFF it (наряд FIX-2, доработка). A flat price per
+ * card would leave a trimmed card costing exactly what it cost before, and the ladder would cut
+ * seconds that never moved. So its table value is the price of ONE round, and {@see seconds()}
+ * reads the count off the payload.
  */
 final readonly class DayPace
 {
-    /** @var array<string, int> seconds per card, by kind — the 28 dealt kinds */
+    /** @var array<string, int> seconds per card, by kind — the 27 dealt kinds; `phrase_other_slot` is per ROUND */
     public const DEFAULTS = [
         'word_intro' => 8,
         'word_repeat' => 12,
@@ -33,7 +40,7 @@ final readonly class DayPace
         'phrase_slot' => 12,
         'phrase_slot_listen' => 12,
         'phrase_repeat' => 25,
-        'phrase_other_slot' => 75,
+        'phrase_other_slot' => 25,
         'phrase_combine' => 20,
         'dialogue_partner' => 15,
         'dialogue_answer' => 30,
@@ -55,9 +62,31 @@ final readonly class DayPace
     /** @param array<string, int> $secondsByKind kind value → seconds per card */
     public function __construct(private array $secondsByKind = self::DEFAULTS) {}
 
-    public function seconds(CardKind $kind): int
+    /**
+     * What one card costs. `$payload` is read only by the kind that is priced per round; every other kind ignores it,
+     * so a caller that does not have the payload may leave it out.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function seconds(CardKind $kind, array $payload = []): int
     {
-        return max(0, (int) ($this->secondsByKind[$kind->value] ?? 0));
+        $each = max(0, (int) ($this->secondsByKind[$kind->value] ?? 0));
+
+        return $kind === CardKind::PhraseOtherSlot ? $each * self::rounds($payload) : $each;
+    }
+
+    /**
+     * How many rounds a «Скажи целиком» card has: its value rounds and the own-word one, when it kept it. A payload
+     * that names none — a card of an older day — is priced as one round rather than as nothing.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public static function rounds(array $payload): int
+    {
+        $values = is_array($payload['rounds'] ?? null) ? count($payload['rounds']) : 0;
+        $own = ($payload['own_round'] ?? null) !== null ? 1 : 0;
+
+        return max(1, $values + $own);
     }
 
     /** @param iterable<DayCard> $cards */
@@ -65,7 +94,7 @@ final readonly class DayPace
     {
         $seconds = 0;
         foreach ($cards as $card) {
-            $seconds += $this->seconds($card->kind());
+            $seconds += $this->seconds($card->kind(), $card->payload());
         }
 
         return $seconds;

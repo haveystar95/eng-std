@@ -229,8 +229,10 @@ it('recognises a frame whose other fillers all do not read once — with the sai
                 ])
                 ->and($ofP1[2]->payload()['own_round']['examples'])->toBe(['поясница'])
                 ->and(array_column($ofP1[0]->payload()['frame']['slot']['fillers'], 'index'))->toBe([0])
-                // Five frames kept their series: 24 less p1's second recognition and… nothing else.
-                ->and($phrases)->toHaveCount(23, $label);
+                // Five frames kept their series: p1 lost its second recognition and nothing else did. The beginner's
+                // four extra cards are THIRD recognitions — its two-round trainers leave the stage room under its
+                // ceiling, the intermediate's three-round ones do not.
+                ->and($phrases)->toHaveCount($level === PlanLevel::Beginner ? 27 : 23, $label);
         }
     }
 });

@@ -80,9 +80,9 @@ function s1pPace(int $seconds): DayPace
     return new DayPace(array_fill_keys(array_keys(DayPace::DEFAULTS), $seconds));
 }
 
-function s1pStage(?DayPace $pace = null): PhrasesStage
+function s1pStage(?DayPace $pace = null, int $budget = PhrasesStage::BUDGET): PhrasesStage
 {
-    return new PhrasesStage(new PhraseCards, $pace ?? new DayPace);
+    return new PhrasesStage(new PhraseCards, $pace ?? new DayPace, $budget);
 }
 
 /**
@@ -149,12 +149,13 @@ it('deals every frame its intro, then its recognitions, then its production, and
     $scene = s1pScene();
 
     foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
-        $drafts = s1pStage()->build($scene, $level);
+        // At a ceiling nothing fits in, the ladder has spent every rung and what is left is the FLOOR — which is the
+        // shape asserted below and is the same at both levels: no third recognition, no own-word round, the trainer
+        // still there. Cutting the trainer away, or a frame's last recognition, would break these counts.
+        $drafts = s1pStage(null, 0)->build($scene, $level);
         $produce = [CardKind::PhraseRepeat, CardKind::PhraseOtherSlot];
 
         // Five frames with a window × (intro, two recognitions, production) + p4 (intro, choose_back, repeat) + combine.
-        // No THIRD recognition fits any more: «Скажи целиком» costs 75 s by `DayPace` (наряд FIX-2, п. 5), and the
-        // stage is over its 540 s before a third is offered.
         expect($drafts)->toHaveCount(24, $level->value)
             ->and(end($drafts)->kind)->toBe(CardKind::PhraseCombine)
             ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseCombine))->toHaveCount(1)
@@ -177,11 +178,87 @@ it('deals every frame its intro, then its recognitions, then its production, and
     }
 });
 
+/**
+ * What the ladder left of every frame with a window: how many recognitions, how many value rounds, and whether the
+ * learner's own word is still on the card.
+ *
+ * @param  list<CardDraft>  $drafts
+ * @return array<string, string>
+ */
+function s1pShape(array $drafts): array
+{
+    $out = [];
+    foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
+        $whole = array_values(array_filter(s1pOf($drafts, $ref), static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot));
+        expect($whole)->toHaveCount(1, "{$ref} keeps its trainer");
+        $out[$ref] = sprintf(
+            '%d узнавания · %d круга%s',
+            count(s1pRecognitions($drafts, $ref)),
+            count($whole[0]->payload['rounds']),
+            $whole[0]->payload['own_round'] === null ? '' : ' + своё',
+        );
+    }
+
+    return $out;
+}
+
+// Canon (решение архитектора 20.09, доработка наряда FIX-2): «потолок этапа «Фразы» — 690 с». CATCHES the stop condition
+// the live pass of 20.09 hit — «Фразы» 663 с при потолке 600 — coming back: a ceiling the clean beginner day cannot meet,
+// and a ladder that cuts a day that already fits (the beginner keeps both its value rounds and its own word here).
+it('builds the beginner «врач» day inside the 690-second ceiling, with nothing cut', function () {
+    $stage = s1pStage();
+    $drafts = $stage->build(s1pScene(), PlanLevel::Beginner);
+
+    expect($stage->seconds($drafts))->toBeLessThanOrEqual(PhrasesStage::BUDGET)
+        ->and(s1pShape($drafts))->toBe([
+            'p1' => '3 узнавания · 2 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 2 круга + своё',
+            'p5' => '2 узнавания · 2 круга + своё', 'p6' => '3 узнавания · 2 круга + своё',
+        ]);
+});
+
+// Canon (решение архитектора 20.09): «порядок урезания — детерминированный и единственный: (1) третье узнавание каркаса,
+// (2) третий круг «Скажи целиком», (3) круг «со своим словом» у каркасов с наименьшим числом реплик в диалоге (при
+// равенстве — позже по визиту). Тренажёр целиком не снимается никогда.» CATCHES a rung taken out of order — an own word
+// cut while a third round is still standing, a third recognition kept while rounds are going — a cut that does not stop
+// the moment the stage fits, a frame cut below the floor, and a trainer removed instead of trimmed.
+it('cuts «Фразы» in exactly one order under a lower ceiling and stops at the floor', function () {
+    $scene = s1pScene();
+    $shape = static fn (int $budget): array => s1pShape(s1pStage(null, $budget)->build($scene, PlanLevel::Intermediate));
+
+    // Nothing to cut: every frame with three fillers has its third recognition, its three value rounds and its own word.
+    expect($shape(9999))->toBe([
+        'p1' => '3 узнавания · 3 круга + своё', 'p2' => '3 узнавания · 3 круга + своё', 'p3' => '3 узнавания · 3 круга + своё',
+        'p5' => '3 узнавания · 3 круга + своё', 'p6' => '3 узнавания · 3 круга + своё',
+    ]);
+
+    // RUNG 1, then RUNG 2 — at the day's own ceiling no third recognition fits, and the third round goes off the frames
+    // the dialogue says least: p3 and p5 (one line each, latest in the visit), then p2. p1 and p6 keep theirs — the
+    // stage fits before their turn comes, which is what «останавливается» means.
+    expect($shape(PhrasesStage::BUDGET))->toBe([
+        'p1' => '2 узнавания · 3 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 2 круга + своё',
+        'p5' => '2 узнавания · 2 круга + своё', 'p6' => '2 узнавания · 3 круга + своё',
+    ]);
+
+    // RUNG 3 — at 600 every third round is gone and the own word starts going, again off the least said first: p3, p5.
+    // Not one own word goes while a third round is still standing.
+    expect($shape(600))->toBe([
+        'p1' => '2 узнавания · 2 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 2 круга',
+        'p5' => '2 узнавания · 2 круга', 'p6' => '2 узнавания · 2 круга + своё',
+    ]);
+
+    // THE FLOOR — a ceiling nothing fits in spends every rung and stops there: two recognitions and the value rounds,
+    // the trainer on every frame with a window. The stage is dealt over the ceiling rather than broken.
+    $floor = s1pStage(null, 0);
+    $drafts = $floor->build($scene, PlanLevel::Intermediate);
+    expect(array_unique(array_values(s1pShape($drafts))))->toBe(['2 узнавания · 2 круга'])
+        ->and($floor->seconds($drafts))->toBeGreaterThan(0);
+});
+
 // Canon (SESSION-1d, решение архитектора 16.09): «два узнавания КАЖДОМУ каркасу с окном», своё наполнение каждому. Catches
 // a frame given one recognition, or more than its fillers, and a frame without a window given more than one.
 it('gives every frame with a window two recognitions, one per filler — a frame of one filler or none just one', function () {
-    // A pace no third recognition fits in: the stage is over 540 s before any is added.
-    $noThirds = s1pPace(30);
+    // A ceiling no third recognition fits in: the ladder starts cutting before any is added.
+    $noThirds = 0;
     $oneFiller = s1pScene(static function (array $payload): array {
         $payload['phrases'][4]['slot']['fillers'] = [$payload['phrases'][4]['slot']['fillers'][0]];
 
@@ -189,7 +266,7 @@ it('gives every frame with a window two recognitions, one per filler — a frame
     });
 
     foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
-        $drafts = s1pStage($noThirds)->build($oneFiller, $level);
+        $drafts = s1pStage(null, $noThirds)->build($oneFiller, $level);
         $counts = [];
         foreach (['p1', 'p2', 'p3', 'p4', 'p5', 'p6'] as $ref) {
             $counts[$ref] = count(s1pRecognitions($drafts, $ref));
@@ -200,10 +277,11 @@ it('gives every frame with a window two recognitions, one per filler — a frame
     }
 });
 
-// Canon (SESSION-1d): «третье — каркасам с наибольшим числом реплик (при равенстве — раньше в визите), пока этап ≤ 540 с по
-// DayPace». Catches a third given by the frame's order instead of how often it is said, a third past the budget, a budget
-// read as «< 540» (the stage that fits exactly), and a third to a frame that has only two fillers to say.
-it('adds a third recognition to the most said frames first, while the stage still fits in 540 seconds by the day\'s pace', function () {
+// Canon (SESSION-1d; потолок — решение архитектора 20.09): «третье — каркасам с наибольшим числом реплик (при равенстве —
+// раньше в визите), пока этап влезает в потолок по DayPace». Catches a third given by the frame's order instead of how
+// often it is said, a third past the ceiling, a ceiling read as «<» (the stage that fits exactly), and a third to a frame
+// that has only two fillers to say.
+it('adds a third recognition to the most said frames first, while the stage still fits in its ceiling by the day\'s pace', function () {
     $scene = s1pScene();
     $thirds = static function (array $drafts): array {
         $out = [];
@@ -216,23 +294,24 @@ it('adds a third recognition to the most said frames first, while the stage stil
         return $out;
     };
 
-    // 24 cards without thirds. At 21 s a card: 504 s, one third fits (525), a second would not (546) — and it goes to p6,
-    // the frame the dialogue says twice, though it stands last in the visit.
-    $one = s1pStage(s1pPace(21))->build($scene, PlanLevel::Intermediate);
-    // At 20 s: 480 s, three thirds make it exactly 540 — p6, then p1 and p2, said once each and earliest in the visit.
-    $three = s1pStage(s1pPace(20))->build($scene, PlanLevel::Intermediate);
-    // At the day's own pace NOT ONE fits since наряд FIX-2 п. 5: «Скажи целиком» is a series of rounds and costs 75 s,
-    // so the stage passes 540 s on its intros, its two recognitions and its productions alone.
+    // At 20 s a card the intermediate stage is 780 s without thirds (24 cards, «Скажи целиком» priced per round:
+    // three values and the own word). A ceiling of 800 takes ONE third — and it goes to p6, the frame the dialogue
+    // says twice, though it stands last in the visit. 840 takes exactly three: p6, then p1 and p2, said once each and
+    // earliest in the visit; a fourth would make 860.
+    $flat = s1pPace(20);
+    $one = s1pStage($flat, 800)->build($scene, PlanLevel::Intermediate);
+    $three = s1pStage($flat, 840)->build($scene, PlanLevel::Intermediate);
+    // At the day's own pace and its own ceiling the intermediate stage has no room for a third: it gives up round
+    // three instead (rung 2 of the ladder), which is the order the ceiling decision names.
     $all = s1pStage()->build($scene, PlanLevel::Intermediate);
 
     expect($thirds($one))->toBe(['p6'])
-        ->and(count($one) * 21)->toBe(525)
+        ->and(s1pStage($flat, 800)->seconds($one))->toBe(800)
         ->and($thirds($three))->toBe(['p1', 'p2', 'p6'])
-        ->and(count($three) * 20)->toBe(540)
+        ->and(s1pStage($flat, 840)->seconds($three))->toBe(840)
         ->and($thirds($all))->toBe([])
-        ->and(array_sum(array_map(static fn (CardDraft $d): int => (new DayPace)->seconds($d->kind), $all)))->toBeGreaterThan(PhrasesStage::THIRD_BUDGET)
         // A frame of two fillers has nothing to say a third recognition with, however often the dialogue says it.
-        ->and($thirds(s1pStage(s1pPace(1))->build(s1pScene(static function (array $payload): array {
+        ->and($thirds(s1pStage(s1pPace(1), 9999)->build(s1pScene(static function (array $payload): array {
             array_pop($payload['phrases'][5]['slot']['fillers']);
 
             return $payload;
@@ -242,7 +321,7 @@ it('adds a third recognition to the most said frames first, while the stage stil
 // Canon (SESSION-1d): «каждое узнавание берёт СВОЁ наполнение, ни одно не повторяется; первым — сказанное (said), дальше
 // остальные по индексу». Catches a series that says the dialogue's filler again, or starts from index 0 whatever is said.
 it('says every recognition with its own filler — the said one first, the rest by index — never one twice', function () {
-    $drafts = s1pStage(s1pPace(20))->build(s1pScene(), PlanLevel::Intermediate);
+    $drafts = s1pStage(s1pPace(20), 840)->build(s1pScene(), PlanLevel::Intermediate);
     foreach (['p1', 'p2', 'p6'] as $ref) {
         expect(s1pFillers(s1pRecognitions($drafts, $ref)))->toBe([0, 1, 2], $ref);
     }
@@ -253,7 +332,7 @@ it('says every recognition with its own filler — the said one first, the rest 
 
         return $payload;
     });
-    $neck = s1pStage(s1pPace(20))->build($saysNeck, PlanLevel::Beginner);
+    $neck = s1pStage(s1pPace(20), 840)->build($saysNeck, PlanLevel::Beginner);
     expect($saysNeck->saidIndex(s1pTerm($saysNeck, 'p1')))->toBe(1)
         ->and(s1pFillers(s1pRecognitions($neck, 'p1')))->toBe([1, 0, 2])
         ->and(PhraseSeries::fillers($saysNeck, s1pTerm($saysNeck, 'p1')))->toBe([1, 0, 2]);
@@ -400,8 +479,10 @@ it('says every frame with a window as «Скажи целиком» at both leve
         s1pOf($drafts, $ref), static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot,
     ))[0]->payload;
 
-    $beginner = s1pStage()->build($scene, PlanLevel::Beginner);
-    $intermediate = s1pStage()->build($scene, PlanLevel::Intermediate);
+    // A ceiling the stage fits in whole: what the LEVEL deals is the question here, and the ladder's cuts have a
+    // canon test of their own below.
+    $beginner = s1pStage(null, 9999)->build($scene, PlanLevel::Beginner);
+    $intermediate = s1pStage(null, 9999)->build($scene, PlanLevel::Intermediate);
 
     foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
         expect(array_column($whole($beginner, $ref)['rounds'], 'filler_index'))->toBe([0, 1], $ref)
@@ -574,7 +655,7 @@ it('deals no phrase_combine when no answer exchange asks — not as a return eit
         return $payload;
     });
     foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
-        $drafts = s1pStage()->build($noQuestion, $level);
+        $drafts = s1pStage(null, 0)->build($noQuestion, $level);
         expect(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseCombine))->toBe([], $level->value)
             ->and($drafts)->toHaveCount(23, $level->value);
     }
@@ -882,3 +963,4 @@ it('gives every one of the eight kinds its exact keys over the deals of both lev
     expect(array_keys($seen))->toEqualCanonicalizing(array_keys($keys))
         ->and(array_keys(CardObjects::fillers(s1pScene(), s1pTerm(s1pScene(), 'p2'))[0]))->toBe(['index', 'target', 'native', 'pronunciation_native', 'in_dialogue', 'native_line', 'audio']);
 });
+

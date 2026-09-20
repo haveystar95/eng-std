@@ -282,16 +282,24 @@ final class PhraseCards
      * - `partner_line` is the line the frame is said next to, for the JUDGE and not for the screen (32-7 shows no
      *   partner line): the model reads it as `PARTNER_LINE`.
      *
+     * THE STAGE MAY ASK FOR LESS (наряд FIX-2, доработка): `$mostRounds` caps the value rounds and `$withOwnRound`
+     * takes the own word off, which is how «Фразы» comes back under its ceiling ({@see PhrasesStage}). Nothing here
+     * decides to cut — the card is built with what it is told.
+     *
      * Null for a frame without a window, and for one whose fillers no card may show.
      */
-    public function sayWhole(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level): ?CardDraft
+    public function sayWhole(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level, ?int $mostRounds = null, bool $withOwnRound = true): ?CardDraft
     {
         $frame = $phrase->frame();
         if ($frame === null || ! self::hasSlot($phrase)) {
             return null;
         }
+        $wanted = self::rounds($scene, $phrase, $level);
+        if ($mostRounds !== null) {
+            $wanted = array_slice($wanted, 0, max(1, $mostRounds));
+        }
         $rounds = [];
-        foreach (self::rounds($scene, $phrase, $level) as $index) {
+        foreach ($wanted as $index) {
             $filler = self::fillerAt($scene, $phrase, $index);
             if ($filler === null) {
                 continue;
@@ -315,12 +323,12 @@ final class PhraseCards
             'key' => $phrase->speakingKey(),
             'rounds' => $rounds,
             'speech_mode' => SpeechMode::Repeat->value,
-            'own_round' => [
+            'own_round' => $withOwnRound ? [
                 'task_native' => $frame->frameNative,
                 'examples' => array_column($fillers, 'native'),
                 'speech_mode' => SpeechMode::Free->value,
                 'judge' => true,
-            ],
+            ] : null,
         ]);
     }
 

@@ -204,11 +204,16 @@ it('numbers the current row only while the day is walked, and words the brow fro
     $window = windowOf($this, $token, $id, 1);
     $rows = array_map(static fn (array $s): array => [$s['stage'], $s['state'], $s['done_count'], $s['total']], $window['stages']);
 
-    // Phrases (SESSION-1d; наряд FIX-2 п. 5): five frames with a window × (intro, two recognitions, «Скажи целиком»)
-    // + p4 × 3 + the day's one phrase_combine = 24.
+    // «Фразы» counts what was DEALT, not a number written here: since the ceiling decision of 20.09 the stage takes
+    // third recognitions while it fits under `plan.phrases_budget`, and how many fit depends on which KINDS the
+    // scene's own seed dealt (a `phrase_assemble` costs twice a `phrase_slot`). The row's total is checked against
+    // the day's cards — which is the assertion worth making anyway: the window counts the day, not its own idea of it.
+    $dealt = count(array_filter(planOpenDay($this, $token, $id, 1)['cards'], static fn (array $c): bool => $c['stage'] === 'phrases'));
+
     expect($window['day']['status'])->toBe('in_progress')
+        ->and($dealt)->toBeGreaterThanOrEqual(24)
         ->and($rows)->toBe([
-            ['words', 'done', null, null], ['phrases', 'current', 0, 24], ['dialogue', 'locked', null, null],
+            ['words', 'done', null, null], ['phrases', 'current', 0, $dealt], ['dialogue', 'locked', null, null],
             ['listen', 'locked', null, null], ['speak', 'locked', null, null],
         ])
         ->and($window['stages'][1]['minutes_left'])->toBeGreaterThan(0)

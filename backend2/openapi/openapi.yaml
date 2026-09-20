@@ -3994,6 +3994,10 @@ components:
         (`own_round.judge`, `POST …/judge`). Уровни различаются только числом кругов: beginner — два
         значения, intermediate — все видимые наполнения окна.
 
+        Под потолком этапа «Фразы» (решение архитектора 20.09) карточка УРЕЗАЕТСЯ, но не снимается:
+        сначала третий круг значений, потом круг «со своим словом» (`own_round: null`) — у каркасов с
+        наименьшим числом реплик в диалоге. Ниже одного круга значений карточка не опускается.
+
         Круги значений зачитывает клиент (`speech_mode: repeat` — весь текст на экране). Две попытки
         без зачёта на КРУГЕ ЗНАЧЕНИЯ — `skipped`, и это провал каркаса (копия карточки целиком,
         второй раз — возврат; SESSION-1d, п. 327). Круг «со своим словом» — ТРЕНИРОВКА: промах или
@@ -4012,7 +4016,7 @@ components:
         rounds:
           type: array
           minItems: 1
-          description: 'Круги значений, по порядку окна: сказанное диалогом первым, остальные по индексу. Beginner берёт первые два, intermediate — все'
+          description: 'Круги значений, по порядку окна: сказанное диалогом первым, остальные по индексу. Beginner берёт первые два, intermediate — все; под потолком этапа их может остаться меньше'
           items:
             type: object
             additionalProperties: false
@@ -4023,18 +4027,20 @@ components:
               task_native: { type: string, description: 'Та же фраза на родном — задание круга' }
         speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         own_round:
-          type: object
-          additionalProperties: false
-          description: 'Последний круг — своё слово в окне, зачёт по смыслу сервером'
-          required: [task_native, examples, speech_mode, judge]
-          properties:
-            task_native: { type: string, description: 'Каркас с окном на родном — задание круга' }
-            examples:
-              type: array
-              description: 'Наполнения урока на родном — показать как примеры, не как ответы'
-              items: { type: string }
-            speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
-            judge: { type: boolean, description: 'Всегда true: этот круг зачитывает `POST …/judge`' }
+          description: 'Последний круг — своё слово в окне, зачёт по смыслу сервером. Null, если потолок этапа его срезал: карточка тогда кончается последним кругом значений'
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [task_native, examples, speech_mode, judge]
+              properties:
+                task_native: { type: string, description: 'Каркас с окном на родном — задание круга' }
+                examples:
+                  type: array
+                  description: 'Наполнения урока на родном — показать как примеры, не как ответы'
+                  items: { type: string }
+                speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
+                judge: { type: boolean, description: 'Всегда true: этот круг зачитывает `POST …/judge`' }
+            - type: 'null'
 
     PlanCardPayloadPhraseCombine:
       type: object

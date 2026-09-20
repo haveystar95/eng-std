@@ -125,7 +125,7 @@ function s1daSnapshot(array $cards): array
 // Canon (разд. 2; SESSION-1d «Фразы» через разные окна): the day's stages, counted exactly on the clean lesson. Catches a
 // stage dealing a card too many or too few — a lost spacing slot, a recognition too many or too few, a second
 // phrase_combine, a rescue dealt twice, a listen card per ask missing, a seventh speak_answer.
-it('deals the clean lesson in five stages of exactly 24, 24, 13, 9 and 8 cards, at either level', function (PlanLevel $level) {
+it('deals the clean lesson in five stages of exactly 24, 26 or 24, 13, 9 and 8 cards — «Фразы» by what its ceiling leaves', function (PlanLevel $level) {
     $cards = s1daDeal(s1daScene($level), $level);
     $words = s1daIn($cards, Stage::Words);
     $phrases = s1daIn($cards, Stage::Phrases);
@@ -137,13 +137,16 @@ it('deals the clean lesson in five stages of exactly 24, 24, 13, 9 and 8 cards, 
             'word_assemble' => 2, 'word_choose' => 2, 'word_in_line' => 2, 'word_intro' => 8, 'word_listen' => 2, 'word_repeat' => 8,
         ]);
 
-    // Phrases (SESSION-1d; наряд FIX-2 п. 5): five frames with a window × (intro, two recognitions, «Скажи целиком») = 20,
-    // p4 without a slot: intro, phrase_choose_back, phrase_repeat = 3, + one phrase_combine = 24. No THIRD recognition
-    // fits any more — a series of rounds costs 75 s by `DayPace`, and the stage is over its 540 s without them.
+    // Phrases (SESSION-1d; наряд FIX-2 п. 5 и его доработка): five frames with a window × (intro, two recognitions,
+    // «Скажи целиком») = 20, p4 without a slot: intro, phrase_choose_back, phrase_repeat = 3, + one phrase_combine = 24.
+    // The beginner's two extra cards are THIRD recognitions: its «Скажи целиком» is two rounds and the stage fits two
+    // more cards under its ceiling; the intermediate's three-round trainers leave no room and it gives up round three
+    // instead (the trimming ladder of `PhrasesStage`).
     $production = array_values(array_filter($phrases, static fn (DayCard $c): bool => in_array($c->kind(), [CardKind::PhraseRepeat, CardKind::PhraseOtherSlot], true)));
     $recognitions = array_values(array_filter($phrases, static fn (DayCard $c): bool => in_array($c->kind(), PhraseSeries::CYCLE, true)));
-    expect(count($phrases))->toBe(24)
-        ->and(count($recognitions))->toBe(11)
+    $thirds = $level === PlanLevel::Beginner ? 2 : 0;
+    expect(count($phrases))->toBe(24 + $thirds)
+        ->and(count($recognitions))->toBe(11 + $thirds)
         ->and(s1daKinds($phrases)['phrase_intro'])->toBe(6)
         ->and(s1daKinds($phrases)['phrase_combine'])->toBe(1)
         ->and(end($phrases)->kind())->toBe(CardKind::PhraseCombine)
@@ -179,7 +182,7 @@ it('deals the clean lesson in five stages of exactly 24, 24, 13, 9 and 8 cards, 
             'speak_answer@x1', 'speak_answer@x2', 'speak_answer@x3', 'speak_answer@x4', 'speak_answer@x5', 'speak_answer@x7',
             'speak_echo@x5', 'speak_retell@x8',
         ])
-        ->and(count($cards))->toBe(24 + 24 + 13 + 9 + 8);
+        ->and(count($cards))->toBe(24 + 24 + $thirds + 13 + 9 + 8);
 
     foreach (Stage::ordered() as $stage) {
         expect(array_map(static fn (DayCard $c): int => $c->position(), s1daIn($cards, $stage)))->toBe(range(1, count(s1daIn($cards, $stage))));
@@ -237,9 +240,9 @@ it('deals the returns once each at the end of their stage: a word as word_choose
         ->and(count($words))->toBe(24 + 1)
         ->and(end($words)->source())->toBe(CardSource::Returned)
         ->and(end($words)->position())->toBe(25)
-        ->and(count($phrases))->toBe(24 + 4)
-        ->and(s1daShape(array_slice($phrases, 24)))->toBe(['phrase_slot_listen@p2', 'phrase_choose_back@p4', 'phrase_repeat@p3', $firstOfP5.'@p5'])
-        ->and(array_slice($phrases, 23, 1)[0]->kind())->toBe(CardKind::PhraseCombine)
+        ->and(count($phrases))->toBe(26 + 4)
+        ->and(s1daShape(array_slice($phrases, 26)))->toBe(['phrase_slot_listen@p2', 'phrase_choose_back@p4', 'phrase_repeat@p3', $firstOfP5.'@p5'])
+        ->and(array_slice($phrases, 25, 1)[0]->kind())->toBe(CardKind::PhraseCombine)
         ->and(count(s1daIn($cards, Stage::Dialogue)))->toBe(13)
         ->and(count(s1daIn($cards, Stage::Listen)))->toBe(9)
         ->and(count($speak))->toBe(8 + 1)
@@ -359,7 +362,7 @@ it('computes the day metrics from a dealt day: dealt, done, minutes without the 
 
     $metrics = (new DayMetricsCalculator)->calculate($cards);
 
-    expect($metrics->cardsTotal)->toBe(78)
+    expect($metrics->cardsTotal)->toBe(80)
         ->and($metrics->cardsDone)->toBe(20)
         ->and($metrics->minutesSpent)->toBe(9);
 });

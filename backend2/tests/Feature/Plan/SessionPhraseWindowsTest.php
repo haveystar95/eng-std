@@ -180,6 +180,13 @@ it('brings a frame failed as a recognition and then as said aloud back once, as 
     planShiftDay($id);
 
     $back = array_values(array_filter(s1dReturned(planOpenDay($this, $token, $id, 2)['cards']), static fn (array $c): bool => $c['unit']['ref'] === $ref));
+    $dayRounds = array_column($said['payload']['rounds'], 'filler_index');
+    $backRounds = array_column($back[0]['payload']['rounds'], 'filler_index');
+
+    // A RETURN CARRIES THE FRAME BACK WHOLE (решение архитектора 20.09, доработка наряда FIX-2): the trimming ladder
+    // shortens the stage it is dealing, and a return is appended after that stage is built — so the card comes back
+    // with every value of its window, opening with the ones the failed card was cut down to.
     expect(array_column($back, 'kind'))->toBe(['phrase_other_slot'])
-        ->and(array_column($back[0]['payload']['rounds'], 'filler_index'))->toBe(array_column($said['payload']['rounds'], 'filler_index'));
+        ->and($backRounds)->toHaveCount(3)
+        ->and(array_slice($backRounds, 0, count($dayRounds)))->toBe($dayRounds);
 });

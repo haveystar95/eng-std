@@ -113,8 +113,9 @@ return [
         'phrase_slot_listen' => 12,
         'phrase_repeat' => 25,
         // «Скажи целиком» (наряд FIX-2, п. 5) is a SERIES: every value of the window said aloud and the learner's own
-        // one after them, all on one card. Its 25 seconds were one round's; a frame of three values now costs four.
-        'phrase_other_slot' => 75,
+        // one after them, all on one card — so this is the price of ONE ROUND and the card's payload says how many
+        // it has (`plan.phrases_budget` cuts rounds off it, and a flat per-card price would hide that).
+        'phrase_other_slot' => 25,
         'phrase_combine' => 20,
         'dialogue_partner' => 15,
         'dialogue_answer' => 30,
@@ -132,6 +133,17 @@ return [
         'speak_echo' => 25,
         'speak_retell' => 30,
     ],
+
+    /*
+     * HOW LONG «ФРАЗЫ» MAY TAKE before the stage starts cutting itself (решение архитектора 20.09, доработка наряда
+     * FIX-2). The day's own ceiling — 32 minutes — is unchanged; this is the stage's, by {@see \App\Modules\Plan\Domain\Service\DayPace}.
+     *
+     * Over it the stage is cut in ONE order: the third recognition, then the third value round of «Скажи целиком»,
+     * then the own-word round — off the frames the dialogue says least first. The trainer itself is never removed,
+     * and a stage that will not fit even then is dealt anyway: the excess is a signal in the build log, not a
+     * refusal to build the day (`Domain/Assembly/PhrasesStage`).
+     */
+    'phrases_budget' => (int) env('PLAN_PHRASES_BUDGET', 690),
 
     /*
      * HOW MUCH OF A LINE ON THE SCREEN MAY GO MISSING (наряд FIX-2, п. 2) — the loosening handle of the `repeat`
