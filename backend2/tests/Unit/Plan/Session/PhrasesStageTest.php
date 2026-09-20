@@ -191,10 +191,12 @@ function s1pShape(array $drafts): array
     foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
         $whole = array_values(array_filter(s1pOf($drafts, $ref), static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot));
         expect($whole)->toHaveCount(1, "{$ref} keeps its trainer");
+        $rounds = count($whole[0]->payload['rounds']);
         $out[$ref] = sprintf(
-            '%d узнавания · %d круга%s',
+            '%d узнавания · %d %s%s',
             count(s1pRecognitions($drafts, $ref)),
-            count($whole[0]->payload['rounds']),
+            $rounds,
+            $rounds === 1 ? 'круг' : 'круга',
             $whole[0]->payload['own_round'] === null ? '' : ' + своё',
         );
     }
@@ -216,12 +218,14 @@ it('builds the beginner «врач» day inside the 690-second ceiling, with not
         ]);
 });
 
-// Canon (решение архитектора 20.09): «порядок урезания — детерминированный и единственный: (1) третье узнавание каркаса,
-// (2) третий круг «Скажи целиком», (3) круг «со своим словом» у каркасов с наименьшим числом реплик в диалоге (при
-// равенстве — позже по визиту). Тренажёр целиком не снимается никогда.» CATCHES a rung taken out of order — an own word
-// cut while a third round is still standing, a third recognition kept while rounds are going — a cut that does not stop
-// the moment the stage fits, a frame cut below the floor, and a trainer removed instead of trimmed.
-it('cuts «Фразы» in exactly one order under a lower ceiling and stops at the floor', function () {
+// Canon (решение архитектора 20.09, уточнено при приёмке): «порядок урезания — детерминированный и единственный:
+// (1) третье узнавание каркаса, (2) третий круг «Скажи целиком», (3) ВТОРОЙ круг значений — у каркасов с наименьшим
+// числом реплик в диалоге (при равенстве — позже по визиту). Круг «со своим словом» лестница не снимает НИКОГДА;
+// нижняя граница — «2 узнавания + 1 круг + своё».»
+// CATCHES: ступень не по порядку — второй круг, снятый пока где-то стоит третий, третье узнавание, оставшееся пока
+// уходят круги; урезание, которое не останавливается на попадании под потолок; каркас ниже нижней границы; и — то,
+// ради чего граница и названа — своё слово, снятое лестницей, или тренажёр, снятый целиком.
+it('cuts «Фразы» in exactly one order under a lower ceiling and stops at the floor — the own word survives it', function () {
     $scene = s1pScene();
     $shape = static fn (int $budget): array => s1pShape(s1pStage(null, $budget)->build($scene, PlanLevel::Intermediate));
 
@@ -239,18 +243,20 @@ it('cuts «Фразы» in exactly one order under a lower ceiling and stops at 
         'p5' => '2 узнавания · 2 круга + своё', 'p6' => '2 узнавания · 3 круга + своё',
     ]);
 
-    // RUNG 3 — at 600 every third round is gone and the own word starts going, again off the least said first: p3, p5.
-    // Not one own word goes while a third round is still standing.
+    // RUNG 3 — at 600 every third round is gone and the SECOND round starts going, again off the least said first:
+    // p3, p5. Not one second round goes while a third is still standing, and not one own word goes at all.
     expect($shape(600))->toBe([
-        'p1' => '2 узнавания · 2 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 2 круга',
-        'p5' => '2 узнавания · 2 круга', 'p6' => '2 узнавания · 2 круга + своё',
+        'p1' => '2 узнавания · 2 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 1 круг + своё',
+        'p5' => '2 узнавания · 1 круг + своё', 'p6' => '2 узнавания · 2 круга + своё',
     ]);
 
-    // THE FLOOR — a ceiling nothing fits in spends every rung and stops there: two recognitions and the value rounds,
-    // the trainer on every frame with a window. The stage is dealt over the ceiling rather than broken.
+    // THE FLOOR — a ceiling nothing fits in spends every rung and stops there: two recognitions, ONE value round and
+    // the learner's own word on every frame with a window. The stage is dealt over the ceiling rather than broken.
     $floor = s1pStage(null, 0);
     $drafts = $floor->build($scene, PlanLevel::Intermediate);
-    expect(array_unique(array_values(s1pShape($drafts))))->toBe(['2 узнавания · 2 круга'])
+    expect(array_unique(array_values(s1pShape($drafts))))->toBe(['2 узнавания · 1 круг + своё'])
+        ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot))->toHaveCount(5)
+        // Over the ceiling it was given, and dealt all the same: the excess is a signal, not a refusal to build.
         ->and($floor->seconds($drafts))->toBeGreaterThan(0);
 });
 
@@ -963,4 +969,5 @@ it('gives every one of the eight kinds its exact keys over the deals of both lev
     expect(array_keys($seen))->toEqualCanonicalizing(array_keys($keys))
         ->and(array_keys(CardObjects::fillers(s1pScene(), s1pTerm(s1pScene(), 'p2'))[0]))->toBe(['index', 'target', 'native', 'pronunciation_native', 'in_dialogue', 'native_line', 'audio']);
 });
+
 

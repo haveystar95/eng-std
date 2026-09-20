@@ -34,18 +34,17 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
  *
  *   1. the THIRD recognition — it is simply not added, which is the rule that was already there;
  *   2. the THIRD value round of «Скажи целиком» — a frame of three values or more keeps two;
- *   3. the OWN-WORD round.
+ *   3. the SECOND value round — a frame keeps one.
  *
  * Rungs 2 and 3 take frames in {@see cutOrder()}: the ones the dialogue says LEAST first (fewer lines on the frame;
  * between two as few — the one said LATER in the visit), which is the mirror of the order the thirds are given in.
  * What is cut first is what the day leans on least.
  *
- * THE FLOOR is where the ladder stops: two recognitions, {@see ROUNDS_AFTER_CUT} value rounds and the trainer itself,
- * which is never removed. Rung 3 is the last notch and is where «своё» goes — the decision of 20.09 lists it as a rung
- * and also names «2 узнавания + 1 круг + своё» as the floor, which cannot both hold; the rungs are the ordered, named
- * part, so they win and the floor is what is left when they are spent. If the stage is still over the ceiling then,
- * the day is dealt anyway and the excess is the signal it was meant to be: a stage that refused to be dealt would be
- * a worse answer than a long one.
+ * THE FLOOR is «два узнавания + один круг + своё»: the OWN-WORD round is never cut and the trainer is never removed,
+ * whatever the ceiling says. Cutting it would leave the stage without the one card where the learner says something
+ * of their own, which is the thing «Фразы» is for. If the stage is still over the ceiling with the ladder spent, the
+ * day is dealt anyway and the excess is the signal it was meant to be: a stage that refused to be dealt would be a
+ * worse answer than a long one.
  */
 final class PhrasesStage
 {
@@ -55,8 +54,8 @@ final class PhrasesStage
     /** The recognitions every frame with a window gets — as many as its fillers, up to this. */
     public const RECOGNITIONS = 2;
 
-    /** The value rounds «Скажи целиком» keeps once rung 2 of the ladder has cut it. */
-    private const ROUNDS_AFTER_CUT = 2;
+    /** What rungs 2 and 3 of the ladder cap the value rounds at, in order; one is the floor and it stops there. */
+    private const ROUNDS_LADDER = [2, 1];
 
     private readonly PhraseSeries $series;
 
@@ -75,7 +74,6 @@ final class PhrasesStage
         $recognitions = [];
         $produce = [];
         $mostRounds = [];
-        $withOwnRound = [];
         foreach ($phrases as $phrase) {
             $ref = $phrase->ref();
             $recognitions[$ref] = [];
@@ -87,16 +85,15 @@ final class PhrasesStage
             }
             $produce[$ref] = PhraseCards::hasSlot($phrase) ? CardKind::PhraseOtherSlot : CardKind::PhraseRepeat;
             $mostRounds[$ref] = null;
-            $withOwnRound[$ref] = true;
         }
         $combine = $this->cards->combine($scene);
 
         /** The production of every frame as the cuts made so far leave it. */
-        $productions = function () use ($scene, $phrases, $produce, $level, &$mostRounds, &$withOwnRound): array {
+        $productions = function () use ($scene, $phrases, $produce, $level, &$mostRounds): array {
             $out = [];
             foreach ($phrases as $phrase) {
                 $ref = $phrase->ref();
-                $out[$ref] = $this->production($scene, $phrase, $produce[$ref], $level, $mostRounds[$ref], $withOwnRound[$ref]);
+                $out[$ref] = $this->production($scene, $phrase, $produce[$ref], $level, $mostRounds[$ref]);
             }
 
             return $out;
@@ -133,8 +130,9 @@ final class PhrasesStage
             $seconds += $this->pace->seconds($third->kind, $third->payload);
         }
 
-        // Rungs 2 and 3 — the third value round, then the own word, off the least said frames first.
-        foreach ([2, 3] as $rung) {
+        // Rungs 2 and 3 — the third value round, then the second, off the least said frames first. The own word is
+        // not on the ladder: a frame ends at one value round and its own, and the stage goes over rather than lose it.
+        foreach (self::ROUNDS_LADDER as $cap) {
             foreach ($this->cutOrder($scene) as $phrase) {
                 if ($seconds <= $this->budget) {
                     break 2;
@@ -143,14 +141,11 @@ final class PhrasesStage
                 if ($produce[$ref] !== CardKind::PhraseOtherSlot) {
                     continue;
                 }
-                if ($rung === 2) {
-                    if (count(PhraseCards::rounds($scene, $phrase, $level)) <= self::ROUNDS_AFTER_CUT) {
-                        continue;
-                    }
-                    $mostRounds[$ref] = self::ROUNDS_AFTER_CUT;
-                } else {
-                    $withOwnRound[$ref] = false;
+                $has = $mostRounds[$ref] ?? count(PhraseCards::rounds($scene, $phrase, $level));
+                if ($has <= $cap) {
+                    continue;
                 }
+                $mostRounds[$ref] = $cap;
                 $made = $productions();
                 $seconds = $cost($made);
             }
@@ -209,11 +204,10 @@ final class PhrasesStage
      * The production of a frame: «Скажи целиком» for a window, else the phrase repeated — and a repeat when it fails.
      *
      * @param  int|null  $mostRounds  the value rounds the ladder left it, null for all of them
-     * @param  bool  $withOwnRound  false once rung 3 has taken its own word
      */
-    private function production(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, PlanLevel $level, ?int $mostRounds = null, bool $withOwnRound = true): CardDraft
+    private function production(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, PlanLevel $level, ?int $mostRounds = null): CardDraft
     {
-        $draft = $kind === CardKind::PhraseOtherSlot ? $this->cards->sayWhole($scene, $phrase, $level, $mostRounds, $withOwnRound) : null;
+        $draft = $kind === CardKind::PhraseOtherSlot ? $this->cards->sayWhole($scene, $phrase, $level, $mostRounds) : null;
         if ($draft !== null) {
             return $draft;
         }
