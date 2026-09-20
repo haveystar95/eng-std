@@ -7,7 +7,7 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 import '../../../support/plan_goldens.dart';
 import '../../../support/session_harness.dart';
 
-/// EVERY DEALT KIND HAS A SCREEN (work orders SESSION-1c §0 and §7, SESSION-2b, FIX-2 §5): each of the 156 cards of
+/// EVERY DEALT KIND HAS A SCREEN (work orders SESSION-1c §0 and §7, SESSION-2b, FIX-2 §5): each of the 158 cards of
 /// both fixtures renders its own widget on a phone-sized screen, at the fixture's level, with and without «No hints»,
 /// without an exception; no card falls back to an empty box. Each fixture deals all 13 kinds of dialogue, listening
 /// and speaking, and between them they deal every kind but `phrase_slot`, whose turn this scene's seeded cycle never
@@ -18,7 +18,7 @@ void main() {
 
   final conversation = {for (final k in SessionKind.values) if (const {PlanStage.dialogue, PlanStage.listen, PlanStage.speak}.contains(k.stage)) k};
 
-  testWidgets('both fixtures: all 156 cards render; the 13 of the conversation in each, every other dealt kind between them', (tester) async {
+  testWidgets('both fixtures: all 158 cards render; the 13 of the conversation in each, every other dealt kind between them', (tester) async {
     final all = <SessionKind>{};
     for (final name in ['day-doctor', 'day-doctor-beginner']) {
       final day = sessionFixture(name);
@@ -38,12 +38,12 @@ void main() {
           cards++;
         }
       }
-      expect(cards, 78, reason: name);
+      expect(cards, name == 'day-doctor' ? 78 : 80, reason: name);
       expect(kinds.containsAll(conversation), isTrue, reason: '$name: ${conversation.difference(kinds)}');
       all.addAll(kinds);
     }
     expect(conversation, hasLength(13));
-    expect(all, SessionKind.values.toSet()..remove(SessionKind.phraseSlot));
+    expect(all, SessionKind.values.toSet());
     await settleCard(tester);
   });
 }

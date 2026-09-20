@@ -203,7 +203,7 @@ abstract final class SessionRules {
     SpeakAnswerPayload(:final frame, :final speechMode) =>
       SpeechMatch.said(heard, framePart(frame.frameTarget), speechMode, rules),
     PhraseOtherSlotPayload(:final frame, :final ownRound) =>
-      SpeechMatch.said(heard, framePart(frame.frameTarget), ownRound.speechMode, rules),
+      SpeechMatch.said(heard, framePart(frame.frameTarget), ownRound?.speechMode ?? SpeechMode.free, rules),
     _ => voiceAccepted(payload, heard, rules),
   };
 

@@ -337,9 +337,13 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
   /// The round's `filler_index` — for the answer of a card with rounds.
   int? fillerIndexOfRound(int round) => null;
 
-  /// The `filler_index` the answer carries: a card with rounds names the last filler said; 32-7 names the meaning
-  /// the learner chose. Null — the card names no filler.
-  int? get answerFillerIndex => roundCount > 1 && _lastPassedRound >= 0 ? fillerIndexOfRound(_lastPassedRound) : null;
+  /// The `filler_index` the answer carries: a card with rounds names the last filler said. Null — the card names no
+  /// filler, which is what [fillerIndexOfRound] answers by default.
+  ///
+  /// The count of rounds is NOT what decides it. It was, and it stopped being true twice over: a `phrase_repeat` is
+  /// one round since FIX-2 §5 and names its filler all the same, and a «Скажи целиком» whose window has one value
+  /// can end up a single round once the stage's ceiling takes its own word (DECISIONS п. 354).
+  int? get answerFillerIndex => _lastPassedRound >= 0 ? fillerIndexOfRound(_lastPassedRound) : null;
 
   /// The next round has started — the card shows its phrase.
   void onRoundStarted(int round) {}

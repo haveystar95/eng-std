@@ -999,6 +999,9 @@ class CardOwnRound {
 /// phrase, the next value takes its place — and the last round is the learner's OWN word, ruled on by the judge.
 /// The levels differ in the number of value rounds and in nothing else. The phone used to compute the rounds itself
 /// ([VoiceRounds], FIX-1 §6); it does not any more — what is said on a card is the day's, not the device's.
+///
+/// The stage's ceiling may have CUT the card (DECISIONS п. 354): fewer value rounds, and [ownRound] null. The phone
+/// walks what it was sent and never tops the card back up.
 class PhraseOtherSlotPayload extends CardPayload {
   const PhraseOtherSlotPayload({
     required super.sceneId,
@@ -1022,8 +1025,8 @@ class PhraseOtherSlotPayload extends CardPayload {
   /// How a value round is passed — [SpeechMode.repeat]: the phrase is on the screen.
   final SpeechMode speechMode;
 
-  /// The own-word round, always last.
-  final CardOwnRound ownRound;
+  /// The own-word round, last when it is there at all — null once the stage's ceiling cut it (DECISIONS п. 354).
+  final CardOwnRound? ownRound;
 
   @override
   Iterable<CardAudio> get audios => const [];
@@ -1035,7 +1038,7 @@ class PhraseOtherSlotPayload extends CardPayload {
     key: _nonEmpty(j['key']),
     rounds: _list(j, 'rounds', CardSayWholeRound.fromJson),
     speechMode: SpeechMode.fromWire(j['speech_mode']),
-    ownRound: CardOwnRound.fromJson(_map(j, 'own_round')),
+    ownRound: j['own_round'] == null ? null : CardOwnRound.fromJson(_map(j, 'own_round')),
   );
 }
 

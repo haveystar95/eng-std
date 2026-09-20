@@ -704,6 +704,9 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
 
   List<CardSayWholeRound> get _values => widget.payload.rounds;
 
+  /// The own-word round, or null when the stage's ceiling cut it (DECISIONS п. 354) — the card is then its values.
+  CardOwnRound? get _ownRound => widget.payload.ownRound;
+
   /// The value round being said; null on the last round — «and now with your own word».
   CardSayWholeRound? get _value => round < _values.length ? _values[round] : null;
 
@@ -724,7 +727,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
   CardEnv get env => widget.env;
 
   @override
-  int get roundCount => _values.length + 1;
+  int get roundCount => _values.length + (_ownRound == null ? 0 : 1);
 
   @override
   int? fillerIndexOfRound(int round) => round < _values.length ? _values[round].fillerIndex : null;
@@ -737,7 +740,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     expectedSpeech,
     _framePart,
     for (final f in _frame.fillers) f.target,
-    ...widget.payload.ownRound.examples,
+    ...?_ownRound?.examples,
   ];
 
   /// A VALUE ROUND is the phrase on the screen said as it stands (`speech_mode: repeat`): the value is part of that
@@ -754,7 +757,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     final value = _value;
     final said = value != null
         ? SessionRules.roundAccepted(widget.payload, value, heard, env.speech)
-        : SpeechMatch.said(heard, _framePart, widget.payload.ownRound.speechMode, env.speech);
+        : SpeechMatch.said(heard, _framePart, _ownRound?.speechMode ?? SpeechMode.free, env.speech);
     final slot = _slotWordsOf(heard, _frame, '');
     setState(() {
       _parts = (frame: said, slot: said);
@@ -867,7 +870,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
             // No reading line on this sheet (as on 32-7 before the merge): the card carries the row of meanings under
             // it, and the two have to stand above the microphone on an 844 pt phone.
             footer: _PhraseFooter(
-              native: value?.taskNative ?? widget.payload.ownRound.taskNative,
+              native: value?.taskNative ?? _ownRound?.taskNative ?? '',
               nativeStyle: AppTextSession.body,
             ),
           ),

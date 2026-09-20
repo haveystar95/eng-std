@@ -22,11 +22,11 @@ void main() {
   const apartment = 'this apartment';
   const narrow = Size(375, 812);
 
-  SessionCard card(String kind, void Function(Map<String, dynamic> payload) edit) {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+  SessionCard card(String kind, void Function(Map<String, dynamic> payload) edit, {String fixture = 'day-doctor', String? ref}) {
+    final raw = jsonDecode(File('../backend2/docs/fixtures/$fixture.json').readAsStringSync()) as Map<String, dynamic>;
     final json = [
       for (final stage in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
-    ].firstWhere((c) => c['kind'] == kind);
+    ].firstWhere((c) => c['kind'] == kind && (ref == null || (c['unit'] as Map<String, dynamic>)['ref'] == ref));
     edit(json['payload'] as Map<String, dynamic>);
     return SessionCard.fromJson(json)!;
   }
@@ -78,8 +78,8 @@ void main() {
   });
 
   testWidgets('32-4 phrase_slot: a long correct filler in sage', (tester) async {
-    // This scene deals no `phrase_slot` since FIX-2 §5 — the card is built out of its own `phrase_slot_listen`.
-    final slot = fixtureSlotCard('day-doctor', edit: (p) => option(p, p['correct'] as String)['text'] = appointment);
+    // The beginner day is the one that deals `phrase_slot` on this scene (DECISIONS п. 354).
+    final slot = card('phrase_slot', (p) => option(p, p['correct'] as String)['text'] = appointment, fixture: 'day-doctor-beginner');
     await pumpCard(tester, probeEnv(slot, CardProbe()), size: narrow);
     await tapText(tester, appointment);
     expectSlotFits(tester, appointment);
@@ -106,9 +106,10 @@ void main() {
     final probe = CardProbe()
       ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: appointment, attempts: 1);
     await pumpCard(tester, probeEnv(own, probe), size: narrow);
-    // Through the three value rounds of the card to the round of the learner's own word.
-    for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
-      await sayDebug(tester, said);
+    // Through the card's value rounds — HOWEVER MANY the stage's ceiling left it (DECISIONS п. 354) — to the round
+    // of the learner's own word.
+    for (final round in (own.payload as PhraseOtherSlotPayload).rounds) {
+      await sayDebug(tester, round.expectedText);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 700));
     }

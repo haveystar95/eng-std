@@ -500,7 +500,10 @@ class _SpeakEchoCardState extends State<SpeakEchoCard> with VoiceCardState<Speak
               : SessionPlateWave(key: const ValueKey('echo-wave'), playing: playing == _key),
           listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _key),
           eyebrow: l.planSessionBrowLine,
-          meta: _revealed ? l.planSessionMatchedSage : l.planSessionTextClosed,
+          // The line's own TRANSLATION once the text is open, and «текст закрыт» while it is not. What stood here
+          // before was the canvas's note to itself — «совпавшее — шалфеем» is how 35-3 describes the sage marks to a
+          // reader of the canvas, not something the learner is told.
+          meta: _revealed ? line.textNative : l.planSessionTextClosed,
         ),
       ),
       bottom: _dock(l),

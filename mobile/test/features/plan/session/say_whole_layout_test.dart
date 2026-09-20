@@ -49,10 +49,12 @@ void main() {
     testWidgets('${entry.key}: the own word and the judge\'s refusal — the reason fits, nothing overflows', (tester) async {
       final probe = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про время — назови, когда это началось.', attempts: 1);
-      await pumpCard(tester, probeEnv(fixtureCard(day, SessionKind.phraseOtherSlot), probe), size: entry.value);
-      // Through every value round to the last one — the own word (FIX-2 §5).
-      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
-        await sayDebug(tester, said);
+      final card = fixtureCard(day, SessionKind.phraseOtherSlot);
+      await pumpCard(tester, probeEnv(card, probe), size: entry.value);
+      // Through every value round the stage's ceiling left the card (DECISIONS п. 354) to the last one — the own
+      // word (FIX-2 §5).
+      for (final round in (card.payload as PhraseOtherSlotPayload).rounds) {
+        await sayDebug(tester, round.expectedText);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 700));
       }

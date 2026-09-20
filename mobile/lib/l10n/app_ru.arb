@@ -5095,10 +5095,6 @@
   "@planSessionBrowLine": {
     "description": "Сессия, бровь листа 35-3 / 35-4."
   },
-  "planSessionMatchedSage": "совпавшее — шалфеем",
-  "@planSessionMatchedSage": {
-    "description": "Сессия, 35-3: мета открытого листа — совпавшие слова подсвечены."
-  },
   "planSessionListenCue": "слушай",
   "@planSessionListenCue": {
     "description": "Сессия, 35-3: подпись над микрофоном, пока звучит реплика."

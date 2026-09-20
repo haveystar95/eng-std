@@ -414,26 +414,27 @@ void main() {
     // CATCHES: the translation back inside the sheet, the eyebrow coming back, the translation set in the small
     // 15 body type.
     testWidgets('phrase_slot (32-4): a filler into the slot; the translation is the task over the card', (tester) async {
-      // This scene deals no `phrase_slot` since FIX-2 §5 — the card is built out of its own `phrase_slot_listen`.
-      final card = fixtureSlotCard('day-doctor');
+      // The beginner day is the one that deals `phrase_slot` on this scene: its third recognitions fit under the
+      // stage's ceiling (DECISIONS п. 354), and the cycle's opener is seeded per frame.
+      final card = fixtureCard(beginner, SessionKind.phraseSlot);
       final probe = CardProbe();
-      await pumpCard(tester, probeEnv(card, probe));
+      await pumpCard(tester, probeEnv(card, probe, day: beginner));
       expect(find.text('Вставь в окно'), findsOneWidget);
       expect(find.text('ПЕРЕВОД'), findsNothing);
       final native = tester.widget<Text>(find.byKey(const ValueKey('slot-native')));
-      expect(native.data, 'У него болит поясница.');
+      expect(native.data, 'У него болит плечо.');
       expect(native.style, AppTextSession.question, reason: 'Literata 26 — the task itself');
       final sheet = tester.getRect(find.byType(SessionSheet).first);
       expect(tester.getRect(find.byKey(const ValueKey('slot-native'))).bottom, lessThan(sheet.top), reason: 'over the card');
       expect(frameLine(tester).slot, isNull);
-      await tapText(tester, 'lower back');
+      await tapText(tester, 'shoulder');
       expect(results(probe), [SessionResult.passed]);
-      expect(frameLine(tester).slot, 'lower back', reason: 'the filler stood in the slot');
+      expect(frameLine(tester).slot, 'shoulder', reason: 'the filler stood in the slot');
       expect(frameLine(tester).look, SlotLook.sage);
       await settleCard(tester);
 
       final wrong = CardProbe();
-      await pumpCard(tester, probeEnv(card, wrong));
+      await pumpCard(tester, probeEnv(card, wrong, day: beginner));
       await tapText(tester, 'neck');
       expect(results(wrong), [SessionResult.failed]);
       await settleCard(tester);
@@ -494,6 +495,8 @@ void main() {
     // CATCHES: возврат выбора плашкой, круг, который не сменился после зачёта, и «своё окно» отдельным экраном.
     testWidgets('phrase_other_slot (32-7): every meaning goes through the window, the own word last', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
+      final payload = card.payload as PhraseOtherSlotPayload;
+      final rounds = payload.rounds;
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
       expect(find.text('Скажи фразу с каждым значением'), findsOneWidget);
@@ -519,20 +522,21 @@ void main() {
       expect(chip(tester, 'chip-0').trailing, isNotNull, reason: 'the meaning already said is checked');
       expect(find.text('У него болит шея.'), findsOneWidget);
 
-      await sayDebug(tester, 'It hurts in his neck');
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 700));
-      expect(frameLine(tester).slot, 'shoulder');
-      await sayDebug(tester, 'It hurts in his shoulder');
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 700));
+      // …and so on through every round the stage's ceiling left the card (DECISIONS п. 354): the rounds are the
+      // server's, and the window follows them.
+      for (final round in rounds.skip(1)) {
+        expect(frameLine(tester).slot, payload.frame.filler(round.fillerIndex)!.target);
+        await sayDebug(tester, round.expectedText);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+      }
 
       // The last round — the learner's own word: no chip for it, the window is empty, the task says so.
       expect(find.text('а теперь со своим словом'), findsOneWidget);
       expect(frameLine(tester).slot, isNull);
       expect(frameLine(tester).look, SlotLook.empty);
-      for (final key in ['chip-0', 'chip-1', 'chip-2']) {
-        expect(chip(tester, key).selected, isFalse, reason: 'no meaning is current any more');
+      for (final round in rounds) {
+        expect(chip(tester, 'chip-${round.fillerIndex}').selected, isFalse, reason: 'no meaning is current any more');
       }
       expect(probe.answers, isEmpty);
 
@@ -642,8 +646,8 @@ void main() {
       expect(find.text('своё…'), findsNothing, reason: 'the chip with the microphone is gone');
       expect(frameLine(tester).slot, 'lower back', reason: 'the first meaning stands in the window');
 
-      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
-        await sayDebug(tester, said);
+      for (final round in (card.payload as PhraseOtherSlotPayload).rounds) {
+        await sayDebug(tester, round.expectedText);
         await tester.pump();
         expect(probe.judged, isEmpty, reason: 'a meaning is graded on the phone');
         await tester.pump(const Duration(milliseconds: 700));
@@ -667,8 +671,8 @@ void main() {
       final probe = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про боль.', attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
-      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
-        await sayDebug(tester, said);
+      for (final round in (card.payload as PhraseOtherSlotPayload).rounds) {
+        await sayDebug(tester, round.expectedText);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 700));
       }
@@ -695,8 +699,8 @@ void main() {
       final probe = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты не сказал, где болит.', attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
-      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
-        await sayDebug(tester, said);
+      for (final round in (card.payload as PhraseOtherSlotPayload).rounds) {
+        await sayDebug(tester, round.expectedText);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 700));
       }

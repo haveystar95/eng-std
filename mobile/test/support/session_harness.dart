@@ -38,9 +38,13 @@ Map<String, dynamic> sessionFixtureJson(String name) =>
 
 SessionDay sessionDayOf(Map<String, dynamic> json) => SessionDay.fromJson(json);
 
-/// The first card of [kind] in the fixture ([skip] cards of that kind are passed over).
-SessionCard fixtureCard(SessionDay day, SessionKind kind, {int skip = 0}) =>
-    day.stages.expand((s) => s.cards).where((c) => c.kind == kind).skip(skip).first;
+/// The first card of [kind] in the fixture ([skip] cards of that kind are passed over); [ref] narrows it to one unit
+/// of the day — which is how a test asks for the frame the stage's ceiling left whole (DECISIONS п. 354).
+SessionCard fixtureCard(SessionDay day, SessionKind kind, {int skip = 0, String? ref}) => day.stages
+    .expand((s) => s.cards)
+    .where((c) => c.kind == kind && (ref == null || c.unit.ref == ref))
+    .skip(skip)
+    .first;
 
 /// The first card of the wire [kind] in fixture [name], with its payload edited before it is parsed — a state the
 /// fixture does not carry (a frame with one meaning, a long filler).
@@ -51,32 +55,6 @@ SessionCard fixtureCardEdited(String name, String kind, void Function(Map<String
   ].firstWhere((c) => c['kind'] == kind);
   edit(json['payload'] as Map<String, dynamic>);
   return SessionCard.fromJson(json)!;
-}
-
-/// A `phrase_slot` CARD OUT OF THE FIXTURE'S OWN `phrase_slot_listen` (work order FIX-2 §5).
-///
-/// The clean doctor day no longer deals one: a frame gets two recognitions since «Скажи целиком» took a series'
-/// worth of seconds, and on this scene's seeded cycle neither of the two is `phrase_slot`. The kind is alive and
-/// dealt on other scenes, so the screen still has to be held — and the card is built out of REAL server data rather
-/// than typed out by hand: the two kinds share `frame`, `options` and `correct` key for key (`docs/plan-api.md`),
-/// and `prompt_native` is the right filler's own `native_line`.
-SessionCard fixtureSlotCard(String name, {void Function(Map<String, dynamic> payload)? edit}) {
-  final json = [
-    for (final stage in (sessionFixtureJson(name)['stages'] as List).cast<Map<String, dynamic>>())
-      ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
-  ].firstWhere((c) => c['kind'] == 'phrase_slot_listen');
-  final listen = json['payload'] as Map<String, dynamic>;
-  final frame = listen['frame'] as Map<String, dynamic>;
-  final fillers = ((frame['slot'] as Map<String, dynamic>)['fillers'] as List).cast<Map<String, dynamic>>();
-  final payload = <String, dynamic>{
-    'scene_id': listen['scene_id'],
-    'frame': frame,
-    'prompt_native': fillers.firstWhere((f) => f['index'] == listen['filler_index'])['native_line'],
-    'options': listen['options'],
-    'correct': listen['correct'],
-  };
-  edit?.call(payload);
-  return SessionCard.fromJson({...json, 'kind': 'phrase_slot', 'payload': payload})!;
 }
 
 /// A voice that plays nothing and remembers what it was asked to play.

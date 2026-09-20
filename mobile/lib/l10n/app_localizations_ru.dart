@@ -4000,9 +4000,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionBrowLine => 'Реплика';
 
   @override
-  String get planSessionMatchedSage => 'совпавшее — шалфеем';
-
-  @override
   String get planSessionListenCue => 'слушай';
 
   @override

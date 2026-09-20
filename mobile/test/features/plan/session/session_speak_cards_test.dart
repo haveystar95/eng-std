@@ -150,11 +150,44 @@ void main() {
       final text = tester.widget<SessionMarkedText>(find.byKey(const ValueKey('echo-text')));
       expect(text.text, 'It looks like a muscle strain, so he should rest and use a heating pad.');
       expect([for (final m in text.marks) text.text.substring(m.start, m.end)], ['It', 'looks', 'like', 'a', 'muscle', 'strain', 'so', 'he', 'should', 'rest', 'and', 'use', 'a', 'heating', 'pad']);
-      expect(find.text('совпавшее — шалфеем'), findsOneWidget);
+      // Under the eyebrow stands the line's own TRANSLATION. «совпавшее — шалфеем» is the canvas telling its reader
+      // what the sage marks mean; it was on the card for a while, and it is not a sentence the learner is told.
+      expect(find.text('Похоже на растяжение мышцы, так что ему нужен покой и грелка.'), findsOneWidget);
+      expect(find.text('совпавшее — шалфеем'), findsNothing);
       await settleCard(tester);
       expect(probe.nexts, 0, reason: 'the revealed line waits for «Next»');
       await tapText(tester, 'Дальше');
       expect(probe.nexts, 1);
+    });
+
+    // RULE (наряд SESSION-1c, кадр 35-3): верная голосовая карточка уходит САМА через 600 мс — и 35-3 названное
+    // исключение из этого правила: зачёт ОТКРЫВАЕТ реплику, и она ждёт «Дальше», иначе открытый текст мелькнёт и
+    // пропадёт, а «Ещё раз» будет некуда нажать. «Дальше» здесь — не след промаха.
+    // CATCHES: эхо, которое уехало по общему правилу и унесло с собой открытую реплику; «Дальше», появившаяся только
+    // после промаха; и общее правило, отменённое ради этого исключения (соседняя карточка обязана уезжать сама).
+    testWidgets('a pass leaves by itself after 600 ms — 35-3 is the exception: the opened line waits for «Дальше»', (tester) async {
+      final echo = CardProbe();
+      await pumpCard(tester, probeEnv(speakAt(7), echo));
+      await tester.pump(const Duration(milliseconds: 3400));
+      await sayDebug(tester, 'It looks like a muscle strain so he should rest and use a heating pad');
+      expect(results(echo), [SessionResult.passed]);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      expect(echo.nexts, 0, reason: '35-3 holds: the line has just opened');
+      expect(find.text('Дальше'), findsOneWidget);
+      await settleCard(tester);
+
+      // The rule it is an exception TO, on the neighbouring kind: a repeat passes and leaves on its own.
+      final repeat = CardProbe();
+      await pumpCard(tester, probeEnv(fixtureCard(day, SessionKind.phraseRepeat), repeat));
+      final expected = (fixtureCard(day, SessionKind.phraseRepeat).payload as PhraseRepeatPayload).expectedText;
+      await sayDebug(tester, expected);
+      expect(results(repeat), [SessionResult.passed]);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      expect(repeat.nexts, 1, reason: 'the rule: a pass leaves by itself after 600 ms');
+      expect(find.text('Дальше'), findsNothing);
+      await settleCard(tester);
     });
 
     testWidgets('two misses — skipped, the line opens, «Next»', (tester) async {

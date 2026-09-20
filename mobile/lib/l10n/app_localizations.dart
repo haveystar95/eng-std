@@ -5859,12 +5859,6 @@ abstract class AppLocalizations {
   /// **'Реплика'**
   String get planSessionBrowLine;
 
-  /// Сессия, 35-3: мета открытого листа — совпавшие слова подсвечены.
-  ///
-  /// In ru, this message translates to:
-  /// **'совпавшее — шалфеем'**
-  String get planSessionMatchedSage;
-
   /// Сессия, 35-3: подпись над микрофоном, пока звучит реплика.
   ///
   /// In ru, this message translates to:

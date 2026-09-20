@@ -24,23 +24,24 @@ void main() {
     final b = SessionDay.fromJson(beginner);
 
     int count(SessionDay d) => d.stages.fold(0, (n, s) => n + s.cards.length);
+    // The beginner day is two cards longer: its «Скажи целиком» is two rounds, so the stage's ceiling has room for
+    // two THIRD recognitions the intermediate's three-round cards leave no room for (DECISIONS п. 354).
     expect(count(a), 78);
-    expect(count(b), 78);
+    expect(count(b), 80);
     expect(a.skipped + b.skipped, 0);
-    expect(count(a) + count(b), 156);
+    expect(count(a) + count(b), 158);
   });
 
-  // The clean doctor day carries every dealt kind but ONE: with «Скажи целиком» costing a series' worth of seconds
-  // no frame gets a third recognition any more (FIX-2 §5), and on THIS scene the two that fit never open on
-  // `phrase_slot` — the cycle's opener is seeded per frame. The kind is alive and dealt elsewhere; what this test
-  // guards is that no kind of the enum went missing from the fixtures by accident.
-  test('the two fixtures carry every dealt kind but phrase_slot, whose turn this scene never reaches', () {
+  // The two fixtures together carry EVERY dealt kind: `phrase_slot` opens a frame's series on the beginner day,
+  // whose third recognitions fit under the stage's ceiling (DECISIONS п. 354) — the intermediate day's do not, and
+  // it has none. What this test guards is that no kind of the enum went missing from the fixtures by accident.
+  test('the two fixtures carry every dealt kind between them', () {
     final kinds = <SessionKind>{
       for (final day in [SessionDay.fromJson(intermediate), SessionDay.fromJson(beginner)])
         for (final s in day.stages)
           for (final c in s.cards) c.kind,
     };
-    expect(kinds, SessionKind.values.toSet()..remove(SessionKind.phraseSlot));
+    expect(kinds, SessionKind.values.toSet());
     expect(SessionKind.values, hasLength(27));
   });
 
@@ -81,15 +82,18 @@ void main() {
     expect(assemble.slotAt, 4);
     expect(assemble.fillerIndex, 1);
 
-    // «Скажи целиком» (FIX-2 §5): the rounds are the SERVER'S, and the own-word round is always last.
-    final whole = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().first;
+    // «Скажи целиком» (FIX-2 §5): the rounds are the SERVER'S, and the own-word round is last when the stage's
+    // ceiling left it (DECISIONS п. 354). p6, the frame the dialogue says most, is the one that keeps all three.
+    final whole = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().firstWhere((p) => p.frame.ref == 'p1');
     expect(whole.speechMode, SpeechMode.repeat);
-    expect([for (final r in whole.rounds) r.fillerIndex], [0, 1, 2]);
+    expect([for (final r in whole.rounds) r.fillerIndex], [0, 1], reason: 'the ceiling took p1\'s third round');
     expect(whole.rounds.first.expectedText, 'It hurts in his lower back.');
     expect(whole.rounds.first.taskNative, 'У него болит поясница.');
-    expect(whole.ownRound.speechMode, SpeechMode.free);
-    expect(whole.ownRound.examples, hasLength(3));
-    expect(whole.frame.fillers, hasLength(3));
+    expect(whole.ownRound!.speechMode, SpeechMode.free);
+    expect(whole.ownRound!.examples, hasLength(3));
+    expect(whole.frame.fillers, hasLength(3), reason: 'the window keeps every value — only the ROUNDS were cut');
+    final kept = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().firstWhere((p) => p.frame.ref == 'p6');
+    expect([for (final r in kept.rounds) r.fillerIndex], [0, 1, 2]);
     // The line the judge reads, never shown: 32-7 has no partner line.
     expect(whole.partnerLine, isNotNull);
 
