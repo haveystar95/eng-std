@@ -41,6 +41,14 @@ ElevenLabs — $0.093), всё на `wordtrainer_e2e_test`. Кап наряда 
 раздаётся, и только если у дня есть о чём говорить (хоть одна сцена с написанным уроком). День,
 открытый ДО наряда, доживает на своих пяти и закрывается на них; новое — со следующего открытого дня.
 
+**Рубильник раздачи** (`plan.conversation.enabled`, `PLAN_CONVERSATION_ENABLED`; в коде `true`).
+Выключенный — день раздаётся без шестого этапа: `has_conversation = false`, пять рядов в
+`stages`/`window.stages`, закрытие без 409, `POST …/conversation` отвечает 422
+`plan_conversation_not_in_day`. Это рубильник РАЗДАЧИ, не чтения: день, уже розданный с разговором,
+остаётся с ним — состав фиксируется при открытии. Спрашивают его в одном месте
+(`DayStages::walksConversation($day, $dealsTalk)`), решает он тоже в одном (`OpenDayHandler`).
+На бою **выключен** — сервер умеет говорить раньше, чем клиент (§7).
+
 **`plan_days.has_conversation` — поле временное.** Оно существует ровно для тех дней, что были
 розданы до наряда; сейчас это только аккаунт Дена и QA-аккаунты. Когда они закроются, поле и три
 места, которые его читают (`DayStages::walksConversation`, `CloseDayHandler`, `CloseStageHandler`),
@@ -216,7 +224,8 @@ null, а `checkpoint(null)` падал на первый элемент. Ста�
 ## §5. Тесты: что каждый ловит
 
 Новые файлы: `tests/Unit/Plan/ConversationTest.php` (9 тестов),
-`tests/Unit/Plan/Session/RecallStageTest.php` (4), `tests/Feature/Plan/ConversationApiTest.php` (15).
+`tests/Unit/Plan/Session/RecallStageTest.php` (4), `tests/Feature/Plan/ConversationApiTest.php` (16 —
+шестнадцатый пришёл с рубильником), `tests/Unit/Plan/DayBudgetTest.php` (5, доработка вердикта).
 
 | тест | правило канона | дефект, который он ловит |
 |---|---|---|
@@ -235,6 +244,7 @@ null, а `checkpoint(null)` падал на первый элемент. Ста�
 | «writes «Что было хорошо» on the day it is passed» | `highlights` склоняет сервер | клиент, которого просят склонять; блок о разговоре, которого не было |
 | «buys the role's voice for the turn and bills it to the turn» | звук разговора — не звук сцены | реплика, записанная в `plan_line_audios` (её вечно был бы должен `plan:speak-backfill`) |
 | «gives no talk to a day dealt before the talk existed» | состав фиксируется при открытии | старый день, который больше нельзя закрыть |
+| «deals five stages while the talk is switched off, and closes the day on them» | рубильник раздачи — про состав дня целиком | рубильник, который прячет этап с экранов, но оставляет 409 на закрытии — день, запертый в ожидании разговора, которого не открыть |
 | `ConversationTest` ×9 | аггрегат: очередь, конец, ходы/деньги, чекпойнты, подсказка, итог, streak | всё перечисленное на уровне домена, без базы |
 | `RecallStageTest` ×4 | «Вспомнить»: лист своих реплик, ранжирование по частоте, потолок 6, порядок плана | сheet с чужими репликами; выбор случайный; больше шести |
 | `LessonNativeMarksTest` «one full stop where the model wrote two» | хвост «3 p.m..» | вторая точка, уезжающая в озвучку; «Well...», испорченное «починкой» |
@@ -292,9 +302,31 @@ $ docker compose restart horizon
 **19 незакрытых дней** несут `has_conversation = false` — они доживают на пяти этапах, как и
 задумано (это и есть те дни, из-за которых поле временное; ROADMAP).
 
-Ключи окружения при желании подкрутить: `PLAN_CONVERSATION_MODEL`, `PLAN_CONVERSATION_TIMEOUT`,
-`PLAN_CONVERSATION_COST_CAP_USD`, `PLAN_CONVERSATION_TURNS_*`, `PLAN_CONVERSATION_MINUTES_*`,
-`PLAN_DAY_CARDS_BUDGET` — у всех есть дефолты, без записи в `.env` всё работает.
+**Рубильник на бою выставлен в `false` 21.09** (микронаряд-хвост): в `backend2/.env` появилась строка
+`PLAN_CONVERSATION_ENABLED=false`, следом `docker compose restart app horizon` — воркер и приложение
+держат конфиг в памяти. Проверено на живом стеке:
+
+```
+$ docker compose exec -T app php artisan tinker --execute="dump(config('plan.conversation.enabled'));
+    dump(app(ConversationRules::class)->enabled);"
+false
+false
+```
+
+Дни, которые раздадутся до сдачи клиента, будут пятиэтапными и закроются без 409 — тот же путь, что у
+19 дней, розданных до наряда.
+
+**Грабля, которую поймали ворота:** `.env` читается и под тестом, поэтому `false` на бою унёс с собой
+весь шестой этап в сьюте — **23 упавших теста** на коммите рубильника. Это ровно та же история, что
+с `SPEECH_ENABLED` (комментарий в `phpunit.xml`), и лечится так же: `PLAN_CONVERSATION_ENABLED=true`
+прибит в `phpunit.xml` — сьют не зависит от того, как настроен живой стек, а тест самого рубильника
+выключает его через `config()`. Включить: `true` в `.env` → `docker compose restart horizon` (ROADMAP,
+один пункт вместе со сносом колонки).
+
+Ключи окружения при желании подкрутить: `PLAN_CONVERSATION_ENABLED`, `PLAN_CONVERSATION_MODEL`,
+`PLAN_CONVERSATION_TIMEOUT`, `PLAN_CONVERSATION_COST_CAP_USD`, `PLAN_CONVERSATION_TURNS_*`,
+`PLAN_CONVERSATION_MINUTES_*`, `PLAN_DAY_CARDS_BUDGET` — у всех есть дефолты, без записи в `.env`
+всё работает.
 
 **Ворота** (один раз, в конце): `composer check` — OpenAPI ok ×2, deptrac **0 violations**,
 PHPStan **0 errors**, Pest **2 354 passed** (после доработки — **2 359**); мутации **16/16**.
@@ -330,6 +362,9 @@ PHPStan **0 errors**, Pest **2 354 passed** (после доработки — *
 
 Полный контракт с полями — `docs/session-handoff.md`. Коротко:
 
+0. **Разговор на бою выключен** (`PLAN_CONVERSATION_ENABLED=false`): сервер отдаёт пятиэтапные дни,
+   пока клиентский наряд не сдан. Состав дня читается из ответа — рисовать шестой ряд «серым» по
+   предположению нельзя. Включается одной строкой в `.env` вместе со сдачей (ROADMAP).
 1. **Шестой ряд в окне дня.** `window.stages` теперь шесть (у репетиции — `recall` и `conversation`):
    у ряда разговора `done_count`/`total` всегда null, он несёт только `minutes_left`. «Начать» на нём
    ведёт не в карточки, а в `POST …/days/{n}/conversation` (кадр 37-5).

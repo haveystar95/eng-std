@@ -17,6 +17,8 @@ use App\Modules\Plan\Domain\ValueObject\ConversationType;
  *
  * The money cap is the plan's protection against a talk that will not end: the learner is never cut
  * off mid-word — the cap makes the NEXT move the role's last (`ended_reason: limit`).
+ *
+ * `enabled` is not a knob of the talk but the switch that deals it at all — see the constant.
  */
 final readonly class ConversationRules
 {
@@ -33,6 +35,16 @@ final readonly class ConversationRules
     public const HINT_DELAY_MS = 5000;
 
     /**
+     * IS THE SIXTH STAGE DEALT AT ALL — the rollout switch, not a rule of the talk (`plan.conversation.enabled`).
+     *
+     * Off, a day is dealt the five stages of before the talk existed and walks them to the end; the
+     * days already dealt WITH the talk keep it, because a day's composition is fixed when it opens
+     * and nothing re-deals it. On is what the code does by itself — the switch exists so the server
+     * may ship before the client that speaks.
+     */
+    public const ENABLED = true;
+
+    /**
      * @param  array<string, int>  $turns  by {@see ConversationType} value
      * @param  array<string, int>  $minutes  by {@see ConversationType} value
      */
@@ -41,6 +53,7 @@ final readonly class ConversationRules
         private array $minutes = self::MINUTES,
         public float $costCapUsd = self::COST_CAP_USD,
         public int $hintDelayMs = self::HINT_DELAY_MS,
+        public bool $enabled = self::ENABLED,
     ) {}
 
     public function turnsFor(ConversationType $type): int

@@ -45,11 +45,14 @@ final class DayStages
     /**
      * WILL THIS DAY WALK THE TALK? A day already dealt says so itself — it keeps the composition it
      * was given ({@see PlanDay::hasConversation()}). A day not dealt yet will be dealt with today's
-     * composition, and today's has six stages: the route and the window draw the future of a plan,
-     * not its past.
+     * composition: the route and the window draw the future of a plan, not its past — and what
+     * today's composition is, the switch says ({@see ConversationRules::ENABLED}), so it is asked
+     * for and never assumed.
+     *
+     * @param  bool  $dealsTalk  does today's dealing include the sixth stage
      */
-    public static function walksConversation(PlanDay $day): bool
+    public static function walksConversation(PlanDay $day, bool $dealsTalk): bool
     {
-        return $day->openedAt() === null || $day->hasConversation();
+        return $day->openedAt() === null ? $dealsTalk : $day->hasConversation();
     }
 }

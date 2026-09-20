@@ -22,6 +22,7 @@ use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
+use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayStages;
 use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
@@ -55,6 +56,7 @@ final readonly class GetDayRoomHandler
         private CardViews $cardViews,
         private LanguagePacks $packs,
         private PlanConfig $config,
+        private ConversationRules $rules,
     ) {}
 
     public function __invoke(GetDayRoom $query): DayRoomView
@@ -77,7 +79,7 @@ final readonly class GetDayRoomHandler
             stages: $this->stages(
                 $cards,
                 $dealt ? $this->cardViews->forCards($cards, $plan->targetLang()->value, self::dayNumbers($plan->days())) : [],
-                DayStages::walksConversation($day),
+                DayStages::walksConversation($day, $this->rules->enabled),
                 $talk,
             ),
             // The numbers of a day that is being walked, not only of one that is over: they are
@@ -103,7 +105,7 @@ final readonly class GetDayRoomHandler
      * @param  list<CardView>  $views  the views of a dealt day's cards, in walking order; empty for the outline
      * @return list<StageProgressView>
      */
-    private function stages(array $cards, array $views, bool $walksTalk = false, ?Conversation $talk = null): array
+    private function stages(array $cards, array $views, bool $walksTalk, ?Conversation $talk): array
     {
         $byStage = [];
         foreach ($views as $view) {

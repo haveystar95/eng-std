@@ -198,6 +198,7 @@ final class PlanServiceProvider extends ServiceProvider
                 minutes: $ints('minutes', ConversationRules::MINUTES),
                 costCapUsd: (float) config('plan.conversation.cost_cap_usd', ConversationRules::COST_CAP_USD),
                 hintDelayMs: (int) config('plan.conversation.hint_delay_ms', ConversationRules::HINT_DELAY_MS),
+                enabled: (bool) config('plan.conversation.enabled', ConversationRules::ENABLED),
             );
         });
 

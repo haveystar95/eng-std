@@ -427,3 +427,31 @@ it('gives no talk to a day dealt before the talk existed', function () {
     }
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk();
 });
+
+/**
+ * Canon (рубильник раздачи): `plan.conversation.enabled = false` — the day is dealt WITHOUT the sixth stage. The
+ * switch is how the server ships before the client that speaks: a day dealt while it is off has the five stages of
+ * before the наряд, walks them, closes on them, and has no talk to open. Catches a switch that only hides the stage
+ * from the screens while `close` goes on holding the day shut, waiting for a talk nobody can start.
+ */
+it('deals five stages while the talk is switched off, and closes the day on them', function () {
+    config(['plan.conversation.enabled' => false]);
+    [$token, $id] = convDay($this);
+
+    $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
+    expect(array_column($room['stages'], 'stage'))->not->toContain('conversation')
+        ->and(array_column($room['day']['stages'], 'stage'))->not->toContain('conversation')
+        ->and(array_column($room['window']['stages'], 'stage'))->not->toContain('conversation');
+
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/conversation")
+        ->assertStatus(422)->assertJsonPath('code', 'plan_conversation_not_in_day');
+
+    foreach (planOpenDay($this, $token, $id, 1)['cards'] as $card) {
+        planAnswer($this, $token, $id, 1, $card['id'], planWalkResult($card['kind']));
+    }
+
+    $closed = $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")
+        ->assertOk()->json('data');
+    expect($closed['day']['status'])->toBe('closed')
+        ->and(array_column($closed['window']['stages'], 'state'))->toBe(['done', 'done', 'done', 'done', 'done']);
+});

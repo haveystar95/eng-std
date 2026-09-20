@@ -22,6 +22,7 @@ use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
+use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayStages;
 use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
@@ -51,6 +52,7 @@ final readonly class PlanViews
         private DayDealer $dealer,
         private LearnerHabits $habits,
         private ConversationRepository $conversations,
+        private ConversationRules $rules,
     ) {}
 
     public function versions(): VersionsView
@@ -241,7 +243,7 @@ final readonly class PlanViews
                 static fn (RouteStage $s): RouteStageView => new RouteStageView($s->stage->value, $s->state->value),
                 RouteStages::of(
                     $day->type(), $tallies, $day->isClosed(), $availableToday, $outline,
-                    DayStages::walksConversation($day), $talk,
+                    DayStages::walksConversation($day, $this->rules->enabled), $talk,
                 ),
             ),
         );

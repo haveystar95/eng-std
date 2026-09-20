@@ -94,8 +94,9 @@ carries until it is read), `PartnerLines` (the longest partner line — one help
 `speak_echo` cannot share a line), `NumberValues`, `Retry` (the reshuffled options and tiles of a copy),
 `RouteStages` (which stages a day on the route has and where each
 stands — from card tallies, the dealer's outline or the day type, plus the talk's own node, which has no cards),
-`DayStages` (the six stages a day walks, by type and by what the day was dealt with), `ConversationRules` (turns,
-minutes and the money cap of a talk, from `plan.conversation`), `ConversationOutcomes` + `SpokenPhrases` (the talk's
+`DayStages` (the six stages a day walks, by type, by what the day was dealt with and — for a day not dealt yet —
+by the rollout switch), `ConversationRules` (turns, minutes, the money cap and the rollout switch of a talk, from
+`plan.conversation`), `ConversationOutcomes` + `SpokenPhrases` (the talk's
 summary read off its journal, and which phrases of the plan the SERVER heard — `SpeechMatch`, mode `free`),
 `DayHighlights` («Что было хорошо», кадр 37-13), `BlueprintChecker` (the plan
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its

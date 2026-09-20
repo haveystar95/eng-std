@@ -31,6 +31,7 @@ use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Service\ConversationOutcomes;
+use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayBudget;
 use App\Modules\Plan\Domain\Service\DayHighlights;
 use App\Modules\Plan\Domain\Service\DayPace;
@@ -78,6 +79,7 @@ final readonly class DayWindowViews
         private DayPace $pace,
         private DayBudget $budget,
         private ConversationMaterial $material,
+        private ConversationRules $rules,
     ) {}
 
     /**
@@ -87,7 +89,7 @@ final readonly class DayWindowViews
     public function of(Plan $plan, PlanDay $day, DayStatus $effective, bool $building, ?SceneView $scene, array $cards, ?Conversation $talk = null): DayWindowView
     {
         $status = WindowStatus::of($effective, $plan->status(), $day->number(), $building);
-        $talks = DayStages::walksConversation($day);
+        $talks = DayStages::walksConversation($day, $this->rules->enabled);
         // One formula for «сколько идёт день»: the cards' minutes plus the talk's own budget, which
         // is not the cards' and never stood under their ceiling ({@see DayBudget}).
         $talkMinutes = $this->budget->talkMinutes($day->type(), $talks);

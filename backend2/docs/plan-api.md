@@ -585,7 +585,8 @@ audio}` — вариант, который есть реплика визита,
 (кадр 37-10 «Врач не отвечает — попробуй ещё раз»).
 
 422 (наряд CONV-1): `plan_conversation_not_in_day` — у дня нет шестого этапа: он роздан до наряда
-(`plan_days.has_conversation = false`, дораздачи нет) или ни у одной его сцены не написан урок.
+(`plan_days.has_conversation = false`, дораздачи нет — так же выглядит день, розданный при выключенном
+`plan.conversation.enabled`) или ни у одной его сцены не написан урок.
 
 422 (наряд SESSION-1a): `plan_card_result_not_allowed` — вид карточки такого итога не принимает
 (`meta {kind, result}`: `passed` на судейской карточке, `failed` на голосовой, `hinted` на
