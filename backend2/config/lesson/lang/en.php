@@ -30,6 +30,12 @@ return [
     // sentences?», «does the native frame end the way the target frame ends?» are asked with these.
     'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'],
 
+    // Words whose dot ends no sentence (наряд CHECK-1): «3 p.m.» in a slot is a time, not a sentence of its own, and
+    // «We have 3 p.m. and 5:30 p.m. today.» is one sentence. Read case-insensitively, as a word on its own. Without the
+    // key every dot ends a sentence. «No.» (the number) is not listed: it is also «No.» the answer, and with it listed
+    // «Oh no.» would end with no mark and a filler «No.» would pass as a value.
+    'abbreviations' => ['a.m.', 'p.m.', 'e.g.', 'i.e.', 'etc.', 'vs.', 'Mr.', 'Mrs.', 'Ms.', 'Dr.', 'St.'],
+
     // A question is known by its word order too, mark or no mark: a last sentence that opens with an auxiliary and
     // a subject pronoun («May I see your passport», «Do you have any bags») asks. Without this key a question is
     // only its question mark — and a repair that deletes the mark from «Can I see your passport first?» passes

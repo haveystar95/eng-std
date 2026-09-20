@@ -644,3 +644,56 @@ it('counts an abbreviation or an acronym as a word of the day, and not a word wi
     expect(array_map($at, ['API', 'CI/CD', 'U.S.', 'HR manager', 'ЖКХ']))->toBe([true, true, true, true, true])
         ->and(array_map($at, ['X-ray', 'iPhone', 'Wi-Fi', 'sick note']))->toBe([false, false, false, false]);
 });
+
+// Live day CHECK-1 («Визит к ветеринару», day 1): «I'd like the ___ appointment.» with «3 p.m.» and «5:30 p.m.» failed the
+// day as «the filler carries its own punctuation» — the dot of an abbreviation read as a sentence's. Canon: a whole
+// sentence in the slot («See you tomorrow.», «Yes?») is still fatal; «3 p.m.», «5:30 p.m.», «Dr. Smith», «e.g.» are no
+// finding; a comma, a semicolon or a colon at the end stay what they were. Catches the bare regex on the dot, a rule that
+// lets a real sentence through, and one that reads the list where the pack has none.
+it('lets a filler that ends with an abbreviation\'s dot through, and still holds a sentence or a comma in the slot', function () {
+    $at = static function (string $filler, ?LessonValidationContext $context = null): array {
+        $p = lvPayload();
+        $p['phrases'][4]['slot']['fillers'][2]['target'] = $filler;
+
+        return array_values(array_map(
+            static fn (LessonViolation $v): string => $v->address,
+            array_filter(lvRun($p, null, $context), static fn (LessonViolation $v): bool => $v->code === LessonCodes::FILLER_UNGRAMMATICAL),
+        ));
+    };
+
+    expect(array_map($at, ['3 p.m.', '5:30 p.m.', 'Dr. Smith', 'e.g.', 'at home']))->toBe([[], [], [], [], []])
+        ->and(array_map($at, ['See you tomorrow.', 'Yes?', 'at home,', 'at home;', 'at home:']))->toBe([['p5.f3'], ['p5.f3'], ['p5.f3'], ['p5.f3'], ['p5.f3']]);
+
+    // A target pack that lists no abbreviations: every dot ends a sentence, and «3 p.m.» is a sentence in the slot.
+    $en = require dirname(__DIR__, 3).'/config/lesson/lang/en.php';
+    unset($en['abbreviations']);
+    $bare = new LessonValidationContext(8, 8, lessonPacks()->for('ru'), (new LanguagePacks(['en' => $en]))->for('en'));
+    expect($at('3 p.m.', $bare))->toBe(['p5.f3']);
+
+    // A target pack with every seam key but `sentence_ends`: the check asks the pack first and is skipped whole — it
+    // neither throws nor reads a full stop it has no rule for.
+    $unmarked = require dirname(__DIR__, 3).'/config/lesson/lang/en.php';
+    $unmarked['sentence_ends'] = null;
+    $skipped = new LessonValidationContext(8, 8, lessonPacks()->for('ru'), (new LanguagePacks(['en' => $unmarked]))->for('en'));
+    expect($at('See you tomorrow.', $skipped))->toBe([])
+        ->and($skipped->skips->codes())->toContain(LessonCodes::FILLER_UNGRAMMATICAL);
+});
+
+// Live day CHECK-1: «We have 3 p.m. and 5:30 p.m. today.» was counted as three sentences (`partner.too_long`). Canon: the
+// partner's sentences are counted by the same rule of where a sentence ends. Catches a count by every dot, and one that
+// no longer counts real sentences.
+it('counts the partner\'s sentences by where a sentence ends, an abbreviation\'s dot ending none', function () {
+    $at = static function (string $line): array {
+        $p = lvPayload();
+        $p['dialogue'][4]['messages'][0]['text_target'] = $line;
+
+        return array_values(array_map(
+            static fn (LessonViolation $v): string => $v->address,
+            array_filter(lvRun($p), static fn (LessonViolation $v): bool => $v->code === LessonCodes::PARTNER_TOO_LONG),
+        ));
+    };
+
+    expect($at('We have 3 p.m. and 5:30 p.m. today.'))->toBe([])
+        ->and($at('Ask Dr. Smith. He is here today.'))->toBe([])
+        ->and($at("I'm here. Are you? Yes."))->toBe(['A5']);
+});

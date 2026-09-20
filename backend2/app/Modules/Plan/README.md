@@ -235,6 +235,10 @@ reads plan tables.
   no longer has, rows and files, and buys nothing.
 - Ops: `plan:speak-report {--plan=} {--day=}` (TTS-2) — what the voice cost: every plan, a plan by day, a day by
   kind of line — characters, dollars, credits, calls (distinct vendor request ids).
+- Ops: `plan:check-report {--since=}` (CHECK-1) — what the lesson validator finds, by code: findings in the stored
+  lessons (`checks_json`), how many of them fatal, days the code stands on, days failed with it, the share of days, the
+  counters `counted / gated / failed` over every attempt, and three examples a code with the plan and the day.
+  Read-only; `--since` narrows the days, not the counters.
 - Ops: `plan:audio-durations {--dry}` (SESSION-1a) — fills `plan_line_audios.duration_ms` where it is null, from
   the stored file, with the writer's own estimate over its bytes (`SpeechCost::mp3DurationMs`, mp3 at 128 kbit/s):
   neither getID3 nor ffprobe is in the containers, and the order bought no new package. Idempotent, buys nothing,

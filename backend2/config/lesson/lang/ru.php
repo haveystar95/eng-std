@@ -24,6 +24,11 @@ return [
 
     'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'],
 
+    // Words whose dot ends no sentence (наряд CHECK-1) — read where a native frame is asked whether it ends with a mark
+    // («т. е.» inside a frame ends nothing). A space inside one is any run of spaces. Without the key every dot ends a
+    // sentence.
+    'abbreviations' => ['т. е.', 'т. д.', 'т. п.', 'г.', 'ул.'],
+
     // The word order of a question — a target-language key, not written for Russian.
     'question_word_order' => null,
 

@@ -23,6 +23,7 @@ use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanAudioDurationsCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanCheckReportCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanImagesBackfillCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSpeakBackfillCommand;
@@ -77,6 +78,8 @@ return Application::configure(basePath: dirname(__DIR__))
         PlanImagesBackfillCommand::class,
         PlanSpeakBackfillCommand::class,
         PlanSpeakReportCommand::class,
+        // What the lesson validator finds, by code (CHECK-1): read-only, off the stored findings and the counters.
+        PlanCheckReportCommand::class,
         // The length of every stored voice file (SESSION-1a): idempotent, buys nothing.
         PlanAudioDurationsCommand::class,
         // The model call journal (GEN-3): calls of processes that ended mid-call become `lost` (scheduled).

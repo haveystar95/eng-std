@@ -159,24 +159,24 @@ final readonly class LanguageWords
         };
     }
 
-    // ── sentences (`sentence_ends`) ──────────────────────────────────────────────────────────────────────────
+    // ── sentences (`sentence_ends`, `abbreviations`) — the one rule of where a sentence ends is {@see SentenceEnds} ──
+
+    /** Where a sentence of this language ends: the marks of the pack, an abbreviation's dot left out. */
+    public function ends(): SentenceEnds
+    {
+        return new SentenceEnds($this->pack);
+    }
 
     /** The mark a text ends with — closing quotes and brackets aside — or '' when it ends with none. */
     public function terminal(string $text): string
     {
-        // A byte-wise rtrim would cut Cyrillic: the typographic apostrophe's bytes are the tails of its letters.
-        $trimmed = (string) preg_replace('/[\s»"\'”’)]+$/u', '', $text);
-        $last = mb_substr($trimmed, -1);
-
-        return array_key_exists($last, $this->marks()) ? $last : '';
+        return $this->ends()->terminal($text);
     }
 
     /** What the mark a text ends with says — `question`, `statement`… — or '' when it ends with none. */
     public function terminalKind(string $text): string
     {
-        $mark = $this->terminal($text);
-
-        return $mark === '' ? '' : $this->marks()[$mark];
+        return $this->ends()->terminalKind($text);
     }
 
     /**
@@ -185,14 +185,15 @@ final readonly class LanguageWords
      */
     public function isQuestion(string $text): bool
     {
-        if ($this->terminalKind($text) === 'question') {
+        $ends = $this->ends();
+        if ($ends->terminalKind($text) === 'question') {
             return true;
         }
         if (! $this->pack->has('question_word_order')) {
             return false;
         }
-        $sentences = preg_split('/['.$this->markClass().']+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $last = array_map(LanguagePack::normal(...), Words::tokens((string) end($sentences)));
+        $sentences = $ends->sentences($text);
+        $last = array_map(LanguagePack::normal(...), Words::tokens($sentences === [] ? '' : $sentences[count($sentences) - 1]));
 
         return count($last) >= 2
             && in_array($last[0], $this->pack->mapWords('question_word_order', 'auxiliaries'), true)
@@ -202,33 +203,26 @@ final readonly class LanguageWords
     /** How many question marks a text has. */
     public function questionMarks(string $text): int
     {
-        $count = 0;
-        foreach ($this->marks() as $mark => $kind) {
-            if ($kind === 'question') {
-                $count += mb_substr_count($text, (string) $mark);
-            }
-        }
-
-        return $count;
+        return $this->ends()->questionMarks($text);
     }
 
+    /** How many sentences a text has, by the rule of where a sentence ends. */
     public function sentences(string $text): int
     {
-        $parts = preg_split('/['.$this->markClass().']+(?:\s+|$)/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
-
-        return $parts === false ? 0 : count(array_filter($parts, static fn (string $p): bool => Words::count($p) > 0));
+        return $this->ends()->count($text);
     }
 
     /**
      * The names of a text: words written with a capital letter anywhere but at the start of a sentence
-     * («Take Nurofen», «Dr Smith»), lower-cased (`function_words` too: «I» is no name).
+     * («Take Nurofen», «Dr. Smith» — the dot of «Dr.» ends no sentence), lower-cased (`function_words` too: «I» is
+     * no name).
      *
      * @return list<string>
      */
     public function names(string $text): array
     {
         $out = [];
-        foreach (preg_split('/['.$this->markClass().']+/u', $text) ?: [] as $sentence) {
+        foreach ($this->ends()->sentences($text) as $sentence) {
             foreach (array_slice(Words::surface($sentence), 1) as $word) {
                 if (preg_match('/^\p{Lu}/u', $word) === 1 && ! $this->isFunction($word)) {
                     $out[] = mb_strtolower($word);
@@ -478,21 +472,5 @@ final readonly class LanguageWords
         }
 
         return array_values(array_unique($out));
-    }
-
-    /** @return array<string, string> mark → what it says */
-    private function marks(): array
-    {
-        $out = [];
-        foreach ($this->pack->map('sentence_ends') as $mark => $kind) {
-            $out[(string) $mark] = is_string($kind) ? $kind : '';
-        }
-
-        return $out;
-    }
-
-    private function markClass(): string
-    {
-        return implode('', array_map(static fn (string $m): string => preg_quote($m, '/'), array_keys($this->marks())));
     }
 }

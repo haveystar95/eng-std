@@ -19,6 +19,7 @@ return [
     'script' => null,
     'script_letters' => null,
     'sentence_ends' => null,
+    'abbreviations' => null,
     'question_word_order' => null,
     'function_words' => null,
     'word_forms' => null,

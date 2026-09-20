@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Check\Lesson;
 
 use App\Modules\Plan\Domain\Check\Language\LanguageSide;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
+use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonRule;
 use App\Modules\Plan\Domain\Check\LessonValidationContext;
@@ -25,8 +26,9 @@ use App\Modules\Plan\Domain\Service\Words;
  * finding that they differ from what the lines say. A line that says none of its frame's fillers is `line.ne_frame`,
  * not a mark.
  *
- * «Grammatical» is checked by the assembly only mechanically (`filler.ungrammatical`, fatal) — a filler with its
- * own full stop or its own slot, a word doubled at the seam, and, by the target's pack, an article after an
+ * «Grammatical» is checked by the assembly only mechanically (`filler.ungrammatical`, fatal) — a filler that ends a
+ * sentence of its own (by the target's rule of where a sentence ends — an abbreviation's dot is no end, наряд CHECK-1)
+ * or carries a comma, a semicolon or a colon, one with its own slot, a word doubled at the seam, and, by the target's pack, an article after an
  * article, «a» before a vowel or «an» before a consonant at the seam, a whole sentence where the frame already has
  * its verb («My biggest strength is ___» + «I am patient»). Three warnings of v4.5 beside it: a filler that is a
  * clause, not a value («if the fever returns»); an article that stays in the frame though it changes with the
@@ -38,7 +40,7 @@ final class FillerRules implements LessonRule
 {
     public function violations(Lesson $answer, LessonValidationContext $context): array
     {
-        $mechanics = $context->reads(LessonCodes::FILLER_UNGRAMMATICAL, LanguageSide::Target, 'articles', 'article_sound', 'clause', 'seam_repeatable_words');
+        $mechanics = $context->reads(LessonCodes::FILLER_UNGRAMMATICAL, LanguageSide::Target, 'sentence_ends', 'articles', 'article_sound', 'clause', 'seam_repeatable_words');
         $clauses = $context->reads(LessonCodes::FILLER_IS_CLAUSE, LanguageSide::Target, 'clause');
         $articles = $context->reads(LessonCodes::FILLER_ARTICLE_SEAM, LanguageSide::Target, 'article_sound');
         $words = $context->targetWords();
@@ -95,7 +97,11 @@ final class FillerRules implements LessonRule
 
     /**
      * What the assembly of one filler into its frame shows on its face. Without the target's words (no pack) only
-     * what needs no language: punctuation, a slot, a doubled word.
+     * what needs no language: a comma, a semicolon or a colon at the end, a slot, a doubled word.
+     *
+     * Whether a filler ends a SENTENCE of its own is the target's rule of where a sentence ends ({@see SentenceEnds},
+     * наряд CHECK-1): «See you tomorrow.» and «Yes?» do, «3 p.m.», «5:30 p.m.», «Dr. Smith» and «e.g.» do not — their
+     * dot is the abbreviation's, and the live day that failed on «I'd like the 3 p.m. appointment.» was healthy English.
      *
      * @return list<string>
      */
@@ -103,7 +109,7 @@ final class FillerRules implements LessonRule
     {
         $problems = [];
         $filler = trim($filler);
-        if (preg_match('/[.?!,;:]$/u', $filler) === 1) {
+        if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->terminal($filler) !== '')) {
             $problems[] = 'the filler carries its own punctuation';
         }
         if (FrameText::hasSlot($filler)) {
