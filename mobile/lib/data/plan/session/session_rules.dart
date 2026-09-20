@@ -189,16 +189,21 @@ abstract final class SessionRules {
   };
 
   /// THE PHONE'S VERDICT WHERE THERE IS NO JUDGE TO ASK — «Once more» from the day summary (FIX-1 §5). The server
-  /// refuses a judged card of a walked day (`plan_card_answered`), so a replay grades a free answer the way every
-  /// voice card is graded: the frame's own words covered by `coverage_min`. What went into the window is anyone's —
-  /// that is what the judge was for, and a replay does not pretend to have one.
+  /// refuses a card of a walked day (`plan_card_answered`), so a replay grades what the judge would have graded the
+  /// way every voice card is graded: the KEY — the frame's own words, in the `free` mode. What went into the window
+  /// is anyone's; that is what the judge was for, and a replay does not pretend to have one.
+  ///
+  /// Both kinds that ask the judge land here, and both ask it about the SAME thing: `speak_answer` about the whole
+  /// card, «Скажи целиком» about its own-word round (its value rounds never reach this — they are graded on the
+  /// phone anyway). So both are read off the frame, never off a round's expected phrase: a learner saying their own
+  /// word would never match the phrase the round was dealt with.
   ///
   /// Before this, a replay accepted ANY speech at all — the first sound heard closed the card as a pass.
   static bool replayAccepted(CardPayload payload, String heard, SpeechRules rules) => switch (payload) {
     SpeakAnswerPayload(:final frame, :final speechMode) =>
       SpeechMatch.said(heard, framePart(frame.frameTarget), speechMode, rules),
-    PhraseOtherSlotPayload(:final rounds, :final speechMode) when rounds.isNotEmpty =>
-      SpeechMatch.said(heard, rounds.first.expectedText, speechMode, rules),
+    PhraseOtherSlotPayload(:final frame, :final ownRound) =>
+      SpeechMatch.said(heard, framePart(frame.frameTarget), ownRound.speechMode, rules),
     _ => voiceAccepted(payload, heard, rules),
   };
 

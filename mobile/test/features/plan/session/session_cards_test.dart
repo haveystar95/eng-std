@@ -685,6 +685,30 @@ void main() {
       await settleCard(tester);
     });
 
+    // RULE (FIX-2 §2, инвариант «клиентская проверка не строже серверной»): круг своего слова спрашивает РОВНО то,
+    // что спрашивает сервер перед вызовом модели, — слова каркаса, — и больше ничего. Что стоит в окне и стоит ли
+    // там что-нибудь, говорит судья.
+    // CATCHES: телефон, который отказывается звать судью, не услышав слов за каркасом: ученик остаётся без причины
+    // отказа, а сервер такую попытку принял бы к рассмотрению.
+    testWidgets('«Скажи целиком»: the own round asks the judge even when nothing was heard beyond the frame', (tester) async {
+      final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
+      final probe = CardProbe()
+        ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты не сказал, где болит.', attempts: 1);
+      await pumpCard(tester, probeEnv(card, probe));
+      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
+        await sayDebug(tester, said);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+      }
+      // The frame and nothing else: the window is empty, and the judge is still the one who says so.
+      await sayDebug(tester, 'It hurts in his');
+      await tester.pump();
+      await tester.pump();
+      expect(probe.judged, ['It hurts in his']);
+      expect(find.text('Ты не сказал, где болит.'), findsOneWidget);
+      await settleCard(tester);
+    });
+
     // The other half of the same rule: a miss on a VALUE round is still a lapse of the frame (DECISIONS п. 327).
     testWidgets('«Скажи целиком»: two misses on a VALUE round are still a skip', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);

@@ -191,7 +191,7 @@ abstract final class SpeechMatch {
     final known = want.toSet();
     final split = [
       for (final w in got)
-        if (known.contains(w)) w else ...(unglue(w, want) ?? [w]),
+        if (known.contains(w)) w else ...(unglue(w, known) ?? [w]),
     ];
     return _join(split, known);
   }
@@ -199,7 +199,6 @@ abstract final class SpeechMatch {
   /// SPLIT BACK TOGETHER: «down», «town» → «downtown». Left to right and greedy, and only from a token the vocabulary
   /// does not already know — a run whose first word is an expected word is a run the sentence asked for.
   static List<String> _join(List<String> heard, Set<String> vocabulary) {
-    const maxJoin = 3;
     final out = <String>[];
     for (var i = 0; i < heard.length; i++) {
       if (vocabulary.contains(heard[i])) {
@@ -208,7 +207,7 @@ abstract final class SpeechMatch {
       }
       var joined = heard[i];
       var taken = 1;
-      for (var span = 1; span < maxJoin && i + span < heard.length; span++) {
+      for (var span = 1; span < _maxJoin && i + span < heard.length; span++) {
         joined += heard[i + span];
         if (vocabulary.contains(joined)) {
           taken = span + 1;
@@ -249,15 +248,32 @@ abstract final class SpeechMatch {
     return false;
   }
 
-  /// Two adjacent words of [expected] (in comparable form) glued into [token] — or null.
-  static List<String>? unglue(String token, List<String> expected) {
-    for (var i = 0; i + 1 < expected.length; i++) {
-      final a = expected[i];
-      final b = expected[i + 1];
-      if (a.length + b.length == token.length && token.startsWith(a) && token.endsWith(b)) return [a, b];
+  /// THE EXPECTED WORDS [token] IS MADE OF, in order, or null when it is not made of them — a mirror of the server's
+  /// `SpokenWordBoundary::decompose()`, walk for walk: left to right, the LONGEST prefix first, backtracking, at most
+  /// [_maxJoin] pieces.
+  ///
+  /// It asks only that every piece be a word the card expects, NOT that the pieces stand next to each other in the
+  /// card's own order — a recogniser glues what it hears, and «couldyoutake» is three of them. The phone used to ask
+  /// for two ADJACENT words, which made it refuse readings the server accepts; that is the one thing a client check
+  /// may never do (work order FIX-2 §2, invariant «клиентская проверка не строже серверной»). Before FIX-2 the
+  /// plan's server rule had no boundary pass at all and the narrower client rule was merely looser; the kernel merge
+  /// gave the server the full walk and would have left the mirror behind.
+  static List<String>? unglue(String token, Set<String> expected, [int depth = 0]) {
+    if (depth >= _maxJoin) return null;
+    for (var take = token.length - 1; take >= 1; take--) {
+      final head = token.substring(0, take);
+      if (!expected.contains(head)) continue;
+      final tail = token.substring(take);
+      if (expected.contains(tail)) return [head, tail];
+      final rest = unglue(tail, expected, depth + 1);
+      if (rest != null) return [head, ...rest];
     }
     return null;
   }
+
+  /// How many heard tokens may be joined back into one expected word, and how many expected words one glued token may
+  /// be cut into — the server's `SpokenWordBoundary::MAX_JOIN`.
+  static const int _maxJoin = 3;
 
   /// Whether the words of [value] stand consecutively in [heard] — articles do not count on either side.
   static bool containsSequence(String heard, String value, SpeechRules rules) {

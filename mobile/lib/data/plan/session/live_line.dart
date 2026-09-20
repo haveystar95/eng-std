@@ -39,9 +39,9 @@ abstract final class LiveLine {
     for (var i = 0; i < surface.length; i++) {
       final last = listening && i == surface.length - 1;
       final tokens = SpeechMatch.words(surface[i]);
-      // Gluing of two adjacent expected words — two words of the line.
+      // A token the recogniser glued out of the line's own words — as many words of the line as it holds.
       final glued = tokens.length == 1 && !available.containsKey(tokens.single)
-          ? SpeechMatch.unglue(tokens.single, expectedWords)
+          ? SpeechMatch.unglue(tokens.single, expectedWords.toSet())
           : null;
       final pieces = glued == null ? [(text: surface[i], tokens: tokens)] : [for (final w in glued) (text: w, tokens: [w])];
       for (final piece in pieces) {

@@ -740,22 +740,27 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     ...widget.payload.ownRound.examples,
   ];
 
+  /// A VALUE ROUND is the phrase on the screen said as it stands (`speech_mode: repeat`): the value is part of that
+  /// text, so there is nothing to count apart. The OWN round asks what the SERVER asks before it calls the model —
+  /// the frame's own words, in `free` — and nothing else: whether the window holds anything, and what, is the
+  /// judge's to say. The phone used to refuse the call when it heard nothing beyond the frame, which made it
+  /// stricter than the server and cost the learner the judge's own reason; a client check may never be stricter
+  /// (work order FIX-2 §2).
+  ///
+  /// What it does still read off the attempt is the WINDOW'S TEXT, for the screen: the words heard beyond the frame
+  /// stand in the window while the judge thinks, and the verdict replaces them with its own `slot_value`.
   @override
   bool accepts(String heard) {
     final value = _value;
-    // A VALUE ROUND is the phrase on the screen said as it stands (`speech_mode: repeat`): the value is part of that
-    // text, so there is nothing to count apart. The OWN round asks only that the frame was said and that SOMETHING
-    // went into the window — what it means is the judge's.
-    final frameSaid = value != null
+    final said = value != null
         ? SessionRules.roundAccepted(widget.payload, value, heard, env.speech)
         : SpeechMatch.said(heard, _framePart, widget.payload.ownRound.speechMode, env.speech);
     final slot = _slotWordsOf(heard, _frame, '');
-    final slotSaid = value != null || slot.isNotEmpty;
     setState(() {
-      _parts = (frame: frameSaid, slot: slotSaid);
+      _parts = (frame: said, slot: said);
       _heardSlot = slot.isEmpty ? null : slot;
     });
-    return frameSaid && slotSaid;
+    return said;
   }
 
   /// The own word is the JUDGE's to rule on: the microphone stays closed until the verdict, and a rejection stands

@@ -139,10 +139,15 @@ void main() {
   // token that is not an expected word but equals two ADJACENT expected words glued together counts as both.
   // CATCHES: a phrase said in full and not passed because of a lost space; a split that invents words out of order.
   group('gluing', () {
-    test('a glued pair of adjacent expected words counts as both', () {
-      expect(SpeechMatch.unglue('workschedule', ['my', 'work', 'schedule']), ['work', 'schedule']);
-      expect(SpeechMatch.unglue('schedulework', ['my', 'work', 'schedule']), isNull, reason: 'not in the expected order');
-      expect(SpeechMatch.unglue('myschedule', ['my', 'work', 'schedule']), isNull, reason: 'not adjacent');
+    test('a glued run of the expected text\'s own words counts as all of them', () {
+      // The server's `SpokenWordBoundary::decompose()`, walk for walk (FIX-2 §2): every piece must be a word the
+      // card expects, and nothing more is asked — not adjacency, not the card's own order, up to three pieces. The
+      // phone used to demand an adjacent PAIR, which made it refuse readings the server accepts.
+      expect(SpeechMatch.unglue('workschedule', {'my', 'work', 'schedule'}), ['work', 'schedule']);
+      expect(SpeechMatch.unglue('schedulework', {'my', 'work', 'schedule'}), ['schedule', 'work']);
+      expect(SpeechMatch.unglue('myschedule', {'my', 'work', 'schedule'}), ['my', 'schedule']);
+      expect(SpeechMatch.unglue('couldyoutake', {'could', 'you', 'take', 'a', 'photo'}), ['could', 'you', 'take']);
+      expect(SpeechMatch.unglue('carpet', {'the', 'red', 'car'}), isNull, reason: 'no word is invented: «pet» is not asked for');
       expect(SpeechMatch.heardWords('can I change my workschedule', 'Can I change my work schedule?'), [
         'can',
         'i',

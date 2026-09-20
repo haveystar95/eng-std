@@ -222,6 +222,19 @@ void main() {
       expect(SessionRules.roundAccepted(p, p.rounds[1], 'it hurts in his neck', en), isTrue);
     });
 
+    // RULE (FIX-1 §5, наряд FIX-2 §5): «Ещё раз» с итога дня не может спросить судью — сервер откажет отвеченной
+    // карточке, — и телефон судит ТО ЖЕ, что судил бы судья: ключ, то есть слова каркаса вне окна, в режиме `free`.
+    // CATCHES: повтор, который принимает любой звук (так было до FIX-1); и «Скажи целиком», у которой круг своего
+    // слова сверяют с фразой круга значений — своё слово с ней не совпадёт никогда.
+    test('a replay grades what the judge would have: the frame\'s own words, the window anyone\'s', () {
+      final answer = day.stageOf(PlanStage.speak)!.cards.map((c) => c.payload).whereType<SpeakAnswerPayload>().first;
+      final whole = first<PhraseOtherSlotPayload>(PlanStage.phrases);
+      expect(SessionRules.replayAccepted(answer, 'it hurts in his knee', en), isTrue);
+      expect(SessionRules.replayAccepted(answer, 'knee', en), isFalse, reason: 'no frame');
+      expect(SessionRules.replayAccepted(whole, 'it hurts in his elbow', en), isTrue, reason: 'the own word');
+      expect(SessionRules.replayAccepted(whole, 'my elbow', en), isFalse, reason: 'no frame');
+    });
+
     test('the kind\'s expected speech', () {
       expect(SessionRules.expectedSpeech(first<WordRepeatPayload>(PlanStage.words)), 'lower back');
       expect(SessionRules.expectedSpeech(first<PhraseOtherSlotPayload>(PlanStage.phrases)), 'It hurts in his lower back.');
