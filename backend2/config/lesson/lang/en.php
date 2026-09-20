@@ -61,6 +61,33 @@ return [
         'okay', 'ok', 'well', 'oh', 'sorry', 'thanks', 'thank', 'sure', 'let',
     ],
 
+    // THE WORDS A RECOGNISER EATS (наряд FIX-2, п. 2) — articles, prepositions, auxiliary and modal verbs: left out
+    // of BOTH sides when a line the learner is LOOKING AT is compared with what was said
+    // ({@see \App\Modules\Shared\Domain\ValueObject\SpeechMode::Repeat}). Narrower than `function_words` on purpose:
+    // that list is about what carries no content for a speaking KEY, and it holds «what», «no», «one», «please» —
+    // words a repeat must not forgive, because dropping them changes the sentence. Written in the canonical form of
+    // the comparison, so no contractions: «I'd» is already «i would» by the time this list is read, and «not» is
+    // NOT here — it flips the meaning.
+    'unstressed_words' => [
+        'a', 'an', 'the',
+        'to', 'of', 'in', 'on', 'at', 'for', 'with', 'by', 'from', 'into', 'about', 'over', 'under', 'after',
+        'before', 'through', 'up', 'down', 'out', 'off', 'as', 'than',
+        'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'do', 'does', 'did', 'have', 'has', 'had',
+        'will', 'would', 'shall', 'should', 'can', 'could', 'may', 'might', 'must',
+    ],
+
+    // A NUMBER SAID EITHER WAY IS THE SAME NUMBER (наряд FIX-2, п. 2): a recogniser writes «3» where the card says
+    // «three» and the other way round, and the learner said one thing. Read as whole words after the text is
+    // canonicalised, so a hyphenated «thirty-nine» arrives as two words and folds to «30 9» on both sides.
+    'number_words' => [
+        'zero' => '0', 'one' => '1', 'two' => '2', 'three' => '3', 'four' => '4', 'five' => '5', 'six' => '6',
+        'seven' => '7', 'eight' => '8', 'nine' => '9', 'ten' => '10', 'eleven' => '11', 'twelve' => '12',
+        'thirteen' => '13', 'fourteen' => '14', 'fifteen' => '15', 'sixteen' => '16', 'seventeen' => '17',
+        'eighteen' => '18', 'nineteen' => '19', 'twenty' => '20', 'thirty' => '30', 'forty' => '40',
+        'fifty' => '50', 'sixty' => '60', 'seventy' => '70', 'eighty' => '80', 'ninety' => '90',
+        'hundred' => '100', 'thousand' => '1000',
+    ],
+
     // Two forms of one word: the shorter's letters but its last `stem_tail`, never fewer than `stem_min`, shared
     // from the start («heat» — «heating», «use» — «used»). A content word is at least `content_min_letters` long.
     'word_forms' => ['stem_min' => 3, 'stem_tail' => 3, 'content_min_letters' => 1],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check\Language;
 
 use App\Modules\Plan\Domain\Exception\LanguagePackKeyMissing;
+use App\Modules\Shared\Domain\ValueObject\SpeechPack;
 
 /**
  * WHAT THE LESSON VALIDATOR KNOWS OF ONE LANGUAGE (наряд GEN-2b, `docs/plan-v2.md` §4) — its words, marks and
@@ -42,6 +43,46 @@ final readonly class LanguagePack
     public static function none(string $code): self
     {
         return new self($code, []);
+    }
+
+    /**
+     * WHAT A COMPARISON OF SPEECH MAY READ OF THIS LANGUAGE (наряд FIX-2, п. 2) — the four lists
+     * {@see \App\Modules\Shared\Domain\Service\SpeechMatch} works from, handed DOWN to the kernel because the kernel
+     * cannot read this module and must not hard-code English. A key this language has not written is an empty list:
+     * the rule still runs and forgives nothing, which is the right answer for a language nobody has described.
+     *
+     * The same lists go out to the phone ({@see SpeechPack::toArray()}), so the mirror on the device is the pack
+     * itself rather than a copy of it in Dart.
+     */
+    public function speech(): SpeechPack
+    {
+        $numbers = [];
+        foreach ($this->has('number_words') ? $this->map('number_words') : [] as $word => $digits) {
+            if (is_string($digits)) {
+                $numbers[self::normal((string) $word)] = $digits;
+            }
+        }
+
+        return new SpeechPack(
+            unstressed: $this->has('unstressed_words') ? $this->words('unstressed_words') : [],
+            articles: $this->has('articles') ? $this->words('articles') : [],
+            abbreviations: $this->has('abbreviations') ? $this->rawList('abbreviations') : [],
+            numberWords: $numbers,
+        );
+    }
+
+    /**
+     * A list AS IT IS WRITTEN — the only reader is `abbreviations`, whose whole content is where the dots stand
+     * («p.m.», «т. е.»); {@see words()} lower-cases and would not lose them, but the set it builds is keyed by the
+     * normal form and the spelling is what a text is searched for.
+     *
+     * @return list<string>
+     */
+    private function rawList(string $key): array
+    {
+        $value = $this->data[$key] ?? null;
+
+        return is_array($value) ? array_values(array_filter($value, is_string(...))) : [];
     }
 
     public function has(string $key): bool

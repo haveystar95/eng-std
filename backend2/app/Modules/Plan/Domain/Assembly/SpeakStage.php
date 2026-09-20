@@ -54,7 +54,7 @@ final class SpeakStage
 
         $retell = self::freeLearnerLine($scene, array_slice(array_keys($answers), 0, self::MAX_ANSWERS));
         if ($retell !== null) {
-            $payload = SpeakCards::retell($scene, $retell, $scene->target);
+            $payload = SpeakCards::retell($scene, $retell);
             if ($payload !== null) {
                 $out[] = new CardDraft(CardKind::SpeakRetell, UnitKind::Exchange, SpokenLines::exchangeRef($retell->step), $payload);
             }

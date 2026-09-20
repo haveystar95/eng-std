@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Learning\Domain\Service;
+namespace App\Modules\Shared\Domain\Service;
 
 /**
  * Forgives the CHANNEL, not the memory (QA-20): an on-device recogniser drops a trailing
@@ -23,7 +23,7 @@ namespace App\Modules\Learning\Domain\Service;
  * a suffix on the previous one.
  *
  * Used by both the word-form path ({@see AnswerGrader}, whole compared string) and the
- * example-form path ({@see SpokenCoverage}, per word of the sentence) — one rule, not two copies
+ * example-form path ({@see SpeechMatch}, per word of the sentence) — one rule, not two copies
  * that could drift.
  */
 final class SpokenSuffixTolerance

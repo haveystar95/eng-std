@@ -33,9 +33,8 @@ final readonly class DayPace
         'phrase_slot' => 12,
         'phrase_slot_listen' => 12,
         'phrase_repeat' => 25,
-        'phrase_other_slot' => 25,
+        'phrase_other_slot' => 75,
         'phrase_combine' => 20,
-        'phrase_own_slot' => 25,
         'dialogue_partner' => 15,
         'dialogue_answer' => 30,
         // The ask says a line AND asks the exchange's check (наряд BACK-TAILS-1 §1.5): the seconds of the two cards

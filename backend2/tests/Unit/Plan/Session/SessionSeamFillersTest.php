@@ -167,10 +167,24 @@ it('shows a hidden filler on no card of the day — no recognition, no productio
                 expect(in_array(PhraseSeries::fillerOf($card->kind(), $payload), $hidden[$card->unitRef()] ?? [], true))->toBeFalse($label);
             }
             foreach ($payload['options'] ?? [] as $option) {
-                expect(in_array($option['text'], [...$targets, ...$sentences], true))->toBeFalse($label);
+                // `listen_predict` offers whole lines: its text key is `text_target` (наряд BACK-TAILS-1 §1.2).
+                foreach ([$option['text'] ?? null, $option['text_target'] ?? null, $option['text_native'] ?? null] as $text) {
+                    expect(in_array($text, [...$targets, ...$sentences], true))->toBeFalse($label);
+                }
             }
-            foreach ([...($payload['examples'] ?? []), $payload['task_native'] ?? null] as $text) {
-                expect(in_array($text, $natives, true))->toBeFalse($label);
+            $spoken = [
+                ...($payload['examples'] ?? []),
+                ...($payload['own_round']['examples'] ?? []),
+                ...array_column($payload['rounds'] ?? [], 'task_native'),
+                $payload['task_native'] ?? null,
+                $payload['own_round']['task_native'] ?? null,
+            ];
+            foreach ($spoken as $text) {
+                expect(in_array($text, [...$natives, ...$sentences], true))->toBeFalse($label);
+            }
+            foreach ($payload['rounds'] ?? [] as $round) {
+                expect(in_array($round['filler_index'], $hidden[$card->unitRef()] ?? [], true))->toBeFalse($label)
+                    ->and(in_array($round['expected_text'], $targets, true))->toBeFalse($label);
             }
             foreach ($payload['frames'] ?? [] as $frame) {
                 expect(in_array($frame['said']['index'], $hidden[$frame['ref']] ?? [], true))->toBeFalse($label);
@@ -189,16 +203,15 @@ it('shows a hidden filler on no card of the day — no recognition, no productio
 // that still counts the hidden fillers (two recognitions, one said twice), a production said with a hidden filler, and an
 // intermediate learner asked for «another window» the frame no longer has.
 it('recognises a frame whose other fillers all do not read once — with the said one — and says it as the phrase itself', function () {
-    // Two scenes: the Intermediate rotation of productions starts at phrase_other_slot on the first, at phrase_own_slot on
-    // the second — a frame with no other window to vary is repeated on both.
+    // Two scenes, both levels: a frame left with ONE value it may show still has a window, so it is said as «Скажи
+     // целиком» — one round on that value and the learner's own after it (наряд FIX-2, п. 5).
     foreach ([S1S_SCENE, '01J8SESS1ESEAMS00000000003'] as $id) {
         $scene = s1sScene(['p1.f2', 'p1.f3'], null, $id);
         $p1 = s1sTerm($scene, 'p1');
 
         expect(PhraseSeries::fillers($scene, $p1))->toBe([0])
             ->and(PhraseSeries::most($scene, $p1))->toBe(1)
-            ->and(PhraseSeries::repeatFillers($scene, $p1))->toBe([])
-            ->and(PhraseSeries::otherFiller($scene, $p1, [0]))->toBeNull();
+            ->and(PhraseSeries::repeatFillers($scene, $p1))->toBe([]);
 
         foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
             $label = "{$id} {$level->value}";
@@ -210,12 +223,14 @@ it('recognises a frame whose other fillers all do not read once — with the sai
                 ->and($kinds[0])->toBe(CardKind::PhraseIntro)
                 ->and(in_array($kinds[1], PhraseSeries::OPENERS, true))->toBeTrue($label)
                 ->and(PhraseSeries::fillerOf($ofP1[1]->kind(), $ofP1[1]->payload()))->toBe(0)
-                ->and($kinds[2])->toBe(CardKind::PhraseRepeat, $label)
-                ->and($ofP1[2]->payload()['filler_index'])->toBe(0)
-                ->and($ofP1[2]->payload()['expected_text'])->toBe('It hurts in his lower back.')
+                ->and($kinds[2])->toBe(CardKind::PhraseOtherSlot, $label)
+                ->and($ofP1[2]->payload()['rounds'])->toBe([
+                    ['filler_index' => 0, 'expected_text' => 'It hurts in his lower back.', 'task_native' => 'У него болит поясница.'],
+                ])
+                ->and($ofP1[2]->payload()['own_round']['examples'])->toBe(['поясница'])
                 ->and(array_column($ofP1[0]->payload()['frame']['slot']['fillers'], 'index'))->toBe([0])
-                // Five frames kept their series: 29 less p1's two recognitions and… nothing else.
-                ->and($phrases)->toHaveCount(27, $label);
+                // Five frames kept their series: 24 less p1's second recognition and… nothing else.
+                ->and($phrases)->toHaveCount(23, $label);
         }
     }
 });
@@ -230,17 +245,18 @@ it('says no copy and no return with a hidden filler, and builds no card on one',
     $filler = static fn (?object $draft): ?int => $draft === null ? null : PhraseSeries::fillerOf($draft->kind, $draft->payload);
 
     // Failed on 0 with 0 taken: without the finding the copy would be 1; it is 2.
-    expect($filler($stage->again($scene, $p1, CardKind::PhraseSlot, 0, [0])))->toBe(2)
-        ->and($filler($stage->returned($scene, $p1, CardKind::PhraseChooseBack, 0)))->toBe(2)
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseRepeat, 2, [0, 2])))->toBe(0)
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseOtherSlot, 2, [0, 2])))->toBe(2)
+    $mid = PlanLevel::Intermediate;
+
+    expect($filler($stage->again($scene, $p1, CardKind::PhraseSlot, 0, [0], $mid)))->toBe(2)
+        ->and($filler($stage->returned($scene, $p1, CardKind::PhraseChooseBack, 0, $mid)))->toBe(2)
+        ->and($filler($stage->again($scene, $p1, CardKind::PhraseRepeat, 2, [0, 2], $mid)))->toBe(0)
         ->and(PhraseSeries::repeatFillers($scene, $p1))->toBe([2])
-        ->and(PhraseSeries::otherFiller($scene, $p1, [0]))->toBe(2)
+        // «Скажи целиком» walks the values a card may show, and the hidden one is not among them.
+        ->and(array_column($cards->sayWhole($scene, $p1, $mid)?->payload['rounds'] ?? [], 'filler_index'))->toBe([0, 2])
         ->and($cards->slot($scene, $p1, 1))->toBeNull()
         ->and($cards->chooseBack($scene, $p1, 1))->toBeNull()
         ->and($cards->slotListen($scene, $p1, 1))->toBeNull()
         ->and($cards->assemble($scene, $p1, 1))->toBeNull()
-        ->and($cards->otherSlot($scene, $p1, 1))->toBeNull()
         ->and($cards->repeat($scene, $p1, 1))->toBeNull()
         ->and($cards->slot(s1sScene([]), s1sTerm(s1sScene([]), 'p1'), 1))->not->toBeNull();
 });

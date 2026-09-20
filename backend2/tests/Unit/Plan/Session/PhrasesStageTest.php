@@ -150,10 +150,12 @@ it('deals every frame its intro, then its recognitions, then its production, and
 
     foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
         $drafts = s1pStage()->build($scene, $level);
-        $produce = [CardKind::PhraseRepeat, CardKind::PhraseOtherSlot, CardKind::PhraseOwnSlot];
+        $produce = [CardKind::PhraseRepeat, CardKind::PhraseOtherSlot];
 
-        // Five frames with a window × (intro, three recognitions, production) + p4 (intro, choose_back, repeat) + combine.
-        expect($drafts)->toHaveCount(29, $level->value)
+        // Five frames with a window × (intro, two recognitions, production) + p4 (intro, choose_back, repeat) + combine.
+        // No THIRD recognition fits any more: «Скажи целиком» costs 75 s by `DayPace` (наряд FIX-2, п. 5), and the
+        // stage is over its 540 s before a third is offered.
+        expect($drafts)->toHaveCount(24, $level->value)
             ->and(end($drafts)->kind)->toBe(CardKind::PhraseCombine)
             ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseCombine))->toHaveCount(1)
             ->and(array_map(static fn (CardDraft $d): string => $d->kind->value, s1pOf($drafts, 'p4')))
@@ -161,10 +163,10 @@ it('deals every frame its intro, then its recognitions, then its production, and
 
         foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
             $cards = s1pOf($drafts, $ref);
-            expect($cards)->toHaveCount(5, "{$level->value} {$ref}")
+            expect($cards)->toHaveCount(4, "{$level->value} {$ref}")
                 ->and($cards[0]->kind)->toBe(CardKind::PhraseIntro)
-                ->and(array_map(static fn (CardDraft $d): bool => in_array($d->kind, PhraseSeries::CYCLE, true), array_slice($cards, 1, 3)))->toBe([true, true, true])
-                ->and(in_array($cards[4]->kind, $produce, true))->toBeTrue("{$level->value} {$ref}");
+                ->and(array_map(static fn (CardDraft $d): bool => in_array($d->kind, PhraseSeries::CYCLE, true), array_slice($cards, 1, 2)))->toBe([true, true])
+                ->and(in_array($cards[3]->kind, $produce, true))->toBeTrue("{$level->value} {$ref}");
         }
         foreach ($drafts as $draft) {
             expect($draft->kind->stage())->toBe(Stage::Phrases)
@@ -219,15 +221,16 @@ it('adds a third recognition to the most said frames first, while the stage stil
     $one = s1pStage(s1pPace(21))->build($scene, PlanLevel::Intermediate);
     // At 20 s: 480 s, three thirds make it exactly 540 — p6, then p1 and p2, said once each and earliest in the visit.
     $three = s1pStage(s1pPace(20))->build($scene, PlanLevel::Intermediate);
-    // At the day's own pace every frame with three fillers gets one.
+    // At the day's own pace NOT ONE fits since наряд FIX-2 п. 5: «Скажи целиком» is a series of rounds and costs 75 s,
+    // so the stage passes 540 s on its intros, its two recognitions and its productions alone.
     $all = s1pStage()->build($scene, PlanLevel::Intermediate);
 
     expect($thirds($one))->toBe(['p6'])
         ->and(count($one) * 21)->toBe(525)
         ->and($thirds($three))->toBe(['p1', 'p2', 'p6'])
         ->and(count($three) * 20)->toBe(540)
-        ->and($thirds($all))->toBe(['p1', 'p2', 'p3', 'p5', 'p6'])
-        ->and(array_sum(array_map(static fn (CardDraft $d): int => (new DayPace)->seconds($d->kind), $all)))->toBeLessThanOrEqual(PhrasesStage::THIRD_BUDGET)
+        ->and($thirds($all))->toBe([])
+        ->and(array_sum(array_map(static fn (CardDraft $d): int => (new DayPace)->seconds($d->kind), $all)))->toBeGreaterThan(PhrasesStage::THIRD_BUDGET)
         // A frame of two fillers has nothing to say a third recognition with, however often the dialogue says it.
         ->and($thirds(s1pStage(s1pPace(1))->build(s1pScene(static function (array $payload): array {
             array_pop($payload['phrases'][5]['slot']['fillers']);
@@ -239,8 +242,8 @@ it('adds a third recognition to the most said frames first, while the stage stil
 // Canon (SESSION-1d): «каждое узнавание берёт СВОЁ наполнение, ни одно не повторяется; первым — сказанное (said), дальше
 // остальные по индексу». Catches a series that says the dialogue's filler again, or starts from index 0 whatever is said.
 it('says every recognition with its own filler — the said one first, the rest by index — never one twice', function () {
-    $drafts = s1pStage()->build(s1pScene(), PlanLevel::Intermediate);
-    foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
+    $drafts = s1pStage(s1pPace(20))->build(s1pScene(), PlanLevel::Intermediate);
+    foreach (['p1', 'p2', 'p6'] as $ref) {
         expect(s1pFillers(s1pRecognitions($drafts, $ref)))->toBe([0, 1, 2], $ref);
     }
 
@@ -250,7 +253,7 @@ it('says every recognition with its own filler — the said one first, the rest 
 
         return $payload;
     });
-    $neck = s1pStage()->build($saysNeck, PlanLevel::Beginner);
+    $neck = s1pStage(s1pPace(20))->build($saysNeck, PlanLevel::Beginner);
     expect($saysNeck->saidIndex(s1pTerm($saysNeck, 'p1')))->toBe(1)
         ->and(s1pFillers(s1pRecognitions($neck, 'p1')))->toBe([1, 0, 2])
         ->and(PhraseSeries::fillers($saysNeck, s1pTerm($saysNeck, 'p1')))->toBe([1, 0, 2]);
@@ -262,7 +265,8 @@ it('says every recognition with its own filler — the said one first, the rest 
 // opener.
 it('walks the recognitions round the cycle from the frame\'s own seeded opener, never opening with the assembly', function () {
     $scene = s1pScene();
-    $drafts = s1pStage()->build($scene, PlanLevel::Intermediate);
+    // A pace that lets every third recognition in, so the cycle is read over three cards and not two.
+    $drafts = s1pStage(s1pPace(1))->build($scene, PlanLevel::Intermediate);
     $openers = [];
     foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
         $opener = Rotation::pick($scene->seed("{$ref}:recognize"), 0, PhraseSeries::OPENERS);
@@ -305,11 +309,11 @@ it('makes every recognition right by its own filler: that filler\'s sentence in 
     $series = new PhraseSeries;
     $p1 = s1pTerm($scene, 'p1');
 
-    $slot = $series->card(CardKind::PhraseSlot, $scene, $p1, 1)?->payload;
-    $back = $series->card(CardKind::PhraseChooseBack, $scene, $p1, 1)?->payload;
-    $listen = $series->card(CardKind::PhraseSlotListen, $scene, $p1, 2)?->payload;
-    $assemble = $series->card(CardKind::PhraseAssemble, $scene, $p1, 2)?->payload;
-    $said = $series->card(CardKind::PhraseSlotListen, $scene, $p1, 0)?->payload;
+    $slot = $series->card(CardKind::PhraseSlot, $scene, $p1, 1, PlanLevel::Intermediate)?->payload;
+    $back = $series->card(CardKind::PhraseChooseBack, $scene, $p1, 1, PlanLevel::Intermediate)?->payload;
+    $listen = $series->card(CardKind::PhraseSlotListen, $scene, $p1, 2, PlanLevel::Intermediate)?->payload;
+    $assemble = $series->card(CardKind::PhraseAssemble, $scene, $p1, 2, PlanLevel::Intermediate)?->payload;
+    $said = $series->card(CardKind::PhraseSlotListen, $scene, $p1, 0, PlanLevel::Intermediate)?->payload;
 
     expect($slot['prompt_native'])->toBe('У него болит шея.')
         ->and(s1pTexts($slot['options'])[$slot['correct']])->toBe('neck')
@@ -328,23 +332,19 @@ it('makes every recognition right by its own filler: that filler\'s sentence in 
         ->and(s1pTexts($said['options'])[$said['correct']])->toBe('lower back');
 });
 
-// Canon (SESSION-1d): «ложные: сначала другие наполнения ЭТОГО каркаса, добор — наполнения других каркасов; совпадений по
-// тексту нет; минимум два варианта». Catches wrong options taken from the next frame before the frame's own, and a top-up
-// that is not another frame's filler.
+// Canon (SESSION-1d): a card built FOR THE WINDOW offers the frame's own other fillers first and tops up with the next
+// frames'. Catches wrong options taken from the next frame before the frame's own, and a top-up that is not another
+// frame's filler.
 it('offers the frame\'s other fillers first and tops up with the fillers of the next frames', function () {
     $scene = s1pScene();
     $series = new PhraseSeries;
+    $level = PlanLevel::Intermediate;
 
-    expect(array_values(s1pTexts($series->card(CardKind::PhraseSlot, $scene, s1pTerm($scene, 'p1'), 1)?->payload['options'])))
+    expect(array_values(s1pTexts($series->card(CardKind::PhraseSlot, $scene, s1pTerm($scene, 'p1'), 1, $level)?->payload['options'])))
         ->toEqualCanonicalizing(['neck', 'lower back', 'shoulder', 'three days ago'])
-        ->and(array_values(s1pTexts($series->card(CardKind::PhraseSlotListen, $scene, s1pTerm($scene, 'p3'), 0)?->payload['options'])))
+        ->and(array_values(s1pTexts($series->card(CardKind::PhraseSlotListen, $scene, s1pTerm($scene, 'p3'), 0, $level)?->payload['options'])))
         // p3's next frame with a window is p5 (p4 has none).
-        ->toEqualCanonicalizing(['sharp', 'dull', 'constant', 'at home'])
-        ->and(array_values(s1pTexts($series->card(CardKind::PhraseChooseBack, $scene, s1pTerm($scene, 'p1'), 2)?->payload['options'])))
-        ->toEqualCanonicalizing(['У него болит плечо.', 'У него болит поясница.', 'У него болит шея.', 'Началось три дня назад.'])
-        // A frame without a window has no filler of its own: all three wrong ones are what the next frame says.
-        ->and(array_values(s1pTexts($series->card(CardKind::PhraseChooseBack, $scene, s1pTerm($scene, 'p4'), null)?->payload['options'])))
-        ->toEqualCanonicalizing(['Температуры у него нет.', 'Он будет отдыхать дома.', 'Он будет отдыхать два дня.', 'Он будет отдыхать после школы.']);
+        ->toEqualCanonicalizing(['sharp', 'dull', 'constant', 'at home']);
 
     // A frame of two fillers: one of its own, two of the next frame.
     $two = s1pScene(static function (array $payload): array {
@@ -352,78 +352,112 @@ it('offers the frame\'s other fillers first and tops up with the fillers of the 
 
         return $payload;
     });
-    expect(array_values(s1pTexts($series->card(CardKind::PhraseSlot, $two, s1pTerm($two, 'p1'), 0)?->payload['options'])))
+    expect(array_values(s1pTexts($series->card(CardKind::PhraseSlot, $two, s1pTerm($two, 'p1'), 0, $level)?->payload['options'])))
         ->toEqualCanonicalizing(['lower back', 'neck', 'three days ago', 'last night']);
 });
 
-// Canon (SESSION-1d, разд. 3): «beginner: phrase_repeat с наполнением, которого ученик ещё не говорил — не said, а следующее
-// по кругу (у каркаса с одним наполнением — said); текст и звук — с этим наполнением». Catches a repeat of the said phrase,
-// a sample that plays the said file, and a frame said twice repeated with its second said filler while an unsaid one is
-// there.
-it('has a beginner say the frame with a filler not said yet, its sample playing that filler — one filler or none: the phrase itself', function () {
+// Canon (наряд FIX-2, п. 1): «варианты — целые text_native реплик; ложные — из ДРУГИХ каркасов, никогда наполнения того
+// же каркаса; кандидат с ≥ 50 % общих слов — в отбой». Catches the set that marked a right answer wrong on the owner's
+// phone: «Что мне нужно принести на приём?» beside «…на визит?» is one sentence offered twice, and the window is what
+// `phrase_slot` is for.
+it('never offers two values of one window as two meanings, and drops a neighbour that reads like the right one', function () {
     $scene = s1pScene();
-    $drafts = s1pStage()->build($scene, PlanLevel::Beginner);
-    $repeat = static fn (array $drafts, string $ref): array => array_values(array_filter(
-        s1pOf($drafts, $ref), static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseRepeat,
+    $series = new PhraseSeries;
+    $level = PlanLevel::Intermediate;
+
+    $p1 = s1pTexts($series->card(CardKind::PhraseChooseBack, $scene, s1pTerm($scene, 'p1'), 2, $level)?->payload['options']);
+    expect(array_values($p1))->toEqualCanonicalizing(['У него болит плечо.', 'Началось три дня назад.', 'Боль острая, когда он наклоняется.', 'Температуры у него нет.'])
+        // Not one of p1's own other windows — they say the same sentence about another body part.
+        ->and(array_values($p1))->not->toContain('У него болит поясница.')
+        ->and(array_values($p1))->not->toContain('У него болит шея.')
+        // A frame without a window is said as itself, and its options are the other frames' too.
+        ->and(array_values(s1pTexts($series->card(CardKind::PhraseChooseBack, $scene, s1pTerm($scene, 'p4'), null, $level)?->payload['options'])))
+        ->toEqualCanonicalizing(['Температуры у него нет.', 'Он будет отдыхать дома.', 'Нам нужно сделать рентген?', 'У него болит поясница.']);
+
+    // The live pair, put into the day: the frame that comes next says almost the same sentence, so it is passed over
+    // and the one after it takes its place. Without the rule the card would offer «на приём» and «на визит» together
+    // and mark the right answer wrong, which is what the owner saw.
+    $alike = s1pScene(static function (array $payload): array {
+        $payload['phrases'][1]['frame_native'] = 'Что мне нужно принести на ___?';
+        $payload['phrases'][1]['slot']['fillers'][1]['native'] = 'приём';
+        $payload['dialogue'][2]['messages'][1]['text_native'] = 'Что мне нужно принести на визит?';
+
+        return $payload;
+    });
+    $options = array_values(s1pTexts($series->card(CardKind::PhraseChooseBack, $alike, s1pTerm($alike, 'p2'), 1, $level)?->payload['options']));
+    expect(CardObjects::said($alike, s1pTerm($alike, 'p3'))['text_native'])->toBe('Что мне нужно принести на визит?')
+        ->and($options)->toContain('Что мне нужно принести на приём?')
+        ->and($options)->not->toContain('Что мне нужно принести на визит?');
+});
+
+// Canon (наряд FIX-2, п. 5): «Скажи целиком» — один тренажёр для всех уровней, круги по значениям каркаса, последний
+// круг «со своим словом»; разница уровней — только в числе кругов (beginner: 2 значения + своё; intermediate — все
+// видимые). Catches a beginner left with nothing but choices and a repeat (проход 20.09, п. 5), a level given another
+// TRAINER instead of another number of rounds, and a card dealt with no own-word round at the end.
+it('says every frame with a window as «Скажи целиком» at both levels — the values in rounds, the learner\'s own last', function () {
+    $scene = s1pScene();
+    $whole = static fn (array $drafts, string $ref): array => array_values(array_filter(
+        s1pOf($drafts, $ref), static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot,
     ))[0]->payload;
 
-    expect($repeat($drafts, 'p1'))->toBe([
-        'scene_id' => s1pSceneId(),
-        'frame' => CardObjects::frame($scene, s1pTerm($scene, 'p1')),
-        'filler_index' => 1,
-        'expected_text' => 'It hurts in his neck.',
-        'key' => s1pTerm($scene, 'p1')->speakingKey(),
-        'coverage_min' => 0.7,
-        'audio' => Audio::of('p1.f2'),
-    ])
-        // p6 is said with «an X-ray» and «a follow-up appointment»: the learner has not said «a sick note».
-        ->and($repeat($drafts, 'p6')['filler_index'])->toBe(2)
-        ->and($repeat($drafts, 'p6')['expected_text'])->toBe('Do we need a sick note?')
-        ->and($repeat($drafts, 'p6')['audio'])->toBe(Audio::of('p6.f3'))
-        ->and($repeat($drafts, 'p4')['filler_index'])->toBeNull()
-        ->and($repeat($drafts, 'p4')['audio'])->toBe(Audio::of('p4'));
+    $beginner = s1pStage()->build($scene, PlanLevel::Beginner);
+    $intermediate = s1pStage()->build($scene, PlanLevel::Intermediate);
 
+    foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
+        expect(array_column($whole($beginner, $ref)['rounds'], 'filler_index'))->toBe([0, 1], $ref)
+            ->and(array_column($whole($intermediate, $ref)['rounds'], 'filler_index'))->toBe([0, 1, 2], $ref)
+            ->and($whole($beginner, $ref)['own_round']['judge'])->toBeTrue($ref)
+            ->and($whole($beginner, $ref)['speech_mode'])->toBe('repeat', $ref)
+            ->and($whole($beginner, $ref)['own_round']['speech_mode'])->toBe('free', $ref);
+    }
+
+    expect($whole($beginner, 'p1')['rounds'])->toBe([
+        ['filler_index' => 0, 'expected_text' => 'It hurts in his lower back.', 'task_native' => 'У него болит поясница.'],
+        ['filler_index' => 1, 'expected_text' => 'It hurts in his neck.', 'task_native' => 'У него болит шея.'],
+    ])
+        ->and($whole($beginner, 'p1')['own_round'])->toBe([
+            'task_native' => 'У него болит ___.',
+            'examples' => ['поясница', 'шея', 'плечо'],
+            'speech_mode' => 'free',
+            'judge' => true,
+        ])
+        // The frame is said next to the line it is said in — read by the JUDGE, not shown (кадр 32-7 has no partner line).
+        ->and($whole($beginner, 'p1')['partner_line'])->toBe([
+            'ref' => 'x1', 'text_target' => 'Where does it hurt: his upper back or his lower back?',
+            'text_native' => 'Где болит: вверху спины или в пояснице?', 'audio' => Audio::of('x1'),
+        ]);
+
+    // A frame of ONE value says it once and then the learner's own — the level cannot cut it below that.
     $oneFiller = s1pScene(static function (array $payload): array {
         $payload['phrases'][4]['slot']['fillers'] = [$payload['phrases'][4]['slot']['fillers'][0]];
 
         return $payload;
     });
-    expect($repeat(s1pStage()->build($oneFiller, PlanLevel::Beginner), 'p5'))->toMatchArray([
-        'filler_index' => 0, 'expected_text' => 'He will rest at home.', 'audio' => Audio::of('p5'),
-    ]);
+    expect(array_column($whole(s1pStage()->build($oneFiller, PlanLevel::Beginner), 'p5')['rounds'], 'filler_index'))->toBe([0])
+        ->and(array_column($whole(s1pStage()->build($oneFiller, PlanLevel::Intermediate), 'p5')['rounds'], 'filler_index'))->toBe([0]);
 });
 
-// Canon (SESSION-1d, разд. 3): «intermediate: phrase_other_slot берёт наполнение, не занятое ни узнаваниями, ни said;
-// свободных нет — любое, кроме said». Catches an other_slot that repeats a recognition's filler while a free one is there,
-// and one that asks for the said filler.
-it('has phrase_other_slot ask for a filler no recognition took, never the said one', function () {
+// Canon (наряд FIX-2, п. 5): a frame WITHOUT a window has no value to put anywhere — it is repeated, at both levels.
+// Catches «Скажи целиком» dealt to a frame with nothing to say it with, and a repeat that still carries a share.
+it('repeats a frame without a window instead, with the mode of a line on the screen', function () {
     $scene = s1pScene();
-    $cycle = [CardKind::PhraseOtherSlot, CardKind::PhraseOwnSlot];
-    $others = static fn (array $drafts): array => array_map(
-        static fn (CardDraft $d): array => [$d->unitRef, $d->payload['filler_index']],
-        array_values(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot)),
-    );
+    $repeat = static fn (array $drafts, string $ref): array => array_values(array_filter(
+        s1pOf($drafts, $ref), static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseRepeat,
+    ))[0]->payload;
 
-    // Without thirds the recognitions take 0 and 1: the other window is 2.
-    $noThirds = $others(s1pStage(s1pPace(30))->build($scene, PlanLevel::Intermediate));
-    expect($noThirds)->not->toBe([]);
-    foreach ($noThirds as [$ref, $index]) {
-        expect($index)->toBe(2, $ref);
+    foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
+        $drafts = s1pStage()->build($scene, $level);
+        expect($repeat($drafts, 'p4'))->toBe([
+            'scene_id' => s1pSceneId(),
+            'frame' => CardObjects::frame($scene, s1pTerm($scene, 'p4')),
+            'filler_index' => null,
+            'expected_text' => "He doesn't have a fever.",
+            'key' => s1pTerm($scene, 'p4')->speakingKey(),
+            'speech_mode' => 'repeat',
+            'audio' => Audio::of('p4'),
+        ], $level->value)
+            ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseRepeat))->toHaveCount(1, $level->value);
     }
-
-    // With three recognitions every filler is taken: any but the said one, seeded.
-    foreach ($others(s1pStage()->build($scene, PlanLevel::Intermediate)) as [$ref, $index]) {
-        expect($index)->toBe(Rotation::pick($scene->seed("{$ref}:other"), 0, [1, 2]), $ref);
-    }
-    expect(PhraseSeries::otherFiller($scene, s1pTerm($scene, 'p1'), [0, 1]))->toBe(2)
-        ->and(PhraseSeries::otherFiller($scene, s1pTerm($scene, 'p1'), [0, 2]))->toBe(1)
-        ->and(PhraseSeries::otherFiller($scene, s1pTerm($scene, 'p4'), []))->toBeNull()
-        ->and((new PhraseCards)->otherSlot($scene, s1pTerm($scene, 'p1'), 0))->toBeNull()
-        // The rotation of the production itself is as before: other_slot → own_slot over the frames with fillers.
-        ->and(array_values(array_unique(array_map(
-            static fn (CardDraft $d): string => $d->kind->value,
-            array_filter(s1pStage()->build($scene, PlanLevel::Intermediate), static fn (CardDraft $d): bool => in_array($d->kind, $cycle, true)),
-        ))))->toEqualCanonicalizing(['phrase_other_slot', 'phrase_own_slot']);
 });
 
 // Canon (SESSION-1d, разд. 2): «между двумя карточками одного каркаса — минимум две карточки других каркасов; интро идут
@@ -528,7 +562,7 @@ it('deals no phrase_combine when no answer exchange asks — not as a return eit
         ->and((new PhraseCards)->combine($onlyX3, s1pTerm($onlyX3, 'p3'))?->payload['exchange']['step'])->toBe(3)
         ->and((new PhraseCards)->combine($onlyX3, s1pTerm($onlyX3, 'p1')))->toBeNull()
         ->and((new PhraseCards)->combine($onlyX3, s1pTerm($onlyX3, 'p5')))->toBeNull()
-        ->and(s1pStage()->returned($onlyX3, s1pTerm($onlyX3, 'p1'), CardKind::PhraseCombine, 0)?->kind)
+        ->and(s1pStage()->returned($onlyX3, s1pTerm($onlyX3, 'p1'), CardKind::PhraseCombine, 0, PlanLevel::Intermediate)?->kind)
         ->toBe(PhraseSeries::kind($onlyX3, s1pTerm($onlyX3, 'p1'), 0));
 
     // Nothing asks: no combine, today or back.
@@ -542,11 +576,11 @@ it('deals no phrase_combine when no answer exchange asks — not as a return eit
     foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
         $drafts = s1pStage()->build($noQuestion, $level);
         expect(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseCombine))->toBe([], $level->value)
-            ->and($drafts)->toHaveCount(28, $level->value);
+            ->and($drafts)->toHaveCount(23, $level->value);
     }
     expect((new PhraseCards)->combine($noQuestion))->toBeNull()
         ->and((new PhraseCards)->combine($noQuestion, s1pTerm($noQuestion, 'p2')))->toBeNull()
-        ->and(s1pStage()->returned($noQuestion, s1pTerm($noQuestion, 'p2'), CardKind::PhraseCombine, 0)?->kind)->not->toBe(CardKind::PhraseCombine);
+        ->and(s1pStage()->returned($noQuestion, s1pTerm($noQuestion, 'p2'), CardKind::PhraseCombine, 0, PlanLevel::Intermediate)?->kind)->not->toBe(CardKind::PhraseCombine);
 
     // A target whose pack names no sentence ends cannot tell a question: no combine.
     $clean = s1pScene();
@@ -631,9 +665,8 @@ it('recognises a frame without a window back and has it repeated, at both levels
         ->and($cards->assemble($scene, $p4, null))->toBeNull()
         ->and($cards->slot($scene, $p4, null))->toBeNull()
         ->and($cards->slotListen($scene, $p4, null))->toBeNull()
-        ->and($cards->otherSlot($scene, $p4, null))->toBeNull()
-        ->and($cards->ownSlot($scene, $p4))->toBeNull()
-        ->and(s1pStage()->returned($scene, $p4, CardKind::PhraseChooseBack, null)?->payload)->toEqual($back);
+        ->and($cards->sayWhole($scene, $p4, PlanLevel::Intermediate))->toBeNull()
+        ->and(s1pStage()->returned($scene, $p4, CardKind::PhraseChooseBack, null, PlanLevel::Intermediate)?->payload)->toEqual($back);
 });
 
 it('deals no phrase_choose_back with nothing to choose between: a lone frame without a window is met and repeated, and goes unrecognised', function () {
@@ -647,7 +680,7 @@ it('deals no phrase_choose_back with nothing to choose between: a lone frame wit
     }
 
     expect((new PhraseCards)->chooseBack($lone, $p4, null))->toBeNull()
-        ->and(s1pStage()->returned($lone, $p4, CardKind::PhraseChooseBack, null))->toBeNull()
+        ->and(s1pStage()->returned($lone, $p4, CardKind::PhraseChooseBack, null, PlanLevel::Intermediate))->toBeNull()
         ->and((new PhraseCards)->chooseBack($full, $p4, null)?->kind)->toBe(CardKind::PhraseChooseBack);
 });
 
@@ -661,21 +694,24 @@ it('says the copy of a failed phrase card as the same kind with the next filler 
     $filler = static fn (?CardDraft $d): ?int => $d === null ? null : PhraseSeries::fillerOf($d->kind, $d->payload);
 
     // Failed on 0 while 0 and 1 are taken: 2 is free.
-    expect($stage->again($scene, $p1, CardKind::PhraseSlot, 0, [0, 1])?->kind)->toBe(CardKind::PhraseSlot)
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseSlot, 0, [0, 1])))->toBe(2)
+    $mid = PlanLevel::Intermediate;
+
+    expect($stage->again($scene, $p1, CardKind::PhraseSlot, 0, [0, 1], $mid)?->kind)->toBe(CardKind::PhraseSlot)
+        ->and($filler($stage->again($scene, $p1, CardKind::PhraseSlot, 0, [0, 1], $mid)))->toBe(2)
         // Failed on 2 while 0 is taken: round after 2 comes 0 (taken), then 1 (free) — the free one.
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseChooseBack, 2, [0, 2])))->toBe(1)
+        ->and($filler($stage->again($scene, $p1, CardKind::PhraseChooseBack, 2, [0, 2], $mid)))->toBe(1)
         // Every filler taken: the next round the slot after the failed one.
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseSlotListen, 1, [0, 1, 2])))->toBe(2)
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseAssemble, 2, [0, 1, 2])))->toBe(0)
-        ->and($stage->again($scene, $p1, CardKind::PhraseAssemble, 2, [0, 1, 2])?->kind)->toBe(CardKind::PhraseAssemble)
-        // Said aloud too: a repeat with the next filler, an other_slot never with the said one.
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseRepeat, 1, [0, 1, 2])))->toBe(2)
-        ->and($filler($stage->again($scene, $p1, CardKind::PhraseOtherSlot, 2, [0, 1, 2])))->toBe(1)
+        ->and($filler($stage->again($scene, $p1, CardKind::PhraseSlotListen, 1, [0, 1, 2], $mid)))->toBe(2)
+        ->and($filler($stage->again($scene, $p1, CardKind::PhraseAssemble, 2, [0, 1, 2], $mid)))->toBe(0)
+        ->and($stage->again($scene, $p1, CardKind::PhraseAssemble, 2, [0, 1, 2], $mid)?->kind)->toBe(CardKind::PhraseAssemble)
+        // Said aloud: a repeat with the next filler.
+        ->and($filler($stage->again($scene, $p1, CardKind::PhraseRepeat, 1, [0, 1, 2], $mid)))->toBe(2)
+        // «Скажи целиком» says every value of the window already (наряд FIX-2, п. 5): its copy is the whole card again.
+        ->and($stage->again($scene, $p1, CardKind::PhraseOtherSlot, 2, [0, 1, 2], $mid)?->payload)
+        ->toEqual((new PhraseCards)->sayWhole($scene, $p1, $mid)?->payload)
         // No filler of its own: nothing to vary — the copy is the card as it was.
-        ->and($stage->again($scene, $p1, CardKind::PhraseCombine, 0, [0]))->toBeNull()
-        ->and($stage->again($scene, $p1, CardKind::PhraseOwnSlot, null, []))->toBeNull()
-        ->and($filler($stage->again($scene, s1pTerm($scene, 'p4'), CardKind::PhraseChooseBack, null, [])))->toBeNull();
+        ->and($stage->again($scene, $p1, CardKind::PhraseCombine, 0, [0], $mid))->toBeNull()
+        ->and($filler($stage->again($scene, s1pTerm($scene, 'p4'), CardKind::PhraseChooseBack, null, [], $mid)))->toBeNull();
 
     // A frame of one filler says its copy with that filler again.
     $oneFiller = s1pScene(static function (array $payload): array {
@@ -683,7 +719,7 @@ it('says the copy of a failed phrase card as the same kind with the next filler 
 
         return $payload;
     });
-    expect($filler(s1pStage()->again($oneFiller, s1pTerm($oneFiller, 'p1'), CardKind::PhraseSlot, 0, [0])))->toBe(0);
+    expect($filler(s1pStage()->again($oneFiller, s1pTerm($oneFiller, 'p1'), CardKind::PhraseSlot, 0, [0], PlanLevel::Intermediate)))->toBe(0);
 });
 
 // Canon (SESSION-1d, разд. 4): «в день возврата единица «фраза» приходит видом, которым её провалили последний раз, снова с
@@ -695,15 +731,17 @@ it('brings a frame back as the kind it failed as the last time, said with anothe
     $p1 = s1pTerm($scene, 'p1');
     $shape = static fn (?CardDraft $d): ?array => $d === null ? null : [$d->kind, PhraseSeries::fillerOf($d->kind, $d->payload)];
 
-    expect($shape($stage->returned($scene, $p1, CardKind::PhraseSlotListen, 1)))->toBe([CardKind::PhraseSlotListen, 2])
-        ->and($shape($stage->returned($scene, $p1, CardKind::PhraseChooseBack, 2)))->toBe([CardKind::PhraseChooseBack, 0])
-        ->and($shape($stage->returned($scene, $p1, CardKind::PhraseAssemble, 0)))->toBe([CardKind::PhraseAssemble, 1])
-        ->and($shape($stage->returned($scene, $p1, CardKind::PhraseRepeat, 1)))->toBe([CardKind::PhraseRepeat, 2])
-        ->and($shape($stage->returned($scene, $p1, CardKind::PhraseOtherSlot, 2)))->toBe([CardKind::PhraseOtherSlot, 1])
-        ->and($stage->returned($scene, $p1, CardKind::PhraseCombine, 0)?->payload['correct_frame'])->toBe('p1')
-        ->and($stage->returned($scene, $p1, CardKind::PhraseCombine, 0)?->kind)->toBe(CardKind::PhraseCombine)
+    $mid = PlanLevel::Intermediate;
+
+    expect($shape($stage->returned($scene, $p1, CardKind::PhraseSlotListen, 1, $mid)))->toBe([CardKind::PhraseSlotListen, 2])
+        ->and($shape($stage->returned($scene, $p1, CardKind::PhraseChooseBack, 2, $mid)))->toBe([CardKind::PhraseChooseBack, 0])
+        ->and($shape($stage->returned($scene, $p1, CardKind::PhraseAssemble, 0, $mid)))->toBe([CardKind::PhraseAssemble, 1])
+        ->and($shape($stage->returned($scene, $p1, CardKind::PhraseRepeat, 1, $mid)))->toBe([CardKind::PhraseRepeat, 2])
+        ->and($stage->returned($scene, $p1, CardKind::PhraseOtherSlot, 2, $mid)?->kind)->toBe(CardKind::PhraseOtherSlot)
+        ->and($stage->returned($scene, $p1, CardKind::PhraseCombine, 0, $mid)?->payload['correct_frame'])->toBe('p1')
+        ->and($stage->returned($scene, $p1, CardKind::PhraseCombine, 0, $mid)?->kind)->toBe(CardKind::PhraseCombine)
         // What it failed as is not known: its first recognition.
-        ->and($shape($stage->returned($scene, $p1, null, null)))->toBe([PhraseSeries::kind($scene, $p1, 0), 0]);
+        ->and($shape($stage->returned($scene, $p1, null, null, $mid)))->toBe([PhraseSeries::kind($scene, $p1, 0), 0]);
 });
 
 it('lays out the frame, every filler with the file it sounds as, and the said phrase on phrase_intro', function () {
@@ -799,59 +837,16 @@ it('asks phrase_assemble for the frame\'s words and two words of the frames afte
         ->and($p5['target_native'])->toBe('Он будет отдыхать два дня.');
 });
 
-it('asks for a filler other than the said one on phrase_other_slot, by its translation', function () {
-    $scene = s1pScene();
-
-    expect((new PhraseCards)->otherSlot($scene, s1pTerm($scene, 'p1'), 2)?->payload)->toBe([
-        'scene_id' => s1pSceneId(),
-        'frame' => CardObjects::frame($scene, s1pTerm($scene, 'p1')),
-        'filler_index' => 2,
-        'task_native' => 'плечо',
-        'expected_text' => 'It hurts in his shoulder.',
-        'slot_expected' => 'shoulder',
-        'key' => s1pTerm($scene, 'p1')->speakingKey(),
-        'coverage_min' => 0.7,
-    ]);
-});
-
-it('has the learner\'s own value judged on phrase_own_slot, with the partner line the frame is said to', function () {
-    $scene = s1pScene();
-    $cards = new PhraseCards;
-    $p1 = $cards->ownSlot($scene, s1pTerm($scene, 'p1'))?->payload;
-
-    expect($p1)->toBe([
-        'scene_id' => s1pSceneId(),
-        'frame' => CardObjects::frame($scene, s1pTerm($scene, 'p1')),
-        'partner_line' => [
-            'ref' => 'x1', 'text_target' => 'Where does it hurt: his upper back or his lower back?',
-            'text_native' => 'Где болит: вверху спины или в пояснице?', 'audio' => Audio::of('x1'),
-        ],
-        'task_native' => 'У него болит ___.',
-        'key' => s1pTerm($scene, 'p1')->speakingKey(),
-        'coverage_min' => 0.7,
-        'examples' => ['поясница', 'шея', 'плечо'],
-        'chips' => CardObjects::fillers($scene, s1pTerm($scene, 'p1')),
-        'judge' => true,
-    ])
-        // «It started» — two words: all of them.
-        ->and($cards->ownSlot($scene, s1pTerm($scene, 'p2'))?->payload['coverage_min'])->toBe(1.0)
-        // p6 is first asked in x7: the learner speaks first, the line before it is the partner's line of x6.
-        ->and($cards->ownSlot($scene, s1pTerm($scene, 'p6'))?->payload['partner_line'])->toBe([
-            'ref' => 'x6', 'text_target' => 'He should rest and use a heating pad.', 'text_native' => 'Ему нужен покой и грелка.', 'audio' => Audio::of('x6'),
-        ]);
-});
-
-it('gives every one of the nine kinds its exact keys over the deals of both levels', function () {
+it('gives every one of the eight kinds its exact keys over the deals of both levels', function () {
     $keys = [
         'phrase_intro' => ['scene_id', 'frame', 'said'],
         'phrase_assemble' => ['scene_id', 'frame', 'target_native', 'tiles', 'chips', 'expected'],
         'phrase_choose_back' => ['scene_id', 'prompt', 'options', 'correct'],
         'phrase_slot' => ['scene_id', 'frame', 'prompt_native', 'options', 'correct'],
         'phrase_slot_listen' => ['scene_id', 'frame', 'filler_index', 'audio', 'options', 'correct'],
-        'phrase_repeat' => ['scene_id', 'frame', 'filler_index', 'expected_text', 'key', 'coverage_min', 'audio'],
-        'phrase_other_slot' => ['scene_id', 'frame', 'filler_index', 'task_native', 'expected_text', 'slot_expected', 'key', 'coverage_min'],
+        'phrase_repeat' => ['scene_id', 'frame', 'filler_index', 'expected_text', 'key', 'speech_mode', 'audio'],
+        'phrase_other_slot' => ['scene_id', 'frame', 'partner_line', 'key', 'rounds', 'speech_mode', 'own_round'],
         'phrase_combine' => ['scene_id', 'exchange', 'partner_line', 'frames', 'correct_frame', 'chips', 'correct_filler'],
-        'phrase_own_slot' => ['scene_id', 'frame', 'partner_line', 'task_native', 'key', 'coverage_min', 'examples', 'chips', 'judge'],
     ];
     $seen = [];
     foreach ([s1pSceneId(), '01J8SESS10N1APHRASES000011'] as $id) {
@@ -865,6 +860,12 @@ it('gives every one of the nine kinds its exact keys over the deals of both leve
                 }
                 foreach ($draft->payload['options'] ?? [] as $option) {
                     expect(array_slice(array_keys($option), 0, 2))->toBe(['id', 'text']);
+                }
+                foreach ($draft->payload['rounds'] ?? [] as $round) {
+                    expect(array_keys($round))->toBe(['filler_index', 'expected_text', 'task_native']);
+                }
+                if (isset($draft->payload['own_round'])) {
+                    expect(array_keys($draft->payload['own_round']))->toBe(['task_native', 'examples', 'speech_mode', 'judge']);
                 }
                 foreach ($draft->payload['frames'] ?? [] as $frame) {
                     expect(array_keys($frame))->toBe(['ref', 'frame_target', 'frame_native', 'said'])

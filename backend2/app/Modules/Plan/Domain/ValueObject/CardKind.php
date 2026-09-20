@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\ValueObject;
 
 /**
- * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1): twenty-nine kinds, twenty-eight of them dealt —
+ * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1): twenty-eight kinds, twenty-seven of them dealt —
  * `listen_pairs` is reserved in the enum and never dealt (the lesson has no two alike lines to pair; its source is
- * v4.6).
+ * v4.6). `phrase_own_slot` is gone (наряд FIX-2, п. 5): «своё окно» became the last round of «Скажи целиком»
+ * (`phrase_other_slot`), which is now the one way a frame with a window is said aloud, at every level.
  *
  * Every kind belongs to exactly one stage and to exactly one way of being counted, because the way it is counted is
  * what the server lets the client write:
@@ -39,7 +40,6 @@ enum CardKind: string
     case PhraseRepeat = 'phrase_repeat';
     case PhraseOtherSlot = 'phrase_other_slot';
     case PhraseCombine = 'phrase_combine';
-    case PhraseOwnSlot = 'phrase_own_slot';
 
     case DialoguePartner = 'dialogue_partner';
     case DialogueAnswer = 'dialogue_answer';
@@ -66,7 +66,7 @@ enum CardKind: string
         return match ($this) {
             self::WordIntro, self::WordRepeat, self::WordChoose, self::WordListen, self::WordAssemble, self::WordInLine => Stage::Words,
             self::PhraseIntro, self::PhraseAssemble, self::PhraseChooseBack, self::PhraseSlot, self::PhraseSlotListen,
-            self::PhraseRepeat, self::PhraseOtherSlot, self::PhraseCombine, self::PhraseOwnSlot => Stage::Phrases,
+            self::PhraseRepeat, self::PhraseOtherSlot, self::PhraseCombine => Stage::Phrases,
             self::DialoguePartner, self::DialogueAnswer, self::DialogueAsk, self::DialogueRescue => Stage::Dialogue,
             self::ListenDialogue, self::ListenQuestion, self::ListenReview, self::ListenPairs, self::ListenPredict,
             self::ListenPace, self::ListenNumber => Stage::Listen,
@@ -163,7 +163,21 @@ enum CardKind: string
      */
     public function isJudged(): bool
     {
-        return in_array($this, [self::PhraseOwnSlot, self::SpeakAnswer], true);
+        return $this === self::SpeakAnswer;
+    }
+
+    /**
+     * A card that may ASK the judge — `speak_answer`, whose whole pass is the verdict, and «Скажи целиком»
+     * (`phrase_other_slot`), whose LAST round is the learner's own value in the window (наряд FIX-2, п. 5).
+     *
+     * The two are not the same thing, and {@see isJudged()} is what tells them apart: on «Скажи целиком» the round
+     * with one's own word is PRACTICE — «промах или „Пропустить" не создают копию и не возвращают единицу»
+     * (решение архитектора 20.09) — so the verdict is recorded and shown, and the card's own result stays what its
+     * value rounds made it, written by the client like any voice card's.
+     */
+    public function asksJudge(): bool
+    {
+        return $this === self::SpeakAnswer || $this === self::PhraseOtherSlot;
     }
 
     /** Read, heard or tapped through: it produces no answer, so it is walked or skipped, never right or wrong. */

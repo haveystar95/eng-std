@@ -22,6 +22,8 @@ return [
     'abbreviations' => null,
     'question_word_order' => null,
     'function_words' => null,
+    'unstressed_words' => null,
+    'number_words' => null,
     'word_forms' => null,
     'number_pattern' => null,
     'time_pattern' => null,

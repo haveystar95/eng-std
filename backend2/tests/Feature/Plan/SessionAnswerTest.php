@@ -106,7 +106,7 @@ function s1aAskCard(int $step): array
         'own_line' => ['ref' => "x{$step}b", 'text_target' => 'Do we need an X-ray?', 'text_native' => 'Нам нужно сделать рентген?', 'frame_ref' => 'p6', 'filler_index' => 0, 'key' => 'Do we need', 'audio' => Audio::of("x{$step}b")],
         'frame' => ['ref' => 'p6', 'kind' => 'ask', 'frame_target' => 'Do we need ___?', 'frame_native' => 'Нам нужно ___?', 'frame_pronunciation_native' => 'ду ви нид ___', 'slot' => null],
         'modes' => ['chips' => [], 'voice_hint' => 'Do we need an X-ray?', 'voice_blind' => 'Do we need ___?'],
-        'coverage_min' => 0.7,
+        'speech_mode' => 'free',
         'question_native' => 'Когда нужно прийти снова?',
         'options' => [['id' => 'o1', 'text' => 'Завтра утром'], ['id' => 'o2', 'text' => 'Если боль не пройдёт'], ['id' => 'o3', 'text' => 'Через год'], ['id' => 'o4', 'text' => 'Верх или низ спины']],
         'correct' => 'o2',
@@ -174,7 +174,7 @@ it('refuses a result the kind cannot have with 422 plan_card_result_not_allowed,
         [s1aDeal($day, CardKind::WordRepeat, UnitKind::Word, 'v1', 1), 'failed'],
         [s1aDeal($day, CardKind::DialogueAnswer, UnitKind::Exchange, 'x2', 1), 'failed'],
         [s1aDeal($day, CardKind::ListenPace, UnitKind::Day, 'day', 1), 'failed'],
-        [s1aDeal($day, CardKind::PhraseOwnSlot, UnitKind::Phrase, 'p1', 1), 'hinted'],
+        [s1aDeal($day, CardKind::DialogueRescue, UnitKind::Exchange, 'x3', 2), 'hinted'],
         [s1aDeal($day, CardKind::ListenDialogue, UnitKind::Day, 'day', 2), 'hinted'],
     ];
 
@@ -191,10 +191,10 @@ it('refuses a result the kind cannot have with 422 plan_card_result_not_allowed,
 });
 
 // Canon (разд. 3): «Пропустить» → skipped обычным POST — the one thing the client writes on a judged card.
-it('lets a judged card be given up — skipped on phrase_own_slot and speak_answer — and a voice be passed with a hint', function () {
+it('lets a judged card be given up — skipped on speak_answer — and a voice be passed with a hint', function () {
     $day = s1aDay($this);
     $given = [
-        s1aDeal($day, CardKind::PhraseOwnSlot, UnitKind::Phrase, 'p2', 1),
+        s1aDeal($day, CardKind::SpeakAnswer, UnitKind::Exchange, 'x2', 4),
         s1aDeal($day, CardKind::SpeakAnswer, UnitKind::Exchange, 'x1', 1),
     ];
     foreach ($given as $card) {

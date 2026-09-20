@@ -145,10 +145,33 @@ it('answers a judged card with the accepted verdict — passed, or hinted when t
         ->and($card->response())->toBe($response)
         ->and($card->answeredAt())->toEqual(s1Now());
 
-    $hinted = s1Card(CardKind::PhraseOwnSlot, UnitKind::Phrase, 'p2');
+    $hinted = s1Card(CardKind::SpeakAnswer, UnitKind::Exchange, 'x3');
     $hinted->judge(true, true, ['heard' => 'x'], s1Now());
 
     expect($hinted->result())->toBe(CardResult::Hinted);
+});
+
+// Canon (наряд FIX-2, п. 5): «круг „со своим словом" — тренировка: промах или „Пропустить" не создают копию и не
+// возвращают единицу». Catches a verdict that closes «Скажи целиком» over its last round — the card's result is its
+// VALUE rounds', and the client writes it — and a verdict lost when the answer arrives after it (the live `speak_answer
+// x5` of the owner's day 1 kept `{heard, hinted_at}` and nothing of the ruling the learner had just been shown).
+it('keeps the verdict of «Скажи целиком» without answering the card, and does not lose it to the answer', function () {
+    $card = s1Card(CardKind::PhraseOtherSlot, UnitKind::Phrase, 'p2');
+    $card->judge(true, false, ['heard' => 'It started last night', 'judge' => ['accepted' => true, 'by' => 'model']], s1Now());
+
+    expect($card->result())->toBeNull()
+        ->and($card->isAnswered())->toBeFalse()
+        ->and($card->attempts())->toBe(1);
+
+    $card->answer(CardResult::Passed, 3, ['heard' => 'It started last night'], s1Now());
+
+    expect($card->result())->toBe(CardResult::Passed)
+        ->and($card->attempts())->toBe(3)
+        ->and($card->response())->toBe([
+            'heard' => 'It started last night',
+            'judge' => ['accepted' => true, 'by' => 'model'],
+        ])
+        ->and($card->returns())->toBeFalse();
 });
 
 it('counts a rejected attempt and leaves the card open', function () {

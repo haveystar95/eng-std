@@ -623,12 +623,13 @@ it('gives every kind exactly its keys, and the line of the day where the word is
         ->and($cards->intro($scene, $scene->term('v4'))->payload['audio']['line'])->toBe(Audio::of('x5'));
 
     $repeat = $cards->repeat($scene, $scene->term('v1'))->payload;
-    expect(array_keys($repeat))->toBe(['scene_id', 'term', 'expected_text', 'coverage_min', 'audio'])
+    expect(array_keys($repeat))->toBe(['scene_id', 'term', 'expected_text', 'speech_mode', 'audio'])
         ->and(array_keys($repeat['term']))->toBe($term)
         ->and($repeat['expected_text'])->toBe('lower back')
-        ->and($repeat['coverage_min'])->toBe(1.0)
+        // The word is on the screen: it is said as it stands, whatever its length.
+        ->and($repeat['speech_mode'])->toBe('repeat')
         ->and($repeat['audio'])->toBe(['term' => Audio::of('v1')])
-        ->and($cards->repeat($scene, $scene->term('v5'))->payload['coverage_min'])->toBe(0.7);
+        ->and($cards->repeat($scene, $scene->term('v5'))->payload['speech_mode'])->toBe('repeat');
 
     $toNative = $cards->choose($scene, $scene->term('v2'), WordCards::TERM_TO_NATIVE, [])->payload;
     $toTerm = $cards->choose($scene, $scene->term('v2'), WordCards::NATIVE_TO_TERM, [])->payload;

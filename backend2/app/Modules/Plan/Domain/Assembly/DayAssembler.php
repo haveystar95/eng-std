@@ -48,7 +48,7 @@ final class DayAssembler
             ...$this->dialogue->build($scene),
             ...$this->listen->build($scene),
             ...$this->speak->build($scene),
-            ...$this->returns($material, $returned, $nativeTopUp),
+            ...$this->returns($material, $returned, $nativeTopUp, $level),
         ];
 
         return $this->deal($dayId, $drafts, $ids);
@@ -65,13 +65,13 @@ final class DayAssembler
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    public function reviewDay(PlanDayId $dayId, array $scenes, array $material, array $returned, array $nativeTopUp, callable $ids): array
+    public function reviewDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, array $nativeTopUp, callable $ids): array
     {
         $seed = 'review:'.implode(':', array_map(static fn (SceneMaterial $s): string => $s->sceneId->value, $scenes));
 
         $drafts = [
             ...$this->speak->review($scenes, self::returnedExchanges($returned), $seed),
-            ...$this->returns($material, $returned, $nativeTopUp),
+            ...$this->returns($material, $returned, $nativeTopUp, $level),
         ];
 
         return $this->deal($dayId, $drafts, $ids);
@@ -88,11 +88,11 @@ final class DayAssembler
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    public function rehearsalDay(PlanDayId $dayId, array $scenes, array $material, array $returned, callable $ids): array
+    public function rehearsalDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, callable $ids): array
     {
         $drafts = [
             ...$this->speak->rehearsal($scenes, self::returnedExchanges($returned)),
-            ...$this->returns($material, $returned, []),
+            ...$this->returns($material, $returned, [], $level),
         ];
 
         return $this->deal($dayId, $drafts, $ids);
@@ -127,7 +127,7 @@ final class DayAssembler
      * @param  list<DayCard>  $dealt  the day's cards, the failed one and its earlier copies among them
      * @return array<string, mixed>
      */
-    public function again(DayCard $failed, ?SceneMaterial $scene, array $dealt): array
+    public function again(DayCard $failed, ?SceneMaterial $scene, array $dealt, PlanLevel $level): array
     {
         $payload = $failed->payload();
         $phrase = $scene === null || $failed->unitKind() !== UnitKind::Phrase ? null : $scene->phraseTerm($failed->unitRef());
@@ -140,7 +140,7 @@ final class DayAssembler
                     $used[] = $index;
                 }
             }
-            $draft = $this->phrases->again($scene, $phrase, $failed->kind(), PhraseSeries::fillerOf($failed->kind(), $payload), $used);
+            $draft = $this->phrases->again($scene, $phrase, $failed->kind(), PhraseSeries::fillerOf($failed->kind(), $payload), $used, $level);
             $payload = $draft === null ? $payload : $draft->payload;
         }
 
@@ -157,7 +157,7 @@ final class DayAssembler
      * @param  list<string>  $nativeTopUp
      * @return list<CardDraft>
      */
-    private function returns(array $material, array $returned, array $nativeTopUp): array
+    private function returns(array $material, array $returned, array $nativeTopUp, PlanLevel $level): array
     {
         $out = [];
         $seen = [];
@@ -178,7 +178,7 @@ final class DayAssembler
                 UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $nativeTopUp),
                 UnitKind::Phrase => ($term = $scene->phraseTerm($unit->ref)) === null || $term->frame() === null
                     ? null
-                    : $this->phrases->returned($scene, $term, $unit->failedAs, $unit->failedFiller),
+                    : $this->phrases->returned($scene, $term, $unit->failedAs, $unit->failedFiller, $level),
                 UnitKind::Exchange => (($step = SpokenLines::stepOfRef($unit->ref)) === null || ($exchange = $scene->exchange($step)) === null)
                     ? null
                     : $this->speak->speakAnswer($scene, $exchange),

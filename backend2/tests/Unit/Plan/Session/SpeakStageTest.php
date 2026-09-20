@@ -195,7 +195,7 @@ it('writes speak_answer with exactly its keys: the exchange, the line answered, 
     $exchange = $scene->exchange(1);
     $payload = (new SpeakStage)->speakAnswer($scene, $exchange)->payload;
 
-    expect(array_keys($payload))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'task_native', 'frame', 'key', 'coverage_min', 'hint', 'judge'])
+    expect(array_keys($payload))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'task_native', 'frame', 'key', 'speech_mode', 'hint', 'judge'])
         ->and($payload['exchange'])->toBe(['ref' => 'x1', 'step' => 1, 'kind' => 'answer'])
         ->and($payload['partner_line'])->toBe([
             'ref' => 'x1',
@@ -217,9 +217,8 @@ it('writes speak_answer with exactly its keys: the exchange, the line answered, 
         ->and($payload['key'])->toBe($exchange->learner()->speakingKey)
         ->and($payload['hint'])->toBe('It hurts in his ___.')
         ->and($payload['judge'])->toBeTrue()
-        // «It hurts in his» — four counted words: most of them; «It started» — two: all.
-        ->and($payload['coverage_min'])->toBe(0.7)
-        ->and((new SpeakStage)->speakAnswer($scene, $scene->exchange(2))->payload['coverage_min'])->toBe(1.0);
+        // The learner says their own sentence and only the frame's own words are the key.
+        ->and($payload['speech_mode'])->toBe('free');
 
     $frame = $payload['frame'];
     expect(array_keys($frame))->toBe(['ref', 'kind', 'frame_target', 'frame_native', 'frame_pronunciation_native', 'slot'])
@@ -244,35 +243,40 @@ it('writes speak_answer with exactly its keys: the exchange, the line answered, 
         ->and($noSlot['hint'])->toBe("He doesn't have a fever.");
 });
 
-// D-22: an ask is the learner's question — the line it answers is the partner line of the exchange before it.
-it('gives an ask exchange the partner line of the previous exchange, and none when it opens the visit', function () {
+// Canon (наряд FIX-2, п. 3): «вопрос, ожидаемая реплика, подсказка-каркас и обмен для судьи — из одного обмена, ссылка
+// одна (payload.exchange)». Catches the card built from two exchanges at once — D-22 put «What is your dog's name?» over
+// «Do you have anything ___?» on the owner's live day and showed one question on two cards — and an `ask` given a
+// question it has none of: its partner line is the ANSWER, and showing it would hand over what the learner is to say.
+it('builds every speak_answer out of ONE exchange, and gives an ask no question at all', function () {
     $scene = s1spScene();
     $stage = new SpeakStage;
     $x7 = $stage->speakAnswer($scene, $scene->exchange(7))->payload;
     $x8 = $stage->speakAnswer($scene, $scene->exchange(8))->payload;
 
     expect($x7['exchange'])->toBe(['ref' => 'x7', 'step' => 7, 'kind' => 'ask'])
-        ->and($x7['partner_line'])->toBe([
-            'ref' => 'x6',
-            'text_target' => 'He should rest and use a heating pad.',
-            'text_native' => 'Ему нужен покой и грелка.',
-            'audio' => Audio::of('x6'),
-        ])
+        ->and($x7['partner_line'])->toBeNull()
         ->and($x7['own_line']['ref'])->toBe('x7b')
         ->and($x7['own_line']['text_target'])->toBe('Do we need an X-ray?')
         ->and($x7['own_line']['filler_index'])->toBe(0)
+        ->and($x7['task_native'])->toBe($x7['own_line']['text_native'])
         ->and($x7['frame']['kind'])->toBe('ask')
-        ->and($x8['partner_line']['ref'])->toBe('x7')
-        ->and($x8['partner_line']['text_target'])->toBe('No, an X-ray is not needed for a muscle strain.')
-        ->and($x8['own_line']['filler_index'])->toBe(1)
-        // The exchange before is found by the step, not by the instance handed in.
-        ->and($stage->speakAnswer($scene, $scene->exchange(7)->withStep(7))->payload['partner_line']['ref'])->toBe('x6')
-        // An answer keeps its own partner line.
-        ->and($stage->speakAnswer($scene, $scene->exchange(3))->payload['partner_line']['ref'])->toBe('x3');
+        ->and($x8['partner_line'])->toBeNull()
+        ->and($x8['own_line']['filler_index'])->toBe(1);
 
-    $askFirst = s1spScene(1, static fn (Lesson $l): Lesson => $l->withExchanges([$l->exchange(7), $l->exchange(8)]));
-    expect($stage->speakAnswer($askFirst, $askFirst->exchange(7))->payload['partner_line'])->toBeNull()
-        ->and($stage->speakAnswer($askFirst, $askFirst->exchange(8))->payload['partner_line']['ref'])->toBe('x7');
+    // Every card of the day: the question, the expected line and the frame are the exchange `payload.exchange` names.
+    foreach ($stage->build($scene) as $draft) {
+        if ($draft->kind !== CardKind::SpeakAnswer) {
+            continue;
+        }
+        $step = $draft->payload['exchange']['step'];
+        $partner = $scene->exchange($step)?->partner();
+        expect($draft->unitRef)->toBe($draft->payload['exchange']['ref'])
+            ->and($draft->payload['own_line']['ref'])->toBe(SpokenLines::learnerRef($step))
+            ->and($draft->payload['partner_line']['ref'] ?? null)
+            ->toBe($draft->payload['exchange']['kind'] === 'ask' ? null : SpokenLines::partnerRef($step))
+            ->and($draft->payload['partner_line']['text_target'] ?? null)
+            ->toBe($draft->payload['exchange']['kind'] === 'ask' ? null : $partner->textTarget);
+    }
 });
 
 it('deals no speak_answer for a rescue, a line on no frame, a frame with no term or an exchange missing a line', function () {
@@ -336,7 +340,7 @@ it('writes speak_echo and speak_retell with exactly their keys', function () {
             'exchange' => ['ref' => 'x5', 'step' => 5, 'kind' => 'answer'],
             'partner_line' => $x5,
             'expected_text' => 'It looks like a muscle strain, so he should rest and use a heating pad.',
-            'coverage_min' => 0.7,
+            'speech_mode' => 'repeat',
             'pause_ms' => 3000,
         ])
         // «Повтори свою реплику»: the learner's own line, its coverage counted by the client — no judge, no reveal of
@@ -355,7 +359,7 @@ it('writes speak_echo and speak_retell with exactly their keys', function () {
                 'audio' => Audio::of('x8b'),
             ],
             'expected_text' => 'Do we need a follow-up appointment?',
-            'coverage_min' => 0.7,
+            'speech_mode' => 'repeat',
         ])
         ->and($drafts[7]->payload['own_line']['key'])->not->toBeNull();
 });

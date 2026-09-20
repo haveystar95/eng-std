@@ -136,6 +136,7 @@ final class PlanDayController
             'number' => $view->number,
             'status' => $view->status,
             'cards' => array_map(PlanJson::card(...), $view->cards),
+            'speech' => $view->speechRules(),
         ]);
     }
 

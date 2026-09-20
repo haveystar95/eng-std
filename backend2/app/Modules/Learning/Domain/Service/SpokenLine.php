@@ -8,6 +8,8 @@ use App\Modules\Learning\Domain\ValueObject\SpeechGradingRules;
 use App\Modules\Learning\Domain\ValueObject\SpokenCredit;
 use App\Modules\Learning\Domain\ValueObject\SpokenVerdict;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
+use App\Modules\Shared\Domain\Service\SpeechMatch;
+use App\Modules\Shared\Domain\ValueObject\SpeechPack;
 
 /**
  * ЗАЧЁТ ВСЕЙ ФРАЗЫ — одна функция, которой судят и экран, и сервер (наряд SPEECH-2, Ч.3).
@@ -36,11 +38,36 @@ use App\Modules\Shared\Domain\Service\LexicalNormalizer;
  */
 final readonly class SpokenLine
 {
+    /**
+     * ОТ КАКОГО ЧИСЛА СЛОВ реплика перестаёт быть «словом» и становится фразой — та точка, с которой устный ответ
+     * сравнивают покрытием, а не равенством (BUGFIX-2 Ч.3б: «Where do you see yourself in five years?» — одна строка
+     * в каталоге и целое предложение в микрофоне). Зеркалится клиентским `SpokenAnswer.longTermWords`, который по
+     * тому же числу выбирает ОКНО записи: «длинность» определена один раз.
+     */
+    public const LONG_UTTERANCE_WORDS = 3;
+
+    /** Достаточно ли длинный ожидаемый ответ, чтобы судить его покрытием? {@see LONG_UTTERANCE_WORDS}. */
+    public static function isLongUtterance(string $expected): bool
+    {
+        $trimmed = trim($expected);
+
+        return $trimmed !== '' && count(preg_split('/\s+/', $trimmed) ?: []) >= self::LONG_UTTERANCE_WORDS;
+    }
+
     public function __construct(
-        private SpokenCoverage $coverage = new SpokenCoverage(),
+        private SpeechMatch $speech = new SpeechMatch(),
         private LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private SpeechNormalization $abbreviations = new SpeechNormalization(),
     ) {}
+
+    /**
+     * КАКИЕ СЛОВА ЯЗЫКА ТУТ ИЗВЕСТНЫ: никакие. Коллекция бывает на любом языке, пакетов у этого модуля нет, и
+     * артикли сняты с обеих сторон раньше ({@see stripArticles()}) — общему правилу прощать здесь нечего.
+     */
+    private function pack(): SpeechPack
+    {
+        return SpeechPack::none();
+    }
 
     /**
      * @param  string  $transcript  что услышал распознаватель, сырым
@@ -84,8 +111,8 @@ final readonly class SpokenLine
         if ($matched === null) {
             return new SpokenVerdict(
                 SpokenCredit::Wrong,
-                coverage: $this->coverage->ratio($heard, $target),
-                missing: $this->forReading($this->coverage->missing($heard, $this->stripArticleWords($line))),
+                coverage: $this->speech->ratio($heard, $target, $this->pack()),
+                missing: $this->forReading($this->speech->missing($heard, $this->stripArticleWords($line), $this->pack())),
                 threshold: 'key_and_rest',
                 normalized: $heard,
             );
@@ -111,7 +138,7 @@ final readonly class SpokenLine
         if (! $this->isRunOf($matched, $target) && $this->wordCount($matched) >= 2) {
             return new SpokenVerdict(
                 SpokenCredit::Correct,
-                $this->coverage->ratio($heard, $matched),
+                $this->speech->ratio($heard, $matched, $this->pack()),
                 threshold: 'key_and_rest',
                 normalized: $heard,
             );
@@ -144,8 +171,8 @@ final readonly class SpokenLine
         SpeechGradingRules $rules,
         bool $forgiveFiller,
     ): SpokenVerdict {
-        $ratio = $this->coverage->ratio($heard, $target);
-        $missing = $this->forReading($this->coverage->missing($heard, $displayed));
+        $ratio = $this->speech->ratio($heard, $target, $this->pack());
+        $missing = $this->forReading($this->speech->missing($heard, $displayed, $this->pack()));
 
         // ОДНО ПРОПУЩЕННОЕ СЛОВО-СВЯЗКА ПРОЩАЕТСЯ (Ч.3.1). Артикли уже сняты с обеих сторон, а
         // предлог или союз распознаватель ест по той же причине — он безударный. Поблажка стоит
@@ -170,7 +197,7 @@ final readonly class SpokenLine
 
     /**
      * КАКОЙ ключ прозвучал — канонизированным, потому что дальше по нему считают. Покрытием, тем
-     * же, что и всегда ({@see SpokenCoverage}); первый подошедший и есть ответ, порядок списка —
+     * же, что и всегда ({@see SpeechMatch}); первый подошедший и есть ответ, порядок списка —
      * это порядок предпочтения (сначала сам `speaking_key`, потом упрощённые формы).
      *
      * @param  list<string>  $keys
@@ -182,7 +209,7 @@ final readonly class SpokenLine
             if ($canonical === '') {
                 continue;
             }
-            if ($this->coverage->ratio($heard, $canonical) >= $rules->wholeLine) {
+            if ($this->speech->ratio($heard, $canonical, $this->pack()) >= $rules->wholeLine) {
                 return $canonical;
             }
         }

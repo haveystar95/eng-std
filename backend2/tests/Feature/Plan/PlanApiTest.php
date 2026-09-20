@@ -147,8 +147,12 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
     expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked'])
         ->and($room['window']['day']['goals'])->toHaveCount(3)
         ->and($room['program'])->not->toBeEmpty()
-        // The old day room's own keys went with it (DAY-UI-2): the goals live in the window now.
-        ->and(array_keys($room))->toBe(['plan_id', 'day', 'scene', 'stages', 'metrics', 'program', 'window'])
+        // The old day room's own keys went with it (DAY-UI-2): the goals live in the window now. `speech` — the
+        // target language's spoken rules, once for the whole day (наряд FIX-2, п. 2).
+        ->and(array_keys($room))->toBe(['plan_id', 'day', 'scene', 'stages', 'metrics', 'program', 'window', 'speech'])
+        ->and(array_keys($room['speech']))->toBe(['unstressed_words', 'articles', 'abbreviations', 'number_words', 'repeat_misses'])
+        ->and($room['speech']['repeat_misses'])->toBe(0)
+        ->and($room['speech']['articles'])->toBe(['a', 'an', 'the'])
         ->and(array_keys($room['program'][0]))->toBe(['unit_kind', 'source', 'state']);
 
     // Closing a stage with cards still open is refused.

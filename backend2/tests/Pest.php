@@ -628,3 +628,25 @@ function planCircleStarts(): array
 
     return $found;
 }
+
+/**
+ * The bar Learning's whole-line reading is held to, over the ONE rule in the kernel (наряд FIX-2, п. 2): this module
+ * has no language pack — a collection is in any language, and its articles are taken off both sides before the count
+ * — so nothing is forgiven here beyond what the rule forgives everyone.
+ */
+function learningCovers(string $heard, string $expected): bool
+{
+    return (new App\Modules\Shared\Domain\Service\SpeechMatch)->covers(
+        $heard, $expected,
+        (new App\Modules\Learning\Domain\ValueObject\SpeechGradingRules)->wholeLine,
+        App\Modules\Shared\Domain\ValueObject\SpeechPack::none(),
+    );
+}
+
+/** The share of the expected sentence's words heard, by the same rule. */
+function learningRatio(string $heard, string $expected): float
+{
+    return (new App\Modules\Shared\Domain\Service\SpeechMatch)->ratio(
+        $heard, $expected, App\Modules\Shared\Domain\ValueObject\SpeechPack::none(),
+    );
+}

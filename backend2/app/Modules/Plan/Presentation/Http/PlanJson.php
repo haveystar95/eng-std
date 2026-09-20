@@ -220,6 +220,7 @@ final class PlanJson
                 'state' => $u->state,
             ], $r->program),
             'window' => self::window($r->window),
+            'speech' => $r->speechRules(),
         ];
     }
 

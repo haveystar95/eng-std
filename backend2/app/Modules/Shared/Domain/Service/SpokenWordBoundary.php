@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Learning\Domain\Service;
+namespace App\Modules\Shared\Domain\Service;
 
 /**
  * A SPACE IS NOT A MISTAKE — where one word ends and the next begins is the recogniser's guess.
@@ -76,7 +76,7 @@ final class SpokenWordBoundary
      * Two strings that differ only in where the spaces fall.
      *
      * The equality path's half of the same tolerance — a term short enough to be compared whole
-     * ({@see SpokenCoverage::LONG_UTTERANCE_WORDS}) is a phrase like «without utilities», and the
+     * ({@see \App\Modules\Learning\Domain\Service\SpokenLine::LONG_UTTERANCE_WORDS}) is a phrase like «without utilities», and the
      * recogniser glues those exactly as readily as it glues a sentence's.
      */
     public function equalIgnoringBoundaries(string $a, string $b): bool

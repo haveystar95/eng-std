@@ -23,8 +23,9 @@ use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
- * Judges one attempt at a card judged by meaning — `phrase_own_slot` and `speak_answer` (наряд SESSION-1a, разд. 4;
- * `speak_retell` left the set with наряд BACK-TAILS-1 §1.1) — and writes the ruling on the card.
+ * Judges one spoken attempt a card asks the judge for — `speak_answer` and the own-word round of «Скажи целиком»
+ * (`phrase_other_slot`, наряд FIX-2 п. 5; `speak_retell` left the set with наряд BACK-TAILS-1 §1.1) — and writes the
+ * ruling on the card.
  *
  * In three steps, because the ruling may take a model's eight seconds and a row lock must not: the card is found and
  * checked WITHOUT a lock (whose plan, which day, which kind, still open); the judge rules outside any transaction
@@ -32,7 +33,7 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * the meantime, and a replay is refused, never counted twice — and the attempt is written with the day's numbers
  * refolded from its cards, as every answer refolds them.
  *
- * `hinted` is the client's word that the frame was on screen before the attempt; `phrase_own_slot` always shows its
+ * `hinted` is the client's word that the frame was on screen before the attempt; «Скажи целиком» always shows its
  * frame, so there it means nothing and is not kept (D-16).
  */
 final readonly class JudgeCardHandler
@@ -57,14 +58,14 @@ final readonly class JudgeCardHandler
         }
 
         $card = $this->cardOf($day, $command->cardId, forUpdate: false);
-        if (! $card->kind()->isJudged()) {
+        if (! $card->kind()->asksJudge()) {
             throw CardNotJudged::of($card->kind());
         }
         if ($card->isAnswered()) {
             throw CardAlreadyAnswered::withId($card->id());
         }
 
-        $hinted = $command->hinted && $card->kind() !== CardKind::PhraseOwnSlot;
+        $hinted = $command->hinted && $card->kind() !== CardKind::PhraseOtherSlot;
         $verdict = $this->judge->judge($plan, $card, $command->heard, $now);
 
         $judged = $this->tx->run(function () use ($command, $day, $verdict, $hinted, $now): DayCard {

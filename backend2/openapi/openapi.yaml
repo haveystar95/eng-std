@@ -2161,8 +2161,10 @@ paths:
             never `failed`:
             two attempts without coverage are a skip — a lapse only on `phrase_repeat` and
             `phrase_other_slot` (SESSION-1d, п. 327: the copy and the return above), nothing on the rest;
-          * judged (`phrase_own_slot`, `speak_answer`) — only `skipped`: the pass is
-            the judge's (`POST …/judge`), never the client's word;
+          * judged (`speak_answer`) — only `skipped`: the pass is the judge's (`POST …/judge`), never
+            the client's word. `phrase_other_slot` ASKS the judge on its last round and is not judged
+            BY it (наряд FIX-2, п. 5): that round is practice, and the card's own result is its value
+            rounds', written by the client like any voice card's;
           * walkthrough (`word_intro`, `phrase_intro`, `dialogue_rescue`, `listen_dialogue`,
             `listen_review`, `listen_pace`) — `passed` or `skipped`, never right or wrong.
       parameters:
@@ -2238,8 +2240,9 @@ paths:
       tags: [Plans]
       summary: «Судья окна» — the server's verdict on one spoken attempt
       description: >-
-        The one pass a client cannot write itself (наряд SESSION-1a, разд. 4). `phrase_own_slot` and
-        `speak_answer` are judged by MEANING: send what the recogniser heard
+        The one pass a client cannot write itself (наряд SESSION-1a, разд. 4). `speak_answer` and the
+        own-word round of «Скажи целиком» (`phrase_other_slot`, наряд FIX-2 п. 5) are judged by
+        MEANING: send what the recogniser heard
         (`heard` — present, and possibly empty: silence is an attempt too) and whether the frame was
         on screen before the attempt (`hinted`), and the server rules. Every other kind is 422
         `plan_card_not_judged` — `speak_retell` among them since наряд BACK-TAILS-1 §1.1: it says the
@@ -2247,7 +2250,8 @@ paths:
 
 
         The code rules first, and for free: the words of the frame outside its slot must be covered
-        (the card's `payload.coverage_min`) — otherwise `accepted: false`, `reason_native` «Каркас не
+        (the `free` mode of the one speech rule, §`speech` of the day) — otherwise `accepted: false`,
+        `reason_native` «Каркас не
         прозвучал — скажи его целиком», and no model is called; a frame with no slot, or a value the
         lesson knows heard whole in the slot, is accepted by the code. Only what is left goes to the
         model — one call, eight seconds, a daily cap per learner. A model that is silent, answers off
@@ -2255,10 +2259,13 @@ paths:
         heard beyond the frame as `slot_value`: a learner who said the frame is not failed by a vendor.
 
 
-        `accepted` → the card is answered: `result` is `hinted` when `hinted` was true, else `passed`
-        (`phrase_own_slot` always shows its frame, so there `hinted` means nothing and is not kept).
-        Not accepted → `attempts` is one more and `result` stays null: «Ещё раз» is another call to
-        this endpoint, «Пропустить» an ordinary `POST …/answer` with `skipped`.
+        `accepted` on `speak_answer` → the card is answered: `result` is `hinted` when `hinted` was
+        true, else `passed`. On «Скажи целиком» the verdict is RECORDED and the card stays open
+        (`result: null`): its own-word round is practice, and the card's result comes with the
+        ordinary `POST …/answer` (`hinted` means nothing there — the frame is always on screen — and
+        is not kept). Not accepted → `attempts` is one more and `result` stays null: «Ещё раз» is
+        another call to this endpoint, «Пропустить» an ordinary `POST …/answer` with `skipped`.
+        A verdict already written is kept when the answer arrives: `response.judge` survives it.
       parameters:
         - $ref: '#/components/parameters/PlanId'
         - $ref: '#/components/parameters/PlanDayNumber'
@@ -3359,7 +3366,7 @@ components:
         The day: the tab's plate reads `stages`, `metrics` and `program`, the session `day` and
         `scene`, the day window its own block `window` (DAY-UI-2). The old day room's `goals_native`,
         `sheet_available`, the unit texts and the first-try/hardest metrics went with that room.
-      required: [plan_id, day, stages, program, window]
+      required: [plan_id, day, stages, program, window, speech]
       properties:
         plan_id: { type: string }
         day: { $ref: '#/components/schemas/PlanDayRoute' }
@@ -3384,6 +3391,7 @@ components:
             opened, every unit is `pending`.
           items: { $ref: '#/components/schemas/PlanProgramUnit' }
         window: { $ref: '#/components/schemas/PlanDayWindow' }
+        speech: { $ref: '#/components/schemas/PlanSpeechRules' }
 
     PlanCard:
       type: object
@@ -3422,7 +3430,7 @@ components:
           enum:
             [word_intro, word_repeat, word_choose, word_listen, word_assemble, word_in_line,
              phrase_intro, phrase_assemble, phrase_choose_back, phrase_slot, phrase_slot_listen,
-             phrase_repeat, phrase_other_slot, phrase_combine, phrase_own_slot,
+             phrase_repeat, phrase_other_slot, phrase_combine,
              dialogue_partner, dialogue_answer, dialogue_ask, dialogue_rescue,
              listen_dialogue, listen_question, listen_review, listen_pairs, listen_predict,
              listen_pace, listen_number,
@@ -3454,7 +3462,6 @@ components:
             - $ref: '#/components/schemas/PlanCardPayloadPhraseRepeat'
             - $ref: '#/components/schemas/PlanCardPayloadPhraseOtherSlot'
             - $ref: '#/components/schemas/PlanCardPayloadPhraseCombine'
-            - $ref: '#/components/schemas/PlanCardPayloadPhraseOwnSlot'
             - $ref: '#/components/schemas/PlanCardPayloadDialoguePartner'
             - $ref: '#/components/schemas/PlanCardPayloadDialogueAnswer'
             - $ref: '#/components/schemas/PlanCardPayloadDialogueAsk'
@@ -3754,12 +3761,12 @@ components:
       title: word_repeat
       additionalProperties: false
       description: 'Повтори слово вслух (31-2). Клиент зачитывает сам — покрытие услышанного по `expected_text`; две попытки без зачёта — `skipped`.'
-      required: [scene_id, term, expected_text, coverage_min, audio]
+      required: [scene_id, term, expected_text, speech_mode, audio]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         term: { $ref: '#/components/schemas/PlanCardTerm' }
         expected_text: { type: string, description: 'Что должно прозвучать — слово на языке цели' }
-        coverage_min: { type: number, description: 'Доля слов `expected_text`, которой хватает для зачёта: 1.0 для двух слов и меньше, иначе 0.7' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         audio:
           type: object
           description: 'Образец — как слово звучит'
@@ -3966,35 +3973,68 @@ components:
       title: phrase_repeat
       additionalProperties: false
       description: 'Повтори фразу вслух (32-6). Клиент зачитывает сам — покрытие услышанного по `expected_text`; две попытки без зачёта — `skipped`, и это провал каркаса (копия с другим наполнением, второй — возврат; SESSION-1d, п. 327).'
-      required: [scene_id, frame, filler_index, expected_text, key, coverage_min, audio]
+      required: [scene_id, frame, filler_index, expected_text, key, speech_mode, audio]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         frame: { $ref: '#/components/schemas/PlanCardFrame' }
         filler_index: { type: [integer, 'null'], description: 'С каким наполнением сказать фразу — у раздачи дня ещё не сказанным учеником (у каркаса с одним наполнением — сказанным в диалоге); null у каркаса без окна' }
         expected_text: { type: string, description: 'Что должно прозвучать — каркас с этим наполнением целиком; `audio` звучит с ним же' }
         key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
-        coverage_min: { type: number, description: 'Доля слов `expected_text` для зачёта: 1.0 для двух слов и меньше, иначе 0.7' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         audio: { $ref: '#/components/schemas/PlanCardAudio' }
 
     PlanCardPayloadPhraseOtherSlot:
       type: object
-      title: phrase_other_slot
+      title: 'phrase_other_slot · «Скажи целиком»'
       additionalProperties: false
       description: >-
-        Тот же каркас с ДРУГИМ наполнением (32-7), заданным переводом; звука у карточки нет. Клиент
-        зачитывает сам: покрытие каркаса по `expected_text` И все слова `slot_expected` в услышанном.
-        Две попытки без зачёта — `skipped`, и это провал каркаса (копия с другим наполнением, второй —
-        возврат; SESSION-1d, п. 327).
-      required: [scene_id, frame, filler_index, task_native, expected_text, slot_expected, key, coverage_min]
+        «Скажи целиком» (32-7) — единственный способ произнести каркас С ОКНОМ, на любом уровне (наряд
+        FIX-2, п. 5). Карточка идёт КРУГАМИ: значение стоит в окне, ученик говорит фразу целиком,
+        следующее значение встаёт в окно; ПОСЛЕДНИЙ круг — своё слово ученика, и его судит сервер
+        (`own_round.judge`, `POST …/judge`). Уровни различаются только числом кругов: beginner — два
+        значения, intermediate — все видимые наполнения окна.
+
+        Круги значений зачитывает клиент (`speech_mode: repeat` — весь текст на экране). Две попытки
+        без зачёта на КРУГЕ ЗНАЧЕНИЯ — `skipped`, и это провал каркаса (копия карточки целиком,
+        второй раз — возврат; SESSION-1d, п. 327). Круг «со своим словом» — ТРЕНИРОВКА: промах или
+        «Пропустить» на нём не создают копию и не возвращают единицу, и вердикт судьи карточку не
+        закрывает — итог карточки пишет клиент по кругам значений.
+      required: [scene_id, frame, partner_line, key, rounds, speech_mode, own_round]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         frame: { $ref: '#/components/schemas/PlanCardFrame' }
-        filler_index: { type: integer, minimum: 0, description: 'Какое наполнение просят — никогда не то, что звучит в диалоге; у раздачи дня — не занятое узнаваниями каркаса, когда такое есть' }
-        task_native: { type: string, description: 'Значение окна на родном — задание' }
-        expected_text: { type: string, description: 'Что должно прозвучать целиком — каркас с этим наполнением' }
-        slot_expected: { type: string, description: 'Значение окна на языке цели — оно должно прозвучать целиком' }
+        partner_line:
+          description: 'Реплика партнёра, рядом с которой каркас звучит в диалоге — её читает СУДЬЯ (`PARTNER_LINE`); на экране её нет (кадр 32-7). Null, если такой реплики нет'
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardLine'
+            - type: 'null'
         key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
-        coverage_min: { type: number, description: 'Доля слов каркаса для зачёта — 1.0 или 0.7' }
+        rounds:
+          type: array
+          minItems: 1
+          description: 'Круги значений, по порядку окна: сказанное диалогом первым, остальные по индексу. Beginner берёт первые два, intermediate — все'
+          items:
+            type: object
+            additionalProperties: false
+            required: [filler_index, expected_text, task_native]
+            properties:
+              filler_index: { type: integer, minimum: 0, description: 'Значение окна этого круга' }
+              expected_text: { type: string, description: 'Что должно прозвучать — каркас с этим значением целиком' }
+              task_native: { type: string, description: 'Та же фраза на родном — задание круга' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
+        own_round:
+          type: object
+          additionalProperties: false
+          description: 'Последний круг — своё слово в окне, зачёт по смыслу сервером'
+          required: [task_native, examples, speech_mode, judge]
+          properties:
+            task_native: { type: string, description: 'Каркас с окном на родном — задание круга' }
+            examples:
+              type: array
+              description: 'Наполнения урока на родном — показать как примеры, не как ответы'
+              items: { type: string }
+            speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
+            judge: { type: boolean, description: 'Всегда true: этот круг зачитывает `POST …/judge`' }
 
     PlanCardPayloadPhraseCombine:
       type: object
@@ -4040,35 +4080,6 @@ components:
           items: { $ref: '#/components/schemas/PlanCardFiller' }
         correct_filler: { type: [integer, 'null'], description: 'Каким наполнением ответили в этом обмене — для разбора после выбора; null, если не определено' }
 
-    PlanCardPayloadPhraseOwnSlot:
-      type: object
-      title: phrase_own_slot
-      additionalProperties: false
-      description: >-
-        Своё значение в окне (32-9), говорят вслух: каркас открыт с самого начала, наполнения — только
-        примеры. Зачёт ТОЛЬКО сервером (`judge: true`, `POST …/judge`); клиенту остаётся «Пропустить».
-      required: [scene_id, frame, partner_line, task_native, key, coverage_min, examples, chips, judge]
-      properties:
-        scene_id: { type: string, description: 'Сцена карточки' }
-        frame: { $ref: '#/components/schemas/PlanCardFrame' }
-        partner_line:
-          description: 'Реплика партнёра, в ответ на которую каркас звучит в диалоге; null, если такой нет'
-          oneOf:
-            - $ref: '#/components/schemas/PlanCardLine'
-            - type: 'null'
-        task_native: { type: string, description: 'Каркас с окном на родном — задание' }
-        key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
-        coverage_min: { type: number, description: 'Доля слов каркаса, которую судья требует прежде, чем смотреть на окно' }
-        examples:
-          type: array
-          description: 'Наполнения урока на родном — показать как примеры, не как ответы'
-          items: { type: string }
-        chips:
-          type: array
-          description: 'Те же наполнения целиком — чипами, если ученик не хочет придумывать своё'
-          items: { $ref: '#/components/schemas/PlanCardFiller' }
-        judge: { type: boolean, description: 'Всегда true: зачёт этой карточки пишет сервер' }
-
     PlanCardPayloadDialoguePartner:
       type: object
       title: dialogue_partner
@@ -4094,7 +4105,7 @@ components:
         Ответь партнёру своей репликой (33-2 / 33-3 / 33-4). Режим выбирает клиент: beginner — чипы,
         intermediate — голос по подсказке, «Без подсказок» — голос по пустому каркасу. Зачёт у клиента:
         покрытие слов каркаса; окно — любое.
-      required: [scene_id, exchange, partner_line, own_line, frame, modes, coverage_min]
+      required: [scene_id, exchange, partner_line, own_line, frame, modes, speech_mode]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange:
@@ -4116,7 +4127,7 @@ components:
               items: { $ref: '#/components/schemas/PlanCardFiller' }
             voice_hint: { type: string, description: 'Своя реплика целиком — подсказка на экране, пока говорят' }
             voice_blind: { type: string, description: 'Каркас с пустым окном — то же без подсказки' }
-        coverage_min: { type: number, description: 'Доля слов каркаса (без окна) для зачёта — 1.0 или 0.7' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
 
     PlanCardPayloadDialogueAsk:
       type: object
@@ -4136,7 +4147,7 @@ components:
         собрать (варианты совпали по тексту, и выбирать не из чего), карточка раздаётся без них —
         реплика ученика есть, а спрашивать нечего. Обязательными их не делает `required`: иначе
         сервер отдавал бы payload мимо своей же схемы (терпимость сборки, `docs/plan-v2.md` §6).
-      required: [scene_id, exchange, partner_line, own_line, frame, modes, coverage_min]
+      required: [scene_id, exchange, partner_line, own_line, frame, modes, speech_mode]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange:
@@ -4158,7 +4169,7 @@ components:
               items: { $ref: '#/components/schemas/PlanCardFiller' }
             voice_hint: { type: string, description: 'Своя реплика целиком — подсказка на экране' }
             voice_blind: { type: string, description: 'Каркас с пустым окном' }
-        coverage_min: { type: number, description: 'Доля слов каркаса (без окна) для зачёта' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         question_native: { type: string, description: 'Вопрос проверки на родном — про ответ агента, звучащий на этой же карточке' }
         options:
           type: array
@@ -4173,7 +4184,7 @@ components:
       description: >-
         «Не понял» (33-6): ученик просит повторить, партнёр говорит то же медленнее. Микрофона у кадра
         нет — карточку проходят насквозь: `passed` или `skipped`.
-      required: [scene_id, exchange, asked_line, rescue_line, partner_repeat, slow_rate, expected_text, coverage_min]
+      required: [scene_id, exchange, asked_line, rescue_line, partner_repeat, slow_rate, expected_text, speech_mode]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange: { $ref: '#/components/schemas/PlanCardExchange' }
@@ -4186,7 +4197,7 @@ components:
         partner_repeat: { $ref: '#/components/schemas/PlanCardLine' }
         slow_rate: { type: number, description: 'Темп, которым переигрывают реплику партнёра — 0.75' }
         expected_text: { type: string, description: 'Что говорит ученик — реплика-выручалка целиком' }
-        coverage_min: { type: number, description: 'Доля её слов, если карточку всё же проходят голосом' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
 
     PlanCardPayloadListenDialogue:
       type: object
@@ -4325,7 +4336,7 @@ components:
         Ответь сам (35-2): звучит реплика партнёра, ученик говорит свою по смыслу; каркас — подсказка,
         которую открывают по кнопке или после 5 с молчания. Зачёт ТОЛЬКО сервером (`judge: true`,
         `POST …/judge`, `hinted: true`, если каркас открывали); клиенту остаётся «Пропустить».
-      required: [scene_id, exchange, partner_line, own_line, task_native, frame, key, coverage_min, hint, judge]
+      required: [scene_id, exchange, partner_line, own_line, task_native, frame, key, speech_mode, hint, judge]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange: { $ref: '#/components/schemas/PlanCardExchange' }
@@ -4338,7 +4349,7 @@ components:
         task_native: { type: string, description: 'Что нужно сказать, на родном — задание' }
         frame: { $ref: '#/components/schemas/PlanCardFrame' }
         key: { type: [string, 'null'], description: 'Ключ произнесения — слова, с которых просят начать' }
-        coverage_min: { type: number, description: 'Доля слов каркаса, которую судья требует прежде, чем смотреть на окно' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         hint: { type: string, description: 'Каркас с окном — это и открывают подсказкой' }
         judge: { type: boolean, description: 'Всегда true: зачёт этой карточки пишет сервер' }
 
@@ -4347,13 +4358,13 @@ components:
       title: speak_echo
       additionalProperties: false
       description: 'Повтори за партнёром (35-3): реплика звучит, текст скрыт до ответа, после паузы ученик говорит её сам. Клиент зачитывает сам по покрытию.'
-      required: [scene_id, exchange, partner_line, expected_text, coverage_min, pause_ms]
+      required: [scene_id, exchange, partner_line, expected_text, speech_mode, pause_ms]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange: { $ref: '#/components/schemas/PlanCardExchange' }
         partner_line: { $ref: '#/components/schemas/PlanCardLine' }
         expected_text: { type: string, description: 'Что должно прозвучать — реплика целиком' }
-        coverage_min: { type: number, description: 'Доля её слов для зачёта — 0.7, какой бы длинной реплика ни была' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         pause_ms: { type: integer, description: 'Пауза после звука, прежде чем ждать речь — 3000 мс' }
 
     PlanCardPayloadSpeakRetell:
@@ -4363,20 +4374,20 @@ components:
       description: >-
         «Повтори свою реплику» (35-4, наряд BACK-TAILS-1 §1.1): звучит СВОЯ реплика ученика, её текст
         цели закрыт, перевод оставлен подсказкой смысла — ученик говорит её вслух, и текст цели
-        открывается после попытки. Зачёт у клиента: покрытие сказанного целиком по `coverage_min`,
+        открывается после попытки. Зачёт у клиента: вся реплика по `speech_mode`,
         без сети. Сервер эту карточку не судит — `POST …/judge` на неё отвечает 422
         `plan_card_not_judged`.
-      required: [scene_id, exchange, own_line, expected_text, coverage_min]
+      required: [scene_id, exchange, own_line, expected_text, speech_mode]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange: { $ref: '#/components/schemas/PlanCardExchange' }
         own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
         expected_text: { type: string, description: 'Что должно прозвучать — своя реплика целиком' }
-        coverage_min: { type: number, description: 'Доля её слов для зачёта — 1.0 или 0.7' }
+        speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
 
     PlanDayCards:
       type: object
-      required: [plan_id, day_id, number, status, cards]
+      required: [plan_id, day_id, number, status, cards, speech]
       properties:
         plan_id: { type: string }
         day_id: { type: string }
@@ -4386,6 +4397,59 @@ components:
           type: array
           description: In walking order — stage by stage, position by position
           items: { $ref: '#/components/schemas/PlanCard' }
+        speech: { $ref: '#/components/schemas/PlanSpeechRules' }
+
+    PlanSpeechRules:
+      type: object
+      additionalProperties: false
+      description: >-
+        ЧТО СРАВНЕНИЕ РЕЧИ ЗНАЕТ О ЯЗЫКЕ ЦЕЛИ (наряд FIX-2, п. 2) — четыре списка из пакета языка и
+        одна ручка, один раз на день. Они едут сюда, а не в каждую карточку, потому что относятся к
+        языку плана, а не к тренажёру, и потому что телефон обязан судить попытку ТЕМ ЖЕ правилом,
+        что и сервер: не своей копией английского в Dart, а пакетом, который сервер и читает.
+
+
+        Язык, для которого пакет не написан, отдаёт пустые списки — тогда не прощается ничего.
+      required: [unstressed_words, articles, abbreviations, number_words, repeat_misses]
+      properties:
+        unstressed_words:
+          type: array
+          description: 'Слова, которые ест распознаватель (артикли, предлоги, вспомогательные глаголы): в режиме `repeat` они не считаются НИ в ожидании, НИ в услышанном'
+          items: { type: string }
+        articles:
+          type: array
+          description: 'Артикли — их прощает режим `free`, где порог это ДОЛЯ слов и снимать все служебные было бы нечего считать'
+          items: { type: string }
+        abbreviations:
+          type: array
+          description: 'Сокращения как они ПИШУТСЯ («p.m.»): точки внутри сворачиваются в буквы перед любым сравнением, иначе «3 p.m.» это три слова'
+          items: { type: string }
+        number_words:
+          type: object
+          description: 'Числительное → его цифры («three» → «3»): распознаватель пишет число и так и так, а человек сказал одно и то же'
+          additionalProperties: { type: string }
+        repeat_misses:
+          type: integer
+          minimum: 0
+          description: 'Сколько СМЫСЛОВЫХ слов реплики на экране разрешено потерять в режиме `repeat` — ноль, пока телефон не докажет обратного (`plan.speech.repeat_misses`)'
+
+    PlanSpeechMode:
+      type: string
+      enum: [repeat, free]
+      description: >-
+        Каким правилом судится сказанное (наряд FIX-2, п. 2) — вместо прежней доли `coverage_min`.
+
+
+        `repeat` — ТЕКСТ НА ЭКРАНЕ, его читают или повторяют: все смысловые слова ожидаемого текста,
+        по порядку; служебные слова пакета (`speech.unstressed_words`) не считаются ни в ожидании, ни
+        в услышанном, лишние слова вокруг не мешают, а `speech.repeat_misses` говорит, сколько
+        смысловых слов всё же прощается. Доля здесь была неверной меркой: «He has a rush» это 70 % от
+        «He has a rash» и другое предложение.
+
+
+        `free` — ученик говорит СВОЁ предложение, и проверяется только КЛЮЧ: доля слов, которых
+        карточка просит (у плана — слова каркаса вне окна), всё у короткого ключа и 70 % у длинного,
+        мультимножеством и без учёта порядка.
 
     PlanAnswerOutcome:
       type: object

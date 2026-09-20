@@ -168,7 +168,7 @@ it('deals an ask as one card: the learner\'s own line, the partner\'s answer, an
         ->and(array_column($ask['options'], 'id'))->toBe(['o1', 'o2', 'o3', 'o4'])
         ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind->value === 'dialogue_partner' && $d->unitRef === 'x8'))->toBe([])
         // The voice keys stay: it is still the card the learner says their line on.
-        ->and(array_keys($ask))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'coverage_min', 'question_native', 'options', 'correct']);
+        ->and(array_keys($ask))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'speech_mode', 'question_native', 'options', 'correct']);
 });
 
 // Canon (наряд BACK-TAILS-1 §1.5, терпимость §6): «три ключа проверки приходят вместе или не приходят вовсе». Catches
@@ -191,7 +191,7 @@ it('deals the ask without the three check keys when its check cannot be built, a
     $alone = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => [$alike(s1dlgStep($x, 8))->withStep(1)]));
     $ask = s1dlgCard($alone, 'dialogue_ask', 'x1')->payload;
 
-    expect(array_keys($ask))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'coverage_min'])
+    expect(array_keys($ask))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'speech_mode'])
         ->and(array_intersect(['question_native', 'options', 'correct'], array_keys($ask)))->toBe([]);
 });
 
@@ -225,7 +225,7 @@ it('deals a rescue once — inside the answer before it, at its own place after 
             ],
             'slow_rate' => 0.75,
             'expected_text' => 'Sorry, could you say that more slowly?',
-            'coverage_min' => 0.7,
+            'speech_mode' => 'repeat',
         ]);
 
     // After an ask the rescue is not pulled inside anything: ask, partner, rescue — in the order of the visit.
@@ -337,9 +337,9 @@ it('gives the voice cards every mode — the fillers as chips, the line as the h
         ->and($x1['modes']['voice_hint'])->toBe($x1['own_line']['text_target'])
         ->and($x1['modes']['voice_blind'])->toBe('It hurts in his ___.')
         ->and($x1['modes']['voice_blind'])->toBe($x1['frame']['frame_target'])
-        // «It hurts in his» — four words: most of them; «It started» — two: all of them.
-        ->and($x1['coverage_min'])->toBe(0.7)
-        ->and($x2['coverage_min'])->toBe(1.0)
+        // The learner says their own line: the key is the frame's own words, the window is anyone's.
+        ->and($x1['speech_mode'])->toBe('free')
+        ->and($x2['speech_mode'])->toBe('free')
         ->and($x2['modes']['voice_blind'])->toBe('It started ___.')
         // A frame without a slot has no chips.
         ->and($x4['frame']['slot'])->toBeNull()
@@ -348,7 +348,7 @@ it('gives the voice cards every mode — the fillers as chips, the line as the h
         ->and($x4['own_line']['frame_ref'])->toBe('p4')
         ->and($x7['modes']['chips'])->toBe($x7['frame']['slot']['fillers'])
         ->and($x7['modes']['voice_blind'])->toBe('Do we need ___?')
-        ->and($x7['coverage_min'])->toBe(0.7)
+        ->and($x7['speech_mode'])->toBe('free')
         ->and($x1['own_line'])->toMatchArray(['ref' => 'x1b', 'frame_ref' => 'p1', 'filler_index' => 0, 'audio' => Audio::of('x1b')]);
 
     // The frame's fillers: the served marks, the learner's-language line, the phrase's own file for the filler it is said with.
@@ -387,7 +387,7 @@ it('keeps the exact keys of every dialogue card and of the pieces they show', fu
     // The ask carries the three keys of the check after its own (наряд BACK-TAILS-1 §1.5); the answer does not.
     foreach ([s1dlgCard($drafts, 'dialogue_answer', 'x2'), s1dlgCard($drafts, 'dialogue_ask', 'x7')] as $card) {
         $p = $card->payload;
-        $voice = ['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'coverage_min'];
+        $voice = ['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'speech_mode'];
         expect(array_keys($p))->toBe($card->kind->value === 'dialogue_ask' ? [...$voice, 'question_native', 'options', 'correct'] : $voice)
             ->and(array_keys($p['partner_line']))->toBe($line)
             ->and(array_keys($p['own_line']))->toBe(['ref', 'text_target', 'text_native', 'frame_ref', 'filler_index', 'key', 'audio'])
@@ -400,7 +400,7 @@ it('keeps the exact keys of every dialogue card and of the pieces they show', fu
     }
 
     $rescue = s1dlgCard($drafts, 'dialogue_rescue', 'x6')->payload;
-    expect(array_keys($rescue))->toBe(['scene_id', 'exchange', 'asked_line', 'rescue_line', 'partner_repeat', 'slow_rate', 'expected_text', 'coverage_min'])
+    expect(array_keys($rescue))->toBe(['scene_id', 'exchange', 'asked_line', 'rescue_line', 'partner_repeat', 'slow_rate', 'expected_text', 'speech_mode'])
         ->and(array_keys($rescue['asked_line']))->toBe($line)
         ->and(array_keys($rescue['rescue_line']))->toBe($line)
         ->and(array_keys($rescue['partner_repeat']))->toBe($line);

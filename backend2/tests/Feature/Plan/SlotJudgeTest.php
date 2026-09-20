@@ -126,13 +126,13 @@ function sjSpeakAnswer(): array
         'task_native' => 'У него болит поясница.',
         'frame' => $frame,
         'key' => 'It hurts',
-        'coverage_min' => 0.7,
+        'speech_mode' => 'free',
         'hint' => 'It hurts in his ___.',
         'judge' => true,
     ];
 }
 
-/** @return array<string, mixed> `phrase_own_slot` of «It started ___.» — two frame words, coverage 1.0 */
+/** @return array<string, mixed> «Скажи целиком» of «It started ___.» — its own-word round is what the judge rules on */
 function sjOwnSlot(): array
 {
     $frame = sjFrame('p2', 'It started ___.', 'Началось ___.', 'когда', [['three days ago', 'три дня назад'], ['last night', 'вчера вечером'], ['this morning', 'сегодня утром']]);
@@ -140,12 +140,15 @@ function sjOwnSlot(): array
     return [
         'frame' => $frame,
         'partner_line' => ['ref' => 'x2', 'text_target' => 'Did it start today, or earlier this week?', 'text_native' => 'Началось сегодня или раньше на этой неделе?', 'audio' => sjAudio('x2')],
-        'task_native' => 'Началось ___.',
         'key' => 'It started',
-        'coverage_min' => 1.0,
-        'examples' => ['три дня назад', 'вчера вечером', 'сегодня утром'],
-        'chips' => $frame['slot']['fillers'],
-        'judge' => true,
+        'rounds' => [['filler_index' => 0, 'expected_text' => 'It started three days ago.', 'task_native' => 'Началось три дня назад.']],
+        'speech_mode' => 'repeat',
+        'own_round' => [
+            'task_native' => 'Началось ___.',
+            'examples' => ['три дня назад', 'вчера вечером', 'сегодня утром'],
+            'speech_mode' => 'free',
+            'judge' => true,
+        ],
     ];
 }
 
@@ -273,16 +276,17 @@ it('rejects by code an attempt without the frame: no model, no quota, the card o
 it('accepts by code a value the lesson knows, said in the frame, without asking the model', function () {
     $day = sjOpenDay($this);
     $answer = sjDeal($day, CardKind::SpeakAnswer, sjSpeakAnswer(), UnitKind::Exchange, 'x1');
-    $own = sjDeal($day, CardKind::PhraseOwnSlot, sjOwnSlot(), UnitKind::Phrase, 'p2');
+    $own = sjDeal($day, CardKind::PhraseOtherSlot, sjOwnSlot(), UnitKind::Phrase, 'p2');
 
     $data = sjJudge($this, $day, $answer, 'It hurts in his neck.')->assertOk()->json('data');
     expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'neck', 'reason_native' => null, 'result' => 'passed', 'attempts' => 1])
         ->and(sjStored($answer)['judge']['by'])->toBe('code')
         ->and(sjStored($answer)['slot_value'])->toBe('neck');
 
-    // A value of several words, heard as one run inside a longer answer.
+    // A value of several words, heard as one run inside a longer answer. The card is «Скажи целиком»: the verdict is
+    // its own-word round's and answers nothing — the result is the client's, from the value rounds (наряд FIX-2, п. 5).
     $data = sjJudge($this, $day, $own, 'it started last night I think')->assertOk()->json('data');
-    expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'last night', 'result' => 'passed'])
+    expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'last night', 'result' => null])
         ->and($day['model']->slotJudgeCalls)->toBe(0);
 });
 
@@ -300,14 +304,12 @@ it('accepts by code a frame without a slot once its words are heard — no model
         'key' => "He doesn't have a fever",
         'hint' => "He doesn't have a fever.",
     ], UnitKind::Exchange, 'x4');
-    $own = sjDeal($day, CardKind::PhraseOwnSlot, [
+    $own = sjDeal($day, CardKind::PhraseOtherSlot, [
         ...sjOwnSlot(),
         'frame' => $slotless,
-        'task_native' => 'Температуры у него нет.',
         'key' => "He doesn't have a fever",
-        'coverage_min' => 0.7,
-        'examples' => [],
-        'chips' => [],
+        'rounds' => [],
+        'own_round' => ['task_native' => 'Температуры у него нет.', 'examples' => [], 'speech_mode' => 'free', 'judge' => true],
     ], UnitKind::Phrase, 'p4');
     $byCode = static fn (bool $accepted, ?string $reason): array => sjSorted([
         'accepted' => $accepted, 'reason_native' => $reason, 'by' => 'code',
@@ -327,7 +329,7 @@ it('accepts by code a frame without a slot once its words are heard — no model
         ->and(sjStored($answer)['judge'])->toBe($byCode(true, null));
 
     $ownPassed = sjJudge($this, $day, $own, "He doesn't have a fever, doctor.")->assertOk()->json('data');
-    expect($ownPassed)->toMatchArray(['accepted' => true, 'slot_value' => null, 'reason_native' => null, 'result' => 'passed', 'attempts' => 1])
+    expect($ownPassed)->toMatchArray(['accepted' => true, 'slot_value' => null, 'reason_native' => null, 'result' => null, 'attempts' => 1])
         ->and(sjStored($own)['judge'])->toBe($byCode(true, null))
         ->and($day['model']->slotJudgeCalls)->toBe(0)
         ->and(sjUnavailableHits())->toBe(0);
@@ -372,13 +374,14 @@ it('asks the model about a value the lesson does not know — with the inputs of
     ]));
 });
 
-it('ignores hinted on phrase_own_slot — its frame is always on screen — and passes it', function () {
+it('ignores hinted on «Скажи целиком» — its frame is always on screen — and records the verdict without closing the card', function () {
     $day = sjOpenDay($this, static fn (SlotJudgeRequest $r): array => ['accepted' => true, 'slot_value' => 'yesterday', 'reason_native' => null]);
-    $card = sjDeal($day, CardKind::PhraseOwnSlot, sjOwnSlot(), UnitKind::Phrase, 'p2');
+    $card = sjDeal($day, CardKind::PhraseOtherSlot, sjOwnSlot(), UnitKind::Phrase, 'p2');
 
     $data = sjJudge($this, $day, $card, 'It started yesterday', hinted: true)->assertOk()->json('data');
 
-    expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'yesterday', 'result' => 'passed', 'attempts' => 1])
+    expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'yesterday', 'result' => null, 'attempts' => 1])
+        ->and(DB::table('day_cards')->where('id', $card)->value('result'))->toBeNull()
         ->and(sjStored($card)['hinted'])->toBeFalse()
         ->and($day['model']->slotJudgeRequests[0]->pattern)->toBe('It started ___.')
         ->and($day['model']->slotJudgeRequests[0]->partnerLine)->toBe('Did it start today, or earlier this week?')
@@ -412,7 +415,7 @@ it('accepts on the code\'s word when the model is silent or off the shape, the w
         return ['accepted' => 'yes', 'slot_value' => 'knee', 'reason_native' => null];
     });
     $silent = sjDeal($day, CardKind::SpeakAnswer, sjSpeakAnswer(), UnitKind::Exchange, 'x1');
-    $offShape = sjDeal($day, CardKind::PhraseOwnSlot, sjOwnSlot(), UnitKind::Phrase, 'p2');
+    $offShape = sjDeal($day, CardKind::PhraseOtherSlot, sjOwnSlot(), UnitKind::Phrase, 'p2');
 
     $data = sjJudge($this, $day, $silent, 'It hurts, in his left knee!')->assertOk()->json('data');
     expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'left knee', 'reason_native' => null, 'result' => 'passed', 'attempts' => 1])
@@ -423,7 +426,7 @@ it('accepts on the code\'s word when the model is silent or off the shape, the w
         ->and(sjUnavailableHits())->toBe(1);
 
     $data = sjJudge($this, $day, $offShape, 'it started on monday')->assertOk()->json('data');
-    expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'on monday', 'result' => 'passed'])
+    expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'on monday', 'result' => null])
         ->and(sjStored($offShape)['judge']['by'])->toBe('unavailable')
         ->and($day['model']->slotJudgeCalls)->toBe(2)
         ->and(sjUnavailableHits())->toBe(2);

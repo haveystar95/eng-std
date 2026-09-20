@@ -29,18 +29,19 @@ function s1dFiller(array $card): ?int
 }
 
 /**
- * The first card of today's own material of one of the kinds, on a frame with a window — a filler of its own to vary.
+ * The first card of today's own material of one of the kinds.
  *
  * @param  list<array<string, mixed>>  $cards
  * @param  list<CardKind>  $kinds
  * @param  list<string>  $skip  frames already used by the test
+ * @param  bool  $withFiller  only a card said with a filler of its own — one there is another window to vary
  * @return array<string, mixed>
  */
-function s1dPick(array $cards, array $kinds, array $skip = []): array
+function s1dPick(array $cards, array $kinds, array $skip = [], bool $withFiller = true): array
 {
     foreach ($cards as $card) {
         if ($card['source'] === 'today' && in_array(CardKind::from($card['kind']), $kinds, true)
-            && ! in_array($card['unit']['ref'], $skip, true) && s1dFiller($card) !== null) {
+            && ! in_array($card['unit']['ref'], $skip, true) && (! $withFiller || s1dFiller($card) !== null)) {
             return $card;
         }
     }
@@ -124,27 +125,26 @@ it('deals a failed phrase recognition again as the same kind with another filler
         ->and(planAnswer($this, $token, $id, 2, $again['requeued']['id'], 'failed', 2)['unit'])->toMatchArray(['returns_tomorrow' => false, 'returns_day' => null]);
 });
 
-// Canon (SESSION-1d, DECISIONS п. 327): «провал произнесения = skipped с attempts ≥ 2 и без no_mic: возвращается произнесением
-// с другим окном; «Пропустить» до второй попытки и отказ микрофона — без последствий». Catches a skip taken for a lapse
-// whatever its attempts, a dead microphone counted against the learner, a copy of a repeat said with the same filler, and
-// a frame said aloud coming back as a recognition.
-it('deals a phrase said aloud and given up on after two attempts again with another filler and returns it tomorrow as said aloud, a skip before that or without a microphone dealing nothing', function () {
+// Canon (SESSION-1d, DECISIONS п. 327; наряд FIX-2 п. 5): «провал произнесения = skipped с attempts ≥ 2 и без no_mic:
+// возвращается произнесением; «Пропустить» до второй попытки и отказ микрофона — без последствий». Catches a skip taken
+// for a lapse whatever its attempts, a dead microphone counted against the learner, and a frame said aloud coming back
+// as a recognition. «Скажи целиком» already walks every value of its window, so its copy is the whole card again.
+it('deals «Скажи целиком» given up on after two attempts again and returns it tomorrow as said aloud, a skip before that or without a microphone dealing nothing', function () {
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 3, 'level' => 'beginner'])['id'];
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/start")->assertOk();
 
     $day1 = planOpenDay($this, $token, $id, 1)['cards'];
-    $repeat = s1dPick($day1, [CardKind::PhraseRepeat]);
-    $early = s1dPick($day1, [CardKind::PhraseRepeat], [$repeat['unit']['ref']]);
-    $noMic = s1dPick($day1, [CardKind::PhraseRepeat], [$repeat['unit']['ref'], $early['unit']['ref']]);
+    $whole = s1dPick($day1, [CardKind::PhraseOtherSlot], [], withFiller: false);
+    $early = s1dPick($day1, [CardKind::PhraseOtherSlot], [$whole['unit']['ref']], withFiller: false);
+    $noMic = s1dPick($day1, [CardKind::PhraseOtherSlot], [$whole['unit']['ref'], $early['unit']['ref']], withFiller: false);
 
-    $first = planAnswer($this, $token, $id, 1, $repeat['id'], 'skipped', 2, ['heard' => 'it']);
+    $first = planAnswer($this, $token, $id, 1, $whole['id'], 'skipped', 2, ['heard' => 'it']);
     $copy = $first['requeued'];
     expect($copy)->not->toBeNull()
-        ->and($copy['kind'])->toBe('phrase_repeat')
-        ->and(s1dFiller($copy))->not->toBe(s1dFiller($repeat))
-        ->and($copy['payload']['expected_text'])->not->toBe($repeat['payload']['expected_text'])
-        ->and($copy['payload']['audio']['ref'])->not->toBe($repeat['payload']['audio']['ref'])
+        ->and($copy['kind'])->toBe('phrase_other_slot')
+        ->and(array_column($copy['payload']['rounds'], 'filler_index'))->toBe(array_column($whole['payload']['rounds'], 'filler_index'))
+        ->and($copy['payload']['own_round']['judge'])->toBeTrue()
         ->and($first['unit']['returns_tomorrow'])->toBeFalse();
 
     expect(planAnswer($this, $token, $id, 1, $early['id'], 'skipped', 1))->toMatchArray(['requeued' => null])
@@ -154,8 +154,7 @@ it('deals a phrase said aloud and given up on after two attempts again with anot
     planShiftDay($id);
 
     $back = s1dReturned(planOpenDay($this, $token, $id, 2)['cards']);
-    expect(array_map(static fn (array $c): string => $c['kind'].'@'.$c['unit']['ref'], $back))->toBe(['phrase_repeat@'.$repeat['unit']['ref']])
-        ->and(s1dFiller($back[0]))->not->toBe(s1dFiller($copy));
+    expect(array_map(static fn (array $c): string => $c['kind'].'@'.$c['unit']['ref'], $back))->toBe(['phrase_other_slot@'.$whole['unit']['ref']]);
 });
 
 // Canon (SESSION-1d, разд. 4): «единица возвращается ровно один раз — видом, которым её провалили ПОСЛЕДНИЙ раз». Found by
@@ -168,7 +167,7 @@ it('brings a frame failed as a recognition and then as said aloud back once, as 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/start")->assertOk();
 
     $day1 = planOpenDay($this, $token, $id, 1)['cards'];
-    $said = s1dPick($day1, [CardKind::PhraseOtherSlot]);
+    $said = s1dPick($day1, [CardKind::PhraseOtherSlot], [], withFiller: false);
     $ref = $said['unit']['ref'];
     $recognition = s1dPick(array_values(array_filter($day1, static fn (array $c): bool => $c['unit']['ref'] === $ref)), PhraseSeries::CYCLE);
 
@@ -182,6 +181,5 @@ it('brings a frame failed as a recognition and then as said aloud back once, as 
 
     $back = array_values(array_filter(s1dReturned(planOpenDay($this, $token, $id, 2)['cards']), static fn (array $c): bool => $c['unit']['ref'] === $ref));
     expect(array_column($back, 'kind'))->toBe(['phrase_other_slot'])
-        ->and(s1dFiller($back[0]))->not->toBe(s1dFiller($saidCopy))
-        ->and(s1dFiller($back[0]))->not->toBe(0);
+        ->and(array_column($back[0]['payload']['rounds'], 'filler_index'))->toBe(array_column($said['payload']['rounds'], 'filler_index'));
 });

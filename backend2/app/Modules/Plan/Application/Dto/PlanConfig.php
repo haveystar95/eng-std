@@ -10,8 +10,8 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 /**
  * The knobs of the plan, read from `config/plan.php` once by the provider: how much a lesson
  * orders per level, how long a build may take before it counts as dead, the rescue kit, the
- * languages a plan may be built in, the seconds a card of each kind takes, and how many slot-judge
- * calls a learner has per day.
+ * languages a plan may be built in, the seconds a card of each kind takes, how many slot-judge
+ * calls a learner has per day, and how much of a line on the screen may go missing when it is said aloud.
  */
 final readonly class PlanConfig
 {
@@ -21,6 +21,7 @@ final readonly class PlanConfig
      * @param  list<string>  $languages  target language codes, in the order the entry screen offers them
      * @param  array<string, int>  $pace  seconds per card by kind value (`plan.pace`)
      * @param  int  $slotJudgeDailyCap  slot-judge model calls per learner per local day (`plan.slot_judge.daily_cap`)
+     * @param  int  $repeatMisses  content words a line ON THE SCREEN may lose and still pass (`plan.speech.repeat_misses`)
      */
     public function __construct(
         public array $counts,
@@ -29,6 +30,7 @@ final readonly class PlanConfig
         public array $languages = ['en', 'de'],
         public array $pace = DayPace::DEFAULTS,
         public int $slotJudgeDailyCap = 60,
+        public int $repeatMisses = 0,
     ) {}
 
     /**

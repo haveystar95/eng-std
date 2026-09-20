@@ -8,13 +8,13 @@ use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Service\Shuffle;
-use App\Modules\Plan\Domain\Service\SpeechCoverage;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
+use App\Modules\Shared\Domain\ValueObject\SpeechMode;
 
 /**
  * THE CARDS OF ONE WORD (наряд SESSION-1a, разд. 1, кадры 31-1…31-7; SESSION-1e): meet it, say it, and the checks —
@@ -46,8 +46,6 @@ final readonly class WordCards
 
     public const GAP = '___';
 
-    public function __construct(private SpeechCoverage $coverage = new SpeechCoverage) {}
-
     /** `word_intro` (31-1): the word, the line of the day it is said in, and both sounds. */
     public function intro(SceneMaterial $scene, PlanTerm $term): CardDraft
     {
@@ -60,13 +58,13 @@ final readonly class WordCards
         ]);
     }
 
-    /** `word_repeat` (31-2): say the word — all of it, when it is two words or fewer (articles aside). */
+    /** `word_repeat` (31-2): say the word as it stands on the screen — `repeat` ({@see SpeechMode::Repeat}). */
     public function repeat(SceneMaterial $scene, PlanTerm $term): CardDraft
     {
         return $this->draft(CardKind::WordRepeat, $scene, $term, [
             'term' => CardObjects::term($term),
             'expected_text' => $term->textTarget(),
-            'coverage_min' => $this->coverage->minFor($term->textTarget(), $scene->target),
+            'speech_mode' => SpeechMode::Repeat->value,
             'audio' => ['term' => Audio::of($term->ref())],
         ]);
     }
@@ -89,7 +87,7 @@ final readonly class WordCards
         $image = ['url' => null, 'tone' => null];
 
         if ($direction === self::TERM_TO_NATIVE) {
-            $chosen = Options::choose($scene->seed($term->ref().':choose'), ['text' => $term->textNative()], self::translations($others, $nativeTopUp), self::OPTIONS);
+            $chosen = Options::choose($scene->seed($term->ref().':choose'), ['text' => $term->textNative()], self::translations($others, $nativeTopUp), self::OPTIONS, Options::TEXT, Options::APART);
             if (count($chosen['options']) < Options::MIN) {
                 return null;
             }
@@ -107,6 +105,8 @@ final readonly class WordCards
             self::spoken($term),
             array_map(self::spoken(...), $others),
             self::OPTIONS,
+            Options::TEXT,
+            Options::APART,
         );
         if (count($chosen['options']) < Options::MIN) {
             return null;
@@ -136,6 +136,8 @@ final readonly class WordCards
             ['text' => $term->textNative()],
             self::translations($this->others($scene, $term, 'listen'), $nativeTopUp),
             self::OPTIONS,
+            Options::TEXT,
+            Options::APART,
         );
         if (count($chosen['options']) < Options::MIN) {
             return null;

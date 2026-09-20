@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Assembly;
 
 use App\Modules\Plan\Domain\Lesson\Exchange;
-use App\Modules\Plan\Domain\Service\FrameParts;
-use App\Modules\Plan\Domain\Service\SpeechCoverage;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
+use App\Modules\Shared\Domain\ValueObject\SpeechMode;
 
 /**
  * THE CARDS OF «ДИАЛОГ» (наряд SESSION-1a, разд. 1; SPEC §4).
@@ -101,7 +100,7 @@ final class DialogueCards
         if ($fourth !== null) {
             $candidates[] = ['text' => $fourth];
         }
-        $chosen = Options::choose($scene->seed("x{$exchange->step}:partner"), ['text' => $right->textNative], $candidates, 4);
+        $chosen = Options::choose($scene->seed("x{$exchange->step}:partner"), ['text' => $right->textNative], $candidates, 4, Options::TEXT, Options::APART);
         if (count($chosen['options']) < Options::MIN) {
             return null;
         }
@@ -115,8 +114,9 @@ final class DialogueCards
 
     /**
      * `dialogue_rescue` (33-6): the line the learner did not catch (the partner's line of the exchange before), the
-     * rescue line they say, and the partner saying it again slower. The rescue line is passed by coverage, so it
-     * carries its expected text and share — but the frame has no microphone, and the client walks it through.
+     * rescue line they say, and the partner saying it again slower. The rescue line stands on the screen, so it
+     * carries its expected text and the `repeat` mode — but the frame has no microphone, and the client walks it
+     * through.
      */
     public static function rescue(SceneMaterial $scene, Exchange $exchange, ?Exchange $previous): ?CardDraft
     {
@@ -134,15 +134,15 @@ final class DialogueCards
             'partner_repeat' => $partnerRepeat,
             'slow_rate' => self::SLOW_RATE,
             'expected_text' => $learner->textTarget,
-            'coverage_min' => (new SpeechCoverage)->minFor($learner->textTarget, $scene->target),
+            'speech_mode' => SpeechMode::Repeat->value,
         ]);
     }
 
     /**
-     * The voice card of an answer or an ask. The client passes it by the coverage of the frame's own words — the
-     * window is anyone's — so `coverage_min` is measured on {@see FrameParts::part()}, and `modes` holds every way in:
-     * the fillers as chips (a frame without a slot has none), the line itself as the hint, the frame with its empty
-     * window blind. A learner line on no frame of the scene deals no voice card.
+     * The voice card of an answer or an ask. The learner says their own sentence, so it is passed in the `free` mode
+     * ({@see SpeechMode::Free}): the key is the frame's own words and the window is anyone's. `modes` holds every way
+     * in: the fillers as chips (a frame without a slot has none), the line itself as the hint, the frame with its
+     * empty window blind. A learner line on no frame of the scene deals no voice card.
      *
      * @param  array<string, mixed>  $extra  keys the kind adds after its own — the check of an `ask` (§1.5)
      */
@@ -168,7 +168,7 @@ final class DialogueCards
                 'voice_hint' => $ownLine['text_target'],
                 'voice_blind' => $pattern->frameTarget,
             ],
-            'coverage_min' => (new SpeechCoverage)->minFor(FrameParts::part($pattern->frameTarget), $scene->target),
+            'speech_mode' => SpeechMode::Free->value,
             ...$extra,
         ]);
     }

@@ -9,10 +9,11 @@ use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Service\FrameParts;
 use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Shuffle;
-use App\Modules\Plan\Domain\Service\SpeechCoverage;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
+use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
+use App\Modules\Shared\Domain\ValueObject\SpeechMode;
 
 /**
  * THE NINE PHRASE CARDS (наряд SESSION-1a, разд. 1; SESSION-1d — фраза через разные окна).
@@ -33,11 +34,12 @@ final class PhraseCards
 {
     public const OPTIONS = 4;
 
+    /** How many values of the window a BEGINNER says the frame with before their own one (решение архитектора 20.09). */
+    public const BEGINNER_ROUNDS = 2;
+
     private const EXTRA_TILES = 2;
 
     private const COMBINE_FRAMES = 3;
-
-    public function __construct(private readonly SpeechCoverage $coverage = new SpeechCoverage) {}
 
     /**
      * Does the frame have a window a card can put a value into — a slot in its text and at least one filler for it?
@@ -122,10 +124,18 @@ final class PhraseCards
 
     /**
      * 32-3 (D-11) — the frame said with the filler in the target language, heard and read; the learner picks its
-     * translation among the frame's other fillers, then what the other frames say (their fillers, a frame without a
-     * window as itself), from the next frame on. A frame without a window is said as itself (`$filler` null). Null for a
-     * filler the frame does not have or cannot be said with, and when there is nothing to choose between — the only
-     * frame of the day, with no other filler of its own.
+     * translation among WHAT THE OTHER FRAMES SAY (their fillers, a frame without a window as itself), from the next
+     * frame on. A frame without a window is said as itself (`$filler` null). Null for a filler the frame does not
+     * have or cannot be said with, and when there is nothing to choose between — the only frame of the day.
+     *
+     * ONE SENTENCE PER FRAME, AND NEVER THIS FRAME'S (наряд FIX-2, п. 1). Two values of one window are one sentence
+     * said about two things — «Что мне нужно принести на приём?» and «…на визит?», «Началось вчера вечером.» and
+     * «Началось сегодня утром.» — so a set holding two of them asks the learner to tell apart what the card never
+     * meant to teach, and the one they pick is marked wrong (проход 20.09). Each other frame therefore offers the
+     * ONE sentence the dialogue says it with, and the frame's own values never appear at all: the window is checked
+     * by the cards built FOR the window (`phrase_slot`, `phrase_slot_listen`), and this one asks what the phrase
+     * means. What is left is filtered by {@see Options::APART} too, so a neighbour that happens to read like this
+     * frame is passed over.
      */
     public function chooseBack(SceneMaterial $scene, PlanTerm $phrase, ?int $filler): ?CardDraft
     {
@@ -135,18 +145,10 @@ final class PhraseCards
             return null;
         }
         $candidates = [];
-        foreach (CardObjects::fillers($scene, $phrase) as $other) {
-            if ($other['index'] !== $sentence['filler_index']) {
-                $candidates[] = ['text' => $other['native_line']];
-            }
-        }
         foreach ($this->othersFromNext($scene, $phrase) as $other) {
-            $fillers = self::hasSlot($other) ? CardObjects::fillers($scene, $other) : [];
-            foreach ($fillers === [] ? [$other->textNative()] : array_column($fillers, 'native_line') as $text) {
-                $candidates[] = ['text' => $text];
-            }
+            $candidates[] = ['text' => CardObjects::said($scene, $other)['text_native']];
         }
-        $chosen = Options::choose($scene->seed(self::seedOf($ref, 'choose_back', $sentence['filler_index'])), ['text' => $sentence['text_native']], $candidates, self::OPTIONS);
+        $chosen = Options::choose($scene->seed(self::seedOf($ref, 'choose_back', $sentence['filler_index'])), ['text' => $sentence['text_native']], $candidates, self::OPTIONS, Options::TEXT, Options::APART);
         if (count($chosen['options']) < Options::MIN) {
             return null;
         }
@@ -257,35 +259,88 @@ final class PhraseCards
             'filler_index' => $sentence['filler_index'],
             'expected_text' => $expected,
             'key' => $phrase->speakingKey(),
-            'coverage_min' => $this->coverage->minFor($expected, $scene->target),
+            'speech_mode' => SpeechMode::Repeat->value,
             'audio' => $sentence['audio'],
         ]);
     }
 
     /**
-     * 32-7 (D-14) — the frame said with the filler — never the one the dialogue says it with — asked for by its
-     * translation in the window and never played. The client passes it when the frame is covered and the value was
-     * heard (`slot_expected`). Null for a frame without a window, a filler it does not have, or the said one.
+     * 32-7 «СКАЖИ ЦЕЛИКОМ» — THE ONE WAY A FRAME WITH A WINDOW IS SAID ALOUD, at every level (наряд FIX-2, п. 5;
+     * решение архитектора 20.09). The card goes in ROUNDS: a value stands in the window, the learner says the whole
+     * phrase, and the next value takes its place; the LAST round is the learner's OWN value, judged by meaning.
+     *
+     * It is one card because it was two, and the seam showed: a beginner's «Фразы» held nothing but choices and a
+     * repeat — «нет ни одного упражнения „со своим словом"» (проход 20.09, п. 5) — while the same trainer, at the
+     * other level, was `phrase_other_slot` and `phrase_own_slot` taking turns over the frames. The levels now differ
+     * in ONE number, {@see rounds()}: how many values a frame is said with before its own one.
+     *
+     * - the value rounds are `repeat` ({@see SpeechMode::Repeat}): the phrase is on the screen with the value in its
+     *   window, and saying it means saying it;
+     * - the own round is `free`: the frame's own words are the key, the window is the learner's, and the judge rules
+     *   on what went into it. It is PRACTICE — a miss or a skip there deals no copy and returns no unit, which the
+     *   client honours by answering the card on the value rounds alone;
+     * - `partner_line` is the line the frame is said next to, for the JUDGE and not for the screen (32-7 shows no
+     *   partner line): the model reads it as `PARTNER_LINE`.
+     *
+     * Null for a frame without a window, and for one whose fillers no card may show.
      */
-    public function otherSlot(SceneMaterial $scene, PlanTerm $phrase, ?int $filler): ?CardDraft
+    public function sayWhole(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level): ?CardDraft
     {
         $frame = $phrase->frame();
-        $right = self::fillerAt($scene, $phrase, $filler);
-        if ($frame === null || $right === null || $right['index'] === $scene->saidIndex($phrase)) {
+        if ($frame === null || ! self::hasSlot($phrase)) {
             return null;
         }
-        $expected = FrameText::withEndMarkOf(FrameText::fill($frame->frameTarget, $right['target']), $phrase->textTarget());
+        $rounds = [];
+        foreach (self::rounds($scene, $phrase, $level) as $index) {
+            $filler = self::fillerAt($scene, $phrase, $index);
+            if ($filler === null) {
+                continue;
+            }
+            $rounds[] = [
+                'filler_index' => $filler['index'],
+                'expected_text' => FrameText::withEndMarkOf(FrameText::fill($frame->frameTarget, $filler['target']), $phrase->textTarget()),
+                'task_native' => $filler['native_line'],
+            ];
+        }
+        if ($rounds === []) {
+            return null;
+        }
+        $first = $scene->lesson->linesOf($phrase->ref())[0]['exchange'] ?? null;
+        $fillers = CardObjects::fillers($scene, $phrase);
 
         return $this->draft(CardKind::PhraseOtherSlot, $phrase, [
             'scene_id' => $scene->sceneId->value,
             'frame' => CardObjects::frame($scene, $phrase),
-            'filler_index' => $right['index'],
-            'task_native' => $right['native'],
-            'expected_text' => $expected,
-            'slot_expected' => $right['target'],
+            'partner_line' => CardObjects::partnerLine($first),
             'key' => $phrase->speakingKey(),
-            'coverage_min' => $this->coverage->minFor($expected, $scene->target),
+            'rounds' => $rounds,
+            'speech_mode' => SpeechMode::Repeat->value,
+            'own_round' => [
+                'task_native' => $frame->frameNative,
+                'examples' => array_column($fillers, 'native'),
+                'speech_mode' => SpeechMode::Free->value,
+                'judge' => true,
+            ],
         ]);
+    }
+
+    /**
+     * THE VALUES «Скажи целиком» GOES THROUGH, in the frame's own order — the one the dialogue says it with first,
+     * the rest by their place in the window ({@see PhraseSeries::fillers()}), so the card walks the chips the way
+     * every other card of the frame walks them.
+     *
+     * How many is the ONLY thing the levels differ in (решение архитектора 20.09): an intermediate learner says the
+     * frame with every value its window may show — the prompt writes two or three — and a beginner with
+     * {@see BEGINNER_ROUNDS} of them; a frame with one value has that one. There is no ceiling beyond that: a
+     * window with four values is a window with four values.
+     *
+     * @return list<int>
+     */
+    public static function rounds(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level): array
+    {
+        $fillers = PhraseSeries::fillers($scene, $phrase);
+
+        return $level === PlanLevel::Beginner ? array_slice($fillers, 0, self::BEGINNER_ROUNDS) : $fillers;
     }
 
     /**
@@ -358,33 +413,6 @@ final class PhraseCards
             'correct_frame' => $phrase->ref(),
             'chips' => CardObjects::fillers($scene, $phrase),
             'correct_filler' => $correctFiller,
-        ]);
-    }
-
-    /**
-     * 32-9 (D-16) — the learner's own value in the window, said aloud and judged by meaning: the frame open from the
-     * start, the partner's line it speaks to (the first exchange the frame is said in), the fillers as examples and
-     * chips. Null for a frame without a window.
-     */
-    public function ownSlot(SceneMaterial $scene, PlanTerm $phrase): ?CardDraft
-    {
-        $frame = $phrase->frame();
-        if ($frame === null || ! self::hasSlot($phrase)) {
-            return null;
-        }
-        $first = $scene->lesson->linesOf($phrase->ref())[0]['exchange'] ?? null;
-        $fillers = CardObjects::fillers($scene, $phrase);
-
-        return $this->draft(CardKind::PhraseOwnSlot, $phrase, [
-            'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($scene, $phrase),
-            'partner_line' => $first === null ? null : CardObjects::cueLine($scene, $first),
-            'task_native' => $frame->frameNative,
-            'key' => $phrase->speakingKey(),
-            'coverage_min' => $this->coverage->minFor(FrameParts::part($frame->frameTarget), $scene->target),
-            'examples' => array_column($fillers, 'native'),
-            'chips' => $fillers,
-            'judge' => true,
         ]);
     }
 

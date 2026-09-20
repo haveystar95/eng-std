@@ -17,7 +17,7 @@ namespace App\Modules\Learning\Domain\ValueObject;
  *             had before speech: a typed word, an assembled sentence, a tapped option.
  *   coverage  the answer must CONTAIN enough of the expected sentence's words. Only reachable when
  *             the answer arrived through a speech recogniser reading a sentence back — see
- *             {@see \App\Modules\Learning\Domain\Service\SpokenCoverage} for why an exact match is
+ *             {@see \App\Modules\Shared\Domain\Service\SpeechMatch} for why an exact match is
  *             the wrong bar there and what "enough" means. Its own shape now: NO text on screen and
  *             no key — the whole line, asked for entire.
  *   read_aloud    the answer must cover enough of a sentence the learner could SEE while saying it

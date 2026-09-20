@@ -112,9 +112,10 @@ return [
         'phrase_slot' => 12,
         'phrase_slot_listen' => 12,
         'phrase_repeat' => 25,
-        'phrase_other_slot' => 25,
+        // «Скажи целиком» (наряд FIX-2, п. 5) is a SERIES: every value of the window said aloud and the learner's own
+        // one after them, all on one card. Its 25 seconds were one round's; a frame of three values now costs four.
+        'phrase_other_slot' => 75,
         'phrase_combine' => 20,
-        'phrase_own_slot' => 25,
         'dialogue_partner' => 15,
         'dialogue_answer' => 30,
         // The ask carries the exchange's check too since наряд BACK-TAILS-1 §1.5 — the two cards merged, and so do
@@ -130,6 +131,21 @@ return [
         'speak_answer' => 35,
         'speak_echo' => 25,
         'speak_retell' => 30,
+    ],
+
+    /*
+     * HOW MUCH OF A LINE ON THE SCREEN MAY GO MISSING (наряд FIX-2, п. 2) — the loosening handle of the `repeat`
+     * mode ({@see \App\Modules\Shared\Domain\ValueObject\SpeechMode}): how many CONTENT words of the expected
+     * text the learner may drop and still be counted as having said it.
+     *
+     * ZERO, and deliberately: the text is in front of them, the words a recogniser actually eats are already left
+     * out of the comparison on both sides (the target pack's `unstressed_words`), and «He has a rush» for «He has a
+     * rash» is what a share of 70 % accepted on the owner's phone. It is a config value and not a constant so that
+     * a device that starts failing healthy sentences can be answered without a release — raise it, restart Horizon,
+     * watch. The number also goes out to the phone with the day, so both sides count the same.
+     */
+    'speech' => [
+        'repeat_misses' => (int) env('PLAN_SPEECH_REPEAT_MISSES', 0),
     ],
 
     /*

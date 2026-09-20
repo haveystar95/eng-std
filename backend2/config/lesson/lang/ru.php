@@ -45,6 +45,31 @@ return [
         'чем', 'чём', 'кто', 'быть', 'есть', 'будет', 'можно', 'нужно', 'надо',
     ],
 
+    // THE WORDS A RECOGNISER EATS (наряд FIX-2, п. 2) — prepositions, particles and the forms of «быть»: left out of
+    // BOTH sides when a line the learner is LOOKING AT is compared with what was said
+    // ({@see \App\Modules\Shared\Domain\ValueObject\SpeechMode::Repeat}). Narrower than `function_words`, which
+    // holds «что», «нет», «какой» — words a repeat must not forgive; «не» and «ни» are not here either, they flip
+    // the meaning. Russian has no articles, so the list opens with prepositions.
+    'unstressed_words' => [
+        'в', 'во', 'на', 'с', 'со', 'у', 'к', 'ко', 'о', 'об', 'обо', 'по', 'за', 'из', 'изо', 'от', 'ото', 'до',
+        'для', 'при', 'про', 'над', 'надо', 'под', 'подо', 'без', 'через', 'перед', 'между',
+        'и', 'а', 'же', 'бы', 'ли', 'б',
+        'быть', 'был', 'была', 'было', 'были', 'есть', 'буду', 'будешь', 'будет', 'будем', 'будете', 'будут',
+    ],
+
+    // A NUMBER SAID EITHER WAY IS THE SAME NUMBER (наряд FIX-2, п. 2). Only the bare nominative forms: an inflected
+    // form («трёх», «двумя») is not what a recogniser writes for a digit, and folding it would make «в двух шагах»
+    // read as «в 2 шагах» on one side only.
+    'number_words' => [
+        'ноль' => '0', 'один' => '1', 'одна' => '1', 'два' => '2', 'две' => '2', 'три' => '3', 'четыре' => '4',
+        'пять' => '5', 'шесть' => '6', 'семь' => '7', 'восемь' => '8', 'девять' => '9', 'десять' => '10',
+        'одиннадцать' => '11', 'двенадцать' => '12', 'тринадцать' => '13', 'четырнадцать' => '14',
+        'пятнадцать' => '15', 'шестнадцать' => '16', 'семнадцать' => '17', 'восемнадцать' => '18',
+        'девятнадцать' => '19', 'двадцать' => '20', 'тридцать' => '30', 'сорок' => '40', 'пятьдесят' => '50',
+        'шестьдесят' => '60', 'семьдесят' => '70', 'восемьдесят' => '80', 'девяносто' => '90', 'сто' => '100',
+        'тысяча' => '1000',
+    ],
+
     // Two forms of one word in an inflected language: both at least four letters, sharing all but the last two
     // letters of the shorter («пояснице» — «поясница», «неделю» — «неделя»). One letter is no content word.
     'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],

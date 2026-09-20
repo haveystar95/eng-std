@@ -121,7 +121,14 @@ final class ListenCards
      * not always there — a lesson is asked for two asks at the least, not four — so a day short of them tops up with
      * the partner's remaining lines OF THE ANSWER'S OWN FORM (SESSION-1d: a question beside a question, a statement
      * beside a statement, by the target pack's `sentence_ends`), and only then with any others. Which of the equals is
-     * a shuffle seeded by the card's address; two options never share their target text.
+     * a shuffle seeded by the card's address.
+     *
+     * THREE DIFFERENT LINES, and not three different refs (наряд FIX-2, п. 4). Equal target texts were already
+     * refused; what was not is a line that SAYS THE SAME THING in other words, and a visit has one by construction —
+     * a `rescue` restates the partner's previous line. On the owner's live day that put «Please bring his vaccination
+     * record and arrive ten minutes early.» beside «Bring his vaccination record. Please come ten minutes early.», and
+     * three bars with nothing to tell them apart. {@see Options::APART} drops such a line and the next candidate takes
+     * its place.
      */
     public static function predict(SceneMaterial $scene, Exchange $exchange): ?CardDraft
     {
@@ -151,6 +158,7 @@ final class ListenCards
             [...$answers, ...$sameForm, ...$other],
             self::PREDICT_OPTIONS,
             'text_target',
+            Options::APART,
         );
         if (count($chosen['options']) < Options::MIN) {
             return null;

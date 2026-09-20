@@ -98,9 +98,11 @@ and patterns from `config/lesson/lang/<code>.php`; a key it lacks is a check ski
 `LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the nine fatal codes, the
 card order a repair takes — a word last —, at most two cards, the `fatal: …` reason), `Words` / `FrameText` / `FrameParts` (the text
 rules the validator and the assembly share — and, since SESSION-1a, the frame without its window: its words, where
-the slot stands), `SpeechCoverage` (how much of the expected text must be heard — 1.0 up to two words, else 0.7,
-the target pack's articles forgiven; also what of the heard text falls OUTSIDE the frame, which is what the judge
-is shown as the slot), `DayMetricsCalculator`, `NativeStrings`, `Shuffle`.
+the slot stands), `DayMetricsCalculator`, `NativeStrings`, `Shuffle`. Whether a spoken attempt counts is NOT this
+module's: since наряд FIX-2 there is one rule in the kernel, `Shared/Domain/Service/SpeechMatch` — two modes, and the
+card says which on the wire (`speech_mode`); this module hands it the target's `LanguagePack::speech()` and reads
+back both the verdict and what of the heard text falls OUTSIDE the frame, which is what the judge is shown as the
+slot.
 The day window (DAY-UI-2, `window` of the day read, put together by `Application/Service/DayWindowViews`):
 `DayWindowStages` (the five rows — a number only on the current one — and the day's progress),
 `DayPace` (seconds per card BY KIND — the table is `plan.pace`, наряд SESSION-1a: a stage of the registry mixes a

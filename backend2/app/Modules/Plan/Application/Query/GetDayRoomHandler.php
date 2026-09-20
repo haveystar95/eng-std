@@ -7,6 +7,7 @@ namespace App\Modules\Plan\Application\Query;
 use App\Modules\Plan\Application\Dto\CardView;
 use App\Modules\Plan\Application\Dto\DayMetricsView;
 use App\Modules\Plan\Application\Dto\DayRoomView;
+use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Dto\ProgramUnitView;
 use App\Modules\Plan\Application\Dto\StageProgressView;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
@@ -15,6 +16,7 @@ use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\DayWindowViews;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Application\Service\PlanViews;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
@@ -46,6 +48,8 @@ final readonly class GetDayRoomHandler
         private LearnerCalendar $calendar,
         private Clock $clock,
         private CardViews $cardViews,
+        private LanguagePacks $packs,
+        private PlanConfig $config,
     ) {}
 
     public function __invoke(GetDayRoom $query): DayRoomView
@@ -71,6 +75,8 @@ final readonly class GetDayRoomHandler
             metrics: $dealt ? new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent) : null,
             program: $this->program($cards),
             window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards),
+            speech: $this->packs->for($plan->targetLang()->value)->speech(),
+            repeatMisses: $this->config->repeatMisses,
         );
     }
 

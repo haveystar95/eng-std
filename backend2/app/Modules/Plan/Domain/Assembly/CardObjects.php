@@ -10,13 +10,14 @@ use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\SpokenLines;
-use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 
 /**
  * THE OBJECTS CARDS ARE MADE OF (наряд SESSION-1a, разд. 1): a term, an exchange, a line of it — the partner's, the
- * learner's own, the partner's line a learner line speaks to, a line of the visit as the listening plays it — a
- * frame, its fillers and the phrase as it is said.
+ * learner's own, a line of the visit as the listening plays it — a frame, its fillers and the phrase as it is said.
+ *
+ * There is no «the partner line a learner line speaks to» any more (наряд FIX-2, п. 3): a card shows the lines of ITS
+ * OWN exchange, and an exchange where the learner speaks first has no question to show at all.
  *
  * One exchange is shown by «Фразы», «Диалог», «Слушаю и отвечаю» and «Говорю сам», one frame by a phrase card, under
  * a dialogue line and on a speaking card — so every object is built HERE and only here, and the five card classes
@@ -120,32 +121,6 @@ final class CardObjects
     }
 
     /**
-     * The partner's line the learner's line of an exchange speaks to: in an answer — the partner's line of the same
-     * exchange, the question it answers; in an ask — the partner's line of the exchange before it, the context the
-     * learner asks in; null for the first exchange or a rescue.
-     *
-     * @return array{ref: string, text_target: string, text_native: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}}|null
-     */
-    public static function cueLine(SceneMaterial $scene, Exchange $exchange): ?array
-    {
-        if ($exchange->kind === ExchangeKind::Answer) {
-            return self::partnerLine($exchange);
-        }
-        if ($exchange->kind !== ExchangeKind::Ask) {
-            return null;
-        }
-        $previous = null;
-        foreach ($scene->lesson->exchanges as $candidate) {
-            if ($candidate->step === $exchange->step) {
-                return self::partnerLine($previous);
-            }
-            $previous = $candidate;
-        }
-
-        return null;
-    }
-
-    /**
      * A line of the visit as the listening cards play it — who says it and in which exchange besides its texts:
      * `{ref, role, exchange_step, text_target, text_native, audio}`.
      *
@@ -198,7 +173,8 @@ final class CardObjects
      * pronunciation_native, in_dialogue, native_line, audio}`. `native_line` is the whole sentence in the learner's
      * language — the MODEL'S OWN translation of the line that says it, when a line of the visit does
      * ({@see SceneMaterial::nativeLineOf()}, наряд BACK-TAILS-1 §2.3), else the frame's translation with the filler's,
-     * ending as the phrase ends; `in_dialogue` is the served mark
+     * ending as the phrase ends and STARTING WITH A CAPITAL ({@see FrameText::nativeSentence()}, наряд FIX-2 п. 1 —
+     * «моей кошке нужен ветеринар.» went onto a live card lower-cased); `in_dialogue` is the served mark
      * (what the dialogue says); `audio` is the file the frame said with this filler is voiced as
      * ({@see SpokenLines::fillers()}, `voicedAs`: the filler the phrase itself is said with sounds as the phrase `p1`,
      * every other one as `p1.f2`), null for a filler the frame cannot be said with.
@@ -231,8 +207,10 @@ final class CardObjects
                 'native' => $filler->native,
                 'pronunciation_native' => $filler->pronunciationNative,
                 'in_dialogue' => $filler->inDialogue,
-                'native_line' => $scene->nativeLineOf($phrase->ref(), $index)
-                    ?? FrameText::withEndMarkOf(FrameText::fill($frame->frameNative, $filler->native), $phrase->textNative()),
+                'native_line' => FrameText::capitalized(
+                    $scene->nativeLineOf($phrase->ref(), $index)
+                    ?? FrameText::nativeSentence($frame->frameNative, $filler->native, $phrase->textNative()),
+                ),
                 'audio' => isset($voiced[$index]) ? Audio::of($voiced[$index]) : null,
             ];
         }
@@ -256,7 +234,7 @@ final class CardObjects
         return [
             'filler_index' => $index,
             'text_target' => $phrase->textTarget(),
-            'text_native' => ($index === null ? null : $scene->nativeLineOf($phrase->ref(), $index)) ?? $phrase->textNative(),
+            'text_native' => FrameText::capitalized(($index === null ? null : $scene->nativeLineOf($phrase->ref(), $index)) ?? $phrase->textNative()),
             'pronunciation_native' => $phrase->pronunciationNative(),
             'audio' => Audio::of($phrase->ref()),
         ];

@@ -9,20 +9,20 @@ use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 
 /**
- * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1; D-01, D-05, D-31): twenty-nine kinds, twenty-eight dealt,
- * each in one stage and counted one way — which is what the server lets the client write for it.
+ * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1; D-01, D-05, D-31; наряд FIX-2 п. 5): twenty-eight kinds,
+ * twenty-seven dealt, each in one stage and counted one way — which is what the server lets the client write for it.
  */
 
-it('has the twenty-nine kinds of the registry in its order, twenty-eight of them dealt — listen_pairs only reserved', function () {
+it('has the twenty-eight kinds of the registry in its order, twenty-seven of them dealt — listen_pairs only reserved', function () {
     expect(array_map(static fn (CardKind $k): string => $k->value, CardKind::cases()))->toBe([
         'word_intro', 'word_repeat', 'word_choose', 'word_listen', 'word_assemble', 'word_in_line',
         'phrase_intro', 'phrase_assemble', 'phrase_choose_back', 'phrase_slot', 'phrase_slot_listen', 'phrase_repeat',
-        'phrase_other_slot', 'phrase_combine', 'phrase_own_slot',
+        'phrase_other_slot', 'phrase_combine',
         'dialogue_partner', 'dialogue_answer', 'dialogue_ask', 'dialogue_rescue',
         'listen_dialogue', 'listen_question', 'listen_review', 'listen_pairs', 'listen_predict', 'listen_pace', 'listen_number',
         'speak_answer', 'speak_echo', 'speak_retell',
     ])
-        ->and(CardKind::dealt())->toHaveCount(28)
+        ->and(CardKind::dealt())->toHaveCount(27)
         ->and(CardKind::dealt())->not->toContain(CardKind::ListenPairs)
         ->and(CardKind::ListenPairs->isDealt())->toBeFalse();
 });
@@ -48,7 +48,7 @@ it('counts every kind exactly one way: choice, spoken, judged or walkthrough', f
     }
 
     expect(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isJudged())))
-        ->toBe([CardKind::PhraseOwnSlot, CardKind::SpeakAnswer])
+        ->toBe([CardKind::SpeakAnswer])
         ->and(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isSpoken())))
         ->toBe([CardKind::WordRepeat, CardKind::PhraseRepeat, CardKind::PhraseOtherSlot, CardKind::DialogueAnswer, CardKind::DialogueAsk, CardKind::SpeakEcho, CardKind::SpeakRetell])
         ->and(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isWalkthrough())))
@@ -63,7 +63,9 @@ it('lets the client write only the results the kind can have', function () {
     ));
 
     expect($allowed(CardKind::SpeakAnswer))->toBe(['skipped'])
-        ->and($allowed(CardKind::PhraseOwnSlot))->toBe(['skipped'])
+        // «Скажи целиком» ASKS the judge and is not judged BY it (наряд FIX-2, п. 5): the own-word round is practice,
+        // and the card's result is its value rounds', written by the client like any voice card's.
+        ->and($allowed(CardKind::PhraseOtherSlot))->toBe(['passed', 'hinted', 'skipped'])
         // «Повтори свою реплику» is a voice card since наряд BACK-TAILS-1 §1.1: the client counts its coverage.
         ->and($allowed(CardKind::SpeakRetell))->toBe(['passed', 'hinted', 'skipped'])
         ->and($allowed(CardKind::ListenPace))->toBe(['passed', 'skipped'])
@@ -104,7 +106,7 @@ it('counts a lapse: a wrong choice, or a phrase said aloud given up on after two
             // The voice still never writes `failed` (422): a lapse of the voice is a skip.
             ->and($kind->allows(CardResult::Failed))->toBeFalse($kind->value);
     }
-    foreach ([CardKind::WordRepeat, CardKind::DialogueAnswer, CardKind::SpeakEcho, CardKind::PhraseOwnSlot, CardKind::SpeakAnswer, CardKind::SpeakRetell] as $kind) {
+    foreach ([CardKind::WordRepeat, CardKind::DialogueAnswer, CardKind::SpeakEcho, CardKind::SpeakAnswer, CardKind::SpeakRetell] as $kind) {
         expect($kind->lapses(CardResult::Skipped, 2, false))->toBeFalse($kind->value)
             ->and($kind->requeues())->toBeFalse($kind->value);
     }
@@ -141,4 +143,18 @@ it('prices every dealt kind and nothing else, the same in the code and in config
         ->and(DayPace::DEFAULTS['speak_answer'])->toBe(35)
         ->and(DayPace::DEFAULTS['word_intro'])->toBe(8)
         ->and((require dirname(__DIR__, 4).'/config/plan.php')['pace'])->toBe(DayPace::DEFAULTS);
+});
+
+// Canon (наряд FIX-2, п. 5): «последний круг „со своим словом" судит сервер, как у own_slot» — and only there. Catches
+// the judge opened to a kind that has no window to rule on, and the two halves of judging confused: who may ASK the
+// judge is not who is PASSED by it.
+it('opens the judge to speak_answer and «Скажи целиком» only, and lets the verdict pass speak_answer alone', function () {
+    expect(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->asksJudge())))
+        ->toBe([CardKind::PhraseOtherSlot, CardKind::SpeakAnswer])
+        ->and(CardKind::PhraseOtherSlot->isJudged())->toBeFalse()
+        ->and(CardKind::SpeakAnswer->isJudged())->toBeTrue();
+
+    foreach (CardKind::cases() as $kind) {
+        expect($kind->asksJudge())->toBe($kind->isJudged() || $kind === CardKind::PhraseOtherSlot, $kind->value);
+    }
 });

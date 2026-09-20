@@ -139,7 +139,7 @@ it('takes its seconds from the table it is given, and a kind the table does not 
 it('computes the day metrics from cards of any kind: dealt, done, minutes without the long pauses', function () {
     $kinds = [
         [CardKind::WordIntro, UnitKind::Word, 'v1'], [CardKind::WordRepeat, UnitKind::Word, 'v1'], [CardKind::WordChoose, UnitKind::Word, 'v1'],
-        [CardKind::PhraseOwnSlot, UnitKind::Phrase, 'p1'], [CardKind::DialogueRescue, UnitKind::Exchange, 'x2'],
+        [CardKind::PhraseOtherSlot, UnitKind::Phrase, 'p1'], [CardKind::DialogueRescue, UnitKind::Exchange, 'x2'],
         [CardKind::ListenDialogue, UnitKind::Day, 'day'], [CardKind::ListenQuestion, UnitKind::Day, 'L1'], [CardKind::SpeakRetell, UnitKind::Exchange, 'x3'],
     ];
     $t = new DateTimeImmutable('2026-09-15T10:00:00Z');

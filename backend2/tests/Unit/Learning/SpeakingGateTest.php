@@ -9,7 +9,6 @@ use App\Modules\Learning\Domain\Service\ExerciseSelector;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\SentenceTokenizer;
-use App\Modules\Learning\Domain\Service\SpokenCoverage;
 use App\Modules\Learning\Domain\ValueObject\Answer;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -25,7 +24,6 @@ beforeEach(function () {
     $this->assess = new PlayabilityAssessor(new ChipShuffler(), new SentenceTokenizer());
     $this->selector = new ExerciseSelector();
     $this->grader = new AnswerGrader();
-    $this->coverage = new SpokenCoverage();
 });
 
 // ── which form the card asks for ─────────────────────────────────────────────
@@ -171,26 +169,26 @@ it('passes a reading the recogniser mangled in its usual ways', function () {
 
     // Dropped article, dropped punctuation, a swapped unstressed word — every one of these is a
     // learner who read the sentence correctly into a microphone in a real room.
-    expect($this->coverage->covers('could you take a photo of us', $expected))->toBeTrue()
-        ->and($this->coverage->covers('could you take photo of us', $expected))->toBeTrue()
-        ->and($this->coverage->covers('could you take a photo of as', $expected))->toBeTrue();
+    expect(learningCovers('could you take a photo of us', $expected))->toBeTrue()
+        ->and(learningCovers('could you take photo of us', $expected))->toBeTrue()
+        ->and(learningCovers('could you take a photo of as', $expected))->toBeTrue();
 });
 
 it('fails a reading that stopped halfway', function () {
-    expect($this->coverage->covers('could you take', 'Could you take a photo of us?'))->toBeFalse()
-        ->and($this->coverage->covers('', 'Could you take a photo of us?'))->toBeFalse()
-        ->and($this->coverage->covers('completely different words entirely', 'Could you take a photo of us?'))->toBeFalse();
+    expect(learningCovers('could you take', 'Could you take a photo of us?'))->toBeFalse()
+        ->and(learningCovers('', 'Could you take a photo of us?'))->toBeFalse()
+        ->and(learningCovers('completely different words entirely', 'Could you take a photo of us?'))->toBeFalse();
 });
 
 it('counts by multiset — saying a repeated word once is not saying it twice', function () {
     // 3 of 4 words = 75%, above the bar; but the second «very» has to be found on its own.
-    expect($this->coverage->ratio('it is very very cold', 'It is very very cold.'))->toBe(1.0)
-        ->and($this->coverage->ratio('very', 'very very'))->toBe(0.5);
+    expect(learningRatio('it is very very cold', 'It is very very cold.'))->toBe(1.0)
+        ->and(learningRatio('very', 'very very'))->toBe(0.5);
 });
 
 it('covers nothing when there is nothing expected — never a vacuous pass', function () {
-    expect($this->coverage->ratio('anything at all', ''))->toBe(0.0)
-        ->and($this->coverage->covers('anything at all', '   '))->toBeFalse();
+    expect(learningRatio('anything at all', ''))->toBe(0.0)
+        ->and(learningCovers('anything at all', '   '))->toBeFalse();
 });
 
 it('routes the coverage key through the grader instead of the equality stages', function () {

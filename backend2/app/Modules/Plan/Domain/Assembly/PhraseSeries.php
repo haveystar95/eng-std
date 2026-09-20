@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Assembly;
 
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
+use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 
 /**
  * THE SERIES OF ONE FRAME (наряд SESSION-1d — фраза через разные окна): which filler each card of a frame is said with
@@ -20,10 +21,11 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
  *   start of its cycle; a frame without a window is recognised back (`phrase_choose_back`, said as itself);
  * - a recognition whose material is missing gives its place to `phrase_choose_back` with the same filler — the card
  *   every frame can have;
- * - PRODUCTION: `phrase_repeat` is said with a filler the learner has not said yet — round the slot after the said
- *   one, a filler the dialogue does not say first; a frame of one filler (or none) repeats the phrase itself.
- *   `phrase_other_slot` takes a filler no recognition has taken and not the said one (seeded among such); none free —
- *   any but the said one;
+ * - PRODUCTION: a frame WITHOUT a window is repeated — `phrase_repeat` with a filler the learner has not said yet,
+ *   round the slot after the said one, a filler the dialogue does not say first; a frame of one filler (or none)
+ *   repeats the phrase itself. A frame WITH a window is said as «Скажи целиком» (`phrase_other_slot`, наряд FIX-2
+ *   п. 5), which takes no single filler: it walks every value the level allows and ends with the learner's own
+ *   ({@see PhraseCards::rounds()});
  * - AGAIN (the copy of a failed card, a frame that comes back): the same kind with the next filler round the slot after
  *   the failed one that no card of the frame has taken; none free — the next one other than the failed one; a frame
  *   with nothing else — the failed one again;
@@ -93,7 +95,7 @@ final readonly class PhraseSeries
         }
         $filler = self::fillers($scene, $phrase)[$i] ?? null;
 
-        return $this->card(self::kind($scene, $phrase, $i), $scene, $phrase, $filler)
+        return $this->card(self::kind($scene, $phrase, $i), $scene, $phrase, $filler, PlanLevel::Intermediate)
             ?? $this->cards->chooseBack($scene, $phrase, $filler);
     }
 
@@ -101,7 +103,7 @@ final readonly class PhraseSeries
      * THE ONE PLACE A PHRASE CARD SAID WITH A FILLER IS PICKED BY ITS KIND — for the day, a copy and a return alike.
      * Null for a kind that is said with no filler of its own, and when the card has no material.
      */
-    public function card(CardKind $kind, SceneMaterial $scene, PlanTerm $phrase, ?int $filler): ?CardDraft
+    public function card(CardKind $kind, SceneMaterial $scene, PlanTerm $phrase, ?int $filler, PlanLevel $level): ?CardDraft
     {
         return match ($kind) {
             CardKind::PhraseSlot => $this->cards->slot($scene, $phrase, $filler),
@@ -109,22 +111,26 @@ final readonly class PhraseSeries
             CardKind::PhraseSlotListen => $this->cards->slotListen($scene, $phrase, $filler),
             CardKind::PhraseAssemble => $this->cards->assemble($scene, $phrase, $filler),
             CardKind::PhraseRepeat => $this->cards->repeat($scene, $phrase, $filler),
-            CardKind::PhraseOtherSlot => $this->cards->otherSlot($scene, $phrase, $filler),
+            CardKind::PhraseOtherSlot => $this->cards->sayWhole($scene, $phrase, $level),
             default => null,
         };
     }
 
     /**
      * The same kind said with another filler — the copy of a card failed the first time, a frame that comes back.
-     * Null for a kind said with no filler of its own (`phrase_combine`, `phrase_own_slot`, a walkthrough) or when no
-     * filler makes the card.
+     * Null for a kind said with no filler of its own (`phrase_combine`, a walkthrough) or when no filler makes the
+     * card. «Скажи целиком» (`phrase_other_slot`) takes no single filler: it comes back as the whole card again,
+     * every round of it, because every value of the window is what it is FOR (наряд FIX-2, п. 5).
      *
      * @param  list<int>  $used  the fillers the frame's cards have already taken
      */
-    public function again(CardKind $kind, SceneMaterial $scene, PlanTerm $phrase, ?int $failed, array $used): ?CardDraft
+    public function again(CardKind $kind, SceneMaterial $scene, PlanTerm $phrase, ?int $failed, array $used, PlanLevel $level): ?CardDraft
     {
+        if ($kind === CardKind::PhraseOtherSlot) {
+            return $this->cards->sayWhole($scene, $phrase, $level);
+        }
         foreach (self::againFillers($scene, $phrase, $kind, $failed, $used) as $filler) {
-            $draft = $this->card($kind, $scene, $phrase, $filler);
+            $draft = $this->card($kind, $scene, $phrase, $filler, $level);
             if ($draft !== null) {
                 return $draft;
             }
@@ -143,20 +149,16 @@ final readonly class PhraseSeries
      */
     public static function againFillers(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, ?int $failed, array $used): array
     {
-        if (! in_array($kind, [...self::CYCLE, CardKind::PhraseRepeat, CardKind::PhraseOtherSlot], true)) {
+        if (! in_array($kind, [...self::CYCLE, CardKind::PhraseRepeat], true)) {
             return [];
         }
         if (! PhraseCards::hasSlot($phrase)) {
             return [null];
         }
-        $said = $kind === CardKind::PhraseOtherSlot ? $scene->saidIndex($phrase) : null;
         $free = [];
         $taken = [];
         $last = [];
         foreach (self::round(array_column(CardObjects::fillers($scene, $phrase), 'index'), $failed) as $index) {
-            if ($index === $said) {
-                continue;
-            }
             if ($index === $failed) {
                 $last[] = $index;
             } elseif (in_array($index, $used, true)) {
@@ -200,24 +202,6 @@ final readonly class PhraseSeries
     }
 
     /**
-     * The filler `phrase_other_slot` asks for: one no recognition of the frame has taken and not the said one, seeded
-     * among such; none free — any but the said one. Null for a frame with no other filler than the said one.
-     *
-     * @param  list<int>  $taken  the fillers the frame's recognitions are said with
-     */
-    public static function otherFiller(SceneMaterial $scene, PlanTerm $phrase, array $taken): ?int
-    {
-        $said = $scene->saidIndex($phrase);
-        $rest = array_values(array_filter(self::fillers($scene, $phrase), static fn (int $i): bool => $i !== $said));
-        if ($rest === []) {
-            return null;
-        }
-        $free = array_values(array_filter($rest, static fn (int $i): bool => ! in_array($i, $taken, true)));
-
-        return Rotation::pick($scene->seed("{$phrase->ref()}:other"), 0, $free === [] ? $rest : $free);
-    }
-
-    /**
      * Which filler a dealt phrase card is said with, read off its own payload: the intro's said one, the prompt's, the
      * window's, the assembly's answer, the combine's exchange; `phrase_slot` names none, so its right option is found
      * among the frame's fillers. Null for a card said with no filler of its own.
@@ -229,7 +213,7 @@ final readonly class PhraseSeries
         $index = match ($kind) {
             CardKind::PhraseIntro => self::at($payload, 'said', 'filler_index'),
             CardKind::PhraseChooseBack => self::at($payload, 'prompt', 'filler_index'),
-            CardKind::PhraseSlotListen, CardKind::PhraseRepeat, CardKind::PhraseOtherSlot => self::at($payload, 'filler_index'),
+            CardKind::PhraseSlotListen, CardKind::PhraseRepeat => self::at($payload, 'filler_index'),
             CardKind::PhraseAssemble => self::at($payload, 'expected', 'filler_index'),
             CardKind::PhraseCombine => self::at($payload, 'correct_filler'),
             CardKind::PhraseSlot => self::slotFiller($payload),

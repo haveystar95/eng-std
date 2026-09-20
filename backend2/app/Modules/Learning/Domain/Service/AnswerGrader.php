@@ -14,6 +14,8 @@ use App\Modules\Learning\Domain\ValueObject\SpeechGradingRules;
 use App\Modules\Learning\Domain\ValueObject\SpokenCredit;
 use App\Modules\Learning\Domain\ValueObject\SpokenVerdict;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
+use App\Modules\Shared\Domain\Service\SpokenSuffixTolerance;
+use App\Modules\Shared\Domain\Service\SpokenWordBoundary;
 
 /**
  * Turns a client's Answer into a Grade for the scheduler. The mode decides how forgiving and
@@ -59,7 +61,7 @@ final class AnswerGrader
     {
         // A key that asks to be MATCHED LOOSELY skips the three stages below entirely — they are
         // stages of equality, and this key is not asking for equality. Reached only by an answer
-        // that came out of a recogniser ({@see SpokenCoverage} for why equality is the wrong bar,
+        // that came out of a recogniser ({@see \App\Modules\Shared\Domain\Service\SpeechMatch} for why equality is the wrong bar,
         // {@see SpokenLine} for the three shapes «enough» now has).
         if ($expected->policy->isSpoken()) {
             return $this->judgeSpoken($answer->response, $expected)->isAccepted()

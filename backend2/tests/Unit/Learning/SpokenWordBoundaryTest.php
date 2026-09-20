@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Learning\Domain\Service\SpokenCoverage;
-use App\Modules\Learning\Domain\Service\SpokenWordBoundary;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\ValueObject\Answer;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -11,6 +9,7 @@ use App\Modules\Learning\Domain\ValueObject\ExpectedAnswer;
 use App\Modules\Learning\Domain\ValueObject\Grade;
 use App\Modules\Learning\Domain\ValueObject\LatencyBaseline;
 use App\Modules\Learning\Domain\ValueObject\MatchPolicy;
+use App\Modules\Shared\Domain\Service\SpokenWordBoundary;
 
 /**
  * A SPACE IS THE RECOGNISER'S GUESS — {@see SpokenWordBoundary}.
@@ -20,25 +19,23 @@ use App\Modules\Learning\Domain\ValueObject\MatchPolicy;
  * sittings running (`reviews`, 02.09 21:42, 21:50, 21:55) — the line's stage-A checklist could not
  * close, and the scheduler was handed a lapse for a reading that was right.
  */
-it('accepts the live reading whose recogniser glued two words together', function () {
-    $coverage = new SpokenCoverage();
 
-    expect($coverage->covers('I see, withoututilities', 'I see, without utilities.'))->toBeTrue()
-        ->and($coverage->ratio('I see, withoututilities', 'I see, without utilities.'))->toBe(1.0);
+it('accepts the live reading whose recogniser glued two words together', function () {
+
+    expect(learningCovers('I see, withoututilities', 'I see, without utilities.'))->toBeTrue()
+        ->and(learningRatio('I see, withoututilities', 'I see, without utilities.'))->toBe(1.0);
 });
 
 it('accepts a glue in the other direction — one expected word heard as two', function () {
-    $coverage = new SpokenCoverage();
 
-    expect($coverage->covers('is the listing still avail able', 'Is the listing still available?'))->toBeTrue();
+    expect(learningCovers('is the listing still avail able', 'Is the listing still available?'))->toBeTrue();
 });
 
 it('still refuses a reading that dropped a word of its own', function () {
-    $coverage = new SpokenCoverage();
 
     // «пропуск смысловых слов остаётся честным отказом»: three of six words said, and no boundary
     // anywhere explains the other three.
-    expect($coverage->covers('could you write please', 'Could you write it down, please?'))->toBeFalse();
+    expect(learningCovers('could you write please', 'Could you write it down, please?'))->toBeFalse();
 });
 
 it('does not invent a word the sentence never asked for', function () {
@@ -81,10 +78,9 @@ it('gives a typed answer no boundary tolerance — the spaces there were typed b
 });
 
 it('keeps the apostrophe fold (Д-32) intact through the re-cut', function () {
-    $coverage = new SpokenCoverage();
 
     // «He's five years old.» folds to «hes five years old» on both sides; nothing about the
     // boundary pass may split that back into «he s».
-    expect($coverage->covers('hes five years old', "He's five years old."))->toBeTrue()
-        ->and($coverage->covers("he's five years old", "Hes five years old."))->toBeTrue();
+    expect(learningCovers('hes five years old', "He's five years old."))->toBeTrue()
+        ->and(learningCovers("he's five years old", "Hes five years old."))->toBeTrue();
 });

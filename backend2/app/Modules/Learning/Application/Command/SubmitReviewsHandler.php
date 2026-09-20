@@ -25,7 +25,7 @@ use App\Modules\Learning\Domain\Repository\TermProgressRepository;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\Scheduler;
-use App\Modules\Learning\Domain\Service\SpokenCoverage;
+use App\Modules\Learning\Domain\Service\SpokenLine;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\Answer;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -262,7 +262,7 @@ final readonly class SubmitReviewsHandler
      * How the SENTENCE key is compared. Every mode that assembles, types or taps a sentence is
      * compared for equality, because the learner produced every character of it. `speaking` is not:
      * its answer came out of a speech recogniser, which drops and swaps words on a perfectly good
-     * reading, so it is compared by COVERAGE ({@see \App\Modules\Learning\Domain\Service\SpokenCoverage} for the numbers and the
+     * reading, so it is compared by COVERAGE ({@see \App\Modules\Shared\Domain\Service\SpeechMatch} for the numbers and the
      * reasoning). Being wrong in the strict direction here is not a cosmetic bug — an exact match
      * on a transcript delivers a LAPSE for a room that was noisy.
      */
@@ -282,7 +282,7 @@ final readonly class SubmitReviewsHandler
      * learner reads a whole sentence into the microphone, and the recogniser mangles it exactly as
      * it mangles a pinned example; holding it to equality graded a good reading `again`
      * (BUGFIX-2 Ч.3б). So a spoken answer to a LONG term is compared by coverage, which in practice
-     * says «the words of the card are in what was heard» — {@see SpokenCoverage::LONG_UTTERANCE_WORDS}.
+     * says «the words of the card are in what was heard» — {@see SpokenLine::LONG_UTTERANCE_WORDS}.
      *
      * A short term keeps equality, and deliberately: coverage over a one-word key would accept the
      * word buried in any sentence at all, and the normalising stages ({@see AnswerGrader}) already
@@ -295,7 +295,7 @@ final readonly class SubmitReviewsHandler
     private function policyForTerm(ReviewInput $input, TermAnswerKeyView $key): MatchPolicy
     {
         return $input->exerciseMode === ExerciseMode::Speaking
-            && SpokenCoverage::isLongUtterance($key->accepted[0] ?? '')
+            && SpokenLine::isLongUtterance($key->accepted[0] ?? '')
                 ? MatchPolicy::Coverage
                 : MatchPolicy::Exact;
     }

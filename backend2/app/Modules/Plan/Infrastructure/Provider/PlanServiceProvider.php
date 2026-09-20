@@ -163,6 +163,7 @@ final class PlanServiceProvider extends ServiceProvider
                 languages: $languages,
                 pace: $pace,
                 slotJudgeDailyCap: (int) config('plan.slot_judge.daily_cap', 60),
+                repeatMisses: (int) config('plan.speech.repeat_misses', 0),
             );
         });
 

@@ -11,15 +11,15 @@ use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SlotJudgeQuota;
-use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Service\FrameParts;
 use App\Modules\Plan\Domain\Service\FrameText;
-use App\Modules\Plan\Domain\Service\SpeechCoverage;
 use App\Modules\Shared\Domain\Service\LanguageName;
+use App\Modules\Shared\Domain\Service\SpeechMatch;
+use App\Modules\Shared\Domain\ValueObject\SpeechMode;
 use DateTimeImmutable;
 use Throwable;
 
@@ -28,8 +28,9 @@ use Throwable;
  * a card judged by meaning — the code first, the model only for what the code cannot say, and never a failure the
  * vendor caused.
  *
- * `speak_answer` and `phrase_own_slot` — the only two kinds there are — in this order:
- * 1. the frame's own words must be heard (coverage, the card's `coverage_min`) — else rejected by code, and neither
+ * `speak_answer` and the own-word round of «Скажи целиком» (`phrase_other_slot`) — the only two kinds that ask it
+ * ({@see \App\Modules\Plan\Domain\ValueObject\CardKind::asksJudge()}) — in this order:
+ * 1. the frame's own words must be heard (the `free` mode of {@see SpeechMatch}) — else rejected by code, and neither
  *    the model nor the day's quota is touched: «say the frame» is not a question of meaning;
  * 2. a frame with no slot has nothing more to judge, and a value the lesson knows for the slot, heard as one run of
  *    words, is a value — both accepted by code, for free;
@@ -52,18 +53,18 @@ final readonly class SlotJudge
         private CheckCounters $counters,
         private LanguagePacks $packs,
         private PlanConfig $config,
-        private SpeechCoverage $coverage = new SpeechCoverage,
+        private SpeechMatch $speech = new SpeechMatch,
     ) {}
 
     public function judge(Plan $plan, DayCard $card, string $heard, DateTimeImmutable $now): SlotJudgeVerdict
     {
         $payload = $card->payload();
-        $target = $this->packs->for($plan->targetLang()->value);
+        $target = $this->packs->for($plan->targetLang()->value)->speech();
         $frame = is_array($payload['frame'] ?? null) ? $payload['frame'] : [];
         $frameTarget = self::text($frame['frame_target'] ?? null);
         $part = FrameParts::part($frameTarget);
 
-        if (! $this->coverage->covers($heard, $part, $this->minimum($payload['coverage_min'] ?? null, $part, $target), $target)) {
+        if (! $this->speech->said($heard, $part, SpeechMode::Free, $target)) {
             return SlotJudgeVerdict::byCode(false, null, self::FRAME_NOT_SAID);
         }
 
@@ -80,13 +81,13 @@ final readonly class SlotJudge
             }
         }
         foreach ($values as $value) {
-            if ($this->coverage->containsSequence($heard, $value, $target)) {
+            if ($this->speech->containsSequence($heard, $value, $target)) {
                 return SlotJudgeVerdict::byCode(true, $value, null);
             }
         }
 
         $partner = self::line($payload['partner_line'] ?? null);
-        $beyond = $this->coverage->slotWords($heard, $frameTarget);
+        $beyond = $this->speech->slotWords($heard, $part, $target);
 
         return $this->ask($plan, $now, new SlotJudgeRequest(
             targetLanguage: LanguageName::of($plan->targetLang()->value),
@@ -131,16 +132,6 @@ final readonly class SlotJudge
         $this->counters->recordCodes($this->model->slotJudgePromptVersion(), [LessonCodes::JUDGE_UNAVAILABLE]);
 
         return SlotJudgeVerdict::unavailable($fallbackSlot);
-    }
-
-    /** The share the card was dealt with; a card without one asks what its frame would have been dealt with. */
-    private function minimum(mixed $dealt, string $part, LanguagePack $target): float
-    {
-        if (is_int($dealt) || is_float($dealt)) {
-            return (float) $dealt;
-        }
-
-        return $this->coverage->minFor($part, $target);
     }
 
     /** @return array{text_target: string, text_native: string} a line of the payload, empty texts for none */

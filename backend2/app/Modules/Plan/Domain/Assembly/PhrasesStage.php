@@ -20,9 +20,11 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
  *   frame; between two as many — the one said earlier in the visit), one after another while the stage, by
  *   {@see DayPace}, still fits in {@see THIRD_BUDGET} seconds with it — the first that does not fit ends the thirds
  *   (решение архитектора 16.09: two recognitions for every frame, no ceiling in cards);
- * - PRODUCTION: `phrase_repeat` for a beginner; an intermediate learner walks `phrase_other_slot` → `phrase_own_slot`
- *   over the frames with two fillers or more, seeded — a frame with a single value has no «other» window to ask for,
- *   so it is repeated; a card that cannot be built is `phrase_repeat` of the phrase itself;
+ * - PRODUCTION: ONE trainer at every level (наряд FIX-2, п. 5) — «Скажи целиком» (`phrase_other_slot`) for every
+ *   frame WITH a window, in rounds over its values and ending with the learner's own; a frame without a window has
+ *   no value to put anywhere and is repeated (`phrase_repeat`). A card that cannot be built is `phrase_repeat` of
+ *   the phrase itself. The levels differ in the number of rounds and in nothing else, which is what the live pass
+ *   of 20.09 asked for: a beginner's «Фразы» held no «со своим словом» at all;
  * - SPACING ({@see Spacing::apart()}): between two cards of one frame stand at least two cards of other frames, the
  *   intros open their waves, `phrase_combine` is last.
  */
@@ -33,10 +35,6 @@ final class PhrasesStage
 
     /** The recognitions every frame with a window gets — as many as its fillers, up to this. */
     public const RECOGNITIONS = 2;
-
-    private const PRODUCE = [CardKind::PhraseOtherSlot, CardKind::PhraseOwnSlot];
-
-    private const MIN_FILLERS_TO_VARY = 2;
 
     private readonly PhraseSeries $series;
 
@@ -54,7 +52,6 @@ final class PhrasesStage
         $recognitions = [];
         $produce = [];
         $seconds = 0;
-        $varied = 0;
         foreach ($phrases as $phrase) {
             $ref = $phrase->ref();
             $recognitions[$ref] = [];
@@ -64,9 +61,7 @@ final class PhrasesStage
                     $recognitions[$ref][] = $card;
                 }
             }
-            $produce[$ref] = $level === PlanLevel::Intermediate && self::varies($scene, $phrase)
-                ? Rotation::pick($scene->seed('phrases:produce'), $varied++, self::PRODUCE)
-                : CardKind::PhraseRepeat;
+            $produce[$ref] = PhraseCards::hasSlot($phrase) ? CardKind::PhraseOtherSlot : CardKind::PhraseRepeat;
             $seconds += $this->pace->seconds(CardKind::PhraseIntro) + $this->pace->seconds($produce[$ref])
                 + array_sum(array_map(fn (CardDraft $d): int => $this->pace->seconds($d->kind), $recognitions[$ref]));
         }
@@ -93,11 +88,7 @@ final class PhrasesStage
         $units = [];
         foreach ($phrases as $phrase) {
             $ref = $phrase->ref();
-            $taken = array_values(array_filter(array_map(
-                static fn (CardDraft $d): ?int => PhraseSeries::fillerOf($d->kind, $d->payload),
-                $recognitions[$ref],
-            ), static fn (?int $i): bool => $i !== null));
-            $units[] = [$this->cards->intro($scene, $phrase), ...$recognitions[$ref], $this->production($scene, $phrase, $produce[$ref], $taken)];
+            $units[] = [$this->cards->intro($scene, $phrase), ...$recognitions[$ref], $this->production($scene, $phrase, $produce[$ref], $level)];
         }
 
         return Spacing::apart($units, $combine);
@@ -109,11 +100,11 @@ final class PhrasesStage
      * the frame's own combine. A kind unknown, or a card that cannot be built again — the frame's first recognition.
      * None when its scene has nothing to choose between.
      */
-    public function returned(SceneMaterial $scene, PlanTerm $phrase, ?CardKind $failedAs, ?int $failedFiller): ?CardDraft
+    public function returned(SceneMaterial $scene, PlanTerm $phrase, ?CardKind $failedAs, ?int $failedFiller, PlanLevel $level): ?CardDraft
     {
         $draft = match (true) {
             $failedAs === CardKind::PhraseCombine => $this->cards->combine($scene, $phrase),
-            $failedAs !== null => $this->series->again($failedAs, $scene, $phrase, $failedFiller, $failedFiller === null ? [] : [$failedFiller]),
+            $failedAs !== null => $this->series->again($failedAs, $scene, $phrase, $failedFiller, $failedFiller === null ? [] : [$failedFiller], $level),
             default => null,
         };
 
@@ -127,23 +118,15 @@ final class PhrasesStage
      *
      * @param  list<int>  $used  the fillers the frame's cards of the day are said with
      */
-    public function again(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, ?int $failed, array $used): ?CardDraft
+    public function again(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, ?int $failed, array $used, PlanLevel $level): ?CardDraft
     {
-        return $this->series->again($kind, $scene, $phrase, $failed, $used);
+        return $this->series->again($kind, $scene, $phrase, $failed, $used, $level);
     }
 
-    /**
-     * The production of a frame: its kind with its filler, or `phrase_repeat` when the kind has no material.
-     *
-     * @param  list<int>  $taken  the fillers the frame's recognitions are said with
-     */
-    private function production(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, array $taken): CardDraft
+    /** The production of a frame: «Скажи целиком» for a window, else the phrase repeated — and a repeat when it fails. */
+    private function production(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, PlanLevel $level): CardDraft
     {
-        $draft = match ($kind) {
-            CardKind::PhraseOtherSlot => $this->cards->otherSlot($scene, $phrase, PhraseSeries::otherFiller($scene, $phrase, $taken)),
-            CardKind::PhraseOwnSlot => $this->cards->ownSlot($scene, $phrase),
-            default => null,
-        };
+        $draft = $kind === CardKind::PhraseOtherSlot ? $this->cards->sayWhole($scene, $phrase, $level) : null;
         if ($draft !== null) {
             return $draft;
         }
@@ -178,9 +161,4 @@ final class PhrasesStage
         return array_column($frames, 'phrase');
     }
 
-    /** A frame said with other values than its own: a window and at least two fillers for it that a card may show. */
-    private static function varies(SceneMaterial $scene, PlanTerm $phrase): bool
-    {
-        return PhraseCards::hasSlot($phrase) && count(CardObjects::fillers($scene, $phrase)) >= self::MIN_FILLERS_TO_VARY;
-    }
 }

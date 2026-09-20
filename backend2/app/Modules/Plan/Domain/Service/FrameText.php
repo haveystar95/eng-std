@@ -125,6 +125,29 @@ final class FrameText
     }
 
     /**
+     * THE ONE PLACE A SENTENCE IS PUT TOGETHER IN THE LEARNER'S LANGUAGE (наряд FIX-2, п. 1) — the native frame said
+     * with a native filler, closed the way the phrase is closed, and STARTING WITH A CAPITAL.
+     *
+     * The capital is the whole reason this is a method and not three calls at the call site. A native frame whose
+     * window stands first («___ нужен ветеринар.») is written lower-cased after the fill, because the filler is a
+     * fragment and was written as one («моей кошке»); the sentence that came out went onto a card of the owner's
+     * live day exactly like that (проход 20.09, п. 1). Wherever a native sentence is assembled it is assembled
+     * here, so the next card cannot get it wrong on its own.
+     */
+    public static function nativeSentence(string $frameNative, string $fillerNative, string $endLike): string
+    {
+        return self::capitalized(self::withEndMarkOf(self::fill($frameNative, $fillerNative), $endLike));
+    }
+
+    /** `$text` with its first letter upper-cased; a text that starts with something else is left alone. */
+    public static function capitalized(string $text): string
+    {
+        $trimmed = ltrim($text);
+
+        return $trimmed === '' ? $text : mb_strtoupper(mb_substr($trimmed, 0, 1)).mb_substr($trimmed, 1);
+    }
+
+    /**
      * Leading conversational glue of any learner line, by its shape: a short prefix up to the first
      * comma («Yes, », «Okay, thanks, »). What «10 words, not counting leading glue» leaves out.
      */

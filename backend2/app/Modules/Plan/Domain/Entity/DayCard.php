@@ -119,7 +119,16 @@ final class DayCard
         $this->result = $result;
         $this->attempts = max(1, $attempts);
         $this->answeredAt = $now;
-        $this->response = $choice === null ? $response : [...$response ?? [], 'choice' => $choice];
+        // A VERDICT ALREADY WRITTEN IS NOT OVERWRITTEN BY THE ANSWER (наряд FIX-2, п. 5). The judge rules before the
+        // card is answered, and on a card the judge does not close («Скажи целиком», and a `speak_answer` the learner
+        // skips after a rejection) the answer arrived afterwards and carried no `judge` of its own — so the ruling,
+        // its cost and its reason vanished from the journal. Live evidence: `speak_answer x5` of the owner's day 1
+        // kept `{heard, hinted_at}` and nothing of the verdict the learner had just been shown.
+        $answered = $choice === null ? $response ?? [] : [...$response ?? [], 'choice' => $choice];
+        $judged = is_array($this->response) && isset($this->response['judge']) && ! isset($answered['judge'])
+            ? ['judge' => $this->response['judge']]
+            : [];
+        $this->response = $answered === [] && $judged === [] ? $response : [...$answered, ...$judged];
 
         if (! $this->kind->lapses($result, $this->attempts, ($response['no_mic'] ?? false) === true, $choiceRight)) {
             return false;
@@ -152,9 +161,14 @@ final class DayCard
     }
 
     /**
-     * The judge's verdict on one attempt of a card judged by meaning (`…/judge`, наряд SESSION-1a, разд. 4). Every
-     * attempt counts and leaves what was heard and ruled; an accepted one answers the card — `hinted` when the frame
-     * was shown before the pass — and a rejected one leaves it open for another attempt or a skip.
+     * The judge's verdict on one attempt (`…/judge`, наряд SESSION-1a, разд. 4). Every attempt counts and leaves what
+     * was heard and ruled.
+     *
+     * WHETHER IT ALSO ANSWERS THE CARD is the kind's ({@see CardKind::isJudged()}, наряд FIX-2 п. 5). On
+     * `speak_answer` the verdict IS the result — accepted, and the card is passed («hinted» when the frame was shown
+     * before it) — and a rejection leaves it open for another attempt or a skip. On «Скажи целиком» the judge rules
+     * on the LAST round only, which is practice: the verdict is kept and shown, and the card's own result stays what
+     * its value rounds made it, written by the client like any voice card's.
      *
      * @param  array<string, mixed>  $response
      */
@@ -165,7 +179,7 @@ final class DayCard
         }
         $this->attempts++;
         $this->response = $response;
-        if ($accepted) {
+        if ($accepted && $this->kind->isJudged()) {
             $this->result = $hinted ? CardResult::Hinted : CardResult::Passed;
             $this->answeredAt = $now;
         }
