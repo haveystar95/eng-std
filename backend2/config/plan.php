@@ -132,6 +132,9 @@ return [
         'speak_answer' => 35,
         'speak_echo' => 25,
         'speak_retell' => 30,
+        // «Вспомни свои реплики» (кадр 37-3, наряд CONV-1): the plan's own lines read through once,
+        // scene by scene — a minute of reading and listening, not a trainer.
+        'recall_scenes' => 60,
     ],
 
     /*
@@ -158,6 +161,39 @@ return [
      */
     'speech' => [
         'repeat_misses' => (int) env('PLAN_SPEECH_REPEAT_MISSES', 0),
+    ],
+
+    /*
+     * THE TALK WITH THE AGENT — the sixth stage of a day (наряд CONV-1, `docs/plan-v2.md`).
+     *
+     * `turns` is how many moves of the SCENE each kind of talk has: at nought the prompt is told
+     * `TURNS_LEFT: 0` and the role says goodbye itself — nothing cuts a learner off mid-word. A
+     * «Не понял» is not one of these moves (переспросы нейтральны, кадр 37-12); it is paid for out
+     * of the money instead.
+     *
+     * `cost_cap_usd` is what one talk may spend on the model and the voice together. Reaching it
+     * makes the NEXT move the role's last (`ended_reason: limit`), it does not end the talk where
+     * the learner stands.
+     *
+     * `model` is a `mini` class on purpose: a move has six seconds to come back and a talk is a
+     * dozen of them. `timeout` is the seconds of its ONE attempt — a retry would double a wait the
+     * learner is sitting through.
+     */
+    'conversation' => [
+        'turns' => [
+            'day' => (int) env('PLAN_CONVERSATION_TURNS_DAY', 4),
+            'rehearsal' => (int) env('PLAN_CONVERSATION_TURNS_REHEARSAL', 10),
+            'review' => (int) env('PLAN_CONVERSATION_TURNS_REVIEW', 4),
+        ],
+        'minutes' => [
+            'day' => (int) env('PLAN_CONVERSATION_MINUTES_DAY', 3),
+            'rehearsal' => (int) env('PLAN_CONVERSATION_MINUTES_REHEARSAL', 6),
+            'review' => (int) env('PLAN_CONVERSATION_MINUTES_REVIEW', 6),
+        ],
+        'cost_cap_usd' => (float) env('PLAN_CONVERSATION_COST_CAP_USD', 0.08),
+        'hint_delay_ms' => (int) env('PLAN_CONVERSATION_HINT_DELAY_MS', 5000),
+        'model' => env('PLAN_CONVERSATION_MODEL', 'gpt-5.4-mini'),
+        'timeout' => (int) env('PLAN_CONVERSATION_TIMEOUT', 20),
     ],
 
     /*

@@ -56,3 +56,36 @@ it('reads a frame of either language and a filler\'s native text without the spa
         ->and($lesson->exchanges[0]->learner()?->textTarget)->toBe('It hurts in his lower back.')
         ->and($lesson->phrase('p4')?->frameNative)->toBe('Температуры у него нет.');
 });
+
+/**
+ * A SENTENCE ENDS WITH ONE FULL STOP, EVEN AFTER AN ABBREVIATION (хвост ROADMAP, наряд CONV-1, п. 7).
+ *
+ * The model writes «3 p.m.» and then closes the sentence with its own stop, and «I can come at 3 p.m..» went to the
+ * phone, to the voice and to the judge exactly like that (found on the live day of наряд FIX-2, §3). The lesson is
+ * read with the doubled stop collapsed — a LINE's text as well as a frame's, because that is where it was seen.
+ *
+ * Catches the two stops kept, an ellipsis written with dots «fixed» into one («Well...» is somebody trailing off,
+ * not a slip), and a stop taken off a sentence that has only one.
+ */
+it('reads a line, a frame and a filler with one full stop where the model wrote two', function () {
+    $lesson = nmParsed(static function (array $p): array {
+        $p['dialogue'][0]['messages'][1]['text_target'] = 'I can come at 3 p.m..';
+        $p['dialogue'][0]['messages'][1]['text_native'] = 'Я могу прийти в 15:00..';
+        $p['dialogue'][1]['messages'][0]['text_target'] = 'Well...';
+        $p['phrases'][0]['frame_target'] = 'It hurts in his ___..';
+        $p['phrases'][0]['frame_native'] = 'У него болит ___..';
+        $p['phrases'][1]['slot']['fillers'][0]['native'] = 'три дня назад..';
+
+        return $p;
+    });
+
+    expect($lesson->exchanges[0]->learner()?->textTarget)->toBe('I can come at 3 p.m.')
+        ->and($lesson->exchanges[0]->learner()?->textNative)->toBe('Я могу прийти в 15:00.')
+        // Three dots are a pause, not a doubled stop.
+        ->and($lesson->exchanges[1]->partner()?->textTarget)->toBe('Well...')
+        ->and($lesson->phrase('p1')?->frameTarget)->toBe('It hurts in his ___.')
+        ->and($lesson->phrase('p1')?->frameNative)->toBe('У него болит ___.')
+        ->and($lesson->phrase('p2')?->fillers()[0]->native)->toBe('три дня назад.')
+        // A sentence that had one stop keeps it.
+        ->and($lesson->phrase('p4')?->frameTarget)->toBe("He doesn't have a fever.");
+});

@@ -16,9 +16,12 @@ use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Exception\LessonNotReady;
+use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
+use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\UnitStates;
+use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\LessonStatus;
@@ -42,6 +45,8 @@ final readonly class DayDealer
         private DayCardRepository $cards,
         private NativeDistractorSource $distractors,
         private LanguagePacks $packs,
+        private ConversationRepository $conversations,
+        private ConversationMaterial $material,
     ) {}
 
     /** @return list<DayCard> */
@@ -241,6 +246,39 @@ final readonly class DayDealer
                 PlanSceneId::fromString((string) $card->payload()['scene_id']), $card->unitKind(), $card->unitRef(), $source->id(),
                 $card->kind(), PhraseSeries::fillerOf($card->kind(), $card->payload()),
             );
+        }
+
+        return [...$out, ...$this->unsaidInTalks($plan, $sources)];
+    }
+
+    /**
+     * WHAT THE TALK DID NOT HEAR (наряд CONV-1, п. 3): the phrases of the plan that did not sound in an earlier day's
+     * conversation come back on the next day, once, as the learner's own line said aloud.
+     *
+     * They are added AFTER the units that failed on cards, so a phrase that did both comes back as what it failed as —
+     * a wrong answer is a stronger fact about a phrase than a talk that took another road. The rehearsal's talk gives
+     * nothing back: there is no tomorrow before the event, and its summary says so in words instead (кадр 37-12).
+     *
+     * @param  array<int, PlanDay>  $sources
+     * @return list<ReturnedUnit>
+     */
+    private function unsaidInTalks(Plan $plan, array $sources): array
+    {
+        $out = [];
+        foreach ($sources as $source) {
+            $talk = $this->conversations->latestForDay($source->id());
+            if ($talk === null || ! $talk->isEnded() || ! $talk->type()->returnsTomorrow()) {
+                continue;
+            }
+            $outcome = ConversationOutcomes::of($talk, $this->material->for($plan, $source)->phrases);
+            foreach ($outcome->notSaid as $id) {
+                [$sceneId, $ref] = array_pad(explode(':', $id, 2), 2, '');
+                if ($sceneId !== '' && $ref !== '') {
+                    $out[] = new ReturnedUnit(
+                        PlanSceneId::fromString($sceneId), UnitKind::Phrase, $ref, $source->id(), CardKind::SpeakRetell,
+                    );
+                }
+            }
         }
 
         return $out;

@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 final class EloquentDayCardRepository implements DayCardRepository
 {
     /** The stage order in SQL, so one query returns the cards in walking order. */
-    private const STAGE_ORDER = "CASE stage WHEN 'words' THEN 0 WHEN 'phrases' THEN 1 WHEN 'dialogue' THEN 2 WHEN 'listen' THEN 3 ELSE 4 END";
+    private const STAGE_ORDER = "CASE stage WHEN 'words' THEN 0 WHEN 'phrases' THEN 1 WHEN 'dialogue' THEN 2 WHEN 'listen' THEN 3 WHEN 'speak' THEN 4 ELSE 5 END";
 
     public function forDay(PlanDayId $dayId): array
     {

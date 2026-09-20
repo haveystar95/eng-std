@@ -31,6 +31,16 @@ final readonly class WindowStage
         return new self($stage, StageState::Locked, null, null, null, 0.0);
     }
 
+    /**
+     * THE STAGE BEING WALKED THAT HAS NO CARDS (наряд CONV-1) — the talk with the agent. It carries
+     * its minutes and no count at all: «Разговор с врачом · идёт · около 6 минут» (кадр 37-1). A
+     * «0 / 1» there would be a number invented to fill a column.
+     */
+    public static function talking(Stage $stage, int $minutesLeft): self
+    {
+        return new self($stage, StageState::Current, null, null, max(0, $minutesLeft), 0.0);
+    }
+
     /** @param int $minutesLeft the minutes the stage's unanswered cards take by the day's pace ({@see \App\Modules\Plan\Domain\Service\DayPace}) */
     public static function current(Stage $stage, int $answered, int $total, int $minutesLeft): self
     {

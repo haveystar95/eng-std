@@ -80,7 +80,12 @@ function s1dFrameFillers(array $cards, string $ref): array
  */
 function s1dReturned(array $cards): array
 {
-    return array_values(array_filter($cards, static fn (array $c): bool => $c['source'] === 'returned' && $c['retry_of'] === null));
+    // The phrases a talk did not hear come back as `speak_retell` (наряд CONV-1): this file is about the frames that
+    // FAILED, and those are checked in `ConversationApiTest`.
+    return array_values(array_filter(
+        $cards,
+        static fn (array $c): bool => $c['source'] === 'returned' && $c['retry_of'] === null && $c['kind'] !== 'speak_retell',
+    ));
 }
 
 // Canon (SESSION-1d, разд. 4): «провалил карточку фразы → копия в конец этапа ТОГО ЖЕ вида с другим наполнением; в день

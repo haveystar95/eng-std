@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\Entity\DayCard;
+use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\StageState;
 use App\Modules\Plan\Domain\ValueObject\WindowStage;
@@ -23,16 +24,30 @@ use App\Modules\Plan\Domain\ValueObject\WindowStatus;
  * - in progress: a stage with every card answered is `done`, the first one that is not is
  *   `current` — with the minutes its unanswered cards take by kind ({@see DayPace}) — the rest `locked`;
  * - passed: every stage `done`.
+ *
+ * Since наряд CONV-1 the last row of a day may be the TALK, which has no cards: it is `done` once
+ * its journal says the talk ended, `current` when the cards are done and it is not over, `locked`
+ * before that — and it never prints «N / M», because there is nothing to count.
  */
 final class DayWindowStages
 {
     /**
      * @param  list<DayCard>  $cards  the day's cards — dealt, or the dealer's outline of a day not opened
      * @param  list<Stage>  $withoutCards  what the day's type deals, for a day with no card yet
+     * @param  bool  $hasConversation  does the day walk the sixth stage ({@see DayStages::walksConversation()})
+     * @param  ConversationState|null  $conversation  where its talk stands; null — not started
+     * @param  int  $conversationSeconds  how long the talk is reckoned to take ({@see ConversationRules})
      * @return list<WindowStage>
      */
-    public static function of(array $cards, array $withoutCards, WindowStatus $status, DayPace $pace): array
-    {
+    public static function of(
+        array $cards,
+        array $withoutCards,
+        WindowStatus $status,
+        DayPace $pace,
+        bool $hasConversation = false,
+        ?ConversationState $conversation = null,
+        int $conversationSeconds = 0,
+    ): array {
         $tallies = RouteStages::tally($cards);
         $out = [];
         $currentFound = false;
@@ -52,6 +67,20 @@ final class DayWindowStages
             $currentFound = $currentFound || $row->state === StageState::Current;
             $out[] = $row;
         }
+
+        if (! $hasConversation) {
+            return $out;
+        }
+
+        // THE SIXTH ROW (наряд CONV-1). It has no cards, so it is neither counted nor paced by them:
+        // «N / M» belongs to card stages, and the talk's minutes are what the talk is reckoned to
+        // take. It becomes the current stage when the cards are done and the talk is not over.
+        $out[] = match (true) {
+            $status === WindowStatus::Passed, $conversation === ConversationState::Ended => WindowStage::done(Stage::Conversation),
+            $status !== WindowStatus::InProgress => WindowStage::locked(Stage::Conversation),
+            $currentFound => WindowStage::locked(Stage::Conversation),
+            default => WindowStage::talking(Stage::Conversation, DayPace::minutes($conversationSeconds)),
+        };
 
         return $out;
     }

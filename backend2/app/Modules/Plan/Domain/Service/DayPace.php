@@ -26,7 +26,7 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
  */
 final readonly class DayPace
 {
-    /** @var array<string, int> seconds per card, by kind — the 27 dealt kinds; `phrase_other_slot` is per ROUND */
+    /** @var array<string, int> seconds per card, by kind — the 28 dealt kinds; `phrase_other_slot` is per ROUND */
     public const DEFAULTS = [
         'word_intro' => 8,
         'word_repeat' => 12,
@@ -57,6 +57,7 @@ final readonly class DayPace
         'speak_answer' => 35,
         'speak_echo' => 25,
         'speak_retell' => 30,
+        'recall_scenes' => 60,
     ];
 
     /** @param array<string, int> $secondsByKind kind value → seconds per card */

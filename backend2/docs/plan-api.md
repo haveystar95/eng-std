@@ -130,8 +130,9 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 | перечитать карточки | `GET /plans/{id}/days/{n}/cards` | `PlanDayCards` (тот же плоский `cards[]`) |
 | ответить | `POST …/cards/{cardId}/answer` `{result, attempts, response?}` | `{card, requeued, unit {kind, ref, returns_tomorrow, returns_day}, day {cards_total, cards_done, minutes_spent}, stage {stage, minutes_spent}}` — из этого клиент пишет итог этапа (30-6/33-8/34-8/35-6) и итог дня (30-7), не считая ничего сам. `requeued` — та же карточка в конце этапа после первого провала (новый `id`, `retry_of`; у карточки фразы — того же вида с другим наполнением; провал голоса фразы — `skipped` после двух попыток с микрофоном, SESSION-1d), иначе `null`; 409 `plan_card_answered`, 422 `plan_card_result_not_allowed` (вид такого итога не принимает) |
 | зачесть окно | `POST …/cards/{cardId}/judge` `{heard, hinted}` | `{accepted, slot_value, reason_native, result, attempts, card}` — судья окна `slot_judge.v2`, только `speak_answer` и последний круг `phrase_other_slot`; 422 `plan_card_not_judged` у любого другого вида (`speak_retell` — тоже, BACK-TAILS-1 §1.1), 409 `plan_card_answered`, 409 `plan_day_not_open`. У `phrase_other_slot` `result` в ответе — `null`: круг «со своим словом» карточку не закрывает (FIX-2 п. 5) |
-| этап пройден | `POST …/stages/{stage}/close` | `PlanDayRoom`; 409 `plan_stage_incomplete` (`meta.remaining`) |
-| день пройден | `POST …/close` | `PlanDayRoom` с `metrics`; 409 `plan_stage_incomplete`; после этого `Plan.collection_id` заполнен |
+| этап пройден | `POST …/stages/{stage}/close` | `PlanDayRoom`; 409 `plan_stage_incomplete` (`meta.remaining`). Этапы: `words`, `phrases`, `dialogue`, `listen`, `speak`, `recall` (репетиция) и `conversation` — у последнего карточек нет, и он «закрыт», когда разговор окончен (наряд CONV-1) |
+| день пройден | `POST …/close` | `PlanDayRoom` с `metrics`; 409 `plan_stage_incomplete` (у шестого этапа — `meta.stage: conversation`); после этого `Plan.collection_id` заполнен |
+| разговор | `POST …/days/{n}/conversation`, `POST …/conversation/{id}/turn`, `GET …/conversation/{id}` | `PlanConversation` — шестой этап дня, раздел «Разговор с агентом» ниже |
 | озвучка реплики, фразы или слова | `GET /plans/audio/{audioId}` | файл голоса. Клиент этот адрес не собирает: в окне он приходит готовой строкой `audio_url`, в карточке — полем `url` объекта `audio` (ниже) |
 
 **Имя маршрута ответа.** Наряд SESSION-1a зовёт ручку итога «`…/result`» — это она же, `POST
@@ -143,14 +144,15 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 `text_native`, `cards_total`, `cards_done`), `metrics.cards_done` / `first_try_share` /
 `hardest_unit_*` (и их колонки в `plan_days`) — их читал только старый кабинет.
 
-**Окно дня — `window`** (DAY-UI-2, DAY-UI-3, кадры 23-0a…0e; схема `PlanDayWindow`). Всё, что окно пишет,
-посчитано здесь; клиент складывает слова и не выводит ни одного числа. Нет поля — клиент говорит
-«не загрузилось», а не угадывает.
+**Окно дня — `window`** (DAY-UI-2, DAY-UI-3, CONV-1; кадры 23-0a…0e, 37-1, 37-2, 37-13; схема `PlanDayWindow`).
+Всё, что окно пишет, посчитано здесь; клиент складывает слова и не выводит ни одного числа. Нет поля — клиент
+говорит «не загрузилось», а не угадывает.
 
 | поле | что это |
 |---|---|
 | `day` | `index`, `type`, `title_native` / `title_target`, `image` (фото сцены с `tone`, `url_112`/`url_448`) и всегда `image_tone`; `status` — `not_started` / `in_progress` / `passed` (другой запертый день — `locked`: окно его не рисует); `minutes_estimate` — «≈ N минут» до конца дня (null у пройденного); `minutes_spent` — только у пройденного; `goals[{text, passed}]` — `passed` true у всех только у пройденного дня |
-| `stages[5]` | words · phrases · dialogue · listen · speak: `state` `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` — **только у `current`** (у остальных null: цифру клиент не рисует); `share` 0…1 — полоса ряда. У не начатого дня все `locked` |
+| `stages[6]` | words · phrases · dialogue · listen · speak · **conversation** (наряд CONV-1; у репетиции — `recall` · `conversation`, у повторения — её карточки и `conversation`): `state` `done` / `current` / `locked`; `done_count`, `total`, `minutes_left` — **только у `current`** (у остальных null: цифру клиент не рисует); `share` 0…1 — полоса ряда. У не начатого дня все `locked`. **У ряда разговора `done_count` и `total` — null всегда**: карточек у него нет и считать нечего, он несёт только `minutes_left` («идёт · около 6 минут», кадр 37-1) |
+| `highlights` | «Что было хорошо» (кадр 37-13): две-три ГОТОВЫЕ строки итога пройденного дня — «Сказал сам 6 реплик из 8», «В разговоре использовал 5 фраз из 7», «Понял все вопросы». Склоняет сервер, клиент печатает по порядку. Пусто, пока день не пройден; без двух последних строк, если разговора у дня не было |
 | `day_progress` | 0…1 — доля пройденных этапов; полоса компактной шапки |
 | `program.words` | `summary {total, done, returns}` + `items[{ref, term, translation, pronunciation, definition, image, image_tone, audio_url, usage, state, returns_day, used_in}]`; `state` — `pending` / `done` / `returns_tomorrow`; `usage {text, translation, offset, length, audio_url}` — реплика дня, где слово звучит (по `used_in` урока, иначе первая реплика визита со словом), и место слова в ней в символах (подсветка шита 23-0e; слова нет в диалоге — `null`); `returns_day` — номер дня возврата у `returns_tomorrow` («вернётся в день 3»); `used_in` — где урок говорит слово (`p3` каркас или его наполнение, `A3` реплика собеседника), аддитивно GEN-2a |
 | `program.phrases` | `summary` + `items[{ref, text, translation, pronunciation, audio_url, state, frame}]` — голос ученика сцены. Фраза — каркас (`lesson_day.v4.5`): `text`/`translation`/`pronunciation` — каркас с наполнением его первой реплики диалога; `frame {target, native, pronunciation, kind, slot {hint, fillers[{target, native, pronunciation, in_dialogue, audio_url}]} \| null}` — сам каркас, аддитивно GEN-2a; `audio_url` наполнения — каркас, сказанный с этим наполнением, голосом ученика (TTS-2; у наполнения, которым сказана сама фраза, — файл фразы) |
@@ -220,7 +222,7 @@ job `failed` с кодом вендора, письмо в лог. Остато�
 (Наряд SESSION-1a. Кадры — `docs/session-map.md`, правда по кадрам — канва
 `docs/design/session-canvas.dc.html`.)
 
-Реестр тренажёров: в enum `kind` **29 значений**, раздаются **28**. `listen_pairs` (34-4) в enum
+Реестр тренажёров: в enum `kind` **30 значений**, раздаются **29** (наряд CONV-1 добавил `recall_scenes`). `listen_pairs` (34-4) в enum
 есть и не раздаётся никогда — в уроке нет двух похожих реплик, источник появится в `lesson_day.v4.6`;
 клиент держит ветку для неизвестного `kind` (пропустить карточку), а не падает.
 
@@ -531,12 +533,59 @@ audio}` — вариант, который есть реплика визита,
 собран» показывает в приложении при возвращении; сервер всё равно пишет факты и пытается доставить.
 Как только регистрация токена ответит `push_enabled: true`, клиент снимает локальные — дублей нет.
 
+## Разговор с агентом — шестой этап дня (наряд CONV-1, кадры 37-5…37-12)
+
+Живой разговор по ходам: роль сцены начинает первой, ученик говорит голосом что хочет, роль отвечает
+на **сказанное**. Вариантов нет; это не «Диалог». Канон — `docs/plan-v2.md` §11, схемы — `PlanConversation`,
+`PlanConversationTurn`, `PlanConversationSummary` в `openapi/openapi.yaml`.
+
+| действие | вызов | ответ |
+|---|---|---|
+| начать · продолжить · «Ещё раз» | `POST /plans/{id}/days/{n}/conversation` `{again?, hints?}` | `PlanConversation`. Открытая на день **одна**: повторный вызов возвращает её же (телефон из фона продолжает), `again: true` закрывает её как `replayed` и начинает новую. **Первую реплику роли пишет сервер здесь же.** 409 `plan_day_not_open`; 422 `plan_conversation_not_in_day` (день роздан до наряда, или у его сцен нет урока); 503 `plan_conversation_unavailable` |
+| ход | `POST /plans/{id}/conversation/{cid}/turn` `{kind: said\|rescue\|skip, heard}` | тот же `PlanConversation` целиком — лента, состояние, подсказка и, если разговор окончен, итог. 409 `plan_conversation_not_your_turn` (предыдущий ход ещё отвечается — второй ответ на одну реплику не покупается), 409 `plan_conversation_ended`, 503 `plan_conversation_unavailable` |
+| перечитать | `GET /plans/{id}/conversation/{cid}` | тот же документ — дверь обратно после обрыва связи (кадр 37-10). Чужой разговор — 404 |
+
+**Ответ один на все три вызова** — весь разговор: дюжина коротких реплик едет целиком, и телефон,
+потерявший ответ, перечитывает, а не гадает, какую половину он пропустил.
+
+| поле | что это |
+|---|---|
+| `state` | `agent_turn` · `your_turn` · `ended`. Состояния «думает» нет: три точки клиент рисует сам, пока запрос в полёте |
+| `partner`, `scene` | роль и сцена, в которой разговор СЕЙЧАС (полоса сцены 30-2b). В репетиции меняются вместе со сценой: «Запись к врачу · администратор» → «Приём у врача · врач» |
+| `scenes[]` | все сцены разговора по порядку («Из каких сцен», кадр 37-1): `state` `current` / `done` / `locked`, `lines` — сколько своих реплик ученик к ней готовил |
+| `minutes_estimate` | «около N минут» — 3 у дня, 6 у репетиции и повторения (`plan.conversation.minutes`) |
+| `turns_left` | сколько ходов СЦЕНЫ осталось. **Переспрос ход не тратит** (кадр 37-12: «переспросы всегда нейтральны»), `skip` — тратит |
+| `hints` | `enabled` (false — «Без подсказок»: ни чипа, ни кнопки), `delay_ms` (5 000 — через сколько молчания чип встаёт сам), `native` — намерение на родном БЕЗ префикса: «Скажи, что …» печатает клиент. Null, когда подсказок нет, когда ход не ученика и когда разговор окончен |
+| `turns[]` | лента: `index` (номер даёт сервер), `speaker`, `kind` (`agent` · `said` · `rescue` · `skip`), тексты, `audio` (`{ref, url, duration_ms, voice}` — null, если вендор не прочитал: телефон читает своим голосом), `understood` (суждение роли; null у `rescue`, `skip` и первой реплики), `phrases_used` (`{scene_id, ref}` — **фразы плана, которые услышал СЕРВЕР** своим правилом, не модель), `off_topic` |
+| `summary` | null, пока разговор идёт; по окончании — итог кадра 37-12 (ниже) |
+
+**Итог** (`summary`): `said_count` («Сказал сам N реплик»), `phrases_used` / `phrases_total` и `phrases[]`
+(каждая фраза сцен разговора с `used`), `understood_all` / `not_understood` («Понял все вопросы» /
+«Понял вопросы, кроме одного»), `rescues` («переспросил 2 раза», всегда нейтрально), `ended_reason`
+(`natural` — роль попрощалась; `limit` — разговор дошёл до денег, которые план ему позволяет, и роль
+закрыла его СЛЕДУЮЩИМ ходом; `declined` — запретная тема во второй раз; `replayed` — «Ещё раз»),
+`minutes` и `returns_tomorrow`.
+
+**`returns_tomorrow`** — вернутся ли не прозвучавшие фразы завтра. У дня и повторения — да, карточками
+`speak_retell` («Повтори свою реплику», кадр 35-4) по правилу «единица возвращается один раз». У репетиции —
+**нет**: завтра событие, и группа несказанного читается «повтори перед приёмом».
+
+**Чего клиенту НЕ надо считать:** ходы, минуты, проценты, «сколько фраз прозвучало» и склонения итога —
+всё это приходит готовым. Прерывание реплики роли — целиком клиентское: сервер о нём не знает и поля под
+него нет.
+
 ## Коды 409
 
 `plan_state`, `plan_already_active`, `plan_core_scene`, `plan_day_locked`, `plan_day_building` (GEN-3), `plan_day_not_open`,
-`plan_lesson_not_ready`, `plan_stage_incomplete`, `plan_card_answered`, `plan_too_short`. 404:
+`plan_lesson_not_ready`, `plan_stage_incomplete`, `plan_card_answered`, `plan_too_short`; разговор (наряд CONV-1):
+`plan_conversation_not_your_turn`, `plan_conversation_ended`. 404:
 `plan_not_found`, `plan_scene_not_found`, `plan_day_not_found`, `plan_card_not_found`,
-`plan_scene_image_not_found`. 503: `plan_scene_image_unavailable`.
+`plan_scene_image_not_found`, `plan_conversation_not_found`. 503: `plan_scene_image_unavailable`,
+**`plan_conversation_unavailable`** — роль не ответила: НИЧЕГО не записано, лента на месте, ход повторяется
+(кадр 37-10 «Врач не отвечает — попробуй ещё раз»).
+
+422 (наряд CONV-1): `plan_conversation_not_in_day` — у дня нет шестого этапа: он роздан до наряда
+(`plan_days.has_conversation = false`, дораздачи нет) или ни у одной его сцены не написан урок.
 
 422 (наряд SESSION-1a): `plan_card_result_not_allowed` — вид карточки такого итога не принимает
 (`meta {kind, result}`: `passed` на судейской карточке, `failed` на голосовой, `hinted` на

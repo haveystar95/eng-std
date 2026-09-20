@@ -144,6 +144,7 @@ final class PlanMapper
                 cardsDone: $row->cards_done,
                 minutesSpent: $row->minutes_spent,
             ),
+            hasConversation: (bool) $row->has_conversation,
         );
     }
 
@@ -254,6 +255,7 @@ final class PlanMapper
             'opens_on' => $day->opensOn()?->format('Y-m-d'),
             'opened_at' => $day->openedAt()?->format(DATE_ATOM),
             'closed_at' => $day->closedAt()?->format(DATE_ATOM),
+            'has_conversation' => $day->hasConversation(),
             ...self::metricColumns($day->metrics()),
         ];
     }

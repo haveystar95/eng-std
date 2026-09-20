@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Plan\Presentation\Http\Controller\PlanAudioController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanCardJudgeController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanController;
+use App\Modules\Plan\Presentation\Http\Controller\PlanConversationController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanDayController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanImageController;
 use Illuminate\Support\Facades\Route;
@@ -45,4 +46,10 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/plans/{id}/days/{number}/cards/{cardId}/judge', [PlanCardJudgeController::class, 'judge'])->whereNumber('number');
     Route::post('/plans/{id}/days/{number}/stages/{stage}/close', [PlanDayController::class, 'closeStage'])->whereNumber('number');
     Route::post('/plans/{id}/days/{number}/close', [PlanDayController::class, 'close'])->whereNumber('number');
+
+    // THE SIXTH STAGE (наряд CONV-1): the talk with the agent — start or carry on, one move, read back.
+    // A move waits on a model and a voice, so it is the slowest call of the API by design (≤ 6 s).
+    Route::post('/plans/{id}/days/{number}/conversation', [PlanConversationController::class, 'start'])->whereNumber('number');
+    Route::get('/plans/{id}/conversation/{conversationId}', [PlanConversationController::class, 'show']);
+    Route::post('/plans/{id}/conversation/{conversationId}/turn', [PlanConversationController::class, 'move']);
 });

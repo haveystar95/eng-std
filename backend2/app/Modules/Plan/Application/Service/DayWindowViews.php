@@ -29,7 +29,15 @@ use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\Entity\Conversation;
+use App\Modules\Plan\Domain\Service\ConversationOutcomes;
+use App\Modules\Plan\Domain\Service\ConversationRules;
+use App\Modules\Plan\Domain\Service\DayHighlights;
 use App\Modules\Plan\Domain\Service\DayPace;
+use App\Modules\Plan\Domain\Service\DayStages;
+use App\Modules\Plan\Domain\Service\NativeStrings;
+use App\Modules\Plan\Domain\ValueObject\ConversationOutcome;
+use App\Modules\Plan\Domain\ValueObject\ConversationType;
 use App\Modules\Plan\Domain\Service\DayWindowStages;
 use App\Modules\Plan\Domain\Service\ImageTones;
 use App\Modules\Plan\Domain\Service\ReturnDay;
@@ -69,13 +77,23 @@ final readonly class DayWindowViews
         private PlanTermRepository $terms,
         private SceneVoices $voices,
         private DayPace $pace,
+        private ConversationRules $rules,
+        private ConversationMaterial $material,
     ) {}
 
-    /** @param list<DayCard> $cards */
-    public function of(Plan $plan, PlanDay $day, DayStatus $effective, bool $building, ?SceneView $scene, array $cards): DayWindowView
+    /**
+     * @param  list<DayCard>  $cards
+     * @param  Conversation|null  $talk  the day's latest talk (наряд CONV-1) — its sixth row and its highlights
+     */
+    public function of(Plan $plan, PlanDay $day, DayStatus $effective, bool $building, ?SceneView $scene, array $cards, ?Conversation $talk = null): DayWindowView
     {
         $status = WindowStatus::of($effective, $plan->status(), $day->number(), $building);
-        $stages = DayWindowStages::of($cards, RouteStages::dealtBy($day->type()), $status, $this->pace);
+        $talks = DayStages::walksConversation($day);
+        $talkSeconds = $this->rules->secondsFor(ConversationType::forDay($day->type()));
+        $stages = DayWindowStages::of(
+            $cards, RouteStages::dealtBy($day->type()), $status, $this->pace,
+            $talks, $talk?->state(), $talkSeconds,
+        );
         $states = UnitStates::of($cards);
         $ownScene = $plan->sceneOf($day);
 
@@ -121,7 +139,12 @@ final readonly class DayWindowViews
                 scene: $scene,
                 imageTone: ImageTones::first($ownScene?->image()?->tone, $plan->coverImage()?->tone),
                 status: $status->value,
-                minutesEstimate: DayWindowStages::minutesEstimate($cards, $status, $this->pace),
+                // The talk answers no card, so its minutes are added on top of what the cards cost —
+                // and only while it is still ahead (наряд CONV-1).
+                minutesEstimate: self::plusTalk(
+                    DayWindowStages::minutesEstimate($cards, $status, $this->pace),
+                    $talks && $talk?->isEnded() !== true ? $talkSeconds : 0,
+                ),
                 minutesSpent: $status === WindowStatus::Passed ? $day->metrics()->minutesSpent : null,
                 goals: array_map(
                     static fn (string $goal): WindowGoalView => new WindowGoalView($goal, $status === WindowStatus::Passed),
@@ -139,7 +162,30 @@ final readonly class DayWindowViews
             ),
             allowedAction: $status->action(self::hasSpeak($cards))?->value,
             listening: self::listening($ownScene?->lesson()),
+            highlights: $status === WindowStatus::Passed
+                ? DayHighlights::of($cards, $this->outcome($plan, $day, $talk), new NativeStrings($plan->nativeLang()->value))
+                : [],
         );
+    }
+
+    /** The minutes a day still asks for, with the talk's own on top; null stays null — a passed day asks for none. */
+    private static function plusTalk(?int $minutes, int $seconds): ?int
+    {
+        return $minutes === null ? null : $minutes + DayPace::minutes($seconds);
+    }
+
+    /**
+     * The summary of the day's talk, for «Что было хорошо» — read only when the day is passed and
+     * only from a talk that is over: the phrases it needs cost a query, and a talk still running has
+     * no summary to print.
+     */
+    private function outcome(Plan $plan, PlanDay $day, ?Conversation $talk): ?ConversationOutcome
+    {
+        if ($talk === null || ! $talk->isEnded()) {
+            return null;
+        }
+
+        return ConversationOutcomes::of($talk, $this->material->for($plan, $day)->phrases);
     }
 
     /**

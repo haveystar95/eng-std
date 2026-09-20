@@ -162,6 +162,40 @@ final class PlanSchemas
     }
 
     /**
+     * ONE MOVE OF THE AGENT (`conversation_agent.v1`, наряд CONV-1): its line in both languages,
+     * what it judged about the move it answers, the checkpoint it closed, the intention to offer
+     * next and whether the talk is over.
+     *
+     * `end` is an enum and not a boolean because the two ways a talk ends by itself are not the
+     * same fact: «the scene is finished» and «the learner pushed a refused subject twice» read
+     * differently in the summary and in the report. The third way — the money cap — is the
+     * server's, never the model's.
+     *
+     * The phrase ids are an enum of what was actually sent: a ref the talk does not carry is not a
+     * phrase of this plan, and a strict schema is cheaper than checking it afterwards.
+     *
+     * @param  list<string>  $phraseIds
+     * @return array<string, mixed>
+     */
+    public static function conversationAgent(array $phraseIds): array
+    {
+        $refs = $phraseIds === []
+            ? ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 0]
+            : ['type' => 'array', 'items' => ['type' => 'string', 'enum' => $phraseIds]];
+
+        return self::object([
+            'reply_target' => ['type' => 'string'],
+            'reply_native' => ['type' => 'string'],
+            'understood' => ['type' => ['boolean', 'null']],
+            'phrases_used' => $refs,
+            'off_topic' => ['type' => 'boolean'],
+            'checkpoint_done' => ['type' => ['string', 'null']],
+            'next_hint_native' => ['type' => ['string', 'null']],
+            'end' => ['type' => 'string', 'enum' => ['no', 'natural', 'declined']],
+        ]);
+    }
+
+    /**
      * One exchange of the dialogue: its step, kind, initiator, the two messages (A and B through `anyOf`) and its
      * check.
      *

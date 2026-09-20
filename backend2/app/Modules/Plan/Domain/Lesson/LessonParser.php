@@ -16,11 +16,12 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
  * and the validator runs on the parsed lesson.
  *
- * One thing is put right on the way, and only one (доработка GEN-3; both sides since наряд BACK-TAILS-1 §3.1): a frame —
- * `frame_target` and `frame_native` — and a filler's native text lose the space before the mark they end with
- * ({@see FrameText::withEndMarkClosed()}) — «I work ___ .» is read as «I work ___.» by the validator, the seam judge,
- * the repair and every card, whatever the stored answer says. The target side was left out of the first pass and a card
- * showed the gap.
+ * TWO things are put right on the way, and only two. A frame — `frame_target` and `frame_native` — and a filler's
+ * native text lose the space before the mark they end with (доработка GEN-3; both sides since наряд BACK-TAILS-1 §3.1,
+ * {@see FrameText::withEndMarkClosed()}): «I work ___ .» is read as «I work ___.» by the validator, the seam judge, the
+ * repair and every card, whatever the stored answer says. And a line, a frame or a filler that ends in TWO full stops
+ * keeps one ({@see FrameText::withoutDoubledStop()}, хвост ROADMAP, наряд CONV-1): «I can come at 3 p.m..» is the
+ * abbreviation's stop plus the sentence's, and the phone, the voice and the judge all read it as written.
  */
 final class LessonParser
 {
@@ -183,8 +184,8 @@ final class LessonParser
     private function message(array $row, string $path): Message
     {
         $speaker = $this->speaker($row, 'speaker', $path);
-        $text = $this->string($row, 'text_target', $path);
-        $native = $this->string($row, 'text_native', $path);
+        $text = FrameText::withoutDoubledStop($this->string($row, 'text_target', $path));
+        $native = FrameText::withoutDoubledStop($this->string($row, 'text_native', $path));
         if ($speaker === Message::SPEAKER_PARTNER) {
             return new Message($speaker, $this->stringOrEmpty($row, 'role_target'), $this->stringOrEmpty($row, 'role_native'), $text, $native);
         }
@@ -223,7 +224,7 @@ final class LessonParser
                 }
                 $fillers[] = new Filler(
                     target: $this->string($f, 'target', "{$path}.slot.fillers[{$index}]"),
-                    native: FrameText::withEndMarkClosed($this->stringOrEmpty($f, 'native')),
+                    native: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->stringOrEmpty($f, 'native'))),
                     pronunciationNative: $this->stringOrEmpty($f, 'pronunciation_native'),
                     inDialogue: $inDialogue,
                 );
@@ -234,8 +235,8 @@ final class LessonParser
         return new Phrase(
             id: $this->string($row, 'id', $path),
             kind: $kind,
-            frameTarget: FrameText::withEndMarkClosed($this->string($row, 'frame_target', $path)),
-            frameNative: FrameText::withEndMarkClosed($this->stringOrEmpty($row, 'frame_native')),
+            frameTarget: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->string($row, 'frame_target', $path))),
+            frameNative: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->stringOrEmpty($row, 'frame_native'))),
             pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
             slot: $slot,
         );

@@ -1,0 +1,238 @@
+[
+  {
+    "name": "1. день закрывается на пяти этапах",
+    "rule": "«День пройден» = шесть этапов насквозь (DECISIONS п. 355)",
+    "defect": "закрытие дня не смотрит на разговор",
+    "file": "app/Modules/Plan/Application/Command/CloseDayHandler.php",
+    "find": "if ($day->hasConversation() && $talk?->isEnded() !== true) {",
+    "replace": "if (false) {",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "holds the day shut"
+      }
+    ]
+  },
+  {
+    "name": "2. переспрос тратит ход сцены",
+    "rule": "«Не понял» тратит деньги, но не ход (DECISIONS п. 360)",
+    "defect": "rescue считается ходом сцены",
+    "file": "app/Modules/Plan/Domain/Entity/Conversation.php",
+    "find": "if ($turn->kind === TurnKind::Said || $turn->kind === TurnKind::Skip) {",
+    "replace": "if ($turn->kind !== TurnKind::Agent) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/ConversationTest.php",
+        "filter": "spends a turn on a move of the scene"
+      },
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "asks the role to repeat itself"
+      }
+    ]
+  },
+  {
+    "name": "3. ход принимается, когда очередь не ученика",
+    "rule": "Второй ход, посланный в полёте первого, не покупает второй ответ (DECISIONS п. 361)",
+    "defect": "аггрегат не проверяет, чей ход",
+    "file": "app/Modules/Plan/Domain/Entity/Conversation.php",
+    "find": "if ($this->state !== ConversationState::YourTurn) {\n            throw ConversationNotYourTurn::state($this->state);\n        }",
+    "replace": "if (false) {\n            throw ConversationNotYourTurn::state($this->state);\n        }",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/ConversationTest.php",
+        "filter": "takes a move only when it is the learner"
+      }
+    ]
+  },
+  {
+    "name": "4. фразы плана считает не код",
+    "rule": "Фразы плана в разговоре считает SpeechMatch free, а не модель (DECISIONS п. 358)",
+    "defect": "в услышанном «находятся» все фразы плана",
+    "file": "app/Modules/Plan/Domain/Service/SpokenPhrases.php",
+    "find": "if (trim($phrase->key) !== '' && $this->speech->said($heard, $phrase->key, SpeechMode::Free, $pack)) {",
+    "replace": "if (trim($phrase->key) !== '') {",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "counts the phrases of the plan"
+      }
+    ]
+  },
+  {
+    "name": "5. подсказку даёт модель, а не чекпойнт",
+    "rule": "Подсказка — text_native своей реплики ближайшего чекпойнта (DECISIONS п. 359)",
+    "defect": "подсказка берётся у модели, минуя урок",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "        $checkpoint = $material->checkpoint($talk->currentCheckpoint());\n        if ($checkpoint === null) {",
+    "replace": "        $checkpoint = $material->checkpoint($talk->currentCheckpoint());\n        if (true) {",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "opens with the role"
+      }
+    ]
+  },
+  {
+    "name": "6. кап считает только модель",
+    "rule": "Кап разговора считается по одному числу — модель плюс озвучка (DECISIONS п. 360)",
+    "defect": "в траты разговора идёт только цена модели",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "$talk->spend($cost->totalUsd());",
+    "replace": "$talk->spend($cost->modelCostUsd);",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "lets the role say goodbye"
+      }
+    ]
+  },
+  {
+    "name": "7. несказанные фразы не возвращаются",
+    "rule": "Фразы, которых не услышал разговор, возвращаются один раз произнесением (DECISIONS п. 362)",
+    "defect": "возвраты разговора не собираются вовсе",
+    "file": "app/Modules/Plan/Application/Service/DayDealer.php",
+    "find": "        return [...$out, ...$this->unsaidInTalks($plan, $sources)];",
+    "replace": "        return $out;",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "gives the phrases the talk did not hear back"
+      }
+    ]
+  },
+  {
+    "name": "8. «Вспомнить» говорит больше шести реплик",
+    "rule": "Пять-шесть реплик по самым частым каркасам (DECISIONS п. 356)",
+    "defect": "потолок реплик поднят",
+    "file": "app/Modules/Plan/Domain/Assembly/RecallStage.php",
+    "find": "    public const LINES = 6;",
+    "replace": "    public const LINES = 99;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/RecallStageTest.php",
+        "filter": "takes the scenes in the plan"
+      }
+    ]
+  },
+  {
+    "name": "9. «Вспомнить» берёт реплики по порядку, а не по частоте",
+    "rule": "Каркасы ранжируются по числу реплик визита на них (DECISIONS п. 356)",
+    "defect": "ранжирование по частоте снято",
+    "file": "app/Modules/Plan/Domain/Assembly/RecallStage.php",
+    "find": "usort($ranked, static fn (array $a, array $b): int => [-$a['count'], $a['order'], $a['step']] <=> [-$b['count'], $b['order'], $b['step']]);",
+    "replace": "usort($ranked, static fn (array $a, array $b): int => [$a['order'], $a['step']] <=> [$b['order'], $b['step']]);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/RecallStageTest.php",
+        "filter": "says aloud the lines of the frames"
+      }
+    ]
+  },
+  {
+    "name": "10. «Повтори свою реплику» не переезжает в «Вспомнить»",
+    "rule": "Один вид читает этап и по дню тоже (DECISIONS п. 357)",
+    "defect": "вид всегда стоит в «Говорю сам»",
+    "file": "app/Modules/Plan/Domain/ValueObject/CardKind.php",
+    "find": "        if ($day === DayType::Rehearsal && $this === self::SpeakRetell) {",
+    "replace": "        if (false) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/Session/CardKindTest.php",
+        "filter": "moves only speak_retell"
+      },
+      {
+        "path": "tests/Unit/Plan/Session/SessionDayAssemblyTest.php",
+        "filter": "deals a rehearsal"
+      }
+    ]
+  },
+  {
+    "name": "11. у окна дня пять рядов вместо шести",
+    "rule": "День — шесть этапов; шестой ряд есть и у окна, и у маршрута (DECISIONS п. 355)",
+    "defect": "ряд разговора не попадает в окно дня",
+    "file": "app/Modules/Plan/Domain/Service/DayWindowStages.php",
+    "find": "        if (! $hasConversation) {\n            return $out;\n        }",
+    "replace": "        if (true) {\n            return $out;\n        }",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/PlanDayWindowTest.php",
+        "filter": "opens a day not started"
+      }
+    ]
+  },
+  {
+    "name": "12. вторая точка остаётся в реплике",
+    "rule": "Предложение кончается одной точкой даже после сокращения (хвост ROADMAP)",
+    "defect": "нормализация на входе урока снята",
+    "file": "app/Modules/Plan/Domain/Service/FrameText.php",
+    "find": "        return (string) preg_replace('/(?<!\\.)\\.\\.$/u', '.', rtrim($text));",
+    "replace": "        return rtrim($text);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonNativeMarksTest.php",
+        "filter": "one full stop where the model wrote two"
+      }
+    ]
+  },
+  {
+    "name": "13. переспрос считается «сказал сам»",
+    "rule": "«Сказал сам» — ходы со своими словами; переспрос и пропуск — нет (DECISIONS п. 355)",
+    "defect": "итог считает своей репликой любой ход ученика",
+    "file": "app/Modules/Plan/Domain/Entity/ConversationTurn.php",
+    "find": "        return $this->kind === TurnKind::Said && trim((string) $this->textTarget) !== '';",
+    "replace": "        return $this->kind !== TurnKind::Agent;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/ConversationTest.php",
+        "filter": "reads the summary off the journal"
+      }
+    ]
+  },
+  {
+    "name": "14. чекпойнтом становится чужая сцена",
+    "rule": "Чекпойнты идут вперёд, чужой id игнорируется (DECISIONS п. 355)",
+    "defect": "в пройденные пишется любой id, который назвала модель",
+    "file": "app/Modules/Plan/Domain/Entity/Conversation.php",
+    "find": "        if (in_array($sceneId, $this->sceneIds, true) && ! in_array($sceneId, $this->checkpointsDone, true)) {",
+    "replace": "        if (! in_array($sceneId, $this->checkpointsDone, true)) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/ConversationTest.php",
+        "filter": "walks its scenes forward"
+      }
+    ]
+  },
+  {
+    "name": "15. «в сторону» подряд считается по репликам ученика",
+    "rule": "Счётчик «в сторону» читается по строкам роли, где стоят её суждения (наряд CONV-1, живой прогон)",
+    "defect": "счётчик считает ходы ученика, у которых суждения нет",
+    "file": "app/Modules/Plan/Domain/Entity/Conversation.php",
+    "find": "            if ($this->turns[$i]->kind !== TurnKind::Agent) {\n                continue;\n            }\n            if ($this->turns[$i]->offTopic !== true) {\n                break;\n            }",
+    "replace": "            if ($this->turns[$i]->kind === TurnKind::Agent) {\n                continue;\n            }\n            if ($this->turns[$i]->offTopic !== true) {\n                break;\n            }",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/ConversationTest.php",
+        "filter": "counts how many moves in a row"
+      },
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "ends the talk on the second push"
+      }
+    ]
+  },
+  {
+    "name": "16. разговор начинается пустой лентой",
+    "rule": "Первую реплику роли пишет сервер при старте (наряд CONV-1, п. 3)",
+    "defect": "старт не зовёт роль",
+    "file": "app/Modules/Plan/Application/Command/StartConversationHandler.php",
+    "find": "        $this->moves->open($plan, $talk, $material);",
+    "replace": "        $material->checkpoints !== [] or $this->moves->open($plan, $talk, $material);",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/ConversationApiTest.php",
+        "filter": "opens with the role"
+      }
+    ]
+  }
+]

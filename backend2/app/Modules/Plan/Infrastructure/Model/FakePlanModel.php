@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Model;
 
+use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
@@ -40,8 +41,13 @@ final class FakePlanModel implements PlanModelPort
 
     public int $slotJudgeCalls = 0;
 
+    public int $conversationCalls = 0;
+
     /** @var list<SlotJudgeRequest> */
     public array $slotJudgeRequests = [];
+
+    /** @var list<ConversationAgentRequest> */
+    public array $conversationRequests = [];
 
     /** @var list<LessonCardRepairRequest> */
     public array $repairRequests = [];
@@ -61,6 +67,7 @@ final class FakePlanModel implements PlanModelPort
      * @param  (Closure(LessonCardRepairRequest, int): array<string, mixed>)|null  $repair  the default returns the card as written
      * @param  (Closure(NativeSeamJudgeRequest, int): array<string, mixed>)|null  $judge  the default reads every sentence as fine
      * @param  (Closure(SlotJudgeRequest, int): array<string, mixed>)|null  $slotJudge  the default accepts; a closure that throws is a silent model
+     * @param  (Closure(ConversationAgentRequest, int): array<string, mixed>)|null  $conversation  the default plays the role by the book; a closure that throws is a silent agent
      */
     public function __construct(
         private readonly ?Closure $plan = null,
@@ -70,6 +77,7 @@ final class FakePlanModel implements PlanModelPort
         private readonly string $lessonVersion = 'lesson_day.v4.7',
         private readonly ?Closure $judge = null,
         private readonly ?Closure $slotJudge = null,
+        private readonly ?Closure $conversation = null,
     ) {}
 
     public function buildPlan(PlanRequest $request): ModelReply
@@ -125,6 +133,40 @@ final class FakePlanModel implements PlanModelPort
         return new ModelReply($payload, 'slot_judge.v2', self::MODEL, 350, 40, '0.000000', 1, '');
     }
 
+    /**
+     * The role, played deterministically (наряд CONV-1): it asks, walks one checkpoint per move,
+     * hears every phrase the learner said, and says goodbye when the turns run out — enough for the
+     * whole suite to walk a talk end to end without a network.
+     */
+    public function conversationTurn(ConversationAgentRequest $request): ModelReply
+    {
+        $this->conversationCalls++;
+        $this->conversationRequests[] = $request;
+        $payload = $this->conversation !== null
+            ? ($this->conversation)($request, $this->conversationCalls)
+            : self::conversationPayload($request);
+
+        return new ModelReply($payload, 'conversation_agent.v1', self::MODEL, 900, 90, '0.000000', 2, '');
+    }
+
+    /** @return array<string, mixed> */
+    public static function conversationPayload(ConversationAgentRequest $request): array
+    {
+        $ending = $request->turnsLeft <= 0;
+        $checkpoint = $request->turn === 'rescue' ? null : $request->currentCheckpoint;
+
+        return [
+            'reply_target' => $ending ? 'Take care. See you next week.' : 'And what brings you in today?',
+            'reply_native' => $ending ? 'Берегите себя. До встречи на следующей неделе.' : 'Что вас беспокоит?',
+            'understood' => $request->turn === 'said' ? true : null,
+            'phrases_used' => [],
+            'off_topic' => false,
+            'checkpoint_done' => $ending ? $checkpoint : null,
+            'next_hint_native' => $ending ? null : 'скажи, что болит',
+            'end' => $ending ? 'natural' : 'no',
+        ];
+    }
+
     public function planPromptVersion(): string
     {
         return $this->planVersion;
@@ -143,6 +185,11 @@ final class FakePlanModel implements PlanModelPort
     public function slotJudgePromptVersion(): string
     {
         return 'slot_judge.v2';
+    }
+
+    public function conversationPromptVersion(): string
+    {
+        return 'conversation_agent.v1';
     }
 
     public function lessonPromptVersion(): string

@@ -19,7 +19,12 @@ use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
+use App\Modules\Plan\Domain\Entity\Conversation;
+use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
+use App\Modules\Plan\Domain\Service\DayStages;
+use App\Modules\Plan\Domain\ValueObject\ConversationState;
+use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\Service\NativeStrings;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
 use App\Modules\Plan\Domain\Service\RouteStages;
@@ -45,6 +50,7 @@ final readonly class PlanViews
         private DayCardRepository $cards,
         private DayDealer $dealer,
         private LearnerHabits $habits,
+        private ConversationRepository $conversations,
     ) {}
 
     public function versions(): VersionsView
@@ -64,6 +70,12 @@ final readonly class PlanViews
         // is not dealt yet but is the learner's next — drawn from what the dealer will deal.
         $tallies = $this->cards->stageTallies($plan->id());
         $outline = $current === null || isset($tallies[$current->id()->value]) ? [] : $this->outline($plan, $current);
+        // The sixth node of every day, in one query too (наряд CONV-1): the talk has no cards, so its
+        // state cannot be read off the tallies.
+        $talks = array_map(
+            static fn (Conversation $talk): ConversationState => $talk->state(),
+            $this->conversations->latestForDays(array_map(static fn (PlanDay $d): PlanDayId => $d->id(), $plan->days())),
+        );
 
         $cost = $plan->planCall()->costUsd ?? '0.000000';
         foreach ($plan->scenes() as $scene) {
@@ -96,9 +108,10 @@ final readonly class PlanViews
             collectionId: $plan->collectionId()?->value,
             unclearReason: $plan->unclearReason(),
             failReason: $plan->failReason(),
-            currentDay: $current === null ? null : $this->routeDay($plan, $current, $today, $strings, $tallies[$current->id()->value] ?? [], $outline),
+            currentDay: $current === null ? null : $this->routeDay($plan, $current, $today, $strings, $tallies[$current->id()->value] ?? [], $outline, $talks[$current->id()->value] ?? null),
             days: array_map(fn (PlanDay $d): DayRouteView => $this->routeDay(
                 $plan, $d, $today, $strings, $tallies[$d->id()->value] ?? [], $current !== null && $d->id()->equals($current->id()) ? $outline : [],
+                $talks[$d->id()->value] ?? null,
             ), $plan->days()),
             scenes: array_map(fn (PlanScene $s): SceneView => $this->scene($plan, $s), $plan->scenes()),
             rescueKit: $this->config->rescueKit,
@@ -189,14 +202,15 @@ final readonly class PlanViews
             $outline = RouteStages::stagesOf($cards);
         }
 
-        return $this->routeDay($plan, $day, $today, $strings, $tallies, $outline);
+        return $this->routeDay($plan, $day, $today, $strings, $tallies, $outline, $this->conversations->latestForDay($day->id())?->state());
     }
 
     /**
      * @param  array<string, array{total: int, answered: int}>  $tallies
      * @param  list<Stage>  $outline
+     * @param  ConversationState|null  $talk  where the day's latest talk stands (наряд CONV-1); null — none yet
      */
-    private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline): DayRouteView
+    private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline, ?ConversationState $talk = null): DayRouteView
     {
         $scene = $plan->sceneOf($day);
         $status = $plan->effectiveDayStatus($day, $today);
@@ -225,7 +239,10 @@ final readonly class PlanViews
             closedAt: $day->closedAt()?->format(DATE_ATOM),
             stages: array_map(
                 static fn (RouteStage $s): RouteStageView => new RouteStageView($s->stage->value, $s->state->value),
-                RouteStages::of($day->type(), $tallies, $day->isClosed(), $availableToday, $outline),
+                RouteStages::of(
+                    $day->type(), $tallies, $day->isClosed(), $availableToday, $outline,
+                    DayStages::walksConversation($day), $talk,
+                ),
             ),
         );
     }

@@ -2341,7 +2341,7 @@ paths:
         - name: stage
           in: path
           required: true
-          schema: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+          schema: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation] }
       responses:
         '200': { $ref: '#/components/responses/PlanDayRoom' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -2366,6 +2366,103 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such plan or day }
         '409': { $ref: '#/components/responses/Problem' }
+
+  /plans/{id}/days/{number}/conversation:
+    post:
+      tags: [Plans]
+      summary: «Начать разговор» · «Продолжить» · «Ещё раз» — the sixth stage of a day
+      description: >-
+        Opens the talk with the agent (наряд CONV-1, кадры 37-5…37-12) — or returns the one already
+        open, which is how a phone coming back from the background carries on. The role's OPENING
+        line is written here, so the ribbon is never empty waiting for somebody to speak first.
+
+
+        `again: true` («Ещё раз» on the summary) closes the open talk as `replayed` and starts a new
+        one: what was said stays said, and the day keeps both journals. `hints: false` is the «Без
+        подсказок» switch of the entry card and is fixed for the talk it starts.
+
+
+        The call waits on a model and a voice — it is the slowest call of this API by design (≤ 6 s).
+        409 `plan_day_not_open` when the day is not being walked; 422 `plan_conversation_not_in_day`
+        when the day has no talk (dealt before наряд CONV-1, or no scene of it has a lesson);
+        503 `plan_conversation_unavailable` when the role did not answer — nothing is written and the
+        call may be repeated.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanDayNumber'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                again: { type: boolean, default: false, description: '«Ещё раз»: close the open talk and start a new one' }
+                hints: { type: boolean, default: true, description: 'False — «Без подсказок»: no chip, no «Подсказать»' }
+      responses:
+        '200': { $ref: '#/components/responses/PlanConversation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan or day }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+  /plans/{id}/conversation/{conversationId}:
+    get:
+      tags: [Plans]
+      summary: The talk as it stands — the door back in after a dropped connection
+      description: >-
+        The same document a move returns (кадр 37-10, «Связь пропала — разговор продолжится отсюда»),
+        so a phone that lost a reply re-reads instead of guessing which half it missed. Someone
+        else's talk reads as one that never existed (404).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanConversationId'
+      responses:
+        '200': { $ref: '#/components/responses/PlanConversation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such talk }
+
+  /plans/{id}/conversation/{conversationId}/turn:
+    post:
+      tags: [Plans]
+      summary: One move of the learner, and the role's answer to it
+      description: >-
+        `said` — what the recogniser heard; `rescue` — «Не понял» / «Sorry?», the role says the same
+        thing again simpler and slower (no judgement is written for it, and it spends none of the
+        talk's moves: «переспросы всегда нейтральны»); `skip` — the learner let the turn go.
+
+
+        Interrupting the role's voice is the phone's business and is not sent here.
+
+
+        The answer is the WHOLE talk again: the ribbon, the state, the next intention and, once it is
+        over, the summary. 409 `plan_conversation_not_your_turn` when the previous move is still being
+        answered — a second call does not buy a second reply; 409 `plan_conversation_ended` after the
+        role said goodbye («Ещё раз» is a new talk); 503 `plan_conversation_unavailable` when the role
+        did not answer — NOTHING is written, the ribbon stays where it was and the move may be repeated.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/PlanConversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, heard]
+              properties:
+                kind: { type: string, enum: [said, rescue, skip] }
+                heard:
+                  type: [string, 'null']
+                  maxLength: 2000
+                  description: 'What the recogniser heard — present, possibly empty (silence is an answer too); ignored for `rescue` and `skip`'
+      responses:
+        '200': { $ref: '#/components/responses/PlanConversation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such talk }
+        '409': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
 
   /sync/cursor:
     get:
@@ -2748,6 +2845,12 @@ components:
       in: path
       required: true
       schema: { type: integer, minimum: 1, maximum: 10 }
+    PlanConversationId:
+      name: conversationId
+      in: path
+      required: true
+      description: The talk with the agent (наряд CONV-1)
+      schema: { type: string, minLength: 26, maxLength: 26 }
 
   responses:
     Unauthorized:
@@ -2801,6 +2904,14 @@ components:
             type: object
             properties:
               data: { $ref: '#/components/schemas/PlanDayRoom' }
+    PlanConversation:
+      description: The talk with the agent, whole
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '#/components/schemas/PlanConversation' }
     PlanDayCards:
       description: The day's cards
       content:
@@ -3273,7 +3384,7 @@ components:
         «Окно дня» (DAY-UI-2, DAY-UI-3, кадры 23-0a…0e): the day's own reading of its cards for the one-screen
         window — what the plate, the compact header, the three programme tabs and the one button
         draw. Everything countable is counted here; the client words it.
-      required: [day, stages, day_progress, program, allowed_action, listening]
+      required: [day, stages, day_progress, program, allowed_action, listening, highlights]
       properties:
         day:
           type: object
@@ -3339,6 +3450,14 @@ components:
             The one button: «Начать» (`POST /start` for an unstarted plan, then `…/open`),
             «Продолжить» (`…/open`), «Ещё раз» — the day's «Говорю сам» once more over
             `GET …/cards`, answers not sent (not a retake of the day). Null: no button.
+        highlights:
+          type: array
+          description: >-
+            «Что было хорошо» (кадр 37-13, наряд CONV-1): two or three ready lines on the summary of a
+            PASSED day — «Сказал сам 6 реплик из 8», «В разговоре использовал 5 фраз из 7», «Понял все
+            вопросы». Written by the server, inflected by the server; the client prints them in order.
+            Empty until the day is passed, and without the talk's two lines when the day held none.
+          items: { type: string }
         listening:
           type: array
           description: >-
@@ -3418,12 +3537,12 @@ components:
          response, unit_kind, unit_ref, source_day_id, answered_at, returns]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall] }
         position: { type: integer, minimum: 1, description: 'Within the stage; a requeued card takes the next position' }
         kind:
           type: string
           description: >-
-            Which trainer this is — the 29 values of the registry: the 28 that are dealt, and
+            Which trainer this is — the 30 values of the registry: the 29 that are dealt, and
             `listen_pairs`, which is RESERVED in the enum and never dealt (the lesson has no two
             alike lines to pair; its source is v4.6). A client that meets a kind it does not know
             shows nothing rather than guessing.
@@ -3434,7 +3553,8 @@ components:
              dialogue_partner, dialogue_answer, dialogue_ask, dialogue_rescue,
              listen_dialogue, listen_question, listen_review, listen_pairs, listen_predict,
              listen_pace, listen_number,
-             speak_answer, speak_echo, speak_retell]
+             speak_answer, speak_echo, speak_retell,
+             recall_scenes]
         unit: { $ref: '#/components/schemas/PlanCardUnit' }
         source: { type: string, enum: [today, returned], description: 'A card of today''s scene, or a unit coming back after failing twice' }
         source_day: { type: [integer, 'null'], description: 'The NUMBER of the day the unit failed on — only on `source: returned`' }
@@ -3442,7 +3562,7 @@ components:
         payload:
           description: >-
             The schema is the one of this card's `kind` — `PlanCardPayloadWordIntro` for
-            `word_intro`, and so on for each of the 28 dealt kinds (the schema's `title` IS the
+            `word_intro`, and so on for each of the 29 dealt kinds (the schema's `title` IS the
             kind). Every payload carries `scene_id`, holds every key it names and no other
             (`additionalProperties: false`), so exactly one of the schemas below fits a given
             payload: `dialogue_answer` and `dialogue_ask` carry the same keys and are told apart by
@@ -3475,6 +3595,7 @@ components:
             - $ref: '#/components/schemas/PlanCardPayloadSpeakAnswer'
             - $ref: '#/components/schemas/PlanCardPayloadSpeakEcho'
             - $ref: '#/components/schemas/PlanCardPayloadSpeakRetell'
+            - $ref: '#/components/schemas/PlanCardPayloadRecallScenes'
         result:
           type: [string, 'null']
           enum: [passed, hinted, failed, skipped, null]
@@ -4388,6 +4509,181 @@ components:
         own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
         expected_text: { type: string, description: 'Что должно прозвучать — своя реплика целиком' }
         speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
+
+    PlanCardPayloadRecallScenes:
+      type: object
+      title: recall_scenes
+      additionalProperties: false
+      description: >-
+        «Вспомни свои реплики» (37-3, наряд CONV-1) — единственная карточка этапа «Вспомнить» у дня
+        репетиции: лист со СВОИМИ репликами каждой сцены плана, с переводом и звуком. Ничего не
+        проверяет и ничего не выбирает — это напоминание перед разговором; итог — `passed` по
+        «Дальше» (или `skipped`). Сцены листаются по порядку плана.
+      required: [scene_id, scenes]
+      properties:
+        scene_id: { type: string, description: 'Первая сцена листа — ключ есть у любого payload' }
+        scenes:
+          type: array
+          description: 'Сцены плана по порядку; на каждой — свои реплики ученика'
+          items:
+            type: object
+            required: [scene_id, title_target, title_native, lines]
+            properties:
+              scene_id: { type: string }
+              title_target: { type: string }
+              title_native: { type: string }
+              lines:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/PlanCardOwnLine'
+                    - type: object
+                      required: [step]
+                      properties:
+                        step: { type: integer, minimum: 1, description: 'Шаг визита, на котором реплика звучит' }
+
+    PlanConversation:
+      type: object
+      description: >-
+        THE TALK WITH THE AGENT (наряд CONV-1, кадры 37-5…37-12) — the sixth stage of a day, whole:
+        the ribbon, whose move it is, the intention offered for the next one and, once it is over,
+        the summary. Everything countable is counted here; the client words nothing.
+      required: [id, plan_id, day, type, state, partner, scene, scenes, minutes_estimate, turns_left, hints, turns, summary]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        plan_id: { type: string }
+        day: { type: integer, description: 'The day''s number' }
+        type:
+          type: string
+          enum: [day, rehearsal, review]
+          description: '3–4 moves at the end of a scene day, the whole visit on the rehearsal, 3–4 on a review day'
+        state:
+          type: string
+          enum: [agent_turn, your_turn, ended]
+          description: >-
+            Whose move it is. There is no «thinking» state: the client draws its own three dots while
+            the request is in flight.
+        partner:
+          type: object
+          description: 'Who the learner is talking to NOW — the role of the current scene (кадр 30-2b)'
+          required: [role_native, role_target]
+          properties:
+            role_native: { type: string }
+            role_target: { type: string }
+        scene:
+          type: object
+          description: 'The scene the talk is in now'
+          required: [title_native, title_target]
+          properties:
+            title_native: { type: string }
+            title_target: { type: string }
+        scenes:
+          type: array
+          description: 'Every scene of the talk, in the order it walks them («Из каких сцен», кадр 37-1)'
+          items:
+            type: object
+            required: [scene_id, title_native, title_target, role_native, role_target, lines, state]
+            properties:
+              scene_id: { type: string }
+              title_native: { type: string }
+              title_target: { type: string }
+              role_native: { type: string }
+              role_target: { type: string }
+              lines: { type: integer, description: 'How many lines of their own the learner is preparing there' }
+              state: { type: string, enum: [current, done, locked] }
+        minutes_estimate: { type: integer, description: '«около N минут» — the talk''s own, by its kind' }
+        turns_left: { type: integer, minimum: 0, description: 'Moves of the scene left; a rescue spends none of them' }
+        hints:
+          type: object
+          required: [enabled, delay_ms, native]
+          properties:
+            enabled: { type: boolean, description: 'False — «Без подсказок»: no chip and no «Подсказать» on the screen' }
+            delay_ms: { type: integer, description: 'How long the silence is before the chip comes up by itself (кадр 37-7)' }
+            native:
+              type: [string, 'null']
+              description: >-
+                The intention to offer for the next move, in the learner's language and without a
+                prefix — the client prints «Скажи, что …» itself. Null when hints are off, when the
+                move is not the learner's, and when the talk has ended.
+        turns:
+          type: array
+          description: 'The whole ribbon, oldest first — the talk is a dozen short lines, so it travels whole'
+          items: { $ref: '#/components/schemas/PlanConversationTurn' }
+        summary:
+          oneOf:
+            - $ref: '#/components/schemas/PlanConversationSummary'
+            - type: 'null'
+
+    PlanConversationTurn:
+      type: object
+      description: 'One line of the ribbon, written once and never changed'
+      required: [index, speaker, kind, text_target, text_native, audio, understood, phrases_used, off_topic, created_at]
+      properties:
+        index: { type: integer, minimum: 1, description: 'Its place in the journal — the server''s, not the client''s' }
+        speaker: { type: string, enum: [partner, learner] }
+        kind:
+          type: string
+          enum: [agent, said, rescue, skip]
+          description: 'The role''s line, or what the learner did: said something, asked to hear it again, or let the turn go'
+        text_target: { type: [string, 'null'], description: 'The role''s line, or what the recogniser heard; null for a skip' }
+        text_native: { type: [string, 'null'], description: 'The role''s line in the learner''s language; null on the learner''s own' }
+        audio:
+          oneOf:
+            - $ref: '#/components/schemas/PlanCardAudio'
+            - type: 'null'
+          description: 'The role''s voice for this line; null when the vendor did not say it — the phone reads it itself'
+        understood: { type: [boolean, 'null'], description: 'Did the learner''s move answer what was asked — the role''s judgement; null on a rescue, a skip and the opening line' }
+        phrases_used:
+          type: array
+          description: >-
+            The phrases of the plan heard in the learner's line — matched by the SERVER's own rule of
+            spoken grading (`free`), never by the model's opinion. Empty on the role's own lines.
+          items:
+            type: object
+            required: [scene_id, ref]
+            properties:
+              scene_id: { type: string }
+              ref: { type: string, description: 'The phrase — `p3`' }
+        off_topic: { type: [boolean, 'null'], description: 'Did the move go where this person would not go' }
+        created_at: { type: string, format: date-time }
+
+    PlanConversationSummary:
+      type: object
+      description: 'THE SUMMARY (кадр 37-12) — a projection of the journal, never a second count kept beside it'
+      required: [said_count, phrases_used, phrases_total, phrases, understood_all, not_understood, rescues, ended_reason, minutes, returns_tomorrow]
+      properties:
+        said_count: { type: integer, description: '«Сказал сам N реплик» — moves with words of the learner''s own in them' }
+        phrases_used: { type: integer, description: 'How many phrases of the plan sounded' }
+        phrases_total: { type: integer }
+        phrases:
+          type: array
+          description: 'Every phrase of the talk''s scenes, and whether it sounded — «Фразы дня в разговоре» and «Не прозвучало»'
+          items:
+            type: object
+            required: [scene_id, ref, text_target, text_native, audio_url, used]
+            properties:
+              scene_id: { type: string }
+              ref: { type: string }
+              text_target: { type: string }
+              text_native: { type: string }
+              audio_url: { type: [string, 'null'], format: uri }
+              used: { type: boolean }
+        understood_all: { type: boolean }
+        not_understood: { type: integer, minimum: 0, description: 'Moves the role ruled were not an answer to what it asked' }
+        rescues: { type: integer, minimum: 0, description: '«переспросил N раз» — always neutral' }
+        ended_reason:
+          type: [string, 'null']
+          enum: [natural, limit, declined, replayed, null]
+          description: >-
+            `natural` — the role said goodbye; `limit` — the talk reached the money the plan allows it
+            and the role closed it on its next move; `declined` — a refused subject pushed twice;
+            `replayed` — «Ещё раз» closed it to make room for a new one.
+        minutes: { type: [integer, 'null'], description: '«Разговор окончен · 3 минуты»' }
+        returns_tomorrow:
+          type: boolean
+          description: >-
+            Do the phrases that did not sound come back tomorrow (`speak_retell`). False on the
+            rehearsal: there is no tomorrow before the event — «повтори перед приёмом».
 
     PlanDayCards:
       type: object

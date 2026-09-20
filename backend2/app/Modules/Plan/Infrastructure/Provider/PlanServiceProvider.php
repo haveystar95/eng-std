@@ -11,6 +11,7 @@ use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\CheckCounters;
+use App\Modules\Plan\Application\Port\ConversationAudioStore;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\LineAudioStore;
@@ -27,19 +28,24 @@ use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SceneImageStore;
 use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Application\Port\SlotJudgeQuota;
+use App\Modules\Plan\Application\Port\TurnSpeaker;
 use App\Modules\Plan\Domain\Check\BlueprintChecker;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
+use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Assembly\PhraseCards;
 use App\Modules\Plan\Domain\Assembly\PhrasesStage;
+use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\ValueObject\CheckModes;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Plan\Infrastructure\Adapter\ArraySlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\CdnSceneImageStore;
+use App\Modules\Plan\Infrastructure\Adapter\DiskConversationAudioStore;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
+use App\Modules\Plan\Infrastructure\Adapter\GenerationTurnSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerCalendar;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerGender;
 use App\Modules\Plan\Infrastructure\Adapter\PexelsPlanImageFinder;
@@ -49,6 +55,7 @@ use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyNativeDistractorSource;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyPlanCollectionWriter;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentCheckCounters;
+use App\Modules\Plan\Infrastructure\Eloquent\EloquentConversationRepository;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentDayCardRepository;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentLineAudioStore;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanAccountEraser;
@@ -94,6 +101,7 @@ final class PlanServiceProvider extends ServiceProvider
         $this->app->alias(EloquentPlanRepository::class, PlanListReader::class);
         $this->app->alias(EloquentPlanRepository::class, SceneLocator::class);
         $this->app->bind(DayCardRepository::class, EloquentDayCardRepository::class);
+        $this->app->bind(ConversationRepository::class, EloquentConversationRepository::class);
         $this->app->bind(PlanTermRepository::class, EloquentPlanTermRepository::class);
         $this->app->bind(CheckCounters::class, EloquentCheckCounters::class);
         $this->app->bind(NativeDistractorSource::class, VocabularyNativeDistractorSource::class);
@@ -170,6 +178,36 @@ final class PlanServiceProvider extends ServiceProvider
             );
         });
 
+        // THE TALK WITH THE AGENT (наряд CONV-1): turns, minutes and the money cap — `plan.conversation`,
+        // tuned in config after the phone, never in code (the rule the day's pace was written under).
+        $this->app->singleton(ConversationRules::class, function (): ConversationRules {
+            $ints = static function (string $key, array $fallback): array {
+                $out = [];
+                foreach ((array) config("plan.conversation.{$key}", $fallback) as $type => $value) {
+                    if (is_string($type) && is_numeric($value)) {
+                        $out[$type] = (int) $value;
+                    }
+                }
+
+                return $out === [] ? $fallback : $out;
+            };
+
+            return new ConversationRules(
+                turns: $ints('turns', ConversationRules::TURNS),
+                minutes: $ints('minutes', ConversationRules::MINUTES),
+                costCapUsd: (float) config('plan.conversation.cost_cap_usd', ConversationRules::COST_CAP_USD),
+                hintDelayMs: (int) config('plan.conversation.hint_delay_ms', ConversationRules::HINT_DELAY_MS),
+            );
+        });
+
+        // The agent's lines land on the day's own private disk, under a folder of their own — and the
+        // voice that buys them never fails a turn (the swallow is in the adapter, with the log line).
+        $this->app->bind(ConversationAudioStore::class, fn (Container $app): ConversationAudioStore => new DiskConversationAudioStore(
+            $app->make(Disks::class),
+            (string) config('plan.audio_disk', 'local'),
+        ));
+        $this->app->bind(TurnSpeaker::class, GenerationTurnSpeaker::class);
+
         // THE PACE OF A DAY (SESSION-1a): seconds per card by kind, from `plan.pace` — tuned in config, never in code.
         $this->app->singleton(DayPace::class, fn (Container $app): DayPace => new DayPace($app->make(PlanConfig::class)->pace));
 
@@ -221,6 +259,8 @@ final class PlanServiceProvider extends ServiceProvider
                 repairModel: (string) config('plan.model.repair_model', 'gpt-5.4'),
                 judgeModel: (string) config('plan.model.judge_model', 'gpt-5.4-mini'),
                 slotJudgeTimeout: (int) config('plan.slot_judge.timeout', ContentModelPlanBuilder::SLOT_JUDGE_TIMEOUT),
+                conversationModel: (string) config('plan.conversation.model', 'gpt-5.4-mini'),
+                conversationTimeout: (int) config('plan.conversation.timeout', ContentModelPlanBuilder::CONVERSATION_TIMEOUT),
             );
         });
 

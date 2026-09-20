@@ -118,6 +118,19 @@ final class FrameText
         return (string) preg_replace('/\s+([.!?…]+)$/u', '$1', trim($text));
     }
 
+    /**
+     * «I can come at 3 p.m..» → «I can come at 3 p.m.» (хвост ROADMAP, наряд CONV-1).
+     *
+     * The model writes the abbreviation with its own full stop and then closes the sentence with
+     * another, and the line goes to the phone, to the voice and to the judge with two. Exactly TWO
+     * are collapsed: three or more are an ellipsis written with dots, and «...» is not a slip to
+     * put right — it is how somebody trails off.
+     */
+    public static function withoutDoubledStop(string $text): string
+    {
+        return (string) preg_replace('/(?<!\.)\.\.$/u', '.', rtrim($text));
+    }
+
     /** `$text` with the closing mark of `$from` when it has none of its own — what a frame written without one borrows. */
     public static function withEndMarkOf(string $text, string $from): string
     {

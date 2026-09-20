@@ -39,6 +39,9 @@ function s1rFailTwice(object $ctx, string $token, string $id, int $number, array
 /**
  * The returned cards of a day, as «scene:kind:ref» — what «the unit came back» is counted by.
  *
+ * The phrases a talk did not hear come back too (наряд CONV-1), as `speak_retell`: this chain is about the units that
+ * FAILED, so those are left out here and checked where they belong — `ConversationApiTest`.
+ *
  * @param  list<array<string, mixed>>  $cards
  * @return list<string>
  */
@@ -46,7 +49,7 @@ function s1rReturned(array $cards): array
 {
     $out = [];
     foreach ($cards as $card) {
-        if ($card['source'] === 'returned' && $card['retry_of'] === null) {
+        if ($card['source'] === 'returned' && $card['retry_of'] === null && $card['kind'] !== 'speak_retell') {
             $out[] = $card['payload']['scene_id'].':'.$card['unit']['kind'].':'.$card['unit']['ref'];
         }
     }
@@ -123,7 +126,8 @@ it('brings yesterday\'s unit back on the rehearsal too — the nearest following
 
     $day3 = s1rCards($this, $token, $id, 3);
     expect(s1rReturned($day3))->toBe([$unit['payload']['scene_id'].':word:'.$unit['unit']['ref']])
-        ->and(array_values(array_unique(array_map(static fn (array $c): string => $c['stage'], $day3))))->toBe(['words', 'speak']);
+        // The rehearsal's own stage is «Вспомнить» since наряд CONV-1; the return still lands at the end of ITS stage.
+        ->and(array_values(array_unique(array_map(static fn (array $c): string => $c['stage'], $day3))))->toBe(['words', 'recall']);
 });
 
 it('deals no copy of a wrong listening answer — the review shows it — and the day\'s listening never returns', function () {

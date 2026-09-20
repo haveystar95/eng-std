@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Port;
 
+use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
@@ -38,6 +39,14 @@ interface PlanModelPort
      */
     public function judgeSlot(SlotJudgeRequest $request): ModelReply;
 
+    /**
+     * ONE MOVE OF THE CONVERSATION AGENT (`conversation_agent.v1`, наряд CONV-1): the role's reply in
+     * both languages, what it judged about the learner's move, the checkpoint it closed, the hint to
+     * offer next and whether the talk is over. Synchronous, inside the learner's request, ONE attempt
+     * — a retry would only lengthen a wait the learner is sitting through; a silence throws.
+     */
+    public function conversationTurn(ConversationAgentRequest $request): ModelReply;
+
     /** The versions stamped on every plan and lesson — read from the prompt files' names. */
     public function planPromptVersion(): string;
 
@@ -49,4 +58,7 @@ interface PlanModelPort
 
     /** The slot judge's version — what its counters (`judge.unavailable`) are kept under. */
     public function slotJudgePromptVersion(): string;
+
+    /** The agent's version — stamped on every turn it writes. */
+    public function conversationPromptVersion(): string;
 }

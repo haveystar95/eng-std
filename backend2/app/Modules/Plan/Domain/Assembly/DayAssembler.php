@@ -7,7 +7,10 @@ namespace App\Modules\Plan\Domain\Assembly;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\UnitStates;
+use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
+use App\Modules\Plan\Domain\ValueObject\DayType;
+use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\Stage;
@@ -16,9 +19,10 @@ use App\Modules\Plan\Domain\ValueObject\UnitKind;
 /**
  * THE DAY, DEALT — deterministically, from stored material (`docs/plan-v2.md` §6; наряд SESSION-1a, разд. 2).
  *
- * A scene day is the five stages of the registry over one lesson, plus the units that failed twice on the previous
- * content day, each at the end of its own stage; a review day is the returns of the two previous scene days and
- * `speak_answer` over their exchanges; the rehearsal is `speak_answer` over every scene of the plan. Every shuffle and
+ * A scene day is the five CARD stages of the registry over one lesson, plus the units that failed twice on the
+ * previous content day, each at the end of its own stage; a review day is the returns of the two previous scene days
+ * and `speak_answer` over their exchanges; the rehearsal is «Вспомнить» ({@see RecallStage}, наряд CONV-1). The sixth
+ * stage of a day — the talk with the agent — is dealt by nobody: it has no cards. Every shuffle and
  * rotation inside is seeded by the card's own address, so a day dealt twice is the same day. The assembler tolerates
  * whatever the checks left in the lesson: a card whose material is missing is simply not dealt, and nothing about a
  * broken mark drops the day.
@@ -31,6 +35,7 @@ final class DayAssembler
         private readonly DialogueStage $dialogue = new DialogueStage,
         private readonly ListenStage $listen = new ListenStage,
         private readonly SpeakStage $speak = new SpeakStage,
+        private readonly RecallStage $recall = new RecallStage,
     ) {}
 
     /**
@@ -51,7 +56,7 @@ final class DayAssembler
             ...$this->returns($material, $returned, $nativeTopUp, $level),
         ];
 
-        return $this->deal($dayId, $drafts, $ids);
+        return $this->deal($dayId, $drafts, $ids, DayType::Scene);
     }
 
     /**
@@ -74,13 +79,17 @@ final class DayAssembler
             ...$this->returns($material, $returned, $nativeTopUp, $level),
         ];
 
-        return $this->deal($dayId, $drafts, $ids);
+        return $this->deal($dayId, $drafts, $ids, DayType::Review);
     }
 
     /**
-     * The exchanges of every scene said aloud, and what failed on the day before at the end of its stage — the
-     * rehearsal is the nearest following day for yesterday's units like any other day (SESSION-1a, хвост). An exchange
-     * already returned is not dealt twice.
+     * THE REHEARSAL (наряд CONV-1): «Вспомнить» — the plan's own lines read through and five or six of
+     * them said aloud ({@see RecallStage}) — and then the talk with the agent, which is no card at
+     * all. Its twelve `speak_answer` over every scene are gone: the day before the event is for
+     * remembering and for speaking to a person, not for another round of the trainer.
+     *
+     * What failed on the day before still comes back at the end of its own stage — the rehearsal is
+     * the nearest following day like any other (SESSION-1a, хвост).
      *
      * @param  list<SceneMaterial>  $scenes  every ready scene of the plan, in order
      * @param  array<string, SceneMaterial>  $material
@@ -91,11 +100,11 @@ final class DayAssembler
     public function rehearsalDay(PlanDayId $dayId, array $scenes, array $material, PlanLevel $level, array $returned, callable $ids): array
     {
         $drafts = [
-            ...$this->speak->rehearsal($scenes, self::returnedExchanges($returned)),
+            ...$this->recall->build($scenes),
             ...$this->returns($material, $returned, [], $level),
         ];
 
-        return $this->deal($dayId, $drafts, $ids);
+        return $this->deal($dayId, $drafts, $ids, DayType::Rehearsal);
     }
 
     /**
@@ -174,15 +183,18 @@ final class DayAssembler
             if ($scene === null) {
                 continue;
             }
-            $draft = match ($unit->kind) {
-                UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $nativeTopUp),
-                UnitKind::Phrase => ($term = $scene->phraseTerm($unit->ref)) === null || $term->frame() === null
+            $draft = match (true) {
+                // A phrase that did not SOUND in the talk comes back as its own line said aloud (наряд CONV-1,
+                // п. 3) — not as a recognition: nothing about it was answered wrong, it simply was not said.
+                $unit->kind === UnitKind::Phrase && $unit->failedAs === CardKind::SpeakRetell => self::unsaidPhrase($scene, $unit->ref),
+                $unit->kind === UnitKind::Word => ($term = $scene->term($unit->ref)) === null ? null : $this->words->returned($scene, $term, $nativeTopUp),
+                $unit->kind === UnitKind::Phrase => ($term = $scene->phraseTerm($unit->ref)) === null || $term->frame() === null
                     ? null
                     : $this->phrases->returned($scene, $term, $unit->failedAs, $unit->failedFiller, $level),
-                UnitKind::Exchange => (($step = SpokenLines::stepOfRef($unit->ref)) === null || ($exchange = $scene->exchange($step)) === null)
+                $unit->kind === UnitKind::Exchange => (($step = SpokenLines::stepOfRef($unit->ref)) === null || ($exchange = $scene->exchange($step)) === null)
                     ? null
                     : $this->speak->speakAnswer($scene, $exchange),
-                UnitKind::Day => null,
+                default => null,
             };
             if ($draft !== null) {
                 $out[] = $draft->returned($unit->sourceDayId);
@@ -193,6 +205,27 @@ final class DayAssembler
     }
 
     /**
+     * A PHRASE THE TALK DID NOT HEAR, coming back (наряд CONV-1, п. 3): the learner's own line that stands on that
+     * frame, said aloud — `speak_retell`, кадр 35-4. The line is the FIRST the visit says on the frame; a frame no
+     * complete exchange says has no line to give back and is not dealt.
+     */
+    private static function unsaidPhrase(SceneMaterial $scene, string $phraseRef): ?CardDraft
+    {
+        foreach ($scene->lesson->exchanges as $exchange) {
+            $learner = $exchange->learner();
+            if ($exchange->kind === ExchangeKind::Rescue || $learner?->phraseId !== $phraseRef || $exchange->partner() === null) {
+                continue;
+            }
+            $payload = SpeakCards::retell($scene, $exchange);
+            if ($payload !== null) {
+                return new CardDraft(CardKind::SpeakRetell, UnitKind::Exchange, SpokenLines::exchangeRef($exchange->step), $payload);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Positions run per stage, in the order the drafts arrived; returned cards land at the end of
      * their stage, after today's.
      *
@@ -200,18 +233,20 @@ final class DayAssembler
      * @param  callable(): DayCardId  $ids
      * @return list<DayCard>
      */
-    private function deal(PlanDayId $dayId, array $drafts, callable $ids): array
+    private function deal(PlanDayId $dayId, array $drafts, callable $ids, DayType $type): array
     {
         $byStage = [];
-        foreach (Stage::ordered() as $stage) {
+        foreach (Stage::ofCards() as $stage) {
             $byStage[$stage->value] = [];
         }
+        // A kind reads its stage off the day as well as off itself: «Повтори свою реплику» stands in
+        // «Говорю сам» on a scene day and in «Вспомнить» on the rehearsal (наряд CONV-1).
         foreach ($drafts as $draft) {
-            $byStage[$draft->kind->stage()->value][] = $draft;
+            $byStage[$draft->kind->stage($type)->value][] = $draft;
         }
 
         $cards = [];
-        foreach (Stage::ordered() as $stage) {
+        foreach (Stage::ofCards() as $stage) {
             $position = 0;
             foreach ($byStage[$stage->value] ?? [] as $draft) {
                 $cards[] = DayCard::dealt(

@@ -15,13 +15,16 @@ use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Exception\StageIncomplete;
+use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
+use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\DayMetricsCalculator;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
+use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
@@ -42,6 +45,7 @@ final readonly class CloseDayHandler
         private PlanAccess $access,
         private PlanRepository $plans,
         private DayCardRepository $cards,
+        private ConversationRepository $conversations,
         private PlanTermRepository $terms,
         private PlanCollectionWriter $collection,
         private DayMetricsCalculator $metrics,
@@ -77,8 +81,17 @@ final readonly class CloseDayHandler
                     )));
                 }
             }
+            // «День пройден» = every stage walked, and since наряд CONV-1 a day dealt with the talk
+            // has six. The talk has no cards to count: its journal is what says it happened, and a
+            // talk that is not over is a stage that is not walked.
+            $talk = $day->hasConversation() ? $this->conversations->latestForDay($day->id()) : null;
+            if ($day->hasConversation() && $talk?->isEnded() !== true) {
+                throw StageIncomplete::stage(Stage::Conversation, 1);
+            }
 
-            $metrics = $this->metrics->calculate($cards);
+            // The day's minutes include the talk: it answers no card, and «19 минут» on the summary
+            // is how long the day took, not how long its cards took.
+            $metrics = $this->metrics->calculate($cards, ConversationOutcomes::minutesOf($talk));
             $next = $plan->closeDay($command->number, $metrics, $today, $now);
 
             // The day's words and phrases go to the plan's collection — the ordinary mechanism.

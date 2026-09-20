@@ -14,6 +14,8 @@ final readonly class DayWindowView
     /**
      * @param  list<WindowStageView>  $stages
      * @param  list<WindowListeningView>  $listening  the questions about the day's whole visit (GEN-2a, additive)
+     * @param  list<string>  $highlights  «Что было хорошо» — two or three lines of a passed day (кадр 37-13,
+     *   наряд CONV-1), written by the server and printed by the client; empty until the day is passed
      */
     public function __construct(
         public WindowDayView $day,
@@ -22,5 +24,6 @@ final readonly class DayWindowView
         public WindowProgramView $program,
         public ?string $allowedAction,
         public array $listening = [],
+        public array $highlights = [],
     ) {}
 }

@@ -7,6 +7,7 @@ use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\Assembly\ReturnedUnit;
+use App\Modules\Plan\Domain\Assembly\RecallStage;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
@@ -184,8 +185,9 @@ it('deals the clean lesson in five stages of exactly 24, 26 or 24, 13, 9 and 8 c
         ])
         ->and(count($cards))->toBe(24 + 24 + $thirds + 13 + 9 + 8);
 
-    foreach (Stage::ordered() as $stage) {
-        expect(array_map(static fn (DayCard $c): int => $c->position(), s1daIn($cards, $stage)))->toBe(range(1, count(s1daIn($cards, $stage))));
+    foreach (Stage::ofCards() as $stage) {
+        $inStage = s1daIn($cards, $stage);
+        expect(array_map(static fn (DayCard $c): int => $c->position(), $inStage))->toBe($inStage === [] ? [] : range(1, count($inStage)));
     }
     expect(array_filter($cards, static fn (DayCard $c): bool => ! $c->kind()->isDealt()))->toBe([])
         ->and(array_unique(array_map(static fn (DayCard $c): string => $c->source()->value, $cards)))->toBe(['today'])
@@ -287,10 +289,10 @@ it('deals a review day of at most ten speak_answer over two scenes in their orde
         ->and(s1daSnapshot($review()))->toBe(s1daSnapshot($cards));
 });
 
-// Canon (разд. 2): «Репетиция: speak_answer по всем сценам плана, ≤ 12 (по одному-два на сцену, seeded)». Catches a
-// rehearsal over the cap, a scene given three, a second card before every scene has its first, a scene left out
-// while there is room.
-it('deals a rehearsal of at most twelve speak_answer — one a scene first, then a second in order while there is room', function (int $scenes, array $perScene) {
+// Canon (наряд CONV-1): «Репетиция — этапы recall и conversation»: one walkthrough of the plan's own lines, then five
+// or six of them said aloud, ALL in «Вспомнить». Catches the old twelve `speak_answer` coming back, a line dealt into
+// «Говорю сам» (a stage the rehearsal does not have), and a sheet that forgets a scene.
+it('deals a rehearsal of «Вспомнить»: the sheet of every scene, then at most six lines said aloud', function (int $scenes) {
     $material = array_map(static fn (int $n): SceneMaterial => s1daScene(PlanLevel::Intermediate, $n), range(1, $scenes));
     $byId = [];
     foreach ($material as $scene) {
@@ -298,28 +300,24 @@ it('deals a rehearsal of at most twelve speak_answer — one a scene first, then
     }
     $cards = (new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Intermediate, [], s1daIds());
 
-    $counts = [];
-    foreach ($material as $scene) {
-        $counts[] = count(array_filter($cards, static fn (DayCard $c): bool => $c->payload()['scene_id'] === $scene->sceneId->value));
-    }
-    $order = array_map(static fn (DayCard $c): array => [$c->payload()['scene_id'], (int) substr($c->unitRef(), 1)], $cards);
-    $sorted = $order;
-    sort($sorted);
+    $sheet = $cards[0];
+    $said = array_slice($cards, 1);
+    /** @var array<int, array<string, mixed>> $sheetScenes */
+    $sheetScenes = $sheet->payload()['scenes'];
 
-    expect($counts)->toBe($perScene)
-        ->and(count($cards))->toBe(array_sum($perScene))
-        ->and(array_unique(array_map(static fn (DayCard $c): string => $c->kind()->value, $cards)))->toBe(['speak_answer'])
-        ->and(array_unique(array_map(static fn (DayCard $c): string => $c->stage()->value, $cards)))->toBe(['speak'])
+    expect($sheet->kind())->toBe(CardKind::RecallScenes)
+        ->and($sheet->unitKind())->toBe(UnitKind::Day)
+        ->and(array_column($sheetScenes, 'scene_id'))->toBe(array_map(static fn (SceneMaterial $m): string => $m->sceneId->value, $material))
+        // Every scene's own lines, with their translation — the sheet is read, not answered (кадр 37-3).
+        ->and(array_map(static fn (array $scene): int => count($scene['lines']), $sheetScenes))->each->toBeGreaterThan(0)
+        ->and(array_unique(array_map(static fn (DayCard $c): string => $c->kind()->value, $said)))->toBe(['speak_retell'])
+        ->and(count($said))->toBeLessThanOrEqual(RecallStage::LINES)
+        ->and(array_unique(array_map(static fn (DayCard $c): string => $c->stage()->value, $cards)))->toBe(['recall'])
         ->and(array_map(static fn (DayCard $c): int => $c->position(), $cards))->toBe(range(1, count($cards)))
-        ->and($order)->toBe($sorted);
-})->with([
-    // Two scenes: one each, then a second each — 4, well under the cap.
-    'two scenes' => [2, [2, 2]],
-    // Eight scenes: 8 firsts, then seconds for the first four until 12.
-    'eight scenes' => [8, [2, 2, 2, 2, 1, 1, 1, 1]],
-    // Thirteen scenes: the first twelve get one card, the thirteenth none.
-    'thirteen scenes' => [13, [...array_fill(0, 12, 1), 0]],
-]);
+        // Dealt twice — the same rehearsal: the ranking is the dialogue's, not a shuffle.
+        ->and(s1daSnapshot((new DayAssembler)->rehearsalDay(PlanDayId::fromString('01J8SESSDAY000000000000004'), $material, $byId, PlanLevel::Intermediate, [], s1daIds())))
+        ->toBe(s1daSnapshot($cards));
+})->with(['one scene' => 1, 'three scenes' => 3, 'eight scenes' => 8]);
 
 // Canon (SESSION-1a, хвост): a unit comes back on the nearest following day of ANY type — the rehearsal takes yesterday's
 // returns at the end of their stages, and an exchange coming back is not also one of the rehearsal's own cards.
@@ -345,9 +343,10 @@ it('deals yesterday\'s returns on a rehearsal at the end of their stages, the re
         ->and(s1daShape(s1daIn($cards, Stage::Words)))->toBe(['word_choose@v3'])
         ->and(end($speak)->source())->toBe(CardSource::Returned)
         ->and(end($speak)->unitRef())->toBe('x1')
-        // The returned exchange is not also a rehearsal card of its scene.
-        ->and(array_filter($own, static fn (DayCard $c): bool => $c->unitRef() === 'x1' && $c->payload()['scene_id'] === $material[0]->sceneId->value))->toBe([])
-        ->and(count($own))->toBe(count($plain));
+        // «Вспомнить» is untouched by the return: the returns land at the end of THEIR stages, and the
+        // returned exchange is «Говорю сам»'s, not the rehearsal's sheet.
+        ->and($own)->toBe([])
+        ->and(count(s1daIn($cards, Stage::Recall)))->toBe(count($plain));
 });
 
 // Moved from the assembly test of the old registry (its kinds are gone): the day's numbers are its dealt cards'.

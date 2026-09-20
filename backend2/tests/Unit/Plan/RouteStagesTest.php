@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Domain\Service\RouteStages;
+use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\RouteStage;
 use App\Modules\Plan\Domain\ValueObject\Stage;
@@ -62,9 +63,34 @@ it('a dealt day is read off its cards, not off its type', function () {
     expect(routeStagesOf($stages))->toBe([['phrases', 'current'], ['speak', 'locked']]);
 });
 
-it('the rehearsal has one stage', function () {
+it('the rehearsal has «Вспомнить», and the talk after it', function () {
     expect(routeStagesOf(RouteStages::of(DayType::Rehearsal, [], closed: false, availableToday: false)))
-        ->toBe([['speak', 'locked']]);
+        ->toBe([['recall', 'locked']])
+        ->and(routeStagesOf(RouteStages::of(DayType::Rehearsal, [], closed: false, availableToday: false, hasConversation: true)))
+        ->toBe([['recall', 'locked'], ['conversation', 'locked']]);
+});
+
+/**
+ * THE SIXTH NODE (наряд CONV-1). It has no cards, so it cannot be read off the tallies: it is walked when its journal
+ * says the talk ended, and it is the stage being walked once the cards are done. The defect this catches is a route
+ * that draws «Разговор» as current while «Говорю сам» is still open — two current nodes on one day.
+ */
+it('draws the talk as the last node and never as a second current one', function () {
+    $walked = ['words' => ['total' => 2, 'answered' => 2], 'speak' => ['total' => 2, 'answered' => 1]];
+
+    expect(routeStagesOf(RouteStages::of(DayType::Scene, $walked, closed: false, availableToday: true, hasConversation: true)))
+        ->toBe([['words', 'done'], ['speak', 'current'], ['conversation', 'locked']])
+        ->and(routeStagesOf(RouteStages::of(
+            DayType::Scene,
+            ['words' => ['total' => 2, 'answered' => 2], 'speak' => ['total' => 2, 'answered' => 2]],
+            closed: false, availableToday: true, hasConversation: true,
+        )))->toBe([['words', 'done'], ['speak', 'done'], ['conversation', 'current']])
+        // A talk that is over is a walked node even when a card stage is not: the learner may start it
+        // early, and the route says what each stage is, not what order they were walked in.
+        ->and(routeStagesOf(RouteStages::of(
+            DayType::Scene, $walked, closed: false, availableToday: true,
+            hasConversation: true, conversation: ConversationState::Ended,
+        )))->toBe([['words', 'done'], ['speak', 'current'], ['conversation', 'done']]);
 });
 
 it('a review day not dealt yet has words and speak', function () {

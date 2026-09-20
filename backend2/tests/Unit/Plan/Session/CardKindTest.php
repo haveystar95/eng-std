@@ -5,15 +5,17 @@ declare(strict_types=1);
 use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
+use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 
 /**
- * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1; D-01, D-05, D-31; наряд FIX-2 п. 5): twenty-eight kinds,
- * twenty-seven dealt, each in one stage and counted one way — which is what the server lets the client write for it.
+ * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1; D-01, D-05, D-31; наряды FIX-2 п. 5 и CONV-1):
+ * twenty-nine kinds, twenty-eight dealt, each in one stage and counted one way — which is what the server lets the
+ * client write for it.
  */
 
-it('has the twenty-eight kinds of the registry in its order, twenty-seven of them dealt — listen_pairs only reserved', function () {
+it('has the twenty-nine kinds of the registry in its order, twenty-eight of them dealt — listen_pairs only reserved', function () {
     expect(array_map(static fn (CardKind $k): string => $k->value, CardKind::cases()))->toBe([
         'word_intro', 'word_repeat', 'word_choose', 'word_listen', 'word_assemble', 'word_in_line',
         'phrase_intro', 'phrase_assemble', 'phrase_choose_back', 'phrase_slot', 'phrase_slot_listen', 'phrase_repeat',
@@ -21,8 +23,9 @@ it('has the twenty-eight kinds of the registry in its order, twenty-seven of the
         'dialogue_partner', 'dialogue_answer', 'dialogue_ask', 'dialogue_rescue',
         'listen_dialogue', 'listen_question', 'listen_review', 'listen_pairs', 'listen_predict', 'listen_pace', 'listen_number',
         'speak_answer', 'speak_echo', 'speak_retell',
+        'recall_scenes',
     ])
-        ->and(CardKind::dealt())->toHaveCount(27)
+        ->and(CardKind::dealt())->toHaveCount(28)
         ->and(CardKind::dealt())->not->toContain(CardKind::ListenPairs)
         ->and(CardKind::ListenPairs->isDealt())->toBeFalse();
 });
@@ -35,9 +38,26 @@ it('puts every kind into the stage its name says', function () {
             'dialogue' => Stage::Dialogue,
             'listen' => Stage::Listen,
             'speak' => Stage::Speak,
+            'recall' => Stage::Recall,
         };
         expect($kind->stage())->toBe($expected, $kind->value);
     }
+});
+
+/**
+ * ONE KIND READS ITS STAGE OFF THE DAY TOO (наряд CONV-1): «Повтори свою реплику» is «Говорю сам» on a scene day and
+ * «Вспомнить» on the rehearsal — the same trainer, the same screen (кадр 35-4), two places. The defect this catches is
+ * a rehearsal that deals its lines into «Говорю сам» and draws a stage the day does not have.
+ */
+it('moves only speak_retell to «Вспомнить», and only on the rehearsal', function () {
+    foreach (CardKind::cases() as $kind) {
+        $moved = $kind->stage(DayType::Rehearsal) !== $kind->stage();
+        expect($moved)->toBe($kind === CardKind::SpeakRetell, $kind->value);
+    }
+
+    expect(CardKind::SpeakRetell->stage(DayType::Rehearsal))->toBe(Stage::Recall)
+        ->and(CardKind::SpeakRetell->stage(DayType::Scene))->toBe(Stage::Speak)
+        ->and(CardKind::SpeakRetell->stage(DayType::Review))->toBe(Stage::Speak);
 });
 
 // Catches a kind added to two lists (a choice that is also spoken) or to none (a kind nobody can answer).
@@ -52,7 +72,7 @@ it('counts every kind exactly one way: choice, spoken, judged or walkthrough', f
         ->and(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isSpoken())))
         ->toBe([CardKind::WordRepeat, CardKind::PhraseRepeat, CardKind::PhraseOtherSlot, CardKind::DialogueAnswer, CardKind::DialogueAsk, CardKind::SpeakEcho, CardKind::SpeakRetell])
         ->and(array_values(array_filter(CardKind::cases(), static fn (CardKind $k): bool => $k->isWalkthrough())))
-        ->toBe([CardKind::WordIntro, CardKind::PhraseIntro, CardKind::DialogueRescue, CardKind::ListenDialogue, CardKind::ListenReview, CardKind::ListenPace]);
+        ->toBe([CardKind::WordIntro, CardKind::PhraseIntro, CardKind::DialogueRescue, CardKind::ListenDialogue, CardKind::ListenReview, CardKind::ListenPace, CardKind::RecallScenes]);
 });
 
 // D-31: a judged card is passed only by the judge; a walkthrough is never right or wrong; the voice never fails.

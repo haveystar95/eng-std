@@ -142,9 +142,10 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
     // Opening day 1 asks the model for nothing (наряд GEN-3 §11): day 2's lesson is asked for when day 1 closes.
     expect(planRead($this, $token, $id)['days'][1]['lesson_status'])->toBe('pending');
 
-    // The room: five stages, the first one current.
+    // The room: the card stages, the first one current — «Вспомнить» is the rehearsal's and absent here — and the
+    // talk last (наряд CONV-1).
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
-    expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked'])
+    expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked', 'absent', 'locked'])
         ->and($room['window']['day']['goals'])->toHaveCount(3)
         ->and($room['program'])->not->toBeEmpty()
         // The old day room's own keys went with it (DAY-UI-2): the goals live in the window now. `speech` — the
@@ -209,7 +210,12 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
 
     planShiftDay($id);
     $two = planOpenDay($this, $token, $id, 2);
-    $returned = array_values(array_filter($two['cards'], static fn (array $c): bool => $c['source'] === 'returned'));
+    // The phrases yesterday's talk did not hear come back too, as `speak_retell` (наряд CONV-1) — the failed WORD is
+    // what this walk is about.
+    $returned = array_values(array_filter(
+        $two['cards'],
+        static fn (array $c): bool => $c['source'] === 'returned' && $c['kind'] !== 'speak_retell',
+    ));
     expect($returned)->toHaveCount(1)
         ->and($returned[0]['kind'])->toBe('word_choose')
         ->and($returned[0]['unit_ref'])->toBe($choose['unit_ref'])
@@ -238,20 +244,18 @@ it('walks a three-day plan through to the rehearsal, which says every scene alou
     expect($two['day']['status'])->toBe('closed');
     planShiftDay($id);
 
-    // The registry's rehearsal (наряд SESSION-1a, разд. 2): speak_answer, one or two a scene, ≤ 12 — two scenes give
-    // one each, then a second each: 4 (the old one said every exchange of both, 16).
+    // The rehearsal of наряд CONV-1: «Вспомнить» — the sheet of both scenes and the lines said aloud — and then the
+    // talk, which has no cards at all. The twelve `speak_answer` of the old rehearsal are gone.
     $rehearsal = planOpenDay($this, $token, $id, 3);
-    expect(array_unique(array_column($rehearsal['cards'], 'stage')))->toBe(['speak'])
-        ->and(array_unique(array_column($rehearsal['cards'], 'kind')))->toBe(['speak_answer'])
-        ->and(count($rehearsal['cards']))->toBe(4)
-        ->and(count(array_unique(array_column(array_column($rehearsal['cards'], 'payload'), 'scene_id'))))->toBe(2);
+    expect(array_unique(array_column($rehearsal['cards'], 'stage')))->toBe(['recall'])
+        ->and($rehearsal['cards'][0]['kind'])->toBe('recall_scenes')
+        ->and(array_unique(array_column(array_slice($rehearsal['cards'], 1), 'kind')))->toBe(['speak_retell'])
+        ->and(count(array_unique(array_column(array_column($rehearsal['cards'][0]['payload']['scenes'], 'scene_id'), 0))))->toBeLessThanOrEqual(2);
 
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/3")->assertOk()->json('data');
-    expect(array_column($room['stages'], 'state'))->toBe(['absent', 'absent', 'absent', 'absent', 'current'])
+    expect(array_column($room['stages'], 'state'))->toBe(['absent', 'absent', 'absent', 'absent', 'absent', 'current', 'locked'])
         ->and($room['window']['program']['words']['items'])->toBe([])
-        // The window's dialogue of a day with no scene of its own: the exchanges its cards say — the four rehearsed.
-        ->and($room['window']['program']['dialogue']['items'])->toHaveCount(4)
-        ->and($room['stages'][4]['cards'])->toHaveCount(4);
+        ->and($room['stages'][5]['cards'])->toHaveCount(count($rehearsal['cards']));
 
     $closed = planWalkDay($this, $token, $id, 3);
     expect($closed['day']['status'])->toBe('closed');

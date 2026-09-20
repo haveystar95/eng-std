@@ -474,11 +474,42 @@ function planWalkDay(object $ctx, string $token, string $id, int $number, array 
             $queue[] = $outcome['requeued'];
         }
     }
-    foreach (['words', 'phrases', 'dialogue', 'listen', 'speak'] as $stage) {
-        $ctx->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/{$number}/stages/{$stage}/close")->assertOk();
+    foreach (['words', 'phrases', 'dialogue', 'listen', 'speak', 'recall'] as $stage) {
+        $ctx->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/plans/{$id}/days/{$number}/stages/{$stage}/close")->assertOk();
     }
+    planTalkThrough($ctx, $token, $id, $number);
 
     return $ctx->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/{$number}/close")->assertOk()->json('data');
+}
+
+/**
+ * THE SIXTH STAGE, WALKED (наряд CONV-1): start the talk and say something every turn until the role
+ * says goodbye. `FakePlanModel` plays the role, so this buys nothing and ends where the turn limit
+ * ends — which is exactly the rule «день пройден = шесть этапов насквозь» a closing day checks.
+ *
+ * A day dealt before the talk existed has no conversation stage: the 422 it answers with is the
+ * right answer, and the day closes on its five.
+ *
+ * @return array<string, mixed>|null the talk as it ended, or null when the day has none
+ */
+function planTalkThrough(object $ctx, string $token, string $id, int $number, bool $again = false): ?array
+{
+    $start = $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$id}/days/{$number}/conversation", ['again' => $again]);
+    if ($start->getStatusCode() === 422) {
+        return null;
+    }
+    $talk = $start->assertOk()->json('data');
+
+    $guard = 0;
+    while ($talk['state'] !== 'ended' && $guard++ < 40) {
+        $talk = $ctx->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/plans/{$id}/conversation/{$talk['id']}/turn", ['kind' => 'said', 'heard' => 'My lower back hurts.'])
+            ->assertOk()->json('data');
+    }
+
+    return $talk;
 }
 
 function planShiftDay(string $planId, int $days = 1): void

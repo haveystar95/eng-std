@@ -21,16 +21,31 @@ final class NativeStrings
             'day' => ['день', 'дня', 'дней'],
             'scene' => ['ситуация', 'ситуации', 'ситуаций'],
             'review' => ['повторение', 'повторения', 'повторений'],
+            'line' => ['реплика', 'реплики', 'реплик'],
+            'line_of' => ['реплику', 'реплики', 'реплик'],
+            'phrase_of' => ['фразу', 'фразы', 'фраз'],
+            'question_of' => ['вопроса', 'вопросов', 'вопросов'],
+            'time' => ['раз', 'раза', 'раз'],
         ],
         'uk' => [
             'day' => ['день', 'дні', 'днів'],
             'scene' => ['ситуація', 'ситуації', 'ситуацій'],
             'review' => ['повторення', 'повторення', 'повторень'],
+            'line' => ['репліка', 'репліки', 'реплік'],
+            'line_of' => ['репліку', 'репліки', 'реплік'],
+            'phrase_of' => ['фразу', 'фрази', 'фраз'],
+            'question_of' => ['питання', 'питань', 'питань'],
+            'time' => ['раз', 'рази', 'разів'],
         ],
         'en' => [
             'day' => ['day', 'days', 'days'],
             'scene' => ['situation', 'situations', 'situations'],
             'review' => ['review', 'reviews', 'reviews'],
+            'line' => ['line', 'lines', 'lines'],
+            'line_of' => ['line', 'lines', 'lines'],
+            'phrase_of' => ['phrase', 'phrases', 'phrases'],
+            'question_of' => ['question', 'questions', 'questions'],
+            'time' => ['time', 'times', 'times'],
         ],
     ];
 
@@ -39,6 +54,34 @@ final class NativeStrings
         'ru' => ['rehearsal' => 'репетиция', 'today' => 'сегодня', 'tomorrow' => 'завтра'],
         'uk' => ['rehearsal' => 'репетиція', 'today' => 'сьогодні', 'tomorrow' => 'завтра'],
         'en' => ['rehearsal' => 'rehearsal', 'today' => 'today', 'tomorrow' => 'tomorrow'],
+    ];
+
+    /**
+     * «ЧТО БЫЛО ХОРОШО» (кадр 37-13) — the lines of the day's summary, assembled by the server and
+     * printed by the client. Placeholders: `{n}` the number reached, `{of}` the number possible,
+     * `{noun}` the noun agreed with `{n}` ({@see count()}).
+     *
+     * @var array<string, array<string, string>>
+     */
+    private const HIGHLIGHTS = [
+        'ru' => [
+            'said_self' => 'Сказал сам {n} {noun} из {of}',
+            'phrases_used' => 'В разговоре использовал {n} {noun} из {of}',
+            'understood_all' => 'Понял все вопросы',
+            'understood_except' => 'Понял вопросы, кроме {n} {noun}',
+        ],
+        'uk' => [
+            'said_self' => 'Сказав сам {n} {noun} із {of}',
+            'phrases_used' => 'У розмові використав {n} {noun} із {of}',
+            'understood_all' => 'Зрозумів усі питання',
+            'understood_except' => 'Зрозумів питання, крім {n} {noun}',
+        ],
+        'en' => [
+            'said_self' => 'Said {n} {noun} of {of} on your own',
+            'phrases_used' => 'Used {n} {noun} of {of} in the conversation',
+            'understood_all' => 'Understood every question',
+            'understood_except' => 'Understood the questions but {n} {noun}',
+        ],
     ];
 
     /** @var array<string, list<string>> the month a date is written with, January first — genitive where the language inflects it */
@@ -150,6 +193,22 @@ final class NativeStrings
         $forms = self::FORMS[$this->table()][$noun] ?? self::FORMS['en'][$noun];
 
         return $n.' '.$forms[$this->pluralIndex($n)];
+    }
+
+    /**
+     * One line of «Что было хорошо» (кадр 37-13), ready to print: the number, the noun agreed with
+     * it, and — where the line says «из M» — what it is out of.
+     */
+    public function highlight(string $key, int $n, string $noun, ?int $of = null): string
+    {
+        $template = self::HIGHLIGHTS[$this->table()][$key] ?? self::HIGHLIGHTS['en'][$key] ?? '';
+        $forms = self::FORMS[$this->table()][$noun] ?? self::FORMS['en'][$noun] ?? ['', '', ''];
+
+        return strtr($template, [
+            '{n}' => (string) $n,
+            '{noun}' => $forms[$this->pluralIndex($n)],
+            '{of}' => (string) ($of ?? $n),
+        ]);
     }
 
     private function word(string $key): string

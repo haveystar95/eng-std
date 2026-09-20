@@ -8,19 +8,26 @@ use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Exception\StageIncomplete;
+use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
+use App\Modules\Plan\Domain\ValueObject\Stage;
 
 /**
  * A stage is «closed» by being answered through — there is no stage row to flip, only the
  * cards. This handler is the check: it refuses while a card of the stage is still unanswered,
  * so the client cannot skip ahead by declaring.
+ *
+ * THE SIXTH STAGE HAS NO CARDS (наряд CONV-1), and it is checked the same way against the only
+ * journal it has: it is closed when its talk is over, and a declaration that it is closed while the
+ * role is still waiting is refused like any other.
  */
 final readonly class CloseStageHandler
 {
     public function __construct(
         private PlanAccess $access,
         private DayCardRepository $cards,
+        private ConversationRepository $conversations,
     ) {}
 
     public function __invoke(CloseStage $command): void
@@ -29,6 +36,14 @@ final readonly class CloseStageHandler
         $day = $plan->day($command->number);
         if ($day->status() !== DayStatus::InProgress) {
             throw PlanDayNotOpen::day($command->number, $day->status());
+        }
+
+        if ($command->stage === Stage::Conversation) {
+            if ($day->hasConversation() && $this->conversations->latestForDay($day->id())?->isEnded() !== true) {
+                throw StageIncomplete::stage(Stage::Conversation, 1);
+            }
+
+            return;
         }
 
         $remaining = count(array_filter(

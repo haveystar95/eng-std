@@ -1,0 +1,90 @@
+==========================================================================================
+одна открытая на день (partial unique index)
+  select * from conversations where day_id = ? and state <> 'ended'
+    Index Scan using conversations_day_open_uidx on conversations  (cost=0.14..8.16 rows=1 width=703) (actual time=0.038..0.038 rows=0 loops=1)
+      Index Cond: (day_id = '01M2QRH5MZK7AJWAFY9QK73MM4'::bpchar)
+      Buffers: shared hit=1
+    Planning Time: 0.046 ms
+    Execution Time: 0.052 ms
+==========================================================================================
+последний разговор дня (окно и итог)
+  select * from conversations where day_id = ? order by started_at desc limit 1
+    Limit  (cost=0.14..8.16 rows=1 width=703) (actual time=0.028..0.028 rows=1 loops=1)
+      Buffers: shared hit=2
+      ->  Index Scan using conversations_day_started_idx on conversations  (cost=0.14..8.16 rows=1 width=703) (actual time=0.027..0.027 rows=1 loops=1)
+            Index Cond: (day_id = '01M2QRH5MZK7AJWAFY9QK73MM4'::bpchar)
+            Buffers: shared hit=2
+    Planning Time: 0.028 ms
+    Execution Time: 0.033 ms
+==========================================================================================
+разговоры пачки дней (маршрут плана)
+  select * from conversations where day_id = any(?) order by started_at
+    Sort  (cost=8.17..8.18 rows=1 width=703) (actual time=0.027..0.027 rows=1 loops=1)
+      Sort Key: started_at
+      Sort Method: quicksort  Memory: 25kB
+      Buffers: shared hit=2
+      ->  Index Scan using conversations_day_started_idx on conversations  (cost=0.14..8.16 rows=1 width=703) (actual time=0.024..0.024 rows=1 loops=1)
+            Index Cond: (day_id = ANY ('{01M2QRH5MZK7AJWAFY9QK73MM4}'::bpchar[]))
+            Buffers: shared hit=2
+    Planning:
+      Buffers: shared hit=31
+    Planning Time: 0.124 ms
+    Execution Time: 0.036 ms
+==========================================================================================
+разговор по id и ученику
+  select * from conversations where id = ? and user_id = ?
+    Index Scan using conversations_user_started_idx on conversations  (cost=0.14..8.16 rows=1 width=703) (actual time=0.031..0.031 rows=1 loops=1)
+      Index Cond: (user_id = '01M2QRH5MNAD9Z14BAZ5MDPF62'::bpchar)
+      Filter: (id = '01M3005ZDQQ2Q9N9420P8FC2RX'::bpchar)
+      Buffers: shared hit=2
+    Planning Time: 0.022 ms
+    Execution Time: 0.035 ms
+==========================================================================================
+лента разговора по порядку
+  select * from conversation_turns where conversation_id = ? order by turn_index
+    Sort  (cost=5.19..5.23 rows=15 width=595) (actual time=0.095..0.096 rows=19 loops=1)
+      Sort Key: turn_index
+      Sort Method: quicksort  Memory: 33kB
+      Buffers: shared hit=7
+      ->  Seq Scan on conversation_turns  (cost=0.00..4.90 rows=15 width=595) (actual time=0.041..0.049 rows=19 loops=1)
+            Filter: (conversation_id = '01M3005ZDQQ2Q9N9420P8FC2RX'::bpchar)
+            Rows Removed by Filter: 43
+            Buffers: shared hit=4
+    Planning:
+      Buffers: shared hit=160
+    Planning Time: 0.495 ms
+    Execution Time: 0.124 ms
+==========================================================================================
+блокировка строки перед записью
+  select * from conversations where id = ? for update
+    LockRows  (cost=0.14..8.17 rows=1 width=709) (actual time=0.133..0.134 rows=1 loops=1)
+      Buffers: shared hit=3
+      ->  Index Scan using conversations_pkey on conversations  (cost=0.14..8.16 rows=1 width=709) (actual time=0.018..0.019 rows=1 loops=1)
+            Index Cond: (id = '01M3005ZDQQ2Q9N9420P8FC2RX'::bpchar)
+            Buffers: shared hit=2
+    Planning Time: 0.020 ms
+    Execution Time: 0.146 ms
+==========================================================================================
+лента разговора по порядку, с выключенным seq scan (на 62 строках планировщик законно выбирает Seq Scan)
+    Sort  (cost=8.74..8.78 rows=15 width=595) (actual time=0.084..0.086 rows=19 loops=1)
+      Sort Key: turn_index
+      Sort Method: quicksort  Memory: 33kB
+      Buffers: shared hit=3
+      ->  Bitmap Heap Scan on conversation_turns  (cost=4.26..8.45 rows=15 width=595) (actual time=0.057..0.061 rows=19 loops=1)
+            Recheck Cond: (conversation_id = '01M3005ZDQQ2Q9N9420P8FC2RX'::bpchar)
+            Heap Blocks: exact=2
+            Buffers: shared hit=3
+            ->  Bitmap Index Scan on conversation_turns_index_uidx  (cost=0.00..4.25 rows=15 width=0) (actual time=0.051..0.051 rows=19 loops=1)
+                  Index Cond: (conversation_id = '01M3005ZDQQ2Q9N9420P8FC2RX'::bpchar)
+                  Buffers: shared hit=1
+    Planning Time: 0.049 ms
+    Execution Time: 0.115 ms
+==========================================================================================
+строк: conversations 6, conversation_turns 62
+  conversation_turns_index_uidx: CREATE UNIQUE INDEX conversation_turns_index_uidx ON public.conversation_turns USING btree (conversation_id, turn_index)
+  conversation_turns_pkey: CREATE UNIQUE INDEX conversation_turns_pkey ON public.conversation_turns USING btree (id)
+  conversation_turns_user_idx: CREATE INDEX conversation_turns_user_idx ON public.conversation_turns USING btree (user_id)
+  conversations_day_open_uidx: CREATE UNIQUE INDEX conversations_day_open_uidx ON public.conversations USING btree (day_id) WHERE ((state)::text <> 'ended'::text)
+  conversations_day_started_idx: CREATE INDEX conversations_day_started_idx ON public.conversations USING btree (day_id, started_at DESC)
+  conversations_pkey: CREATE UNIQUE INDEX conversations_pkey ON public.conversations USING btree (id)
+  conversations_user_started_idx: CREATE INDEX conversations_user_started_idx ON public.conversations USING btree (user_id, started_at DESC)

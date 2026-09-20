@@ -8,6 +8,10 @@ use App\Modules\Plan\Application\Dto\CardView;
 use App\Modules\Plan\Application\Dto\DayRoomView;
 use App\Modules\Plan\Application\Dto\DayRouteView;
 use App\Modules\Plan\Application\Dto\DaySlotView;
+use App\Modules\Plan\Application\Dto\ConversationSceneView;
+use App\Modules\Plan\Application\Dto\ConversationSummaryView;
+use App\Modules\Plan\Application\Dto\ConversationTurnView;
+use App\Modules\Plan\Application\Dto\ConversationView;
 use App\Modules\Plan\Application\Dto\DayWindowView;
 use App\Modules\Plan\Application\Dto\PlanBuildView;
 use App\Modules\Plan\Application\Dto\PlanLanguagesView;
@@ -225,6 +229,85 @@ final class PlanJson
     }
 
     /**
+     * THE TALK WITH THE AGENT (наряд CONV-1, кадры 37-5…37-12). Everything is counted in Application;
+     * here the only thing added is the address of a line's sound — the same absolute
+     * `GET /plans/audio/{id}` the day's voice uses, so a client has one player and one rule.
+     *
+     * @return array<string, mixed>
+     */
+    public static function conversation(ConversationView $c): array
+    {
+        $audio = static fn (?string $id): ?string => $id === null ? null : url("/api/v1/plans/audio/{$id}");
+
+        return [
+            'id' => $c->id,
+            'plan_id' => $c->planId,
+            'day' => $c->day,
+            'type' => $c->type,
+            'state' => $c->state,
+            'partner' => ['role_native' => $c->partnerRoleNative, 'role_target' => $c->partnerRoleTarget],
+            'scene' => ['title_native' => $c->sceneTitleNative, 'title_target' => $c->sceneTitleTarget],
+            'scenes' => array_map(static fn (ConversationSceneView $s): array => [
+                'scene_id' => $s->sceneId,
+                'title_native' => $s->titleNative,
+                'title_target' => $s->titleTarget,
+                'role_native' => $s->roleNative,
+                'role_target' => $s->roleTarget,
+                'lines' => $s->lines,
+                'state' => $s->state,
+            ], $c->scenes),
+            'minutes_estimate' => $c->minutesEstimate,
+            'turns_left' => $c->turnsLeft,
+            'hints' => ['enabled' => $c->hintsEnabled, 'delay_ms' => $c->hintDelayMs, 'native' => $c->hintNative],
+            'turns' => array_map(static fn (ConversationTurnView $t): array => [
+                'index' => $t->index,
+                'speaker' => $t->speaker,
+                'kind' => $t->kind,
+                'text_target' => $t->textTarget,
+                'text_native' => $t->textNative,
+                'audio' => $t->audioId === null ? null : [
+                    'ref' => $t->audioId,
+                    'url' => $audio($t->audioId),
+                    'duration_ms' => $t->audioDurationMs,
+                    'voice' => 'partner',
+                ],
+                'understood' => $t->understood,
+                'phrases_used' => $t->phrasesUsed,
+                'off_topic' => $t->offTopic,
+                'created_at' => $t->createdAt,
+            ], $c->turns),
+            'summary' => $c->summary === null ? null : self::conversationSummary($c->summary, $audio),
+        ];
+    }
+
+    /**
+     * @param  callable(?string): ?string  $audio
+     * @return array<string, mixed>
+     */
+    private static function conversationSummary(ConversationSummaryView $s, callable $audio): array
+    {
+        return [
+            'said_count' => $s->saidCount,
+            'phrases_used' => $s->phrasesUsed,
+            'phrases_total' => $s->phrasesTotal,
+            'phrases' => array_map(static fn (array $p): array => [
+                'scene_id' => $p['scene_id'],
+                'ref' => $p['ref'],
+                'text_target' => $p['text_target'],
+                'text_native' => $p['text_native'],
+                'audio_url' => $audio($p['audio_id']),
+                'used' => $p['used'],
+            ], $s->phrases),
+            'understood_all' => $s->understoodAll,
+            'not_understood' => $s->notUnderstood,
+            'rescues' => $s->rescues,
+            'ended_reason' => $s->endedReason,
+            'minutes' => $s->minutes,
+            'returns_tomorrow' => $s->returnsTomorrow,
+        ];
+    }
+
+    /**
      * «Окно дня» (DAY-UI-2, DAY-UI-3). Counts, minutes and shares are the server's; the voice of a
      * line, a phrase or a word is an absolute address built from the request, like the photo crops.
      *
@@ -328,6 +411,8 @@ final class PlanJson
                 ],
             ],
             'allowed_action' => $w->allowedAction,
+            // «Что было хорошо» (кадр 37-13): ready lines, in the frame's order; empty until the day is passed.
+            'highlights' => $w->highlights,
             'listening' => array_map(static fn (WindowListeningView $q): array => [
                 'question' => $q->question,
                 'options' => $q->options,

@@ -408,45 +408,9 @@ it('reviews two scenes with at most ten answers, seeded, the returned exchanges 
     expect(s1spAddresses($stage->review($scenes, $many, $seed)))->toBe(array_slice($pool, 11));
 });
 
-// Canon: the rehearsal says aloud every scene of the plan, ≤ 12, one or two per scene, seeded.
-it('rehearses three scenes with two answers each, by step, seeded by the scene', function () {
-    $scenes = [s1spScene(1), s1spScene(2), s1spScene(3)];
-    $rehearsal = (new SpeakStage)->rehearsal($scenes);
-
-    $expected = [];
-    foreach ([1, 2, 3] as $n) {
-        $steps = array_slice(Shuffle::seeded('rehearsal:'.s1spSceneId($n)->value, [1, 2, 3, 4, 5, 7, 8]), 0, 2);
-        sort($steps);
-        foreach ($steps as $step) {
-            $expected[] = s1spSceneId($n)->value.':x'.$step;
-        }
-    }
-    $perScene = array_count_values(array_map(static fn (CardDraft $d): string => $d->payload['scene_id'], $rehearsal));
-
-    expect(count($rehearsal))->toBeLessThanOrEqual(12)
-        ->and(s1spAddresses($rehearsal))->toBe($expected)
-        ->and($perScene)->toBe([s1spSceneId(1)->value => 2, s1spSceneId(2)->value => 2, s1spSceneId(3)->value => 2])
-        ->and(array_map(static fn (CardDraft $d): CardKind => $d->kind, $rehearsal))->each->toBe(CardKind::SpeakAnswer)
-        ->and((new SpeakStage)->rehearsal([s1spScene(1), s1spScene(2), s1spScene(3)]))->toEqual($rehearsal);
-});
-
-it('rehearses thirteen scenes with exactly twelve answers, one per scene, and seven with the second round in order', function () {
-    $thirteen = array_map(static fn (int $n): SceneMaterial => s1spScene($n), range(1, 13));
-    $rehearsal = (new SpeakStage)->rehearsal($thirteen);
-    $perScene = array_count_values(array_map(static fn (CardDraft $d): string => $d->payload['scene_id'], $rehearsal));
-
-    $expected = [];
-    foreach (range(1, 12) as $n) {
-        $expected[] = s1spSceneId($n)->value.':x'.Shuffle::seeded('rehearsal:'.s1spSceneId($n)->value, [1, 2, 3, 4, 5, 7, 8])[0];
-    }
-
-    expect($rehearsal)->toHaveCount(12)
-        ->and(max($perScene))->toBe(1)
-        ->and(array_keys($perScene))->toBe(array_map(static fn (int $n): string => s1spSceneId($n)->value, range(1, 12)))
-        ->and(s1spAddresses($rehearsal))->toBe($expected);
-
-    // Seven scenes: one each (7), then a second for the first five (12) — the last two keep one.
-    $seven = (new SpeakStage)->rehearsal(array_slice($thirteen, 0, 7));
-    expect(array_values(array_count_values(array_map(static fn (CardDraft $d): string => $d->payload['scene_id'], $seven))))
-        ->toBe([2, 2, 2, 2, 2, 1, 1]);
-});
+/**
+ * SNESENO (наряд CONV-1): «Репетиция: speak_answer по всем сценам плана, ≤ 12» is gone — the day before the event is
+ * «Вспомнить» ({@see RecallStage}) and the talk with the agent. The two tests that held the old selection went with
+ * the method they tested; what replaced them lives in `RecallStageTest` and in the rehearsal case of
+ * `SessionDayAssemblyTest`.
+ */

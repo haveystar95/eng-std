@@ -38,16 +38,20 @@ it('puts every day’s stages on the route: the day open today at its first stag
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$build['id']}/start")->assertOk();
     $plan = routeCurrent($this, $token);
 
-    $five = [['words', 'current'], ['phrases', 'locked'], ['dialogue', 'locked'], ['listen', 'locked'], ['speak', 'locked']];
-    expect(routeWire($plan['days'][0]))->toBe($five)
-        ->and(routeWire($plan['current_day']))->toBe($five)
-        ->and(array_column(routeWire($plan['days'][1]), 1))->toBe(['locked', 'locked', 'locked', 'locked', 'locked'])
-        ->and(routeWire($plan['days'][2]))->toBe([['words', 'locked'], ['speak', 'locked']])
-        ->and(routeWire($plan['days'][4]))->toBe([['speak', 'locked']]);
+    // Six nodes since наряд CONV-1 — the talk is the last of them, on a scene day, a review and the rehearsal alike.
+    $six = [
+        ['words', 'current'], ['phrases', 'locked'], ['dialogue', 'locked'],
+        ['listen', 'locked'], ['speak', 'locked'], ['conversation', 'locked'],
+    ];
+    expect(routeWire($plan['days'][0]))->toBe($six)
+        ->and(routeWire($plan['current_day']))->toBe($six)
+        ->and(array_column(routeWire($plan['days'][1]), 1))->toBe(['locked', 'locked', 'locked', 'locked', 'locked', 'locked'])
+        ->and(routeWire($plan['days'][2]))->toBe([['words', 'locked'], ['speak', 'locked'], ['conversation', 'locked']])
+        ->and(routeWire($plan['days'][4]))->toBe([['recall', 'locked'], ['conversation', 'locked']]);
 
     // The day room's own `day` says the same.
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$build['id']}/days/1")->assertOk()->json('data');
-    expect(routeWire($room['day']))->toBe($five);
+    expect(routeWire($room['day']))->toBe($six);
 });
 
 it('reads a day being walked off its cards, and a closed day as all done', function () {
@@ -60,8 +64,10 @@ it('reads a day being walked off its cards, and a closed day as all done', funct
     foreach (array_filter($cards, static fn (array $c): bool => $c['stage'] === 'words') as $card) {
         planAnswer($this, $token, $id, 1, $card['id'], 'passed');
     }
-    expect(routeWire(routeCurrent($this, $token)['days'][0]))
-        ->toBe([['words', 'done'], ['phrases', 'current'], ['dialogue', 'locked'], ['listen', 'locked'], ['speak', 'locked']]);
+    expect(routeWire(routeCurrent($this, $token)['days'][0]))->toBe([
+        ['words', 'done'], ['phrases', 'current'], ['dialogue', 'locked'],
+        ['listen', 'locked'], ['speak', 'locked'], ['conversation', 'locked'],
+    ]);
 
     planWalkDay($this, $token, $id, 1);
     $plan = routeCurrent($this, $token);

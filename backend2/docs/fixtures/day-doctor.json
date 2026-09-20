@@ -41,6 +41,10 @@
             {
                 "stage": "speak",
                 "state": "locked"
+            },
+            {
+                "stage": "conversation",
+                "state": "locked"
             }
         ]
     },
@@ -6807,6 +6811,20 @@
                     "returns": false
                 }
             ]
+        },
+        {
+            "stage": "recall",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "conversation",
+            "total": 0,
+            "done": 0,
+            "state": "locked",
+            "cards": []
         }
     ],
     "metrics": {
@@ -6941,7 +6959,7 @@
             },
             "image_tone": "#6D80E3",
             "status": "in_progress",
-            "minutes_estimate": 30,
+            "minutes_estimate": 33,
             "minutes_spent": null,
             "goals": [
                 {
@@ -6993,6 +7011,14 @@
             },
             {
                 "stage": "speak",
+                "state": "locked",
+                "done_count": null,
+                "total": null,
+                "minutes_left": null,
+                "share": 0.0
+            },
+            {
+                "stage": "conversation",
                 "state": "locked",
                 "done_count": null,
                 "total": null,
@@ -7598,6 +7624,7 @@
             }
         },
         "allowed_action": "continue",
+        "highlights": [],
         "listening": [
             {
                 "question": "Что болит у ребёнка?",

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\ValueObject;
 
 /**
- * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1): twenty-eight kinds, twenty-seven of them dealt —
+ * THE REGISTRY OF DAY TRAINERS (наряд SESSION-1a, разд. 1): twenty-nine kinds, twenty-eight of them dealt —
  * `listen_pairs` is reserved in the enum and never dealt (the lesson has no two alike lines to pair; its source is
  * v4.6). `phrase_own_slot` is gone (наряд FIX-2, п. 5): «своё окно» became the last round of «Скажи целиком»
  * (`phrase_other_slot`), which is now the one way a frame with a window is said aloud, at every level.
+ * `recall_scenes` is new (наряд CONV-1): the rehearsal's «Вспомни свои реплики», read through, never graded.
  *
  * Every kind belongs to exactly one stage and to exactly one way of being counted, because the way it is counted is
  * what the server lets the client write:
@@ -58,11 +59,24 @@ enum CardKind: string
     case SpeakEcho = 'speak_echo';
     case SpeakRetell = 'speak_retell';
 
+    /** «Вспомни свои реплики» (кадр 37-3, наряд CONV-1): the rehearsal's own lines read through once, scene by scene. */
+    case RecallScenes = 'recall_scenes';
+
     /** The attempts after which a phrase said aloud and given up on is a lapse, not the learner's will (п. 327). */
     public const SPOKEN_LAPSE_ATTEMPTS = 2;
 
-    public function stage(): Stage
+    /**
+     * The stage this kind is walked in. ONE kind reads its stage off the DAY as well as off itself:
+     * «Повтори свою реплику» (`speak_retell`) stands in «Говорю сам» on a scene day and in
+     * «Вспомнить» on the rehearsal (наряд CONV-1) — the same trainer, the same screen (кадр 35-4),
+     * two different places in two different days. Everything else has one stage and one only.
+     */
+    public function stage(?DayType $day = null): Stage
     {
+        if ($day === DayType::Rehearsal && $this === self::SpeakRetell) {
+            return Stage::Recall;
+        }
+
         return match ($this) {
             self::WordIntro, self::WordRepeat, self::WordChoose, self::WordListen, self::WordAssemble, self::WordInLine => Stage::Words,
             self::PhraseIntro, self::PhraseAssemble, self::PhraseChooseBack, self::PhraseSlot, self::PhraseSlotListen,
@@ -71,6 +85,7 @@ enum CardKind: string
             self::ListenDialogue, self::ListenQuestion, self::ListenReview, self::ListenPairs, self::ListenPredict,
             self::ListenPace, self::ListenNumber => Stage::Listen,
             self::SpeakAnswer, self::SpeakEcho, self::SpeakRetell => Stage::Speak,
+            self::RecallScenes => Stage::Recall,
         };
     }
 
@@ -185,6 +200,7 @@ enum CardKind: string
     {
         return in_array($this, [
             self::WordIntro, self::PhraseIntro, self::DialogueRescue, self::ListenDialogue, self::ListenReview, self::ListenPace,
+            self::RecallScenes,
         ], true);
     }
 

@@ -165,7 +165,7 @@ function windowVoiceUrls(array $program): array
     ];
 }
 
-it('opens a day not started with five rows «впереди» and no number, the programme counted and «Начать» (23-0a)', function () {
+it('opens a day not started with six rows «впереди» and no number, the programme counted and «Начать» (23-0a)', function () {
     [, $token] = planLearner();
     $build = planCreate($this, $token, ['days_total' => 2]);
 
@@ -179,7 +179,8 @@ it('opens a day not started with five rows «впереди» and no number, the
         ->and($window['day']['minutes_estimate'])->toBeGreaterThan(10)
         ->and($window['day']['minutes_spent'])->toBeNull()
         ->and(array_column($window['day']['goals'], 'passed'))->each->toBeFalse()
-        ->and(array_column($window['stages'], 'stage'))->toBe(['words', 'phrases', 'dialogue', 'listen', 'speak'])
+        // Six rows since наряд CONV-1: «Разговор» is the last of them and it has no cards to count.
+        ->and(array_column($window['stages'], 'stage'))->toBe(['words', 'phrases', 'dialogue', 'listen', 'speak', 'conversation'])
         ->and(array_unique(array_column($window['stages'], 'state')))->toBe(['locked'])
         ->and(array_filter(array_column($window['stages'], 'done_count'), static fn ($v): bool => $v !== null))->toBe([])
         ->and(array_filter(array_column($window['stages'], 'total'), static fn ($v): bool => $v !== null))->toBe([])
@@ -214,11 +215,12 @@ it('numbers the current row only while the day is walked, and words the brow fro
         ->and($dealt)->toBeGreaterThanOrEqual(24)
         ->and($rows)->toBe([
             ['words', 'done', null, null], ['phrases', 'current', 0, $dealt], ['dialogue', 'locked', null, null],
-            ['listen', 'locked', null, null], ['speak', 'locked', null, null],
+            ['listen', 'locked', null, null], ['speak', 'locked', null, null], ['conversation', 'locked', null, null],
         ])
         ->and($window['stages'][1]['minutes_left'])->toBeGreaterThan(0)
         ->and($window['stages'][0]['share'])->toEqual(1)
-        ->and($window['day_progress'])->toBe(0.2)
+        // One row of six is walked.
+        ->and($window['day_progress'])->toBe(0.17)
         ->and($window['program']['words']['summary'])->toBe(['total' => 8, 'done' => 7, 'returns' => 1])
         ->and(array_column($window['program']['words']['items'], 'state', 'ref')['v2'])->toBe('returns_tomorrow')
         ->and($window['allowed_action'])->toBe('continue');
@@ -232,6 +234,8 @@ it('closes a passed day with its minutes, every goal checked, every row full, th
         windowWalkStage($this, $token, $id, $stage, failRef: $stage === 'words' ? 'v4' : null);
         $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/stages/{$stage}/close")->assertOk();
     }
+    // The sixth stage is walked like the five: «день пройден» is six of them through (наряд CONV-1).
+    planTalkThrough($this, $token, $id, 1);
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk();
 
     $window = windowOf($this, $token, $id, 1);

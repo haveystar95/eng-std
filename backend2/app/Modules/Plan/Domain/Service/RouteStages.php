@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\ValueObject\DayType;
+use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\RouteStage;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\StageState;
@@ -19,27 +20,39 @@ use App\Modules\Plan\Domain\ValueObject\StageState;
  *
  * A day not dealt yet has no cards to count. Its stages come from what it WILL deal: the outline
  * the dealer can draw for it when its material is written, otherwise what its type deals by the
- * canon (`docs/plan-v2.md` §6 — a scene day five stages, a review words and speak, the rehearsal
- * speak only). Nothing of such a day is walked: it is all `locked`, except that the day the learner
- * may start today has its first stage `current`.
+ * canon (`docs/plan-v2.md` §6 — a scene day five card stages, a review words and speak, the
+ * rehearsal «Вспомнить»). Nothing of such a day is walked: it is all `locked`, except that the day
+ * the learner may start today has its first stage `current`.
+ *
+ * THE SIXTH NODE (наряд CONV-1) is not one of these: the talk has no cards at all, so it is added
+ * after them and its state is read off its own journal.
  */
 final class RouteStages
 {
     /**
      * @param  array<string, array{total: int, answered: int}>  $tallies  by stage value; empty when no card is dealt
      * @param  list<Stage>  $outline  the stages the day will deal, when that is known; empty = go by the type
+     * @param  bool  $hasConversation  does this day walk the sixth stage ({@see DayStages::walksConversation()})
+     * @param  ConversationState|null  $conversation  where its talk stands; null — it has not been started
      * @return list<RouteStage>
      */
-    public static function of(DayType $type, array $tallies, bool $closed, bool $availableToday, array $outline = []): array
-    {
+    public static function of(
+        DayType $type,
+        array $tallies,
+        bool $closed,
+        bool $availableToday,
+        array $outline = [],
+        bool $hasConversation = false,
+        ?ConversationState $conversation = null,
+    ): array {
         $dealt = [];
-        foreach (Stage::ordered() as $stage) {
+        foreach (Stage::ofCards() as $stage) {
             if (($tallies[$stage->value]['total'] ?? 0) > 0) {
                 $dealt[] = $stage;
             }
         }
         if ($dealt !== []) {
-            return self::walk($dealt, $tallies, $closed);
+            return self::withTalk(self::walk($dealt, $tallies, $closed), $closed, $hasConversation, $conversation);
         }
 
         $stages = $outline !== [] ? self::inWalkingOrder($outline) : self::dealtBy($type);
@@ -52,7 +65,42 @@ final class RouteStages
             });
         }
 
-        return $out;
+        return self::withTalk($out, $closed, $hasConversation, $conversation);
+    }
+
+    /**
+     * The talk's own node, after the card stages (наряд CONV-1). It has no cards, so its state is
+     * read off its journal: over — walked; open — the stage being walked; not started — the stage to
+     * walk once the cards are done.
+     *
+     * @param  list<RouteStage>  $stages
+     * @return list<RouteStage>
+     */
+    private static function withTalk(array $stages, bool $closed, bool $hasConversation, ?ConversationState $conversation): array
+    {
+        if (! $hasConversation) {
+            return $stages;
+        }
+        $cardsDone = true;
+        foreach ($stages as $stage) {
+            if ($stage->state !== StageState::Done) {
+                $cardsDone = false;
+            }
+        }
+        $state = match (true) {
+            $closed, $conversation === ConversationState::Ended => StageState::Done,
+            $conversation !== null, $cardsDone && $stages !== [] => StageState::Current,
+            default => StageState::Locked,
+        };
+        // A talk that is the CURRENT stage takes the «current» mark from the cards: only one node is current.
+        if ($state === StageState::Current) {
+            $stages = array_map(
+                static fn (RouteStage $s): RouteStage => $s->state === StageState::Current ? new RouteStage($s->stage, StageState::Done) : $s,
+                $stages,
+            );
+        }
+
+        return [...$stages, new RouteStage(Stage::Conversation, $state)];
     }
 
     /**
@@ -62,11 +110,7 @@ final class RouteStages
      */
     public static function dealtBy(DayType $type): array
     {
-        return match ($type) {
-            DayType::Scene => Stage::ordered(),
-            DayType::Review => [Stage::Words, Stage::Speak],
-            DayType::Rehearsal => [Stage::Speak],
-        };
+        return DayStages::cardStagesOf($type);
     }
 
     /**
@@ -133,6 +177,6 @@ final class RouteStages
      */
     private static function inWalkingOrder(array $stages): array
     {
-        return array_values(array_filter(Stage::ordered(), static fn (Stage $s): bool => in_array($s, $stages, true)));
+        return array_values(array_filter(Stage::ofCards(), static fn (Stage $s): bool => in_array($s, $stages, true)));
     }
 }
