@@ -125,7 +125,7 @@ sha1(url)}`. Адрес фото сцены не меняется никогда
 
 | действие | вызов | ответ |
 |---|---|---|
-| день | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `stages[]` (`locked`/`current`/`done`/`absent`, **и `cards[]`** — карточки этапа по `position`, в конверте разд. «Карточки сессии»; у нерозданного дня список пуст: у контура нет id, которым отвечают), `metrics` (`cards_total`, `minutes_spent`), `program[]` (`unit_kind`, `source`, `state` `pending`/`passed`/`failed`) — это читают плита таба и сессия; **`window`** — окно дня (ниже) |
+| день | `GET /plans/{id}/days/{n}` | `PlanDayRoom`: `day`, `scene`, `stages[]` (`locked`/`current`/`done`/`absent`, **и `cards[]`** — карточки этапа по `position`, в конверте разд. «Карточки сессии»; у нерозданного дня список пуст: у контура нет id, которым отвечают), `metrics` (`cards_total`, `minutes_spent`), `program[]` (`unit_kind`, `source`, `state` `pending`/`passed`/`failed`) — это читают плита таба и сессия; **`window`** — окно дня (ниже); **`speech`** — списки языка цели для зачёта речи, раз на день (разд. «Зачёт речи») |
 | открыть / продолжить | `POST /plans/{id}/days/{n}/open` | `PlanDayCards` — **весь** плоский список карточек с состоянием; 409 `plan_day_locked` (`meta.blocked_by_day` или `meta.opens_on`), 409 `plan_day_building` (урок дня ещё пишется, `meta.lesson_status` — подождать и опросить план), 409 `plan_lesson_not_ready` (`meta.lesson_status: failed` — предложить `POST …/scenes/{sceneId}/lesson/retry`) |
 | перечитать карточки | `GET /plans/{id}/days/{n}/cards` | `PlanDayCards` (тот же плоский `cards[]`) |
 | ответить | `POST …/cards/{cardId}/answer` `{result, attempts, response?}` | `{card, requeued, unit {kind, ref, returns_tomorrow, returns_day}, day {cards_total, cards_done, minutes_spent}, stage {stage, minutes_spent}}` — из этого клиент пишет итог этапа (30-6/33-8/34-8/35-6) и итог дня (30-7), не считая ничего сам. `requeued` — та же карточка в конце этапа после первого провала (новый `id`, `retry_of`; у карточки фразы — того же вида с другим наполнением; провал голоса фразы — `skipped` после двух попыток с микрофоном, SESSION-1d), иначе `null`; 409 `plan_card_answered`, 422 `plan_card_result_not_allowed` (вид такого итога не принимает) |
@@ -461,12 +461,13 @@ audio}` — вариант, который есть реплика визита,
 `docs/fixtures/day-doctor.json` (intermediate) и `docs/fixtures/day-doctor-beginner.json`
 (beginner) — полный раздатый день «Приём у врача»: тело `data` ответа
 `GET /api/v1/plans/{id}/days/1` как есть (`plan_id`, `day`, `scene`, `stages[]` с карточками,
-`metrics`, `program`, `window`). Оба дня — **83** карточки (BACK-TAILS-1: ask-обмены раздают по одной
-карточке вместо двух): слова 24 (с SESSION-1e проверки —
+`metrics`, `program`, `window`, `speech`). Оба дня — **78** карточек (FIX-2 п. 5: каркас с окном произносится
+одной «Скажи целиком», и третьих узнаваний после неё не остаётся): слова 24 (с SESSION-1e проверки —
 по две каждого вида: `word_choose` — одна `term_to_native`, одна `native_to_term`, `word_listen`, `word_in_line`,
-`word_assemble`), фразы 29 (6 интро, 16 узнаваний — `phrase_slot_listen` 5, `phrase_assemble` 5,
-`phrase_choose_back` 3, `phrase_slot` 3 — 6 произнесений, `phrase_combine` на `x1`), диалог **13**, слушание 9, речь 8;
-окно ≈ 27 мин. Id и адреса в фикстурах подставные и детерминированные (`ulid-0001…`,
+`word_assemble`), фразы **24** (6 интро, 11 узнаваний — `phrase_slot_listen` 5, `phrase_choose_back` 3,
+`phrase_assemble` 3 — 5 «Скажи целиком» и 1 `phrase_repeat` у каркаса без окна, `phrase_combine` на `x1`;
+`phrase_slot` этой сцене не выпал — открывающий вид у каждого каркаса свой, seeded), диалог **13**, слушание 9,
+речь 8; окно ≈ 30 мин. Id и адреса в фикстурах подставные и детерминированные (`ulid-0001…`,
 `http://localhost/api/v1/plans/audio/…`), тест держит файлы байт-в-байт — на них и пишется разбор
 на клиенте.
 
