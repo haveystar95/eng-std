@@ -378,7 +378,8 @@ void main() {
 
       final wrong = CardProbe();
       await pumpCard(tester, probeEnv(card, wrong));
-      await tapText(tester, 'Началось вчера вечером.');
+      // A wrong option is another FRAME's sentence now, never another value of this window (FIX-2 §1).
+      await tapText(tester, 'Температуры у него нет.');
       expect(results(wrong), [SessionResult.failed]);
       await settleCard(tester);
     });
@@ -413,20 +414,21 @@ void main() {
     // CATCHES: the translation back inside the sheet, the eyebrow coming back, the translation set in the small
     // 15 body type.
     testWidgets('phrase_slot (32-4): a filler into the slot; the translation is the task over the card', (tester) async {
-      final card = fixtureCard(intermediate, SessionKind.phraseSlot);
+      // This scene deals no `phrase_slot` since FIX-2 §5 — the card is built out of its own `phrase_slot_listen`.
+      final card = fixtureSlotCard('day-doctor');
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
       expect(find.text('Вставь в окно'), findsOneWidget);
       expect(find.text('ПЕРЕВОД'), findsNothing);
       final native = tester.widget<Text>(find.byKey(const ValueKey('slot-native')));
-      expect(native.data, 'У него болит плечо.');
+      expect(native.data, 'У него болит поясница.');
       expect(native.style, AppTextSession.question, reason: 'Literata 26 — the task itself');
       final sheet = tester.getRect(find.byType(SessionSheet).first);
       expect(tester.getRect(find.byKey(const ValueKey('slot-native'))).bottom, lessThan(sheet.top), reason: 'over the card');
       expect(frameLine(tester).slot, isNull);
-      await tapText(tester, 'shoulder');
+      await tapText(tester, 'lower back');
       expect(results(probe), [SessionResult.passed]);
-      expect(frameLine(tester).slot, 'shoulder', reason: 'the filler stood in the slot');
+      expect(frameLine(tester).slot, 'lower back', reason: 'the filler stood in the slot');
       expect(frameLine(tester).look, SlotLook.sage);
       await settleCard(tester);
 
@@ -457,26 +459,27 @@ void main() {
       await settleCard(tester);
     });
 
-    testWidgets('phrase_repeat (32-6): sample at 0.85×, coverage by coverage_min; two misses — skipped', (tester) async {
+    // RULE (FIX-2 §5): `phrase_repeat` is ONE round on a frame WITHOUT a window — there is no second value to say
+    // it with, and the second round the phone used to invent went with the rounds becoming the server's. The line is
+    // on the screen, so it is said as it stands (`speech_mode: repeat`), and two misses close the card.
+    // CATCHES: a round invented on the device, and a line passed with a content word said wrong.
+    testWidgets('phrase_repeat (32-6): one round, the sample at 0.85×, the line said as it stands; two misses — skipped', (tester) async {
       final card = fixtureCard(beginner, SessionKind.phraseRepeat);
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
       expect(find.text('Скажи фразу вслух'), findsOneWidget);
+      expect(find.byKey(const ValueKey('voice-round')), findsNothing, reason: 'one round has no header');
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played.single, endsWith('@0.85'));
-      await sayDebug(tester, 'it hurts in his back');
-      expect(probe.answers, isEmpty, reason: '4 of 5 significant words — round 1 of 2 passed, the answer waits for round 2');
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
-      await sayDebug(tester, 'it hurts in his shoulder');
+      await sayDebug(tester, "he doesn't have a fever");
       expect(results(probe), [SessionResult.passed]);
       await settleCard(tester);
 
       final miss = CardProbe();
       await pumpCard(tester, probeEnv(card, miss));
+      await sayDebug(tester, "he doesn't have a favour");
       await sayDebug(tester, 'hello');
-      await sayDebug(tester, 'lower back');
       expect(results(miss), [SessionResult.skipped]);
       await settleCard(tester);
     });
@@ -625,63 +628,74 @@ void main() {
       await settleCard(tester);
     });
 
-    // RULE (наряд FIX-1 §6): `phrase_own_slot` is the SAME trainer — the meanings first, the own word last. Only the
-    // own word is graded differently, and the contract decides that: a judged kind's pass is the server's, so that
-    // round asks `…/judge` and the client writes no `passed` of its own.
-    // CATCHES: a client-written pass on a judged kind (422 and a lost answer), a judge asked on a meaning round, and
+    // RULE (наряды FIX-1 §6 and FIX-2 §5): «Скажи целиком» walks the SERVER'S rounds — the meanings first, the own
+    // word last — and only the own word asks `…/judge`.
+    // CATCHES: a judge asked on a meaning round, rounds invented on the device instead of read off the payload, and
     // the return of «своё окно» as a screen of its own.
-    testWidgets('phrase_own_slot (32-9 is gone): the same trainer, and only its own word asks the judge', (tester) async {
-      final card = fixtureCard(intermediate, SessionKind.phraseOwnSlot);
+    testWidgets('«Скажи целиком»: the server\'s rounds, and only the own word asks the judge', (tester) async {
+      final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
       final probe = CardProbe()
-        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'last week', result: SessionResult.passed, attempts: 1);
+        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'my elbow', attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
       expect(find.text('Скажи фразу с каждым значением'), findsOneWidget);
       expect(find.text('СВОЁ ОКНО'), findsNothing, reason: 'the eyebrow went with the separate trainer');
       expect(find.text('своё…'), findsNothing, reason: 'the chip with the microphone is gone');
-      expect(frameLine(tester).slot, 'three days ago', reason: 'the first meaning stands in the window');
+      expect(frameLine(tester).slot, 'lower back', reason: 'the first meaning stands in the window');
 
-      await sayDebug(tester, 'It started three days ago');
-      await tester.pump();
-      expect(probe.judged, isEmpty, reason: 'a meaning is graded on the phone');
-      await tester.pump(const Duration(milliseconds: 700));
-      await sayDebug(tester, 'It started last night');
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 700));
-      await sayDebug(tester, 'It started this morning');
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 700));
+      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
+        await sayDebug(tester, said);
+        await tester.pump();
+        expect(probe.judged, isEmpty, reason: 'a meaning is graded on the phone');
+        await tester.pump(const Duration(milliseconds: 700));
+      }
 
-      // The own word: the judge, and nothing of ours on a pass.
+      // The own word: the judge — and the card's own answer, because the server does not close it (FIX-2 §5).
       expect(find.text('а теперь со своим словом'), findsOneWidget);
-      await sayDebug(tester, 'It started last week');
+      await sayDebug(tester, 'It hurts in his elbow');
       await tester.pump();
-      expect(probe.judged, ['It started last week']);
-      expect(probe.answers, isEmpty, reason: 'the server records a judge-graded pass');
+      expect(probe.judged, ['It hurts in his elbow']);
       await settleCard(tester);
+      expect(results(probe), [SessionResult.passed]);
       expect(probe.nexts, 1);
     });
 
-    // CATCHES: a rejection that looks like a pass, and a «Skip» that writes anything but `skipped`.
-    testWidgets('phrase_own_slot: the judge refuses — the reason stands under the microphone, «Skip» → skipped', (tester) async {
-      final card = fixtureCard(intermediate, SessionKind.phraseOwnSlot);
+    // RULE (FIX-2 §5): «круг „со своим словом" — тренировка: промах или „Пропустить" не создают копию и не
+    // возвращают единицу». CATCHES: a skip on the own round sent as `skipped`, which the server reads as a lapse of
+    // the frame after two attempts and sends the frame back tomorrow over a word the learner was invited to invent.
+    testWidgets('«Скажи целиком»: the judge refuses — the reason stands under the microphone, and the card still passes', (tester) async {
+      final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
       final probe = CardProbe()
-        ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про время.', attempts: 1);
+        ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про боль.', attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
-      for (final said in ['It started three days ago', 'It started last night', 'It started this morning']) {
+      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
         await sayDebug(tester, said);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 700));
       }
-      await sayDebug(tester, 'It started with a big noise');
+      await sayDebug(tester, 'It hurts in his big noise');
       await tester.pump();
       await tester.pump();
-      expect(probe.judged, ['It started with a big noise']);
-      expect(find.text('Ты сказал не про время.'), findsOneWidget);
+      expect(probe.judged, ['It hurts in his big noise']);
+      expect(find.text('Ты сказал не про боль.'), findsOneWidget);
       expect(probe.answers, isEmpty);
 
       await tapText(tester, 'Пропустить');
-      expect(results(probe), [SessionResult.skipped]);
+      expect(results(probe), [SessionResult.passed], reason: 'the value rounds are what the card is graded on');
       expect(probe.nexts, 1);
+      await settleCard(tester);
+    });
+
+    // The other half of the same rule: a miss on a VALUE round is still a lapse of the frame (DECISIONS п. 327).
+    testWidgets('«Скажи целиком»: two misses on a VALUE round are still a skip', (tester) async {
+      final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
+      final probe = CardProbe();
+      await pumpCard(tester, probeEnv(card, probe));
+      for (var i = 0; i < 2; i++) {
+        await sayDebug(tester, 'something else entirely');
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+      }
+      expect(results(probe), [SessionResult.skipped]);
       await settleCard(tester);
     });
   });

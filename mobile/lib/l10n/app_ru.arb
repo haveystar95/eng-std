@@ -4761,18 +4761,6 @@
   "@planSessionPlaying": {
     "description": "Сессия, «Комбинация» (32-8) «собрано · играет»: подпись под волной, пока звучит собранная фраза."
   },
-  "planSessionRound": "{current} из {total}",
-  "@planSessionRound": {
-    "description": "Сессия, «Повтори фразу» (32-6) и «Скажи целиком» (32-7) с раундами (доводка SESSION-1b′, п. 12): шапка раунда мелко серым над листом — «1 из 2», «2 из 2». У карточки с одним раундом не показывается.",
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "planSessionMicMissed": "не расслышал, ещё раз",
   "@planSessionMicMissed": {
     "description": "Сессия, микрофон (30-3) «не расслышал»: подпись."
@@ -5077,6 +5065,19 @@
   "planSessionWhichNumber": "Какое число прозвучало?",
   "@planSessionWhichNumber": {
     "description": "Сессия, «Поймай число» (34-7): текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2a §5)."
+  },
+  "planSessionTaskAskYourself": "Спроси сам",
+  "@planSessionTaskAskYourself": {
+    "description": "Сессия, «Говорю сам» (35-2) на обмене ask (наряд FIX-2, п. 3): задание, когда ученик говорит первым — вопроса у такой карточки нет, отвечать не на что."
+  },
+  "planSessionAskIntent": "Спроси: «{text}»",
+  "@planSessionAskIntent": {
+    "description": "Сессия, «Говорю сам» (35-2) на обмене ask (наряд FIX-2, п. 3): намерение на родном в своём пузыре — своя реплика ученика в кавычках.",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
   },
   "planSessionTaskAnswerOwnWords": "Ответь своими словами",
   "@planSessionTaskAnswerOwnWords": {

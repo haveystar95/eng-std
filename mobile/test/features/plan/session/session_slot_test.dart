@@ -78,7 +78,8 @@ void main() {
   });
 
   testWidgets('32-4 phrase_slot: a long correct filler in sage', (tester) async {
-    final slot = card('phrase_slot', (p) => option(p, p['correct'] as String)['text'] = appointment);
+    // This scene deals no `phrase_slot` since FIX-2 §5 — the card is built out of its own `phrase_slot_listen`.
+    final slot = fixtureSlotCard('day-doctor', edit: (p) => option(p, p['correct'] as String)['text'] = appointment);
     await pumpCard(tester, probeEnv(slot, CardProbe()), size: narrow);
     await tapText(tester, appointment);
     expectSlotFits(tester, appointment);
@@ -101,21 +102,21 @@ void main() {
   });
 
   testWidgets('32-7 own word: live words with the caret, then the judge\'s long value in sage', (tester) async {
-    final own = card('phrase_own_slot', (_) {});
+    final own = card('phrase_other_slot', (_) {});
     final probe = CardProbe()
-      ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: appointment, result: SessionResult.passed, attempts: 1);
+      ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: appointment, attempts: 1);
     await pumpCard(tester, probeEnv(own, probe), size: narrow);
-    // Through the three meanings of the card to the round of the learner's own word.
-    for (final said in ['It started three days ago', 'It started last night', 'It started this morning']) {
+    // Through the three value rounds of the card to the round of the learner's own word.
+    for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
       await sayDebug(tester, said);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 700));
     }
-    await enterHeard(tester, 'It started $appointment');
+    await enterHeard(tester, 'It hurts in his $appointment');
     expectSlotFits(tester, appointment);
     await tester.pump(const Duration(milliseconds: 1010));
     await tester.pump();
-    expect(probe.judged, ['It started $appointment']);
+    expect(probe.judged, ['It hurts in his $appointment']);
     expectSlotFits(tester, appointment);
     await settleCard(tester);
   });

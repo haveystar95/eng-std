@@ -10,7 +10,7 @@ import '../../../../data/plan/session/live_line.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
-import '../../../../data/plan/session/speech_coverage.dart';
+import '../../../../data/plan/session/speech_match.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
 import '../parts/session_choice.dart';
@@ -214,7 +214,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
   ];
 
   @override
-  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.articles);
+  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.speech);
 
   @override
   String? get responseMode => _mode.wire;
@@ -266,13 +266,13 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
   ({String target, String? native})? _slotOf(String heard) {
     if (!p.frame.hasSlot) return null;
     for (final f in p.frame.fillers) {
-      if (SpeechCoverage.containsSequence(heard, f.target, env.articles)) return (target: f.target, native: f.nativeLine);
+      if (SpeechMatch.containsSequence(heard, f.target, env.speech)) return (target: f.target, native: f.nativeLine);
     }
-    final frameWords = SpeechCoverage.words(_framePart).toSet();
+    final frameWords = SpeechMatch.words(_framePart).toSet();
     final words = heard
         .split(RegExp(r'\s+'))
         .where((w) {
-          final tokens = SpeechCoverage.words(w);
+          final tokens = SpeechMatch.words(w);
           return tokens.isNotEmpty && !tokens.every(frameWords.contains);
         })
         .join(' ')

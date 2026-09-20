@@ -3557,11 +3557,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionPlaying => 'playing';
 
   @override
-  String planSessionRound(int current, int total) {
-    return '$current of $total';
-  }
-
-  @override
   String get planSessionMicMissed => 'didn\'t catch that, once more';
 
   @override
@@ -3810,6 +3805,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionWhichNumber => 'Which number did you hear?';
+
+  @override
+  String get planSessionTaskAskYourself => 'Ask, in your own words';
+
+  @override
+  String planSessionAskIntent(String text) {
+    return 'Ask: «$text»';
+  }
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Answer in your own words';

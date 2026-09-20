@@ -211,7 +211,7 @@ class _WordRepeatCardState extends State<WordRepeatCard> with VoiceCardState<Wor
   String get expectedSpeech => widget.payload.expectedText;
 
   @override
-  bool accepts(String heard) => SessionRules.voiceAccepted(widget.payload, heard, env.articles);
+  bool accepts(String heard) => SessionRules.voiceAccepted(widget.payload, heard, env.speech);
 
   @override
   void initState() {

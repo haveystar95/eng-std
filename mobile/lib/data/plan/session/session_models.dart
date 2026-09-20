@@ -12,6 +12,7 @@
 library;
 
 import '../plan_models.dart';
+import 'speech_match.dart';
 
 /// The server sent a known kind with a payload that this build has no way to show.
 class SessionContractError extends FormatException {
@@ -23,17 +24,19 @@ enum SessionGrading {
   /// Choice and tiles: the client checks against `correct` / `expected`.
   choice,
 
-  /// Voice: speech coverage by `coverage_min`, two attempts without a pass — `skipped`.
+  /// Voice: the card's own `speech_mode`, two attempts without a pass — `skipped`.
   voice,
 
-  /// By meaning — only the server, `POST …/judge` (`phrase_own_slot`, `speak_answer`).
+  /// By meaning — only the server, `POST …/judge` (`speak_answer`). «Скажи целиком» ASKS the judge on its last round
+  /// and is graded as a voice card: that round is practice, and the card's result is its value rounds' (FIX-2 §5).
   judge,
 
   /// Walkthrough: «Got it» / «Next».
   pass,
 }
 
-/// CARD KIND — 29 enum values on the server, 28 are dealt; `listen_pairs` is never dealt and is not here.
+/// CARD KIND — 28 enum values on the server, 27 are dealt; `listen_pairs` is never dealt and is not here.
+/// `phrase_own_slot` went with work order FIX-2 §5: «своё окно» is the last round of «Скажи целиком».
 enum SessionKind {
   wordIntro('word_intro', PlanStage.words, SessionGrading.pass),
   wordRepeat('word_repeat', PlanStage.words, SessionGrading.voice),
@@ -49,7 +52,6 @@ enum SessionKind {
   phraseRepeat('phrase_repeat', PlanStage.phrases, SessionGrading.voice),
   phraseOtherSlot('phrase_other_slot', PlanStage.phrases, SessionGrading.voice),
   phraseCombine('phrase_combine', PlanStage.phrases, SessionGrading.choice),
-  phraseOwnSlot('phrase_own_slot', PlanStage.phrases, SessionGrading.judge),
   dialoguePartner('dialogue_partner', PlanStage.dialogue, SessionGrading.choice),
   dialogueAnswer('dialogue_answer', PlanStage.dialogue, SessionGrading.voice),
   dialogueAsk('dialogue_ask', PlanStage.dialogue, SessionGrading.voice),
@@ -484,7 +486,6 @@ sealed class CardPayload {
     SessionKind.phraseRepeat => PhraseRepeatPayload.fromJson(j),
     SessionKind.phraseOtherSlot => PhraseOtherSlotPayload.fromJson(j),
     SessionKind.phraseCombine => PhraseCombinePayload.fromJson(j),
-    SessionKind.phraseOwnSlot => PhraseOwnSlotPayload.fromJson(j),
     SessionKind.dialoguePartner => DialoguePartnerPayload.fromJson(j),
     SessionKind.dialogueAnswer || SessionKind.dialogueAsk => DialogueAnswerPayload.fromJson(j),
     SessionKind.dialogueRescue => DialogueRescuePayload.fromJson(j),
@@ -574,13 +575,13 @@ class WordRepeatPayload extends CardPayload {
     required super.sceneId,
     required this.term,
     required this.expectedText,
-    required this.coverageMin,
+    required this.speechMode,
     this.termAudio,
   });
 
   final CardTerm term;
   final String expectedText;
-  final double coverageMin;
+  final SpeechMode speechMode;
   final CardAudio? termAudio;
 
   @override
@@ -590,7 +591,7 @@ class WordRepeatPayload extends CardPayload {
     sceneId: _scene(j),
     term: CardTerm.fromJson(_map(j, 'term')),
     expectedText: _str(j, 'expected_text'),
-    coverageMin: _num(j, 'coverage_min'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
     termAudio: CardAudio.maybe((j['audio'] as Map<String, dynamic>?)?['term']),
   );
 }
@@ -926,7 +927,7 @@ class PhraseRepeatPayload extends CardPayload {
     this.fillerIndex,
     required this.expectedText,
     this.key,
-    required this.coverageMin,
+    required this.speechMode,
     this.audio,
   });
 
@@ -936,7 +937,7 @@ class PhraseRepeatPayload extends CardPayload {
 
   /// The pronunciation key — underlined in brass.
   final String? key;
-  final double coverageMin;
+  final SpeechMode speechMode;
   final CardAudio? audio;
 
   @override
@@ -948,31 +949,81 @@ class PhraseRepeatPayload extends CardPayload {
     fillerIndex: (j['filler_index'] as num?)?.toInt(),
     expectedText: _str(j, 'expected_text'),
     key: _nonEmpty(j['key']),
-    coverageMin: _num(j, 'coverage_min'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
     audio: CardAudio.maybe(j['audio']),
   );
 }
 
-/// `phrase_other_slot` (32-7): the frame with a DIFFERENT filler, given in the native language.
+/// One round of «Скажи целиком»: the value that stands in the window and the whole phrase said with it.
+class CardSayWholeRound {
+  const CardSayWholeRound({required this.fillerIndex, required this.expectedText, required this.taskNative});
+
+  final int fillerIndex;
+
+  /// The frame said with this value — what must be heard, in [SpeechMode.repeat].
+  final String expectedText;
+
+  /// The same sentence in the learner's language — the round's task.
+  final String taskNative;
+
+  factory CardSayWholeRound.fromJson(Map<String, dynamic> j) => CardSayWholeRound(
+    fillerIndex: _int(j, 'filler_index'),
+    expectedText: _str(j, 'expected_text'),
+    taskNative: _str(j, 'task_native'),
+  );
+}
+
+/// The LAST round of «Скажи целиком» — the learner's own value in the window, judged by meaning by the server.
+class CardOwnRound {
+  const CardOwnRound({required this.taskNative, required this.examples, required this.speechMode});
+
+  /// The frame with its window in the learner's language — the round's task.
+  final String taskNative;
+
+  /// The lesson's own values in the learner's language — shown as examples, never as answers.
+  final List<String> examples;
+
+  final SpeechMode speechMode;
+
+  factory CardOwnRound.fromJson(Map<String, dynamic> j) => CardOwnRound(
+    taskNative: _str(j, 'task_native'),
+    examples: _strings(j, 'examples'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
+  );
+}
+
+/// `phrase_other_slot` — «СКАЖИ ЦЕЛИКОМ» (32-7), the one way a frame WITH a window is said aloud, at either level
+/// (work order FIX-2, item 5).
+///
+/// The card goes in ROUNDS, and the SERVER builds them: a value stands in the window, the learner says the whole
+/// phrase, the next value takes its place — and the last round is the learner's OWN word, ruled on by the judge.
+/// The levels differ in the number of value rounds and in nothing else. The phone used to compute the rounds itself
+/// ([VoiceRounds], FIX-1 §6); it does not any more — what is said on a card is the day's, not the device's.
 class PhraseOtherSlotPayload extends CardPayload {
   const PhraseOtherSlotPayload({
     required super.sceneId,
     required this.frame,
-    required this.fillerIndex,
-    required this.taskNative,
-    required this.expectedText,
-    required this.slotExpected,
+    this.partnerLine,
     this.key,
-    required this.coverageMin,
+    required this.rounds,
+    required this.speechMode,
+    required this.ownRound,
   });
 
   final CardFrame frame;
-  final int fillerIndex;
-  final String taskNative;
-  final String expectedText;
-  final String slotExpected;
+
+  /// The line the frame is said next to — read by the JUDGE, not shown (32-7 has no partner line).
+  final CardLine? partnerLine;
   final String? key;
-  final double coverageMin;
+
+  /// The value rounds, in the window's own order; at least one.
+  final List<CardSayWholeRound> rounds;
+
+  /// How a value round is passed — [SpeechMode.repeat]: the phrase is on the screen.
+  final SpeechMode speechMode;
+
+  /// The own-word round, always last.
+  final CardOwnRound ownRound;
 
   @override
   Iterable<CardAudio> get audios => const [];
@@ -980,12 +1031,11 @@ class PhraseOtherSlotPayload extends CardPayload {
   factory PhraseOtherSlotPayload.fromJson(Map<String, dynamic> j) => PhraseOtherSlotPayload(
     sceneId: _scene(j),
     frame: CardFrame.fromJson(_map(j, 'frame')),
-    fillerIndex: _int(j, 'filler_index'),
-    taskNative: _str(j, 'task_native'),
-    expectedText: _str(j, 'expected_text'),
-    slotExpected: _str(j, 'slot_expected'),
+    partnerLine: CardLine.maybe(j['partner_line']),
     key: _nonEmpty(j['key']),
-    coverageMin: _num(j, 'coverage_min'),
+    rounds: _list(j, 'rounds', CardSayWholeRound.fromJson),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
+    ownRound: CardOwnRound.fromJson(_map(j, 'own_round')),
   );
 }
 
@@ -1038,42 +1088,6 @@ class PhraseCombinePayload extends CardPayload {
     correctFrame: _str(j, 'correct_frame'),
     chips: _list(j, 'chips', CardFiller.fromJson),
     correctFiller: (j['correct_filler'] as num?)?.toInt(),
-  );
-}
-
-/// `phrase_own_slot` (32-9): an own slot; the pass by meaning is the server's.
-class PhraseOwnSlotPayload extends CardPayload {
-  const PhraseOwnSlotPayload({
-    required super.sceneId,
-    required this.frame,
-    this.partnerLine,
-    required this.taskNative,
-    required this.examples,
-    required this.chips,
-    this.key,
-    required this.coverageMin,
-  });
-
-  final CardFrame frame;
-  final CardLine? partnerLine;
-  final String taskNative;
-  final List<String> examples;
-  final List<CardFiller> chips;
-  final String? key;
-  final double coverageMin;
-
-  @override
-  Iterable<CardAudio> get audios => _fillerAudios(chips);
-
-  factory PhraseOwnSlotPayload.fromJson(Map<String, dynamic> j) => PhraseOwnSlotPayload(
-    sceneId: _scene(j),
-    frame: CardFrame.fromJson(_map(j, 'frame')),
-    partnerLine: CardLine.maybe(j['partner_line']),
-    taskNative: _str(j, 'task_native'),
-    examples: _strings(j, 'examples'),
-    chips: _list(j, 'chips', CardFiller.fromJson),
-    key: _nonEmpty(j['key']),
-    coverageMin: _num(j, 'coverage_min'),
   );
 }
 
@@ -1135,7 +1149,7 @@ class DialogueAnswerPayload extends CardPayload {
     required this.ownLine,
     required this.frame,
     required this.modes,
-    required this.coverageMin,
+    required this.speechMode,
     this.check,
   });
 
@@ -1144,7 +1158,7 @@ class DialogueAnswerPayload extends CardPayload {
   final CardOwnLine ownLine;
   final CardFrame frame;
   final CardAnswerModes modes;
-  final double coverageMin;
+  final SpeechMode speechMode;
 
   /// `dialogue_ask` (33-5) carries the check of its own exchange — the question about the partner's answer and four
   /// options (BACK-TAILS-1 §1.5); null — an `answer` exchange, or an `ask` whose check the day could not build.
@@ -1160,7 +1174,7 @@ class DialogueAnswerPayload extends CardPayload {
     ownLine: CardOwnLine.fromJson(_map(j, 'own_line')),
     frame: CardFrame.fromJson(_map(j, 'frame')),
     modes: CardAnswerModes.fromJson(_map(j, 'modes')),
-    coverageMin: _num(j, 'coverage_min'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
     check: CardCheck.maybe(j),
   );
 }
@@ -1175,7 +1189,7 @@ class DialogueRescuePayload extends CardPayload {
     required this.partnerRepeat,
     required this.slowRate,
     required this.expectedText,
-    required this.coverageMin,
+    required this.speechMode,
   });
 
   final CardExchange exchange;
@@ -1184,7 +1198,7 @@ class DialogueRescuePayload extends CardPayload {
   final CardLine partnerRepeat;
   final double slowRate;
   final String expectedText;
-  final double coverageMin;
+  final SpeechMode speechMode;
 
   @override
   Iterable<CardAudio> get audios => [?askedLine?.audio, ?rescueLine.audio, ?partnerRepeat.audio];
@@ -1197,7 +1211,7 @@ class DialogueRescuePayload extends CardPayload {
     partnerRepeat: CardLine.fromJson(_map(j, 'partner_repeat')),
     slowRate: _num(j, 'slow_rate'),
     expectedText: _str(j, 'expected_text'),
-    coverageMin: _num(j, 'coverage_min'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
   );
 }
 
@@ -1384,7 +1398,7 @@ class SpeakAnswerPayload extends CardPayload {
     required this.frame,
     required this.hint,
     this.key,
-    required this.coverageMin,
+    required this.speechMode,
   });
 
   final CardExchange exchange;
@@ -1394,7 +1408,7 @@ class SpeakAnswerPayload extends CardPayload {
   final CardFrame frame;
   final String hint;
   final String? key;
-  final double coverageMin;
+  final SpeechMode speechMode;
 
   @override
   Iterable<CardAudio> get audios => [?partnerLine?.audio];
@@ -1408,7 +1422,7 @@ class SpeakAnswerPayload extends CardPayload {
     frame: CardFrame.fromJson(_map(j, 'frame')),
     hint: _str(j, 'hint'),
     key: _nonEmpty(j['key']),
-    coverageMin: _num(j, 'coverage_min'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
   );
 }
 
@@ -1419,14 +1433,14 @@ class SpeakEchoPayload extends CardPayload {
     required this.exchange,
     required this.partnerLine,
     required this.expectedText,
-    required this.coverageMin,
+    required this.speechMode,
     required this.pauseMs,
   });
 
   final CardExchange exchange;
   final CardLine partnerLine;
   final String expectedText;
-  final double coverageMin;
+  final SpeechMode speechMode;
   final int pauseMs;
 
   @override
@@ -1437,7 +1451,7 @@ class SpeakEchoPayload extends CardPayload {
     exchange: CardExchange.fromJson(_map(j, 'exchange')),
     partnerLine: CardLine.fromJson(_map(j, 'partner_line')),
     expectedText: _str(j, 'expected_text'),
-    coverageMin: _num(j, 'coverage_min'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
     pauseMs: _int(j, 'pause_ms'),
   );
 }
@@ -1449,7 +1463,7 @@ class SpeakRetellPayload extends CardPayload {
     required this.exchange,
     required this.ownLine,
     required this.expectedText,
-    required this.coverageMin,
+    required this.speechMode,
   });
 
   final CardExchange exchange;
@@ -1458,7 +1472,7 @@ class SpeakRetellPayload extends CardPayload {
   /// meaning, and its target text opens after the attempt.
   final CardOwnLine ownLine;
   final String expectedText;
-  final double coverageMin;
+  final SpeechMode speechMode;
 
   @override
   Iterable<CardAudio> get audios => [?ownLine.audio];
@@ -1468,7 +1482,7 @@ class SpeakRetellPayload extends CardPayload {
     exchange: CardExchange.fromJson(_map(j, 'exchange')),
     ownLine: CardOwnLine.fromJson(_map(j, 'own_line')),
     expectedText: _str(j, 'expected_text'),
-    coverageMin: _num(j, 'coverage_min'),
+    speechMode: SpeechMode.fromWire(j['speech_mode']),
   );
 }
 

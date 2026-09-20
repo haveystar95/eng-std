@@ -10,7 +10,7 @@ import '../../../../data/plan/session/dialogue_feed.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
-import '../../../../data/plan/session/speech_coverage.dart';
+import '../../../../data/plan/session/speech_match.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_choice.dart';
@@ -47,6 +47,7 @@ class CardEnv {
     this.stageCards = const [],
     this.scene,
     this.stageDone,
+    this.speech = SpeechRules.none,
   });
 
   final SessionCard card;
@@ -109,7 +110,9 @@ class CardEnv {
   /// voice stages stand ahead (the words and phrases never see them done).
   final bool Function(PlanStage stage)? stageDone;
 
-  Set<String> get articles => SpeechCoverage.articlesFor(targetLang);
+  /// The target language's spoken rules, as the DAY sent them (work order FIX-2, item 2) — the phone judges a
+  /// spoken attempt by the server's own lists, never by a copy of English in Dart.
+  final SpeechRules speech;
 
   /// After the second failure the unit comes back tomorrow — the server said so in its answer.
   bool get returnsTomorrow => outcome?.unit.returnsTomorrow ?? false;

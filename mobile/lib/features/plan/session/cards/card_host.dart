@@ -26,9 +26,8 @@ Widget sessionCardFor(CardEnv env) => switch (env.card.payload) {
   final PhraseRepeatPayload p => PhraseRepeatCard(env: env, payload: p),
   // Both slot kinds are ONE trainer since FIX-1 §6 — «Say it whole», rounds through the meanings and the learner's
   // own word last; they differ only in who passes that last round (the phone, or the server's slot judge).
-  final PhraseOtherSlotPayload p => PhraseSayWholeCard.other(env: env, payload: p),
+  final PhraseOtherSlotPayload p => PhraseSayWholeCard(env: env, payload: p),
   final PhraseCombinePayload p => PhraseCombineCard(env: env, payload: p),
-  final PhraseOwnSlotPayload p => PhraseSayWholeCard.own(env: env, payload: p),
   final DialoguePartnerPayload p => DialoguePartnerCard(env: env, payload: p),
   final DialogueAnswerPayload p => DialogueAnswerCard(env: env, payload: p),
   final DialogueRescuePayload p => DialogueRescueCard(env: env, payload: p),

@@ -3,13 +3,13 @@
 /// marks. And the reverse for the own bubble of the dialogue (35-2, 35-5): which heard words belong to the expected
 /// line.
 ///
-/// Words are compared in the canonical form of speech coverage ([SpeechCoverage.words]) and as a multiset: a word the
+/// Words are compared in the canonical form of speech coverage ([SpeechMatch.words]) and as a multiset: a word the
 /// line says twice needs to be heard twice to be marked twice; a gluing of two adjacent words counts as both.
 ///
 /// Pure functions, not a single widget.
 library;
 
-import 'speech_coverage.dart';
+import 'speech_match.dart';
 
 /// A word of the line, `[start, end)` in characters.
 typedef WordRange = ({int start, int end});
@@ -20,12 +20,12 @@ abstract final class HeardWords {
   /// The words of [line] that are in [heard] — their character ranges, in the line's order.
   static List<WordRange> matched(String line, String heard) {
     final available = <String, int>{};
-    for (final w in SpeechCoverage.heardWords(heard, line)) {
+    for (final w in SpeechMatch.heardWords(heard, line)) {
       available[w] = (available[w] ?? 0) + 1;
     }
     final out = <WordRange>[];
     for (final m in _word.allMatches(line)) {
-      final tokens = SpeechCoverage.words(m[0]!);
+      final tokens = SpeechMatch.words(m[0]!);
       if (tokens.isEmpty) continue;
       final need = <String, int>{};
       for (final t in tokens) {

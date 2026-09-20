@@ -8,7 +8,7 @@ import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/data/plan/session/session_rules.dart';
-import 'package:eng_std/data/plan/session/speech_coverage.dart';
+import 'package:eng_std/data/plan/session/speech_match.dart';
 
 /// THE SESSION'S GRADING RULES (work order SESSION-1b §1 and §6): the «what the client may write» matrix, checking
 /// choices and tiles, the voice pass.
@@ -17,7 +17,7 @@ void main() {
     jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>,
   );
   T first<T extends CardPayload>(PlanStage stage) => day.stageOf(stage)!.cards.map((c) => c.payload).whereType<T>().first;
-  final en = SpeechCoverage.articlesFor('en');
+  final en = day.speech;
 
   group('what the client may write', () {
     const choice = {SessionResult.passed, SessionResult.failed};
@@ -42,7 +42,6 @@ void main() {
       SessionKind.phraseRepeat: voice,
       SessionKind.phraseOtherSlot: voice,
       SessionKind.phraseCombine: choice,
-      SessionKind.phraseOwnSlot: judged,
       SessionKind.dialoguePartner: choice,
       SessionKind.dialogueAnswer: voice,
       SessionKind.dialogueAsk: voice,
@@ -60,9 +59,9 @@ void main() {
 
     // CATCHES: a voice kind that may write `failed` (422 and a dropped answer), a judged kind that writes its own pass,
     // a walkthrough that is skipped, and a new kind added without a row.
-    test('the matrix on all 28 kinds: choice passed | failed, voice passed | skipped, judged only skipped, walkthrough passed', () {
+    test('the matrix on all 27 kinds: choice passed | failed, voice passed | skipped, judged only skipped, walkthrough passed', () {
       expect(matrix.keys.toSet(), SessionKind.values.toSet());
-      expect(SessionKind.values, hasLength(28));
+      expect(SessionKind.values, hasLength(27));
       for (final kind in SessionKind.values) {
         final writes = SessionRules.clientWrites(kind);
         expect(writes, matrix[kind], reason: kind.wire);
@@ -76,9 +75,9 @@ void main() {
     });
 
     test('the kinds are sorted by grading method as on the server', () {
-      for (final k in [SessionKind.phraseOwnSlot, SessionKind.speakAnswer]) {
-        expect(k.grading, SessionGrading.judge, reason: k.wire);
-      }
+      // Only `speak_answer` is JUDGED since FIX-2 §5: «Скажи целиком» asks the judge on its last round and is graded
+      // as a voice card — that round is practice and its result is its value rounds'.
+      expect(SessionKind.speakAnswer.grading, SessionGrading.judge);
       // `speak_retell` left the judge with BACK-TAILS-1 §1.1: «Say your line again» is graded by coverage, and a
       // question to `…/judge` on it comes back 422.
       for (final k in [
@@ -137,18 +136,18 @@ void main() {
 
     // CATCHES: a dialogue answer that demands the lesson's own filler (the slot is anyone's), and one that passes without
     // the frame.
-    test('dialogue voice: the frame covered by coverage_min, any slot; the echo — coverage of the line', () {
+    test('dialogue voice: the frame is the key and the slot is anyone\'s; the echo — the line as it stands', () {
       final x1 = answerOf('x1');
+      expect(x1.speechMode, SpeechMode.free);
       expect(SessionRules.voiceAccepted(x1, 'it hurts in his knee', en), isTrue, reason: 'any slot');
       expect(SessionRules.voiceAccepted(x1, 'It hurts in his lower back', en), isTrue);
       expect(SessionRules.voiceAccepted(x1, 'lower back', en), isFalse, reason: 'no frame');
       final x2 = answerOf('x2');
-      expect(x2.coverageMin, 1.0);
       expect(SessionRules.voiceAccepted(x2, 'it started yesterday', en), isTrue);
       expect(SessionRules.voiceAccepted(x2, 'started yesterday', en), isFalse, reason: 'a two-word frame needs both words');
 
       final echo = day.stageOf(PlanStage.speak)!.cards.map((c) => c.payload).whereType<SpeakEchoPayload>().single;
-      expect(echo.coverageMin, 0.7);
+      expect(echo.speechMode, SpeechMode.repeat);
       expect(SessionRules.voiceAccepted(echo, 'It looks like a muscle strain so he should rest and use a heating pad', en), isTrue);
       expect(SessionRules.voiceAccepted(echo, 'muscle strain rest', en), isFalse);
       expect(SessionRules.expectedSpeech(echo), echo.expectedText);
@@ -201,28 +200,31 @@ void main() {
   });
 
   group('voice', () {
-    test('word_repeat: a short word — all words', () {
+    test('word_repeat: the word on the screen, said as it stands', () {
       final p = first<WordRepeatPayload>(PlanStage.words);
-      expect(p.coverageMin, 1.0);
+      expect(p.speechMode, SpeechMode.repeat);
       expect(SessionRules.voiceAccepted(p, 'Lower back', en), isTrue);
       expect(SessionRules.voiceAccepted(p, 'lowerback', en), isTrue, reason: 'gluing counts as both words');
       expect(SessionRules.voiceAccepted(p, 'lower', en), isFalse);
       expect(SessionRules.voiceAccepted(p, '', en), isFalse);
     });
 
-    test('phrase_other_slot: the frame covered AND every slot word heard — counted separately', () {
+    // Canon (FIX-2 §5): a VALUE round of «Скажи целиком» is the whole phrase with that value, on the screen — so
+    // every content word of it, in order. CATCHES: a round passed on the frame alone, and one passed with another
+    // value in the window.
+    test('«Скажи целиком»: a value round is the whole phrase with that value', () {
       final p = first<PhraseOtherSlotPayload>(PlanStage.phrases);
-      expect(p.expectedText, 'It hurts in his shoulder.');
-      expect(SessionRules.voiceAccepted(p, 'it hurts in his shoulder', en), isTrue);
-      expect(SessionRules.otherSlotParts(p, 'it hurts in his neck', en), (frame: true, slot: false));
-      expect(SessionRules.voiceAccepted(p, 'it hurts in his neck', en), isFalse);
-      expect(SessionRules.otherSlotParts(p, 'shoulder', en), (frame: false, slot: true));
-      expect(SessionRules.voiceAccepted(p, 'shoulder', en), isFalse);
+      expect(p.speechMode, SpeechMode.repeat);
+      expect(p.rounds.first.expectedText, 'It hurts in his lower back.');
+      expect(SessionRules.roundAccepted(p, p.rounds.first, 'it hurts in his lower back', en), isTrue);
+      expect(SessionRules.roundAccepted(p, p.rounds.first, 'it hurts in his neck', en), isFalse);
+      expect(SessionRules.roundAccepted(p, p.rounds.first, 'lower back', en), isFalse);
+      expect(SessionRules.roundAccepted(p, p.rounds[1], 'it hurts in his neck', en), isTrue);
     });
 
     test('the kind\'s expected speech', () {
       expect(SessionRules.expectedSpeech(first<WordRepeatPayload>(PlanStage.words)), 'lower back');
-      expect(SessionRules.expectedSpeech(first<PhraseOwnSlotPayload>(PlanStage.phrases)), 'It started .');
+      expect(SessionRules.expectedSpeech(first<PhraseOtherSlotPayload>(PlanStage.phrases)), 'It hurts in his lower back.');
     });
   });
 

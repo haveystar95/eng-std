@@ -142,13 +142,14 @@ void main() {
       expect(find.text('тап — говорить'), findsOneWidget);
       expect(find.text('It looks like a muscle strain, so he should rest and use a heating pad.'), findsNothing);
 
-      // 11 of the 13 words that count (the articles are forgiven) — over the card's 0.7.
-      await sayDebug(tester, 'It looks like a muscle strain so he should rest and use heat');
+      // The line is on the screen, so it is said as it stands (`speech_mode: repeat`, FIX-2 §2): every content word,
+      // in its order. «and use heat» would have passed the old 0.7 share and is two content words short of the line.
+      await sayDebug(tester, 'It looks like a muscle strain so he should rest and use a heating pad');
       expect(results(probe), [SessionResult.passed]);
       await tester.pump(const Duration(milliseconds: 250));
       final text = tester.widget<SessionMarkedText>(find.byKey(const ValueKey('echo-text')));
       expect(text.text, 'It looks like a muscle strain, so he should rest and use a heating pad.');
-      expect([for (final m in text.marks) text.text.substring(m.start, m.end)], ['It', 'looks', 'like', 'a', 'muscle', 'strain', 'so', 'he', 'should', 'rest', 'and', 'use']);
+      expect([for (final m in text.marks) text.text.substring(m.start, m.end)], ['It', 'looks', 'like', 'a', 'muscle', 'strain', 'so', 'he', 'should', 'rest', 'and', 'use', 'a', 'heating', 'pad']);
       expect(find.text('совпавшее — шалфеем'), findsOneWidget);
       await settleCard(tester);
       expect(probe.nexts, 0, reason: 'the revealed line waits for «Next»');

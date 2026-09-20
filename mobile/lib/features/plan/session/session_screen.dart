@@ -16,6 +16,7 @@ import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/dialogue_feed.dart';
 import '../../../data/plan/session/session_models.dart';
 import '../../../data/plan/session/session_summary.dart';
+import '../../../data/plan/session/speech_match.dart';
 import '../../../data/providers.dart';
 import '../../profile/qa_report_button.dart' show QaReportHidden;
 import '../plan_providers.dart';
@@ -333,6 +334,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       stageCards: stageCards,
       scene: _session.scene,
       stageDone: q.isDone,
+      speech: _session.day?.speech ?? SpeechRules.none,
     );
     final listen = stage == PlanStage.listen;
     final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;

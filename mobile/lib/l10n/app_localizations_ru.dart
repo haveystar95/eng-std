@@ -3717,11 +3717,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionPlaying => 'играет';
 
   @override
-  String planSessionRound(int current, int total) {
-    return '$current из $total';
-  }
-
-  @override
   String get planSessionMicMissed => 'не расслышал, ещё раз';
 
   @override
@@ -3983,6 +3978,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionWhichNumber => 'Какое число прозвучало?';
+
+  @override
+  String get planSessionTaskAskYourself => 'Спроси сам';
+
+  @override
+  String planSessionAskIntent(String text) {
+    return 'Спроси: «$text»';
+  }
 
   @override
   String get planSessionTaskAnswerOwnWords => 'Ответь своими словами';

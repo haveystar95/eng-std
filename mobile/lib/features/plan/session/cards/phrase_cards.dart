@@ -9,8 +9,7 @@ import 'package:eng_std/theme/theme.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
-import '../../../../data/plan/session/speech_coverage.dart';
-import '../../../../data/plan/session/voice_rounds.dart';
+import '../../../../data/plan/session/speech_match.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_choice.dart';
 import '../parts/session_tiles.dart';
@@ -582,9 +581,12 @@ class _PhraseSlotListenCardState extends State<PhraseSlotListenCard> with Choice
 
 // ── 32-6 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// REPEAT ALOUD (32-6): the sample at 0.85× on opening, the key underlined in brass; microphone; pass — coverage of
-/// `expected_text` by `coverage_min`; two attempts without a pass — `skipped`. Rounds (item 12, [VoiceRounds]):
-/// round 2 — the frame with the next filler, its own sample at 0.85×, «1 of 2 · 2 of 2» above the sheet.
+/// REPEAT ALOUD (32-6): the sample at 0.85× on opening, the key underlined in brass; microphone; pass — the line on
+/// the screen said as it stands (`speech_mode: repeat`); two attempts without a pass — `skipped`.
+///
+/// ONE ROUND since work order FIX-2 §5: the card is dealt only to a frame WITHOUT a window, which has no second
+/// value to say it with, and as the stand-in when «Скажи целиком» could not be built. The second round the phone
+/// used to invent out of the frame's fillers went with the rounds becoming the server's.
 class PhraseRepeatCard extends StatefulWidget {
   const PhraseRepeatCard({super.key, required this.env, required this.payload});
 
@@ -598,24 +600,17 @@ class PhraseRepeatCard extends StatefulWidget {
 class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState<PhraseRepeatCard> {
   static const _key = 'phrase-repeat';
 
-  late final List<VoiceRound> _rounds = VoiceRounds.ofRepeat(widget.payload);
-
-  VoiceRound get _current => _rounds[round];
-
   @override
   CardEnv get env => widget.env;
 
   @override
-  int get roundCount => _rounds.length;
+  int? fillerIndexOfRound(int round) => widget.payload.fillerIndex;
 
   @override
-  int? fillerIndexOfRound(int round) => _rounds[round].fillerIndex;
+  String get expectedSpeech => widget.payload.expectedText;
 
   @override
-  String get expectedSpeech => _current.expectedText;
-
-  @override
-  bool accepts(String heard) => SessionRules.roundAccepted(widget.payload, _current, heard, env.articles);
+  bool accepts(String heard) => SessionRules.voiceAccepted(widget.payload, heard, env.speech);
 
   @override
   void initState() {
@@ -624,10 +619,8 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
     _playSample();
   }
 
-  @override
-  void onRoundStarted(int round) => _playSample();
-
-  void _playSample() => _autoplay(this, env, _current.audio, _current.expectedText, _key, rate: kRepeatRate);
+  void _playSample() =>
+      _autoplay(this, env, widget.payload.audio, widget.payload.expectedText, _key, rate: kRepeatRate);
 
   @override
   void dispose() {
@@ -639,7 +632,7 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
   TextRange? get _keyRange {
     final key = widget.payload.key;
     if (key == null) return null;
-    final text = _current.expectedText;
+    final text = widget.payload.expectedText;
     final at = text.toLowerCase().indexOf(key.toLowerCase());
     return at < 0 ? null : TextRange(start: at, end: at + key.length);
   }
@@ -650,26 +643,21 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
     final p = widget.payload;
-    final r = _current;
-    final filler = r.filler;
+    final filler = p.fillerIndex == null ? null : p.frame.filler(p.fillerIndex!);
     return CardLayout(
       bodyGap: 12,
       centerBody: true,
       fadeStop: 0.30,
       task: SessionTask(l.planSessionTaskSayPhrase),
-      body: _Rounds(
-        round: round,
-        count: roundCount,
-        child: _PhraseSheet(
-          plate: _PhrasePlate(
-            listen: CardListen(env: env, audio: r.audio, fallback: r.expectedText, playKey: _key, rate: kRepeatRate),
-            child: SessionFrameText.plain(r.expectedText, style: AppTextSession.frame, underline: _keyRange),
-          ),
-          footer: _PhraseFooter(
-            eyebrow: l.planSessionBrowPhrase,
-            reading: _pronunciation(p.frame, filler),
-            native: r.native ?? _native(p.frame, filler),
-          ),
+      body: _PhraseSheet(
+        plate: _PhrasePlate(
+          listen: CardListen(env: env, audio: p.audio, fallback: p.expectedText, playKey: _key, rate: kRepeatRate),
+          child: SessionFrameText.plain(p.expectedText, style: AppTextSession.frame, underline: _keyRange),
+        ),
+        footer: _PhraseFooter(
+          eyebrow: l.planSessionBrowPhrase,
+          reading: _pronunciation(p.frame, filler),
+          native: _native(p.frame, filler),
         ),
       ),
       bottom: voiceDock(context),
@@ -677,97 +665,32 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
   }
 }
 
-/// The sheet of a card with rounds (item 12) — «1 of 2 · 2 of 2» small and grey above it; one round — the sheet alone.
-class _Rounds extends StatelessWidget {
-  const _Rounds({required this.round, required this.count, required this.child});
-
-  final int round;
-  final int count;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    if (count < 2) return child;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(AppLocalizations.of(context).planSessionRound(round + 1, count), key: const ValueKey('voice-round'), style: AppTextSession.meta),
-        const SizedBox(height: 8),
-        child,
-      ],
-    );
-  }
-}
-
 // ── 32-7 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// SAY IT WHOLE (32-7, work order FIX-1 §6) — THE ONE TRAINER OF A FRAME WITH A WINDOW. The window shows a meaning,
-/// the learner says the WHOLE phrase, a pass moves the next meaning into the window, and so on through every meaning
-/// the card carries (2–3); the last round is «and now with your own word» — the former «my own slot» (32-9), which
-/// has no screen of its own any more.
+/// SAY IT WHOLE (32-7, work orders FIX-1 §6 and FIX-2 §5) — THE ONE TRAINER OF A FRAME WITH A WINDOW, at either
+/// level. A meaning stands in the window, the learner says the WHOLE phrase, a pass moves the next meaning in, and
+/// the last round is «and now with your own word» — the former «my own slot» (32-9), which has no screen of its own.
+///
+/// THE ROUNDS ARE THE SERVER'S (`payload.rounds`, FIX-2 §5). The phone used to work them out of the frame's fillers,
+/// which meant the device decided how much of the day a learner got and the two levels differed in the TRAINER they
+/// were given; now they differ in this list's length and in nothing else, and what is said on a card is the day's.
 ///
 /// The chips are not a choice but a STATE: said · now · ahead. Nothing on this card is tapped except the microphone.
 ///
-/// The two payloads it is dealt differ in ONE thing, and the contract decides it: who may pass the own word.
-/// `phrase_other_slot` is a voice kind and the phone grades it (the frame's own words covered, and something said in
-/// the window); `phrase_own_slot` is a judged kind whose pass only the server may write (`…/judge`), so that round
-/// asks the judge and the client sends no answer of its own on a pass.
+/// THE OWN-WORD ROUND IS THE JUDGE'S AND IS PRACTICE. Its verdict comes from `…/judge` and does not close the card
+/// (the server keeps `result` null for this kind); a miss or a skip there deals no copy and returns no unit, so an
+/// answer that would go out as `skipped` after every value round has passed goes out as `passed` instead.
 class PhraseSayWholeCard extends StatefulWidget {
-  /// `phrase_other_slot` — the phone grades every round.
-  PhraseSayWholeCard.other({super.key, required this.env, required PhraseOtherSlotPayload payload})
-    : frame = payload.frame,
-      coverageMin = payload.coverageMin,
-      phraseKey = payload.key,
-      judged = false,
-      hints = const [],
-      expectedText = payload.expectedText,
-      slotExpected = payload.slotExpected,
-      dealtFiller = payload.fillerIndex;
-
-  /// `phrase_own_slot` — the own word goes to the slot judge.
-  PhraseSayWholeCard.own({super.key, required this.env, required PhraseOwnSlotPayload payload})
-    : frame = payload.frame,
-      coverageMin = payload.coverageMin,
-      phraseKey = payload.key,
-      judged = true,
-      hints = payload.examples,
-      expectedText = null,
-      slotExpected = null,
-      dealtFiller = null;
+  const PhraseSayWholeCard({super.key, required this.env, required this.payload});
 
   final CardEnv env;
-  final CardFrame frame;
-  final double coverageMin;
-
-  /// The phrase's key words — underlined in the frame.
-  final String? phraseKey;
-
-  /// The own word is the judge's to pass (`phrase_own_slot`).
-  final bool judged;
-
-  /// Words the recognizer should expect beyond the frame (`examples`).
-  final List<String> hints;
-
-  /// The server's strings for the filler the card was dealt with; null — the payload carries none.
-  final String? expectedText;
-  final String? slotExpected;
-  final int? dealtFiller;
+  final PhraseOtherSlotPayload payload;
 
   @override
   State<PhraseSayWholeCard> createState() => _PhraseSayWholeCardState();
 }
 
 class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardState<PhraseSayWholeCard> {
-  /// The rounds: every meaning of the window, then the learner's own word (null). A frame without a window has the
-  /// one round of saying it as it stands.
-  late final List<CardFiller?> _rounds = _roundsOf(widget.frame);
-
-  static List<CardFiller?> _roundsOf(CardFrame frame) {
-    final rounds = <CardFiller?>[...frame.fillers, if (frame.hasSlot) null];
-    return rounds.isEmpty ? const [null] : rounds;
-  }
-
   /// How the last attempt of this round went — the frame and the window separately (the sage of a pass).
   ({bool frame, bool slot})? _parts;
 
@@ -777,50 +700,57 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
   /// Why the judge did not accept the own word; null — nothing was rejected.
   String? _reason;
 
-  CardFiller? get _filler => _rounds[round];
+  CardFrame get _frame => widget.payload.frame;
 
-  /// The last round — «and now with your own word».
-  bool get _own => _filler == null;
+  List<CardSayWholeRound> get _values => widget.payload.rounds;
 
-  String get _framePart => SessionRules.framePart(widget.frame.frameTarget);
+  /// The value round being said; null on the last round — «and now with your own word».
+  CardSayWholeRound? get _value => round < _values.length ? _values[round] : null;
 
-  /// The card was dealt with this meaning, so the server's own strings describe it best.
-  bool get _dealt => _filler != null && _filler!.index == widget.dealtFiller;
+  bool get _own => _value == null;
+
+  /// Every value round is through: what is left is the own word, and it costs the learner nothing.
+  bool get _valuesDone => round >= _values.length;
+
+  String get _framePart => SessionRules.framePart(_frame.frameTarget);
+
+  /// The window's chip of this round — the filler the server named.
+  CardFiller? get _filler {
+    final at = _value?.fillerIndex;
+    return at == null ? null : _frame.filler(at);
+  }
 
   @override
   CardEnv get env => widget.env;
 
   @override
-  int get roundCount => _rounds.length;
+  int get roundCount => _values.length + 1;
 
   @override
-  int? fillerIndexOfRound(int round) => _rounds[round]?.index;
+  int? fillerIndexOfRound(int round) => round < _values.length ? _values[round].fillerIndex : null;
 
   @override
-  String get expectedSpeech {
-    final filler = _filler;
-    if (filler == null) return _framePart;
-    return _dealt ? widget.expectedText ?? widget.frame.filledWith(filler.target) : widget.frame.filledWith(filler.target);
-  }
-
-  /// All of these words must be heard — the meaning in the window; the own round has none of its own.
-  String get _slotExpected => _dealt ? widget.slotExpected ?? _filler!.target : _filler?.target ?? '';
+  String get expectedSpeech => _value?.expectedText ?? _framePart;
 
   @override
   List<String> get contextual => [
     expectedSpeech,
     _framePart,
-    for (final f in widget.frame.fillers) f.target,
-    ...widget.hints,
+    for (final f in _frame.fillers) f.target,
+    ...widget.payload.ownRound.examples,
   ];
 
   @override
   bool accepts(String heard) {
-    final frameSaid = SpeechCoverage.covers(heard, expectedSpeech, widget.coverageMin, env.articles);
-    final slot = _slotWordsOf(heard, widget.frame, '');
-    // The window: a known meaning is heard whole; the own word is whatever was said beyond the frame — that there
-    // WAS something is the phone's whole claim about it (the meaning is the judge's, where there is one).
-    final slotSaid = _own ? slot.isNotEmpty : SpeechCoverage.covers(heard, _slotExpected, SpeechCoverage.all, env.articles);
+    final value = _value;
+    // A VALUE ROUND is the phrase on the screen said as it stands (`speech_mode: repeat`): the value is part of that
+    // text, so there is nothing to count apart. The OWN round asks only that the frame was said and that SOMETHING
+    // went into the window — what it means is the judge's.
+    final frameSaid = value != null
+        ? SessionRules.roundAccepted(widget.payload, value, heard, env.speech)
+        : SpeechMatch.said(heard, _framePart, widget.payload.ownRound.speechMode, env.speech);
+    final slot = _slotWordsOf(heard, _frame, '');
+    final slotSaid = value != null || slot.isNotEmpty;
     setState(() {
       _parts = (frame: frameSaid, slot: slotSaid);
       _heardSlot = slot.isEmpty ? null : slot;
@@ -828,11 +758,11 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     return frameSaid && slotSaid;
   }
 
-  /// The own word of a judged card is the JUDGE's to pass: the microphone stays closed until the verdict, and a
-  /// rejection stands under the microphone in the judge's own words.
+  /// The own word is the JUDGE's to rule on: the microphone stays closed until the verdict, and a rejection stands
+  /// under the microphone in the judge's own words.
   @override
   Future<bool> grade(String heard) async {
-    if (!_own || !widget.judged) return accepts(heard);
+    if (!_own) return accepts(heard);
     if (!accepts(heard)) return false;
     try {
       final outcome = await env.judge(heard);
@@ -848,11 +778,16 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     }
   }
 
-  /// A JUDGED PASS IS THE SERVER'S: the judge wrote the card's answer when it accepted the own word, and this client
-  /// may not write `passed` on a judged kind at all (`CardKind::allows`). A skip is the client's, as always.
+  /// THE CARD'S RESULT IS ITS VALUE ROUNDS' (FIX-2 §5). The own word is practice: once the values are through, a
+  /// `skipped` — two misses on the own round, or «Skip» on it — goes out as `passed`, so the frame is not sent back
+  /// tomorrow over a word the learner was invited to invent. Before the values are through a skip is a skip, and the
+  /// frame lapses as it always did (DECISIONS п. 327).
   @override
   void submitAnswer(SessionAnswer answer) {
-    if (widget.judged && answer.result == SessionResult.passed) return;
+    if (answer.result == SessionResult.skipped && _valuesDone) {
+      env.submit(SessionAnswer(result: SessionResult.passed, attempts: answer.attempts, response: answer.response));
+      return;
+    }
     env.submit(answer);
   }
 
@@ -877,9 +812,9 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
 
   /// The key in the frame — case-insensitive; not found — no underline.
   TextRange? get _keyRange {
-    final key = widget.phraseKey;
+    final key = widget.payload.key;
     if (key == null) return null;
-    final at = widget.frame.parts.before.toLowerCase().indexOf(key.toLowerCase());
+    final at = _frame.parts.before.toLowerCase().indexOf(key.toLowerCase());
     return at < 0 ? null : TextRange(start: at, end: at + key.length);
   }
 
@@ -890,15 +825,15 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     final l = AppLocalizations.of(context);
     final passed = _parts?.frame == true && _parts?.slot == true && (done || roundPassed);
     final listening = mic.isListening;
-    final filler = _filler;
+    final value = _value;
     // The own word fills the window as it is said, and stays there while the judge thinks; a known meaning stands in
     // the window from the start of its round.
-    final live = _own && listening && !mic.closed ? _slotWordsOf(mic.partial, widget.frame, '') : null;
+    final live = _own && listening && !mic.closed ? _slotWordsOf(mic.partial, _frame, '') : null;
     final shown = passed
-        ? (_heardSlot ?? _slotExpected)
+        ? (_heardSlot ?? _filler?.target)
         : _own
         ? (live != null ? (live.isEmpty ? null : live) : _heardSlot)
-        : filler?.target;
+        : _filler?.target;
     return CardLayout(
       bodyGap: 12,
       fadeStop: 0.30,
@@ -913,10 +848,10 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
           _PhraseSheet(
             plate: _PhrasePlate(
               child: SessionFrameText(
-                before: widget.frame.parts.before,
-                after: widget.frame.parts.after,
+                before: _frame.parts.before,
+                after: _frame.parts.after,
                 style: AppTextSession.frame,
-                window: widget.frame.hasSlot,
+                window: _frame.hasSlot,
                 frameColor: passed && _parts?.frame == true ? AppColors.verdictKnown : null,
                 slot: shown,
                 look: passed ? SlotLook.sage : (shown == null ? SlotLook.empty : SlotLook.filled),
@@ -927,13 +862,13 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
             // No reading line on this sheet (as on 32-7 before the merge): the card carries the row of meanings under
             // it, and the two have to stand above the microphone on an 844 pt phone.
             footer: _PhraseFooter(
-              native: _own ? widget.frame.frameNative : _native(widget.frame, filler),
+              native: value?.taskNative ?? widget.payload.ownRound.taskNative,
               nativeStyle: AppTextSession.body,
             ),
           ),
-          if (widget.frame.hasSlot) ...[
+          if (_frame.hasSlot) ...[
             const SizedBox(height: 20),
-            _RoundChips(fillers: widget.frame.fillers, round: round, rounds: _rounds),
+            _RoundChips(fillers: _frame.fillers, round: round, rounds: _values),
           ],
         ],
       ),
@@ -950,7 +885,7 @@ class _RoundChips extends StatelessWidget {
 
   final List<CardFiller> fillers;
   final int round;
-  final List<CardFiller?> rounds;
+  final List<CardSayWholeRound> rounds;
 
   @override
   Widget build(BuildContext context) => Wrap(
@@ -958,7 +893,7 @@ class _RoundChips extends StatelessWidget {
     runSpacing: 8,
     children: [
       for (final f in fillers)
-        if (rounds.indexWhere((r) => r?.index == f.index) case final at when at >= 0)
+        if (rounds.indexWhere((r) => r.fillerIndex == f.index) case final at when at >= 0)
           SessionTile(
             key: ValueKey('chip-${f.index}'),
             text: f.target,
@@ -975,11 +910,11 @@ class _RoundChips extends StatelessWidget {
 
 /// The heard words beyond the frame [frame] in speech order — what goes into the slot; empty — [fallback].
 String _slotWordsOf(String heard, CardFrame frame, String fallback) {
-  final frameWords = SpeechCoverage.words('${frame.parts.before} ${frame.parts.after}').toSet();
+  final frameWords = SpeechMatch.words('${frame.parts.before} ${frame.parts.after}').toSet();
   final slot = heard
       .split(RegExp(r'\s+'))
       .where((w) {
-        final tokens = SpeechCoverage.words(w);
+        final tokens = SpeechMatch.words(w);
         return tokens.isNotEmpty && !tokens.every(frameWords.contains);
       })
       .join(' ')

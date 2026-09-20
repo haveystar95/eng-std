@@ -6,11 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
+import 'package:eng_std/data/plan/session/speech_match.dart';
 
 /// THE DAY SESSION CONTRACT AT THE CLIENT'S DOOR (work order SESSION-1b §6): both server fixtures
 /// (`backend2/docs/fixtures/day-doctor*.json` — the body of `GET /plans/{id}/days/1`, kept byte-for-byte by the
-/// server) parse in full — 166 cards since BACK-TAILS-1 (the ask exchange is one card now), all 28 dealt kinds; a card of an
-/// unknown kind is skipped without an error.
+/// server) parse in full — 156 cards since FIX-2 (a frame with a window is said once, as «Скажи целиком», and no third
+/// recognition fits after it), all 27 dealt kinds; a card of an unknown kind is skipped without an error.
 Map<String, dynamic> _fixture(String name) =>
     jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
 
@@ -18,25 +19,29 @@ void main() {
   final intermediate = _fixture('day-doctor');
   final beginner = _fixture('day-doctor-beginner');
 
-  test('both fixtures parse in full: 83 + 83 cards, none skipped', () {
+  test('both fixtures parse in full: 78 + 78 cards, none skipped', () {
     final a = SessionDay.fromJson(intermediate);
     final b = SessionDay.fromJson(beginner);
 
     int count(SessionDay d) => d.stages.fold(0, (n, s) => n + s.cards.length);
-    expect(count(a), 83);
-    expect(count(b), 83);
+    expect(count(a), 78);
+    expect(count(b), 78);
     expect(a.skipped + b.skipped, 0);
-    expect(count(a) + count(b), 166);
+    expect(count(a) + count(b), 156);
   });
 
-  test('the two fixtures carry all 28 dealt kinds', () {
+  // The clean doctor day carries every dealt kind but ONE: with «Скажи целиком» costing a series' worth of seconds
+  // no frame gets a third recognition any more (FIX-2 §5), and on THIS scene the two that fit never open on
+  // `phrase_slot` — the cycle's opener is seeded per frame. The kind is alive and dealt elsewhere; what this test
+  // guards is that no kind of the enum went missing from the fixtures by accident.
+  test('the two fixtures carry every dealt kind but phrase_slot, whose turn this scene never reaches', () {
     final kinds = <SessionKind>{
       for (final day in [SessionDay.fromJson(intermediate), SessionDay.fromJson(beginner)])
         for (final s in day.stages)
           for (final c in s.cards) c.kind,
     };
-    expect(kinds, SessionKind.values.toSet());
-    expect(SessionKind.values, hasLength(28));
+    expect(kinds, SessionKind.values.toSet()..remove(SessionKind.phraseSlot));
+    expect(SessionKind.values, hasLength(27));
   });
 
   test('the envelope: stage, position, unit, source; the payload is its kind\'s model', () {
@@ -76,13 +81,17 @@ void main() {
     expect(assemble.slotAt, 4);
     expect(assemble.fillerIndex, 1);
 
-    final other = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().first;
-    expect(other.coverageMin, 0.7);
-    expect(other.slotExpected, 'shoulder');
-
-    final own = phrases.map((c) => c.payload).whereType<PhraseOwnSlotPayload>().first;
-    expect(own.chips, hasLength(3));
-    expect(own.partnerLine, isNotNull);
+    // «Скажи целиком» (FIX-2 §5): the rounds are the SERVER'S, and the own-word round is always last.
+    final whole = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().first;
+    expect(whole.speechMode, SpeechMode.repeat);
+    expect([for (final r in whole.rounds) r.fillerIndex], [0, 1, 2]);
+    expect(whole.rounds.first.expectedText, 'It hurts in his lower back.');
+    expect(whole.rounds.first.taskNative, 'У него болит поясница.');
+    expect(whole.ownRound.speechMode, SpeechMode.free);
+    expect(whole.ownRound.examples, hasLength(3));
+    expect(whole.frame.fillers, hasLength(3));
+    // The line the judge reads, never shown: 32-7 has no partner line.
+    expect(whole.partnerLine, isNotNull);
 
     final combine = phrases.map((c) => c.payload).whereType<PhraseCombinePayload>().single;
     expect(combine.frames, hasLength(3));
@@ -138,17 +147,24 @@ void main() {
     expect(day.termText('v404'), isNull);
   });
 
-  test('fractions read as numbers: 1.0 and the integer 1 are the same', () {
+  // Canon (FIX-2 §2): the card carries a MODE, not a share, and the language's own lists come with the day.
+  // CATCHES: a build that still reads `coverage_min`; a day whose `speech` block is dropped on the way in.
+  test('the mode comes on the card, the language\'s lists come with the day', () {
     final day = SessionDay.fromJson(intermediate);
     final repeat = day.stageOf(PlanStage.words)!.cards.map((c) => c.payload).whereType<WordRepeatPayload>().first;
-    expect(repeat.coverageMin, 1.0);
+    expect(repeat.speechMode, SpeechMode.repeat);
 
+    expect(day.speech.articles, {'a', 'an', 'the'});
+    expect(day.speech.unstressed, contains('would'));
+    expect(day.speech.unstressed, isNot(contains('not')), reason: '«not» flips the meaning — it is not unstressed');
+    expect(day.speech.abbreviations, contains('p.m.'));
+    expect(day.speech.numberWords['three'], '3');
+    expect(day.speech.repeatMisses, 0);
+
+    // A day without the block forgives nothing — an older server, or a reply that lost it.
     final raw = jsonDecode(jsonEncode(intermediate)) as Map<String, dynamic>;
-    final card = (raw['stages'] as List).first['cards'][2] as Map<String, dynamic>;
-    expect(card['kind'], 'word_repeat');
-    (card['payload'] as Map<String, dynamic>)['coverage_min'] = 1;
-    final parsed = SessionCard.fromJson(card)!.payload as WordRepeatPayload;
-    expect(parsed.coverageMin, 1.0);
+    raw.remove('speech');
+    expect(SessionDay.fromJson(raw).speech.articles, isEmpty);
   });
 
   test('an unknown kind — skipped without an error and without a card; listen_pairs too', () {

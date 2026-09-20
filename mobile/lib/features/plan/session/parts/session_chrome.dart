@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -10,7 +9,6 @@ import 'package:eng_std/theme/theme.dart';
 import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/plan_models.dart';
 import '../../../../data/plan/session/session_queue.dart';
-import '../../../../data/providers.dart';
 import '../../../../ui/scene_circle.dart';
 import 'session_bits.dart';
 
@@ -200,15 +198,21 @@ class SessionCloseButton extends StatelessWidget {
   );
 }
 
-/// SCENE STRIP (canvas 30-2b): scene photo 32, «Doctor's appointment · Receptionist» (native; the role in the
-/// nominative, as the server gave it), the learner's circle 32 on the right. Not tappable — it is a reminder.
-class SessionSceneStrip extends ConsumerWidget {
+/// SCENE STRIP (canvas 30-2b): scene photo 32 and «Doctor's appointment · Receptionist» (native; the role in the
+/// nominative, as the server gave it). Not tappable — it is a reminder.
+///
+/// THE CIRCLE ON THE RIGHT IS GONE (work order FIX-2, item 6). It held the LEARNER'S own avatar, which on the
+/// owner's account is Google's generated one — a red disc with «О» — standing over a strip that is about the SCENE
+/// and the partner, and answering a question nobody asked: whose session this is. 30-2b puts the partner's face
+/// there, and the contract has no partner photo to put; the partner's role stays where the frame also keeps it, in
+/// the line itself («· с врачом»).
+class SessionSceneStrip extends StatelessWidget {
   const SessionSceneStrip({super.key, required this.scene});
 
   final PlanScene? scene;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final s = scene;
     final role = s?.partnerRoleNative?.trim() ?? '';
@@ -216,8 +220,6 @@ class SessionSceneStrip extends ConsumerWidget {
     final line = role.isEmpty ? title : (title.isEmpty ? role : l.planSessionSceneLine(title, role));
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
     final photo = s?.image;
-    final user = ref.watch(authControllerProvider).value;
-    final name = user?.name.trim() ?? '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(kSessionGutter, 14, kSessionGutter, 0),
       // The line wraps in full — nothing above a session card is cut; the canvas height 48 is only the minimum.
@@ -232,20 +234,6 @@ class SessionSceneStrip extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
             Expanded(child: Text(line, style: AppTextSession.sceneLine)),
-            const SizedBox(width: 12),
-            Container(
-              width: 32,
-              height: 32,
-              clipBehavior: Clip.antiAlias,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.photoPlaceholder),
-              child: user?.avatar != null
-                  ? Image(image: CachedNetworkImage(user!.avatar!), fit: BoxFit.cover, width: 32, height: 32)
-                  : Text(
-                      name.isEmpty ? '' : name.characters.first.toUpperCase(),
-                      style: AppTextSession.headerStage.copyWith(fontSize: 14, color: AppColors.inkBody),
-                    ),
-            ),
           ],
         ),
       ),

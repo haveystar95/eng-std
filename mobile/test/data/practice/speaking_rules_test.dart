@@ -111,8 +111,10 @@ void main() {
       // So the phone showed «Верно» and the scheduler wrote a lapse underneath it. Both sides now
       // read the same number, and it is read out of the PHP rather than transcribed: a
       // transcription agrees on the day it is written and drifts silently after.
+      // `SpokenCoverage` was merged into the kernel's one rule with work order FIX-2 §2; the number about WHICH
+      // answers are compared this way is Learning's policy and stayed in Learning, on `SpokenLine`.
       final php = File(
-        '../backend2/app/Modules/Learning/Domain/Service/SpokenCoverage.php',
+        '../backend2/app/Modules/Learning/Domain/Service/SpokenLine.php',
       );
       expect(php.existsSync(), isTrue, reason: 'the server file moved: ${php.path}');
 

@@ -139,8 +139,9 @@ void main() {
   });
 
   testWidgets('03 «Скажи целиком»: последний круг — своё слово', (tester) async {
-    await pumpCardShot(tester, () => probeEnv(fixtureCard(day, SessionKind.phraseOwnSlot), CardProbe()));
-    for (final said in ['It started three days ago', 'It started last night', 'It started this morning']) {
+    await pumpCardShot(tester, () => probeEnv(fixtureCard(day, SessionKind.phraseOtherSlot), CardProbe()));
+    // Through every value round of the card to the last one — the own word (FIX-2 §5).
+    for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
       await sayDebug(tester, said);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 700));

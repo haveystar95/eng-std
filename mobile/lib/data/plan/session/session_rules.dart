@@ -2,9 +2,9 @@
 /// SESSION-1c).
 ///
 /// The client grades, without the network: choice — the option id against `correct`, tiles — against `expected`,
-/// voice — speech coverage by `coverage_min` ([SpeechCoverage]). Judged kinds are graded only by the server. The
-/// consequences (the copy at the end of the stage, the unit's return) are handled by the server — they are not
-/// here.
+/// voice — by the card's own `speech_mode` ([SpeechMatch], work order FIX-2 item 2). `speak_answer` is graded only
+/// by the server. The consequences (the copy at the end of the stage, the unit's return) are handled by the server —
+/// they are not here.
 ///
 /// Pure functions, not a single widget.
 library;
@@ -13,8 +13,7 @@ import 'package:flutter/foundation.dart';
 
 import '../plan_models.dart';
 import 'session_models.dart';
-import 'speech_coverage.dart';
-import 'voice_rounds.dart';
+import 'speech_match.dart';
 
 /// HOW A DIALOGUE VOICE CARD ASKS (`dialogue_answer` / `dialogue_ask`, work order SESSION-1c, section 2). The card
 /// carries data for every mode (`modes`); the client picks one by the plan's level and «No hints» (30-1).
@@ -105,7 +104,7 @@ abstract final class SessionRules {
     SessionKind.dialogueAsk ||
     SessionKind.speakEcho ||
     SessionKind.speakRetell => _voice,
-    SessionKind.phraseOwnSlot || SessionKind.speakAnswer => _judged,
+    SessionKind.speakAnswer => _judged,
     SessionKind.wordIntro ||
     SessionKind.phraseIntro ||
     SessionKind.dialogueRescue ||
@@ -170,28 +169,22 @@ abstract final class SessionRules {
   /// `phrase_combine`: the frame = `correct_frame`; the filler — any of `chips`.
   static bool combineCorrect(PhraseCombinePayload payload, String frameRef) => frameRef == payload.correctFrame;
 
-  /// The pass of a word or phrase voice card by what was heard.
-  ///
-  /// `phrase_other_slot` — the frame and the slot separately: coverage of `expected_text` by `coverage_min` AND
-  /// all the words of `slot_expected` in what was heard.
-  static bool voiceAccepted(CardPayload payload, String heard, Set<String> articles) => switch (payload) {
-    WordRepeatPayload(:final expectedText, :final coverageMin) =>
-      SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
-    PhraseRepeatPayload(:final expectedText, :final coverageMin) =>
-      SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
-    PhraseOtherSlotPayload(:final expectedText, :final slotExpected, :final coverageMin) =>
-      SpeechCoverage.covers(heard, expectedText, coverageMin, articles) &&
-          SpeechCoverage.covers(heard, slotExpected, SpeechCoverage.all, articles),
-    // The dialogue (SESSION-1c, section 2): the frame's own words covered by `coverage_min` — the slot is anyone's,
-    // in either voice mode; the server measured `coverage_min` on the same part (`FrameParts::part`).
-    DialogueAnswerPayload(:final frame, :final coverageMin) =>
-      SpeechCoverage.covers(heard, framePart(frame.frameTarget), coverageMin, articles),
-    SpeakEchoPayload(:final expectedText, :final coverageMin) =>
-      SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
-    // «Say your line again» (35-4, BACK-TAILS-1 §1.1): the learner's own line covered whole — the same rule as the
-    // echo, and no judge.
-    SpeakRetellPayload(:final expectedText, :final coverageMin) =>
-      SpeechCoverage.covers(heard, expectedText, coverageMin, articles),
+  /// The pass of a word or phrase voice card by what was heard — the card's own `speech_mode`, the day's own
+  /// [SpeechRules]. «Скажи целиком» is not here: it goes in rounds, and a round is passed by [roundAccepted].
+  static bool voiceAccepted(CardPayload payload, String heard, SpeechRules rules) => switch (payload) {
+    WordRepeatPayload(:final expectedText, :final speechMode) =>
+      SpeechMatch.said(heard, expectedText, speechMode, rules),
+    PhraseRepeatPayload(:final expectedText, :final speechMode) =>
+      SpeechMatch.said(heard, expectedText, speechMode, rules),
+    // The dialogue (SESSION-1c, section 2): the learner says their own line, so the key is the frame's own words —
+    // the slot is anyone's, in either voice mode (`speech_mode: free`, measured on the same `FrameParts::part`).
+    DialogueAnswerPayload(:final frame, :final speechMode) =>
+      SpeechMatch.said(heard, framePart(frame.frameTarget), speechMode, rules),
+    SpeakEchoPayload(:final expectedText, :final speechMode) =>
+      SpeechMatch.said(heard, expectedText, speechMode, rules),
+    // «Say your line again» (35-4, BACK-TAILS-1 §1.1): the learner's own line, said as it stands — and no judge.
+    SpeakRetellPayload(:final expectedText, :final speechMode) =>
+      SpeechMatch.said(heard, expectedText, speechMode, rules),
     _ => false,
   };
 
@@ -201,11 +194,12 @@ abstract final class SessionRules {
   /// that is what the judge was for, and a replay does not pretend to have one.
   ///
   /// Before this, a replay accepted ANY speech at all — the first sound heard closed the card as a pass.
-  static bool replayAccepted(CardPayload payload, String heard, Set<String> articles) => switch (payload) {
-    SpeakAnswerPayload(:final frame, :final coverageMin) ||
-    PhraseOwnSlotPayload(:final frame, :final coverageMin) =>
-      SpeechCoverage.covers(heard, framePart(frame.frameTarget), coverageMin, articles),
-    _ => voiceAccepted(payload, heard, articles),
+  static bool replayAccepted(CardPayload payload, String heard, SpeechRules rules) => switch (payload) {
+    SpeakAnswerPayload(:final frame, :final speechMode) =>
+      SpeechMatch.said(heard, framePart(frame.frameTarget), speechMode, rules),
+    PhraseOtherSlotPayload(:final rounds, :final speechMode) when rounds.isNotEmpty =>
+      SpeechMatch.said(heard, rounds.first.expectedText, speechMode, rules),
+    _ => voiceAccepted(payload, heard, rules),
   };
 
   /// THE FRAME'S OWN WORDS — the frame outside its slot, without the closing mark: what must be heard for the frame
@@ -235,31 +229,17 @@ abstract final class SessionRules {
     DialogueMode.chips || DialogueMode.voiceBlind => framePart(payload.frame.frameTarget),
   };
 
-  /// The separate pass of `phrase_other_slot`: the frame (coverage of the phrase) and the slot (all the words of the
-  /// meaning in it). [expectedText] and [slotExpected] — the chip the learner chose (32-7, SESSION-2b §1); by
-  /// default the filler the card came with.
-  static ({bool frame, bool slot}) otherSlotParts(
-    PhraseOtherSlotPayload p,
-    String heard,
-    Set<String> articles, {
-    String? expectedText,
-    String? slotExpected,
-  }) => (
-    frame: SpeechCoverage.covers(heard, expectedText ?? p.expectedText, p.coverageMin, articles),
-    slot: SpeechCoverage.covers(heard, slotExpected ?? p.slotExpected, SpeechCoverage.all, articles),
-  );
-
-  /// A round of `phrase_repeat` (polish pass SESSION-1b′, item 12): the round's phrase covered by the card's
-  /// `coverage_min`. Round 1 is the card's own pass ([voiceAccepted]).
-  static bool roundAccepted(PhraseRepeatPayload payload, VoiceRound round, String heard, Set<String> articles) =>
-      SpeechCoverage.covers(heard, round.expectedText, payload.coverageMin, articles);
+  /// A VALUE ROUND of «Скажи целиком» (work order FIX-2, item 5): the whole phrase with that value, in the card's
+  /// own mode. The rounds are the SERVER'S — the phone no longer works out which value comes next.
+  static bool roundAccepted(PhraseOtherSlotPayload payload, CardSayWholeRound round, String heard, SpeechRules rules) =>
+      SpeechMatch.said(heard, round.expectedText, payload.speechMode, rules);
 
   /// What should be spoken — for the live line and the hint to the recognizer.
   static String expectedSpeech(CardPayload payload) => switch (payload) {
     WordRepeatPayload(:final expectedText) => expectedText,
     PhraseRepeatPayload(:final expectedText) => expectedText,
-    PhraseOtherSlotPayload(:final expectedText) => expectedText,
-    PhraseOwnSlotPayload(:final frame) => frame.parts.before + frame.parts.after,
+    PhraseOtherSlotPayload(:final rounds) when rounds.isNotEmpty => rounds.first.expectedText,
+    PhraseOtherSlotPayload(:final frame) => frame.parts.before + frame.parts.after,
     DialogueAnswerPayload(:final ownLine) => ownLine.textTarget,
     SpeakEchoPayload(:final expectedText) => expectedText,
     SpeakRetellPayload(:final expectedText) => expectedText,

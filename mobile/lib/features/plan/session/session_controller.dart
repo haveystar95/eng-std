@@ -11,7 +11,7 @@ import '../../../data/plan/session/session_outbox.dart';
 import '../../../data/plan/session/session_outcomes.dart';
 import '../../../data/plan/session/session_queue.dart';
 import '../../../data/plan/session/session_rules.dart';
-import '../../../data/plan/session/speech_coverage.dart';
+import '../../../data/plan/session/speech_match.dart';
 
 /// Where the session stands.
 enum SessionPhase {
@@ -394,7 +394,7 @@ class SessionController extends ChangeNotifier {
     // every voice card (FIX-1 §5). Before this, any sound at all passed: the first word heard closed the card.
     if (replay) {
       final attempts = _replayAttempts.update(card.id, (n) => n + 1, ifAbsent: () => 1);
-      final accepted = SessionRules.replayAccepted(card.payload, heard, SpeechCoverage.articlesFor(plan.targetLang));
+      final accepted = SessionRules.replayAccepted(card.payload, heard, day?.speech ?? SpeechRules.none);
       if (accepted) _queue?.markAnswered(card, SessionResult.passed, attempts);
       _notify();
       return SessionJudgeOutcome(accepted: accepted, result: accepted ? SessionResult.passed : null, attempts: attempts);

@@ -11,7 +11,7 @@ import '../../../../data/plan/session/live_line.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
-import '../../../../data/plan/session/speech_coverage.dart';
+import '../../../../data/plan/session/speech_match.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
@@ -179,6 +179,11 @@ enum _Hint { none, silence, button }
 /// in the bubble with the judge's `slot_value` in sage, «by meaning ✓», a check, auto-advance. Rejected — the words
 /// that do not belong fade in the bubble, the reason, three exits over the microphone: «Try again» (brass), «Hint»,
 /// «Skip»; after the hint — two. «No hints» — no hint by silence and no «Hint».
+///
+/// AN `ask` EXCHANGE HAS NO QUESTION (work order FIX-2 §3): the learner speaks first, and the partner's line of that
+/// exchange is the ANSWER — the server sends `partner_line: null` there. The card then says «Ask, in your own words»
+/// and the own bubble holds the intent — the learner's own line in their language, in quotes. Everything else is the
+/// same: the frame hint after five seconds of silence, the judge, the exits.
 class SpeakAnswerCard extends StatefulWidget {
   const SpeakAnswerCard({super.key, required this.env, required this.payload});
 
@@ -199,6 +204,9 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
   SpeakAnswerPayload get p => widget.payload;
 
   String get _framePart => SessionRules.framePart(p.frame.frameTarget);
+
+  /// The learner speaks first here: no question to answer, and none is shown (FIX-2 §3).
+  bool get _asks => p.partnerLine == null;
 
   @override
   CardEnv get env => widget.env;
@@ -279,7 +287,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       feed: true,
       bodyGap: 16,
       fadeStop: 0.30,
-      task: SessionTask(l.planSessionTaskAnswerOwnWords),
+      task: SessionTask(_asks ? l.planSessionTaskAskYourself : l.planSessionTaskAnswerOwnWords),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -302,7 +310,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
     final v = verdict;
     if (v != null && v.accepted) {
       final slot = v.slotValue;
-      final filler = slot == null ? null : p.frame.fillers.where((f) => SpeechCoverage.containsSequence(slot, f.target, env.articles)).firstOrNull;
+      final filler = slot == null ? null : p.frame.fillers.where((f) => SpeechMatch.containsSequence(slot, f.target, env.speech)).firstOrNull;
       final parts = p.frame.parts;
       return SessionBubble(
         own: true,
@@ -326,10 +334,11 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
     if (mic.isListening && mic.partial.trim().isNotEmpty) {
       return SessionBubble(own: true, child: SessionInkLiveLine(words: LiveLine.of(mic.partial, _framePart, listening: !mic.closed)));
     }
-    // Waiting for the answer: the wave and the task in the native language.
+    // Waiting for the answer: the wave and the task in the native language — on an `ask` exchange, the INTENT
+    // («Ask: „…"»), because there is no question above it to answer (FIX-2 §3).
     return SessionBubble(
       own: true,
-      translation: p.taskNative,
+      translation: _asks ? l.planSessionAskIntent(p.taskNative) : p.taskNative,
       child: const SessionWave(heights: SessionWave.five, width: 80),
     );
   }
@@ -422,7 +431,7 @@ class _SpeakEchoCardState extends State<SpeakEchoCard> with VoiceCardState<Speak
   String get expectedSpeech => p.expectedText;
 
   @override
-  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.articles);
+  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.speech);
 
   @override
   bool get autoAdvanceOnPass => false;
@@ -623,7 +632,7 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with VoiceCardState<S
   String get expectedSpeech => p.expectedText;
 
   @override
-  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.articles);
+  bool accepts(String heard) => SessionRules.voiceAccepted(p, heard, env.speech);
 
   @override
   bool get autoAdvanceOnPass => false;

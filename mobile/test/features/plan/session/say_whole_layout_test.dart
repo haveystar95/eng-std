@@ -49,8 +49,9 @@ void main() {
     testWidgets('${entry.key}: the own word and the judge\'s refusal — the reason fits, nothing overflows', (tester) async {
       final probe = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про время — назови, когда это началось.', attempts: 1);
-      await pumpCard(tester, probeEnv(fixtureCard(day, SessionKind.phraseOwnSlot), probe), size: entry.value);
-      for (final said in ['It started three days ago', 'It started last night', 'It started this morning']) {
+      await pumpCard(tester, probeEnv(fixtureCard(day, SessionKind.phraseOtherSlot), probe), size: entry.value);
+      // Through every value round to the last one — the own word (FIX-2 §5).
+      for (final said in ['It hurts in his lower back', 'It hurts in his neck', 'It hurts in his shoulder']) {
         await sayDebug(tester, said);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 700));
@@ -58,7 +59,7 @@ void main() {
       expect(find.text('а теперь со своим словом'), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'the own round: no overflow');
 
-      const long = 'It started a very long time ago when we were all still living in the old house by the river';
+      const long = 'It hurts in a very long place we have been talking about since the old house by the river';
       await enterHeard(tester, long);
       expect(tester.takeException(), isNull, reason: 'a long live line: no overflow');
       await tester.pump(const Duration(milliseconds: 1010));

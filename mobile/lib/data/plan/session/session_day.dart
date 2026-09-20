@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import '../day_window.dart';
 import '../plan_models.dart';
 import 'session_models.dart';
+import 'speech_match.dart';
 
 /// A day stage with its cards.
 class SessionStageCards {
@@ -39,6 +40,7 @@ class SessionDay {
     required this.stages,
     this.scene,
     this.window,
+    this.speech = SpeechRules.none,
     this.skipped = 0,
   });
 
@@ -46,6 +48,11 @@ class SessionDay {
   final PlanDayRoute day;
   final PlanScene? scene;
   final List<SessionStageCards> stages;
+
+  /// WHAT A COMPARISON OF SPEECH KNOWS ABOUT THE TARGET LANGUAGE (work order FIX-2, item 2) — the target pack's own
+  /// lists and the loosening handle, once for the whole day. The phone grades a spoken attempt by these, not by a
+  /// copy of English in Dart; a day without the block forgives nothing.
+  final SpeechRules speech;
 
   /// The day window — the current stage's «≈ N min» comes from here. Null if the window did not parse: then
   /// there are no minutes.
@@ -78,8 +85,7 @@ class SessionDay {
         PhraseSlotPayload(:final frame) ||
         PhraseSlotListenPayload(:final frame) ||
         PhraseRepeatPayload(:final frame) ||
-        PhraseOtherSlotPayload(:final frame) ||
-        PhraseOwnSlotPayload(:final frame) => frame,
+        PhraseOtherSlotPayload(:final frame) => frame,
         _ => null,
       };
       if (frame != null && frame.ref == frameRef) seen ??= frame;
@@ -155,6 +161,7 @@ class SessionDay {
       scene: j['scene'] is Map<String, dynamic> ? PlanScene.fromJson(j['scene'] as Map<String, dynamic>) : null,
       stages: stages,
       window: window,
+      speech: j['speech'] is Map<String, dynamic> ? SpeechRules.fromJson(j['speech'] as Map<String, dynamic>) : SpeechRules.none,
       skipped: skipped,
     );
   }

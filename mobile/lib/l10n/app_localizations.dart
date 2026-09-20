@@ -5463,12 +5463,6 @@ abstract class AppLocalizations {
   /// **'играет'**
   String get planSessionPlaying;
 
-  /// Сессия, «Повтори фразу» (32-6) и «Скажи целиком» (32-7) с раундами (доводка SESSION-1b′, п. 12): шапка раунда мелко серым над листом — «1 из 2», «2 из 2». У карточки с одним раундом не показывается.
-  ///
-  /// In ru, this message translates to:
-  /// **'{current} из {total}'**
-  String planSessionRound(int current, int total);
-
   /// Сессия, микрофон (30-3) «не расслышал»: подпись.
   ///
   /// In ru, this message translates to:
@@ -5828,6 +5822,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Какое число прозвучало?'**
   String get planSessionWhichNumber;
+
+  /// Сессия, «Говорю сам» (35-2) на обмене ask (наряд FIX-2, п. 3): задание, когда ученик говорит первым — вопроса у такой карточки нет, отвечать не на что.
+  ///
+  /// In ru, this message translates to:
+  /// **'Спроси сам'**
+  String get planSessionTaskAskYourself;
+
+  /// Сессия, «Говорю сам» (35-2) на обмене ask (наряд FIX-2, п. 3): намерение на родном в своём пузыре — своя реплика ученика в кавычках.
+  ///
+  /// In ru, this message translates to:
+  /// **'Спроси: «{text}»'**
+  String planSessionAskIntent(String text);
 
   /// Сессия, строка задания 35-2 и 35-5. Канва — «Ответь врачу»: склонения роли контракт не отдаёт.
   ///
