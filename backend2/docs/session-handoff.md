@@ -10,7 +10,7 @@
 Branch: `main`. Last updated: 2026-09-21. Закрыт наряд **CONV-1** (только `backend2/`): **разговор с
 агентом — шестой этап дня**, под серию 37 канвы. Живая проверка на `wordtrainer_e2e_test` — **$0.124**
 (модель $0.031, озвучка $0.093) при капе наряда $1; **генераций уроков 0**; `wordtrainer` не тронут.
-Коммиты: `b8fdd15d` (код), `c247139d` (документы).
+Коммиты: `b8fdd15d` (код), `c247139d` (документы), `ebd42520` (доработка: потолок и `DayBudget`).
 Отчёт — `docs/research/conv-1/README.md`; канон — `docs/plan-v2.md` §11; решения — DECISIONS пп.
 **355–364** и три записи в «Отменено». Ворота: OpenAPI ok ×2, deptrac 0, PHPStan 0, Pest **2 354
 passed**; мутации **16 из 16** (`docs/research/conv-1/mutations.md`); EXPLAIN —
