@@ -15,8 +15,10 @@ use Illuminate\Support\Str;
 // планом и днём; ключ --since». Catches a report that counts a fatal code as a warning, misses a failed day, prints more
 // than three examples, or ignores --since.
 it('reports every code with its findings, fatal ones, days, failed days, share, counters and three examples', function () {
-    // The test database keeps the days of earlier runs: the report is read since this test began — its own days.
+    // The test database keeps the days of earlier runs (the timestamps are whole seconds): the report is read since this
+    // test began, and the failed day an earlier run of this very test left is put back to pending first.
     $since = now()->format(DATE_ATOM);
+    DB::table('plan_scenes')->where('fail_reason', 'fatal: filler.ungrammatical')->update(['lesson_status' => 'pending', 'fail_reason' => null, 'build_started_at' => null, 'checks_json' => '[]']);
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 3])['id'];
     $scenes = DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->get();

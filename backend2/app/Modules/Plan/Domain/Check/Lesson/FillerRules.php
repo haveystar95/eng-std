@@ -99,7 +99,7 @@ final class FillerRules implements LessonRule
      * What the assembly of one filler into its frame shows on its face. Without the target's words (no pack) only
      * what needs no language: a comma, a semicolon or a colon at the end, a slot, a doubled word.
      *
-     * Whether a filler ends a SENTENCE of its own is the target's rule of where a sentence ends ({@see SentenceEnds},
+     * Whether a filler carries a SENTENCE of its own is the target's rule ({@see SentenceEnds::carriesSentence()},
      * наряд CHECK-1): «See you tomorrow.» and «Yes?» do, «3 p.m.», «5:30 p.m.», «Dr. Smith» and «e.g.» do not — their
      * dot is the abbreviation's, and the live day that failed on «I'd like the 3 p.m. appointment.» was healthy English.
      *
@@ -109,7 +109,7 @@ final class FillerRules implements LessonRule
     {
         $problems = [];
         $filler = trim($filler);
-        if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->terminal($filler) !== '')) {
+        if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->carriesSentence($filler))) {
             $problems[] = 'the filler carries its own punctuation';
         }
         if (FrameText::hasSlot($filler)) {

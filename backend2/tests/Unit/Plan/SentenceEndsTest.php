@@ -24,10 +24,10 @@ function endsWithoutList(): SentenceEnds
     return new SentenceEnds((new LanguagePacks(['en' => $en]))->for('en'));
 }
 
-// Canon CHECK-1: «Точка — конец предложения, только если слово перед ней не сокращение из языкового пакета; «?» и «!» —
-// всегда конец.» Catches the live day's reading of «3 p.m.» as a sentence with its own full stop, and a rule that
-// stops reading a real full stop, a question mark or an exclamation mark.
-it('ends a text with a full stop, a question mark or an exclamation mark, and not with the dot of an abbreviation', function () {
+// Canon CHECK-1 (вердикт архитектора): «closesText — текст закончен знаком конца? Точка после сокращения в самом КОНЦЕ
+// текста закрывает его («Come at 3 p.m.» — закончен); внутри текста предложение не кончает.» Catches a rule that reads
+// a closed frame as unmarked, and one that stops reading a real full stop, a question mark or an exclamation mark.
+it('closes a text with a full stop, a question mark or an exclamation mark — an abbreviation\'s dot at the very end too', function () {
     $en = endsOf('en');
 
     expect($en->terminal('See you tomorrow.'))->toBe('.')
@@ -36,19 +36,38 @@ it('ends a text with a full stop, a question mark or an exclamation mark, and no
         ->and($en->terminal('Really?!'))->toBe('!')
         ->and($en->terminal('He said "no."'))->toBe('.')
         ->and($en->terminalKind('Yes?'))->toBe('question')
-        ->and($en->terminal('3 p.m.'))->toBe('')
-        ->and($en->terminal('5:30 p.m.'))->toBe('')
-        ->and($en->terminal('Dr. Smith'))->toBe('')
-        ->and($en->terminal('e.g.'))->toBe('')
-        ->and($en->terminal('Come at 3 p.m.'))->toBe('')
+        ->and($en->terminal('Come at 3 p.m.'))->toBe('.')
+        ->and($en->closesText('Come at 3 p.m.'))->toBeTrue()
+        ->and($en->terminalKind('Come at 3 p.m.'))->toBe('statement')
         // The list is read whatever the case: «3 P.M.» is the time too.
-        ->and($en->terminal('Come at 3 P.M.'))->toBe('')
         ->and($en->count('Ask DR. SMITH. He knows.'))->toBe(2)
-        // Of a run of marks only the ones that are no abbreviation's count: the assembly's «Come at 3 p.m..».
+        ->and($en->terminal('Dr. Smith'))->toBe('')
         ->and($en->terminal('Come at 3 p.m..'))->toBe('.')
         ->and($en->terminal('at 3 p.m.?'))->toBe('?')
         ->and($en->terminal('Hello'))->toBe('')
+        ->and($en->closesText('Hello'))->toBeFalse()
         ->and($en->terminal(''))->toBe('');
+});
+
+// Canon CHECK-1 (вердикт архитектора): «carriesSentence — наполнение несёт собственное предложение? Точка сокращения —
+// нет («3 p.m.», «Dr. Smith»); «See you tomorrow.», «Yes?» — да.» Catches the live day's reading of «3 p.m.» as a
+// sentence with its own full stop, and a rule that lets a real sentence into the slot.
+it('reads a fragment as carrying a sentence of its own by a real end mark, never by an abbreviation\'s dot', function () {
+    $en = endsOf('en');
+
+    expect($en->carriesSentence('See you tomorrow.'))->toBeTrue()
+        ->and($en->carriesSentence('Yes?'))->toBeTrue()
+        ->and($en->carriesSentence('Great!'))->toBeTrue()
+        ->and($en->carriesSentence('3 p.m.'))->toBeFalse()
+        ->and($en->carriesSentence('5:30 p.m.'))->toBeFalse()
+        ->and($en->carriesSentence('3 P.M.'))->toBeFalse()
+        ->and($en->carriesSentence('Dr. Smith'))->toBeFalse()
+        ->and($en->carriesSentence('e.g.'))->toBeFalse()
+        ->and($en->carriesSentence('at home'))->toBeFalse()
+        // Of a run of marks only the ones that are no abbreviation's count: the assembly's «Come at 3 p.m..».
+        ->and($en->carriesSentence('at 3 p.m..'))->toBeTrue()
+        ->and($en->carriesSentence('at 3 p.m.?'))->toBeTrue()
+        ->and($en->carriesSentence(''))->toBeFalse();
 });
 
 // Canon CHECK-1: «We have 3 p.m. and 5:30 p.m. today.» — одно предложение; «I'm here. Are you?» — два. Catches the live
@@ -74,7 +93,7 @@ it('counts sentences by their ends, an abbreviation\'s dot and a dot inside a nu
 it('reads every dot as an end for a pack that lists no abbreviations', function () {
     $bare = endsWithoutList();
 
-    expect($bare->terminal('3 p.m.'))->toBe('.')
+    expect($bare->carriesSentence('3 p.m.'))->toBeTrue()
         ->and($bare->count('We have 3 p.m. and 5:30 p.m. today.'))->toBe(3)
         ->and($bare->terminal('Yes?'))->toBe('?');
 });
@@ -84,7 +103,8 @@ it('reads every dot as an end for a pack that lists no abbreviations', function 
 it('reads the Russian abbreviations, a space inside one being any run of spaces', function () {
     $ru = endsOf('ru');
 
-    expect($ru->terminal('Я живу на ул.'))->toBe('')
+    expect($ru->carriesSentence('на ул.'))->toBeFalse()
+        ->and($ru->terminal('Я живу на ул.'))->toBe('.')
         ->and($ru->terminal('Я живу на улице.'))->toBe('.')
         ->and($ru->count('Т. е. так. Или нет.'))->toBe(2)
         ->and($ru->count('Т.  е. так.'))->toBe(1)

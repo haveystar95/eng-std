@@ -12,15 +12,21 @@ use App\Modules\Plan\Domain\Service\Words;
  * the dot of an abbreviation the pack lists (`abbreviations`: «3 p.m.», «Dr. Smith», «e.g.»); a question mark and an
  * exclamation mark always do. A pack without the key lists nothing, and every dot ends a sentence.
  *
- * Two questions are asked of it: does a text end with an end mark ({@see terminal()}), and how many sentences a text has
- * ({@see count()}). The live day of the order («Визит к ветеринару», day 1) failed on both being asked with a bare regex:
- * the filler «3 p.m.» was «a filler with its own full stop» (fatal), and «We have 3 p.m. and 5:30 p.m. today.» was three
- * sentences.
+ * Two questions are asked of it (решение архитектора по сдаче CHECK-1):
+ *
+ * 1. Is a TEXT closed — does it end with an end mark ({@see closesText()}, {@see terminal()} for which)? An
+ *    abbreviation's dot at the very end of the text closes it («Come at 3 p.m.» is a closed sentence, and a frame
+ *    ending so has its mark); inside the text it ends no sentence («We have 3 p.m. and 5:30 p.m. today.» is one
+ *    sentence, {@see count()}).
+ * 2. Does a FRAGMENT carry a sentence of its own ({@see carriesSentence()})? An abbreviation's dot does not («3 p.m.»,
+ *    «Dr. Smith», «e.g.» are values for a slot); «See you tomorrow.» and «Yes?» do.
+ *
+ * The live day of the order («Визит к ветеринару», day 1) failed on both being asked with a bare regex: the filler
+ * «3 p.m.» was «a filler with its own full stop» (fatal), and «We have 3 p.m. and 5:30 p.m. today.» was three sentences.
  *
  * A run of marks ends a sentence only where a sentence can end — before a space, a closing quote or bracket, or the end
  * of the text: «3.5» and «5:30» have no end in them. Of a run, only the marks that are no abbreviation's count: «See you
- * at 3 p.m..» ends with the second dot. The text ending with an abbreviation's dot («Come at 3 p.m.») ends, by this rule,
- * with no mark: the rule is one, and a filler is read by it exactly as a frame is.
+ * at 3 p.m..» carries a sentence by its second dot.
  *
  * Heuristic on purpose, like every rule of the packs: a word of the list before a dot is read as the abbreviation
  * whatever it means there — which is why a list keeps out a word that is also an ordinary one («No.»).
@@ -50,16 +56,32 @@ final readonly class SentenceEnds
             .')(?![^\s»"\'”’)\]'.$this->markClass.',;:])/iu';
     }
 
-    /** The mark a text ends with — closing quotes and brackets aside — or '' when it ends with none. */
+    /**
+     * The mark a text ends with — closing quotes and brackets aside — or '' when it ends with none. An abbreviation's
+     * dot at the very end closes the text: «Come at 3 p.m.» ends with «.».
+     */
     public function terminal(string $text): string
     {
-        $ends = $this->ends($text);
-        if ($ends === []) {
-            return '';
-        }
-        [$offset, $marks, $length] = $ends[count($ends) - 1];
+        $last = $this->last($text);
 
-        return preg_match('/^[\s»"\'”’)\]]*$/u', substr($text, $offset + $length)) === 1 ? mb_substr($marks, -1) : '';
+        return $last === null ? '' : mb_substr($last[1], -1);
+    }
+
+    /** Is the text closed — does it end with an end mark? */
+    public function closesText(string $text): bool
+    {
+        return $this->terminal($text) !== '';
+    }
+
+    /**
+     * Does a fragment carry a sentence of its own — end with a mark that is no abbreviation's? «See you tomorrow.» and
+     * «Yes?» do; «3 p.m.», «Dr. Smith» and «e.g.» do not; «at 3 p.m..» does, by its second dot.
+     */
+    public function carriesSentence(string $fragment): bool
+    {
+        $last = $this->last($fragment);
+
+        return $last !== null && ! $last[3];
     }
 
     /** What the mark a text ends with says — `question`, `statement`… — or '' when it ends with none. */
@@ -108,10 +130,29 @@ final readonly class SentenceEnds
     }
 
     /**
-     * Where the sentences of a text end: for every run of end marks that stands where a sentence can end and is not
-     * wholly an abbreviation's — [byte offset of its first mark that counts, those marks, the bytes to the run's end].
+     * The end the text closes with — the last end of {@see ends()} when nothing but spaces, closing quotes and brackets
+     * follow it — or null.
      *
-     * @return list<array{0: int, 1: string, 2: int}>
+     * @return array{0: int, 1: string, 2: int, 3: bool}|null
+     */
+    private function last(string $text): ?array
+    {
+        $ends = $this->ends($text);
+        if ($ends === []) {
+            return null;
+        }
+        $last = $ends[count($ends) - 1];
+
+        return preg_match('/^[\s»"\'”’)\]]*$/u', substr($text, $last[0] + $last[2])) === 1 ? $last : null;
+    }
+
+    /**
+     * Where the sentences of a text end: for every run of end marks that stands where a sentence can end — [byte offset
+     * of its first mark that counts, those marks, the bytes to the run's end, whether the run is wholly an
+     * abbreviation's]. A run that is wholly an abbreviation's is an end only at the very end of the text — «Come at
+     * 3 p.m.» is closed; inside the text it is left out, and «We have 3 p.m. and 5:30 p.m. today.» has one end.
+     *
+     * @return list<array{0: int, 1: string, 2: int, 3: bool}>
      */
     private function ends(string $text): array
     {
@@ -131,7 +172,9 @@ final readonly class SentenceEnds
                 $at += strlen($mark);
             }
             if ($first !== null) {
-                $out[] = [$first, $kept, $offset + strlen($run) - $first];
+                $out[] = [$first, $kept, $offset + strlen($run) - $first, false];
+            } elseif (preg_match('/^[\s»"\'”’)\]]*$/u', substr($text, $offset + strlen($run))) === 1) {
+                $out[] = [$offset, $run, strlen($run), true];
             }
         }
 

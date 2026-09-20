@@ -179,6 +179,12 @@ final readonly class LanguageWords
         return $this->ends()->terminalKind($text);
     }
 
+    /** Does a fragment (a filler) carry a sentence of its own — «See you tomorrow.», never «3 p.m.»? */
+    public function carriesSentence(string $fragment): bool
+    {
+        return $this->ends()->carriesSentence($fragment);
+    }
+
     /**
      * Does a text ask: it ends with a question mark, or — when the pack spells the word order of a question
      * (`question_word_order`) — its last sentence opens with an auxiliary and a subject pronoun, mark or no mark.

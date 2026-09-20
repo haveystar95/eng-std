@@ -679,6 +679,23 @@ it('lets a filler that ends with an abbreviation\'s dot through, and still holds
         ->and($skipped->skips->codes())->toContain(LessonCodes::FILLER_UNGRAMMATICAL);
 });
 
+// Canon CHECK-1 (вердикт архитектора): «точка после сокращения в самом конце текста закрывает его — frame.no_end_punct не
+// срабатывает». Catches a frame ending with «p.m.» read as a frame without its mark.
+it('reads a frame that ends with an abbreviation\'s dot as a frame with its mark', function () {
+    $at = static function (string $frame): array {
+        $p = lvPayload();
+        $p['phrases'][4]['frame_target'] = $frame;
+
+        return array_values(array_map(
+            static fn (LessonViolation $v): string => $v->address,
+            array_filter(lvRun($p), static fn (LessonViolation $v): bool => $v->code === LessonCodes::FRAME_NO_END_PUNCT),
+        ));
+    };
+
+    expect($at('He will rest until ___ p.m.'))->toBe([])
+        ->and($at('He will rest until ___ p.m'))->toBe(['p5']);
+});
+
 // Live day CHECK-1: «We have 3 p.m. and 5:30 p.m. today.» was counted as three sentences (`partner.too_long`). Canon: the
 // partner's sentences are counted by the same rule of where a sentence ends. Catches a count by every dot, and one that
 // no longer counts real sentences.
