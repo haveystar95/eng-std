@@ -1,0 +1,212 @@
+[
+  {
+    "name": "1. точка сокращения снова конец предложения",
+    "rule": "точка — конец, только если слово перед ней не сокращение пакета",
+    "defect": "маска сокращений не строится — каждая точка конец",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": "        $listed = $pack->has('abbreviations') ? $pack->words('abbreviations') : [];",
+    "replace": "        $listed = [];",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "not with the dot of an abbreviation"
+      },
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "lets a filler that ends with an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "2. знак вопроса после сокращения теряется",
+    "rule": "«?» и «!» — всегда конец; из прогона знаков считаются те, что не сокращения",
+    "defect": "прогон знаков, начатый точкой сокращения, отбрасывается целиком",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": "                if (! isset($masked[$at])) {\n                    $kept .= $mark;\n                    $first ??= $at;\n                }",
+    "replace": "                if (! isset($masked[$offset])) {\n                    $kept .= $mark;\n                    $first ??= $at;\n                }",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "not with the dot of an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "3. точка внутри числа — конец",
+    "rule": "прогон знаков — конец только перед пробелом, закрывающей кавычкой или концом текста",
+    "defect": "«3.5» режется на два предложения",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": "preg_match_all('/['.$this->markClass.']+(?=[\\s»\"\\'”’)\\]]|$)/u', $text, $runs, PREG_OFFSET_CAPTURE);",
+    "replace": "preg_match_all('/['.$this->markClass.']+/u', $text, $runs, PREG_OFFSET_CAPTURE);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "counts sentences by their ends"
+      }
+    ]
+  },
+  {
+    "name": "4. сокращение читается только в своём регистре",
+    "rule": "список читается без учёта регистра",
+    "defect": "«DR. SMITH» — конец предложения",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": ".')(?![^\\s»\"\\'”’)\\]'.$this->markClass.',;:])/iu';",
+    "replace": ".')(?![^\\s»\"\\'”’)\\]'.$this->markClass.',;:])/u';",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "not with the dot of an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "5. пробел внутри русского сокращения — один пробел",
+    "rule": "пробел внутри сокращения — любой прогон пробелов",
+    "defect": "«Т.  е.» не сокращение",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": "str_replace(' ', '\\s+', preg_quote($a, '/'))",
+    "replace": "preg_quote($a, '/')",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "reads the Russian abbreviations"
+      }
+    ]
+  },
+  {
+    "name": "6. наполнение с целым предложением проходит",
+    "rule": "filler.ungrammatical: целое предложение в окне — фатально",
+    "defect": "конец предложения у наполнения не читается",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/FillerRules.php",
+    "find": "if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->terminal($filler) !== '')) {",
+    "replace": "if (preg_match('/[,;:]$/u', $filler) === 1) {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "lets a filler that ends with an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "7. запятая в конце наполнения проходит",
+    "rule": "запятая, точка с запятой, двоеточие в конце наполнения — как было",
+    "defect": "языконезависимая проверка запятой снята",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/FillerRules.php",
+    "find": "if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->terminal($filler) !== '')) {",
+    "replace": "if ($words !== null && $words->terminal($filler) !== '') {",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "lets a filler that ends with an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "8. filler.ungrammatical читает точки без ключа sentence_ends",
+    "rule": "проверка, читающая знаки конца, спрашивает пакет о sentence_ends",
+    "defect": "ключ sentence_ends не спрашивается — пакет без него роняет проверку вместо пропуска",
+    "file": "app/Modules/Plan/Domain/Check/Lesson/FillerRules.php",
+    "find": "LanguageSide::Target, 'sentence_ends', 'articles', 'article_sound', 'clause', 'seam_repeatable_words');",
+    "replace": "LanguageSide::Target, 'articles', 'article_sound', 'clause', 'seam_repeatable_words');",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "lets a filler that ends with an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "9. предложения собеседника считаются по каждой точке",
+    "rule": "partner.too_long — предложения по правилу конца предложения",
+    "defect": "счёт предложений — по прогонам знаков без маски",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": "        foreach ($this->ends($text) as [$offset, , $length]) {\n            $out[] = substr($text, $from, $offset - $from);",
+    "replace": "        preg_match_all('/['.$this->markClass.']+/u', $text, $all, PREG_OFFSET_CAPTURE);\n        foreach ($all[0] as [$run, $offset]) {\n            $length = strlen($run);\n            $out[] = substr($text, $from, $offset - $from);",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "counts the partner"
+      }
+    ]
+  },
+  {
+    "name": "10. en без списка сокращений",
+    "rule": "en — a.m., p.m., e.g., i.e., etc., vs., Mr., Mrs., Ms., Dr., St.",
+    "defect": "ключ en пуст",
+    "file": "config/lesson/lang/en.php",
+    "find": "    'abbreviations' => ['a.m.', 'p.m.', 'e.g.', 'i.e.', 'etc.', 'vs.', 'Mr.', 'Mrs.', 'Ms.', 'Dr.', 'St.'],",
+    "replace": "    'abbreviations' => [],",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "lets a filler that ends with an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "11. ru без списка сокращений",
+    "rule": "ru — т. е., т. д., т. п., г., ул.",
+    "defect": "ключ ru пуст",
+    "file": "config/lesson/lang/ru.php",
+    "find": "    'abbreviations' => ['т. е.', 'т. д.', 'т. п.', 'г.', 'ул.'],",
+    "replace": "    'abbreviations' => [],",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "reads the Russian abbreviations"
+      }
+    ]
+  },
+  {
+    "name": "12. check-report: фатальный код считается предупреждением",
+    "rule": "check-report — из них фатальных по LessonGate",
+    "defect": "столбец fatal всегда 0",
+    "file": "app/Modules/Plan/Infrastructure/Console/PlanCheckReportCommand.php",
+    "find": "                LessonGate::isFatal($code) ? $c['findings'] : 0,",
+    "replace": "                0,",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/PlanCheckReportTest.php"
+      }
+    ]
+  },
+  {
+    "name": "13. check-report: день failed не читается из fail_reason",
+    "rule": "check-report — дней ушло в failed по fail_reason",
+    "defect": "failed days всегда 0",
+    "file": "app/Modules/Plan/Infrastructure/Console/PlanCheckReportCommand.php",
+    "find": "            if ((string) $row->lesson_status === 'failed' && in_array($code, self::failedOn((string) $row->fail_reason), true)) {",
+    "replace": "            if (false) {",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/PlanCheckReportTest.php"
+      }
+    ]
+  },
+  {
+    "name": "14. check-report: больше трёх примеров",
+    "rule": "check-report — 3 примера на код",
+    "defect": "примеры не ограничены",
+    "file": "app/Modules/Plan/Infrastructure/Console/PlanCheckReportCommand.php",
+    "find": "            if (count($byCode[$code]['examples']) < self::EXAMPLES) {",
+    "replace": "            if (true) {",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/PlanCheckReportTest.php"
+      }
+    ]
+  },
+  {
+    "name": "15. check-report: --since не читается",
+    "rule": "check-report — ключ --since",
+    "defect": "дни не фильтруются по --since",
+    "file": "app/Modules/Plan/Infrastructure/Console/PlanCheckReportCommand.php",
+    "find": "        $query = DB::table('plan_scenes as s')->whereIn('s.lesson_status', ['ready', 'failed']);\n        if ($from !== null) {",
+    "replace": "        $query = DB::table('plan_scenes as s')->whereIn('s.lesson_status', ['ready', 'failed']);\n        if (false) {",
+    "tests": [
+      {
+        "path": "tests/Feature/Plan/PlanCheckReportTest.php"
+      }
+    ]
+  }
+]

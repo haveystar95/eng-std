@@ -1,0 +1,327 @@
+{
+    "airport-day1": {
+        "codes": {
+            "frame.adjacent_repeat": 1,
+            "frame.native_agreement": 1,
+            "pronunciation.foreign_script": 4,
+            "pronunciation.script": 4,
+            "vocab.used_in_wrong": 3
+        },
+        "fatal": 4,
+        "findings": [
+            "pronunciation.foreign_script@p1.f1: the reading «май паспoрт» is spelled with letters of another writing: «o»",
+            "pronunciation.script@p1.f1: the reading «май паспoрт» leaves the native script",
+            "pronunciation.foreign_script@v1: the reading «паспoрт» is spelled with letters of another writing: «o»",
+            "pronunciation.script@v1: the reading «паспoрт» leaves the native script",
+            "pronunciation.foreign_script@B1: the reading «Хиэр из май паспoрт.» is spelled with letters of another writing: «o»",
+            "pronunciation.script@B1: the reading «Хиэр из май паспoрт.» leaves the native script",
+            "pronunciation.foreign_script@B7: the reading «Сoри, куд ю сэй зэт мор слoули?» is spelled with letters of another writing: «o»",
+            "pronunciation.script@B7: the reading «Сoри, куд ю сэй зэт мор слoули?» leaves the native script",
+            "frame.adjacent_repeat@x2: exchanges 1 and 2 both stand on p1",
+            "frame.native_agreement@p3: «Я хочу сдать этот ___.»: «этот» agrees with the slot — it changes with the filler",
+            "vocab.used_in_wrong@v5: «window seat» is not in the partner's line of exchange 5",
+            "vocab.used_in_wrong@v5: «window seat» is not in the partner's line of exchange 8",
+            "vocab.used_in_wrong@v8: «boarding pass» is not in the partner's line of exchange 1"
+        ]
+    },
+    "airport-day2-v4.5": {
+        "codes": {
+            "check.verbatim": 2,
+            "variant.longer": 1,
+            "vocab.used_in_wrong": 2
+        },
+        "fatal": 0,
+        "findings": [
+            "variant.longer@B7: the variant «I'll take out three kilos.» has 5 words, the line 4",
+            "check.verbatim@x4.check: the right option «Clothes and books» repeats «clothes and» of the partner's line",
+            "check.verbatim@x8.check: the right option «Wear it or hold it» repeats «wear it» of the partner's line",
+            "vocab.used_in_wrong@v7: «sharp item» is not in the partner's line of exchange 5",
+            "vocab.used_in_wrong@v7: «sharp item» is not in the partner's line of exchange 6"
+        ]
+    },
+    "airport-day2-v4.6": {
+        "codes": {
+            "check.verbatim": 2,
+            "variant.longer": 2,
+            "vocab.used_in_wrong": 2
+        },
+        "fatal": 0,
+        "findings": [
+            "variant.longer@B7: the variant «My shampoo goes in checked baggage.» has 6 words, the line 4",
+            "variant.longer@B8: the variant «Okay, it's under the limit now.» has 6 words, the line 5",
+            "check.verbatim@x3.check: the right option «It can stay with the passenger.» repeats «can stay» of the partner's line",
+            "check.verbatim@x4.check: the right option «Some things into the backpack.» repeats «the backpack» of the partner's line",
+            "vocab.used_in_wrong@v1: «overweight» is not in the partner's line of exchange 1",
+            "vocab.used_in_wrong@v2: «extra fee» is not in the partner's line of exchange 2"
+        ]
+    },
+    "bank-day1": {
+        "codes": {
+            "check.verbatim": 1,
+            "frame.unresolved_pronoun": 1,
+            "vocab.used_in_wrong": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.unresolved_pronoun@p2: «I need it for ___.» leans on «it», and nothing in the frame is what it stands for",
+            "check.verbatim@x3.check: the right option «How long the learner will remain» repeats «how long» of the partner's line",
+            "vocab.used_in_wrong@v8: «monthly fee» is not in frame p8 or its fillers"
+        ]
+    },
+    "bank-day2-v4.5": {
+        "codes": {
+            "frame.unresolved_pronoun": 1,
+            "listening.same_exchange": 1,
+            "variant.longer": 1,
+            "vocab.abbreviation": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.unresolved_pronoun@p7: «I'll use it for ___.» leans on «it», and nothing in the frame is what it stands for",
+            "variant.longer@B2: the variant «Can I use it on my phone?» has 7 words, the line 5",
+            "listening.same_exchange@L4: L3 and this question are both about exchange 7",
+            "vocab.abbreviation@v4: «PIN» is an abbreviation or an acronym — a word of the day only when the learner's language has an everyday word for it"
+        ]
+    },
+    "bank-day2-v4.6": {
+        "codes": {
+            "check.verbatim": 1,
+            "frame.unresolved_pronoun": 1,
+            "learner.restates_partner": 1,
+            "rescue.new_fact": 1,
+            "vocab.abbreviation": 2,
+            "vocab.used_in_wrong": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.unresolved_pronoun@p2: «Does it come ___?» leans on «it», and nothing in the frame is what it stands for",
+            "learner.restates_partner@B8: «The limit is three hundred euros.» repeats 6 of 9 words of the partner's «The daily cash withdrawal limit is three hundred euros.» (the, limit, is, three, hundred, euros)",
+            "rescue.new_fact@A6: the repeat says «card», «enter», which exchange 5 did not",
+            "check.verbatim@x2.check: the right option «To your address» repeats «your address» of the partner's line",
+            "vocab.abbreviation@v5: «PIN» is an abbreviation or an acronym — a word of the day only when the learner's language has an everyday word for it",
+            "vocab.abbreviation@v7: «ATM» is an abbreviation or an acronym — a word of the day only when the learner's language has an everyday word for it",
+            "vocab.used_in_wrong@v8: «withdrawal limit» is not in frame p7 or its fillers"
+        ]
+    },
+    "doctor-day1": {
+        "codes": {
+            "check.verbatim": 2,
+            "exchange.second_question": 1,
+            "filler.one_in_dialogue": 1,
+            "frame.native_agreement": 1,
+            "frame.native_alternatives": 1,
+            "learner.restates_partner": 1,
+            "line.ne_frame": 1,
+            "vocab.used_in_wrong": 1
+        },
+        "fatal": 2,
+        "findings": [
+            "exchange.second_question@x3: the closing message of A «Yes. What was the highest temperature?» ends with a question mark",
+            "frame.native_agreement@p1: «У него ___.»: «него» agrees with the slot — it changes with the filler",
+            "frame.native_alternatives@p4: «Я дал(а) ему ___.» writes alternatives inside the frame",
+            "filler.one_in_dialogue@p5.f1: «a viral infection» is marked in_dialogue, but no line says it",
+            "line.ne_frame@B5: «So it looks like a viral infection.» is not «It looks like ___.» with any of its fillers («a viral infection», «strep throat», «a cold»)",
+            "learner.restates_partner@B5: «So it looks like a viral infection.» repeats 6 of 10 words of the partner's «His throat is red. It looks like a viral infection.» (it, looks, like, a, viral, infection)",
+            "check.verbatim@x3.check: the right option «The highest reading» repeats «the highest» of the partner's line",
+            "check.verbatim@x7.check: the right option «Check his temperature» repeats «check his» of the partner's line",
+            "vocab.used_in_wrong@v8: «warning sign» is not in frame p7 or its fillers"
+        ]
+    },
+    "doctor-day2-v4.5": {
+        "codes": {
+            "frame.native_agreement": 2,
+            "variant.longer": 2,
+            "vocab.everyday_word": 1,
+            "vocab.learner_share": 1,
+            "vocab.used_in_wrong": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.native_agreement@p2: «У него ___.»: «него» agrees with the slot — it changes with the filler",
+            "frame.native_agreement@p6: «Вам нужны ___?»: «нужны» agrees with the slot — it changes with the filler",
+            "variant.longer@B1: the variant «The appointment is for my son.» has 6 words, the line 4",
+            "variant.longer@B5: the variant «How long is the waiting time?» has 6 words, the line 5",
+            "vocab.used_in_wrong@v4: «waiting time» is not in frame p5 or its fillers",
+            "vocab.everyday_word@v7: «room» is a plain everyday word or a word of the STOP LIST",
+            "vocab.learner_share@lesson: 3 of 8 items are in the learner's frames or fillers (at least half)"
+        ]
+    },
+    "doctor-day2-v4.6": {
+        "codes": {
+            "check.verbatim": 2,
+            "frame.native_agreement": 2,
+            "variant.longer": 1,
+            "vocab.learner_share": 1,
+            "vocab.used_in_wrong": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.native_agreement@p4: «У него ___.»: «него» agrees with the slot — it changes with the filler",
+            "frame.native_agreement@p7: «Вам нужен ___?»: «нужен» agrees with the slot — it changes with the filler",
+            "variant.longer@B1: the variant «The appointment is for my son.» has 6 words, the line 4",
+            "check.verbatim@x4.check: the right option «The doctor should see him shortly» repeats «see him» of the partner's line",
+            "check.verbatim@x5.check: the right option «To room 12 at the end of the corridor» repeats «the end» of the partner's line",
+            "vocab.used_in_wrong@v1: «appointment» is not in frame p3 or its fillers",
+            "vocab.learner_share@lesson: 2 of 8 items are in the learner's frames or fillers (at least half)"
+        ]
+    },
+    "interview-day1": {
+        "codes": {
+            "check.verbatim": 1,
+            "frame.unresolved_pronoun": 1,
+            "vocab.nested": 1,
+            "vocab.used_in_wrong": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.unresolved_pronoun@p4: «I would describe it as ___.» leans on «it», and nothing in the frame is what it stands for",
+            "check.verbatim@x6.check: the right option «Product and engineering» repeats «and engineering» of the partner's line",
+            "vocab.used_in_wrong@v6: «responsibilities» is not in the partner's line of exchange 6",
+            "vocab.nested@v4: «manage» is inside «hiring manager» (v7)"
+        ]
+    },
+    "interview-day2-v4.5": {
+        "codes": {
+            "native.gendered_past": 6,
+            "vocab.used_in_wrong": 3
+        },
+        "fatal": 0,
+        "findings": [
+            "vocab.used_in_wrong@v3: «reprioritize» is not in the partner's line of exchange 3",
+            "vocab.used_in_wrong@v7: «two-week sprint» is not in the partner's line of exchange 6",
+            "vocab.used_in_wrong@v7: «two-week sprint» is not in the partner's line of exchange 7",
+            "native.gendered_past@B2: «Я руководил командой из шести человек.» says «руководил» about the learner while the learner's gender is unknown",
+            "native.gendered_past@B3: «Я пересматривал приоритеты в роадмапе.» says «пересматривал» about the learner while the learner's gender is unknown",
+            "native.gendered_past@B4: «Я давал еженедельные обновления.» says «давал» about the learner while the learner's gender is unknown",
+            "native.gendered_past@p2: «Я руководил ___.» says «руководил» about the learner while the learner's gender is unknown",
+            "native.gendered_past@p3: «Я пересматривал приоритеты в ___.» says «пересматривал» about the learner while the learner's gender is unknown",
+            "native.gendered_past@p4: «Я давал ___.» says «давал» about the learner while the learner's gender is unknown"
+        ]
+    },
+    "interview-day2-v4.6": {
+        "codes": {
+            "native.gendered_past": 4,
+            "pronunciation.foreign_script": 1,
+            "pronunciation.script": 1,
+            "variant.longer": 1
+        },
+        "fatal": 1,
+        "findings": [
+            "pronunciation.foreign_script@p1.f2: the reading «э პლэтформ майгрейшн» is spelled with letters of another writing: «პ», «ლ»",
+            "pronunciation.script@p1.f2: the reading «э პლэтформ майгрейшн» leaves the native script",
+            "variant.longer@B4: the variant «I made the scope smaller.» has 5 words, the line 4",
+            "native.gendered_past@B3: «Я опирался на еженедельное планирование.» says «опирался» about the learner while the learner's gender is unknown",
+            "native.gendered_past@B4: «Я сокращал объём задач.» says «сокращал» about the learner while the learner's gender is unknown",
+            "native.gendered_past@p3: «Я опирался на ___.» says «опирался» about the learner while the learner's gender is unknown",
+            "native.gendered_past@p4: «Я сокращал ___.» says «сокращал» about the learner while the learner's gender is unknown"
+        ]
+    },
+    "rent-day1": {
+        "codes": {
+            "check.verbatim": 1,
+            "frame.unresolved_pronoun": 2,
+            "listening.distractor_not_filler": 1,
+            "listening.same_exchange": 1,
+            "native.gendered_past": 2,
+            "variant.longer": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.unresolved_pronoun@p1: «I need it for ___.» leans on «it», and nothing in the frame is what it stands for",
+            "frame.unresolved_pronoun@p8: «Can I pay it ___?» leans on «it», and nothing in the frame is what it stands for",
+            "variant.longer@B6: the variant «Can I keep a cat?» has 5 words, the line 4",
+            "check.verbatim@x3.check: the right option «Power and internet» repeats «and internet» of the partner's line",
+            "listening.same_exchange@L3: L1 and this question are both about exchange 1",
+            "listening.distractor_not_filler@L1: the question asks p1's slot («год»): the right option «На год» is a number or a time, the wrong option «На полгода» is neither a number nor a time",
+            "native.gendered_past@B7: «Я хотел бы въехать в следующем месяце.» says «хотел» about the learner while the learner's gender is unknown",
+            "native.gendered_past@p7: «Я хотел бы въехать ___.» says «хотел» about the learner while the learner's gender is unknown"
+        ]
+    },
+    "rent-day2-v4.5": {
+        "codes": {
+            "check.verbatim": 1,
+            "listening.same_exchange": 1,
+            "variant.longer": 1,
+            "vocab.used_in_wrong": 2
+        },
+        "fatal": 0,
+        "findings": [
+            "variant.longer@B2: the variant «How do I get the deposit back?» has 7 words, the line 5",
+            "check.verbatim@x3.check: the right option «Electricity and internet» repeats «electricity and» of the partner's line",
+            "listening.same_exchange@L4: L3 and this question are both about exchange 6",
+            "vocab.used_in_wrong@v1: «lease» is not in the partner's line of exchange 8",
+            "vocab.used_in_wrong@v5: «move-out» is not in the partner's line of exchange 5"
+        ]
+    },
+    "rent-day2-v4.6": {
+        "codes": {
+            "rescue.new_fact": 1,
+            "variant.longer": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "variant.longer@B5: the variant «Do I pay electricity separately?» has 5 words, the line 4",
+            "rescue.new_fact@A6: the repeat says «extra», «set», which exchange 5 did not"
+        ]
+    },
+    "restaurant-day1": {
+        "codes": {
+            "check.verbatim": 2,
+            "frame.unresolved_pronoun": 1,
+            "variant.longer": 2,
+            "vocab.learner_share": 1,
+            "vocab.used_in_wrong": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.unresolved_pronoun@p4: «Does it have ___?» leans on «it», and nothing in the frame is what it stands for",
+            "variant.longer@B3: the variant «What is in the pasta?» has 5 words, the line 4",
+            "variant.longer@B4: the variant «Are there nuts in it?» has 5 words, the line 4",
+            "check.verbatim@x2.check: the right option «Whether they can order now» repeats «order now» of the partner's line",
+            "check.verbatim@x6.check: the right option «Potatoes and vegetables» repeats «potatoes and» of the partner's line",
+            "vocab.used_in_wrong@v4: «nuts» is not in frame p5 or its fillers",
+            "vocab.learner_share@lesson: 3 of 8 items are in the learner's frames or fillers (at least half)"
+        ]
+    },
+    "restaurant-day2-v4.5": {
+        "codes": {
+            "frame.count": 1,
+            "frame.twin": 2,
+            "frame.unused": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.count@lesson: 8 frames for 7 answer/ask exchanges (at most all of them)",
+            "frame.twin@p4: «Can I pay ___?» / «Можно оплатить ___?» is the target pattern of p3",
+            "frame.twin@p5: «Could we pay on ___?» / «Можно оплатить ___?» is the native pattern of p3",
+            "frame.unused@p8: no learner line stands on «One person will pay.»"
+        ]
+    },
+    "restaurant-day2-v4.6": {
+        "codes": {
+            "check.verbatim": 1,
+            "partner.two_questions": 1,
+            "vocab.nested": 1,
+            "vocab.used_in_wrong": 2
+        },
+        "fatal": 0,
+        "findings": [
+            "partner.two_questions@A7: «Will one person pay, or are you splitting it?» asks two things at once",
+            "check.verbatim@x4.check: the right option «At the table.» repeats «the table» of the partner's line",
+            "vocab.used_in_wrong@v6: «card machine» is not in the partner's line of exchange 5",
+            "vocab.used_in_wrong@v7: «split the bill» is not in the partner's line of exchange 7",
+            "vocab.nested@v1: «bill» is inside «split the bill» (v7)"
+        ]
+    },
+    "vet-day1-attempt2": {
+        "codes": {
+            "frame.native_agreement": 1,
+            "vocab.abbreviation": 1
+        },
+        "fatal": 0,
+        "findings": [
+            "frame.native_agreement@p1: «___ нужен ветеринар.»: «нужен» agrees with the slot — it changes with the filler",
+            "vocab.abbreviation@v6: «ID» is an abbreviation or an acronym — a word of the day only when the learner's language has an everyday word for it"
+        ]
+    }
+}

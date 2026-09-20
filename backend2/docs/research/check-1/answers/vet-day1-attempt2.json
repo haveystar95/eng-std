@@ -1,0 +1,751 @@
+{
+  "topic": {
+    "title_target": "Making a vet appointment",
+    "title_native": "Запись к ветеринару",
+    "description_target": "Book a visit for your dog, say the main problem, ask about times, and ask what to bring.",
+    "description_native": "Запишитесь на приём для собаки, назовите главную проблему, спросите о времени и о том, что нужно принести."
+  },
+  "learner_role": {
+    "role_target": "Pet owner",
+    "role_native": "Хозяин"
+  },
+  "role_gender": "female",
+  "dialogue": [
+    {
+      "step": 1,
+      "kind": "answer",
+      "initiator": "A",
+      "messages": [
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "Hello. How can I help you today?",
+          "text_native": "Здравствуйте. Чем я могу вам помочь сегодня?"
+        },
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p1",
+          "filler": "my dog",
+          "text_target": "My dog needs a vet.",
+          "text_native": "Моей собаке нужен ветеринар.",
+          "pronunciation_native": "Май дог нийдз э вет.",
+          "speaking_key": "needs a vet",
+          "simplified_variants": [
+            "I need a vet.",
+            "My dog needs help."
+          ]
+        }
+      ],
+      "check": {
+        "text_target": "What does the receptionist ask at the start?",
+        "text_native": "О чём администратор спрашивает в начале?",
+        "options": [
+          {
+            "text_target": "Why the pet is sick",
+            "text_native": "Почему питомец заболел"
+          },
+          {
+            "text_target": "What help is needed today",
+            "text_native": "Какая помощь нужна сегодня"
+          },
+          {
+            "text_target": "Which doctor you want",
+            "text_native": "Какого врача вы хотите"
+          }
+        ],
+        "correct_option_index": 1,
+        "explanation_native": "Администратор начинает с общего вопроса о том, чем помочь сегодня."
+      }
+    },
+    {
+      "step": 2,
+      "kind": "answer",
+      "initiator": "A",
+      "messages": [
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "What seems to be the problem?",
+          "text_native": "В чём, похоже, проблема?"
+        },
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p2",
+          "filler": "a rash",
+          "text_target": "My dog has a rash.",
+          "text_native": "У моей собаки сыпь.",
+          "pronunciation_native": "Май дог хэз э рэш.",
+          "speaking_key": "has a",
+          "simplified_variants": [
+            "There is a rash.",
+            "My dog has spots."
+          ]
+        }
+      ],
+      "check": {
+        "text_target": "What is the receptionist asking about?",
+        "text_native": "О чём спрашивает администратор?",
+        "options": [
+          {
+            "text_target": "The main issue with the dog",
+            "text_native": "Какая у собаки основная проблема"
+          },
+          {
+            "text_target": "The dog's age",
+            "text_native": "Сколько собаке лет"
+          },
+          {
+            "text_target": "Your phone number",
+            "text_native": "Ваш номер телефона"
+          }
+        ],
+        "correct_option_index": 0,
+        "explanation_native": "Администратор спрашивает, в чём именно проблема у собаки."
+      }
+    },
+    {
+      "step": 3,
+      "kind": "answer",
+      "initiator": "A",
+      "messages": [
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "Is the rash all over the body?",
+          "text_native": "Сыпь по всему телу?"
+        },
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p3",
+          "filler": "all over the body",
+          "text_target": "Yes, it's all over the body.",
+          "text_native": "Да, она по всему телу.",
+          "pronunciation_native": "Йес, итс ол оувэр зэ боди.",
+          "speaking_key": "all over the",
+          "simplified_variants": [
+            "Yes, everywhere.",
+            "Yes, on the whole body."
+          ]
+        }
+      ],
+      "check": {
+        "text_target": "What location does the receptionist mention?",
+        "text_native": "Какое место упоминает администратор?",
+        "options": [
+          {
+            "text_target": "Only the legs",
+            "text_native": "Только лапы"
+          },
+          {
+            "text_target": "The whole body",
+            "text_native": "Всё тело"
+          },
+          {
+            "text_target": "Just the ears",
+            "text_native": "Только уши"
+          }
+        ],
+        "correct_option_index": 1,
+        "explanation_native": "Администратор уточняет, по всему ли телу сыпь."
+      }
+    },
+    {
+      "step": 4,
+      "kind": "answer",
+      "initiator": "A",
+      "messages": [
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "What is your dog's name?",
+          "text_native": "Как зовут вашу собаку?"
+        },
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p4",
+          "filler": "Buddy",
+          "text_target": "My dog's name is Buddy.",
+          "text_native": "Мою собаку зовут Бадди.",
+          "pronunciation_native": "Май догз нейм из Бадди.",
+          "speaking_key": "name is",
+          "simplified_variants": [
+            "It's Buddy.",
+            "His name is Buddy."
+          ]
+        }
+      ],
+      "check": {
+        "text_target": "What information does the receptionist want?",
+        "text_native": "Какую информацию хочет администратор?",
+        "options": [
+          {
+            "text_target": "The pet's name",
+            "text_native": "Кличку питомца"
+          },
+          {
+            "text_target": "The pet's weight",
+            "text_native": "Вес питомца"
+          },
+          {
+            "text_target": "The owner's address",
+            "text_native": "Адрес хозяина"
+          }
+        ],
+        "correct_option_index": 0,
+        "explanation_native": "Администратор просит назвать кличку собаки."
+      }
+    },
+    {
+      "step": 5,
+      "kind": "ask",
+      "initiator": "B",
+      "messages": [
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p5",
+          "filler": "today",
+          "text_target": "Do you have anything today?",
+          "text_native": "У вас есть что-нибудь на сегодня?",
+          "pronunciation_native": "Ду ю хэв энисинг тудэй?",
+          "speaking_key": "have anything",
+          "simplified_variants": [
+            "Any time today?",
+            "Is there time today?"
+          ]
+        },
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "We have 3 p.m. and 5:30 p.m. today.",
+          "text_native": "Сегодня у нас есть время на 3 дня и на 5:30 вечера."
+        }
+      ],
+      "check": {
+        "text_target": "Which times does the receptionist offer?",
+        "text_native": "Какое время предлагает администратор?",
+        "options": [
+          {
+            "text_target": "At noon and late evening",
+            "text_native": "В полдень и поздно вечером"
+          },
+          {
+            "text_target": "In the morning and at lunch",
+            "text_native": "Утром и в обед"
+          },
+          {
+            "text_target": "Mid-afternoon and early evening",
+            "text_native": "Во второй половине дня и ранним вечером"
+          }
+        ],
+        "correct_option_index": 2,
+        "explanation_native": "Администратор предлагает два времени сегодня: одно днём и одно ближе к вечеру."
+      }
+    },
+    {
+      "step": 6,
+      "kind": "ask",
+      "initiator": "B",
+      "messages": [
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p6",
+          "filler": "3 p.m.",
+          "text_target": "I'd like the 3 p.m. appointment.",
+          "text_native": "Я бы хотел запись на 3 дня.",
+          "pronunciation_native": "Айд лайк зэ сри пи эм эпойнтмэнт.",
+          "speaking_key": "I'd like the",
+          "simplified_variants": [
+            "The 3 p.m. time, please.",
+            "3 p.m. works for me."
+          ]
+        },
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "Okay, I can book you for 3 p.m.",
+          "text_native": "Хорошо, я могу записать вас на 3 дня."
+        }
+      ],
+      "check": {
+        "text_target": "What does the receptionist confirm?",
+        "text_native": "Что подтверждает администратор?",
+        "options": [
+          {
+            "text_target": "The later slot is taken",
+            "text_native": "Более позднее время уже занято"
+          },
+          {
+            "text_target": "The 3 p.m. visit is booked",
+            "text_native": "Визит на 3 часа записан"
+          },
+          {
+            "text_target": "You need to call back tomorrow",
+            "text_native": "Вам нужно позвонить завтра"
+          }
+        ],
+        "correct_option_index": 1,
+        "explanation_native": "Администратор подтверждает запись на 3 часа."
+      }
+    },
+    {
+      "step": 7,
+      "kind": "ask",
+      "initiator": "B",
+      "messages": [
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p7",
+          "filler": "bring",
+          "text_target": "What should I bring?",
+          "text_native": "Что мне нужно принести?",
+          "pronunciation_native": "Уот шуд ай бринг?",
+          "speaking_key": "should I",
+          "simplified_variants": [
+            "What do I bring?",
+            "What should I take?"
+          ]
+        },
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "Please bring your ID and the dog's vaccination record.",
+          "text_native": "Пожалуйста, принесите ваш документ и карту прививок собаки."
+        }
+      ],
+      "check": {
+        "text_target": "What two things does the receptionist ask for?",
+        "text_native": "Какие две вещи просит принести администратор?",
+        "options": [
+          {
+            "text_target": "A payment card and a photo",
+            "text_native": "Банковскую карту и фотографию"
+          },
+          {
+            "text_target": "An ID and the vaccine record",
+            "text_native": "Документ и карту прививок"
+          },
+          {
+            "text_target": "A toy and some food",
+            "text_native": "Игрушку и немного еды"
+          }
+        ],
+        "correct_option_index": 1,
+        "explanation_native": "Администратор просит принести удостоверение и карту прививок собаки."
+      }
+    },
+    {
+      "step": 8,
+      "kind": "ask",
+      "initiator": "B",
+      "messages": [
+        {
+          "speaker": "B",
+          "role_target": "Pet owner",
+          "role_native": "Хозяин",
+          "phrase_id": "p8",
+          "filler": "arrive",
+          "text_target": "How early should I arrive?",
+          "text_native": "Насколько заранее мне нужно прийти?",
+          "pronunciation_native": "Хау ёрли шуд ай эрайв?",
+          "speaking_key": "should I arrive",
+          "simplified_variants": [
+            "How early do I come?",
+            "When should I arrive?"
+          ]
+        },
+        {
+          "speaker": "A",
+          "role_target": "Receptionist",
+          "role_native": "Администратор",
+          "text_target": "Please arrive 10 minutes early for the form.",
+          "text_native": "Пожалуйста, придите на 10 минут раньше для анкеты."
+        }
+      ],
+      "check": {
+        "text_target": "How much earlier should you come?",
+        "text_native": "Насколько раньше вам нужно прийти?",
+        "options": [
+          {
+            "text_target": "A quarter of an hour before",
+            "text_native": "За пятнадцать минут"
+          },
+          {
+            "text_target": "Ten minutes before",
+            "text_native": "За десять минут"
+          },
+          {
+            "text_target": "Right on time",
+            "text_native": "Точно ко времени"
+          }
+        ],
+        "correct_option_index": 1,
+        "explanation_native": "Администратор просит прийти за десять минут до приёма."
+      }
+    }
+  ],
+  "phrases": [
+    {
+      "id": "p1",
+      "kind": "answer",
+      "frame_target": "___ needs a vet.",
+      "frame_native": "___ нужен ветеринар.",
+      "pronunciation_native": "___ нийдз э вет.",
+      "slot": {
+        "hint_native": "кому нужен ветеринар",
+        "fillers": [
+          {
+            "target": "my dog",
+            "native": "моей собаке",
+            "pronunciation_native": "май дог",
+            "in_dialogue": true
+          },
+          {
+            "target": "my cat",
+            "native": "моей кошке",
+            "pronunciation_native": "май кэт",
+            "in_dialogue": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "p2",
+      "kind": "answer",
+      "frame_target": "My dog has ___.",
+      "frame_native": "У моей собаки ___.",
+      "pronunciation_native": "Май дог хэз ___.",
+      "slot": {
+        "hint_native": "какая проблема",
+        "fillers": [
+          {
+            "target": "a rash",
+            "native": "сыпь",
+            "pronunciation_native": "э рэш",
+            "in_dialogue": true
+          },
+          {
+            "target": "a cough",
+            "native": "кашель",
+            "pronunciation_native": "э коф",
+            "in_dialogue": false
+          },
+          {
+            "target": "vomiting",
+            "native": "рвота",
+            "pronunciation_native": "вомитинг",
+            "in_dialogue": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "p3",
+      "kind": "answer",
+      "frame_target": "It's ___.",
+      "frame_native": "Она ___.",
+      "pronunciation_native": "Итс ___.",
+      "slot": {
+        "hint_native": "где это находится",
+        "fillers": [
+          {
+            "target": "all over the body",
+            "native": "по всему телу",
+            "pronunciation_native": "ол оувэр зэ боди",
+            "in_dialogue": true
+          },
+          {
+            "target": "on the belly",
+            "native": "на животе",
+            "pronunciation_native": "он зэ бели",
+            "in_dialogue": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "p4",
+      "kind": "answer",
+      "frame_target": "My dog's name is ___.",
+      "frame_native": "Мою собаку зовут ___.",
+      "pronunciation_native": "Май догз нейм из ___.",
+      "slot": {
+        "hint_native": "кличка собаки",
+        "fillers": [
+          {
+            "target": "Buddy",
+            "native": "Бадди",
+            "pronunciation_native": "Бадди",
+            "in_dialogue": true
+          },
+          {
+            "target": "Max",
+            "native": "Макс",
+            "pronunciation_native": "Макс",
+            "in_dialogue": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "p5",
+      "kind": "ask",
+      "frame_target": "Do you have anything ___?",
+      "frame_native": "У вас есть что-нибудь на ___?",
+      "pronunciation_native": "Ду ю хэв энисинг ___?",
+      "slot": {
+        "hint_native": "на какое время",
+        "fillers": [
+          {
+            "target": "today",
+            "native": "сегодня",
+            "pronunciation_native": "тудэй",
+            "in_dialogue": true
+          },
+          {
+            "target": "tomorrow morning",
+            "native": "завтра утром",
+            "pronunciation_native": "тумороу морнинг",
+            "in_dialogue": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6",
+      "kind": "ask",
+      "frame_target": "I'd like the ___ appointment.",
+      "frame_native": "Мне нужна запись на ___.",
+      "pronunciation_native": "Айд лайк зэ ___ эпойнтмэнт.",
+      "slot": {
+        "hint_native": "какое время выбрать",
+        "fillers": [
+          {
+            "target": "3 p.m.",
+            "native": "3 дня",
+            "pronunciation_native": "сри пи эм",
+            "in_dialogue": true
+          },
+          {
+            "target": "5:30 p.m.",
+            "native": "5:30 вечера",
+            "pronunciation_native": "файв сёрти пи эм",
+            "in_dialogue": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "p7",
+      "kind": "ask",
+      "frame_target": "What should I ___?",
+      "frame_native": "Что мне нужно ___?",
+      "pronunciation_native": "Уот шуд ай ___?",
+      "slot": {
+        "hint_native": "что сделать",
+        "fillers": [
+          {
+            "target": "bring",
+            "native": "принести",
+            "pronunciation_native": "бринг",
+            "in_dialogue": true
+          },
+          {
+            "target": "prepare",
+            "native": "подготовить",
+            "pronunciation_native": "припэр",
+            "in_dialogue": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "p8",
+      "kind": "ask",
+      "frame_target": "How early should I ___?",
+      "frame_native": "Насколько заранее мне нужно ___?",
+      "pronunciation_native": "Хау ёрли шуд ай ___?",
+      "slot": {
+        "hint_native": "что сделать по времени",
+        "fillers": [
+          {
+            "target": "arrive",
+            "native": "прийти",
+            "pronunciation_native": "эрайв",
+            "in_dialogue": true
+          },
+          {
+            "target": "be there",
+            "native": "быть там",
+            "pronunciation_native": "би зэр",
+            "in_dialogue": false
+          }
+        ]
+      }
+    }
+  ],
+  "listening": {
+    "questions": [
+      {
+        "text_native": "Какая проблема у собаки?",
+        "options_native": [
+          "Сыпь",
+          "Кашель",
+          "Рвота"
+        ],
+        "correct_option_index": 0,
+        "explanation_native": "Хозяин говорит, что у собаки сыпь."
+      },
+      {
+        "text_native": "На какое время записали приём?",
+        "options_native": [
+          "На 3 дня",
+          "На 5:30 вечера",
+          "На завтра утром"
+        ],
+        "correct_option_index": 0,
+        "explanation_native": "Администратор подтверждает запись на 3 часа дня."
+      },
+      {
+        "text_native": "Что нужно принести на приём?",
+        "options_native": [
+          "Игрушку и корм",
+          "Паспорт хозяина и поводок",
+          "Документ и карту прививок"
+        ],
+        "correct_option_index": 2,
+        "explanation_native": "Администратор просит принести документ и карту прививок собаки."
+      },
+      {
+        "text_native": "Насколько раньше нужно прийти?",
+        "options_native": [
+          "За 10 минут",
+          "За 30 минут",
+          "Точно ко времени"
+        ],
+        "correct_option_index": 0,
+        "explanation_native": "Администратор просит прийти за десять минут до приёма."
+      }
+    ]
+  },
+  "vocabulary": [
+    {
+      "id": "v1",
+      "term_target": "vet",
+      "translation_native": "ветеринар",
+      "pronunciation_native": "вет",
+      "definition_target": "a doctor for animals",
+      "kind": "word",
+      "image_prompt": "veterinarian examining a dog in a clinic room",
+      "used_in": [
+        "p1"
+      ]
+    },
+    {
+      "id": "v2",
+      "term_target": "rash",
+      "translation_native": "сыпь",
+      "pronunciation_native": "рэш",
+      "definition_target": "red or irritated spots on the skin",
+      "kind": "word",
+      "image_prompt": "dog with a skin rash being checked at a clinic",
+      "used_in": [
+        "p2",
+        "A3"
+      ]
+    },
+    {
+      "id": "v3",
+      "term_target": "all over the body",
+      "translation_native": "по всему телу",
+      "pronunciation_native": "ол оувэр зэ боди",
+      "definition_target": "on many parts of the body, not in one place",
+      "kind": "chunk",
+      "image_prompt": null,
+      "used_in": [
+        "p3"
+      ]
+    },
+    {
+      "id": "v4",
+      "term_target": "appointment",
+      "translation_native": "запись на приём",
+      "pronunciation_native": "эпойнтмэнт",
+      "definition_target": "a planned time to see a doctor or specialist",
+      "kind": "word",
+      "image_prompt": "appointment book on a reception desk at a vet clinic",
+      "used_in": [
+        "p6"
+      ]
+    },
+    {
+      "id": "v5",
+      "term_target": "vaccination record",
+      "translation_native": "карта прививок",
+      "pronunciation_native": "вэксинэйшн рэкорд",
+      "definition_target": "a document with the animal's vaccine history",
+      "kind": "chunk",
+      "image_prompt": "pet vaccination booklet on a clinic counter",
+      "used_in": [
+        "A7"
+      ]
+    },
+    {
+      "id": "v6",
+      "term_target": "ID",
+      "translation_native": "документ",
+      "pronunciation_native": "ай ди",
+      "definition_target": "an official document that shows who you are",
+      "kind": "word",
+      "image_prompt": "identification card on a reception counter",
+      "used_in": [
+        "A7"
+      ]
+    },
+    {
+      "id": "v7",
+      "term_target": "arrive",
+      "translation_native": "прийти",
+      "pronunciation_native": "эрайв",
+      "definition_target": "to get to a place",
+      "kind": "word",
+      "image_prompt": "person arriving with a dog at a veterinary clinic entrance",
+      "used_in": [
+        "p8",
+        "A8"
+      ]
+    },
+    {
+      "id": "v8",
+      "term_target": "form",
+      "translation_native": "анкета",
+      "pronunciation_native": "форм",
+      "definition_target": "a paper with questions to fill in",
+      "kind": "word",
+      "image_prompt": "paper form and pen on a veterinary reception desk",
+      "used_in": [
+        "A8"
+      ]
+    }
+  ]
+}

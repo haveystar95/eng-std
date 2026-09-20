@@ -1,0 +1,95 @@
++---------------------------------+----------+-------+------+-------------+---------------+--------------------------+
+| code                            | findings | fatal | days | failed days | share of days | counted / gated / failed |
++---------------------------------+----------+-------+------+-------------+---------------+--------------------------+
+| check.verbatim                  | 24       | 0     | 9    | 0           | 69.2 %        | 26 / 0 / 0               |
+| filler.native_seam              | 16       | 0     | 6    | 0           | 46.2 %        | 16 / 0 / 0               |
+| frame.adjacent_repeat           | 1        | 0     | 1    | 0           | 7.7 %         | 1 / 0 / 0                |
+| frame.native_agreement          | 9        | 0     | 5    | 0           | 38.5 %        | 10 / 0 / 0               |
+| frame.no_end_punct              | 5        | 0     | 3    | 0           | 23.1 %        | 5 / 0 / 0                |
+| frame.unresolved_pronoun        | 5        | 0     | 4    | 0           | 30.8 %        | 5 / 0 / 0                |
+| key.contains_filler             | 3        | 0     | 2    | 0           | 15.4 %        | 3 / 0 / 0                |
+| key.no_content_word             | 3        | 0     | 1    | 0           | 7.7 %         | 3 / 0 / 0                |
+| key.too_long                    | 2        | 0     | 1    | 0           | 7.7 %         | 2 / 0 / 0                |
+| learner.restates_partner        | 2        | 0     | 1    | 0           | 7.7 %         | 2 / 0 / 0                |
+| listening.distractor_not_filler | 3        | 0     | 2    | 0           | 15.4 %        | 3 / 0 / 0                |
+| listening.same_exchange         | 2        | 0     | 2    | 0           | 15.4 %        | 2 / 0 / 0                |
+| native.gendered_past            | 4        | 0     | 2    | 0           | 15.4 %        | 6 / 0 / 0                |
+| pronunciation.script            | 1        | 0     | 1    | 0           | 7.7 %         | 9 / 0 / 0                |
+| rescue.new_fact                 | 1        | 0     | 1    | 0           | 7.7 %         | 1 / 0 / 0                |
+| variant.longer                  | 13       | 0     | 9    | 0           | 69.2 %        | 13 / 0 / 0               |
+| vocab.free_combination          | 4        | 0     | 4    | 0           | 30.8 %        | 6 / 0 / 0                |
+| vocab.learner_share             | 3        | 0     | 3    | 0           | 23.1 %        | 3 / 0 / 0                |
+| vocab.nested                    | 1        | 0     | 1    | 0           | 7.7 %         | 1 / 0 / 0                |
+| vocab.used_in_wrong             | 13       | 0     | 6    | 0           | 46.2 %        | 20 / 0 / 0               |
++---------------------------------+----------+-------+------+-------------+---------------+--------------------------+
+Days with a lesson: 13. Counters are over every attempt and every date.
+
+check.verbatim
+  · the right option «During the last year» repeats «last year» of the partner's line — «Съём квартиры», day 2 «Просмотр жилья»
+  · the right option «Stay on a leash» repeats «stay on» of the partner's line — «Съём квартиры», day 2 «Просмотр жилья»
+  · the right option «An ID and recent salary slips» repeats «and recent» of the partner's line — «Съём квартиры», day 1 «Звонок агенту»
+filler.native_seam
+  · «Она по всему его телу.» («Она ___.» with «по всему его телу») does not read as Russian, the seam judge says — «Визит к ветеринару», day 1 «Запись к врачу»
+  · «Она на его животе.» («Она ___.» with «на его животе») does not read as Russian, the seam judge says — «Визит к ветеринару», day 1 «Запись к врачу»
+  · «Я могу жить с старыми окнами.» («Я могу жить с ___.» with «старыми окнами») does not read as Russian, the seam judge says — «Съём квартиры», day 2 «Просмотр жилья»
+frame.adjacent_repeat
+  · exchanges 2 and 3 both stand on p2 — «Съём квартиры», day 1 «Просмотр»
+frame.native_agreement
+  · «___ нужен ветеринар.»: «нужен» agrees with the slot — it changes with the filler — «Визит к ветеринару», day 1 «Запись к врачу»
+  · «У него ___.»: «него» agrees with the slot — it changes with the filler — «Визит к ветеринару», day 1 «Запись к врачу»
+  · «Какая ___?»: «какая» agrees with the slot — it changes with the filler — «Съём квартиры», day 1 «Звонок агенту»
+frame.no_end_punct
+  · «I'd like to ___» and the native «Я бы хотел ___» end with no mark — «Съём квартиры», day 2 «Просмотр жилья»
+  · the native «Мне нужен ___» ends with no mark — «Съём квартиры», day 1 «Просмотр»
+  · «I'd like to apply ___» and the native «Я хочу подать заявку ___» end with no mark — «Съём квартиры», day 2 «Заявка и договор»
+frame.unresolved_pronoun
+  · «Does it have ___?» leans on «it», and nothing in the frame is what it stands for — «Съём квартиры», day 1 «Просмотр»
+  · «Is it ___?» leans on «it», and nothing in the frame is what it stands for — «Съём квартиры», day 1 «Просмотр»
+  · «Is it okay with ___?» leans on «it», and nothing in the frame is what it stands for — «Съём квартиры», day 2 «Просмотр жилья»
+key.contains_filler
+  · the key «any side effects» takes words of the filler «side effects» — «Приём у врача», day 2 «Аптека»
+  · the key «He is drinking» takes words of the filler «drinking water» — «Приём у врача», day 1 «Приём у врача»
+  · the key «need a test» takes words of the filler «a test» — «Приём у врача», day 1 «Приём у врача»
+key.no_content_word
+  · the key «has had it» has no content word — «Приём у врача», day 1 «Приём у врача»
+  · the key «It was» has no content word — «Приём у врача», day 1 «Приём у врача»
+  · the key «should I do» has no content word — «Приём у врача», day 1 «Приём у врача»
+key.too_long
+  · the key «How much should I give» has 5 words (1–4) — «Приём у врача», day 2 «Аптека»
+  · the key «How often should I give» has 5 words (1–4) — «Приём у врача», day 2 «Аптека»
+learner.restates_partner
+  · «Okay, the deposit is one month.» repeats 4 of 6 words of the partner's «The deposit is one month's rent.» (the, deposit, is, one) — «Съём квартиры», day 1 «Звонок агенту»
+  · «Okay, utilities are not included.» repeats 4 of 4 words of the partner's «Utilities are not included.» (utilities, are, not, included) — «Съём квартиры», day 1 «Звонок агенту»
+listening.distractor_not_filler
+  · the question asks p6's slot («побочные эффекты»), but 0 of its wrong options are p6's other fillers (expected 2) — «Приём у врача», day 2 «Аптека»
+  · the question asks p2's slot («три дня»), but 0 of its wrong options are p2's other fillers (expected 2) — «Приём у врача», day 1 «Приём у врача»
+  · the question asks p1's slot («болит горло»), but 0 of its wrong options are p1's other fillers (expected 2) — «Приём у врача», day 1 «Приём у врача»
+listening.same_exchange
+  · L3 and this question are both about exchange 8 — «Съём квартиры», day 1 «Звонок агенту»
+  · L3 and this question are both about exchange 6 — «Собеседование», day 1 «Собеседование»
+native.gendered_past
+  · «Я хотел бы посмотреть похожую квартиру.» says «хотел» about the learner while the learner's gender is unknown — «Съём квартиры», day 1 «Просмотр»
+  · «Я хотел бы посмотреть ___.» says «хотел» about the learner while the learner's gender is unknown — «Съём квартиры», day 1 «Просмотр»
+  · «Она меньше, чем я ожидал.» says «ожидал» about the learner while the learner's gender is unknown — «Поиск квартиры», day 2 «Просмотр жилья»
+pronunciation.script
+  · the reading «бэтэр зэн зе ֆоутoуз» leaves the native script — «Поиск квартиры», day 2 «Просмотр жилья»
+rescue.new_fact
+  · the repeat says «dog», «25», «euros», which exchange 6 did not — «Съём квартиры», day 2 «Заявка и договор»
+variant.longer
+  · the variant «He has a skin rash.» has 5 words, the line 4 — «Визит к ветеринару», day 1 «Запись к врачу»
+  · the variant «Can I look at the kitchen?» has 6 words, the line 5 — «Съём квартиры», day 2 «Просмотр жилья»
+  · the variant «Does it include parking?» has 4 words, the line 3 — «Съём квартиры», day 1 «Звонок агенту»
+vocab.free_combination
+  · «come at» is a free combination of ordinary words — «Визит к ветеринару», day 1 «Запись к врачу»
+  · «small dog» is a free combination of ordinary words — «Поиск квартиры», day 1 «Звонок агенту»
+  · «small pet» is a free combination of ordinary words — «Съём квартиры», day 1 «Просмотр жилья»
+vocab.learner_share
+  · 3 of 8 items are in the learner's frames or fillers (at least half) — «Съём квартиры», day 2 «Просмотр жилья»
+  · 2 of 8 items are in the learner's frames or fillers (at least half) — «Поиск квартиры», day 2 «Просмотр жилья»
+  · 3 of 8 items are in the learner's frames or fillers (at least half) — «Съём квартиры», day 2 «Заявка и договор»
+vocab.nested
+  · «fever» is inside «fever medicine» (v7) — «Приём у врача», day 1 «Приём у врача»
+vocab.used_in_wrong
+  · «arrive early» is not in the partner's line of exchange 7 — «Визит к ветеринару», day 1 «Запись к врачу»
+  · «arrive early» is not in the partner's line of exchange 8 — «Визит к ветеринару», day 1 «Запись к врачу»
+  · «parking space» is not in the partner's line of exchange 6 — «Съём квартиры», day 2 «Просмотр жилья»
