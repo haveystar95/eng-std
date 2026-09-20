@@ -329,7 +329,9 @@ false
 всё работает.
 
 **Ворота** (один раз, в конце): `composer check` — OpenAPI ok ×2, deptrac **0 violations**,
-PHPStan **0 errors**, Pest **2 354 passed** (после доработки — **2 359**); мутации **16/16**.
+PHPStan **0 errors**, Pest **2 354 passed** (после доработки — **2 359**, после рубильника —
+**2 360**); мутации **16/16**. На хвосте рубильника ворота гонялись обе стороны: `composer check`
+зелёный и `flutter analyze` — `No issues found!` (mobile не трогали).
 
 ### §7а. invariant-reviewer — CLEAN
 
@@ -355,6 +357,8 @@ PHPStan **0 errors**, Pest **2 354 passed** (после доработки — *
 | `c247139d` | документы: канон §11, контракт, handoff, DECISIONS 355–364, REGISTRY, ROADMAP, OpenAPI, этот отчёт |
 | `3d2d483f`, `fb46b632` | хеши в отчёте и handoff; хвост ROADMAP про разговор дня повторения |
 | `ebd42520` | доработка: `DayBudget` и потолок над пятью этапами, тест канона, DECISIONS 365, подтверждения вердикта, ROADMAP про `has_conversation`, прогон миграции на бой |
+| `e21558b8` | хеш доработки в отчёте и handoff |
+| `edb08dbd` | хвост: рубильник раздачи `plan.conversation.enabled`, тест канона, прибитый `PLAN_CONVERSATION_ENABLED` в `phpunit.xml`, выключение на бою, один пункт ROADMAP |
 
 ---
 
