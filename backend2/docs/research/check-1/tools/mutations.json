@@ -9,7 +9,7 @@
     "tests": [
       {
         "path": "tests/Unit/Plan/SentenceEndsTest.php",
-        "filter": "not with the dot of an abbreviation"
+        "filter": "reads a fragment as carrying a sentence"
       },
       {
         "path": "tests/Unit/Plan/LessonValidatorTest.php",
@@ -27,7 +27,7 @@
     "tests": [
       {
         "path": "tests/Unit/Plan/SentenceEndsTest.php",
-        "filter": "not with the dot of an abbreviation"
+        "filter": "reads a fragment as carrying a sentence"
       }
     ]
   },
@@ -55,7 +55,11 @@
     "tests": [
       {
         "path": "tests/Unit/Plan/SentenceEndsTest.php",
-        "filter": "not with the dot of an abbreviation"
+        "filter": "closes a text with a full stop"
+      },
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "reads a fragment as carrying a sentence"
       }
     ]
   },
@@ -78,7 +82,7 @@
     "rule": "filler.ungrammatical: целое предложение в окне — фатально",
     "defect": "конец предложения у наполнения не читается",
     "file": "app/Modules/Plan/Domain/Check/Lesson/FillerRules.php",
-    "find": "if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->terminal($filler) !== '')) {",
+    "find": "if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->carriesSentence($filler))) {",
     "replace": "if (preg_match('/[,;:]$/u', $filler) === 1) {",
     "tests": [
       {
@@ -92,8 +96,8 @@
     "rule": "запятая, точка с запятой, двоеточие в конце наполнения — как было",
     "defect": "языконезависимая проверка запятой снята",
     "file": "app/Modules/Plan/Domain/Check/Lesson/FillerRules.php",
-    "find": "if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->terminal($filler) !== '')) {",
-    "replace": "if ($words !== null && $words->terminal($filler) !== '') {",
+    "find": "if (preg_match('/[,;:]$/u', $filler) === 1 || ($words !== null && $words->carriesSentence($filler))) {",
+    "replace": "if ($words !== null && $words->carriesSentence($filler)) {",
     "tests": [
       {
         "path": "tests/Unit/Plan/LessonValidatorTest.php",
@@ -206,6 +210,42 @@
     "tests": [
       {
         "path": "tests/Feature/Plan/PlanCheckReportTest.php"
+      }
+    ]
+  },
+  {
+    "name": "16. точка сокращения в конце текста не закрывает его",
+    "rule": "closesText — точка после сокращения в самом конце текста закрывает его",
+    "defect": "каркас «…until ___ p.m.» читается без знака — frame.no_end_punct",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": "            } elseif (preg_match('/^[\\s»\"\\'”’)\\]]*$/u', substr($text, $offset + strlen($run))) === 1) {\n                $out[] = [$offset, $run, strlen($run), true];\n            }",
+    "replace": "            }",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "closes a text with a full stop"
+      },
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "reads a frame that ends with an abbreviation"
+      }
+    ]
+  },
+  {
+    "name": "17. carriesSentence не отличает точку сокращения",
+    "rule": "carriesSentence — точка сокращения не несёт предложения",
+    "defect": "наполнение «3 p.m.» снова несёт предложение",
+    "file": "app/Modules/Plan/Domain/Check/Language/SentenceEnds.php",
+    "find": "        return $last !== null && ! $last[3];",
+    "replace": "        return $last !== null;",
+    "tests": [
+      {
+        "path": "tests/Unit/Plan/SentenceEndsTest.php",
+        "filter": "reads a fragment as carrying a sentence"
+      },
+      {
+        "path": "tests/Unit/Plan/LessonValidatorTest.php",
+        "filter": "lets a filler that ends with an abbreviation"
       }
     ]
   }
