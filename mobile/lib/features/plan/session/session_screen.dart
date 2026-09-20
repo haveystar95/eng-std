@@ -12,13 +12,19 @@ import 'package:eng_std/ui/day_plate.dart';
 
 import '../../../data/app_version.dart';
 import '../../../data/languages.dart' show sttLocaleFor;
+import '../../../data/plan/day_window.dart' show WindowPhrase;
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/dialogue_feed.dart';
 import '../../../data/plan/session/session_models.dart';
 import '../../../data/plan/session/session_summary.dart';
 import '../../../data/plan/session/speech_match.dart';
 import '../../../data/providers.dart';
+import '../../../data/speech/speech_turn.dart' show SpeechTurnConfig;
 import '../../profile/qa_report_button.dart' show QaReportHidden;
+import '../conversation/conversation_controller.dart';
+import '../conversation/talk_entry.dart';
+import '../conversation/talk_screen.dart';
+import '../conversation/talk_summary.dart';
 import '../plan_providers.dart';
 import 'cards/card_host.dart';
 import 'cards/card_kit.dart';
@@ -40,7 +46,14 @@ import 'session_voice.dart';
 /// window, which reads the plan again. [replay] — «Once more» on a passed day: the stage is walked again on the phone,
 /// nothing is sent, and the day summary follows (SESSION-2a §4).
 class SessionScreen extends ConsumerStatefulWidget {
-  const SessionScreen({super.key, required this.plan, required this.number, this.backend, this.replay = false});
+  const SessionScreen({
+    super.key,
+    required this.plan,
+    required this.number,
+    this.backend,
+    this.talkBackend,
+    this.replay = false,
+  });
 
   final Plan plan;
   final int number;
@@ -48,6 +61,9 @@ class SessionScreen extends ConsumerStatefulWidget {
 
   /// The session server; null — the real API. A test substitutes its own.
   final SessionBackend? backend;
+
+  /// The talk's server (наряд CLIENT-CONV-1a); null — the real API.
+  final ConversationBackend? talkBackend;
 
   @override
   ConsumerState<SessionScreen> createState() => _SessionScreenState();
@@ -61,6 +77,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   /// A card reported «no microphone» — instead of the stage header, only the cross and the scene strip (30-3).
   bool _noMic = false;
   int _preparedFor = -1;
+
+  /// THE TALK (37-5…37-12) — built when the session first reaches the sixth stage.
+  ConversationController? _talk;
+
+  /// A start («Начать разговор», «Ещё раз») is on its way: it waits on a model and a voice.
+  bool _starting = false;
+  bool _talkStartFailed = false;
 
   @override
   void initState() {
@@ -89,6 +112,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     unawaited(_online?.cancel());
     _session.removeListener(_onSession);
     _session.dispose();
+    _talk?.dispose();
     unawaited(_voice.release());
     unawaited(SessionSounds.release());
     super.dispose();
@@ -211,6 +235,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         return _cardPhase(context);
       case SessionPhase.summary:
         return _summary(context);
+      case SessionPhase.talkEntry:
+        return _talkEntry(context);
+      case SessionPhase.talk:
+        return _talkPhase(context);
+      case SessionPhase.talkSummary:
+        return _talkSummaryPhase(context);
       case SessionPhase.daySummary:
         return _daySummary(context);
     }
@@ -259,15 +289,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     );
   }
 
+  /// THE DAY'S ROWS ON 30-1 — exactly the stages the SERVER dealt, in its order (наряд
+  /// CLIENT-CONV-1a): six on a day with a talk, five on one dealt without it. The talk is «пройден»
+  /// when its own row says so — it has no cards to count.
   List<StageRow> _rows({required PlanStage current}) {
     final q = _session.queue;
     return [
-      for (final s in PlanStage.known)
+      for (final s in _session.dayStages)
         (
           stage: s,
           status: s == current
               ? StageRowStatus.current
-              : (q?.isDone(s) ?? false)
+              : (s == PlanStage.conversation ? _session.talkDone : q?.isDone(s) ?? false)
               ? StageRowStatus.done
               : StageRowStatus.ahead,
           started: q != null && q.cardsOf(s).any((c) => c.isAnswered),
@@ -328,6 +361,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       replay: widget.replay,
       frameSentence: (ref) => _session.day?.frameSentence(ref),
       termText: (ref) => _session.day?.termText(ref),
+      exchangeOf: (line) => _session.day?.exchangeOf(line),
       level: plan.level,
       noHints: _session.noHints,
       feed: stage == PlanStage.dialogue ? DialogueFeed.before(stageCards, card) : const [],
@@ -387,15 +421,114 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     );
   }
 
+  /// THE TALK (наряд CLIENT-CONV-1a, кадры 37-5…37-12) — its own three phases inside the session:
+  /// the entry in place of 30-1, the ribbon, the summary. The controller is built once, when the
+  /// session first reaches the sixth stage, and lives until the session is left.
+  ConversationController _talkController() {
+    final plan = widget.plan;
+    return _talk ??= ConversationController(
+      backend: widget.talkBackend ?? ApiConversationBackend(ref.read(apiClientProvider)),
+      planId: plan.id,
+      day: widget.number,
+      voice: _voice,
+      hints: !_session.noHints,
+    );
+  }
+
+  /// The talk's microphone: free speech in the target language, and a pause of its own
+  /// ([ConversationController.silenceClosesTurn]).
+  SessionMic _talkMic() => SessionMic(
+    recognizer: ref.read(speechRecognizerProvider),
+    diagnostics: ref.read(speechDiagnosticsProvider),
+    localeId: sttLocaleFor(widget.plan.targetLang),
+    expected: '',
+    contextualStrings: _talkPhrases.values.take(50).toList(),
+    config: const SpeechTurnConfig(silenceAfterSpeech: ConversationController.silenceClosesTurn),
+  );
+
+  /// The day's phrases by `ref` — the text behind the server's `phrases_used`.
+  Map<String, String> get _talkPhrases => {
+    for (final p in _session.day?.window?.program.phrases ?? const <WindowPhrase>[]) p.ref: p.text,
+  };
+
+  /// 37-5.
+  Widget _talkEntry(BuildContext context) => TalkEntryView(
+    scene: _session.scene,
+    minutes: _session.talkMinutes,
+    rehearsal: _session.day?.day.type == PlanDayType.rehearsal,
+    noHints: _session.noHints,
+    onNoHints: (v) => unawaited(_session.setNoHints(v)),
+    starting: _starting,
+    failure: _talkStartFailed ? AppLocalizations.of(context).planTalkOpenFailed : null,
+    onBack: () => Navigator.of(context).maybePop(),
+    onStart: _starting ? null : () => unawaited(_startTalk()),
+  );
+
+  Future<void> _startTalk() async {
+    final talk = _talkController();
+    setState(() {
+      _starting = true;
+      _talkStartFailed = false;
+    });
+    await talk.open();
+    if (!mounted) return;
+    setState(() => _starting = false);
+    if (talk.phase == TalkPhase.openFailed) {
+      setState(() => _talkStartFailed = true);
+      return;
+    }
+    _session.talkStarted();
+  }
+
+  /// 37-6…37-11.
+  Widget _talkPhase(BuildContext context) {
+    final talk = _talkController();
+    return TalkView(
+      controller: talk,
+      scene: _session.scene,
+      voice: _voice,
+      makeMic: _talkMic,
+      phraseTexts: _talkPhrases,
+      onSummary: _session.talkEnded,
+      onClose: () => Navigator.of(context).maybePop(),
+    );
+  }
+
+  /// 37-12.
+  Widget _talkSummaryPhase(BuildContext context) {
+    final talk = _talkController();
+    final document = talk.talk;
+    if (document?.summary == null) return _talkPhase(context);
+    return TalkSummaryView(
+      talk: document!,
+      scene: _session.scene,
+      voice: _voice,
+      busy: _starting,
+      onClose: () => Navigator.of(context).maybePop(),
+      onAgain: () => unawaited(_againTalk()),
+      onNext: () => unawaited(_session.afterTalk()),
+    );
+  }
+
+  /// «Ещё раз» (37-12): a NEW talk — the server closes the old one as `replayed`.
+  Future<void> _againTalk() async {
+    final talk = _talkController();
+    setState(() => _starting = true);
+    _session.talkAgain();
+    await talk.open(again: true);
+    if (!mounted) return;
+    setState(() => _starting = false);
+  }
+
   Widget _summary(BuildContext context) {
     final l = AppLocalizations.of(context);
     final stage = _session.stage;
     final q = _session.queue!;
     final next = _session.nextStage;
     switch (stage) {
-      case PlanStage.dialogue || PlanStage.listen || PlanStage.speak:
-        return _talkSummary(context, stage, next);
-      case PlanStage.words || PlanStage.phrases || PlanStage.unknown:
+      case PlanStage.dialogue || PlanStage.listen || PlanStage.speak || PlanStage.recall:
+        return _stageTalkSummary(context, stage, next);
+      case PlanStage.words || PlanStage.phrases || PlanStage.conversation || PlanStage.unknown:
         final units = q.unitsOf(stage);
         final returning = [for (final ref in q.returningUnits(stage)) _returning(stage, ref)];
         return SessionStageSummary(
@@ -413,8 +546,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     }
   }
 
-  /// 33-8 · 34-8 · 35-6.
-  Widget _talkSummary(BuildContext context, PlanStage stage, PlanStage? next) {
+  /// 33-8 · 34-8 · 35-6 — the summary of a CARD stage that is a conversation; the talk's own is 37-12.
+  Widget _stageTalkSummary(BuildContext context, PlanStage stage, PlanStage? next) {
     final l = AppLocalizations.of(context);
     final q = _session.queue!;
     final cards = q.cardsOf(stage);
@@ -485,8 +618,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final nextDay = _session.nextDay;
     return SessionDaySummary(
       title: l.planSessionDayDoneTitle(l.planMinutesCount(_session.dayMinutes)),
-      stages: [for (final s in PlanStage.known) if (q.hasCards(s)) s],
+      // EXACTLY THE STAGES THE SERVER DEALT — six on a day with a talk, five on one without it.
+      stages: _session.dayStages,
       stageName: (s) => SessionTexts.stage(l, s),
+      highlights: _session.highlights,
       returnsLine: SessionTexts.dayReturns(l, SessionSummaries.dayReturns(q)),
       nextDay: switch (SessionSummaries.nextDayLesson(nextDay)) {
         null => null,

@@ -587,12 +587,17 @@ class ListenReviewCard extends StatelessWidget {
 
 // ── 34-5 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// WHAT WILL THE ANSWER BE? (34-5, work order SESSION-2b §3 on the contract of BACK-TAILS-1 §1.2): the learner's own
-/// question sounds on the plate — a wave and «listen» 44, no text; under it the question «What will the answer be?»
-/// (the client's: the contract sends none). The three options are LINES with sound and no text: a tap plays one
-/// (grey wave — not heard yet, brass — heard, alive — playing), a second tap on a heard one marks it with a brass
-/// outline and a check. «This is the answer» is active only when a marked line has been heard. After the answer every
-/// sheet opens its English line and its translation, and the right one takes the sage wash and the check.
+/// WHAT WILL THE ANSWER BE? (кадр 34-5, наряд CLIENT-CONV-1a on the contract of BACK-TAILS-1 §1.2).
+///
+/// The learner's OWN question stands at the top as their own dark bubble with a wave and «прослушать»
+/// — it is their line, so it is drawn the way their lines are drawn everywhere else. Under it, three
+/// sound plates: three of the partner's replies, with no text at all. A tap plays one (and a tap
+/// while it plays stops it); a second tap on one that has been HEARD to the end marks it. «Это ответ»
+/// comes alive only then — the card asks the learner to listen, not to guess by length.
+///
+/// Right — the card leaves by itself after 600 ms. Wrong — every plate opens its line and its
+/// translation, the learner's own question opens above them, the right plate takes the sage wash and
+/// the check, and the one chosen keeps its ink outline; «Дальше» appears only after a miss.
 class ListenPredictCard extends StatefulWidget {
   const ListenPredictCard({super.key, required this.env, required this.payload});
 
@@ -633,9 +638,14 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
     super.dispose();
   }
 
-  /// A tap on a sheet: it plays; a heard one that is tapped again becomes the answer to send.
-  Future<void> _tap(CardLineOption option) async {
+  /// A tap on a plate: it plays — or stops, if it is the one playing. A plate already heard, tapped
+  /// again, becomes the answer to send.
+  Future<void> _tap(CardLineOption option, {required bool playing}) async {
     _autoplay?.cancel();
+    if (playing) {
+      await env.voice.stop();
+      return;
+    }
     if (!answered && _heard.contains(option.id) && _marked != option.id) {
       setState(() => _marked = option.id);
       AppHaptics.light();
@@ -651,34 +661,38 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final p = widget.payload;
-    final own = p.ownLine;
+    final own = widget.payload.ownLine;
     return CardLayout(
-      bodyGap: 12,
-      task: SessionTask(l.planSessionTaskListenChoose),
+      feed: true,
+      bodyGap: 16,
+      fadeStop: 0.30,
+      task: SessionTask(l.planSessionTaskListenChoose, companion: l.planSessionListenWholeOne),
       body: ValueListenableBuilder<Object?>(
         valueListenable: env.voice.playing,
-        builder: (_, playing, _) => SessionQuestionSheet(
-          media: Stack(
-            children: [
-              Positioned.fill(
-                child: SessionWavePlate(
-                  playing: playing == _ownKey,
-                  heights: SessionWave.five,
-                  label: l.planWindowListen,
-                  onTap: () => unawaited(env.voice.play(own.audio, fallback: own.textTarget, key: _ownKey)),
-                ),
-              ),
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: CardListen(env: env, audio: own.audio, fallback: own.textTarget, playKey: _ownKey),
-              ),
-            ],
+        builder: (_, playing, _) => SessionOwnRow(
+          listen: SessionListenButton(
+            size: 28,
+            brass: true,
+            label: l.planWindowListen,
+            playing: playing == _ownKey,
+            onTap: () => unawaited(env.voice.play(own.audio, fallback: own.textTarget, key: _ownKey)),
           ),
-          eyebrow: l.planSessionBrowQuestion,
-          eyebrowTrailing: eyebrowTrailing(l),
-          text: Text(l.planSessionWhatAnswerSounds, style: AppTextSession.question),
+          bubble: SessionBubble(
+            own: true,
+            // The learner's own question opens with the rest of the texts — on a pass too, in the
+            // 600 ms the card has left (кадр 34-5, «тексты открываются вместе со своей репликой»).
+            text: answered ? own.textTarget : null,
+            translation: answered ? own.textNative : null,
+            child: answered
+                ? null
+                : SessionWave(
+                    key: const ValueKey('predict-own-wave'),
+                    heights: SessionWave.five,
+                    width: 80,
+                    playing: playing == _ownKey,
+                    color: AppColors.paper,
+                  ),
+          ),
         ),
       ),
       bottom: _dock(l),
@@ -693,15 +707,17 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
       children: [
         for (final o in widget.payload.options) ...[
           if (o != widget.payload.options.first) const SizedBox(height: 8),
-          SessionSoundOption(
+          SessionSoundPlate(
             key: ValueKey('option-${o.id}'),
+            audioRef: o.audio?.ref ?? o.id,
+            durationMs: o.audio?.durationMs,
             heard: _heard.contains(o.id),
             playing: playing == 'predict-${o.id}',
             marked: _marked == o.id,
             look: answered ? lookOf(o.id) : null,
             textTarget: o.textTarget,
             textNative: o.textNative,
-            onTap: () => unawaited(_tap(o)),
+            onTap: () => unawaited(_tap(o, playing: playing == 'predict-${o.id}')),
           ),
         ],
         const SizedBox(height: 16),
@@ -709,7 +725,10 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
           SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
         else if (!answered)
           SessionDockButton(
+            key: const ValueKey('predict-answer'),
             label: l.planSessionThisIsAnswer,
+            // Only a plate that has been HEARD can be marked, so an active button is always one the
+            // learner has listened to.
             enabled: _marked != null,
             onTap: _marked == null ? null : () => choose(_marked!),
           ),

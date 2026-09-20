@@ -2517,7 +2517,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planRuleStages =>
-      'Five stages in order: words → phrases → dialogue → listen and reply → speak on my own';
+      'Six stages in order: words → phrases → dialogue → listen and reply → speak on my own → talk';
 
   @override
   String get planRuleReturn => 'Whatever did not work comes back the next day. Nothing is lost';
@@ -3579,9 +3579,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionNoMicAllow => 'Allow';
 
   @override
-  String get planSessionByMeaning => 'by meaning ✓';
-
-  @override
   String get planSessionTryAgain => 'Try again';
 
   @override
@@ -3775,9 +3772,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskListenChoose => 'Listen and choose the answer';
 
   @override
-  String get planSessionWhatAnswerSounds => 'What will the answer be?';
-
-  @override
   String get planSessionThisIsAnswer => 'This is the answer';
 
   @override
@@ -3831,12 +3825,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionWaiting => 'waiting';
-
-  @override
-  String get planSessionHintSilence => 'here\'s the frame — the slot is yours';
-
-  @override
-  String get planSessionHintOpened => 'the frame is open — the slot is yours';
 
   @override
   String get planSessionNotThat => 'not that — let\'s try again';
@@ -3924,4 +3912,141 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionCloseFailed => 'The day didn\'t close — no connection';
+
+  @override
+  String get planPlateStageTalk => 'Talk';
+
+  @override
+  String get planPlateStageRecall => 'Recall';
+
+  @override
+  String get planTalkEntryTitle => 'Talk to the person';
+
+  @override
+  String planTalkEntryMinutes(String minutes) {
+    return 'about $minutes';
+  }
+
+  @override
+  String get planTalkEntryWhole => 'The whole talk';
+
+  @override
+  String get planTalkEntryRuleStart => 'They speak first. Answer, and ask your own questions.';
+
+  @override
+  String get planTalkEntryRuleRescue =>
+      'Lost the thread — tap «Didn\'t get it» and they will say it more simply.';
+
+  @override
+  String get planTalkEntryRuleCounts =>
+      'What counts: what you said, the day\'s phrases, the questions you got.';
+
+  @override
+  String get planTalkStart => 'Start the talk';
+
+  @override
+  String get planTalkRescueAction => 'Didn\'t get it';
+
+  @override
+  String planTalkHintChip(String intent) {
+    return 'Say that $intent';
+  }
+
+  @override
+  String get planTalkOpenText => 'text';
+
+  @override
+  String get planTalkInterrupted => 'cut short';
+
+  @override
+  String get planTalkSilenceEnds => 'silence ends it';
+
+  @override
+  String get planTalkUnheard => 'didn\'t catch that — say it again';
+
+  @override
+  String get planTalkOffline => 'Connection lost — the talk goes on from here';
+
+  @override
+  String get planTalkSilent => 'No answer — try once more';
+
+  @override
+  String get planTalkOpenFailed => 'The talk did not start — try once more';
+
+  @override
+  String get planTalkNotInDay => 'This day has no talk';
+
+  @override
+  String get planTalkEnded => 'Talk over';
+
+  @override
+  String get planTalkSummaryAction => 'Summary';
+
+  @override
+  String planTalkSaidLines(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'You said $n lines yourself',
+      one: 'You said $n line yourself',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planTalkUnderstoodAll => 'You got every question';
+
+  @override
+  String planTalkUnderstoodExcept(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'You got the questions but $n — they come back',
+      one: 'You got the questions but one — it comes back',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planTalkRescues(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'asked again $n times',
+      one: 'asked again $n time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planTalkPhrasesOf(int used, int total) {
+    return 'The day\'s phrases in the talk · $used of $total';
+  }
+
+  @override
+  String get planTalkNotSaidTomorrow => 'Not said — comes back tomorrow';
+
+  @override
+  String get planTalkNotSaidRehearsal => 'Not said — go over it before the visit';
+
+  @override
+  String get planTalkReady => 'You are ready for the visit';
+
+  @override
+  String get planTalkHighlights => 'What went well';
+
+  @override
+  String get planSessionListenWholeOne => 'Listen to the whole of it — only one answer fits';
+
+  @override
+  String get planSessionFrameWhole => 'This phrase is said whole — nothing in it changes';
+
+  @override
+  String get planSessionChangeable => 'this part can change';
+
+  @override
+  String get planSessionInTalk => 'In the talk';
+
+  @override
+  String get planSessionOwnWordChip => 'your own word';
 }

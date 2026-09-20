@@ -117,13 +117,25 @@ enum LessonStatus {
   };
 }
 
-/// `PlanStageProgress.stage` — the five stages of a day, in their order (плита 4н).
+/// `PlanStageProgress.stage` — the stages a day is walked in, in their order (плита 4н).
+///
+/// A scene day walks SIX of them (наряд CONV-1): words → phrases → dialogue → listen → speak →
+/// [conversation], the live talk with the agent, which is the only stage made of no cards at all.
+/// [recall] («Вспомнить», кадры 37-1, 37-3) belongs to the rehearsal day, whose two stages are
+/// `recall` and `conversation`. No day has both `speak` and `recall`, so the order of this list is
+/// the order inside a day, mirroring the server's `Stage::ordered()`.
+///
+/// WHICH OF THEM A DAY HAS IS THE SERVER'S ANSWER, never this list: a day dealt before наряд CONV-1
+/// (or while the talk was switched off) comes back with five stages and is walked and closed on
+/// five. The client reads `stages[]` and draws what came.
 enum PlanStage {
   words,
   phrases,
   dialogue,
   listen,
   speak,
+  recall,
+  conversation,
   unknown;
 
   static PlanStage fromWire(String? s) => switch (s) {
@@ -132,17 +144,16 @@ enum PlanStage {
     'dialogue' => dialogue,
     'listen' => listen,
     'speak' => speak,
+    'recall' => recall,
+    'conversation' => conversation,
     _ => unknown,
   };
 
   /// Имя этапа на проводе — им день закрывает этап (`POST …/stages/{stage}/close`, наряд DAY-UI).
   String get wire => name;
 
-  /// «Этап N из 5» на входе в этап (кадр 23-2a). У [unknown] номера нет — этап, которого эта
-  /// сборка не знает, в шапке не считается.
-  int get ordinal => index + 1;
-
-  /// Пять этапов дня в порядке хода, без «неизвестного».
+  /// The stages of a day in walking order, without «unknown» — the order a list of stages is sorted
+  /// into, not the composition of any one day.
   static List<PlanStage> get known =>
       PlanStage.values.where((s) => s != PlanStage.unknown).toList();
 }
@@ -197,9 +208,13 @@ class PlanRouteStage {
   final PlanStage stage;
   final PlanRouteStageState state;
 
-  factory PlanRouteStage.fromJson(Map<String, dynamic> j) {
+  /// A stage name this build has never heard of is SKIPPED, not fatal (наряд CLIENT-CONV-1a): the
+  /// server may deal a stage before the phone is updated for it, and a plan the whole tab cannot
+  /// draw is a worse answer than a line one node short. The state of a known stage stays closed —
+  /// a fourth word for it would be a fill the client invented.
+  static PlanRouteStage? maybe(Map<String, dynamic> j) {
     final stage = PlanStage.fromWire(j['stage'] as String?);
-    if (stage == PlanStage.unknown) throw PlanContractError('route stage «${j['stage']}»');
+    if (stage == PlanStage.unknown) return null;
 
     return PlanRouteStage(stage: stage, state: PlanRouteStageState.fromWire(j['state']));
   }
@@ -459,7 +474,7 @@ class PlanDayRoute {
     minutesSpent: (j['minutes_spent'] as num?)?.toInt() ?? 0,
     stages: [
       for (final s in (j['stages'] as List?) ?? const [])
-        if (s is Map<String, dynamic>) PlanRouteStage.fromJson(s),
+        if (s is Map<String, dynamic>) ?PlanRouteStage.maybe(s),
     ],
     sceneId: j['scene_id'] as String?,
     titleNative: j['title_native'] as String?,

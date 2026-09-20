@@ -60,20 +60,18 @@ void main() {
 
   // CATCHES: a slot whose text height is forced below the frame's line (the text touches the outline), and a slot that
   // keeps a fixed size around a long filler.
-  testWidgets('32-1 phrase_intro: the said filler and a chip filler — filled and highlighted', (tester) async {
+  testWidgets('32-1 phrase_intro: длинное значение дня встаёт в окно целиком', (tester) async {
     final intro = card('phrase_intro', (p) {
       filler(p, 0)['target'] = appointment;
       filler(p, 1)['target'] = apartment;
     });
     await pumpCard(tester, probeEnv(intro, CardProbe()), size: narrow);
     expectSlotFits(tester, appointment);
-
-    await tester.tap(find.byKey(const ValueKey('chip-1')));
-    await tester.pump();
-    expectSlotFits(tester, apartment);
+    // Плашки значений — состояние, а не выбор (наряд CLIENT-CONV-1a): в окне стоит значение дня и
+    // остаётся там.
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump();
-    expectSlotFits(tester, apartment);
+    expectSlotFits(tester, appointment);
     await settleCard(tester);
   });
 

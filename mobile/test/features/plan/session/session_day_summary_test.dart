@@ -93,10 +93,22 @@ Plan _plan() => Plan.fromJson({
   'versions': const <String, dynamic>{},
 });
 
-/// Every card answered; [open] — the positions per stage left unanswered.
-Map<String, dynamic> _day({Map<String, Set<int>> open = const {}, Map<String, Set<int>> returns = const {}}) {
+/// Every card answered AND the talk over ([talk] false — a day dealt without a sixth stage at all);
+/// [open] — the positions per stage left unanswered. [highlights] — the server's ready lines of 30-7.
+Map<String, dynamic> _day({
+  Map<String, Set<int>> open = const {},
+  Map<String, Set<int>> returns = const {},
+  bool talk = true,
+  List<String> highlights = const [],
+}) {
   final raw = sessionFixtureJson('day-doctor');
   (raw['day'] as Map<String, dynamic>)['minutes_spent'] = 19;
+  final window = raw['window'] as Map<String, dynamic>;
+  window['highlights'] = highlights;
+  window['stages'] = [
+    for (final row in (window['stages'] as List).cast<Map<String, dynamic>>())
+      if (row['stage'] != 'conversation') row else if (talk) {...row, 'state': 'done'},
+  ];
   for (final s in (raw['stages'] as List).cast<Map<String, dynamic>>()) {
     for (final c in (s['cards'] as List).cast<Map<String, dynamic>>()) {
       if (open[s['stage']]?.contains(c['position']) ?? false) continue;
@@ -168,7 +180,7 @@ void main() {
 
     expect(find.text('День пройден · 19 минут'), findsOneWidget);
     expect(find.byKey(const ValueKey('day-summary-plate')), findsOneWidget);
-    for (final stage in ['Слова', 'Фразы', 'Диалог', 'Слушаю и отвечаю', 'Говорю сам']) {
+    for (final stage in ['Слова', 'Фразы', 'Диалог', 'Слушаю и отвечаю', 'Говорю сам', 'Разговор']) {
       expect(find.descendant(of: find.byKey(const ValueKey('day-summary-plate')), matching: find.text(stage)), findsOneWidget, reason: stage);
     }
     expect(find.text('ВЕРНЁТСЯ ЗАВТРА'), findsOneWidget);
@@ -184,6 +196,40 @@ void main() {
     expect(backend.closes, 1);
     expect(find.byType(SessionScreen), findsNothing, reason: 'back to the day window, which reads the plan again');
     expect(find.text('window'), findsOneWidget);
+  });
+
+  // THE DAY IS WHAT THE SERVER DEALT (наряд CLIENT-CONV-1a). A day with five rows has no «Разговор»
+  // on its summary — not greyed out, not «coming soon»: absent.
+  // CATCHES: a sixth row drawn by the client's own list of stages rather than by `window.stages`.
+  testWidgets('пять этапов без «Разговора» закрывают день', (tester) async {
+    final backend = _Backend(_day(talk: false));
+    await _open(tester, backend);
+
+    expect(find.text('День пройден · 19 минут'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('day-summary-plate')), matching: find.text('Разговор')), findsNothing);
+    expect(find.text('ЧТО БЫЛО ХОРОШО'), findsNothing, reason: 'the server sent no lines');
+
+    await tester.tap(find.byKey(const ValueKey('day-summary-close')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(backend.closes, 1);
+  });
+
+  // «Что было хорошо» — the SERVER's own lines, printed in order and nothing else. A block with no
+  // lines is not drawn at all.
+  // CATCHES: a client counting «сказал сам N реплик» for itself, or inflecting the server's line.
+  testWidgets('«Что было хорошо» — готовые строки сервера, по порядку', (tester) async {
+    await _open(tester, _Backend(_day(highlights: const [
+      'Сказал сам 6 реплик из 8',
+      'В разговоре использовал 5 фраз из 7',
+      'Понял все вопросы врача',
+    ])));
+
+    expect(find.text('ЧТО БЫЛО ХОРОШО'), findsOneWidget);
+    for (final (i, line) in ['Сказал сам 6 реплик из 8', 'В разговоре использовал 5 фраз из 7', 'Понял все вопросы врача'].indexed) {
+      expect(find.byKey(ValueKey('day-summary-highlight-$i')), findsOneWidget);
+      expect(find.text(line), findsOneWidget);
+    }
   });
 
   // CATCHES: a retelling recognized in the target language, an echo recognized in the native one.

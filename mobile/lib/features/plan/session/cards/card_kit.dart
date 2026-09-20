@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../../data/plan/day_window.dart' show WindowPair;
 import '../../../../data/plan/plan_models.dart';
 import '../../../../data/plan/session/dialogue_feed.dart';
 import '../../../../data/plan/session/session_models.dart';
@@ -41,6 +42,7 @@ class CardEnv {
     this.replay = false,
     this.frameSentence,
     this.termText,
+    this.exchangeOf,
     this.level = PlanLevel.intermediate,
     this.noHints = false,
     this.feed = const [],
@@ -90,6 +92,10 @@ class CardEnv {
 
   /// The day's word by its unit `ref` ([SessionDay.termText]) — what the phone reads on «By ear» without a file.
   final String? Function(String unitRef)? termText;
+
+  /// THE EXCHANGE THE LEARNER'S LINE BELONGS TO ([SessionDay.exchangeOf]) — «В разговоре» on 32-1,
+  /// third state. Null when the day's dialogue does not hold that line: the block is then not drawn.
+  final WindowPair? Function(String ownLineTarget)? exchangeOf;
 
   /// The plan's level — the dialogue's mode (SESSION-1c, section 2).
   final PlanLevel level;

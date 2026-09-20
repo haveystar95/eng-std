@@ -5,14 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
-import '../../../../data/plan/session/dialogue_feed.dart';
 import '../../../../data/plan/session/heard_words.dart';
 import '../../../../data/plan/session/live_line.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
-import '../../../../data/plan/session/speech_match.dart';
 import '../../../../data/speech/speech_turn.dart';
+import '../../conversation/talk_ribbon.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
 import '../parts/session_line_sheet.dart';
@@ -169,21 +168,27 @@ mixin _JudgedCardState<T extends StatefulWidget> on State<T> {
 
 // ── 35-2 · 35-5 ───────────────────────────────────────────────────────────────────────────────────
 
-/// How the frame hint was opened.
+/// How the intention was offered.
 enum _Hint { none, silence, button }
 
-/// ANSWER THE PARTNER (35-2; rejected — 35-5): the partner's line (`partner_line`) sounds when the card opens; the own
-/// bubble waits with a wave over the task (`task_native`); the microphone; while recording the live line stands in the
-/// own bubble. 5 s of silence without a recording — the frame hint (`hint`) rises over the microphone with a brass
-/// slot. The attempt goes to the judge with `hinted` — true when the hint was on screen before it. Accepted — the frame
-/// in the bubble with the judge's `slot_value` in sage, «by meaning ✓», a check, auto-advance. Rejected — the words
-/// that do not belong fade in the bubble, the reason, three exits over the microphone: «Try again» (brass), «Hint»,
-/// «Skip»; after the hint — two. «No hints» — no hint by silence and no «Hint».
+/// ANSWER THE PARTNER (35-2; rejected — 35-5), REBUILT ON THE TALK'S RIBBON (наряд CLIENT-CONV-1a):
+/// the same bubbles and the same microphone as кадры 37-6…37-8, with the two differences the canvas
+/// names — here the partner's text is OPEN from the start (it is a trainer, not a talk), and the left
+/// exit is «Пропустить», not «Не понял».
 ///
-/// AN `ask` EXCHANGE HAS NO QUESTION (work order FIX-2 §3): the learner speaks first, and the partner's line of that
-/// exchange is the ANSWER — the server sends `partner_line: null` there. The card then says «Ask, in your own words»
-/// and the own bubble holds the intent — the learner's own line in their language, in quotes. Everything else is the
-/// same: the frame hint after five seconds of silence, the judge, the exits.
+/// The partner's line sounds when the card opens and stands with its translation. THE OWN BUBBLE
+/// APPEARS ONLY ONCE THERE IS SOMETHING IN IT: what is being said, or what was said. Five seconds of
+/// silence — or «Подсказать» — raise the CHIP with the task in the learner's language, and the button
+/// goes away with it (the two never stand together). The attempt goes to the judge with `hinted`.
+/// Accepted — the words the server matched to phrases of the day are underlined in sage, and the card
+/// leaves by itself. Rejected — the judge's own sentence stands in ink under the bubble, «Ещё раз» is
+/// a button and «Пропустить» a link. Under «Без подсказок» there is no chip and no «Подсказать».
+///
+/// AN `ask` EXCHANGE HAS NO QUESTION (work order FIX-2 §3): the learner speaks first, and the
+/// partner's line of that exchange is the ANSWER — the server sends `partner_line: null`. The card
+/// then says «Спроси сам» and the intention stands as a LIGHT plate on the right, where the learner's
+/// own line will go; the ink bubble appears only after they have said something (кадр 35-2
+/// «Намерение»).
 class SpeakAnswerCard extends StatefulWidget {
   const SpeakAnswerCard({super.key, required this.env, required this.payload});
 
@@ -247,7 +252,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
     super.dispose();
   }
 
-  /// 5 s of silence before the first recording raise the frame hint — never under «No hints».
+  /// 5 s of silence before the first recording raise the chip — never under «Без подсказок».
   void _armSilence() {
     if (env.noHints || _hint != _Hint.none) return;
     _silence?.cancel();
@@ -264,6 +269,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
 
   void _showHint() {
     if (env.noHints) return;
+    _silence?.cancel();
     setState(() => _hint = _Hint.button);
   }
 
@@ -276,13 +282,17 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
     }
   }
 
+  /// The chip stands while the task is offered and the card is still open; in «Спроси сам» the
+  /// intention is on screen from the start and stands on the right instead.
+  bool get _chipShown => !_asks && _hint != _Hint.none && !env.noHints && !finished;
+
   @override
   Widget build(BuildContext context) {
     final noMic = noMicView();
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
     final line = p.partnerLine;
-    final accepted = verdict?.accepted == true;
+    final own = _ownBubble(l);
     return CardLayout(
       feed: true,
       bodyGap: 16,
@@ -291,106 +301,98 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (line != null) ...[
-            SessionPartnerRow(
-              bubble: SessionBubble(own: false, text: line.textTarget, translation: line.textNative),
-              listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _partnerKey, size: 28, brass: true),
+          if (line != null)
+            ValueListenableBuilder<Object?>(
+              valueListenable: env.voice.playing,
+              builder: (_, playing, _) => TalkPartnerBubble(
+                text: line.textTarget,
+                translation: line.textNative,
+                open: true,
+                playing: playing == _partnerKey,
+                onListen: () => unawaited(env.voice.play(line.audio, fallback: line.textTarget, key: _partnerKey)),
+              ),
             ),
-            const SizedBox(height: 8),
+          // «Спроси сам»: the intention is a light plate on the right — a dark bubble is only ever
+          // what the learner actually said.
+          if (_asks) ...[
+            if (line != null) const SizedBox(height: 8),
+            TalkHintChip(key: const ValueKey('speak-ask-intent'), text: l.planSessionAskIntent(p.taskNative), alignEnd: true),
           ],
-          SessionOwnRow(mark: accepted ? FeedMark.passed : FeedMark.none, bubble: _ownBubble(l)),
+          if (own != null) ...[const SizedBox(height: 8), own],
         ],
       ),
       bottom: _dock(l),
     );
   }
 
-  Widget _ownBubble(AppLocalizations l) {
-    final style = SessionBubble.lineStyle(own: true);
-    final v = verdict;
-    if (v != null && v.accepted) {
-      final slot = v.slotValue;
-      final filler = slot == null ? null : p.frame.fillers.where((f) => SpeechMatch.containsSequence(slot, f.target, env.speech)).firstOrNull;
-      final parts = p.frame.parts;
-      return SessionBubble(
-        own: true,
-        translation: filler?.nativeLine ?? (slot == null ? p.taskNative : null),
-        // «By meaning ✓» is the JUDGE's verdict, and a replay has no judge (FIX-1 §5): the pass there is the
-        // phone's coverage, which says nothing about meaning.
-        footer: env.judgedHere
-            ? Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(l.planSessionByMeaning, key: const ValueKey('speak-by-meaning'), style: AppTextSession.meta.copyWith(color: AppColors.sessionSageOnInk)),
-              )
-            : null,
-        child: p.frame.hasSlot && slot != null
-            ? SessionFrameText(before: parts.before, after: parts.after, style: style, slot: slot, look: SlotLook.sage, onInk: true)
-            : Text(p.frame.hasSlot ? heard : p.frame.frameTarget, style: style.copyWith(color: AppColors.sessionSageOnInk)),
-      );
-    }
-    if (rejected || judging) {
-      return SessionBubble(own: true, child: SessionInkLiveLine(words: LiveLine.of(heard, _framePart, listening: false), dimPlain: rejected));
-    }
+  /// The own bubble — only when there is something in it: the live line while a recording is on, and
+  /// what was said once it has closed. The judge's sentence stands UNDER it, in ink.
+  Widget? _ownBubble(AppLocalizations l) {
+    final accepted = verdict?.accepted == true;
     if (mic.isListening && mic.partial.trim().isNotEmpty) {
-      return SessionBubble(own: true, child: SessionInkLiveLine(words: LiveLine.of(mic.partial, _framePart, listening: !mic.closed)));
+      return TalkOwnBubble(child: SessionInkLiveLine(words: LiveLine.of(mic.partial, _framePart, listening: !mic.closed)));
     }
-    // Waiting for the answer: the wave and the task in the native language — on an `ask` exchange, the INTENT
-    // («Ask: „…"»), because there is no question above it to answer (FIX-2 §3).
-    return SessionBubble(
-      own: true,
-      translation: _asks ? l.planSessionAskIntent(p.taskNative) : p.taskNative,
-      child: const SessionWave(heights: SessionWave.five, width: 80),
-    );
-  }
-
-  /// The frame hint over the microphone — the frame with an empty brass slot (a frame without a slot — the frame) and
-  /// its caption.
-  Widget? _hintView(AppLocalizations l) {
-    if (_hint == _Hint.none || env.noHints || finished) return null;
-    final parts = p.frame.parts;
-    return SessionAppear(
-      key: const ValueKey('speak-hint'),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SessionFrameText(
-            before: parts.before,
-            after: parts.after,
-            style: AppTextSession.target22,
-            window: p.frame.hasSlot,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 14),
-          Text(_hint == _Hint.silence ? l.planSessionHintSilence : l.planSessionHintOpened, style: AppTextSession.meta),
-        ],
-      ),
+    if (heard.trim().isEmpty) return null;
+    final bubble = accepted
+        ? TalkOwnBubble(key: const ValueKey('speak-own'), text: heard, marks: HeardWords.matched(heard, p.ownLine.textTarget))
+        : TalkOwnBubble(
+            key: const ValueKey('speak-own'),
+            child: SessionInkLiveLine(words: LiveLine.of(heard, _framePart, listening: false), dimPlain: rejected),
+          );
+    if (!rejected) return bubble;
+    final why = (reason ?? '').trim().isEmpty ? l.planSessionNotThat : reason!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        bubble,
+        const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(why, key: const ValueKey('speak-judge-line'), textAlign: TextAlign.right, style: AppTextSession.body),
+        ),
+      ],
     );
   }
 
   Widget _dock(AppLocalizations l) {
-    final hint = _hintView(l);
+    // Rejected: the way on is a button, and «Пропустить» is a link under it (кадр 35-2 «не зачтено»).
     if (rejected) {
-      final hinted = _hint != _Hint.none;
-      return SessionMicPanel(
-        mic: mic,
-        expected: _framePart,
-        onSkip: null,
-        liveLine: MicLiveLine.none,
-        top: hint,
-        missedCaption: (reason ?? '').trim().isEmpty ? l.planSessionNotThat : reason,
-        exits: [
-          SessionTextExit(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, brass: !hinted, onTap: tryAgain),
-          if (!hinted && !env.noHints) SessionTextExit(key: const ValueKey('exit-hint'), label: l.planSessionHintAction, onTap: _showHint),
-          SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, onTap: skip),
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_chipShown) ...[TalkHintChip(text: p.taskNative), const SizedBox(height: 14)],
+          Center(child: SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, onTap: skip)),
+          const SizedBox(height: 14),
+          SessionDockButton(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, onTap: tryAgain),
         ],
       );
     }
-    return SessionMicPanel(
-      mic: mic,
-      expected: _framePart,
-      onSkip: finished || judging ? null : skip,
-      liveLine: MicLiveLine.none,
-      top: hint,
+    final look = switch (mic.state) {
+      MicState.listening => TalkMicLook.listening,
+      MicState.heard => TalkMicLook.heard,
+      _ => judging ? TalkMicLook.busy : TalkMicLook.waiting,
+    };
+    return TalkDock(
+      debugMic: finished || judging ? null : mic,
+      chip: _chipShown ? TalkHintChip(text: p.taskNative) : null,
+      caption: switch (mic.state) {
+        MicState.listening => l.planSessionMicListening,
+        MicState.heard => l.planSessionMicHeard,
+        MicState.missed => l.planSessionMicMissed,
+        _ => judging ? null : l.planSessionMicTap,
+      },
+      left: finished || judging
+          ? null
+          : SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, onTap: skip),
+      right: _asks || env.noHints || _hint != _Hint.none || finished || judging
+          ? null
+          : SessionTextExit(key: const ValueKey('exit-hint'), label: l.planSessionHintAction, onTap: _showHint),
+      mic: TalkMicButton(
+        look: look,
+        label: l.planSessionMicTap,
+        onTap: finished || judging || mic.state == MicState.heard ? null : () => unawaited(mic.tap()),
+      ),
     );
   }
 }

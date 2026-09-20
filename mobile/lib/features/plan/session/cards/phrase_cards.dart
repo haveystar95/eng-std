@@ -6,11 +6,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../../data/plan/day_window.dart' show WindowPair;
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/plan/session/speech_match.dart';
 import '../parts/session_bits.dart';
+import '../parts/session_bubbles.dart';
 import '../parts/session_choice.dart';
 import '../parts/session_tiles.dart';
 import '../session_texts.dart';
@@ -112,7 +114,7 @@ class _PhraseSheet extends StatelessWidget {
   );
 }
 
-/// A row of filler chips 40: the chosen one is ink, the rest paper (32-1, 32-8).
+/// A row of filler chips 40: the chosen one is ink, the rest paper (32-8).
 class _FillerChips extends StatelessWidget {
   const _FillerChips({required this.fillers, required this.selected, required this.onTap});
 
@@ -137,14 +139,40 @@ class _FillerChips extends StatelessWidget {
   );
 }
 
+/// THE MEANINGS AS NEUTRAL PLATES (кадр 32-1, наряд CLIENT-CONV-1a) — «это карточка-урок, здесь
+/// ничего не выбирают». The plates say what the changing part can hold; the one standing in the
+/// window is outlined, and none of them is a button.
+class _MeaningPlates extends StatelessWidget {
+  const _MeaningPlates({required this.fillers, required this.shown});
+
+  final List<CardFiller> fillers;
+  final int? shown;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    key: const ValueKey('meaning-plates'),
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final f in fillers)
+        SessionTile(key: ValueKey('meaning-${f.index}'), text: f.target, height: 40, outlined: true, selected: shown == f.index),
+    ],
+  );
+}
+
 // ── 32-1 ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// FRAME INTRO (32-1) — a lesson card, not a task: «Look and listen»; the frame with a filler ALWAYS in its slot —
-/// the one the dialogue says, until a chip is tapped. The chosen chip is ink and the same word stands in the brass
-/// slot; the reading and the translation change with it. A tap voices the phrase with that filler. A frame with one
-/// meaning (or none) is the third state of the canvas: the phrase whole, no slot and no chips. On open the phrase
-/// plays by itself once (SESSION-1b′, item 11), then only by «Listen» and the chips. «Got it» → `passed`, no
-/// reaction sound.
+/// FRAME INTRO (кадр 32-1) — A LESSON CARD, NOT A TASK (наряд CLIENT-CONV-1a): «Посмотри и
+/// послушай», the frame with a filler always in its slot, and under it the meanings as NEUTRAL
+/// PLATES with the caption «эту часть можно менять». Nothing here is chosen: the plates show what
+/// the changing part can hold, and the card ends in «Дальше».
+///
+/// THE THIRD STATE — one meaning, no window: the phrase stands whole, the line of sense says so in
+/// as many words, and under it «В разговоре» holds the exchange the phrase is said in. That exchange
+/// comes from the day's own dialogue: `phrase_intro` carries no `usage` of its own, so a phrase the
+/// day's dialogue does not hold gets no block at all.
+///
+/// On open the phrase plays by itself once (SESSION-1b′, item 11), then only by «Прослушать».
 class PhraseIntroCard extends StatefulWidget {
   const PhraseIntroCard({super.key, required this.env, required this.payload});
 
@@ -156,41 +184,31 @@ class PhraseIntroCard extends StatefulWidget {
 }
 
 class _PhraseIntroCardState extends State<PhraseIntroCard> {
-  /// The filler the learner put in themselves; null — the one said in the dialogue.
-  CardFiller? _filler;
-
   Timer? _autoplayTimer;
 
-  /// The card offers a choice: a slot with more than one meaning. One meaning (or a frame without a slot) is the
-  /// canvas' third state — the phrase whole, no slot and no chips.
-  bool get _choosable => widget.payload.frame.hasSlot && widget.payload.frame.fillers.length > 1;
+  /// The frame has a slot with more than one meaning — the plates stand under it. One meaning (or a
+  /// frame without a slot) is the canvas' third state: the phrase whole, no plates.
+  bool get _changeable => widget.payload.frame.hasSlot && widget.payload.frame.fillers.length > 1;
 
-  /// What stands in the slot — always something while there is a choice: the learner's chip, the filler the dialogue
-  /// says, otherwise the first one (the one the dialogue says may be missing from the card, SESSION-1e).
+  /// What stands in the slot — the filler the dialogue says, otherwise the first one (the one the
+  /// dialogue says may be missing from the card, SESSION-1e).
   CardFiller? get _shown {
     final frame = widget.payload.frame;
-    if (!_choosable) return frame.filler(widget.payload.said.fillerIndex);
-    return _filler ?? frame.filler(widget.payload.said.fillerIndex) ?? frame.fillers.first;
+    if (!_changeable) return frame.filler(widget.payload.said.fillerIndex);
+    return frame.filler(widget.payload.said.fillerIndex) ?? frame.fillers.first;
   }
 
   @override
   void initState() {
     super.initState();
     final said = widget.payload.said;
-    // The phrase as the dialogue says it — the same sound «Listen» plays before a chip is chosen.
-    _autoplayTimer = autoplayOnce(this, widget.env, said.audio, said.textTarget, 'intro-phrase', skip: () => _filler != null);
+    _autoplayTimer = autoplayOnce(this, widget.env, said.audio, said.textTarget, 'intro-phrase');
   }
 
   @override
   void dispose() {
     _autoplayTimer?.cancel();
     super.dispose();
-  }
-
-  void _pick(CardFiller f) {
-    final frame = widget.payload.frame;
-    setState(() => _filler = f);
-    unawaited(widget.env.voice.play(f.audio, fallback: frame.filledWith(f.target), key: 'chip-${f.index}'));
   }
 
   @override
@@ -200,39 +218,93 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
     final p = widget.payload;
     final frame = p.frame;
     final shown = _shown;
-    final listenAudio = _filler?.audio ?? p.said.audio;
-    final listenText = _filler == null ? p.said.textTarget : frame.filledWith(_filler!.target);
+    final pair = _changeable ? null : env.exchangeOf?.call(p.said.textTarget);
     return CardLayout(
       bodyGap: 12,
       fadeStop: 0.34,
-      task: SessionTask(l.planSessionTaskLookListen),
+      task: SessionTask(
+        l.planSessionTaskLookListen,
+        // THE LINE OF SENSE. Only the one-meaning state has words the client may write: «эту фразу
+        // говорят целиком» is true of every such phrase. What makes a CHANGING frame what it is
+        // («так говорят, где болит») is about this phrase alone, and the contract sends no such line
+        // — so none is drawn (отчёт §5).
+        companion: _changeable ? null : l.planSessionFrameWhole,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _PhraseSheet(
             plate: _PhrasePlate(
               height: 288,
-              listen: CardListen(env: env, audio: listenAudio, fallback: listenText, playKey: 'intro-phrase'),
-              child: _choosable && shown != null
+              listen: CardListen(env: env, audio: p.said.audio, fallback: p.said.textTarget, playKey: 'intro-phrase'),
+              child: _changeable && shown != null
                   ? SessionFrameText.frame(frame, style: AppTextSession.frame, slot: shown.target, look: SlotLook.filled)
                   : SessionFrameText.plain(frame.hasSlot ? p.said.textTarget : frame.frameTarget, style: AppTextSession.frame),
             ),
             footer: _PhraseFooter(reading: _pronunciation(frame, shown), native: _native(frame, shown)),
           ),
-          if (_choosable) ...[
+          if (_changeable) ...[
+            const SizedBox(height: 20),
+            Text(l.planSessionChangeable, key: const ValueKey('changeable-caption'), style: AppTextSession.meta),
+            const SizedBox(height: 10),
+            _MeaningPlates(fillers: frame.fillers, shown: shown?.index),
+          ] else if (pair != null) ...[
             const SizedBox(height: 24),
-            _FillerChips(fillers: frame.fillers, selected: shown?.index, onTap: _pick),
+            SessionEyebrow(l.planSessionInTalk),
+            const SizedBox(height: 14),
+            _InTalk(pair: pair, env: env),
           ],
         ],
       ),
       bottom: SessionDockButton(
-        label: l.planSessionUnderstood,
+        label: l.planSessionNext,
         busy: env.advancing,
         onTap: () {
           env.submit(const SessionAnswer(result: SessionResult.passed, attempts: 1));
           unawaited(env.next());
         },
       ),
+    );
+  }
+}
+
+/// «В РАЗГОВОРЕ» (кадр 32-1, третье состояние) — the exchange the phrase is said in, as the two
+/// bubbles the whole product draws a conversation with.
+class _InTalk extends StatelessWidget {
+  const _InTalk({required this.pair, required this.env});
+
+  final WindowPair pair;
+  final CardEnv env;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final partner = pair.partner;
+    final learner = pair.learner;
+    final rows = <Widget>[
+      if (partner != null)
+        SessionPartnerRow(
+          key: const ValueKey('in-talk-partner'),
+          bubble: SessionBubble(own: false, text: partner.text, translation: partner.translation),
+          listen: SessionListenButton(
+            size: 28,
+            brass: true,
+            label: l.planWindowListen,
+            onTap: () => unawaited(env.voice.play(
+              partner.audioUrl == null ? null : CardAudio(ref: 'in-talk-partner', url: partner.audioUrl, voice: 'partner'),
+              fallback: partner.text,
+              key: 'in-talk-partner',
+            )),
+          ),
+        ),
+      if (learner != null)
+        SessionOwnRow(key: const ValueKey('in-talk-learner'), bubble: SessionBubble(own: true, text: learner.text, translation: learner.translation)),
+    ];
+    final ordered = pair.learnerFirst ? rows.reversed.toList() : rows;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [for (final (i, row) in ordered.indexed) ...[if (i > 0) const SizedBox(height: 8), row]],
     );
   }
 }
@@ -501,11 +573,9 @@ class _PhraseSlotCardState extends State<PhraseSlotCard> with ChoiceCardState<Ph
           ),
         ],
       ),
-      bottom: optionsDock(
-        context,
-        target: true,
-        listen: (o) => CardListen(env: env, audio: o.audio, fallback: p.frame.filledWith(o.text), playKey: 'option-${o.id}', size: 28),
-      ),
+      // «ПРОСЛУШАТЬ» СНЯТО (кадр 32-4, наряд CLIENT-CONV-1a): заданием здесь стоит перевод над
+      // карточкой, и кружок у каждого варианта предлагал прослушать ответ до того, как его выбрали.
+      bottom: optionsDock(context, target: true),
     );
   }
 }
@@ -876,7 +946,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
           ),
           if (_frame.hasSlot) ...[
             const SizedBox(height: 20),
-            _RoundChips(fillers: _frame.fillers, round: round, rounds: _values),
+            _RoundChips(fillers: _frame.fillers, round: round, rounds: _values, ownRound: _ownRound != null),
           ],
         ],
       ),
@@ -885,35 +955,48 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
   }
 }
 
-/// THE CHIPS OF «SAY IT WHOLE» — a STATE, not a choice (FIX-1 §6): said (a sage check), now (ink), ahead (an
-/// outline). The own-word round has no chip of its own — the row is then all checks, and the task line says what
-/// is left to do.
+/// THE PLATES OF «SAY IT WHOLE» — a STATE, not a choice (FIX-1 §6, кадр 32-7): said (a sage check),
+/// now (ink), ahead (an outline). THE OWN WORD IS THE LAST PLATE OF THE ROW (наряд CLIENT-CONV-1a):
+/// it is a round like the others, and a row that ended in checks left the last round with nothing
+/// showing where it stood.
 class _RoundChips extends StatelessWidget {
-  const _RoundChips({required this.fillers, required this.round, required this.rounds});
+  const _RoundChips({required this.fillers, required this.round, required this.rounds, required this.ownRound});
 
   final List<CardFiller> fillers;
   final int round;
   final List<CardSayWholeRound> rounds;
 
+  /// The card ends in the learner's own word; false — the stage's ceiling cut that round.
+  final bool ownRound;
+
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
-    children: [
-      for (final f in fillers)
-        if (rounds.indexWhere((r) => r.fillerIndex == f.index) case final at when at >= 0)
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final f in fillers)
+          if (rounds.indexWhere((r) => r.fillerIndex == f.index) case final at when at >= 0)
+            SessionTile(
+              key: ValueKey('chip-${f.index}'),
+              text: f.target,
+              height: 40,
+              outlined: true,
+              selected: at == round,
+              trailing: at < round ? const Icon(LucideIcons.check, size: 16, color: AppColors.verdictKnown) : null,
+            ),
+        if (ownRound)
           SessionTile(
-            key: ValueKey('chip-${f.index}'),
-            text: f.target,
+            key: const ValueKey('chip-own'),
+            text: l.planSessionOwnWordChip,
             height: 40,
             outlined: true,
-            selected: at == round,
-            trailing: at < round
-                ? const Icon(LucideIcons.check, size: 16, color: AppColors.verdictKnown)
-                : null,
+            selected: round >= rounds.length,
           ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 /// The heard words beyond the frame [frame] in speech order — what goes into the slot; empty — [fallback].

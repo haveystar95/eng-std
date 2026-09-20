@@ -197,6 +197,7 @@ CardEnv probeEnv(
   openSettings: () async {},
   frameSentence: day?.frameSentence,
   termText: day?.termText,
+  exchangeOf: day?.exchangeOf,
   level: level,
   replay: replay,
   noHints: noHints,

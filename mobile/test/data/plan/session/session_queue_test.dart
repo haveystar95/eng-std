@@ -104,6 +104,30 @@ class _FakeBackend implements SessionBackend {
   }
 }
 
+/// THE SAME DAY WITHOUT A SIXTH STAGE — what the server deals for a day dealt before наряд CONV-1,
+/// and for every day while the talk is switched off (`plan.conversation.enabled = false`, the state
+/// of прод at the time of this наряд): five rows in the window and no talk among them.
+Map<String, dynamic> _withoutTalk(Map<String, dynamic> raw) {
+  final window = raw['window'] as Map<String, dynamic>;
+  window['stages'] = [
+    for (final s in (window['stages'] as List).cast<Map<String, dynamic>>())
+      if (s['stage'] != 'conversation') s,
+  ];
+  raw['stages'] = [
+    for (final s in (raw['stages'] as List).cast<Map<String, dynamic>>())
+      if (s['stage'] != 'conversation') s,
+  ];
+  return raw;
+}
+
+/// The day's talk is over — its own row says so, and nothing else can.
+Map<String, dynamic> _talkDone(Map<String, dynamic> raw) {
+  for (final s in ((raw['window'] as Map<String, dynamic>)['stages'] as List).cast<Map<String, dynamic>>()) {
+    if (s['stage'] == 'conversation') s['state'] = 'done';
+  }
+  return raw;
+}
+
 /// [raw] with every card answered `passed`.
 Map<String, dynamic> _allAnswered(Map<String, dynamic> raw) {
   for (final s in (raw['stages'] as List).cast<Map<String, dynamic>>()) {
@@ -346,20 +370,53 @@ void main() {
       session.dispose();
     });
 
-    test('every card answered — the day summary on entry; the last stage\'s summary leads to it', () async {
+    // CATCHES: «день пройден» on five stages while the day still owes its talk — the server refuses
+    // that close with 409 `plan_stage_incomplete`, `meta.stage: conversation` (наряд CONV-1).
+    test('every card answered but the talk not had — the talk\'s entry, not the day summary', () async {
       final session = SessionController(backend: _FakeBackend([_allAnswered(_raw())]), plan: _plan(), number: 1);
       await session.load();
+      expect(session.hasTalk, isTrue);
+      expect(session.phase, SessionPhase.talkEntry);
+      expect(session.stage, PlanStage.conversation);
+      session.dispose();
+    });
+
+    test('every card answered and the talk over — the day summary on entry', () async {
+      final session = SessionController(backend: _FakeBackend([_talkDone(_allAnswered(_raw()))]), plan: _plan(), number: 1);
+      await session.load();
       expect(session.phase, SessionPhase.daySummary);
-      expect(session.stage, PlanStage.speak);
       session.continueAfterSummary();
       expect(session.phase, SessionPhase.daySummary);
+      session.dispose();
+    });
+
+    // THE DAY IS WHAT THE SERVER DEALT. A day without a sixth row is walked and closed on five, and
+    // draws no talk anywhere — not greyed out, not «coming soon»: absent.
+    test('five stages without «Разговор» close the day', () async {
+      final session = SessionController(backend: _FakeBackend([_withoutTalk(_allAnswered(_raw()))]), plan: _plan(), number: 1);
+      await session.load();
+      expect(session.hasTalk, isFalse);
+      expect(session.dayStages, [PlanStage.words, PlanStage.phrases, PlanStage.dialogue, PlanStage.listen, PlanStage.speak]);
+      expect(session.phase, SessionPhase.daySummary);
+      session.dispose();
+    });
+
+    // The last card stage leads into the talk, and the talk into the day summary.
+    test('the last card stage\'s summary leads to the talk; «Дальше» of the talk to the day summary', () async {
+      final session = SessionController(backend: _FakeBackend([_allAnswered(_raw()), _talkDone(_allAnswered(_raw()))]), plan: _plan(), number: 1);
+      await session.load();
+      session.talkStarted();
+      session.talkEnded();
+      await session.afterTalk();
+      expect(session.phase, SessionPhase.daySummary);
+      expect(session.talkDone, isTrue, reason: 'the day was read again — the sixth row is now «пройден»');
       session.dispose();
     });
 
     // CATCHES: a close sent before the last answer is delivered, a closed day that stays open on the phone, an already
     // closed day reported as an error, and a network failure that pops the learner out as if the day had closed.
     test('closeDay: the answers first, then POST …/close; 409 not open — closed; 409 incomplete — back to the stage; offline — stays', () async {
-      final raw = _allAnswered(_raw());
+      final raw = _talkDone(_allAnswered(_raw()));
       final closed = jsonDecode(jsonEncode(raw)) as Map<String, dynamic>;
       (closed['day'] as Map<String, dynamic>)['status'] = 'closed';
       final backend = _FakeBackend([raw])..onClose = () async => SessionDay.fromJson(closed);
@@ -372,14 +429,14 @@ void main() {
       expect(backend.closes, 1);
       session.dispose();
 
-      final notOpen = _FakeBackend([_allAnswered(_raw())])..onClose = () async => throw _status(409, 'plan_day_not_open');
+      final notOpen = _FakeBackend([_talkDone(_allAnswered(_raw()))])..onClose = () async => throw _status(409, 'plan_day_not_open');
       final again = SessionController(backend: notOpen, plan: _plan(), number: 1);
       await again.load();
       expect(await again.closeDay(), isTrue);
       again.dispose();
 
       final incomplete = _raw();
-      final missing = _FakeBackend([_allAnswered(_raw()), incomplete])..onClose = () async => throw _status(409, 'plan_stage_incomplete');
+      final missing = _FakeBackend([_talkDone(_allAnswered(_raw())), incomplete])..onClose = () async => throw _status(409, 'plan_stage_incomplete');
       final back = SessionController(backend: missing, plan: _plan(), number: 1);
       await back.load();
       expect(await back.closeDay(), isFalse);
@@ -387,7 +444,7 @@ void main() {
       expect(back.stage, PlanStage.words);
       back.dispose();
 
-      final offline = _FakeBackend([_allAnswered(_raw())])..onClose = () async => throw _offline();
+      final offline = _FakeBackend([_talkDone(_allAnswered(_raw()))])..onClose = () async => throw _offline();
       final stays = SessionController(backend: offline, plan: _plan(), number: 1);
       await stays.load();
       expect(await stays.closeDay(), isFalse);
@@ -444,7 +501,7 @@ void main() {
     // CATCHES: «Once more» throwing the owner onto the day summary (17.09), a replay that writes answers, asks the
     // judge or re-reads the day over the replayed stage, and a replay that leaves the replayed answers on the summary.
     test('«Once more» restarts the stage: «Speak myself» unanswered on the phone, nothing sent, then the day summary again', () async {
-      final closed = _allAnswered(_raw());
+      final closed = _talkDone(_allAnswered(_raw()));
       (closed['day'] as Map<String, dynamic>)['status'] = 'closed';
       final backend = _FakeBackend([closed]);
       final session = SessionController(backend: backend, plan: _plan(), number: 1, replay: true);
@@ -480,7 +537,8 @@ void main() {
 
       session.continueAfterSummary();
       expect(session.phase, SessionPhase.daySummary);
-      expect(session.queue!.cardsOf(PlanStage.speak), hasLength(closed['stages'].last['cards'].length));
+      final speakCards = (closed['stages'] as List).cast<Map<String, dynamic>>().firstWhere((x) => x['stage'] == 'speak')['cards'] as List;
+      expect(session.queue!.cardsOf(PlanStage.speak), hasLength(speakCards.length));
       expect(session.queue!.isDone(PlanStage.speak), isTrue, reason: 'the summary is the server\'s day');
       expect(await session.closeDay(), isTrue, reason: 'a closed day is not closed again');
       expect(backend.closes, 0);
@@ -568,7 +626,7 @@ void main() {
     });
 
     test('the day summary reads the plan again — the next day as the server states it now', () async {
-      final backend = _FakeBackend([_allAnswered(_raw())])..plans.add(planWithDay({'status': 'in_progress', 'lesson_status': 'ready'}));
+      final backend = _FakeBackend([_talkDone(_allAnswered(_raw()))])..plans.add(planWithDay({'status': 'in_progress', 'lesson_status': 'ready'}));
       final session = SessionController(backend: backend, plan: _plan(), number: 1);
       await session.load();
       await pumpEventQueue();

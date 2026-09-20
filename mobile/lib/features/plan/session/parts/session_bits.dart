@@ -10,6 +10,7 @@ import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/plan_models.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../ui/plan_marks.dart';
+import '../../plan_stage_text.dart';
 
 /// SHARED BUILDING BLOCKS OF THE DAY SESSION (canvas `session-canvas.dc.html`, series 30–32): sheet, eyebrow, task
 /// line, wave, «listen», the action button and its dock, photo, frame line with a slot, «correct / wrong» reactions.
@@ -691,14 +692,5 @@ class SessionReturnDot extends StatelessWidget {
   }
 }
 
-/// Stage glyph 20 in a single color.
-Widget sessionStageGlyph(PlanStage stage, Color color) => PlanStageGlyph(kind: sessionStageMark(stage), color: color);
-
-/// The stage glyph by the stage name.
-PlanStageMarkKind sessionStageMark(PlanStage stage) => switch (stage) {
-  PlanStage.words => PlanStageMarkKind.words,
-  PlanStage.phrases => PlanStageMarkKind.phrases,
-  PlanStage.dialogue => PlanStageMarkKind.dialogue,
-  PlanStage.listen => PlanStageMarkKind.listen,
-  PlanStage.speak || PlanStage.unknown => PlanStageMarkKind.speak,
-};
+/// Stage glyph 20 in a single color. One rule for the whole plan — `planStageMark`.
+Widget sessionStageGlyph(PlanStage stage, Color color) => PlanStageGlyph(kind: planStageMark(stage), color: color);

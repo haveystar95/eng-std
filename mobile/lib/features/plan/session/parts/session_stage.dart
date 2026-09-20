@@ -500,6 +500,7 @@ class SessionDaySummary extends StatelessWidget {
     required this.stages,
     required this.stageName,
     required this.returnsLine,
+    this.highlights = const [],
     required this.nextDay,
     required this.scene,
     required this.onClose,
@@ -513,6 +514,11 @@ class SessionDaySummary extends StatelessWidget {
   /// The day's stages, in walking order — every one of them is done.
   final List<PlanStage> stages;
   final String Function(PlanStage stage) stageName;
+
+  /// «ЧТО БЫЛО ХОРОШО» (кадр 30-7, наряд CONV-1) — two or three READY lines of the server, printed
+  /// in order and not inflected here. Empty — the block is not drawn at all: a block that says «0
+  /// фраз» about a talk that did not happen is not praise.
+  final List<String> highlights;
 
   /// «5 cards: 2 words, 2 phrases and 1 line.»; null — nothing comes back, the block is not drawn.
   final String? returnsLine;
@@ -561,7 +567,16 @@ class SessionDaySummary extends StatelessWidget {
                           builder: (_, t, child) => Opacity(opacity: t, child: child),
                           child: plate,
                         ),
-                      if (returnsLine != null || nextDay != null) const SizedBox(height: 100),
+                      if (highlights.isNotEmpty) ...[
+                        const SizedBox(height: 40),
+                        SessionEyebrow(l.planTalkHighlights),
+                        const SizedBox(height: 14),
+                        for (final (i, line) in highlights.indexed) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          Text(line, key: ValueKey('day-summary-highlight-$i'), style: AppTextSession.body),
+                        ],
+                      ],
+                      if (returnsLine != null || nextDay != null) SizedBox(height: highlights.isEmpty ? 100 : 40),
                       if (returnsLine != null) ...[
                         SessionEyebrow(l.planSessionReturnsTomorrow),
                         const SizedBox(height: 14),

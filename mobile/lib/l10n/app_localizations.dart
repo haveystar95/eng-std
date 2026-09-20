@@ -3840,7 +3840,7 @@ abstract class AppLocalizations {
   /// Второе правило плана; в листе 21-8 под ним стоит ряд пяти значков этапов (plan.rule.stages).
   ///
   /// In ru, this message translates to:
-  /// **'Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам'**
+  /// **'Шесть этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам → разговор'**
   String get planRuleStages;
 
   /// Третье правило плана — витрина 21-1 и лист 21-8 (plan.rule.return).
@@ -5505,12 +5505,6 @@ abstract class AppLocalizations {
   /// **'Разрешить'**
   String get planSessionNoMicAllow;
 
-  /// Сессия, своё окно зачтено (32-9): строка шалфеем вместо перевода.
-  ///
-  /// In ru, this message translates to:
-  /// **'по смыслу ✓'**
-  String get planSessionByMeaning;
-
   /// Сессия, своё окно не зачтено (32-9): кнопка новой попытки под причиной отказа.
   ///
   /// In ru, this message translates to:
@@ -5763,12 +5757,6 @@ abstract class AppLocalizations {
   /// **'Послушай и выбери ответ'**
   String get planSessionTaskListenChoose;
 
-  /// Сессия, 34-5: текст вопроса в листе; контракт вопроса не отдаёт (наряд SESSION-2b §3).
-  ///
-  /// In ru, this message translates to:
-  /// **'Что прозвучит в ответ?'**
-  String get planSessionWhatAnswerSounds;
-
   /// Сессия, 34-5: кнопка — отмеченная озвучка и есть ответ; активна только когда лист отмечен и прослушан.
   ///
   /// In ru, this message translates to:
@@ -5870,18 +5858,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'жду'**
   String get planSessionWaiting;
-
-  /// Сессия, 35-2: подсказка-каркас встала сама после 5 с молчания.
-  ///
-  /// In ru, this message translates to:
-  /// **'подскажу каркас — окно твоё'**
-  String get planSessionHintSilence;
-
-  /// Сессия, 35-5: подсказка-каркас после «Подсказать».
-  ///
-  /// In ru, this message translates to:
-  /// **'каркас открыт — окно твоё'**
-  String get planSessionHintOpened;
 
   /// Сессия, 35-5: отказ судьи, когда сервер не прислал своей причины.
   ///
@@ -5996,6 +5972,216 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'День не закрылся — нет связи'**
   String get planSessionCloseFailed;
+
+  /// Имя шестого этапа дня (наряд CONV-1): плита таба 21-2, ряд окна 23-0a, узел маршрута, вход 30-1, итог дня 30-7, шапка экрана разговора 37-6.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор'**
+  String get planPlateStageTalk;
+
+  /// Имя этапа репетиции (кадры 37-1, 37-3): свои реплики плана, прочитанные и сказанные вслух.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вспомнить'**
+  String get planPlateStageRecall;
+
+  /// Вход в разговор (37-5): заголовок. Роль без склонения — «собеседник», как на входе в «Говорю сам»: контракт отдаёт роль только в именительном (полоса сцены над заголовком называет её словом).
+  ///
+  /// In ru, this message translates to:
+  /// **'Поговори с собеседником'**
+  String get planTalkEntryTitle;
+
+  /// Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут»; minutes — planMinutesCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'около {minutes}'**
+  String planTalkEntryMinutes(String minutes);
+
+  /// Вход в разговор репетиции (37-5): бровь вместо названия сцены — разговор идёт по всем сценам плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор целиком'**
+  String get planTalkEntryWhole;
+
+  /// Вход в разговор (37-5): первая строка правил. Роль без склонения — «собеседник».
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседник начнёт первым. Отвечай и спрашивай сам.'**
+  String get planTalkEntryRuleStart;
+
+  /// Вход в разговор (37-5): вторая строка правил. Пример «скажи „Sorry?“» из кадра снят: он на английском, а язык цели бывает любым.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не понял — нажми «Не понял», и он повторит проще.'**
+  String get planTalkEntryRuleRescue;
+
+  /// Вход в разговор (37-5): третья строка правил.
+  ///
+  /// In ru, this message translates to:
+  /// **'Считается: сказал сам, фразы дня, понял вопросы.'**
+  String get planTalkEntryRuleCounts;
+
+  /// Вход в разговор (37-5): кнопка — POST …/days/{n}/conversation.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать разговор'**
+  String get planTalkStart;
+
+  /// Экран разговора (37-6…37-10): кнопка слева от микрофона, во всех состояниях твоей очереди — ход kind=rescue, ход сцены не тратит.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не понял'**
+  String get planTalkRescueAction;
+
+  /// Экран разговора (37-7): чип подсказки — префикс печатает клиент, намерение intent приходит готовым (hints.native, без префикса).
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи, что {intent}'**
+  String planTalkHintChip(String intent);
+
+  /// Экран разговора (37-6…37-8): кнопка у пузыря собеседника — открывает текст реплики; в «Без подсказок» её нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'текст'**
+  String get planTalkOpenText;
+
+  /// Экран разговора (37-9): пометка у реплики собеседника, которую прервали тапом по микрофону.
+  ///
+  /// In ru, this message translates to:
+  /// **'прервано'**
+  String get planTalkInterrupted;
+
+  /// Экран разговора (37-7, 37-9): подпись под живой строкой, пока идёт запись.
+  ///
+  /// In ru, this message translates to:
+  /// **'тишина — конец'**
+  String get planTalkSilenceEnds;
+
+  /// Экран разговора (37-10): запись вышла пустой. Ход на сервер не уходит.
+  ///
+  /// In ru, this message translates to:
+  /// **'не расслышал — скажи ещё раз'**
+  String get planTalkUnheard;
+
+  /// Экран разговора (37-10): ход не дошёл. «Повторить» перечитывает разговор и повторяет ход, если он всё ещё твой.
+  ///
+  /// In ru, this message translates to:
+  /// **'Связь пропала — разговор продолжится отсюда'**
+  String get planTalkOffline;
+
+  /// Экран разговора (37-10): 503 plan_conversation_unavailable — в журнале не осталось ничего, ход повторяется один в один. Роль без склонения.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседник не отвечает — попробуй ещё раз'**
+  String get planTalkSilent;
+
+  /// Экран разговора: старт не прошёл (нет связи, роль не ответила).
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор не начался — попробуй ещё раз'**
+  String get planTalkOpenFailed;
+
+  /// Экран разговора: 422 plan_conversation_not_in_day — день роздан без шестого этапа.
+  ///
+  /// In ru, this message translates to:
+  /// **'В этом дне разговора нет'**
+  String get planTalkNotInDay;
+
+  /// Конец разговора (37-11): заголовок листа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор окончен'**
+  String get planTalkEnded;
+
+  /// Конец разговора (37-11): кнопка листа — ведёт на итог 37-12.
+  ///
+  /// In ru, this message translates to:
+  /// **'Итог'**
+  String get planTalkSummaryAction;
+
+  /// Итог разговора (37-12): счёт сервера said_count.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{Сказал сам {n} реплику} few{Сказал сам {n} реплики} many{Сказал сам {n} реплик} other{Сказал сам {n} реплики}}'**
+  String planTalkSaidLines(int n);
+
+  /// Итог разговора (37-12): understood_all = true.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понял все вопросы'**
+  String get planTalkUnderstoodAll;
+
+  /// Итог разговора (37-12): not_understood > 0.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{Понял вопросы, кроме одного — вернётся} other{Понял вопросы, кроме {n} — вернутся}}'**
+  String planTalkUnderstoodExcept(int n);
+
+  /// Итог разговора (37-12): вторая часть строки понимания, всегда нейтральная.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{переспросил {n} раз} few{переспросил {n} раза} many{переспросил {n} раз} other{переспросил {n} раза}}'**
+  String planTalkRescues(int n);
+
+  /// Итог разговора (37-12): бровь списка фраз — счёт сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы дня в разговоре · {used} из {total}'**
+  String planTalkPhrasesOf(int used, int total);
+
+  /// Итог разговора (37-12): группа несказанного у дня и повторения (returns_tomorrow = true).
+  ///
+  /// In ru, this message translates to:
+  /// **'Не прозвучало — вернётся завтра'**
+  String get planTalkNotSaidTomorrow;
+
+  /// Итог разговора (37-12): группа несказанного у репетиции — завтра событие, возврата не будет (returns_tomorrow = false).
+  ///
+  /// In ru, this message translates to:
+  /// **'Не прозвучало — повтори перед приёмом'**
+  String get planTalkNotSaidRehearsal;
+
+  /// Итог разговора репетиции (37-12): заголовок вместо счёта реплик.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты готов к приёму'**
+  String get planTalkReady;
+
+  /// Итог дня (30-7): бровь блока готовых строк сервера (window.highlights).
+  ///
+  /// In ru, this message translates to:
+  /// **'Что было хорошо'**
+  String get planTalkHighlights;
+
+  /// «Что прозвучит в ответ?» (34-5): подпись задания под шапкой.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушай целиком — ответ один'**
+  String get planSessionListenWholeOne;
+
+  /// Знакомство с каркасом (32-1), третье состояние: у фразы одно значение, окна нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эту фразу говорят целиком — в ней ничего не меняется'**
+  String get planSessionFrameWhole;
+
+  /// Знакомство с каркасом (32-1): подпись над плашками значений.
+  ///
+  /// In ru, this message translates to:
+  /// **'эту часть можно менять'**
+  String get planSessionChangeable;
+
+  /// Знакомство с каркасом (32-1), третье состояние: бровь блока с репликой дня, в которой фраза звучит.
+  ///
+  /// In ru, this message translates to:
+  /// **'В разговоре'**
+  String get planSessionInTalk;
+
+  /// «Скажи целиком» (32-7): последняя плашка ряда значений — круг своего слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'своё слово'**
+  String get planSessionOwnWordChip;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

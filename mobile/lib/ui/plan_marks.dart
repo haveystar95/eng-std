@@ -21,13 +21,18 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eng_std/theme/theme.dart';
 
-/// Пять этапов дня — порядок канвы: слова → фразы → диалог → слушаю и отвечаю → говорю сам.
+/// Этапы дня — порядок канвы: слова → фразы → диалог → слушаю и отвечаю → говорю сам → разговор.
+///
+/// У РАЗГОВОРА ЗНАЧОК ДИАЛОГА — так его нарисовала канва (кадры 23-0a, 30-1, 21-8: шестой ряд
+/// повторяет третий рисунок пузырей). Значение отдельное, а не `dialogue` дважды: ряд называет этап,
+/// и этап, которого эта сборка не знает, не должен доставать чужой значок из списка.
 enum PlanStageMarkKind {
   words('assets/stages/words.svg'),
   phrases('assets/stages/phrases.svg'),
   dialogue('assets/stages/dialogue.svg'),
   listen('assets/stages/listen.svg'),
-  speak('assets/stages/speak.svg');
+  speak('assets/stages/speak.svg'),
+  talk('assets/stages/dialogue.svg');
 
   const PlanStageMarkKind(this.asset);
 

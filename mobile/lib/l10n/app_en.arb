@@ -1116,7 +1116,7 @@
   "@planRuleSituation": {
     "description": "Первое правило плана — витрина 21-1 и лист 21-8 (plan.rule.situation)."
   },
-  "planRuleStages": "Five stages in order: words → phrases → dialogue → listen and reply → speak on my own",
+  "planRuleStages": "Six stages in order: words → phrases → dialogue → listen and reply → speak on my own → talk",
   "@planRuleStages": {
     "description": "Второе правило плана; в листе 21-8 под ним стоит ряд пяти значков этапов (plan.rule.stages)."
   },
@@ -2204,7 +2204,6 @@
   "planSessionNoMicTitle": "Microphone needed",
   "planSessionNoMicBody": "Without it, “Listen and answer” and “Speak myself” can't be done. Words and phrases work with choices and tiles.",
   "planSessionNoMicAllow": "Allow",
-  "planSessionByMeaning": "by meaning ✓",
   "planSessionTryAgain": "Try again",
   "planSessionReturnsTomorrow": "Coming back tomorrow",
   "planSessionDoneWords": "Words done · {minutes}",
@@ -2247,7 +2246,6 @@
   "planSessionFromMemory": "from memory · no sound",
   "planSessionTaskWhereHeard": "Where it was said",
   "planSessionTaskListenChoose": "Listen and choose the answer",
-  "planSessionWhatAnswerSounds": "What will the answer be?",
   "planSessionThisIsAnswer": "This is the answer",
   "planSessionTaskNormalPace": "Now at normal speed",
   "planSessionBrowSlowRate": "Slow · {rate}×",
@@ -2265,8 +2263,6 @@
   "planSessionBrowLine": "Line",
   "planSessionListenCue": "listen",
   "planSessionWaiting": "waiting",
-  "planSessionHintSilence": "here's the frame — the slot is yours",
-  "planSessionHintOpened": "the frame is open — the slot is yours",
   "planSessionNotThat": "not that — let's try again",
   "planSessionHintAction": "Hint",
   "planSessionDoneDialogue": "Dialogue done · {minutes}",
@@ -2285,5 +2281,92 @@
   "planSessionAnd": "{a} and {b}",
   "planSessionNextDayBuilding": "Day {n} — building",
   "planSessionNextDayReady": "Day {n} — ready",
-  "planSessionCloseFailed": "The day didn't close — no connection"
+  "planSessionCloseFailed": "The day didn't close — no connection",
+  "planPlateStageTalk": "Talk",
+  "planPlateStageRecall": "Recall",
+  "planTalkEntryTitle": "Talk to the person",
+  "planTalkEntryMinutes": "about {minutes}",
+  "@planTalkEntryMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planTalkEntryWhole": "The whole talk",
+  "@planTalkEntryScenes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planTalkEntryRuleStart": "They speak first. Answer, and ask your own questions.",
+  "planTalkEntryRuleRescue": "Lost the thread — tap «Didn't get it» and they will say it more simply.",
+  "planTalkEntryRuleCounts": "What counts: what you said, the day's phrases, the questions you got.",
+  "planTalkStart": "Start the talk",
+  "planTalkRescueAction": "Didn't get it",
+  "planTalkHintChip": "Say that {intent}",
+  "@planTalkHintChip": {
+    "placeholders": {
+      "intent": {
+        "type": "String"
+      }
+    }
+  },
+  "planTalkOpenText": "text",
+  "planTalkInterrupted": "cut short",
+  "planTalkSilenceEnds": "silence ends it",
+  "planTalkUnheard": "didn't catch that — say it again",
+  "planTalkOffline": "Connection lost — the talk goes on from here",
+  "planTalkSilent": "No answer — try once more",
+  "planTalkOpenFailed": "The talk did not start — try once more",
+  "planTalkNotInDay": "This day has no talk",
+  "planTalkEnded": "Talk over",
+  "planTalkSummaryAction": "Summary",
+  "planTalkSaidLines": "{n, plural, one{You said {n} line yourself} other{You said {n} lines yourself}}",
+  "@planTalkSaidLines": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planTalkUnderstoodAll": "You got every question",
+  "planTalkUnderstoodExcept": "{n, plural, one{You got the questions but one — it comes back} other{You got the questions but {n} — they come back}}",
+  "@planTalkUnderstoodExcept": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planTalkRescues": "{n, plural, one{asked again {n} time} other{asked again {n} times}}",
+  "@planTalkRescues": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planTalkPhrasesOf": "The day's phrases in the talk · {used} of {total}",
+  "@planTalkPhrasesOf": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planTalkNotSaidTomorrow": "Not said — comes back tomorrow",
+  "planTalkNotSaidRehearsal": "Not said — go over it before the visit",
+  "planTalkReady": "You are ready for the visit",
+  "planTalkHighlights": "What went well",
+  "planSessionListenWholeOne": "Listen to the whole of it — only one answer fits",
+  "planSessionFrameWhole": "This phrase is said whole — nothing in it changes",
+  "planSessionChangeable": "this part can change",
+  "planSessionInTalk": "In the talk",
+  "planSessionOwnWordChip": "your own word"
 }

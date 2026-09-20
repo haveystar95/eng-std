@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
+import 'package:eng_std/features/plan/session/parts/session_choice.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/session_harness.dart';
@@ -220,7 +221,9 @@ void main() {
       expect(options, hasLength(3));
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
       expect(find.text('Послушай и выбери ответ'), findsOneWidget);
-      expect(find.text('Что прозвучит в ответ?'), findsOneWidget);
+      expect(find.text('Слушай целиком — ответ один'), findsOneWidget);
+      expect(find.text('Что прозвучит в ответ?'), findsNothing, reason: 'вопрос ушёл в задание — сверху стоит своя реплика');
+      expect(find.byKey(const ValueKey('predict-own-wave')), findsOneWidget);
       for (final o in options) {
         expect(find.text(o.textTarget), findsNothing, reason: 'no English before the answer');
         expect(find.text(o.textNative), findsNothing, reason: 'and no translation either');
@@ -238,6 +241,14 @@ void main() {
       await tester.tap(find.byKey(ValueKey('option-${correct.id}')));
       await tester.pump();
       expect(dockEnabled(tester, 'Это ответ'), isTrue, reason: 'the second tap marks the heard line');
+      // ПРАВИЛО НАРЯДА CLIENT-CONV-1a (кадр 34-5): длительность стоит на каждой плашке, и волна у
+      // разных вариантов разная — плашки различимы на глаз, пока текста нет.
+      // ЛОВИТ: одну и ту же волну на трёх плашках и плашку без длительности.
+      final waves = {
+        for (final o in options) SessionSoundPlate.waveOf(o.audio!.ref).join(','),
+      };
+      expect(waves, hasLength(3), reason: 'у каждого файла своя волна');
+      expect(find.text(SessionSoundPlate.clock(correct.audio!.durationMs!)), findsWidgets);
       expect(results(probe), isEmpty, reason: 'nothing is sent until the button');
 
       await tapText(tester, 'Это ответ');

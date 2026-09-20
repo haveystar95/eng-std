@@ -3,24 +3,21 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/session_models.dart';
 import '../../../data/plan/session/session_summary.dart';
+import '../plan_stage_text.dart';
 
 /// SESSION WORDING — choosing the ARB string by stage, level and count. Not a single word here, only the choice.
 abstract final class SessionTexts {
-  static String stage(AppLocalizations l, PlanStage s) => switch (s) {
-    PlanStage.words => l.planPlateStageWords,
-    PlanStage.phrases => l.planPlateStagePhrases,
-    PlanStage.dialogue => l.planPlateStageDialog,
-    PlanStage.listen => l.planPlateStageListen,
-    PlanStage.speak || PlanStage.unknown => l.planPlateStageSpeak,
-  };
+  /// One name per stage, the plan's own — `planStageName`.
+  static String stage(AppLocalizations l, PlanStage s) => planStageName(l, s);
 
-  /// The stage description on entry (30-1); [units] — the stage's units.
+  /// The stage description on entry (30-1); [units] — the stage's units. The talk has an entry of
+  /// its own (37-5) and never asks for this one.
   static String description(AppLocalizations l, PlanStage s, int units) => switch (s) {
     PlanStage.words => l.planSessionDescWords(units),
     PlanStage.phrases => l.planSessionDescPhrases(units),
     PlanStage.dialogue => l.planSessionDescDialogue,
     PlanStage.listen => l.planSessionDescListen,
-    PlanStage.speak || PlanStage.unknown => l.planSessionDescSpeak,
+    PlanStage.speak || PlanStage.recall || PlanStage.conversation || PlanStage.unknown => l.planSessionDescSpeak,
   };
 
   /// «4 words left» — on the right of the header (30-2); the dialogue and speaking count exchanges («lines»).

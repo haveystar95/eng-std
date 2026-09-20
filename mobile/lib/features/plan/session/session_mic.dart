@@ -48,6 +48,7 @@ class SessionMic extends ChangeNotifier {
     required this.localeId,
     required this.expected,
     this.contextualStrings = const [],
+    this.config = turnConfig,
   });
 
   final SpeechRecognizer _recognizer;
@@ -70,6 +71,12 @@ class SessionMic extends ChangeNotifier {
   /// numbers live in [SpeechTurnConfig]'s own defaults, so the session, the collections trainer and the intro echo
   /// cannot drift apart again.
   static const SpeechTurnConfig turnConfig = SpeechTurnConfig();
+
+  /// WHAT CLOSES THIS MICROPHONE'S RECORDING. [turnConfig] by default — the app's one rule. The talk
+  /// with the agent passes its own (наряд CLIENT-CONV-1a: a pause of 1.5 s, where a card waits 1 s),
+  /// and that is the ONLY caller allowed a number of its own: on a card the learner says a line they
+  /// have just read, in a talk they think mid-sentence.
+  final SpeechTurnConfig config;
 
   MicState _state = MicState.idle;
   String _partial = '';
@@ -116,7 +123,7 @@ class SessionMic extends ChangeNotifier {
     _closed = false;
     _set(MicState.listening);
     SessionSounds.play(SessionSounds.micOn);
-    final turn = SpeechTurn(_recognizer, config: turnConfig, diagnostics: _diagnostics);
+    final turn = SpeechTurn(_recognizer, config: config, diagnostics: _diagnostics);
     _turn = turn;
     SpeechTurnResult result;
     try {
@@ -204,7 +211,7 @@ class SessionMic extends ChangeNotifier {
     _closed = false;
     _set(MicState.listening);
     SessionSounds.play(SessionSounds.micOn);
-    _debugClose = Timer(turnConfig.silenceAfterSpeech, () {
+    _debugClose = Timer(config.silenceAfterSpeech, () {
       if (_disposed) return;
       _closed = true;
       _notify();

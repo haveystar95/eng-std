@@ -279,15 +279,24 @@ class DayWindow {
     required this.stages,
     required this.dayProgress,
     required this.program,
+    this.highlights = const [],
     this.action,
   });
 
   final WindowDay day;
+
+  /// Ряды этапов дня, в порядке хода — СКОЛЬКО ИХ, РЕШАЕТ СЕРВЕР (наряд CONV-1): шесть у дня с
+  /// разговором, пять у дня, розданного до него, два у репетиции.
   final List<WindowStage> stages;
 
   /// Полоса компактной шапки — доля пройденных этапов.
   final double dayProgress;
   final WindowProgram program;
+
+  /// «ЧТО БЫЛО ХОРОШО» (кадр 30-7) — две-три ГОТОВЫЕ строки пройденного дня: сервер их и считает, и
+  /// склоняет, клиент печатает по порядку. Пусто, пока день не пройден, и без строк разговора у дня,
+  /// которого он не нёс.
+  final List<String> highlights;
   final WindowAction? action;
 
   /// Разбор блока `window`. Нет блока, нет поля, чужое слово — [PlanContractError].
@@ -313,7 +322,13 @@ class DayWindow {
         ],
       ),
       stages: [
-        for (final s in _list(j['stages'], 'window.stages')) _stage(_map(s, 'stage')),
+        for (final s in _list(j['stages'], 'window.stages')) ?_stage(_map(s, 'stage')),
+      ],
+      // ADDITIVE, unlike the rest of the block: a window without «Что было хорошо» is a window with
+      // nothing to praise yet, not a window that failed to load. There is no state here to guess.
+      highlights: [
+        for (final h in (j['highlights'] as List?) ?? const [])
+          if (h is String && h.trim().isNotEmpty) h,
       ],
       dayProgress: _share(j['day_progress'], 'window.day_progress'),
       program: WindowProgram(
@@ -328,9 +343,12 @@ class DayWindow {
     );
   }
 
-  static WindowStage _stage(Map<String, dynamic> s) {
+  /// A stage this build has never heard of is SKIPPED (наряд CLIENT-CONV-1a): the day's composition
+  /// is the server's, and a window that refuses to load over one unknown row would hide the five
+  /// rows it does understand. Everything else about a row stays closed.
+  static WindowStage? _stage(Map<String, dynamic> s) {
     final stage = PlanStage.fromWire(s['stage'] as String?);
-    if (stage == PlanStage.unknown) throw PlanContractError('window stage «${s['stage']}»');
+    if (stage == PlanStage.unknown) return null;
 
     return WindowStage(
       stage: stage,

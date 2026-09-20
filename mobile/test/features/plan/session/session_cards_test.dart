@@ -254,59 +254,57 @@ void main() {
     // RULE (SESSION-2b §1, кадр 32-1): a meaning is ALWAYS in the slot and its chip is ink; the reading and the
     // translation change with it; the grey «this part can change» and the «FRAME» eyebrow are gone.
     // CATCHES: a chip that does not darken (the old neutral row), a reading or a translation left at the filler the
-    // card opened with, the eyebrow and the caption coming back.
-    testWidgets('phrase_intro (32-1): the chosen chip is ink and stands in the slot; reading and translation follow it', (tester) async {
+    // ПРАВИЛО (наряд CLIENT-CONV-1a, кадр 32-1): 32-1 — КАРТОЧКА-УРОК, здесь ничего не выбирают.
+    // Значения стоят НЕЙТРАЛЬНЫМИ плашками под подписью «эту часть можно менять», в окне — значение
+    // дня, и карточка кончается «Дальше». Правило SESSION-2b §1 («чип угольный и его выбирают»)
+    // отменено кадром: выбор в уроке обещает задание, которого нет.
+    // ЛОВИТ: возврат тапаемых чипов, пропавшую подпись и старую кнопку «Понятно».
+    testWidgets('32-1: значения — нейтральные плашки, ничего не выбирается', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.phraseIntro), probe, voice: voice));
       expect(find.text('Посмотри и послушай'), findsOneWidget);
-      expect(find.text('КАРКАС'), findsNothing);
-      expect(find.text('эту часть можно менять'), findsNothing);
-      expect(frameLine(tester).slot, 'lower back', reason: 'the frame opens with the filler said in the dialogue');
+      expect(find.text('эту часть можно менять'), findsOneWidget);
+      expect(find.byKey(const ValueKey('chip-0')), findsNothing, reason: 'чипов на уроке нет');
+      expect(find.byKey(const ValueKey('meaning-plates')), findsOneWidget);
+      expect(frameLine(tester).slot, 'lower back', reason: 'в окне — значение, которое говорит диалог');
       expect(frameLine(tester).look, SlotLook.filled);
       expect(find.text('У него болит поясница.'), findsOneWidget);
-      expect(chip(tester, 'chip-0').selected, isTrue, reason: 'one chip is always chosen');
-      for (final key in ['chip-1', 'chip-2']) {
+      expect(chip(tester, 'meaning-0').selected, isTrue, reason: 'плашка значения в окне обведена');
+      for (final key in ['meaning-1', 'meaning-2']) {
         expect(chip(tester, key).selected, isFalse);
       }
+      expect(chip(tester, 'meaning-1').onTap, isNull, reason: 'плашка — состояние, а не кнопка');
 
-      await tester.tap(find.byKey(const ValueKey('chip-1')));
-      await tester.pump();
-      expect(voice.played, ['p1.f2@1.0']);
-      expect(frameLine(tester).slot, 'neck');
-      expect(frameLine(tester).look, SlotLook.filled, reason: 'the slot stays a brass window');
-      expect(chip(tester, 'chip-1').selected, isTrue, reason: 'the chosen chip is ink');
-      expect(chip(tester, 'chip-0').selected, isFalse);
-      expect(find.text('У него болит шея.'), findsOneWidget);
-      expect(find.text('ит хёртс ин хиз нэк'), findsOneWidget);
-
-      await tapText(tester, 'Понятно');
+      await tapText(tester, 'Дальше');
       expect(results(probe), [SessionResult.passed]);
       await settleCard(tester);
     });
 
-    // RULE (SESSION-2b §1, кадр 32-1, third state): one meaning — no slot and no chips, the phrase whole.
-    // CATCHES: a window with a single chip under it (there is nothing to choose), an empty window on a frame whose
-    // only meaning the day names.
-    testWidgets('phrase_intro (32-1): one meaning — the phrase whole, no slot and no chips', (tester) async {
+    // ПРАВИЛО (кадр 32-1, третье состояние): одно значение — фраза целиком, окна нет, плашек нет,
+    // строка-суть говорит это словами, а под ней «В разговоре» — обмен, в котором фраза звучит.
+    // ЛОВИТ: окно с одной плашкой под ним; блок «В разговоре», нарисованный без реплики дня.
+    testWidgets('32-1: одно значение — фраза целиком, строка-суть и «В разговоре»', (tester) async {
       final one = fixtureCardEdited('day-doctor', 'phrase_intro', (p) {
         final frame = p['frame'] as Map<String, dynamic>;
         final slot = frame['slot'] as Map<String, dynamic>;
         slot['fillers'] = [(slot['fillers'] as List).first];
       });
-      await pumpCard(tester, probeEnv(one, CardProbe()));
-      expect(find.byType(SessionFrameText), findsOneWidget);
-      expect(frameLine(tester).window, isFalse, reason: 'no window: there is nothing to change');
-      expect(frameLine(tester).before, 'It hurts in his lower back.', reason: 'the phrase as the dialogue says it');
-      expect(find.byKey(const ValueKey('chip-0')), findsNothing);
-      expect(find.text('У него болит поясница.'), findsOneWidget);
+      await pumpCard(tester, probeEnv(one, CardProbe(), day: intermediate));
+      expect(frameLine(tester).window, isFalse, reason: 'окна нет: менять нечего');
+      expect(frameLine(tester).before, 'It hurts in his lower back.');
+      expect(find.byKey(const ValueKey('meaning-plates')), findsNothing);
+      expect(find.text('Эту фразу говорят целиком — в ней ничего не меняется'), findsOneWidget);
+      expect(find.text('В РАЗГОВОРЕ'), findsOneWidget);
+      expect(find.byKey(const ValueKey('in-talk-partner')), findsOneWidget);
+      expect(find.byKey(const ValueKey('in-talk-learner')), findsOneWidget);
       await settleCard(tester);
     });
 
-    // RULE (SESSION-1b′, item 11): the frame intro plays the phrase as the dialogue says it once on open, then only by
-    // «Listen» and the chips; a chip tapped before the pause is what the learner hears — nothing plays over it.
-    // CATCHES: a silent intro, a replay by itself after a chip, an autoplay that talks over the chosen chip.
-    testWidgets('phrase_intro: the phrase plays by itself once on open, then only by «Listen» and the chips', (tester) async {
+    // ПРАВИЛО (SESSION-1b′, п. 11): урок каркаса проигрывает фразу так, как её говорит диалог, ОДИН
+    // раз при открытии — дальше только «Прослушать».
+    // ЛОВИТ: немой урок и повтор сам по себе.
+    testWidgets('32-1: фраза звучит сама один раз, дальше — только «Прослушать»', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.phraseIntro);
       final said = (card.payload as PhraseIntroPayload).said;
       final voice = QuietVoice();
@@ -314,19 +312,9 @@ void main() {
       expect(voice.played, isEmpty);
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['${said.audio!.ref}@1.0']);
-      expect(voice.fallbacks, [said.textTarget], reason: 'without a file the phone reads the phrase');
-      await tester.tap(find.byKey(const ValueKey('chip-1')));
-      await tester.pump();
+      expect(voice.fallbacks, [said.textTarget], reason: 'без файла фразу читает телефон');
       await tester.pump(const Duration(seconds: 3));
-      expect(voice.played, ['${said.audio!.ref}@1.0', 'p1.f2@1.0'], reason: 'the chip plays; nothing plays by itself again');
-      await settleCard(tester);
-
-      final early = QuietVoice();
-      await pumpCard(tester, probeEnv(card, CardProbe(), voice: early));
-      await tester.tap(find.byKey(const ValueKey('chip-2')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(early.played, ['p1.f3@1.0'], reason: 'a chip before the pause — no autoplay over it');
+      expect(voice.played, ['${said.audio!.ref}@1.0'], reason: 'само по себе больше ничего не звучит');
       await settleCard(tester);
     });
 
@@ -750,16 +738,14 @@ void main() {
       expect(sounds, [SessionSounds.correct, SessionSounds.miss]);
     });
 
-    testWidgets('walkthrough cards are silent: word_intro, phrase_intro with a chip', (tester) async {
+    testWidgets('walkthrough cards are silent: word_intro, phrase_intro', (tester) async {
       final sounds = recordSessionSounds(tester);
       await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.wordIntro), CardProbe()));
       await tapText(tester, 'Понятно');
       await settleCard(tester);
 
       await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.phraseIntro), CardProbe()));
-      await tester.tap(find.byKey(const ValueKey('chip-2')));
-      await tester.pump();
-      await tapText(tester, 'Понятно');
+      await tapText(tester, 'Дальше');
       await settleCard(tester);
       expect(sounds, isEmpty);
     });

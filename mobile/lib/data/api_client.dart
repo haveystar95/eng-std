@@ -8,6 +8,7 @@ import '../features/search/search_pair.dart' show SearchLanguages;
 import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
+import 'plan/conversation/conversation_models.dart';
 import 'plan/plan_models.dart';
 import 'plan/session/session_day.dart';
 import 'plan/session/session_outcomes.dart';
@@ -718,6 +719,57 @@ class ApiClient {
     );
 
     return SessionJudgeOutcome.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  // ---- The talk with the agent (наряд CONV-1, `docs/plan-api.md`, «Разговор с агентом») --------
+  //
+  // Three calls, ONE answer: the whole talk. The phone that lost a reply re-reads it ([conversation])
+  // instead of guessing which half it missed.
+
+  /// Start the day's talk, or re-enter the one already open — the sixth stage (кадр 37-5). [again] —
+  /// «Ещё раз» on the summary: the open talk is closed as `replayed` and a new one begins. [hints]
+  /// false is «Без подсказок» and is fixed for the talk it starts.
+  ///
+  /// The slowest call of this API by design: it waits for a model and a voice. 409 `plan_day_not_open`,
+  /// 422 `plan_conversation_not_in_day` (the day has no sixth stage), 503 `plan_conversation_unavailable`.
+  Future<PlanConversation> startConversation(String planId, int number, {bool again = false, bool hints = true}) async {
+    final r = await _dio.post(
+      '/plans/$planId/days/$number/conversation',
+      data: {'again': again, 'hints': hints},
+      options: Options(receiveTimeout: const Duration(seconds: 30)),
+    );
+
+    return PlanConversation.fromJson(_data(r));
+  }
+
+  /// One move of the learner and the role's answer to it. `said` — what the recogniser heard (may be
+  /// empty: silence is an answer too); `rescue` — «Не понял»; `skip` — the turn is let go. Interrupting
+  /// the role's voice is the phone's own business and is not sent.
+  ///
+  /// 409 `plan_conversation_not_your_turn` — the previous move is still being answered, a second call
+  /// buys no second reply; 409 `plan_conversation_ended`; 503 `plan_conversation_unavailable` — NOTHING
+  /// was written and the same move may be repeated one for one.
+  Future<PlanConversation> conversationTurn(
+    String planId,
+    String conversationId, {
+    required String kind,
+    String? heard,
+  }) async {
+    final r = await _dio.post(
+      '/plans/$planId/conversation/$conversationId/turn',
+      data: {'kind': kind, 'heard': heard},
+      options: Options(receiveTimeout: const Duration(seconds: 30)),
+    );
+
+    return PlanConversation.fromJson(_data(r));
+  }
+
+  /// The talk as it stands — the door back in after a dropped connection (кадр 37-10). Someone else's
+  /// talk reads as one that never existed (404).
+  Future<PlanConversation> conversation(String planId, String conversationId) async {
+    final r = await _dio.get('/plans/$planId/conversation/$conversationId');
+
+    return PlanConversation.fromJson(_data(r));
   }
 
   /// ДЕВ-ДВЕРЬ СМЕНЫ ДНЕЙ (наряд DAY-FIX-2): сдвинуть «сегодня» QA-аккаунта на [days] дней.

@@ -176,7 +176,7 @@ class SessionMicPanel extends StatelessWidget {
       children.add(ring == null ? button : ring!(button));
       if (kDebugMode && state != MicState.heard && enabled) {
         children.add(const SizedBox(height: 10));
-        children.add(_DebugHeardField(mic: mic));
+        children.add(SessionDebugHeardField(mic: mic));
       }
       return Column(mainAxisSize: MainAxisSize.min, children: children);
     },
@@ -371,17 +371,18 @@ class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMi
   }
 }
 
-/// «WHAT WAS HEARD» FIELD — debug build only: the text is sent as if recognized (a simulator has no microphone).
-class _DebugHeardField extends StatefulWidget {
-  const _DebugHeardField({required this.mic});
+/// «WHAT WAS HEARD» FIELD — debug build only: the text is sent as if recognized (a simulator has no
+/// microphone, and the talk's live check is driven through it — наряд CLIENT-CONV-1a).
+class SessionDebugHeardField extends StatefulWidget {
+  const SessionDebugHeardField({super.key, required this.mic});
 
   final SessionMic mic;
 
   @override
-  State<_DebugHeardField> createState() => _DebugHeardFieldState();
+  State<SessionDebugHeardField> createState() => _DebugHeardFieldState();
 }
 
-class _DebugHeardFieldState extends State<_DebugHeardField> {
+class _DebugHeardFieldState extends State<SessionDebugHeardField> {
   final _text = TextEditingController();
 
   @override

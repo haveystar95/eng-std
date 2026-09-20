@@ -1,0 +1,352 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/theme/theme.dart';
+
+import '../../../data/api_client.dart' show problemCodeOf;
+import '../../../data/plan/conversation/conversation_models.dart';
+import '../../../data/plan/plan_models.dart';
+import '../../../data/plan/session/heard_words.dart';
+import '../../../data/plan/session/live_line.dart';
+import '../../../data/speech/speech_turn.dart';
+import '../session/cards/card_kit.dart' show CardLayout;
+import '../session/parts/session_bits.dart';
+import '../session/parts/session_chrome.dart';
+import '../session/parts/session_mic_panel.dart';
+import '../session/session_mic.dart';
+import '../session/session_voice.dart';
+import 'conversation_controller.dart';
+import 'talk_ribbon.dart';
+
+/// THE TALK (кадры 37-6…37-11) — the ribbon, the microphone and the three ways a move can fail.
+///
+/// THE MICROPHONE OPENS ONLY ON A TAP. No state of this screen starts a recording by itself: not the
+/// end of the role's line, not the chip, not a failure (DECISIONS п. 299 — «Запись начинает
+/// человек»). A tap WHILE the role is speaking cuts the line off and starts listening at once
+/// (кадр 37-9) — that is still a tap.
+class TalkView extends StatefulWidget {
+  const TalkView({
+    super.key,
+    required this.controller,
+    required this.scene,
+    required this.voice,
+    required this.makeMic,
+    required this.onSummary,
+    required this.onClose,
+    this.phraseTexts = const {},
+  });
+
+  final ConversationController controller;
+
+  /// The day's scene — the strip under the header (30-2b).
+  final PlanScene? scene;
+  final SessionVoice voice;
+
+  /// The talk's own microphone: free speech, the target language's locale.
+  final SessionMic Function() makeMic;
+
+  /// «Итог» on the end sheet (37-11).
+  final VoidCallback onSummary;
+  final VoidCallback onClose;
+
+  /// The day's phrases by `ref` — the text the server's `phrases_used` names. Without the text there
+  /// is no underline: the client does not guess which words the server matched.
+  final Map<String, String> phraseTexts;
+
+  @override
+  State<TalkView> createState() => _TalkViewState();
+}
+
+class _TalkViewState extends State<TalkView> {
+  late final SessionMic _mic;
+
+  /// The role's lines whose text the learner opened, by `index` (37-6 «текст»).
+  final Set<int> _opened = {};
+
+  ConversationController get _talk => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _mic = widget.makeMic()..onTurn = _onTurn;
+    _mic.addListener(_onMic);
+    _talk.addListener(_onTalk);
+  }
+
+  @override
+  void dispose() {
+    _mic.removeListener(_onMic);
+    _mic.dispose();
+    _talk.removeListener(_onTalk);
+    super.dispose();
+  }
+
+  void _onMic() {
+    if (_mic.isListening) _talk.recordingStarted();
+    if (mounted) setState(() {});
+  }
+
+  void _onTalk() {
+    if (mounted) setState(() {});
+  }
+
+  /// A recording closed. Silence is not sent — it is «не расслышал», and it costs nothing.
+  void _onTurn(MicTurn turn) {
+    final heard = turn.outcome == SpeechTurnOutcome.heard ? turn.transcript.trim() : '';
+    _mic.reset();
+    unawaited(_talk.say(heard));
+  }
+
+  /// A tap on the microphone: while the role speaks it cuts the line off AND starts listening; the
+  /// rest of the time it is the ordinary tap of every microphone in the app.
+  Future<void> _tapMic() async {
+    if (_talk.phase == TalkPhase.agentSpeaking) {
+      await _talk.interrupt();
+      if (!mounted) return;
+    }
+    await _mic.tap();
+  }
+
+  /// Every phrase of the day, as one reference line — the live line paints the words of the plan
+  /// that have already sounded in sage (37-7 «слушаю»).
+  String get _expected => widget.phraseTexts.values.join(' ');
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final talk = _talk.talk;
+    if (talk == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(kSessionGutter),
+          child: _talk.phase == TalkPhase.openFailed
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_openFailure(l), textAlign: TextAlign.center, style: AppTextSession.body),
+                    const SizedBox(height: 18),
+                    SessionDockButton(label: l.planTabRetry, onTap: () => unawaited(_talk.open())),
+                    const SizedBox(height: 8),
+                    TextButton(onPressed: widget.onClose, child: Text(l.planWindowBack, style: AppTextSession.skip)),
+                  ],
+                )
+              : const CircularProgressIndicator(color: AppColors.ink),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _header(l, talk),
+        SessionSceneStrip(scene: widget.scene),
+        Expanded(
+          child: CardLayout(
+            feed: true,
+            bodyGap: 16,
+            fadeStop: 0.30,
+            task: null,
+            body: _ribbon(talk),
+            bottom: _talk.phase == TalkPhase.ended ? _endSheet(l, talk) : _dock(l, talk),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _openFailure(AppLocalizations l) =>
+      problemCodeOf(_talk.openError) == 'plan_conversation_not_in_day' ? l.planTalkNotInDay : l.planTalkOpenFailed;
+
+  /// The talk's header: the cross, the stage's name and the talk's own minutes. No bar and no beads —
+  /// the talk has no cards, and a bar would be a number the phone made up.
+  Widget _header(AppLocalizations l, PlanConversation talk) => Padding(
+    padding: const EdgeInsets.fromLTRB(kSessionGutter - kSessionCloseInset, 4, kSessionGutter, 0),
+    child: SizedBox(
+      height: 24,
+      child: Row(
+        children: [
+          SessionCloseButton(onTap: widget.onClose, label: l.planSessionClose),
+          const SizedBox(width: 2),
+          Text(l.planPlateStageTalk, style: AppTextSession.headerStage),
+          const Spacer(),
+          Text(
+            l.planSessionApproxMinutes(talk.minutesEstimate),
+            key: const ValueKey('talk-minutes'),
+            style: AppTextSession.meta.copyWith(height: 1),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  /// THE RIBBON — the server's `turns[]`, oldest first, and the three dots while a move is in flight.
+  Widget _ribbon(PlanConversation talk) {
+    final rows = <Widget>[];
+    TalkTurn? previous;
+    for (final turn in talk.turns) {
+      final row = _turnRow(talk, turn);
+      if (row == null) continue;
+      if (rows.isNotEmpty) {
+        // Inside one exchange the lines stand 8 apart, between exchanges 16 — an exchange starts
+        // with the role's line.
+        rows.add(SizedBox(height: !turn.isOwn && previous != null && previous.isOwn ? 16 : 8));
+      }
+      rows.add(row);
+      previous = turn;
+    }
+    if (_talk.phase == TalkPhase.sending) {
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 16));
+      rows.add(const TalkThinking());
+    }
+
+    return Column(
+      key: const ValueKey('talk-ribbon'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: rows,
+    );
+  }
+
+  Widget? _turnRow(PlanConversation talk, TalkTurn turn) {
+    if (turn.isOwn) {
+      final text = turn.textTarget;
+      // A skipped turn has no words of its own — the ribbon simply goes on.
+      if (text == null || text.trim().isEmpty) return null;
+      return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text, marks: _marksOf(turn));
+    }
+    // The role's text is closed until it is opened by a tap. Under «Без подсказок» there is no way
+    // to open it and no button offering one: the texts wait for the summary.
+    final open = _opened.contains(turn.index);
+    return ValueListenableBuilder<Object?>(
+      key: ValueKey('turn-${turn.index}'),
+      valueListenable: widget.voice.playing,
+      builder: (_, playing, _) => TalkPartnerBubble(
+        text: turn.textTarget ?? '',
+        translation: turn.textNative,
+        open: open,
+        playing: playing == 'talk-${turn.index}',
+        interrupted: _talk.interruptedAt(turn.index),
+        onListen: () => unawaited(widget.voice.play(turn.audio, fallback: turn.textTarget ?? '', key: 'talk-${turn.index}')),
+        onOpenText: talk.hints.enabled ? () => setState(() => _opened.add(turn.index)) : null,
+      ),
+    );
+  }
+
+  /// The ranges of the learner's line the SERVER matched to phrases of the plan. A phrase whose text
+  /// this day does not carry leaves no mark: the contract names the phrase by `ref` only.
+  List<({int start, int end})> _marksOf(TalkTurn turn) {
+    final text = turn.textTarget ?? '';
+    final marks = <({int start, int end})>[];
+    for (final used in turn.phrasesUsed) {
+      final phrase = widget.phraseTexts[used.ref];
+      if (phrase == null) continue;
+      marks.addAll(HeardWords.matched(text, phrase));
+    }
+    marks.sort((a, b) => a.start.compareTo(b.start));
+    return marks;
+  }
+
+  Widget _dock(AppLocalizations l, PlanConversation talk) {
+    final phase = _talk.phase;
+    final listening = _mic.isListening;
+    final yourTurn = phase == TalkPhase.yourTurn;
+    final look = switch (phase) {
+      TalkPhase.agentSpeaking => TalkMicLook.dimmed,
+      TalkPhase.sending || TalkPhase.opening || TalkPhase.openFailed || TalkPhase.ended => TalkMicLook.busy,
+      TalkPhase.yourTurn => listening ? TalkMicLook.listening : TalkMicLook.waiting,
+    };
+    final trouble = _talk.trouble;
+    final caption = switch (trouble) {
+      TalkTrouble.unheard => l.planTalkUnheard,
+      _ => switch (phase) {
+        TalkPhase.agentSpeaking => l.planSessionListenCue,
+        TalkPhase.yourTurn => listening ? l.planSessionMicListening : l.planSessionMicTap,
+        _ => null,
+      },
+    };
+
+    return TalkDock(
+      debugMic: yourTurn ? _mic : null,
+      notice: switch (trouble) {
+        TalkTrouble.offline => TalkNotice(text: l.planTalkOffline, onRetry: () => unawaited(_talk.retry())),
+        TalkTrouble.agentSilent => TalkNotice(text: l.planTalkSilent, onRetry: () => unawaited(_talk.retry())),
+        _ => null,
+      },
+      chip: _talk.chipShown && _talk.hintNative != null ? TalkHintChip(text: l.planTalkHintChip(_talk.hintNative!)) : null,
+      liveLine: listening && _mic.partial.trim().isNotEmpty
+          ? _LiveLine(words: LiveLine.of(_mic.partial, _expected, listening: !_mic.closed))
+          : null,
+      caption: caption,
+      subCaption: listening ? l.planTalkSilenceEnds : null,
+      // «Не понял» stands in EVERY state of the learner's move: a rescue is not a hint, and it costs
+      // no turn of the scene.
+      left: yourTurn
+          ? SessionTextExit(
+              key: const ValueKey('talk-rescue'),
+              label: l.planTalkRescueAction,
+              onTap: () => unawaited(_talk.rescue()),
+            )
+          : null,
+      right: _talk.hintButtonShown
+          ? SessionTextExit(key: const ValueKey('talk-hint'), label: l.planSessionHintAction, onTap: _talk.showHint)
+          : null,
+      mic: TalkMicButton(
+        look: look,
+        label: l.planSessionMicTap,
+        onTap: phase == TalkPhase.agentSpeaking || yourTurn ? () => unawaited(_tapMic()) : null,
+      ),
+    );
+  }
+
+  /// THE END (кадр 37-11): the role's goodbye stays in the ribbon and a sheet rises over it —
+  /// «Разговор окончен · N минут» and one button.
+  Widget _endSheet(AppLocalizations l, PlanConversation talk) {
+    final minutes = talk.summary?.minutes;
+    return Column(
+      key: const ValueKey('talk-end-sheet'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SessionSheet(
+          child: Row(
+            children: [
+              Expanded(child: Text(l.planTalkEnded, style: AppTextSession.text15)),
+              if (minutes != null) Text(l.planMinutesCount(minutes), style: AppTextSession.meta),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        SessionDockButton(key: const ValueKey('talk-summary-action'), label: l.planTalkSummaryAction, onTap: widget.onSummary),
+      ],
+    );
+  }
+}
+
+/// The live line of a talk — Literata 22 centred, the words of the plan's phrases in sage.
+class _LiveLine extends StatelessWidget {
+  const _LiveLine({required this.words});
+
+  final List<LiveWord> words;
+
+  @override
+  Widget build(BuildContext context) => Text.rich(
+    key: const ValueKey('talk-live-line'),
+    TextSpan(
+      children: [
+        for (var i = 0; i < words.length; i++)
+          TextSpan(
+            text: i == 0 ? words[i].text : ' ${words[i].text}',
+            style: AppTextSession.target22.copyWith(
+              color: switch (words[i].tone) {
+                LiveTone.matched => AppColors.verdictKnown,
+                LiveTone.pending => AppColors.tertiary,
+                LiveTone.plain => AppColors.ink,
+              },
+            ),
+          ),
+      ],
+    ),
+    textAlign: TextAlign.center,
+  );
+}

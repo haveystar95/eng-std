@@ -2632,7 +2632,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planRuleStages =>
-      'Пять этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам';
+      'Шесть этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам → разговор';
 
   @override
   String get planRuleReturn =>
@@ -3739,9 +3739,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionNoMicAllow => 'Разрешить';
 
   @override
-  String get planSessionByMeaning => 'по смыслу ✓';
-
-  @override
   String get planSessionTryAgain => 'Ещё раз';
 
   @override
@@ -3948,9 +3945,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskListenChoose => 'Послушай и выбери ответ';
 
   @override
-  String get planSessionWhatAnswerSounds => 'Что прозвучит в ответ?';
-
-  @override
   String get planSessionThisIsAnswer => 'Это ответ';
 
   @override
@@ -4004,12 +3998,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionWaiting => 'жду';
-
-  @override
-  String get planSessionHintSilence => 'подскажу каркас — окно твоё';
-
-  @override
-  String get planSessionHintOpened => 'каркас открыт — окно твоё';
 
   @override
   String get planSessionNotThat => 'не то — попробуем ещё';
@@ -4129,4 +4117,143 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionCloseFailed => 'День не закрылся — нет связи';
+
+  @override
+  String get planPlateStageTalk => 'Разговор';
+
+  @override
+  String get planPlateStageRecall => 'Вспомнить';
+
+  @override
+  String get planTalkEntryTitle => 'Поговори с собеседником';
+
+  @override
+  String planTalkEntryMinutes(String minutes) {
+    return 'около $minutes';
+  }
+
+  @override
+  String get planTalkEntryWhole => 'Разговор целиком';
+
+  @override
+  String get planTalkEntryRuleStart => 'Собеседник начнёт первым. Отвечай и спрашивай сам.';
+
+  @override
+  String get planTalkEntryRuleRescue => 'Не понял — нажми «Не понял», и он повторит проще.';
+
+  @override
+  String get planTalkEntryRuleCounts => 'Считается: сказал сам, фразы дня, понял вопросы.';
+
+  @override
+  String get planTalkStart => 'Начать разговор';
+
+  @override
+  String get planTalkRescueAction => 'Не понял';
+
+  @override
+  String planTalkHintChip(String intent) {
+    return 'Скажи, что $intent';
+  }
+
+  @override
+  String get planTalkOpenText => 'текст';
+
+  @override
+  String get planTalkInterrupted => 'прервано';
+
+  @override
+  String get planTalkSilenceEnds => 'тишина — конец';
+
+  @override
+  String get planTalkUnheard => 'не расслышал — скажи ещё раз';
+
+  @override
+  String get planTalkOffline => 'Связь пропала — разговор продолжится отсюда';
+
+  @override
+  String get planTalkSilent => 'Собеседник не отвечает — попробуй ещё раз';
+
+  @override
+  String get planTalkOpenFailed => 'Разговор не начался — попробуй ещё раз';
+
+  @override
+  String get planTalkNotInDay => 'В этом дне разговора нет';
+
+  @override
+  String get planTalkEnded => 'Разговор окончен';
+
+  @override
+  String get planTalkSummaryAction => 'Итог';
+
+  @override
+  String planTalkSaidLines(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Сказал сам $n реплики',
+      many: 'Сказал сам $n реплик',
+      few: 'Сказал сам $n реплики',
+      one: 'Сказал сам $n реплику',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planTalkUnderstoodAll => 'Понял все вопросы';
+
+  @override
+  String planTalkUnderstoodExcept(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Понял вопросы, кроме $n — вернутся',
+      one: 'Понял вопросы, кроме одного — вернётся',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planTalkRescues(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'переспросил $n раза',
+      many: 'переспросил $n раз',
+      few: 'переспросил $n раза',
+      one: 'переспросил $n раз',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planTalkPhrasesOf(int used, int total) {
+    return 'Фразы дня в разговоре · $used из $total';
+  }
+
+  @override
+  String get planTalkNotSaidTomorrow => 'Не прозвучало — вернётся завтра';
+
+  @override
+  String get planTalkNotSaidRehearsal => 'Не прозвучало — повтори перед приёмом';
+
+  @override
+  String get planTalkReady => 'Ты готов к приёму';
+
+  @override
+  String get planTalkHighlights => 'Что было хорошо';
+
+  @override
+  String get planSessionListenWholeOne => 'Слушай целиком — ответ один';
+
+  @override
+  String get planSessionFrameWhole => 'Эту фразу говорят целиком — в ней ничего не меняется';
+
+  @override
+  String get planSessionChangeable => 'эту часть можно менять';
+
+  @override
+  String get planSessionInTalk => 'В разговоре';
+
+  @override
+  String get planSessionOwnWordChip => 'своё слово';
 }

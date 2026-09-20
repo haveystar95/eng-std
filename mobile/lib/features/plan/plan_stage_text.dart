@@ -3,23 +3,30 @@ import 'package:eng_std/ui/ui.dart';
 
 import '../../data/plan/plan_models.dart';
 
-/// Имя этапа — одно на плиту, кабинет и узел маршрута: «Слова», «Фразы», «Диалог», «Слушаю и
-/// отвечаю», «Говорю сам» (решение владельца 12.09 при постановке PLAN-UI-3: пять этапов, как на
-/// сервере; канва с тремя узлами расходится с продуктом и будет перерисована).
+/// Имя этапа — одно на плиту, кабинет, узел маршрута и вход в этап: «Слова», «Фразы», «Диалог»,
+/// «Слушаю и отвечаю», «Говорю сам», «Разговор» (наряд CONV-1 — шестой этап; у репетиции вместо
+/// первых пяти «Вспомнить» и тот же «Разговор»).
+///
+/// Сколько их у дня — решает сервер: имя здесь есть у каждого этапа контракта, а какие из них
+/// нарисовать, говорит `stages[]` ответа. У [PlanStage.unknown] имени нет: ряд без имени не рисуется.
 String planStageName(AppLocalizations l, PlanStage stage) => switch (stage) {
   PlanStage.words => l.planPlateStageWords,
   PlanStage.phrases => l.planPlateStagePhrases,
   PlanStage.dialogue => l.planPlateStageDialog,
   PlanStage.listen => l.planPlateStageListen,
   PlanStage.speak => l.planPlateStageSpeak,
+  PlanStage.recall => l.planPlateStageRecall,
+  PlanStage.conversation => l.planPlateStageTalk,
   PlanStage.unknown => '',
 };
 
-/// Этап контракта → значок канвы (`assets/stages/`).
+/// Этап контракта → значок канвы (`assets/stages/`). У разговора значок диалога, у «Вспомнить» —
+/// значок фраз: так их нарисовала канва (23-0a, 37-1).
 PlanStageMarkKind planStageMark(PlanStage stage) => switch (stage) {
   PlanStage.words => PlanStageMarkKind.words,
-  PlanStage.phrases => PlanStageMarkKind.phrases,
+  PlanStage.phrases || PlanStage.recall => PlanStageMarkKind.phrases,
   PlanStage.dialogue => PlanStageMarkKind.dialogue,
   PlanStage.listen => PlanStageMarkKind.listen,
+  PlanStage.conversation => PlanStageMarkKind.talk,
   PlanStage.speak || PlanStage.unknown => PlanStageMarkKind.speak,
 };

@@ -5,8 +5,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
-import 'package:eng_std/features/plan/session/parts/session_bits.dart';
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
+import 'package:eng_std/features/plan/session/session_mic.dart';
 
 import '../../../support/session_harness.dart';
 
@@ -20,87 +20,120 @@ void main() {
   List<SessionResult> results(CardProbe probe) => [for (final a in probe.answers) a.result];
   const rejected = SessionJudgeOutcome(accepted: false, reasonNative: 'Ты сказал не про время.', attempts: 1);
 
-  group('35-2 · 35-5 speak_answer', () {
-    // CATCHES: a hint that never comes, `hinted` false after the hint was on screen (the server would write passed),
-    // a judged pass the client writes itself.
-    testWidgets('the partner sounds; 5 s of silence — the frame hint; the judge gets hinted = true; accepted — by meaning, auto-advance', (tester) async {
+  group('35-2 · 35-5 speak_answer — на ленте разговора', () {
+    // ПРАВИЛО (наряд CLIENT-CONV-1a, кадр 35-2): подсказка — ЧИП с заданием на родном, и «Подсказать»
+    // уходит вместе с ним: вместе они не стоят. Задание до подсказки на экране не стоит вовсе —
+    // «Ответь своими словами» перестаёт быть заданием, если ответ уже написан под вопросом.
+    // ЛОВИТ: задание, показанное в пузыре с самого начала; чип и кнопку рядом; `hinted: false` после
+    // открытой подсказки (сервер написал бы `passed` вместо `hinted`).
+    testWidgets('подсказка — чип на родном, и «Подсказать» уходит вместе с ней', (tester) async {
       final probe = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'last night', result: SessionResult.hinted, attempts: 1);
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(speakAt(2), probe, voice: voice));
       expect(find.text('Ответь своими словами'), findsOneWidget);
       expect(find.text('Did it start today, or earlier this week?'), findsOneWidget);
-      expect(find.text('Началось три дня назад.'), findsOneWidget, reason: 'the task in the own bubble');
+      expect(find.text('Началось три дня назад.'), findsNothing, reason: 'задание не стоит на экране до подсказки');
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['x2@1.0']);
-      expect(find.byKey(const ValueKey('speak-hint')), findsNothing);
+      expect(find.byKey(const ValueKey('talk-hint-chip')), findsNothing);
+      expect(find.byKey(const ValueKey('exit-hint')), findsOneWidget);
+
       await tester.pump(const Duration(seconds: 5));
       await tester.pump();
-      expect(find.byKey(const ValueKey('speak-hint')), findsOneWidget);
-      expect(find.text('подскажу каркас — окно твоё'), findsOneWidget);
+      expect(find.byKey(const ValueKey('talk-hint-chip')), findsOneWidget);
+      expect(find.text('Началось три дня назад.'), findsOneWidget, reason: 'чип печатает задание сервера как есть');
+      expect(find.byKey(const ValueKey('exit-hint')), findsNothing, reason: 'чип и кнопка вместе не стоят');
 
       await enterHeard(tester, 'It started last night');
       await tester.pump(const Duration(milliseconds: 1010));
       await tester.pump();
       expect(probe.judged, ['It started last night']);
       expect(probe.hinted, [true]);
-      expect(probe.answers, isEmpty, reason: 'the server records a judged pass');
-      expect(find.text('по смыслу ✓'), findsOneWidget);
-      expect(find.byKey(const ValueKey('bubble-mark-passed')), findsOneWidget);
-      final frame = tester.widget<SessionFrameText>(find.descendant(of: find.byType(SessionOwnRow), matching: find.byType(SessionFrameText)));
-      expect(frame.slot, 'last night');
-      expect(frame.look, SlotLook.sage);
+      expect(probe.answers, isEmpty, reason: 'судейский зачёт пишет сервер');
+      expect(find.byKey(const ValueKey('speak-own')), findsOneWidget);
+      expect(find.text('услышал'), findsOneWidget);
       await settleCard(tester);
-      expect(probe.nexts, 1);
+      expect(probe.nexts, 1, reason: 'зачтено — карточка уходит сама');
     });
 
-    // CATCHES: a rejection without its exits, «Hint» that does not open the frame or does not mark `hinted`, «Skip»
-    // that writes anything but skipped.
-    testWidgets('rejected — the reason and three exits; «Hint» — the frame, two exits, hinted on the next attempt; «Skip» — skipped', (tester) async {
+    // ПРАВИЛО (кадр 35-2 «сказал · не зачтено»): строка судьи — чернилами ПОД пузырём, «Ещё раз» —
+    // кнопкой, «Пропустить» — ссылкой. Микрофона в этом состоянии нет: следующая попытка начинается
+    // с «Ещё раз».
+    // ЛОВИТ: причину отказа, спрятанную под микрофон; «Ещё раз» ссылкой наравне с «Пропустить».
+    testWidgets('не зачтено — строка судьи под пузырём, «Ещё раз» кнопкой, «Пропустить» ссылкой', (tester) async {
       final probe = CardProbe()..verdict = (_) => rejected;
       await pumpCard(tester, probeEnv(speakAt(2), probe));
       await tester.pump(const Duration(milliseconds: 300));
       await sayDebug(tester, 'It started the car');
       await tester.pump();
       expect(probe.hinted, [false]);
+      expect(find.byKey(const ValueKey('speak-judge-line')), findsOneWidget);
       expect(find.text('Ты сказал не про время.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('exit-again')), findsOneWidget);
-      expect(find.byKey(const ValueKey('exit-hint')), findsOneWidget);
-      expect(find.byKey(const ValueKey('exit-skip')), findsOneWidget);
-      expect(find.byKey(const ValueKey('bubble-live-line')), findsOneWidget, reason: 'what was said stays in the bubble, faded');
-
-      await tester.tap(find.byKey(const ValueKey('exit-hint')));
-      await tester.pump();
-      expect(find.text('каркас открыт — окно твоё'), findsOneWidget);
-      expect(find.byKey(const ValueKey('exit-hint')), findsNothing, reason: 'after the hint — two exits');
+      expect(find.byKey(const ValueKey('bubble-live-line')), findsOneWidget, reason: 'сказанное остаётся в пузыре');
+      expect(find.byKey(const ValueKey('talk-mic')), findsNothing);
+      expect(dockEnabled(tester, 'Ещё раз'), isTrue);
 
       await tester.tap(find.byKey(const ValueKey('exit-again')));
       await tester.pump();
+      expect(find.byKey(const ValueKey('talk-mic')), findsOneWidget, reason: '«Ещё раз» возвращает микрофон');
       await sayDebug(tester, 'It started this morning');
       await tester.pump();
-      expect(probe.hinted, [false, true]);
+      expect(probe.hinted, [false, false], reason: 'подсказку не открывали');
 
       await tester.tap(find.byKey(const ValueKey('exit-skip')));
       await tester.pump();
       expect(results(probe), [SessionResult.skipped]);
-      expect(probe.answers.single.response?.hintedAt, 'button');
       expect(probe.nexts, 1);
       await settleCard(tester);
     });
 
-    // CATCHES: «No hints» that still raises the frame by silence or offers «Hint».
-    testWidgets('«No hints» — no hint by silence and no «Hint»', (tester) async {
+    // ПРАВИЛО НАРЯДА: в «Без подсказок» нет НИ ЧИПА, НИ КНОПКИ — ни по молчанию, ни по нажатию.
+    // ЛОВИТ: чип, встающий по пятисекундному таймеру независимо от режима.
+    testWidgets('в «Без подсказок» нет ни чипа, ни кнопки', (tester) async {
       final probe = CardProbe()..verdict = (_) => rejected;
       await pumpCard(tester, probeEnv(speakAt(2), probe, noHints: true));
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(seconds: 6));
-      expect(find.byKey(const ValueKey('speak-hint')), findsNothing);
+      expect(find.byKey(const ValueKey('talk-hint-chip')), findsNothing);
+      expect(find.byKey(const ValueKey('exit-hint')), findsNothing);
       await sayDebug(tester, 'It started the car');
       await tester.pump();
       expect(probe.hinted, [false]);
-      expect(find.byKey(const ValueKey('exit-again')), findsOneWidget);
-      expect(find.byKey(const ValueKey('exit-hint')), findsNothing);
-      expect(find.byKey(const ValueKey('speak-hint')), findsNothing);
+      expect(find.byKey(const ValueKey('talk-hint-chip')), findsNothing);
+      await settleCard(tester);
+    });
+
+    // ПРАВИЛО (кадр 35-2 «Намерение»): в «Спроси сам» задание стоит СВЕТЛОЙ плашкой справа — тёмный
+    // пузырь появляется только после того, как ты сказал.
+    // ЛОВИТ: намерение, набранное тёмным пузырём, то есть выданное за речь ученика.
+    testWidgets('«Спроси сам» — намерение светлой плашкой, тёмный пузырь только после речи', (tester) async {
+      final probe = CardProbe()..verdict = (_) => const SessionJudgeOutcome(accepted: true, attempts: 1);
+      final ask = day.stageOf(PlanStage.speak)!.cards.firstWhere((c) => (c.payload as SpeakAnswerPayload).partnerLine == null);
+      await pumpCard(tester, probeEnv(ask, probe));
+      expect(find.text('Спроси сам'), findsOneWidget);
+      expect(find.byKey(const ValueKey('speak-ask-intent')), findsOneWidget);
+      expect(find.byKey(const ValueKey('speak-own')), findsNothing, reason: 'сказать ещё нечего');
+
+      await tester.pump(const Duration(milliseconds: 300));
+      await sayDebug(tester, 'Do we need an X-ray?');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('speak-own')), findsOneWidget);
+      await settleCard(tester);
+    });
+
+    // ПРАВИЛО НАРЯДА — ОДНО НА ВСЕ ЭКРАНЫ: микрофон открывается ТОЛЬКО по тапу.
+    // ЛОВИТ: карточку, которая включает запись по концу реплики собеседника (DECISIONS п. 299).
+    testWidgets('микрофон не открывается сам', (tester) async {
+      final probe = CardProbe();
+      await pumpCard(tester, probeEnv(speakAt(2), probe));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(seconds: 6));
+      expect(probe.mics.single.state, MicState.idle);
+      expect(find.byKey(const ValueKey('session-debug-heard')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      expect(probe.mics.single.state, MicState.listening, reason: 'и открывается по тапу');
       await settleCard(tester);
     });
   });
@@ -268,31 +301,23 @@ void main() {
     });
   });
 
-  // RULE (SESSION-2b §4): in a replay («Once more» from the day summary) a FREE answer says «replay, not graded»
-  // under its task — the judge is not asked and nothing goes to the server. A graded card says nothing of the kind.
-  // CATCHES: the caption missing in a replay (the card promises a verdict it will not get), and the caption standing
-  // on an ordinary walk or on a card the client grades itself.
-  // RULE (наряд FIX-1 §5): в повторе судьи НЕТ — карточку свободного ответа судит телефон покрытием, как обычный
-  // проход, и «по смыслу ✓» — вердикт судьи — в повторе не пишется. Подпись «повтор без оценки» снята вместе с
-  // правилом, которое её требовало: оценка есть, на сервер она не уходит.
-  // CATCHES: возврат «любая речь = зачёт» и значка «по смыслу ✓», нарисованного без судьи.
+  // ПРАВИЛО (наряд CLIENT-CONV-1a, кадр 35-2): у своего пузыря нет ни перевода, ни оценки — в нём
+  // стоит только сказанное. «По смыслу ✓» снято вместе со старым экраном: вердикт судьи виден тем,
+  // что карточка уходит сама, а отказ — строкой судьи под пузырём.
+  // CATCHES: возврат значка оценки в пузырь — и в проходе, и в повторе, где судьи нет вовсе.
   group('replay of a stage', () {
-    testWidgets('«by meaning ✓» is not shown in a replay — there is no judge to say it', (tester) async {
-      final probe = CardProbe()
-        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'my back', result: SessionResult.passed, attempts: 1);
-      await pumpCard(tester, probeEnv(speakAt(2), probe, replay: true));
-      await sayDebug(tester, 'It hurts in my back');
-      await tester.pump();
-      expect(find.byKey(const ValueKey('speak-by-meaning')), findsNothing);
-      await settleCard(tester);
-
-      final walk = CardProbe()
-        ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'my back', result: SessionResult.passed, attempts: 1);
-      await pumpCard(tester, probeEnv(speakAt(2), walk));
-      await sayDebug(tester, 'It hurts in my back');
-      await tester.pump();
-      expect(find.byKey(const ValueKey('speak-by-meaning')), findsOneWidget, reason: 'an ordinary walk has a judge');
-      await settleCard(tester);
+    testWidgets('свой пузырь — только сказанное: ни перевода, ни отметки оценки', (tester) async {
+      for (final replay in [true, false]) {
+        final probe = CardProbe()
+          ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'my back', result: SessionResult.passed, attempts: 1);
+        await pumpCard(tester, probeEnv(speakAt(2), probe, replay: replay));
+        await sayDebug(tester, 'It hurts in my back');
+        await tester.pump();
+        expect(find.text('по смыслу ✓'), findsNothing, reason: 'replay: $replay');
+        expect(find.byKey(const ValueKey('speak-own')), findsOneWidget);
+        expect(find.text('Началось три дня назад.'), findsNothing, reason: 'перевода под своей репликой нет');
+        await settleCard(tester);
+      }
     });
 
     testWidgets('the note «replay, not graded» is gone: a replay grades like an ordinary walk', (tester) async {

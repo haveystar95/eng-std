@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import 'session_bits.dart';
@@ -88,21 +89,37 @@ class SessionOption extends StatelessWidget {
   }
 }
 
-/// A SOUND OPTION (34-5, work order SESSION-2b §3): an option that is a LINE — before the answer it has no text at
-/// all, only a wave: grey while it has not been heard, brass once it has, alive while it plays. A tap plays it; a
-/// second tap on a heard one marks it with a brass outline and a check — that is what «This is the answer» sends.
-/// After the answer the sheet opens both texts, and the right one takes the sage wash and the check.
-class SessionSoundOption extends StatelessWidget {
-  const SessionSoundOption({
+/// A SOUND PLATE (кадр 34-5, наряд CLIENT-CONV-1a) — an option that is a LINE: before the answer it
+/// has no text at all, only «играет/пауза» 44, a wave and its length.
+///
+/// Four states, and they are about LISTENING, not about being right: не слушал — the wave in the
+/// colour of a rule; играет — brass and running; прослушан — a sage check by the length; выбран — an
+/// ink outline (the second tap on a plate that has been heard). «Это ответ» comes alive only when
+/// the chosen plate has been listened to: the card asks the learner to hear it, not to guess.
+///
+/// THE WAVE IS THE FILE'S OWN, not a shared drawing: its bars are derived from the sound's `ref`, so
+/// three answers look like three different recordings and never like one picture repeated. It is not
+/// the real amplitude — that would cost a decode of every file to draw a plate — and it says nothing
+/// about the line; it is there so the plates are told apart by eye.
+///
+/// After the answer the plate opens both texts, the right one takes the sage wash and the check, and
+/// the one that was chosen wrongly keeps the ink outline.
+class SessionSoundPlate extends StatelessWidget {
+  const SessionSoundPlate({
     super.key,
+    required this.audioRef,
     required this.heard,
     required this.playing,
     required this.marked,
     required this.onTap,
+    this.durationMs,
     this.look,
     this.textTarget,
     this.textNative,
   });
+
+  /// The sound's `ref` — the seed of this plate's wave.
+  final String audioRef;
 
   /// The line has been played to the end at least once.
   final bool heard;
@@ -112,40 +129,79 @@ class SessionSoundOption extends StatelessWidget {
   final bool marked;
   final VoidCallback? onTap;
 
-  /// After the answer — how this option settled; null — the answer is not given yet and the texts stay closed.
+  /// «0:03»; null — the server sent no length and none is drawn.
+  final int? durationMs;
+
+  /// After the answer — how this option settled; null — the answer is not given yet and the texts
+  /// stay closed.
   final OptionLook? look;
   final String? textTarget;
   final String? textNative;
 
+  static const int _mask = 2147483647;
+
+  /// «m:ss» of the plate's length.
+  static String clock(int ms) {
+    final total = (ms / 1000).round();
+    return '${total ~/ 60}:${(total % 60).toString().padLeft(2, '0')}';
+  }
+
+  /// Twenty bars 8…24 from the sound's own `ref` — the same file always draws the same wave.
+  /// (`_mask` is a 31-bit arithmetic mask, written in decimal: hex in `lib/` is for colours only.)
+  static List<double> waveOf(String ref) {
+    var seed = 0;
+    for (final unit in ref.codeUnits) {
+      seed = (seed * 31 + unit) & _mask;
+    }
+    return [
+      for (var i = 0; i < 20; i++)
+        () {
+          seed = (seed * 1103515245 + 12345) & _mask;
+          return 8 + (seed % 17).toDouble();
+        }(),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final answered = look != null;
     final wash = look == OptionLook.correct || look == OptionLook.returns;
-    final trailing = switch (look) {
-      OptionLook.correct => const Icon(LucideIcons.check, size: 20, color: AppColors.verdictKnown),
-      OptionLook.returns => const SessionReturnDot(),
-      null when marked => const Icon(LucideIcons.check, size: 20, color: AppColors.brassInk),
-      _ => null,
-    };
+    final waveColor = playing
+        ? AppColors.brassInk
+        : heard
+        ? AppColors.brassInk
+        : AppColors.markerOutline;
+
     return Semantics(
       button: onTap != null,
-      label: textNative,
+      label: textNative ?? l.planWindowListen,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: AnimatedContainer(
           duration: AppMotion.sessionSageWash,
           curve: AppMotion.easeOut,
-          constraints: BoxConstraints(minHeight: answered ? 80 : 56),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          constraints: BoxConstraints(minHeight: answered ? 80 : 64),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: wash ? AppColors.sessionSageWash : AppColors.paper,
             borderRadius: BorderRadius.circular(16),
-            border: !answered && marked ? Border.all(color: AppColors.brassInk, width: 1.5) : null,
-            boxShadow: wash || (!answered && marked) ? null : kSessionSheetShadow,
+            border: (!answered && marked) || look == OptionLook.wrong
+                ? Border.all(color: AppColors.ink, width: 1.5)
+                : null,
+            boxShadow: wash || (!answered && marked) || look == OptionLook.wrong ? null : kSessionSheetShadow,
           ),
           child: Row(
             children: [
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Center(
+                  child: Icon(playing ? LucideIcons.pause : LucideIcons.play, size: 20, color: AppColors.ink),
+                ),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: answered
                     ? Column(
@@ -160,14 +216,27 @@ class SessionSoundOption extends StatelessWidget {
                     : Align(
                         alignment: Alignment.centerLeft,
                         child: SessionWave(
-                          heights: SessionWave.five,
-                          width: 80,
+                          key: ValueKey('plate-wave-$audioRef'),
+                          heights: waveOf(audioRef),
+                          barWidth: 2.5,
+                          width: 140,
                           playing: playing,
-                          color: heard || playing ? AppColors.brassInk : AppColors.markerOutline,
+                          color: waveColor,
                         ),
                       ),
               ),
-              if (trailing != null) ...[const SizedBox(width: 12), trailing],
+              if (!answered) ...[
+                const SizedBox(width: 12),
+                if (durationMs != null) Text(clock(durationMs!), style: AppTextSession.meta),
+                if (heard) ...[
+                  const SizedBox(width: 6),
+                  const Icon(LucideIcons.check, size: 16, color: AppColors.verdictKnown),
+                ],
+              ],
+              if (look == OptionLook.correct) ...[
+                const SizedBox(width: 12),
+                const Icon(LucideIcons.check, size: 20, color: AppColors.verdictKnown),
+              ],
             ],
           ),
         ),

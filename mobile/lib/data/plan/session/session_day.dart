@@ -106,6 +106,21 @@ class SessionDay {
     return null;
   }
 
+  /// THE EXCHANGE THE LEARNER'S LINE [ownLineTarget] IS SAID IN — «В разговоре» under a phrase whose
+  /// frame has nothing to change (кадр 32-1, third state).
+  ///
+  /// Matched by the TEXT of the line, because that is all there is: `phrase_intro` carries no `usage`
+  /// the way a word does (`PlanWindowWord.usage`), so the day's own dialogue is asked instead. No
+  /// match — no block: the client does not put the phrase under some other exchange.
+  WindowPair? exchangeOf(String ownLineTarget) {
+    final needle = ownLineTarget.trim();
+    if (needle.isEmpty) return null;
+    for (final pair in window?.program.dialogue ?? const <WindowPair>[]) {
+      if (pair.learner?.text.trim() == needle) return pair;
+    }
+    return null;
+  }
+
   /// «≈ N min» — only for the window's current stage; for the others the server does not send the number.
   int? minutesLeft(PlanStage stage) {
     for (final s in window?.stages ?? const <WindowStage>[]) {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/api_client.dart';
+import '../../../data/plan/day_window.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/plan_store.dart';
 import '../../../data/plan/session/session_day.dart';
@@ -37,7 +38,16 @@ enum SessionPhase {
   /// Stage summary (30-6, 33-8, 34-8, 35-6).
   summary,
 
-  /// Day summary (30-7): every card of the day is answered — «Close the day».
+  /// The way into the talk (37-5) — the sixth stage's own entry, in place of 30-1.
+  talkEntry,
+
+  /// The talk itself (37-6…37-11).
+  talk,
+
+  /// The talk's summary (37-12).
+  talkSummary,
+
+  /// Day summary (30-7): every card of the day is answered and its talk is over — «Close the day».
   daySummary,
 }
 
@@ -198,6 +208,41 @@ class SessionController extends ChangeNotifier {
   SessionAnswerOutcome? outcomeOf(String cardId) => _outcomes[cardId];
   int? minutesOf(PlanStage stage) => _stageMinutes[stage];
 
+  /// THE DAY'S STAGES, IN WALKING ORDER, AS THE SERVER DEALT THEM (наряд CLIENT-CONV-1a) — six on a
+  /// day with a talk, five on one dealt before it, two on the rehearsal. The list of rows on the
+  /// stage entry (30-1), the plate of the day summary (30-7) and what follows what all read this and
+  /// nothing else.
+  ///
+  /// Without the window (it did not parse) the day falls back to the stages that brought cards: a
+  /// session that cannot say which stages exist is worse than one that names the ones it can see.
+  List<PlanStage> get dayStages {
+    final rows = _day?.window?.stages ?? const <WindowStage>[];
+    if (rows.isNotEmpty) return [for (final r in rows) r.stage];
+
+    return [for (final s in PlanStage.known) if (_queue?.hasCards(s) ?? false) s];
+  }
+
+  /// The day walks the sixth stage. A day without it is walked and closed on five (наряд CONV-1).
+  bool get hasTalk => dayStages.contains(PlanStage.conversation);
+
+  /// The talk is over — the server's own row says so, and «разговор окончен» is the only meaning of
+  /// «пройден» a stage made of no cards can have.
+  bool get talkDone => _talkRow?.state == WindowStageState.done;
+
+  /// «около N минут» on the talk's entry (37-5) — the server's, for the current row only.
+  int? get talkMinutes => _talkRow?.minutesLeft;
+
+  WindowStage? get _talkRow {
+    for (final r in _day?.window?.stages ?? const <WindowStage>[]) {
+      if (r.stage == PlanStage.conversation) return r;
+    }
+    return null;
+  }
+
+  /// «Что было хорошо» (30-7) — two or three ready lines of the server; empty until the day is
+  /// passed, and the block is then not drawn at all.
+  List<String> get highlights => _day?.window?.highlights ?? const [];
+
   /// «Close the day» is on its way to the server.
   bool get closing => _closing;
 
@@ -232,8 +277,18 @@ class SessionController extends ChangeNotifier {
         _startReplay(day);
       } else {
         final open = _queue!.firstOpenStage();
-        _stage = open ?? _lastStageWithCards();
-        _phase = open == null && day.dealt ? SessionPhase.daySummary : SessionPhase.entry;
+        if (open != null) {
+          _stage = open;
+          _phase = SessionPhase.entry;
+        } else if (hasTalk && !talkDone) {
+          // Every card is answered and the day still owes its talk: «день пройден» is six stages
+          // through, not five (409 `plan_stage_incomplete`, `meta.stage: conversation`).
+          _stage = PlanStage.conversation;
+          _phase = SessionPhase.talkEntry;
+        } else {
+          _stage = _lastStageWithCards();
+          _phase = day.dealt ? SessionPhase.daySummary : SessionPhase.entry;
+        }
       }
     } catch (e) {
       if (_disposed) return;
@@ -455,11 +510,25 @@ class SessionController extends ChangeNotifier {
     }
   }
 
-  /// The stage after the current one — on the stage summary. A replay has none: it returns to the day summary.
-  PlanStage? get nextStage => replay ? null : _queue?.stageAfter(_stage);
+  /// THE STAGE AFTER THE CURRENT ONE, IN THE DAY'S OWN ORDER — on the stage summary. A card stage
+  /// with no cards is stepped over; the talk is offered while it is not over. A replay has none: it
+  /// returns to the day summary.
+  PlanStage? get nextStage {
+    if (replay) return null;
+    final order = dayStages;
+    final at = order.indexOf(_stage);
+    if (at < 0) return null;
+    for (var i = at + 1; i < order.length; i++) {
+      final stage = order[i];
+      if (stage == PlanStage.conversation) return talkDone ? null : stage;
+      if (_queue?.hasCards(stage) ?? false) return stage;
+    }
+    return null;
+  }
 
-  /// «Next» on the stage summary — entry to the next stage; after the last stage («Day done», 35-6) — the day
-  /// summary (30-7). After a replay — the day summary again, from the server's day, not the replayed answers.
+  /// «Next» on the stage summary — entry to the next stage; the talk has an entry of its own (37-5);
+  /// after the last stage — the day summary (30-7). After a replay — the day summary again, from the
+  /// server's day, not the replayed answers.
   void continueAfterSummary() {
     final next = nextStage;
     _card = null;
@@ -470,9 +539,37 @@ class SessionController extends ChangeNotifier {
       unawaited(_readPlan());
     } else {
       _stage = next;
-      _phase = SessionPhase.entry;
+      _phase = next == PlanStage.conversation ? SessionPhase.talkEntry : SessionPhase.entry;
     }
     _notify();
+  }
+
+  /// The talk has started (37-5 → 37-6).
+  void talkStarted() {
+    _phase = SessionPhase.talk;
+    _notify();
+  }
+
+  /// «Итог» on the end sheet (37-11 → 37-12).
+  void talkEnded() {
+    _phase = SessionPhase.talkSummary;
+    _notify();
+  }
+
+  /// «Ещё раз» on the talk's summary (37-12): the old talk is closed by the server and a new one
+  /// begins — back to the ribbon, without passing the entry again.
+  void talkAgain() {
+    _phase = SessionPhase.talk;
+    _notify();
+  }
+
+  /// «Дальше» on the talk's summary — the day summary (30-7). The day is read again first: its sixth
+  /// row is now «пройден», and only the server knows that.
+  Future<void> afterTalk() async {
+    _phase = SessionPhase.daySummary;
+    _notify();
+    unawaited(_readPlan());
+    await _refreshAfterStage();
   }
 
   /// «Close the day» (30-7): every deferred answer delivered first, then `POST …/close`. True — the day is closed
@@ -495,12 +592,17 @@ class SessionController extends ChangeNotifier {
       switch (problemCodeOf(e)) {
         case 'plan_day_not_open':
           closed = true;
+        // A card the server still misses — or the talk the day has not had (`meta.stage:
+        // conversation`): the day is read again and the session stands at that stage's entry.
         case 'plan_stage_incomplete':
           await _reloadQueue();
           final open = _queue?.firstOpenStage();
           if (open != null) {
             _stage = open;
             _phase = SessionPhase.entry;
+          } else if (hasTalk && !talkDone) {
+            _stage = PlanStage.conversation;
+            _phase = SessionPhase.talkEntry;
           }
         default:
           debugPrint('[session] close day: $e');
