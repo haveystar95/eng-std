@@ -523,6 +523,7 @@ is the exception: the opened line waits for «Дальше»». Тест дер�
 |---|---|
 | `e08ee93a` | backend2: потолок 690 с, лестница урезания, `plan.phrases_budget`, OpenAPI, канон, DECISIONS п. 354, фикстуры |
 | `6645b6c6` | mobile: nullable `own_round`, `answerFillerIndex`, перевод реплики в 35-3, канон «уходит сама», словарь, снимок 08 |
+| `9dd003cd` | этот §8 |
 
 **§7 без изменений.** Сборка — **1.0.0 (16)**.
 
