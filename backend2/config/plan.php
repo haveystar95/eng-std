@@ -149,6 +149,17 @@ return [
     'phrases_budget' => (int) env('PLAN_PHRASES_BUDGET', 690),
 
     /*
+     * ПОТОЛОК ПЯТИ ЭТАПОВ КАРТОЧЕК, МИНУТ (решение владельца 21.09, наряд CONV-1).
+     *
+     * «День дольше 32 минут — стоп до ворот» сказано о РАЗДАЧЕ: если слова, фразы, диалог, слушание и
+     * речь вместе стали дороже, значит правило числа узнаваний посчитано слишком щедро. Разговор в
+     * этот потолок НЕ входит — у него свой бюджет (`plan.conversation.minutes`), заданный числом
+     * ходов, а не раздачей; длительность дня на экране при этом складывается из обоих
+     * ({@see \App\Modules\Plan\Domain\Service\DayBudget}).
+     */
+    'day_cards_budget' => (int) env('PLAN_DAY_CARDS_BUDGET', 32),
+
+    /*
      * HOW MUCH OF A LINE ON THE SCREEN MAY GO MISSING (наряд FIX-2, п. 2) — the loosening handle of the `repeat`
      * mode ({@see \App\Modules\Shared\Domain\ValueObject\SpeechMode}): how many CONTENT words of the expected
      * text the learner may drop and still be counted as having said it.

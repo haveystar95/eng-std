@@ -38,6 +38,7 @@ use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Assembly\PhraseCards;
 use App\Modules\Plan\Domain\Assembly\PhrasesStage;
 use App\Modules\Plan\Domain\Service\ConversationRules;
+use App\Modules\Plan\Domain\Service\DayBudget;
 use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\ValueObject\CheckModes;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -210,6 +211,14 @@ final class PlanServiceProvider extends ServiceProvider
 
         // THE PACE OF A DAY (SESSION-1a): seconds per card by kind, from `plan.pace` — tuned in config, never in code.
         $this->app->singleton(DayPace::class, fn (Container $app): DayPace => new DayPace($app->make(PlanConfig::class)->pace));
+
+        // СКОЛЬКО ИДЁТ ДЕНЬ И ЧТО СТОИТ ПОД ПОТОЛКОМ (решение владельца 21.09): потолок — про пять
+        // этапов карточек, длительность — про день целиком, карточки плюс разговор.
+        $this->app->bind(DayBudget::class, fn (Container $app): DayBudget => new DayBudget(
+            $app->make(DayPace::class),
+            $app->make(ConversationRules::class),
+            (int) config('plan.day_cards_budget', DayBudget::CARDS_MINUTES),
+        ));
 
         // THE CEILING OF «ФРАЗЫ» (решение архитектора 20.09): the stage trims itself against `plan.phrases_budget`.
         // Bound because the budget is an int — autowiring would hand the stage its compiled-in default and the knob

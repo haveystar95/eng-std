@@ -36,7 +36,7 @@ final class DayWindowStages
      * @param  list<Stage>  $withoutCards  what the day's type deals, for a day with no card yet
      * @param  bool  $hasConversation  does the day walk the sixth stage ({@see DayStages::walksConversation()})
      * @param  ConversationState|null  $conversation  where its talk stands; null — not started
-     * @param  int  $conversationSeconds  how long the talk is reckoned to take ({@see ConversationRules})
+     * @param  int  $conversationMinutes  how long the talk is reckoned to take ({@see DayBudget::talkMinutes()})
      * @return list<WindowStage>
      */
     public static function of(
@@ -46,7 +46,7 @@ final class DayWindowStages
         DayPace $pace,
         bool $hasConversation = false,
         ?ConversationState $conversation = null,
-        int $conversationSeconds = 0,
+        int $conversationMinutes = 0,
     ): array {
         $tallies = RouteStages::tally($cards);
         $out = [];
@@ -79,7 +79,7 @@ final class DayWindowStages
             $status === WindowStatus::Passed, $conversation === ConversationState::Ended => WindowStage::done(Stage::Conversation),
             $status !== WindowStatus::InProgress => WindowStage::locked(Stage::Conversation),
             $currentFound => WindowStage::locked(Stage::Conversation),
-            default => WindowStage::talking(Stage::Conversation, DayPace::minutes($conversationSeconds)),
+            default => WindowStage::talking(Stage::Conversation, $conversationMinutes),
         };
 
         return $out;
