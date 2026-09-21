@@ -131,7 +131,7 @@ class TalkSummaryView extends StatelessWidget {
           ));
         }
       }
-      if (rows.isNotEmpty && rows.last is _PhraseRow) rows.add(const SizedBox(height: 12));
+      if (rows.isNotEmpty && rows.last is _PhraseRow) rows.add(const SizedBox(height: 8));
       rows.add(_PhraseRow(key: ValueKey('talk-phrase-${p.sceneId}-${p.ref}'), phrase: p, voice: voice));
     }
     return rows;
@@ -145,7 +145,10 @@ class TalkSummaryView extends StatelessWidget {
   }
 }
 
-/// One phrase of the summary — the line, its translation and «прослушать» 28 (кадр 37-12).
+/// One phrase of the summary — A PLATE (кадр 37-12): said, it lies on a sage wash 15 %; not said, it stands in an
+/// ink outline. The line, its translation and «прослушать» 28 are inside — the circle in the top right corner, its 44
+/// touch box reaching 8 into the plate's padding so the circle sits where the frame puts it (8 from the top, 12 from
+/// the edge).
 class _PhraseRow extends StatelessWidget {
   const _PhraseRow({super.key, required this.phrase, required this.voice});
 
@@ -158,28 +161,37 @@ class _PhraseRow extends StatelessWidget {
     final key = 'summary-${phrase.sceneId}-${phrase.ref}';
     return ValueListenableBuilder<Object?>(
       valueListenable: voice.playing,
-      builder: (_, playing, _) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(phrase.textTarget, style: AppTextSession.target22),
-                const SizedBox(height: 2),
-                Text(phrase.textNative, style: AppTextSession.body),
-              ],
+      builder: (_, playing, _) => Container(
+        decoration: BoxDecoration(
+          color: phrase.used ? AppColors.sessionSageWash : null,
+          borderRadius: BorderRadius.circular(16),
+          border: phrase.used ? null : Border.all(color: AppColors.markerOutline, width: 1.5),
+        ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12 + 28 + 12, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(phrase.textTarget, style: AppTextSession.target22),
+                  Text(phrase.textNative, style: AppTextSession.body),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          SessionListenButton(
-            size: 28,
-            brass: true,
-            label: l.planWindowListen,
-            playing: playing == key,
-            onTap: () => unawaited(voice.play(phrase.audio, fallback: phrase.textTarget, key: key)),
-          ),
-        ],
+            Positioned(
+              top: 0,
+              right: 4,
+              child: SessionListenButton(
+                size: 28,
+                brass: true,
+                label: l.planWindowListen,
+                playing: playing == key,
+                onTap: () => unawaited(voice.play(phrase.audio, fallback: phrase.textTarget, key: key)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

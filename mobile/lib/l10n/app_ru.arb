@@ -4710,7 +4710,7 @@
   },
   "planSessionBrowPhrase": "Фраза",
   "@planSessionBrowPhrase": {
-    "description": "Сессия, обратный перевод (32-3) и «Повтори вслух» (32-6): бровь."
+    "description": "Сессия, обратный перевод (32-3), «Повтори вслух» (32-6) и лист «Скажи целиком» (32-7): бровь."
   },
   "planSessionBrowAssembled": "Собрано",
   "@planSessionBrowAssembled": {

@@ -194,13 +194,7 @@ class SessionSoundPlate extends StatelessWidget {
           ),
           child: Row(
             children: [
-              SizedBox(
-                width: 44,
-                height: 44,
-                child: Center(
-                  child: Icon(playing ? LucideIcons.pause : LucideIcons.play, size: 20, color: AppColors.ink),
-                ),
-              ),
+              SessionPlayCircle(key: ValueKey('plate-play-$audioRef'), playing: playing),
               const SizedBox(width: 8),
               Expanded(
                 child: answered
@@ -243,6 +237,56 @@ class SessionSoundPlate extends StatelessWidget {
       ),
     );
   }
+}
+
+/// «ИГРАЕТ / ПАУЗА» 44 (кадр 34-5) — an outlined circle on the ground's fill, a solid triangle 18 in it, two bars while
+/// the plate plays. The canvas' own glyphs (a 24 box drawn at 18): the Lucide set has no solid triangle.
+class SessionPlayCircle extends StatelessWidget {
+  const SessionPlayCircle({super.key, required this.playing});
+
+  final bool playing;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 44,
+    height: 44,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: AppColors.ground,
+      border: Border.all(color: AppColors.markerOutline, width: 1.5),
+    ),
+    child: CustomPaint(size: const Size.square(18), painter: _PlayGlyphPainter(playing: playing)),
+  );
+}
+
+class _PlayGlyphPainter extends CustomPainter {
+  _PlayGlyphPainter({required this.playing});
+
+  final bool playing;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final u = size.width / 24;
+    final ink = Paint()..color = AppColors.ink;
+    if (playing) {
+      for (final x in const [7.5, 12.9]) {
+        canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x * u, 5.5 * u, 3.6 * u, 13 * u), Radius.circular(1.2 * u)), ink);
+      }
+      return;
+    }
+    canvas.drawPath(
+      Path()
+        ..moveTo(8.5 * u, 5.5 * u)
+        ..lineTo(18 * u, 12 * u)
+        ..lineTo(8.5 * u, 18.5 * u)
+        ..close(),
+      ink,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PlayGlyphPainter old) => old.playing != playing;
 }
 
 /// QUESTION SHEET OF TEMPLATE 30-9 — one for all canvases: the top (photo / wave / text), eyebrow, a two-line

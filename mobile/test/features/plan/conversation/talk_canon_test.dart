@@ -4,15 +4,19 @@ import 'package:dio/dio.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/data/plan/conversation/conversation_models.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/conversation/conversation_controller.dart';
 import 'package:eng_std/features/plan/conversation/talk_ribbon.dart';
+import 'package:eng_std/features/plan/conversation/talk_summary.dart';
 import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionListenButton;
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart' show SessionBubble;
 import 'package:eng_std/features/plan/session/parts/session_mic_panel.dart' show SessionTextExit;
 import 'package:eng_std/features/plan/session/session_mic.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/session_harness.dart' show SilentRecognizer, enterHeard;
 import '../../../support/talk_harness.dart';
@@ -293,6 +297,61 @@ void main() {
     });
   });
 
+  group('37-7 · 37-9 · 37-10 · микрофон по кадру', () {
+    // ПРАВИЛО (кадры 37-7 «слушаю», 37-9, приёмка снимков): кнопка слушает С ИКОНКОЙ МИКРОФОНА — квадрата «стоп» нет
+    // («Вычтено: … квадрат „стоп"»); вокруг её 88-коробки — полоса шалфея 8 на 30 %; «говори, я слушаю» НАД кнопкой,
+    // «тишина — конец» ПОД ней; повторный тап — стоп. Пока пишет, в доке «Не понял» и кнопка — «Подсказать» нет.
+    // ЛОВИТ: квадрат «стоп» на записи и «тишина — конец» над кнопкой — снимки 06 и 08 до приёмки.
+    testWidgets('слушаю: иконка микрофона, кольцо шалфея, «тишина — конец» под кнопкой; повторный тап — стоп', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases, recognizer: ListeningRecognizer());
+      await finishLine(tester, stand);
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      expect(stand.mics.single.state, MicState.listening);
+      expect(tester.widget<Icon>(find.byKey(const ValueKey('talk-mic-glyph'))).icon, LucideIcons.mic, reason: 'иконка микрофона, не квадрат');
+      final ring = tester.widget<TalkMicRing>(find.byKey(const ValueKey('talk-mic-ring')));
+      expect(ring.color, AppColors.sessionListenRing, reason: 'шалфей 30 %');
+      expect(ring.width, 8);
+      // The ring stands up to 8 outside the button's 88 box; the words stand clear of it (14 in the frame).
+      final ringBox = tester.getRect(find.byKey(const ValueKey('talk-mic'))).inflate(ring.width);
+      expect(tester.getRect(find.text('говори, я слушаю')).bottom, lessThanOrEqualTo(ringBox.top), reason: 'над кнопкой, мимо кольца');
+      expect(tester.getRect(find.text('тишина — конец')).top, greaterThanOrEqualTo(ringBox.bottom), reason: 'под кнопкой, мимо кольца');
+      expect(find.byKey(const ValueKey('talk-hint')), findsNothing, reason: 'пока пишет — «Не понял» и кнопка');
+      expect(find.byKey(const ValueKey('talk-rescue')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      await tester.pump();
+      expect(stand.mics.single.state, isNot(MicState.listening), reason: 'повторный тап — стоп');
+      expect(probe.moves, isEmpty, reason: 'тишина не уходит на сервер');
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (кадр 37-10, приёмка снимков): «не расслышал» — снова «твоя очередь»: вокруг кнопки латунное кольцо 2,
+    // над ней «тап — говорить», а «не расслышал — скажи ещё раз» — ПОД ней.
+    // ЛОВИТ: кольцо шалфея после строки «не расслышал» и строку на месте подписи над кнопкой.
+    testWidgets('не расслышал: латунное кольцо «твоя очередь», строка под кнопкой', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases, recognizer: ListeningRecognizer());
+      await finishLine(tester, stand);
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      await tester.pump();
+      expect(stand.talk.trouble, TalkTrouble.unheard);
+      final ring = tester.widget<TalkMicRing>(find.byKey(const ValueKey('talk-mic-ring')));
+      expect(ring.color, AppColors.brassInk, reason: 'латунь, не шалфей');
+      expect(ring.width, 2);
+      final mic = tester.getRect(find.byKey(const ValueKey('talk-mic')));
+      expect(tester.getRect(find.text('тап — говорить')).bottom, lessThanOrEqualTo(mic.top), reason: '«тап — говорить» над кнопкой');
+      expect(tester.getRect(find.text('не расслышал — скажи ещё раз')).top, greaterThanOrEqualTo(mic.bottom), reason: 'строка под кнопкой');
+      expect(probe.moves, isEmpty);
+      await settleTalk(tester);
+    });
+  });
+
   group('37-7 · «Без подсказок»', () {
     // ПРАВИЛО (кадр 37-7, примечание): в «Без подсказок» НЕТ НИ ЧИПА, НИ КНОПКИ «Подсказать», а
     // тексты реплик роли закрыты до итога — открывать их нечем.
@@ -546,6 +605,58 @@ void main() {
       expect(summaries, 1);
       await settleTalk(tester);
     });
+  });
+
+  group('37-12 · фразы — плашки', () {
+    Future<void> pumpSummary(WidgetTester tester, PlanConversation talk) async {
+      tester.view.physicalSize = const Size(390, 844) * 2;
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('ru'), Locale('en')],
+          home: Scaffold(
+            body: TalkSummaryView(talk: talk, scene: null, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}),
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    // ПРАВИЛО (кадр 37-12, приёмка снимков): фразы итога — ПЛАШКИ, не строки: сказанные — на подложке шалфея 15 %,
+    // несказанные — в контуре чернил; «прослушать» 28 — внутри плашки. Группы и подписи — как были. То же в
+    // репетиции.
+    // ЛОВИТ: строки без плашек с кружком снаружи — 37-12 до приёмки.
+    for (final (name, fixture) in [('день', 'conversation-day-ended'), ('репетиция', 'conversation-rehearsal-ended')]) {
+      testWidgets('$name: сказанные — на шалфее 15 %, несказанные — в контуре; «прослушать» 28 внутри', (tester) async {
+        final talk = talkFixture(fixture);
+        await pumpSummary(tester, talk);
+        final phrases = talk.summary!.phrases;
+        expect(phrases.where((p) => p.used), isNotEmpty);
+        expect(phrases.where((p) => !p.used), isNotEmpty);
+        for (final p in phrases) {
+          final row = find.byKey(ValueKey('talk-phrase-${p.sceneId}-${p.ref}'));
+          final plate = find.descendant(of: row, matching: find.byType(Container)).first;
+          final box = tester.widget<Container>(plate).decoration! as BoxDecoration;
+          if (p.used) {
+            expect(box.color, AppColors.sessionSageWash, reason: '«${p.textTarget}» сказана — шалфей 15 %');
+            expect(box.border, isNull);
+          } else {
+            expect(box.color, isNull, reason: '«${p.textTarget}» не сказана — без подложки');
+            expect((box.border! as Border).top.color, AppColors.markerOutline, reason: 'контур чернил');
+          }
+          final listen = find.descendant(of: row, matching: find.byType(SessionListenButton));
+          expect(tester.widget<SessionListenButton>(listen).size, 28);
+          final r = tester.getRect(plate);
+          final circle = tester.getRect(listen).deflate(8);
+          expect(r.contains(circle.topLeft) && r.contains(circle.bottomRight), isTrue, reason: 'кружок внутри плашки');
+          expect(r.right - circle.right, moreOrLessEquals(12, epsilon: 2), reason: 'в правом углу');
+        }
+      });
+    }
   });
 
   group('контракт', () {

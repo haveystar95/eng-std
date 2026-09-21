@@ -5,6 +5,7 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
 
+import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
 import '../../../support/session_harness.dart';
 
 /// «СКАЖИ ЦЕЛИКОМ» (32-7, наряд FIX-1 §6) — ПОЛЕ КАРТОЧКИ НА НИЗКОМ ТЕЛЕФОНЕ. Лист, ряд плашек-состояний и
@@ -13,7 +14,11 @@ import '../../../support/session_harness.dart';
 ///
 /// Наследник `own_slot_layout_test.dart`: экран «своё окно» снесён вместе с отдельным тренажёром, а правило
 /// «ничего не наезжает и ничего не срезано» осталось — оно и было тем, что нашли снимки SESSION-1b.
+///
+/// МЕРИТСЯ НАСТОЯЩИМИ ШРИФТАМИ (Literata, Inter — как в снимках): тестовый шрифт рисует каждую букву в кегль шириной,
+/// и лист по кадру 32-7 (бровь, каркас, чтение, перевод, «прослушать») на нём выходил вдвое выше, чем на телефоне.
 void main() {
+  setUpAll(setUpPlanGoldens);
   final day = sessionFixture('day-doctor');
   const sizes = {'844 pt': Size(390, 674), 'SE 667 pt': Size(375, 497)};
 

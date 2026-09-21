@@ -213,6 +213,26 @@ void main() {
     // is the answer» is active only then. After the answer every sheet opens both texts and the right one is marked.
     // CATCHES: texts of the options shown before the answer (the exercise becomes reading), «This is the answer»
     // active on a sheet that was never played, and a mark set by the first tap.
+    // ПРАВИЛО (кадр 34-5, приёмка снимков CLIENT-CONV-1a): «играет / пауза» — в контурном кружке 44 на плашке озвучки:
+    // заливка фона, контур чернил 22 %; внутри треугольник, пока плашка молчит (две полосы — пока играет).
+    // ЛОВИТ: голый треугольник без кружка — 34-5 до приёмки.
+    testWidgets('34-5: «играет/пауза» — в контурном кружке 44', (tester) async {
+      final voice = QuietVoice();
+      final card = listenAt(6);
+      final options = (card.payload as ListenPredictPayload).options;
+      await pumpCard(tester, probeEnv(card, CardProbe(), voice: voice));
+      for (final o in options) {
+        final circle = find.byKey(ValueKey('plate-play-${o.audio!.ref}'));
+        expect(tester.getSize(circle), const Size(44, 44));
+        final box = tester.widget<Container>(find.descendant(of: circle, matching: find.byType(Container)).first).decoration! as BoxDecoration;
+        expect(box.shape, BoxShape.circle);
+        expect(box.color, AppColors.ground, reason: 'заливка фона');
+        expect((box.border! as Border).top.color, AppColors.markerOutline, reason: 'контур чернил 22 %');
+        expect(tester.widget<SessionPlayCircle>(circle).playing, isFalse);
+      }
+      await settleCard(tester);
+    });
+
     testWidgets('34-5: кнопка активна только после прослушивания выбранного', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();

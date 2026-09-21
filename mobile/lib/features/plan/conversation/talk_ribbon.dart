@@ -406,10 +406,12 @@ enum TalkMicLook {
   /// The role is speaking: the button is dimmed and a tap on it CUTS THE LINE OFF (37-6, 37-9).
   dimmed,
 
-  /// The learner's move: a brass ring pulses 1.6 s (37-7).
+  /// The learner's move — «твоя очередь»: a 2 px brass ring around the 88 box pulses 1.6 s (37-7,
+  /// and 37-10 after «не расслышал»).
   waiting,
 
-  /// Recording: a sage ring pulses 1.2 s, a tap closes the move (37-7 «слушаю»).
+  /// Recording — «слушаю»: a sage band 8 at 30 % around the 88 box pulses 1.2 s; a second tap stops the
+  /// recording (37-7 «слушаю», 37-9).
   listening,
 
   /// Heard and taken — sage with a check (35-2 «сказал · зачтено»). The talk itself never stands
@@ -420,8 +422,11 @@ enum TalkMicLook {
   busy,
 }
 
-/// THE TALK'S MICROPHONE 72 (37-6…37-9). Four looks, ONE rule: it opens only on a tap — no state of
-/// the talk starts a recording by itself.
+/// THE TALK'S MICROPHONE — the frame's 88 box with the button 72 inside (37-6…37-10). ONE rule: it opens
+/// only on a tap — no state of the talk starts a recording by itself — and a second tap stops it.
+///
+/// The button always shows the microphone (37-9: «Вычтено: … квадрат „стоп"»); what tells the states apart
+/// is the ring around the 88 box: brass 2 while the move is the learner's, a sage band 8 while it listens.
 class TalkMicButton extends StatefulWidget {
   const TalkMicButton({super.key, required this.look, required this.onTap, required this.label});
 
@@ -474,19 +479,26 @@ class _TalkMicButtonState extends State<TalkMicButton> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final look = widget.look;
-    final icon = switch (look) {
-      TalkMicLook.listening => Container(
-        width: 18,
-        height: 18,
-        decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(4)),
-      ),
-      TalkMicLook.heard => const Icon(LucideIcons.check, size: 30, color: AppColors.paper),
-      _ => const Icon(LucideIcons.mic, size: 30, color: AppColors.paper),
-    };
-    final pulse = look == TalkMicLook.listening ? _sage : _brass;
     final ring = switch (look) {
-      TalkMicLook.waiting => AppColors.sessionBrassRing,
-      TalkMicLook.listening => AppColors.sessionListenRing,
+      // om-ring: the 2 px brass line grows to 8 and fades; at rest — and in a frame — it is the line itself.
+      TalkMicLook.waiting => AnimatedBuilder(
+        animation: _brass,
+        builder: (_, _) {
+          final t = _brass.isAnimating ? Curves.easeOut.transform(_brass.value) : 0.0;
+          return TalkMicRing(color: AppColors.brassInk.withValues(alpha: 1 - t), width: 2 + 6 * t);
+        },
+      ),
+      // om-pulse: the sage band 8 → 12 → 8 at .30 → .14 → .30.
+      TalkMicLook.listening => AnimatedBuilder(
+        animation: _sage,
+        builder: (_, _) {
+          final t = _sage.isAnimating ? (0.5 - 0.5 * math.cos(_sage.value * 2 * math.pi)) : 0.0;
+          return TalkMicRing(
+            color: Color.lerp(AppColors.sessionListenRing, AppColors.sessionListenRing.withValues(alpha: .14), t)!,
+            width: 8 + 4 * t,
+          );
+        },
+      ),
       _ => null,
     };
 
@@ -495,41 +507,77 @@ class _TalkMicButtonState extends State<TalkMicButton> with TickerProviderStateM
       label: widget.label,
       child: GestureDetector(
         key: const ValueKey('talk-mic'),
+        behavior: HitTestBehavior.opaque,
         onTap: widget.onTap == null
             ? null
             : () {
                 AppHaptics.light();
                 widget.onTap!();
               },
-        child: AnimatedBuilder(
-          animation: pulse,
-          builder: (_, child) {
-            // om-pulse: ring 8 → 12 → 8, opacity .30 → .14 → .30.
-            final t = pulse.isAnimating ? (0.5 - 0.5 * math.cos(pulse.value * 2 * math.pi)) : 0.0;
-            return Opacity(
-              opacity: look == TalkMicLook.dimmed || look == TalkMicLook.busy ? 0.45 : 1,
-              child: Container(
-                width: 72,
-                height: 72,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: look == TalkMicLook.heard ? AppColors.verdictKnown : AppColors.windowInk,
-                  boxShadow: [
-                    const BoxShadow(color: AppColors.sessionMicShadow, blurRadius: 24, offset: Offset(0, 8)),
-                    if (ring != null)
-                      BoxShadow(color: Color.lerp(ring, ring.withValues(alpha: .14), t)!, spreadRadius: 8 + 4 * t),
-                  ],
+        child: SizedBox(
+          width: 88,
+          height: 88,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              ?ring,
+              Opacity(
+                opacity: look == TalkMicLook.dimmed || look == TalkMicLook.busy ? 0.35 : 1,
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: look == TalkMicLook.heard ? AppColors.verdictKnown : AppColors.windowInk,
+                    boxShadow: const [BoxShadow(color: AppColors.sessionMicShadow, blurRadius: 24, offset: Offset(0, 8))],
+                  ),
+                  child: Icon(
+                    look == TalkMicLook.heard ? LucideIcons.check : LucideIcons.mic,
+                    key: const ValueKey('talk-mic-glyph'),
+                    size: 30,
+                    color: AppColors.paper,
+                  ),
                 ),
-                child: child,
               ),
-            );
-          },
-          child: icon,
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// THE RING AROUND THE MICROPHONE'S 88 BOX — the frame's `box-shadow: 0 0 0 [width]`, drawn OUTSIDE the box:
+/// brass 2 for «твоя очередь», a sage band 8 at 30 % for «слушаю».
+class TalkMicRing extends StatelessWidget {
+  const TalkMicRing({super.key = const ValueKey('talk-mic-ring'), required this.color, required this.width});
+
+  final Color color;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(size: const Size.square(88), painter: _RingPainter(color: color, width: width));
+}
+
+class _RingPainter extends CustomPainter {
+  _RingPainter({required this.color, required this.width});
+
+  final Color color;
+  final double width;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width;
+    canvas.drawCircle(size.center(Offset.zero), size.shortestSide / 2 + width / 2, paint);
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) => old.color != color || old.width != width;
 }
 
 /// THE TALK'S DOCK (37-6…37-9): the chip over everything, the caption, the live line, and the row of
@@ -564,7 +612,8 @@ class TalkDock extends StatelessWidget {
   /// «тап — говорить» / «слушай» / «говори, я слушаю».
   final String? caption;
 
-  /// «тишина — конец» under the caption.
+  /// Under the microphone: «тишина — конец» while it listens, «не расслышал — скажи ещё раз» after an empty
+  /// recording (37-7, 37-10).
   final String? subCaption;
 
   /// The live line of the recording, over the caption.
@@ -584,24 +633,23 @@ class TalkDock extends StatelessWidget {
       if (notice case final n?) ...[n, const SizedBox(height: 14)],
       if (chip case final c?) ...[c, const SizedBox(height: 14)],
       if (liveLine case final line?) ...[line, const SizedBox(height: 14)],
+      // The frame's order (37-7 «слушаю», 37-10): the caption over the button, the button's 88 box, and what
+      // closes or failed the move — «тишина — конец», «не расслышал» — under it; 14 between them, so the ring the
+      // button wears outside its box (up to 8) never reaches the words.
       if (caption case final text?) ...[
         Text(text, key: const ValueKey('talk-caption'), textAlign: TextAlign.center, style: AppTextSession.meta),
-        const SizedBox(height: 6),
-      ],
-      if (subCaption case final text?) ...[
-        Text(text, key: const ValueKey('talk-sub-caption'), textAlign: TextAlign.center, style: AppTextSession.meta),
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
       ],
       SizedBox(
-        height: 72,
+        height: 88,
         // THE MICROPHONE IS LAST, SO IT IS HIT FIRST. The exits sit at the sides and their tap areas
         // (44 high, opaque) reach towards the middle; on a 375 phone «Подсказать» already overlaps
         // the button's centre, and a tap meant for the microphone was swallowed by the exit behind
         // it. The row paints in this order and hit-tests in reverse: the button always wins.
         child: LayoutBuilder(
           builder: (_, box) {
-            // Each side gets what the microphone's ring (88) leaves it, less 4 of air.
-            final side = math.max(0.0, (box.maxWidth - 88) / 2 - 4);
+            // Each side gets what the microphone's 88 box and its brass ring leave it, with a little air.
+            final side = math.max(0.0, (box.maxWidth - 96) / 2);
             return Stack(
               alignment: Alignment.center,
               children: [
@@ -615,6 +663,10 @@ class TalkDock extends StatelessWidget {
           },
         ),
       ),
+      if (subCaption case final text?) ...[
+        const SizedBox(height: 14),
+        Text(text, key: const ValueKey('talk-sub-caption'), textAlign: TextAlign.center, style: AppTextSession.meta),
+      ],
       if (kDebugMode && debugMic != null) ...[
         const SizedBox(height: 10),
         SessionDebugHeardField(mic: debugMic!),

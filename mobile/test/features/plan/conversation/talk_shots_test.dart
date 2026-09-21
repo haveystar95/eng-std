@@ -76,7 +76,10 @@ void main() {
   Future<void> pumpShot(WidgetTester tester, Widget home) async {
     tester.view
       ..devicePixelRatio = 2
-      ..physicalSize = frame * 2;
+      ..physicalSize = frame * 2
+      // The frames' phone has a 52 status bar over the screen, as a real one does: a shot shows the height a card
+      // really has, not 52 more (the air over «Начать разговор» on 37-5 was that 52).
+      ..padding = const FakeViewPadding(top: 52 * 2);
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       RepaintBoundary(

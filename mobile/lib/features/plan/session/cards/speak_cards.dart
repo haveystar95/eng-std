@@ -333,11 +333,15 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       return TalkOwnBubble(child: SessionInkLiveLine(words: LiveLine.of(mic.partial, _framePart, listening: !mic.closed)));
     }
     if (heard.trim().isEmpty) return null;
+    // Rejected, the line is still what the learner said — plain, in paper, like every own bubble (кадр 35-2
+    // «сказал · не зачтено»); the judge's reason is the verdict, and it stands under the bubble.
     final bubble = accepted
         ? TalkOwnBubble(key: const ValueKey('speak-own'), text: heard, marks: HeardWords.matched(heard, p.ownLine.textTarget))
+        : rejected
+        ? TalkOwnBubble(key: const ValueKey('speak-own'), text: heard)
         : TalkOwnBubble(
             key: const ValueKey('speak-own'),
-            child: SessionInkLiveLine(words: LiveLine.of(heard, _framePart, listening: false), dimPlain: rejected),
+            child: SessionInkLiveLine(words: LiveLine.of(heard, _framePart, listening: false)),
           );
     if (!rejected) return bubble;
     final why = (reason ?? '').trim().isEmpty ? l.planSessionNotThat : reason!;
@@ -345,10 +349,13 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         bubble,
-        const SizedBox(height: 6),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text(why, key: const ValueKey('speak-judge-line'), textAlign: TextAlign.right, style: AppTextSession.body),
+        const SizedBox(height: 8),
+        // The judge's sentence reads from the left edge of the ribbon — Inter 15/500 in ink, as the frame sets it.
+        Text(
+          why,
+          key: const ValueKey('speak-judge-line'),
+          textAlign: TextAlign.left,
+          style: AppTextSession.text15.copyWith(fontWeight: FontWeight.w500),
         ),
       ],
     );

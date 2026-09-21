@@ -255,27 +255,40 @@ void main() {
     // RULE (SESSION-2b §1, кадр 32-1): a meaning is ALWAYS in the slot and its chip is ink; the reading and the
     // translation change with it; the grey «this part can change» and the «FRAME» eyebrow are gone.
     // CATCHES: a chip that does not darken (the old neutral row), a reading or a translation left at the filler the
-    // ПРАВИЛО (наряд CLIENT-CONV-1a, кадр 32-1): 32-1 — КАРТОЧКА-УРОК, здесь ничего не выбирают.
-    // Значения стоят НЕЙТРАЛЬНЫМИ плашками под подписью «эту часть можно менять», в окне — значение
-    // дня, и карточка кончается «Дальше». Правило SESSION-2b §1 («чип угольный и его выбирают»)
-    // отменено кадром: выбор в уроке обещает задание, которого нет.
-    // ЛОВИТ: возврат тапаемых чипов, пропавшую подпись и старую кнопку «Понятно».
-    testWidgets('32-1: значения — нейтральные плашки, ничего не выбирается', (tester) async {
+    // ПРАВИЛО (кадр 32-1, приёмка снимков CLIENT-CONV-1a): 32-1 — КАРТОЧКА-УРОК, здесь ничего не выбирают. Значения —
+    // нейтральные серые плашки во всю ширину: слово Literata 17 и перевод под ним. Ни одна не выделена — даже та, что
+    // стоит в окне, — и ни одна не кнопка. Лист — ОДИН бумажный: каркас с окном, чтение, перевод, «прослушать» 44.
+    // ЛОВИТ: чипы-выбор (первый — чернильный, как выбранный), обведённую плашку значения в окне и лист, разрезанный на
+    // плашку фона и бумажный подвал.
+    testWidgets('32-1: значения — нейтральные плашки во всю ширину, ничего не выбрано', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
-      await pumpCard(tester, probeEnv(fixtureCard(intermediate, SessionKind.phraseIntro), probe, voice: voice));
+      final card = fixtureCard(intermediate, SessionKind.phraseIntro);
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
       expect(find.text('Посмотри и послушай'), findsOneWidget);
       expect(find.text('эту часть можно менять'), findsOneWidget);
-      expect(find.byKey(const ValueKey('chip-0')), findsNothing, reason: 'чипов на уроке нет');
-      expect(find.byKey(const ValueKey('meaning-plates')), findsOneWidget);
-      expect(frameLine(tester).slot, 'lower back', reason: 'в окне — значение, которое говорит диалог');
-      expect(frameLine(tester).look, SlotLook.filled);
-      expect(find.text('У него болит поясница.'), findsOneWidget);
-      expect(chip(tester, 'meaning-0').selected, isTrue, reason: 'плашка значения в окне обведена');
-      for (final key in ['meaning-1', 'meaning-2']) {
-        expect(chip(tester, key).selected, isFalse);
+      expect(find.byType(SessionTile), findsNothing, reason: 'ни одного чипа на уроке');
+      final sheet = find.byKey(const ValueKey('lesson-sheet'));
+      final width = tester.getRect(sheet).width;
+      for (final f in (card.payload as PhraseIntroPayload).frame.fillers) {
+        final plate = find.byKey(ValueKey('meaning-${f.index}'));
+        expect(tester.getRect(plate).width, moreOrLessEquals(width, epsilon: 0.5), reason: 'во всю ширину');
+        final word = find.descendant(of: plate, matching: find.text(f.target));
+        expect(word, findsOneWidget);
+        expect(tester.widget<Text>(word).style!.fontSize, 17, reason: 'слово Literata 17');
+        expect(tester.widget<Text>(word).style!.fontFamily, AppFonts.literata);
+        expect(find.descendant(of: plate, matching: find.text(f.native)), findsOneWidget, reason: 'перевод под словом');
+        final box = tester.widget<Container>(plate).decoration! as BoxDecoration;
+        expect(box.color, AppColors.meaningPlate, reason: 'нейтральная серая плашка');
+        expect(box.border, isNull, reason: 'ничего не обведено — и то, что в окне, тоже');
+        expect(find.descendant(of: plate, matching: find.byType(GestureDetector)), findsNothing, reason: 'плашка — не кнопка');
       }
-      expect(chip(tester, 'meaning-1').onTap, isNull, reason: 'плашка — состояние, а не кнопка');
+      expect(frameLine(tester).slot, 'lower back', reason: 'в окне — значение, которое говорит диалог');
+      expect(find.descendant(of: sheet, matching: find.byType(SessionFrameText)), findsOneWidget, reason: 'каркас — в листе');
+      expect(find.descendant(of: sheet, matching: find.byKey(const ValueKey('lesson-reading'))), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text('У него болит поясница.')), findsOneWidget);
+      final listen = find.descendant(of: sheet, matching: find.byType(SessionListenButton));
+      expect(tester.widget<SessionListenButton>(listen).size, 44, reason: '«прослушать» 44 в углу листа');
 
       await tapText(tester, 'Дальше');
       expect(results(probe), [SessionResult.passed]);
@@ -299,6 +312,44 @@ void main() {
       expect(find.text('В РАЗГОВОРЕ'), findsOneWidget);
       expect(find.byKey(const ValueKey('in-talk-partner')), findsOneWidget);
       expect(find.byKey(const ValueKey('in-talk-learner')), findsOneWidget);
+      await settleCard(tester);
+    });
+
+    // ПРАВИЛО (кадр 32-7, приёмка снимков CLIENT-CONV-1a): лист «Скажи целиком» — по кадру: бровь «ФРАЗА», каркас с
+    // окном, чтение фразы с этим значением, родное предложение и «прослушать» 44 в правом нижнем углу листа — он
+    // играет фразу с этим значением (файл сервера у наполнения). На своём слове окно пустое, чтение держит пробел
+    // сервера `___`, как и родное предложение под ним.
+    // ЛОВИТ: лист без чтения и без звука — 32-7 до приёмки.
+    testWidgets('32-7: лист по кадру — бровь, каркас с окном, чтение, перевод, «прослушать» 44 в углу', (tester) async {
+      final voice = QuietVoice();
+      final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
+      final payload = card.payload as PhraseOtherSlotPayload;
+      await pumpCard(tester, probeEnv(card, CardProbe(), voice: voice));
+      final sheet = find.byKey(const ValueKey('lesson-sheet'));
+      expect(find.descendant(of: sheet, matching: find.text('ФРАЗА')), findsOneWidget, reason: 'бровь «Фраза»');
+      expect(frameLine(tester).window, isTrue);
+      final first = payload.frame.filler(payload.rounds.first.fillerIndex)!;
+      expect(frameLine(tester).slot, first.target);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-reading'))).data, 'ит хёртс ин хиз лоуэр бэк');
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, payload.rounds.first.taskNative);
+      final listen = find.descendant(of: sheet, matching: find.byType(SessionListenButton));
+      expect(tester.widget<SessionListenButton>(listen).size, 44);
+      final box = tester.getRect(sheet);
+      expect(box.right - tester.getRect(listen).right, moreOrLessEquals(24, epsilon: 0.5), reason: 'в правом углу листа');
+      expect(box.bottom - tester.getRect(listen).bottom, moreOrLessEquals(24, epsilon: 0.5), reason: 'внизу листа');
+      await tester.tap(listen);
+      await tester.pump();
+      expect(voice.played.last, '${first.audio!.ref}@1.0', reason: 'играет фраза с этим значением');
+
+      for (final round in payload.rounds) {
+        await sayDebug(tester, round.expectedText);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+      }
+      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-reading'))).data, payload.frame.framePronunciationNative);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, payload.ownRound!.taskNative);
+      expect(find.descendant(of: sheet, matching: find.byType(SessionListenButton)), findsOneWidget, reason: '«прослушать» и на своём слове');
       await settleCard(tester);
     });
 

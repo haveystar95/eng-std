@@ -296,15 +296,15 @@ class _TalkViewState extends State<TalkView> {
       TalkPhase.yourTurn => listening ? TalkMicLook.listening : TalkMicLook.waiting,
     };
     final trouble = _talk.trouble;
-    final caption = switch (trouble) {
-      TalkTrouble.unheard => l.planTalkUnheard,
-      _ => switch (phase) {
-        TalkPhase.agentSpeaking => l.planSessionListenCue,
-        TalkPhase.yourTurn when noMic => null,
-        TalkPhase.yourTurn => listening ? l.planSessionMicListening : l.planSessionMicTap,
-        _ => null,
-      },
+    // «Не расслышал» is the move's again (37-10): «тап — говорить» over the button, the brass ring of
+    // «твоя очередь» around it, and the reason under it.
+    final caption = switch (phase) {
+      TalkPhase.agentSpeaking => l.planSessionListenCue,
+      TalkPhase.yourTurn when noMic => null,
+      TalkPhase.yourTurn => listening ? l.planSessionMicListening : l.planSessionMicTap,
+      _ => null,
     };
+    final subCaption = listening ? l.planTalkSilenceEnds : (trouble == TalkTrouble.unheard ? l.planTalkUnheard : null);
 
     return TalkDock(
       debugMic: yourTurn ? _mic : null,
@@ -324,7 +324,7 @@ class _TalkViewState extends State<TalkView> {
           ? _LiveLine(words: LiveLine.of(_mic.partial, _expected, listening: !_mic.closed))
           : null,
       caption: caption,
-      subCaption: listening ? l.planTalkSilenceEnds : null,
+      subCaption: subCaption,
       // «Не понял» stands in EVERY state of the learner's move: a rescue is not a hint, and it costs
       // no turn of the scene.
       left: yourTurn
@@ -334,7 +334,9 @@ class _TalkViewState extends State<TalkView> {
               onTap: () => unawaited(_talk.rescue()),
             )
           : null,
-      right: _talk.hintButtonShown
+      // While it listens the dock holds «Не понял» and the button alone (37-7 «слушаю»): a hint is asked for
+      // before speaking, not in the middle of it.
+      right: _talk.hintButtonShown && !listening
           ? TalkPill(key: const ValueKey('talk-hint'), label: l.planSessionHintAction, brass: true, onTap: _talk.showHint)
           : null,
       mic: TalkMicButton(

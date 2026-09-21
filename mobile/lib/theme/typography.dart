@@ -1333,6 +1333,26 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
+  /// The frame on the lesson card 32-1 — Literata 28/500, line 36 («размер вне списка Части 0, он назван в наряде и
+  /// живёт только на этом кадре»).
+  static const frameLesson = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 28,
+    height: 36 / 28,
+    letterSpacing: -0.28,
+    color: AppColors.ink,
+  );
+
+  /// A meaning on its neutral plate (32-1) — Literata 17/500, 1.2: the token list's «термин в списке слов».
+  static const meaning = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 17,
+    height: 1.2,
+    color: AppColors.ink,
+  );
+
   /// Tray tile and filler chip — Literata 15.
   static const tile = TextStyle(fontFamily: AppFonts.literata, fontSize: 15, color: AppColors.ink);
 

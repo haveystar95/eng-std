@@ -215,6 +215,7 @@ class SessionListenButton extends StatelessWidget {
     this.size = 44,
     this.playing = false,
     this.brass = false,
+    this.onPaper = false,
   });
 
   final VoidCallback? onTap;
@@ -222,6 +223,10 @@ class SessionListenButton extends StatelessWidget {
   final double size;
   final bool playing;
   final bool brass;
+
+  /// The circle stands on a paper sheet — it takes the ground's fill, or it would vanish into the paper (32-1, 32-7:
+  /// «прослушать» 44 `#EFEBE3` in the sheet's corner).
+  final bool onPaper;
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +247,7 @@ class SessionListenButton extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: brass ? null : AppColors.paper,
+                color: brass ? null : (onPaper ? AppColors.ground : AppColors.paper),
                 border: Border.all(color: playing || brass ? AppColors.brassInk : AppColors.markerOutline, width: 1.5),
               ),
               child: playing

@@ -41,24 +41,23 @@ void _autoplay(State state, CardEnv env, CardAudio? audio, String fallback, Obje
   });
 }
 
-/// PHRASE PLATE (32-1, 32-3…32-9) — `#EFEBE3` across the sheet's whole field, the phrase in Literata 30
+/// PHRASE PLATE (32-3…32-6, 32-8) — `#EFEBE3` across the sheet's whole field, the phrase in Literata 30
 /// left-aligned, «Listen» 44 in the bottom-right corner.
 class _PhrasePlate extends StatelessWidget {
-  const _PhrasePlate({required this.child, this.listen, this.height = 208, this.topLeft});
+  const _PhrasePlate({required this.child, this.listen, this.topLeft});
 
   final Widget child;
   final Widget? listen;
-  final double height;
   final Widget? topLeft;
 
-  /// The plate's height is at least [height]; a long phrase grows it — the text is not clipped.
+  /// The plate is at least 208 high; a long phrase grows it — the text is not clipped.
   @override
   Widget build(BuildContext context) => ColoredBox(
     color: AppColors.ground,
     child: Stack(
       children: [
         Container(
-          constraints: BoxConstraints(minHeight: height),
+          constraints: const BoxConstraints(minHeight: 208),
           padding: EdgeInsets.fromLTRB(20, topLeft == null ? 20 : 52, 20, listen == null ? 20 : 64),
           alignment: Alignment.centerLeft,
           child: child,
@@ -70,22 +69,21 @@ class _PhrasePlate extends StatelessWidget {
   );
 }
 
-/// The text part of the phrase sheet — eyebrow, reading, translation. A sheet may carry no eyebrow at all (32-1,
-/// 32-7): the frame with its filler in the slot already says what the card is about.
+/// The text part of the phrase sheet — eyebrow, reading, translation. A sheet may carry no eyebrow at all: the frame
+/// with its filler in the slot already says what the card is about.
 class _PhraseFooter extends StatelessWidget {
-  const _PhraseFooter({this.eyebrow, this.reading, this.native, this.nativeStyle});
+  const _PhraseFooter({this.eyebrow, this.reading, this.native});
 
   final String? eyebrow;
   final String? reading;
   final String? native;
-  final TextStyle? nativeStyle;
 
   @override
   Widget build(BuildContext context) {
     final rows = <Widget>[
       if (eyebrow case final text?) SessionEyebrow(text),
       if (reading case final text?) Text(text, style: AppTextSession.meta),
-      if (native case final text?) Text(text, style: nativeStyle ?? AppTextSession.body),
+      if (native case final text?) Text(text, style: AppTextSession.body),
     ];
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -114,6 +112,48 @@ class _PhraseSheet extends StatelessWidget {
   );
 }
 
+/// THE LESSON SHEET (кадры 32-1, 32-7) — ONE paper sheet, as the frames draw it now: an eyebrow (32-7), the frame in
+/// Literata with its window, the reading, the native sentence, and «прослушать» 44 in the bottom right corner on the
+/// ground's fill. The older sheet — a ground plate over a paper footer — still carries the other cards of series 32.
+class _LessonSheet extends StatelessWidget {
+  const _LessonSheet({required this.frame, this.eyebrow, this.reading, this.native, this.listen, this.padding = 20, this.listenGap = 12});
+
+  final Widget frame;
+  final String? eyebrow;
+  final String? reading;
+  final String? native;
+  final Widget? listen;
+
+  /// 20 on 32-1, 24 on 32-7.
+  final double padding;
+
+  /// From the native sentence to «прослушать»: 12 on 32-1, 16 on 32-7.
+  final double listenGap;
+
+  @override
+  Widget build(BuildContext context) => SessionSheet(
+    key: const ValueKey('lesson-sheet'),
+    padding: EdgeInsets.all(padding),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (eyebrow case final text?) ...[SessionEyebrow(text), const SizedBox(height: 8)],
+        frame,
+        if (reading case final text?) ...[
+          const SizedBox(height: 6),
+          Text(text, key: const ValueKey('lesson-reading'), style: AppTextSession.meta),
+        ],
+        if (native case final text?) ...[
+          const SizedBox(height: 4),
+          Text(text, key: const ValueKey('lesson-native'), style: AppTextSession.body),
+        ],
+        if (listen case final button?) ...[SizedBox(height: listenGap), Align(alignment: Alignment.centerRight, child: button)],
+      ],
+    ),
+  );
+}
+
 /// A row of filler chips 40: the chosen one is ink, the rest paper (32-8).
 class _FillerChips extends StatelessWidget {
   const _FillerChips({required this.fillers, required this.selected, required this.onTap});
@@ -139,23 +179,35 @@ class _FillerChips extends StatelessWidget {
   );
 }
 
-/// THE MEANINGS AS NEUTRAL PLATES (кадр 32-1, наряд CLIENT-CONV-1a) — «это карточка-урок, здесь
-/// ничего не выбирают». The plates say what the changing part can hold; the one standing in the
-/// window is outlined, and none of them is a button.
+/// THE MEANINGS AS NEUTRAL PLATES (кадр 32-1) — «это карточка-урок, здесь ничего не выбирают»: each meaning is a grey
+/// plate across the whole width with the word in Literata 17 and its translation under it. None of them is marked, not
+/// even the one standing in the window, and none of them is a button — nothing here looks like a choice.
 class _MeaningPlates extends StatelessWidget {
-  const _MeaningPlates({required this.fillers, required this.shown});
+  const _MeaningPlates({required this.fillers});
 
   final List<CardFiller> fillers;
-  final int? shown;
 
   @override
-  Widget build(BuildContext context) => Wrap(
+  Widget build(BuildContext context) => Column(
     key: const ValueKey('meaning-plates'),
-    spacing: 8,
-    runSpacing: 8,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      for (final f in fillers)
-        SessionTile(key: ValueKey('meaning-${f.index}'), text: f.target, height: 40, outlined: true, selected: shown == f.index),
+      for (final (i, f) in fillers.indexed) ...[
+        if (i > 0) const SizedBox(height: 8),
+        Container(
+          key: ValueKey('meaning-${f.index}'),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(color: AppColors.meaningPlate, borderRadius: BorderRadius.circular(12)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(f.target, style: AppTextSession.meaning),
+              const SizedBox(height: 2),
+              Text(f.native, style: AppTextSession.body),
+            ],
+          ),
+        ),
+      ],
     ],
   );
 }
@@ -220,10 +272,10 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
     final shown = _shown;
     final pair = _changeable ? null : env.exchangeOf?.call(p.said.textTarget);
     return CardLayout(
-      bodyGap: 12,
+      bodyGap: _changeable ? 16 : 24,
       fadeStop: 0.34,
-      // With «В разговоре» under the sheet the field is taller than the screen, and its last bubble
-      // must not sit under the button: the dock stands below the field, not over it.
+      // With «В разговоре» under the sheet the field may be taller than a small screen, and its last bubble must not
+      // sit under the button: the dock stands below the field, and the field scrolls above it.
       overlayDock: pair == null,
       task: SessionTask(
         l.planSessionTaskLookListen,
@@ -236,23 +288,21 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PhraseSheet(
-            plate: _PhrasePlate(
-              height: 288,
-              listen: CardListen(env: env, audio: p.said.audio, fallback: p.said.textTarget, playKey: 'intro-phrase'),
-              child: _changeable && shown != null
-                  ? SessionFrameText.frame(frame, style: AppTextSession.frame, slot: shown.target, look: SlotLook.filled)
-                  : SessionFrameText.plain(frame.hasSlot ? p.said.textTarget : frame.frameTarget, style: AppTextSession.frame),
-            ),
-            footer: _PhraseFooter(reading: _pronunciation(frame, shown), native: _native(frame, shown)),
+          _LessonSheet(
+            frame: _changeable && shown != null
+                ? SessionFrameText.frame(frame, style: AppTextSession.frameLesson, slot: shown.target, look: SlotLook.filled)
+                : SessionFrameText.plain(frame.hasSlot ? p.said.textTarget : frame.frameTarget, style: AppTextSession.frameLesson),
+            reading: _pronunciation(frame, shown),
+            native: _native(frame, shown),
+            listen: CardListen(env: env, audio: p.said.audio, fallback: p.said.textTarget, playKey: 'intro-phrase', onPaper: true),
           ),
           if (_changeable) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(l.planSessionChangeable, key: const ValueKey('changeable-caption'), style: AppTextSession.meta),
-            const SizedBox(height: 10),
-            _MeaningPlates(fillers: frame.fillers, shown: shown?.index),
+            const SizedBox(height: 14),
+            _MeaningPlates(fillers: frame.fillers),
           ] else if (pair != null) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             SessionEyebrow(l.planSessionInTalk),
             const SizedBox(height: 14),
             _InTalk(pair: pair, env: env),
@@ -307,7 +357,7 @@ class _InTalk extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [for (final (i, row) in ordered.indexed) ...[if (i > 0) const SizedBox(height: 8), row]],
+      children: [for (final (i, row) in ordered.indexed) ...[if (i > 0) const SizedBox(height: 12), row]],
     );
   }
 }
@@ -891,6 +941,17 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     super.dispose();
   }
 
+  /// The reading of this round: the frame's reading with the meaning's in its window; on the own-word round the window
+  /// is empty, and the reading keeps the server's own gap — the same `___` as the native sentence under it (кадр 32-7
+  /// «своё слово» draws dots there; a drawn ellipsis is what the session code never prints).
+  String? get _roundReading => _own ? _frame.framePronunciationNative : _pronunciation(_frame, _filler);
+
+  /// «Прослушать» 44 in the sheet's corner: the frame spoken with this round's meaning — the server's file of that
+  /// filler. The own-word round has no file (the window is the learner's): the phone reads the frame's fixed part.
+  Widget _roundListen(CardSayWholeRound? value) => value == null
+      ? CardListen(env: env, audio: null, fallback: _framePart, playKey: 'say-whole-own', onPaper: true)
+      : CardListen(env: env, audio: _filler?.audio, fallback: value.expectedText, playKey: 'say-whole-$round', onPaper: true);
+
   /// The key in the frame — case-insensitive; not found — no underline.
   TextRange? get _keyRange {
     final key = widget.payload.key;
@@ -926,29 +987,27 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PhraseSheet(
-            plate: _PhrasePlate(
-              child: SessionFrameText(
-                before: _frame.parts.before,
-                after: _frame.parts.after,
-                style: AppTextSession.frame,
-                window: _frame.hasSlot,
-                frameColor: passed && _parts?.frame == true ? AppColors.verdictKnown : null,
-                slot: shown,
-                look: passed ? SlotLook.sage : (shown == null ? SlotLook.empty : SlotLook.filled),
-                caret: _own && listening && !mic.closed,
-                underline: _keyRange,
-              ),
+          _LessonSheet(
+            padding: 24,
+            listenGap: 16,
+            eyebrow: l.planSessionBrowPhrase,
+            frame: SessionFrameText(
+              before: _frame.parts.before,
+              after: _frame.parts.after,
+              style: AppTextSession.frame,
+              window: _frame.hasSlot,
+              frameColor: passed && _parts?.frame == true ? AppColors.verdictKnown : null,
+              slot: shown,
+              look: passed ? SlotLook.sage : (shown == null ? SlotLook.empty : SlotLook.filled),
+              caret: _own && listening && !mic.closed,
+              underline: _keyRange,
             ),
-            // No reading line on this sheet (as on 32-7 before the merge): the card carries the row of meanings under
-            // it, and the two have to stand above the microphone on an 844 pt phone.
-            footer: _PhraseFooter(
-              native: value?.taskNative ?? _ownRound?.taskNative ?? '',
-              nativeStyle: AppTextSession.body,
-            ),
+            reading: _roundReading,
+            native: value?.taskNative ?? _ownRound?.taskNative ?? '',
+            listen: _roundListen(value),
           ),
           if (_frame.hasSlot) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
             _RoundChips(fillers: _frame.fillers, round: round, rounds: _values, ownRound: _ownRound != null),
           ],
         ],

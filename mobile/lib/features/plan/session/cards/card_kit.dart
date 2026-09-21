@@ -649,6 +649,7 @@ class CardListen extends StatelessWidget {
     this.size = 44,
     this.rate = 1.0,
     this.brass = false,
+    this.onPaper = false,
   });
 
   final CardEnv env;
@@ -659,12 +660,16 @@ class CardListen extends StatelessWidget {
   final double rate;
   final bool brass;
 
+  /// See [SessionListenButton.onPaper].
+  final bool onPaper;
+
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<Object?>(
     valueListenable: env.voice.playing,
     builder: (context, playing, _) => SessionListenButton(
       size: size,
       brass: brass,
+      onPaper: onPaper,
       label: AppLocalizations.of(context).planWindowListen,
       playing: playing == playKey,
       onTap: () => unawaited(env.voice.play(audio, fallback: fallback, rate: rate, key: playKey)),

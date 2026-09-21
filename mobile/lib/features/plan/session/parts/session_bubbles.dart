@@ -223,14 +223,13 @@ class SessionAppear extends StatelessWidget {
   }
 }
 
-/// THE LIVE LINE IN THE OWN BUBBLE (35-2 «speaking», 35-5 «not that») — Literata 22 on ink: the words that belong to
-/// the expected line in sage, the last word while recording and the words that do not belong dimmed to 45 %; [dimPlain]
-/// false keeps a word that does not belong in paper (still speaking), true dims it (the verdict said no).
+/// THE LIVE LINE IN THE OWN BUBBLE (35-2 «speaking») — Literata 22 on ink: the words that belong to the expected line
+/// in sage, the last word while recording dimmed to 45 %, the rest in paper. A rejected line is not drawn here: it is
+/// what the learner said, plain, in paper (кадр 35-2 «сказал · не зачтено»).
 class SessionInkLiveLine extends StatelessWidget {
-  const SessionInkLiveLine({super.key, required this.words, this.dimPlain = false});
+  const SessionInkLiveLine({super.key, required this.words});
 
   final List<LiveWord> words;
-  final bool dimPlain;
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +245,7 @@ class SessionInkLiveLine extends StatelessWidget {
                 color: switch (w.tone) {
                   LiveTone.matched => AppColors.sessionSageOnInk,
                   LiveTone.pending => AppColors.sessionPaperDim,
-                  LiveTone.plain => dimPlain ? AppColors.sessionPaperDim : AppColors.paper,
+                  LiveTone.plain => AppColors.paper,
                 },
               ),
             ),

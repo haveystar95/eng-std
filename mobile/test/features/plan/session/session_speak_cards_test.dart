@@ -10,6 +10,7 @@ import 'package:eng_std/features/plan/session/parts/session_bits.dart' show Sess
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
 import 'package:eng_std/features/plan/session/parts/session_mic_panel.dart' show SessionTextExit;
 import 'package:eng_std/features/plan/session/session_mic.dart';
+import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/session_harness.dart';
 
@@ -99,20 +100,36 @@ void main() {
       await settleCard(tester);
     });
 
-    // ПРАВИЛО (кадр 35-2 «сказал · не зачтено»): строка судьи — чернилами ПОД пузырём, «Ещё раз» —
-    // кнопкой, «Пропустить» — ссылкой. Микрофона в этом состоянии нет: следующая попытка начинается
-    // с «Ещё раз».
-    // ЛОВИТ: причину отказа, спрятанную под микрофон; «Ещё раз» ссылкой наравне с «Пропустить».
-    testWidgets('не зачтено — строка судьи под пузырём, «Ещё раз» кнопкой, «Пропустить» ссылкой', (tester) async {
+    // ПРАВИЛО (кадр 35-2 «сказал · не зачтено»): сказанное остаётся в тёмном пузыре — ЦВЕТОМ БУМАГИ, как любая
+    // своя реплика; строка судьи — Inter 15/500 чернилами, слева под пузырём, от края ленты (24); «Ещё раз» —
+    // кнопкой, «Пропустить» — ссылкой. Микрофона в этом состоянии нет: следующая попытка начинается с «Ещё раз».
+    // ЛОВИТ: серую реплику в пузыре и серую строку судьи справа — 35-2 до приёмки снимков; причину отказа,
+    // спрятанную под микрофон; «Ещё раз» ссылкой наравне с «Пропустить».
+    testWidgets('не зачтено — реплика бумагой, строка судьи чернилами слева, «Ещё раз» кнопкой', (tester) async {
       final probe = CardProbe()..verdict = (_) => rejected;
       await pumpCard(tester, probeEnv(speakAt(2), probe));
       await tester.pump(const Duration(milliseconds: 300));
       await sayDebug(tester, 'It started the car');
       await tester.pump();
       expect(probe.hinted, [false]);
-      expect(find.byKey(const ValueKey('speak-judge-line')), findsOneWidget);
+      final own = find.byKey(const ValueKey('speak-own'));
+      final line = tester.widget<Text>(find.descendant(of: own, matching: find.byKey(const ValueKey('talk-own-line'))));
+      expect(line.textSpan!.toPlainText(), 'It started the car', reason: 'сказанное остаётся в пузыре');
+      final spans = <TextSpan>[];
+      line.textSpan!.visitChildren((s) {
+        if (s is TextSpan && (s.text ?? '').isNotEmpty) spans.add(s);
+        return true;
+      });
+      expect(spans.every((s) => s.style!.color == AppColors.paper), isTrue, reason: 'цветом бумаги, не серым');
+      final judge = find.byKey(const ValueKey('speak-judge-line'));
       expect(find.text('Ты сказал не про время.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('bubble-live-line')), findsOneWidget, reason: 'сказанное остаётся в пузыре');
+      final judgeText = tester.widget<Text>(judge);
+      expect(judgeText.style!.color, AppColors.ink, reason: 'чернилами');
+      expect(judgeText.style!.fontSize, 15);
+      expect(judgeText.style!.fontWeight, FontWeight.w500);
+      expect(tester.getRect(judge).left, moreOrLessEquals(tester.getRect(find.byType(TalkPartnerBubble)).left, epsilon: 0.5),
+          reason: 'слева, от края ленты');
+      expect(tester.getRect(judge).top, greaterThanOrEqualTo(tester.getRect(own).bottom), reason: 'под пузырём');
       expect(find.byKey(const ValueKey('talk-mic')), findsNothing);
       expect(dockEnabled(tester, 'Ещё раз'), isTrue);
 

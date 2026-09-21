@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../data/local/cached_image_provider.dart';
 import '../../../data/plan/plan_models.dart';
 import '../session/parts/session_bits.dart';
 import '../session/parts/session_chrome.dart';
 
 /// THE WAY INTO THE TALK (кадр 37-5) — the sixth stage's own entry, in place of 30-1: the scene strip
-/// with the role, the eyebrow, «Поговори с собеседником», the minutes, THREE lines of rules on the
-/// learner's language, «Без подсказок» and one button.
+/// with the role, the scene's photo, the eyebrow, «Поговори с собеседником», the minutes, THREE lines of
+/// rules on the learner's language, «Без подсказок» and one button.
 ///
 /// Nothing here is counted on the phone. The minutes are the server's row of the stage
 /// (`stages[].minutes_left`) and are simply absent when it did not send them; the role and the scene
@@ -70,27 +71,29 @@ class TalkEntryView extends StatelessWidget {
                 ),
                 SessionSceneStrip(scene: scene),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 24, kSessionGutter, 0),
+                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 20, kSessionGutter, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      _ScenePhoto(scene: scene),
+                      const SizedBox(height: 20),
                       SessionEyebrow(eyebrow),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Text(l.planTalkEntryTitle, key: const ValueKey('talk-entry-title'), style: AppTextSession.stageTitle),
                       if (minutes != null) ...[
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 4),
                         Text(
                           l.planTalkEntryMinutes(minutes!),
                           key: const ValueKey('talk-entry-minutes'),
                           style: AppTextSession.meta,
                         ),
                       ],
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       for (final line in [l.planTalkEntryRuleStart, l.planTalkEntryRuleRescue, l.planTalkEntryRuleCounts]) ...[
-                        if (line != l.planTalkEntryRuleStart) const SizedBox(height: 12),
+                        if (line != l.planTalkEntryRuleStart) const SizedBox(height: 14),
                         Text(line, style: AppTextSession.body),
                       ],
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       _NoHintsRow(value: noHints, onChanged: onNoHints),
                     ],
                   ),
@@ -118,6 +121,31 @@ class TalkEntryView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// THE SCENE'S PHOTO (кадр 37-5) — between the strip and the eyebrow, 170 high with corners 12, the photo covering
+/// the card on the scene's tone while it comes in. A scene without a photo keeps the card's shape as a paper plate.
+class _ScenePhoto extends StatelessWidget {
+  const _ScenePhoto({required this.scene});
+
+  final PlanScene? scene;
+
+  @override
+  Widget build(BuildContext context) {
+    final photo = scene?.image;
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
+    return ClipRRect(
+      key: const ValueKey('talk-entry-photo'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        height: 170,
+        decoration: BoxDecoration(
+          color: photo == null ? AppColors.paper : AppColors.wireTone(photo.tone),
+          image: photo == null ? null : DecorationImage(image: CachedNetworkImage(photo.urlFor(342, dpr)), fit: BoxFit.cover),
+        ),
+      ),
     );
   }
 }

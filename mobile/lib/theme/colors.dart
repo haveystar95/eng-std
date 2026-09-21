@@ -80,6 +80,9 @@ abstract final class AppColors {
   /// Заливка использованного чипа сборки и тихих кнопок (§2б).
   static const faintInk = Color.fromARGB(15, _inkR, _inkG, _inkB); // .06
 
+  /// Нейтральная плашка значения на карточке-уроке 32-1 — `rgba(46,38,32,.05)`.
+  static const meaningPlate = Color.fromARGB(13, _inkR, _inkG, _inkB); // .05
+
   /// Разделитель внутри контекстного меню и списков от текста (§4в).
   static const dividerFaint = Color.fromARGB(26, _inkR, _inkG, _inkB); // .10
 
