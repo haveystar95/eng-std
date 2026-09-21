@@ -7,7 +7,9 @@ scene, the spoken audio of a day (both speakers' lines, phrases, words), the che
 
 Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_line_audios`,
 `plan_check_counters`, and — since наряд CONV-1 — `conversations` + `conversation_turns`: the talk with the agent
-that is the SIXTH stage of a day, and its append-only journal of lines (`docs/plan-v2.md` §11). A `day_cards` row carries one kind of the registry of day trainers (наряд SESSION-1a:
+that is the SIXTH stage of a day, and its append-only journal of lines (`docs/plan-v2.md` §11); since наряд CONV-2 —
+`plan_stage_passages`, the append-only journal of walked stages (one row per day and stage, never changed; its first
+user is the talk: the first talk of a day that ended of its own walks the sixth stage, and «Ещё раз» after it is a replay). A `day_cards` row carries one kind of the registry of day trainers (наряд SESSION-1a:
 29 values in the enum, 28 dealt, `listen_pairs` reserved), its unit (`word`/`phrase`/`exchange`/`day`) and
 `response` — what came with the attempt: what was heard, the slot's value, whether the frame was shown, the
 client's mode, and the judge's ruling with its call. Photo tones (PLAN-UI-3): `plan_scenes.image_tone`, `plans.cover_image_tone`
@@ -54,7 +56,7 @@ their own columns instead (`saveScene` — never the photo columns, `attachScene
 plan fell to `ready` with no start date and day 1 locked again (`docs/research/plan-api-fix-1/`).
 | `DayCard` | answered once; what may be written is the KIND's (`CardKind::allows`, наряд SESSION-1a: a judged card only ever takes `skipped` from the client, a walkthrough is walked or skipped, the voice never fails, a choice takes all four); a first failure of a choice requeues, a second returns the unit tomorrow — and a `day` unit (the listening) returns never; a skip has no consequence; the judge writes its own pass (`judge()`: attempts up, the ruling and what was heard into `response`, the result only when accepted) |
 | `PlanTerm` | written once from the served lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms; a phrase keeps its frame (`frame_*`, `slot`) and reads as the frame said with its dialogue filler, a word keeps `used_in`; a P2R `--apply` rewrites the texts by ref, never the row or its photo |
-| `Conversation` (+ `ConversationTurn`) | the talk with the agent (наряд CONV-1): the journal is APPEND-ONLY and numbered by the aggregate (a client cannot insert, reorder or rewrite a line it is shown); a move is taken only when the state IS `your_turn` (a second `POST …/turn` in flight does not buy a second reply); an ended talk takes nothing more — «Ещё раз» is a NEW talk (`replayed`), never this one reopened; checkpoints walk FORWARD and a scene marked done stays done; the money — model plus voice — is added up in one place so the cap is asked of one number. Turns of the scene and money are two budgets: a rescue spends the money and none of the turns |
+| `Conversation` (+ `ConversationTurn`) | the talk with the agent (наряд CONV-1): the journal is APPEND-ONLY and numbered by the aggregate (a client cannot insert, reorder or rewrite a line it is shown); a move is taken only when the state IS `your_turn` (a second `POST …/turn` in flight does not buy a second reply); an ended talk takes nothing more — «Ещё раз» is a NEW talk (`replayed`), never this one reopened; checkpoints walk FORWARD and a scene marked done stays done; the money — model plus voice — is added up in one place so the cap is asked of one number. Turns of the scene and money are two budgets: a rescue spends the money and none of the turns. Since CONV-2: whether a talk walks the stage is the talk's own answer (`passesStage()` — ended of its own, never `replayed`), its minutes are the time it was talked (`activeSeconds()`: gaps between lines, each up to `MAX_GAP_SECONDS` = 60), and the line a rescue asks to hear again is `lineBeforeLastMove()` |
 | `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
 
 The lesson (`Domain/Lesson`, `lesson_day.v4.7`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
@@ -82,7 +84,7 @@ REGISTRY OF DAY TRAINERS (наряды SESSION-1a, CONV-1: `WordsStage`, `Phrase
 recognitions and a production — `PhraseSeries` (SESSION-1d) decides which filler and which kind each is, for the day,
 a failed card's copy and a frame that comes back — spaced by `Spacing::apart` (`SpacingSearch`: at least two other
 frames' cards between two of one frame); the units that failed twice returned at the end of their own stage, a frame
-as the kind it failed as last with another filler; the review's ten and the rehearsal's twelve `speak_answer`),
+as the kind it failed as last with another filler; the review's ten `speak_answer` and the rehearsal's «Вспомнить», CONV-1),
 their card builders (`WordCards`, `PhraseCards`, `DialogueCards`, `ListenCards`, `SpeakCards` — and `CardObjects`,
 the one place a frame, a line, an exchange and the phrase as it is said are drawn, so no two stages show them
 differently, and the one list of a frame's fillers every card shows — without a filler the seam judge said does not
@@ -90,14 +92,13 @@ read, unless the dialogue says it, SESSION-1e) and the helpers every kind shares
 lesson, its terms, the packs of the plan's two languages and its `filler.native_seam` findings — `hides()`; whether a
 line asks — `asks()`, which `phrase_combine` is dealt on), `Options` (the wrong ones never equal to the right one or to each other, ids `o1…`
 in the SHOWN order, a card left with fewer than two options is not dealt), `Audio` (the sound stub a payload
-carries until it is read), `PartnerLines` (the longest partner line — one helper, so `listen_pace` and
-`speak_echo` cannot share a line), `NumberValues`, `Retry` (the reshuffled options and tiles of a copy),
+carries until it is read), `PartnerLines` (the pace line of `listen_pace` and the longest partner line of a given length — since CONV-2 no card of «Говорю сам» says a partner line, and the echo stands on a learner line, `SpeakStage::learnerLines()`), `NumberValues`, `Retry` (the reshuffled options and tiles of a copy),
 `RouteStages` (which stages a day on the route has and where each
-stands — from card tallies, the dealer's outline or the day type, plus the talk's own node, which has no cards),
+stands — from card tallies, the dealer's outline or the day type, plus the talk's own node, which has no cards — `TalkStage`: ahead / open / passed, read off the journal of walked stages, CONV-2),
 `DayStages` (the six stages a day walks, by type, by what the day was dealt with and — for a day not dealt yet —
 by the rollout switch), `ConversationRules` (turns, minutes, the money cap and the rollout switch of a talk, from
 `plan.conversation`), `ConversationOutcomes` + `SpokenPhrases` (the talk's
-summary read off its journal, and which phrases of the plan the SERVER heard — `SpeechMatch`, mode `free`),
+summary read off its journal, and which phrases of the plan the SERVER heard — `SpeechMatch`, mode `free`), `ConversationTargets` (CONV-2: the up to seven phrases a talk is FOR, over its checkpoints in order — one list for the entry card, the ribbon's strip and the summary), `RoleLines` (CONV-2: the role's reply that says a learner line, or a rescue that says the rescued line again — the guards `ConversationMoves` asks once more on), `IntentClause` (the hint as the clause after «Скажи, что …»), `InstrumentalRole` (the role in the instrumental for «Поговори с врачом», ru/uk, null where the ending hangs on stress),
 `DayHighlights` («Что было хорошо», кадр 37-13), `BlueprintChecker` (the plan
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
 card's address, `LessonCodes`), `Check/Language` — the rules' languages: `LanguagePack` (one language's words, marks
@@ -177,7 +178,7 @@ reads plan tables.
 
 | Port | Implementations |
 |---|---|
-| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v1`, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
+| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v2` since CONV-2, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `NextDayAccess` | `EveryNextDayAllowed` — may the learner have the next day; asked by `CloseDayHandler` before the next day's lesson is queued (GEN-3 §11). Always yes until PAY-1, whose paywall is this one method |
@@ -187,7 +188,8 @@ reads plan tables.
 | `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
 | `LineSpeaker` | `GenerationLineSpeaker` — every line on its own vendor call in the voice the pack gives its role and gender (`SpeechSynthesizerPort::speakLines`), the account's balance for the fuse; off when `SPEECH_ENABLED=false` |
 | `LineAudioStore` | `EloquentLineAudioStore` (private disk `plan.audio_disk`; `withoutDuration` / `read` / `setDuration` are what `plan:audio-durations` backfills `duration_ms` through) |
-| `ConversationRepository` (Domain) | `EloquentConversationRepository` — the talk's row written whole, its lines only ever INSERTed (no update, no delete anywhere in the class), and `lockState()` for the re-check a write does after the model has answered |
+| `ConversationRepository` (Domain) | `EloquentConversationRepository` — the talk's row written whole, its lines only ever INSERTed (no update, no delete anywhere in the class), and `lockState()` for the re-check a write does after the model has answered; `findById`, `allForDay` (a day's talks — the minutes of the day) and `walkedWithoutPassage` (the talks that ended of their own on days with no passage — what `plan:reconcile-talks` writes) |
+| `StagePassageRepository` (Domain) | `EloquentStagePassageRepository` — `plan_stage_passages`, INSERT … ON CONFLICT DO NOTHING (`insertOrIgnore`) and SELECTs; no UPDATE/DELETE. Written by ONE writer, `Application/Service/ConversationPassing::mark()`, inside the transaction that saves the talk (CONV-2, DECISIONS п. 367) |
 | `TurnSpeaker` | `GenerationTurnSpeaker` (the pack's voice for one line of a talk, over `LineSpeaker`; the vendor's refusals are swallowed HERE, with the log line — a line without sound is still a line) |
 | `ConversationAudioStore` | `DiskConversationAudioStore` (`plan-audio/conversations/<talk>/<turn>.mp3` on `plan.audio_disk`; served by the same `GET /plans/audio/{id}` — a turn's line is NOT a `plan_line_audios` row: that table is the SCENE's bill) |
 | `SlotJudgeQuota` | `RedisSlotJudgeQuota` (cache connection, key `plan:slot_judge:{user}:{Y-m-d in the learner's zone}`, `INCR` and an `EXPIREAT` on the first call to the next local midnight) and `ArraySlotJudgeQuota` (in-process, `PLAN_SLOT_JUDGE_QUOTA_STORE=array` under test) — the judge is a paid call inside an HTTP request, so it is capped per learner per LOCAL day; past the cap the verdict is the code's and nothing is bought |
@@ -206,7 +208,7 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v2`; `lesson_day.v4.6`
+  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v2`; `lesson_day.v4.6`
   and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
@@ -227,10 +229,14 @@ reads plan tables.
   where `used_in` says), else it fails `fatal: <codes>`. A failed lesson is asked for again only by the learner's
   retry — no open, close, reschedule or extension rebuilds it. A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
-  table under its own prompt version (`slot_judge.v2`) and has that one code only: it judges a learner's attempt,
-  not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene.
+  table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
+  not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
+  conversation's guards count there too, under `conversation_agent.v2` (`conversation.learner_line`, `…_cut`, `…_kept`,
+  `conversation.rescue_same_words`, `…_kept` — CONV-2).
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN), `plan:repair-card`
   (P2R by hand — Presentation/Console).
+- Ops: `plan:reconcile-talks {--dry}` (CONV-2) — writes the sixth-stage passage of every day whose talk ended of its own
+  before `plan_stage_passages` existed (the first such talk of the day); idempotent, prints «было / стало». Backup first.
 - Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search
   ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed and the words repeating a picture of their day), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a

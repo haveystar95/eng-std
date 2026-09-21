@@ -1,0 +1,19 @@
+план 01M32DX8QCABM348XP45Z1ZD4M · день 1 · уровень intermediate · база wordtrainer · потолок «Фраз» 690 с
+«Фразы»: 29 карточек · 823 с по DayPace
+  p1  Do you have ___?                 значений 3 (a day pass / a weekly pass / towel rental) · кругов 2 + своё
+  p2  What ___ do you have?            значений 2 (monthly memberships / payment options) · кругов 2 + своё
+  p3  This is ___.                     значений 2 (my first visit / my trial day) · кругов 2 + своё
+  p4  That works for me on ___.        значений 2 (weekdays / weekends) · кругов 2 + своё
+  p5  Where are ___?                   значений 2 (the changing rooms / the showers) · кругов 2 + своё
+  p6  I'll return ___.                 значений 2 (the locker key / the access card) · кругов 2 + своё
+  p7  Can I pay ___?                   значений 2 (by card / in cash) · кругов 2 + своё
+день: 84 карточек · 1966 с = 33 мин по DayPace (потолок карточек — 32 мин)
+«Говорю сам»:
+  speak_answer  x1   ученик Do you have a day pass?
+  speak_answer  x2   ученик What monthly memberships do you have?
+  speak_answer  x3   ученик Yes, this is my first visit.
+  speak_answer  x4   ученик That works for me on weekdays.
+  speak_answer  x5   ученик Where are the changing rooms?
+  speak_answer  x6   ученик Okay, I'll return the locker key.
+  speak_echo    x1   ученик Do you have a day pass?
+  speak_retell  x8   ученик Can I pay by card?

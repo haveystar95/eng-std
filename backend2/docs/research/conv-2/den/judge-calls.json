@@ -1,0 +1,379 @@
+[
+ {
+  "id": "01M32EAMM0NMG5G98XP50D9AKP",
+  "occurred_at": "2026-09-21T16:55:58+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: Yes, a day pass is fifteen dollars.\nPARTNER_LINE_NATIVE: Да, дневной пропуск стоит пятнадцать долларов.\nPATTERN: Do you have ___?\nPATTERN_NATIVE: У вас есть ___?\nSLOT_HINT: что есть в наличии\nEXAMPLE_VALUES: a day pass; a weekly pass; towel rental\nHEARD: Do you have a man space",
+  "answer": {
+   "accepted": false,
+   "slot_value": "a man space",
+   "reason_native": "Ты не назвал то, что есть в наличии."
+  },
+  "usage": {
+   "total_tokens": 484,
+   "prompt_tokens": 451,
+   "completion_tokens": 33,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32EAT93MARFYFCKMWH6QD83",
+  "occurred_at": "2026-09-21T16:56:04+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: Yes, a day pass is fifteen dollars.\nPARTNER_LINE_NATIVE: Да, дневной пропуск стоит пятнадцать долларов.\nPATTERN: Do you have ___?\nPATTERN_NATIVE: У вас есть ___?\nSLOT_HINT: что есть в наличии\nEXAMPLE_VALUES: a day pass; a weekly pass; towel rental\nHEARD: Do you have a month",
+  "answer": {
+   "accepted": true,
+   "slot_value": "a month",
+   "reason_native": null
+  },
+  "usage": {
+   "total_tokens": 472,
+   "prompt_tokens": 450,
+   "completion_tokens": 22,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32ECDR6AM5B95WPHZWHXE3X",
+  "occurred_at": "2026-09-21T16:56:56+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: We have a basic plan and an unlimited plan.\nPARTNER_LINE_NATIVE: У нас есть базовый план и безлимитный план.\nPATTERN: What ___ do you have?\nPATTERN_NATIVE: Какие ___ у вас есть?\nSLOT_HINT: какие варианты вас интересуют\nEXAMPLE_VALUES: monthly memberships; payment options\nHEARD: What days membership do you have",
+  "answer": {
+   "accepted": true,
+   "slot_value": "days membership",
+   "reason_native": null
+  },
+  "usage": {
+   "total_tokens": 473,
+   "prompt_tokens": 451,
+   "completion_tokens": 22,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32EDWCCJCK82NJF6Y31841F",
+  "occurred_at": "2026-09-21T16:57:44+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: Is this your first visit here?\nPARTNER_LINE_NATIVE: Это ваш первый визит сюда?\nPATTERN: This is ___.\nPATTERN_NATIVE: Это ___.\nSLOT_HINT: что это за визит или ситуация\nEXAMPLE_VALUES: my first visit; my trial day\nHEARD: This is my trial period",
+  "answer": {
+   "accepted": false,
+   "slot_value": "my trial period",
+   "reason_native": "Ты ответил не про визит или ситуацию в этом месте."
+  },
+  "usage": {
+   "total_tokens": 475,
+   "prompt_tokens": 440,
+   "completion_tokens": 35,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32EHSQMZ785RRQZFR71EDFK",
+  "occurred_at": "2026-09-21T16:59:52+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: We open at six and close at ten on weekdays.\nPARTNER_LINE_NATIVE: В будни мы открываемся в шесть и закрываемся в десять.\nPATTERN: That works for me on ___.\nPATTERN_NATIVE: Мне это подходит по ___.\nSLOT_HINT: в какие дни это подходит\nEXAMPLE_VALUES: weekdays; weekends\nHEARD: That works for me on weekend",
+  "answer": {
+   "accepted": true,
+   "slot_value": "weekend",
+   "reason_native": null
+  },
+  "usage": {
+   "total_tokens": 478,
+   "prompt_tokens": 456,
+   "completion_tokens": 22,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32EKD3WG6R0EK21SNRWNJ9G",
+  "occurred_at": "2026-09-21T17:00:45+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: Please bring a towel, use clean shoes, and return the locker key after training.\nPARTNER_LINE_NATIVE: Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.\nPATTERN: I'll return ___.\nPATTERN_NATIVE: Я верну ___.\nSLOT_HINT: что нужно вернуть\nEXAMPLE_VALUES: the locker key; the access card\nHEARD: I will return the towel",
+  "answer": {
+   "accepted": false,
+   "slot_value": "the towel",
+   "reason_native": "Ты не назвал то, что нужно вернуть после тренировки."
+  },
+  "usage": {
+   "total_tokens": 503,
+   "prompt_tokens": 469,
+   "completion_tokens": 34,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32EMNQJS1H0BKE2RTV6KFNE",
+  "occurred_at": "2026-09-21T17:01:27+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: Please bring a towel, use clean shoes, and return the locker key after training.\nPARTNER_LINE_NATIVE: Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.\nPATTERN: I'll return ___.\nPATTERN_NATIVE: Я верну ___.\nSLOT_HINT: что нужно вернуть\nEXAMPLE_VALUES: the locker key; the access card\nHEARD: I will return the best key",
+  "answer": {
+   "accepted": true,
+   "slot_value": "the best key",
+   "reason_native": null
+  },
+  "usage": {
+   "total_tokens": 493,
+   "prompt_tokens": 470,
+   "completion_tokens": 23,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32F5P54ASD51W7A1EBGPQEQ",
+  "occurred_at": "2026-09-21T17:10:44+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: \nPARTNER_LINE_NATIVE: \nPATTERN: Do you have ___?\nPATTERN_NATIVE: У вас есть ___?\nSLOT_HINT: что есть в наличии\nEXAMPLE_VALUES: a day pass; a weekly pass; towel rental\nHEARD: Do you have",
+  "answer": {
+   "accepted": false,
+   "slot_value": "",
+   "reason_native": "Ты ничего не сказал вместо пропуска."
+  },
+  "usage": {
+   "total_tokens": 455,
+   "prompt_tokens": 429,
+   "completion_tokens": 26,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32F6C03VD80W8J8H5E9ZBGP",
+  "occurred_at": "2026-09-21T17:11:07+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: \nPARTNER_LINE_NATIVE: \nPATTERN: What ___ do you have?\nPATTERN_NATIVE: Какие ___ у вас есть?\nSLOT_HINT: какие варианты вас интересуют\nEXAMPLE_VALUES: monthly memberships; payment options\nHEARD: What monthly membership do you have",
+  "answer": {
+   "accepted": true,
+   "slot_value": "monthly membership",
+   "reason_native": null
+  },
+  "usage": {
+   "total_tokens": 452,
+   "prompt_tokens": 430,
+   "completion_tokens": 22,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32FA2VF7KZ2J75GF2KWS9S6",
+  "occurred_at": "2026-09-21T17:13:08+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: We open at six and close at ten on weekdays.\nPARTNER_LINE_NATIVE: В будни мы открываемся в шесть и закрываемся в десять.\nPATTERN: That works for me on ___.\nPATTERN_NATIVE: Мне это подходит по ___.\nSLOT_HINT: в какие дни это подходит\nEXAMPLE_VALUES: weekdays; weekends\nHEARD: That works for me",
+  "answer": {
+   "accepted": false,
+   "slot_value": "",
+   "reason_native": "Ты не сказал слово в пропуске."
+  },
+  "usage": {
+   "total_tokens": 481,
+   "prompt_tokens": 454,
+   "completion_tokens": 27,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32FC6AW0R4G161Q6CEQWX9Z",
+  "occurred_at": "2026-09-21T17:14:17+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: \nPARTNER_LINE_NATIVE: \nPATTERN: Where are ___?\nPATTERN_NATIVE: Где ___?\nSLOT_HINT: какое место внутри зала\nEXAMPLE_VALUES: the changing rooms; the showers\nHEARD: Where are they changing room",
+  "answer": {
+   "accepted": true,
+   "slot_value": "they changing room",
+   "reason_native": null
+  },
+  "usage": {
+   "total_tokens": 454,
+   "prompt_tokens": 425,
+   "completion_tokens": 29,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32FCPHD6QX08QCZ7M2Q26V2",
+  "occurred_at": "2026-09-21T17:14:34+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: Please bring a towel, use clean shoes, and return the locker key after training.\nPARTNER_LINE_NATIVE: Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.\nPATTERN: I'll return ___.\nPATTERN_NATIVE: Я верну ___.\nSLOT_HINT: что нужно вернуть\nEXAMPLE_VALUES: the locker key; the access card\nHEARD: OK I will return",
+  "answer": {
+   "accepted": false,
+   "slot_value": null,
+   "reason_native": "Ты не сказал, что именно вернёшь."
+  },
+  "usage": {
+   "total_tokens": 498,
+   "prompt_tokens": 468,
+   "completion_tokens": 30,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ },
+ {
+  "id": "01M32FCYAXV2QDB07MCHEWTE8D",
+  "occurred_at": "2026-09-21T17:14:42+00:00",
+  "duration_ms": null,
+  "model": "gpt-5.4-mini",
+  "system_first_line": "SLOT JUDGE — v2",
+  "system_sha256": "add74827cc3b57004def9e1b9514740a6e2ef5763962b7935e04fddba1846549",
+  "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: intermediate\nPARTNER_LINE: Please bring a towel, use clean shoes, and return the locker key after training.\nPARTNER_LINE_NATIVE: Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.\nPATTERN: I'll return ___.\nPATTERN_NATIVE: Я верну ___.\nSLOT_HINT: что нужно вернуть\nEXAMPLE_VALUES: the locker key; the access card\nHEARD: OK I will return",
+  "answer": {
+   "accepted": false,
+   "slot_value": null,
+   "reason_native": "Ты не сказал, что именно вернёшь."
+  },
+  "usage": {
+   "total_tokens": 498,
+   "prompt_tokens": 468,
+   "completion_tokens": 30,
+   "prompt_tokens_details": {
+    "audio_tokens": 0,
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "audio_tokens": 0,
+    "reasoning_tokens": 0,
+    "accepted_prediction_tokens": 0,
+    "rejected_prediction_tokens": 0
+   }
+  }
+ }
+]

@@ -1,0 +1,19 @@
+план 01M2H13E1QT6F5D4FKJSEKTAD7 · день 1 · уровень beginner · база wordtrainer_e2e_test · потолок «Фраз» 690 с
+«Фразы»: 29 карточек · 810 с по DayPace
+  p1  My son has ___.                  значений 3 (a fever / a cough / ear pain) · кругов 2 + своё
+  p2  He has had it ___.               значений 3 (for three days / since yesterday / since this morning) · кругов 2 + своё
+  p3  His temperature is ___.          значений 3 (39 degrees / 38.5 / 40 degrees) · кругов 2 + своё
+  p4  He also has ___.                 значений 3 (a sore throat / a headache / a rash) · кругов 2 + своё
+  p5  He should rest ___.              значений 3 (at home / today / for two days) · кругов 2 + своё
+  p6  How often should I give ___?     значений 3 (the paracetamol / the syrup / the drops) · кругов 2 + своё
+  p7  When should we come back ___?    значений 3 (if he gets worse / if the fever returns / if he stops eating) · кругов 2 + своё
+день: 84 карточек · 1923 с = 33 мин по DayPace (потолок карточек — 32 мин)
+«Говорю сам»:
+  speak_answer  x1   ученик My son has a fever.
+  speak_answer  x2   ученик He has had it for three days.
+  speak_answer  x3   ученик His temperature is 39 degrees.
+  speak_answer  x4   ученик He also has a sore throat.
+  speak_answer  x5   ученик He should rest at home.
+  speak_answer  x7   ученик How often should I give the paracetamol?
+  speak_echo    x2   ученик He has had it for three days.
+  speak_retell  x8   ученик When should we come back if he gets worse?

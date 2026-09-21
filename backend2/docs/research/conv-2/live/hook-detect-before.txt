@@ -1,0 +1,18 @@
+видит обход команда
+да   —    git commit -m "x"
+—    —    git add backend2/app && git commit -m "x"
+—    —    git add -A; git commit -m "x"
+—    —    (cd backend2 && git add . && git commit -m "x")
+—    —    git stash && git pull --rebase && git commit -am "x"
+—    —    git add x | tee log && git commit -m "y"
+—    —    bash -c 'git commit -m x'
+да   —    git -C /tmp/wt commit -m "x"
+да   —    git -c user.name=x commit -m "x"
+да   —    git --work-tree=/tmp/wt commit -m "x"
+да   —    cd backend2 && git commit -m "x"
+да   —    SKIP_GATES=1 git commit -m "wip"
+—    —    git add x && SKIP_GATES=1 git commit -m "wip"
+—    —    git status && git log --oneline -3
+—    —    git commit --dry-run
+—    —    git log --grep=commit
+—    —    echo done | cat

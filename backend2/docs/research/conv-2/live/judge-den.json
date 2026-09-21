@@ -1,0 +1,77 @@
+{
+    "attempts": [
+        {
+            "card": "01M32E0RJGG3PSGX3RAXFKAKVC",
+            "kind": "speak_answer",
+            "unit": "x3",
+            "heard": "Yes it my first visit",
+            "before": "code: «Каркас не прозвучал — скажи его целиком»",
+            "after": "code: зачёт (окно: my first visit)",
+            "latency_ms": null
+        },
+        {
+            "card": "01M32E0RJGG3PSGX3RAXFKAKVC",
+            "kind": "speak_answer",
+            "unit": "x3",
+            "heard": "Yes it is my first visit",
+            "before": "code: «Каркас не прозвучал — скажи его целиком»",
+            "after": "code: зачёт (окно: my first visit)",
+            "latency_ms": null
+        },
+        {
+            "card": "01M32E0RJGG3PSGX3RAXFKAKVC",
+            "kind": "speak_answer",
+            "unit": "x3",
+            "heard": "Yes it is my first day",
+            "before": "code: «Каркас не прозвучал — скажи его целиком»",
+            "after": "model: зачёт (окно: my first day)",
+            "latency_ms": 965
+        },
+        {
+            "card": "01M32E0RJG4SVN03HW5V38V2SY",
+            "kind": "speak_answer",
+            "unit": "x4",
+            "heard": "That works for me",
+            "before": "model: «Ты не сказал слово в пропуске.»",
+            "after": "code: отказ «Не сказал главного — в какие дни это подходит»",
+            "latency_ms": null
+        },
+        {
+            "card": "01M32E0RJG4SVN03HW5V38V2SY",
+            "kind": "speak_answer",
+            "unit": "x4",
+            "heard": "That works for me for weekdays",
+            "before": "code: зачёт (weekdays)",
+            "after": "code: зачёт (окно: weekdays)",
+            "latency_ms": null
+        },
+        {
+            "card": "01M32E0RJGJVRCAX6HS2QFTF3M",
+            "kind": "phrase_other_slot",
+            "unit": "p6",
+            "heard": "I will return the towel",
+            "before": "model: «Ты не назвал то, что нужно вернуть после тренировки.»",
+            "after": "model: зачёт (окно: the towel)",
+            "latency_ms": 1286
+        },
+        {
+            "card": "01M32E0RJGJVRCAX6HS2QFTF3M",
+            "kind": "phrase_other_slot",
+            "unit": "p6",
+            "heard": "I will return the best key",
+            "before": "model: зачёт (the best key)",
+            "after": "model: зачёт (окно: the best key)",
+            "latency_ms": 945
+        },
+        {
+            "card": "01M32E0RJGGH5CZDK6HD6VH4D6",
+            "kind": "speak_answer",
+            "unit": "x6",
+            "heard": "OK I will return",
+            "before": "model: «Ты не сказал, что именно вернёшь.»",
+            "after": "code: отказ «Не сказал главного — что нужно вернуть»",
+            "latency_ms": null
+        }
+    ],
+    "usd": 0.001958
+}

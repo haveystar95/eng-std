@@ -1,0 +1,7 @@
+день 1 (in_progress), has_conversation=true
+окно: conversation — current, «Поговори с врачом», сцен 1
+кабинет: conversation — current
+«Что было хорошо»: —
+прохождение: нет
+  разговор 01M323Y9P4CX41BZCVGV2PTPHX · ended · natural · 2026-09-21 13:54:28+00 → 2026-09-21 14:03:14+00
+  разговор 01M324FF9EHXPSTPBGY3EYGKWA · your_turn · — · 2026-09-21 14:03:50+00 → …

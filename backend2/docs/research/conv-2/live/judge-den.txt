@@ -1,0 +1,26 @@
+1. speak_answer x3 — «Yes it my first visit»
+   было:  code: «Каркас не прозвучал — скажи его целиком»
+   стало: code: зачёт (окно: my first visit)
+2. speak_answer x3 — «Yes it is my first visit»
+   было:  code: «Каркас не прозвучал — скажи его целиком»
+   стало: code: зачёт (окно: my first visit)
+3. speak_answer x3 — «Yes it is my first day»
+   было:  code: «Каркас не прозвучал — скажи его целиком»
+   стало: model: зачёт (окно: my first day)
+4. speak_answer x4 — «That works for me»
+   было:  model: «Ты не сказал слово в пропуске.»
+   стало: code: отказ «Не сказал главного — в какие дни это подходит»
+5. speak_answer x4 — «That works for me for weekdays»
+   было:  code: зачёт (weekdays)
+   стало: code: зачёт (окно: weekdays)
+6. phrase_other_slot p6 — «I will return the towel»
+   было:  model: «Ты не назвал то, что нужно вернуть после тренировки.»
+   стало: model: зачёт (окно: the towel)
+7. phrase_other_slot p6 — «I will return the best key»
+   было:  model: зачёт (the best key)
+   стало: model: зачёт (окно: the best key)
+8. speak_answer x6 — «OK I will return»
+   было:  model: «Ты не сказал, что именно вернёшь.»
+   стало: code: отказ «Не сказал главного — что нужно вернуть»
+
+судья: $0.001958

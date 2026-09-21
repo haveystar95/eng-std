@@ -1,0 +1,227 @@
+{
+    "calls": [
+        {
+            "n": 1,
+            "call": "01M32DKSYH4MMVD5YSME8BSPP2",
+            "turn": "start",
+            "heard": "",
+            "before": "Hello, this is the agent. Is this flat two rooms?",
+            "before_flip": "Is this flat two rooms?",
+            "after": "Hello. Yes, this flat has one living room and one bedroom. What would you like to know?",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1547
+        },
+        {
+            "n": 2,
+            "call": "01M32DN4KDFEDRJ2B1PXSQT9X6",
+            "turn": "said",
+            "heard": "Hello yes this flight showrooms",
+            "before": "Yes, it is a two-room flat. What is the rent you want to ask about?",
+            "before_flip": null,
+            "after": "Yes, it has a living room and one bedroom. What is the rent?",
+            "after_flip": "What is the rent?",
+            "after_end": "no",
+            "redo": {
+                "reply": "Yes, it has a living room and one bedroom. What is the rent?",
+                "flip": null,
+                "cut": {
+                    "target": "Yes, it has a living room and one bedroom.",
+                    "native": "Да, там есть гостиная и одна спальня."
+                }
+            },
+            "latency_ms": 1177
+        },
+        {
+            "n": 3,
+            "call": "01M32DNW4RH4REKA3N8A6BAGY0",
+            "turn": "said",
+            "heard": "It is two room flat",
+            "before": "Yes, it is a two-room flat. What is the rent?",
+            "before_flip": "What is the rent?",
+            "after": "Yes, it is a two-room flat. What is the rent?",
+            "after_flip": "What is the rent?",
+            "after_end": "no",
+            "redo": {
+                "reply": "Yes, it has a living room and one bedroom. What is the rent?",
+                "flip": null,
+                "cut": {
+                    "target": "Yes, it has a living room and one bedroom.",
+                    "native": "Да, в ней есть гостиная и одна спальня."
+                }
+            },
+            "latency_ms": 1136
+        },
+        {
+            "n": 4,
+            "call": "01M32DPBAM52W2Q5HA3F8XRGCY",
+            "turn": "said",
+            "heard": "The rent is $800 per month",
+            "before": "Yes, the rent is $800 per month. Is parking included?",
+            "before_flip": "Is parking included?",
+            "after": "The rent is £1,200 a month, not including bills. What would you like to know next?",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1305
+        },
+        {
+            "n": 5,
+            "call": "01M32DPTY6JZTFE184HQBEKFPY",
+            "turn": "said",
+            "heard": "No parking is not included",
+            "before": "Right, parking is not included. Are dogs allowed?",
+            "before_flip": "Are dogs allowed?",
+            "after": "That's right, parking isn't included. There is a paid car park nearby.",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1393
+        },
+        {
+            "n": 6,
+            "call": "01M32DQCGHM719AB7NCA1M5H0R",
+            "turn": "said",
+            "heard": "Yes dogs allowed but it will cost double deposit",
+            "before": "Yes, dogs are allowed, but there is an extra deposit. How much is the deposit?",
+            "before_flip": "How much is the deposit?",
+            "after": "Yes, dogs are allowed, but there is a £100 pet fee. The building also requires dogs to be registered with management.",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1518
+        },
+        {
+            "n": 7,
+            "call": "01M32DQXYP6T0KWC6E03V6Q1N8",
+            "turn": "said",
+            "heard": "Deposit is one month rent",
+            "before": "Yes, the deposit is one month’s rent. Can we meet Friday evening?",
+            "before_flip": "Can we meet Friday evening?",
+            "after": "Yes, the deposit is one month’s rent. Can we meet Friday evening?",
+            "after_flip": "Can we meet Friday evening?",
+            "after_end": "no",
+            "redo": {
+                "reply": "Yes, the deposit is one month’s rent. It’s a twelve-month minimum term too.",
+                "flip": null,
+                "cut": null
+            },
+            "latency_ms": 1290
+        },
+        {
+            "n": 8,
+            "call": "01M32DRBQH9CFW3BTB8Z5CNDPX",
+            "turn": "said",
+            "heard": "No Friday evening I am busy",
+            "before": "Okay, Friday evening does not work. Can we meet on another day?",
+            "before_flip": null,
+            "after": "Friday at six works. Please bring your ID and recent payslips.",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1371
+        },
+        {
+            "n": 9,
+            "call": "01M32DRP7ZNKRDNKKRGNQ0C5ZT",
+            "turn": "said",
+            "heard": "Yes",
+            "before": "Great, Friday works. Can I see the kitchen?",
+            "before_flip": "Can I see the kitchen?",
+            "after": "Great. Friday at six works. Please bring your ID and recent payslips.",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1271
+        },
+        {
+            "n": 10,
+            "call": "01M32DS7AQFJNMY6DX8P680D2E",
+            "turn": "said",
+            "heard": "There are Kitchen but it's studio",
+            "before": "Yes, there is a kitchen, and it is a studio. Can I see the kitchen?",
+            "before_flip": "Can I see the kitchen?",
+            "after": "Of course. The kitchen is this way, next to the living room.",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1311
+        },
+        {
+            "n": 11,
+            "call": "01M32FJ6YJ6C8MD8F1HCB4MTRQ",
+            "turn": "start",
+            "heard": "",
+            "before": "Hello! Welcome to the gym. How can I help you today?",
+            "before_flip": null,
+            "after": "Hello, welcome to the gym. Is this your first visit here?",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 2124
+        },
+        {
+            "n": 12,
+            "call": "01M32FJX2NQM58FVFKE36CWJVY",
+            "turn": "said",
+            "heard": "Hello I need daily training",
+            "before": "Do you have a day pass?",
+            "before_flip": "Do you have a day pass?",
+            "after": "A day pass is fifteen dollars. Do you have a day pass or a monthly membership?",
+            "after_flip": "Do you have a day pass?",
+            "after_end": "no",
+            "redo": {
+                "reply": "Sure — a day pass is fifteen dollars.",
+                "flip": null,
+                "cut": null
+            },
+            "latency_ms": 1195
+        },
+        {
+            "n": 13,
+            "call": "01M32FK98GA1K6DGV5PB5S22F9",
+            "turn": "said",
+            "heard": "No I want to buy monthly membership",
+            "before": "We have a few monthly memberships. This is your first visit, right?",
+            "before_flip": null,
+            "after": "We have a basic plan and an unlimited plan.",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 2197
+        },
+        {
+            "n": 14,
+            "call": "01M32FKNTYEJW8TDE422C2JT8H",
+            "turn": "said",
+            "heard": "Yes it is my first visit",
+            "before": "Great, then I can show you the monthly options. What monthly memberships do you have in mind, and do you need weekdays only?",
+            "before_flip": "What monthly memberships do you have?",
+            "after": "Great. We open at six and close at ten on weekdays. What would you like to know next?",
+            "after_flip": null,
+            "after_end": "no",
+            "redo": null,
+            "latency_ms": 1554
+        },
+        {
+            "n": 15,
+            "call": "01M32FM7SXYDYH8G8FPK116SS6",
+            "turn": "said",
+            "heard": "Weekdays works for me",
+            "before": "Great, that works. Where are the changing rooms?",
+            "before_flip": "Where are the changing rooms?",
+            "after": "That works for me on weekdays. Please note that we open at six and close at ten on weekdays.",
+            "after_flip": null,
+            "after_end": "natural",
+            "redo": null,
+            "latency_ms": 1428
+        }
+    ],
+    "flipped_v1": 11,
+    "flipped_v2_first": 4,
+    "flipped_after_guard": 0,
+    "redo": 4,
+    "cut": 2,
+    "usd": 0.017005
+}

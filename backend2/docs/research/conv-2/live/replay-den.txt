@@ -1,0 +1,51 @@
+ 1 start  HEARD «»
+   было:  Hello, this is the agent. Is this flat two rooms?   ← реплика ученика «Is this flat two rooms?»
+   стало: Hello. Yes, this flat has one living room and one bedroom. What would you like to know?
+ 2 said   HEARD «Hello yes this flight showrooms»
+   было:  Yes, it is a two-room flat. What is the rent you want to ask about?
+   стало: Yes, it has a living room and one bedroom. What is the rent?   ← реплика ученика «What is the rent?»
+   REDO:  Yes, it has a living room and one bedroom. What is the rent?   → вырезано: «Yes, it has a living room and one bedroom.»
+ 3 said   HEARD «It is two room flat»
+   было:  Yes, it is a two-room flat. What is the rent?   ← реплика ученика «What is the rent?»
+   стало: Yes, it is a two-room flat. What is the rent?   ← реплика ученика «What is the rent?»
+   REDO:  Yes, it has a living room and one bedroom. What is the rent?   → вырезано: «Yes, it has a living room and one bedroom.»
+ 4 said   HEARD «The rent is $800 per month»
+   было:  Yes, the rent is $800 per month. Is parking included?   ← реплика ученика «Is parking included?»
+   стало: The rent is £1,200 a month, not including bills. What would you like to know next?
+ 5 said   HEARD «No parking is not included»
+   было:  Right, parking is not included. Are dogs allowed?   ← реплика ученика «Are dogs allowed?»
+   стало: That's right, parking isn't included. There is a paid car park nearby.
+ 6 said   HEARD «Yes dogs allowed but it will cost double deposit»
+   было:  Yes, dogs are allowed, but there is an extra deposit. How much is the deposit?   ← реплика ученика «How much is the deposit?»
+   стало: Yes, dogs are allowed, but there is a £100 pet fee. The building also requires dogs to be registered with management.
+ 7 said   HEARD «Deposit is one month rent»
+   было:  Yes, the deposit is one month’s rent. Can we meet Friday evening?   ← реплика ученика «Can we meet Friday evening?»
+   стало: Yes, the deposit is one month’s rent. Can we meet Friday evening?   ← реплика ученика «Can we meet Friday evening?»
+   REDO:  Yes, the deposit is one month’s rent. It’s a twelve-month minimum term too.
+ 8 said   HEARD «No Friday evening I am busy»
+   было:  Okay, Friday evening does not work. Can we meet on another day?
+   стало: Friday at six works. Please bring your ID and recent payslips.
+ 9 said   HEARD «Yes»
+   было:  Great, Friday works. Can I see the kitchen?   ← реплика ученика «Can I see the kitchen?»
+   стало: Great. Friday at six works. Please bring your ID and recent payslips.
+10 said   HEARD «There are Kitchen but it's studio»
+   было:  Yes, there is a kitchen, and it is a studio. Can I see the kitchen?   ← реплика ученика «Can I see the kitchen?»
+   стало: Of course. The kitchen is this way, next to the living room.
+11 start  HEARD «»
+   было:  Hello! Welcome to the gym. How can I help you today?
+   стало: Hello, welcome to the gym. Is this your first visit here?
+12 said   HEARD «Hello I need daily training»
+   было:  Do you have a day pass?   ← реплика ученика «Do you have a day pass?»
+   стало: A day pass is fifteen dollars. Do you have a day pass or a monthly membership?   ← реплика ученика «Do you have a day pass?»
+   REDO:  Sure — a day pass is fifteen dollars.
+13 said   HEARD «No I want to buy monthly membership»
+   было:  We have a few monthly memberships. This is your first visit, right?
+   стало: We have a basic plan and an unlimited plan.
+14 said   HEARD «Yes it is my first visit»
+   было:  Great, then I can show you the monthly options. What monthly memberships do you have in mind, and do you need weekdays only?   ← реплика ученика «What monthly memberships do you have?»
+   стало: Great. We open at six and close at ten on weekdays. What would you like to know next?
+15 said   HEARD «Weekdays works for me»
+   было:  Great, that works. Where are the changing rooms?   ← реплика ученика «Where are the changing rooms?»
+   стало: That works for me on weekdays. Please note that we open at six and close at ten on weekdays.
+
+вызовов 15 · переворотов: v1 11 · v2 первым ответом 4 · после страховки 0 (REDO 4, вырезано 2) · $0.017005
