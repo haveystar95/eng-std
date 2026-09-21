@@ -14,7 +14,6 @@ import '../../../data/speech/speech_turn.dart';
 import '../session/cards/card_kit.dart' show CardLayout;
 import '../session/parts/session_bits.dart';
 import '../session/parts/session_chrome.dart';
-import '../session/parts/session_mic_panel.dart';
 import '../session/session_mic.dart';
 import '../session/session_voice.dart';
 import 'conversation_controller.dart';
@@ -249,6 +248,7 @@ class _TalkViewState extends State<TalkView> {
         open: open,
         playing: playing == 'talk-${turn.index}',
         interrupted: _talk.interruptedAt(turn.index),
+        speaking: _talk.sounding(turn.index),
         onListen: () => unawaited(widget.voice.play(turn.audio, fallback: turn.textTarget ?? '', key: 'talk-${turn.index}')),
         onOpenText: talk.hints.enabled ? () => setState(() => _opened.add(turn.index)) : null,
       ),
@@ -328,14 +328,14 @@ class _TalkViewState extends State<TalkView> {
       // «Не понял» stands in EVERY state of the learner's move: a rescue is not a hint, and it costs
       // no turn of the scene.
       left: yourTurn
-          ? SessionTextExit(
+          ? TalkPill(
               key: const ValueKey('talk-rescue'),
               label: l.planTalkRescueAction,
               onTap: () => unawaited(_talk.rescue()),
             )
           : null,
       right: _talk.hintButtonShown
-          ? SessionTextExit(key: const ValueKey('talk-hint'), label: l.planSessionHintAction, onTap: _talk.showHint)
+          ? TalkPill(key: const ValueKey('talk-hint'), label: l.planSessionHintAction, brass: true, onTap: _talk.showHint)
           : null,
       mic: TalkMicButton(
         look: look,

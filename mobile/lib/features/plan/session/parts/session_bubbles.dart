@@ -23,13 +23,28 @@ const double kSessionBubbleMax = 274;
 /// ONE BUBBLE — [own] ink on the right, otherwise paper on the left; [child] replaces the line (a wave, a frame with
 /// its slot, the live line); [footer] stands under the translation («by meaning ✓», «Didn't catch that»).
 class SessionBubble extends StatelessWidget {
-  const SessionBubble({super.key, required this.own, this.text, this.translation, this.child, this.footer});
+  const SessionBubble({
+    super.key,
+    required this.own,
+    this.text,
+    this.translation,
+    this.child,
+    this.footer,
+    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    this.shadow,
+  });
 
   final bool own;
   final String? text;
   final String? translation;
   final Widget? child;
   final Widget? footer;
+
+  /// 14 / 12, as every bubble of the canvas; a plate whose content brings its own 44 touch boxes trims it (37-6).
+  final EdgeInsets padding;
+
+  /// The talk's plates stand on the ribbon with the canvas shadow (37-6…37-9); the dialogue's bubbles do not.
+  final List<BoxShadow>? shadow;
 
   /// The bubble's line style — Literata 22 in ink or paper.
   static TextStyle lineStyle({required bool own}) => AppTextSession.target22.copyWith(color: own ? AppColors.paper : AppColors.ink);
@@ -41,8 +56,8 @@ class SessionBubble extends StatelessWidget {
   Widget build(BuildContext context) => _MaxWidthBox(
     maxWidth: kSessionBubbleMax,
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(color: own ? AppColors.windowInk : AppColors.paper, borderRadius: BorderRadius.circular(16)),
+      padding: padding,
+      decoration: BoxDecoration(color: own ? AppColors.windowInk : AppColors.paper, borderRadius: BorderRadius.circular(16), boxShadow: shadow),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

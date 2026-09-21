@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,18 +35,6 @@ Future<void> _say(WidgetTester tester, {String text = 'He has had it for three d
   await tester.pump(const Duration(milliseconds: 1600));
   await tester.pump();
   await tester.pump();
-}
-
-/// The role's line [index] as it stands on the screen: the bubble, «прослушать» and — when it is there —
-/// «текст».
-({Rect bubble, Rect listen, Rect? chip}) _pairOf(WidgetTester tester, int index) {
-  final line = find.byKey(ValueKey('turn-$index'));
-  final chip = find.descendant(of: line, matching: find.byKey(const ValueKey('talk-open-text')));
-  return (
-    bubble: tester.getRect(find.descendant(of: line, matching: find.byType(SessionBubble))),
-    listen: tester.getRect(find.descendant(of: line, matching: find.byKey(const ValueKey('talk-listen')))),
-    chip: chip.evaluate().isEmpty ? null : tester.getRect(chip),
-  );
 }
 
 DioException _offline() => DioException(requestOptions: RequestOptions(path: '/x'), type: DioExceptionType.connectionError);
@@ -130,51 +119,136 @@ void main() {
       await settleTalk(tester);
     });
 
-    // ПРАВИЛО (кадр 37-6, правка архитектора 21.09): под пузырём роли — ОДИН ряд из двух:
-    // «прослушать» 44 и чип «текст». Ни кружка рядом с пузырём, ни голого серого слова под ним. Так —
-    // во всех состояниях ленты: реплика звучит, прервана, уже прошла, открыта (тогда «текст» уходит,
-    // «прослушать» остаётся); «прервано» стоит между пузырём и рядом, как в кадре 37-9.
-    // ЛОВИТ: кружок 28 справа от пузыря и серое «текст» отдельной строкой — лента до правки.
-    testWidgets('37-6: «прослушать» 44 и «текст» — одним рядом под пузырём, во всех состояниях ленты', (tester) async {
+    // ПРАВИЛО (кадр 37-6, правка архитектора 21.09 «по кадру»): всё, что принадлежит реплике роли, стоит
+    // ВНУТРИ её светлого контейнера. Роль говорит — в контейнере одна волна. Договорила — «прослушать» 28
+    // и чип «текст» одним рядом (контейнер 12 + 28 + 12, кружок в 12 от верха и в 14 от края, как в кадре).
+    // Прервана — «прервано» над тем же рядом (37-9). Открыта — слова и кружок 28 в правом верхнем углу,
+    // чипа нет. Кружка снаружи нет ни в одном состоянии.
+    // ЛОВИТ: кружок 44 и чип под пузырём (правка 21.09 до кадра); кружок 28 справа от пузыря и серое
+    // «текст» строкой под ним (лента до правок).
+    testWidgets('37-6: «прослушать» 28 и «текст» — одним рядом внутри пузыря; пока роль говорит — одна волна', (tester) async {
       final probe = TalkProbe()..documents.add(open);
       final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
 
-      void expectPairUnder(int index, {required bool chip, required String state}) {
-        final line = find.byKey(ValueKey('turn-$index'));
-        final pair = _pairOf(tester, index);
-        final listen = find.descendant(of: line, matching: find.byKey(const ValueKey('talk-listen')));
-        expect(tester.widget<SessionListenButton>(listen).size, 44, reason: '$state: «прослушать» 44');
-        expect(pair.listen.top, greaterThanOrEqualTo(pair.bubble.bottom), reason: '$state: под пузырём, а не рядом');
-        expect((pair.listen.left - pair.bubble.left).abs(), lessThan(1), reason: '$state: ряд начинается у края пузыря');
-        if (chip) {
-          expect(pair.chip, isNotNull, reason: '$state: «текст» стоит');
-          expect((pair.chip!.center.dy - pair.listen.center.dy).abs(), lessThan(1), reason: '$state: один ряд');
-          expect(pair.chip!.left, greaterThanOrEqualTo(pair.listen.right), reason: '$state: «текст» справа от «прослушать»');
-        } else {
-          expect(pair.chip, isNull, reason: '$state: текст открыт — «текст» не нужен');
-        }
-        expect(find.descendant(of: line, matching: find.byType(SessionTextExit)), findsNothing, reason: '$state: серого слова нет');
-        expect(find.descendant(of: line, matching: find.byType(SessionListenButton)), findsOneWidget, reason: '$state: второго кружка рядом с пузырём нет');
+      Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
+      Rect plate(int index) => tester.getRect(inTurn(index, find.byType(SessionBubble)));
+      Rect listen(int index) => tester.getRect(inTurn(index, find.byKey(const ValueKey('talk-listen'))));
+
+      void expectInside(int index, String state) {
+        final p = plate(index);
+        final box = listen(index);
+        expect(inTurn(index, find.byType(SessionListenButton)), findsOneWidget, reason: '$state: кружок один');
+        expect(tester.widget<SessionListenButton>(inTurn(index, find.byType(SessionListenButton))).size, 28, reason: '$state: кружок 28');
+        expect(box.left >= p.left && box.right <= p.right && box.top >= p.top && box.bottom <= p.bottom, isTrue,
+            reason: '$state: кружок внутри контейнера, а не рядом и не под ним');
+        expect(inTurn(index, find.byType(SessionTextExit)), findsNothing, reason: '$state: серого слова нет');
       }
 
+      // Роль говорит: одна волна, ни кружка, ни чипа.
       expect(stand.talk.phase, TalkPhase.agentSpeaking);
-      expectPairUnder(5, chip: true, state: 'звучит');
-      expectPairUnder(1, chip: true, state: 'прошлая реплика');
+      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsOneWidget);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-listen'))), findsNothing, reason: 'пока роль говорит — одна волна');
+      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsNothing);
 
+      // Прошлая реплика, договорена: пара одним рядом, геометрия кадра.
+      expectInside(1, 'договорила');
+      final said = plate(1);
+      final circle = listen(1).deflate(8);
+      final chip = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-open-text'))));
+      expect(said.height, moreOrLessEquals(52, epsilon: 0.5), reason: '12 + 28 + 12, как в кадре');
+      expect(circle.left - said.left, moreOrLessEquals(14, epsilon: 0.5));
+      expect(circle.top - said.top, moreOrLessEquals(12, epsilon: 0.5));
+      expect((chip.center.dy - circle.center.dy).abs(), lessThan(1), reason: 'один ряд');
+      expect(chip.left, greaterThanOrEqualTo(circle.right), reason: '«текст» справа от «прослушать»');
+      expect(chip.right, lessThanOrEqualTo(said.right), reason: 'чип внутри контейнера');
+      expect(inTurn(1, find.byKey(const ValueKey('talk-line-wave'))), findsNothing, reason: 'волна — только пока роль говорит');
+
+      // Прервана: «прервано» над рядом, всё внутри.
       await tester.tap(find.byKey(const ValueKey('talk-mic')));
       await tester.pump();
       await tester.pump();
-      expectPairUnder(5, chip: true, state: 'прервана');
-      final interrupted = tester.getRect(find.byKey(const ValueKey('talk-interrupted')));
-      final pair = _pairOf(tester, 5);
-      expect(interrupted.top, greaterThanOrEqualTo(pair.bubble.bottom), reason: '«прервано» под пузырём');
-      expect(interrupted.bottom, lessThanOrEqualTo(pair.listen.top), reason: '«прервано» над рядом');
+      expectInside(5, 'прервана');
+      final cut = plate(5);
+      final mark = tester.getRect(inTurn(5, find.byKey(const ValueKey('talk-interrupted'))));
+      expect(mark.top, greaterThanOrEqualTo(cut.top));
+      expect(mark.bottom, lessThanOrEqualTo(listen(5).deflate(8).top + 0.5), reason: '«прервано» над рядом');
+      expect(cut.height, moreOrLessEquals(70, epsilon: 0.5), reason: '12 + 18 + 28 + 12, как в 37-9');
+      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsOneWidget);
 
-      await tester.tap(find.descendant(of: find.byKey(const ValueKey('turn-5')), matching: find.byKey(const ValueKey('talk-open-text'))));
+      // Открыта: слова, кружок в правом верхнем углу, чипа нет.
+      await tester.tap(inTurn(5, find.byKey(const ValueKey('talk-open-text'))));
       await tester.pump();
       expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsOneWidget);
-      expectPairUnder(5, chip: false, state: 'открыта');
+      expectInside(5, 'открыта');
+      final opened = plate(5);
+      final corner = listen(5).deflate(8);
+      expect(opened.right - corner.right, moreOrLessEquals(14, epsilon: 0.5), reason: 'в 14 от правого края');
+      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsNothing, reason: 'текст открыт — чип ушёл');
       await settleTalk(tester);
+    });
+
+    // ПРАВИЛО: кружок внутри контейнера — живая кнопка: тап по нему играет ИМЕННО эту реплику, и в закрытом
+    // контейнере, и в открытом (касание 44 стоит на 8 в поле контейнера, кружок 28 — где его рисует кадр).
+    // ЛОВИТ: кнопку, до которой не доходит палец, потому что её поле касания обрезал контейнер.
+    testWidgets('«прослушать» в контейнере играет свою реплику — закрытую и открытую', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+      await finishLine(tester, stand);
+      Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
+
+      final closed = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-listen'))));
+      await tester.tapAt(closed.topLeft + const Offset(3, 3), kind: PointerDeviceKind.touch);
+      await tester.pump();
+      expect(stand.voice.played.last, 'talk-1', reason: 'край касания 44 закрытого контейнера — тоже кнопка');
+      stand.voice.finish();
+      await tester.pump();
+
+      await tester.tap(inTurn(1, find.byKey(const ValueKey('talk-open-text'))));
+      await tester.pump();
+      final opened = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-listen'))));
+      await tester.tapAt(opened.topRight + const Offset(-3, 3), kind: PointerDeviceKind.touch);
+      await tester.pump();
+      expect(stand.voice.played.last, 'talk-1', reason: 'угол касания 44 открытого контейнера — тоже кнопка');
+      stand.voice.finish();
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (кадр 37-7): «Не понял» и «Подсказать» — контурные плашки 44 по бокам микрофона, не
+    // текст: «Не понял» — контур чернил, «Подсказать» — латунь. Плашки не заходят на кольцо микрофона.
+    // ЛОВИТ: «Не понял» и «Подсказать» серыми словами — док до правки 21.09.
+    testWidgets('37-7: «Не понял» и «Подсказать» — контурные плашки 44 по бокам микрофона', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+      await finishLine(tester, stand);
+
+      final rescue = find.byKey(const ValueKey('talk-rescue'));
+      final hint = find.byKey(const ValueKey('talk-hint'));
+      expect(tester.widget<TalkPill>(rescue).brass, isFalse, reason: '«Не понял» — контур чернил');
+      expect(tester.widget<TalkPill>(hint).brass, isTrue, reason: '«Подсказать» — латунь');
+      expect(tester.getSize(rescue).height, 44);
+      expect(tester.getSize(hint).height, 44);
+      expect(find.descendant(of: find.byType(TalkDock), matching: find.byType(SessionTextExit)), findsNothing, reason: 'не текстом');
+      final mic = tester.getRect(find.byKey(const ValueKey('talk-mic')));
+      expect(tester.getRect(rescue).right, lessThanOrEqualTo(mic.center.dx - 44), reason: 'не заходит на кольцо 88');
+      expect(tester.getRect(hint).left, greaterThanOrEqualTo(mic.center.dx + 44), reason: 'не заходит на кольцо 88');
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (кадр 37-7): плашка — по своему слову: контур 1,5 + 14 + слово + 14 + контур 1,5, а не во всю
+    // отведённую ей половину дока.
+    // ЛОВИТ: плашку, растянутую до кольца микрофона, — первый рендер правки 21.09.
+    testWidgets('плашка 44 — по своему слову, а не во всю ширину', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 300), child: TalkPill(label: 'Hi', onTap: () {})),
+          ),
+        ),
+      );
+      final word = tester.getSize(find.text('Hi')).width;
+      expect(tester.getSize(find.byType(TalkPill)).width, moreOrLessEquals(1.5 + 14 + word + 14 + 1.5, epsilon: 0.5));
+      expect(tester.getSize(find.byType(TalkPill)).height, 44);
     });
 
     // ПРАВИЛО (кадр 37-8): свой пузырь — ТОЛЬКО распознанный текст; фразы плана в нём подчёркнуты
@@ -238,6 +312,8 @@ void main() {
       expect(find.byKey(const ValueKey('talk-hint-chip')), findsNothing);
       expect(find.byKey(const ValueKey('talk-hint')), findsNothing);
       expect(find.byKey(const ValueKey('talk-open-text')), findsNothing, reason: 'тексты закрыты до итога');
+      final plate = tester.getRect(find.descendant(of: find.byKey(const ValueKey('turn-5')), matching: find.byType(SessionBubble)));
+      expect(plate.width, moreOrLessEquals(56, epsilon: 0.5), reason: 'в контейнере один кружок: 14 + 28 + 14');
       expect(find.text('Hello. What brings you in today?'), findsNothing);
       expect(find.byKey(const ValueKey('talk-rescue')), findsOneWidget, reason: 'переспрос — не подсказка');
       await settleTalk(tester);

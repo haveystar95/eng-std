@@ -126,7 +126,7 @@ void main() {
         voice: voice,
         phraseTexts: phrases,
         makeMic: () {
-          final mic = SessionMic(recognizer: SilentRecognizer(), localeId: 'en_US', expected: '');
+          final mic = SessionMic(recognizer: ListeningRecognizer(), localeId: 'en_US', expected: '');
           mics.add(mic);
           return mic;
         },

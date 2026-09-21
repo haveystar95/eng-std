@@ -362,7 +362,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_chipShown) ...[TalkHintChip(text: p.taskNative), const SizedBox(height: 14)],
-          Center(child: SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, onTap: skip)),
+          Center(child: SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, brass: true, onTap: skip)),
           const SizedBox(height: 14),
           SessionDockButton(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, onTap: tryAgain),
         ],
@@ -382,12 +382,11 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
         MicState.missed => l.planSessionMicMissed,
         _ => judging ? null : l.planSessionMicTap,
       },
-      left: finished || judging
-          ? null
-          : SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, onTap: skip),
+      // The sides are plates 44 (кадр 35-2), as in the talk: «Пропустить» in ink, «Подсказать» in brass.
+      left: finished || judging ? null : TalkPill(key: const ValueKey('exit-skip'), label: l.planSessionSkip, onTap: skip),
       right: _asks || env.noHints || _hint != _Hint.none || finished || judging
           ? null
-          : SessionTextExit(key: const ValueKey('exit-hint'), label: l.planSessionHintAction, onTap: _showHint),
+          : TalkPill(key: const ValueKey('exit-hint'), label: l.planSessionHintAction, brass: true, onTap: _showHint),
       mic: TalkMicButton(
         look: look,
         label: l.planSessionMicTap,

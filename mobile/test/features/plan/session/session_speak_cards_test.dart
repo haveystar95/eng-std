@@ -5,9 +5,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
-import 'package:eng_std/features/plan/conversation/talk_ribbon.dart' show TalkPartnerBubble;
+import 'package:eng_std/features/plan/conversation/talk_ribbon.dart' show TalkPartnerBubble, TalkPill;
 import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionListenButton;
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
+import 'package:eng_std/features/plan/session/parts/session_mic_panel.dart' show SessionTextExit;
 import 'package:eng_std/features/plan/session/session_mic.dart';
 
 import '../../../support/session_harness.dart';
@@ -59,20 +60,42 @@ void main() {
       expect(probe.nexts, 1, reason: 'зачтено — карточка уходит сама');
     });
 
-    // ПРАВИЛО (правка архитектора 21.09, «то же в 35-2»): у пузыря собеседника «прослушать» 44 стоит
-    // ПОД пузырём, как в ленте разговора; текст в тренажёре открыт, поэтому «текст» не стоит вовсе.
-    // ЛОВИТ: кружок 28 справа от пузыря — 35-2 до правки.
-    testWidgets('пузырь собеседника — «прослушать» 44 под пузырём, кружка рядом нет', (tester) async {
+    // ПРАВИЛО (кадр 35-2, правка 21.09 «по кадру»): пузырь собеседника — тот же светлый контейнер, что в
+    // ленте разговора: текст в тренажёре открыт, поэтому в контейнере один кружок 28 — в правом верхнем
+    // углу, в 12 от верха и в 14 от края; чипа «текст» нет.
+    // ЛОВИТ: кружок 44 под пузырём и кружок 28 справа от пузыря — 35-2 до правки.
+    testWidgets('пузырь собеседника — тот же контейнер с одним кружком 28 в углу', (tester) async {
       await pumpCard(tester, probeEnv(speakAt(2), CardProbe()));
       await tester.pump(const Duration(milliseconds: 300));
       final partner = find.byType(TalkPartnerBubble);
-      final bubble = tester.getRect(find.descendant(of: partner, matching: find.byType(SessionBubble)));
+      final plate = tester.getRect(find.descendant(of: partner, matching: find.byType(SessionBubble)));
       final listen = find.descendant(of: partner, matching: find.byKey(const ValueKey('talk-listen')));
-      expect(tester.widget<SessionListenButton>(listen).size, 44);
-      expect(tester.getRect(listen).top, greaterThanOrEqualTo(bubble.bottom), reason: 'под пузырём, а не рядом');
-      expect((tester.getRect(listen).left - bubble.left).abs(), lessThan(1));
-      expect(find.descendant(of: partner, matching: find.byType(SessionListenButton)), findsOneWidget, reason: 'кружка рядом нет');
+      expect(tester.widget<SessionListenButton>(listen).size, 28);
+      final circle = tester.getRect(listen).deflate(8);
+      expect(plate.right - circle.right, moreOrLessEquals(14, epsilon: 0.5), reason: 'в 14 от правого края');
+      expect(circle.top - plate.top, moreOrLessEquals(12, epsilon: 0.5), reason: 'в 12 от верха');
+      expect(find.descendant(of: partner, matching: find.byType(SessionListenButton)), findsOneWidget, reason: 'кружок один');
       expect(find.byKey(const ValueKey('talk-open-text')), findsNothing, reason: 'текст открыт — «текст» не нужен');
+      await settleCard(tester);
+    });
+
+    // ПРАВИЛО (кадр 35-2): «Пропустить» и «Подсказать» — контурные плашки 44 по бокам микрофона, как в
+    // разговоре; после отказа судьи «Пропустить» — латунная ссылка над «Ещё раз» («сказал · не зачтено»).
+    // ЛОВИТ: боковые выходы серыми словами и серую ссылку после отказа — 35-2 до правки 21.09.
+    testWidgets('«Пропустить» и «Подсказать» — плашки 44; после отказа «Пропустить» — латунная ссылка', (tester) async {
+      final probe = CardProbe()..verdict = (_) => rejected;
+      await pumpCard(tester, probeEnv(speakAt(2), probe));
+      await tester.pump(const Duration(milliseconds: 300));
+      final skip = find.byKey(const ValueKey('exit-skip'));
+      final hint = find.byKey(const ValueKey('exit-hint'));
+      expect(tester.widget<TalkPill>(skip).brass, isFalse);
+      expect(tester.widget<TalkPill>(hint).brass, isTrue);
+      expect(tester.getSize(skip).height, 44);
+      expect(tester.getSize(hint).height, 44);
+
+      await sayDebug(tester, 'It started the car');
+      await tester.pump();
+      expect(tester.widget<SessionTextExit>(find.byKey(const ValueKey('exit-skip'))).brass, isTrue, reason: 'ссылка латунью, как в кадре');
       await settleCard(tester);
     });
 

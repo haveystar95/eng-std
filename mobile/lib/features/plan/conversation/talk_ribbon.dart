@@ -20,14 +20,25 @@ import '../session/session_mic.dart';
 /// in the trainer the partner's text is OPEN from the start, in the talk it is CLOSED and opens on a
 /// tap on «текст»; and the trainer has «Пропустить», while the talk has «Не понял».
 
-/// THE PARTNER'S LINE (37-6, 37-8, 35-2) — a paper bubble on the left and, UNDER it, one row of two:
-/// «прослушать» 44 and the «текст» chip (the architect's revision of 21.09: no circle beside the
-/// bubble, no bare grey word under it — the pair stands together, as the canvas draws it).
+/// The talk's plates on the ribbon — the canvas shadow `0 2px 8px`, ink at 6 % (37-6…37-9, 35-2).
+const List<BoxShadow> kTalkPlateShadow = [BoxShadow(color: AppColors.faintInk, blurRadius: 8, offset: Offset(0, 2))];
+
+/// The wave of a line the role is saying (37-6 «врач говорит»): eighteen bars 3 wide, 3 apart, 24 high.
+const List<double> _speakingBars = [6, 12, 20, 24, 18, 10, 22, 14, 8, 16, 24, 12, 6, 18, 10, 20, 12, 8];
+
+/// THE PARTNER'S LINE (37-6…37-9, 35-2) — a light plate on the left, and everything that belongs to the line
+/// stands INSIDE it (the architect's revision of 21.09, «по кадру»). Three states, as the frames draw them:
 ///
-/// The text is [open] or closed: closed, the bubble holds a wave instead of words, and the chip opens
-/// them; open, the chip is gone and «прослушать» stays alone. Under «Без подсказок» the caller passes
-/// no [onOpenText] at all — then there is no way to open the text and no chip offering one (кадр
-/// 37-8, «в „Без подсказок" остаётся только „прослушать"»).
+/// - the role is saying it ([speaking], closed) — the wave alone (37-6 «врач говорит»);
+/// - said and closed — «прослушать» 28 and the «текст» chip in one row (37-6 «врач договорил», 37-8), with
+///   «прервано» over them when the learner cut the line off (37-9);
+/// - open — the words and their translation, «прослушать» 28 in the top right corner (37-8, 35-2).
+///
+/// Under «Без подсказок» the caller passes no [onOpenText] — then there is no chip and no way to open the text
+/// (37-8, «в „Без подсказок" остаётся только „прослушать"»).
+///
+/// Every circle and chip is 28 on the screen and 44 under the finger: the plate trims its padding by the 8 the touch
+/// box adds, so it keeps the frame's size (12 + 28 + 12) and the circle stands where the frame puts it.
 class TalkPartnerBubble extends StatelessWidget {
   const TalkPartnerBubble({
     super.key,
@@ -38,15 +49,16 @@ class TalkPartnerBubble extends StatelessWidget {
     required this.onListen,
     this.onOpenText,
     this.interrupted = false,
+    this.speaking = false,
   });
 
   final String text;
   final String? translation;
 
-  /// The words are shown; false — a wave stands in their place.
+  /// The words are shown.
   final bool open;
 
-  /// The line is sounding now.
+  /// The line's sound is playing — the role's first saying or a replay from «прослушать».
   final bool playing;
   final VoidCallback? onListen;
 
@@ -56,56 +68,97 @@ class TalkPartnerBubble extends StatelessWidget {
   /// The learner cut this line off (кадр 37-9) — it stays in the ribbon with «прервано».
   final bool interrupted;
 
+  /// The role is saying this line now, the first time (кадр 37-6 «врач говорит»): the plate holds the wave alone.
+  final bool speaking;
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final openText = onOpenText;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+    final listen = SessionListenButton(
+      key: const ValueKey('talk-listen'),
+      size: 28,
+      brass: true,
+      label: l.planWindowListen,
+      playing: playing,
+      onTap: onListen,
+    );
+    final cut = interrupted ? Text(l.planTalkInterrupted, key: const ValueKey('talk-interrupted'), style: AppTextSession.meta) : null;
+    return SessionPartnerRow(
+      bubble: open
+          ? _openPlate(listen, cut)
+          : speaking
+          ? SessionBubble(
+              own: false,
+              shadow: kTalkPlateShadow,
+              child: SessionWave(key: const ValueKey('talk-line-wave'), heights: _speakingBars, playing: playing),
+            )
+          : _closedPlate(l, listen, cut),
+    );
+  }
+
+  /// 37-8, 35-2: the words, and the circle in the top right corner — its touch box stands 8 into the padding.
+  Widget _openPlate(Widget listen, Widget? cut) => SessionBubble(
+    own: false,
+    padding: EdgeInsets.zero,
+    shadow: kTalkPlateShadow,
+    child: Stack(
       children: [
-        SessionPartnerRow(
-          bubble: SessionBubble(
-            own: false,
-            text: open ? text : null,
-            translation: open ? translation : null,
-            child: open ? null : SessionWave(key: const ValueKey('talk-line-wave'), heights: SessionWave.five, width: 80, playing: playing),
-          ),
-        ),
-        // «прервано» sits over the pair, as кадр 37-9 stacks it over «прослушать» and «текст».
-        if (interrupted)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(l.planTalkInterrupted, key: const ValueKey('talk-interrupted'), style: AppTextSession.meta),
-          ),
         Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Row(
-            key: const ValueKey('talk-line-actions'),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14 + 28 + 10, 12),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SessionListenButton(
-                key: const ValueKey('talk-listen'),
-                size: 44,
-                brass: true,
-                label: l.planWindowListen,
-                playing: playing,
-                onTap: onListen,
-              ),
-              if (!open && openText != null) ...[
-                const SizedBox(width: 10),
-                TalkTextChip(key: const ValueKey('talk-open-text'), label: l.planTalkOpenText, onTap: openText),
+              ?cut,
+              Text(text, style: SessionBubble.lineStyle(own: false)),
+              if (translation case final t? when t.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(t, style: SessionBubble.translationStyle(own: false)),
               ],
             ],
           ),
         ),
+        Positioned(top: 4, right: 6, child: listen),
       ],
+    ),
+  );
+
+  /// 37-6 «врач договорил», 37-8, 37-9: the pair in one row; «прервано» over it.
+  Widget _closedPlate(AppLocalizations l, Widget listen, Widget? cut) {
+    final openText = onOpenText;
+    final pair = Row(
+      key: const ValueKey('talk-line-actions'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        listen,
+        if (openText != null) ...[
+          const SizedBox(width: 2),
+          TalkTextChip(key: const ValueKey('talk-open-text'), label: l.planTalkOpenText, onTap: openText),
+        ],
+      ],
+    );
+    return SessionBubble(
+      own: false,
+      padding: EdgeInsets.fromLTRB(6, cut == null ? 4 : 12, openText == null ? 6 : 14, 4),
+      shadow: kTalkPlateShadow,
+      child: cut == null
+          ? pair
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(padding: const EdgeInsets.only(left: 8), child: cut),
+                // The frame sets the row right under «прервано»: the 44 touch boxes reach 8 up over its line, and the
+                // plate is measured by the 36 below it.
+                Align(alignment: Alignment.bottomLeft, widthFactor: 1, heightFactor: 36 / 44, child: pair),
+              ],
+            ),
     );
   }
 }
 
 /// THE «ТЕКСТ» CHIP (37-6, 37-8, 37-9) — an ink outline 1,5 at 22 %, 28 high with corners 14, 13 in the
-/// secondary ink; a 44 touch target around it, like every tap target of the dock.
+/// secondary ink; a 44 touch target around it.
 class TalkTextChip extends StatelessWidget {
   const TalkTextChip({super.key, required this.label, required this.onTap});
 
@@ -130,6 +183,49 @@ class TalkTextChip extends StatelessWidget {
               border: Border.all(color: AppColors.markerOutline, width: 1.5),
             ),
             child: Text(label, style: AppTextSession.meta.copyWith(color: AppColors.secondary)),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// A DOCK PLATE 44 (37-7, 35-2) — «Не понял» / «Пропустить» in an ink outline at 22 %, «Подсказать» in brass:
+/// corners 22, 15 on 14 at the sides. A plate, not a word: it is one of the three things the thumb reaches for.
+class TalkPill extends StatelessWidget {
+  const TalkPill({super.key, required this.label, required this.onTap, this.brass = false});
+
+  final String label;
+  final VoidCallback onTap;
+  final bool brass;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: brass ? AppColors.brassInk : AppColors.markerOutline, width: 1.5),
+        ),
+        // The plate hugs its word; a longer word in another language shrinks inside it rather than running into the
+        // microphone.
+        child: Center(
+          widthFactor: 1,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: AppTextSession.text15.copyWith(
+                color: brass ? AppColors.brassInk : AppColors.ink,
+                fontWeight: brass ? FontWeight.w500 : FontWeight.w400,
+              ),
+            ),
           ),
         ),
       ),
@@ -247,6 +343,7 @@ class _TalkThinkingState extends State<TalkThinking> with SingleTickerProviderSt
   Widget build(BuildContext context) => SessionPartnerRow(
     bubble: SessionBubble(
       own: false,
+      shadow: kTalkPlateShadow,
       child: AnimatedBuilder(
         key: const ValueKey('talk-thinking'),
         animation: _c,
@@ -501,13 +598,21 @@ class TalkDock extends StatelessWidget {
         // (44 high, opaque) reach towards the middle; on a 375 phone «Подсказать» already overlaps
         // the button's centre, and a tap meant for the microphone was swallowed by the exit behind
         // it. The row paints in this order and hit-tests in reverse: the button always wins.
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            if (left case final w?) Align(alignment: Alignment.centerLeft, child: w),
-            if (right case final w?) Align(alignment: Alignment.centerRight, child: w),
-            Center(child: mic),
-          ],
+        child: LayoutBuilder(
+          builder: (_, box) {
+            // Each side gets what the microphone's ring (88) leaves it, less 4 of air.
+            final side = math.max(0.0, (box.maxWidth - 88) / 2 - 4);
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                if (left case final w?)
+                  Align(alignment: Alignment.centerLeft, child: ConstrainedBox(constraints: BoxConstraints(maxWidth: side), child: w)),
+                if (right case final w?)
+                  Align(alignment: Alignment.centerRight, child: ConstrainedBox(constraints: BoxConstraints(maxWidth: side), child: w)),
+                Center(child: mic),
+              ],
+            );
+          },
         ),
       ),
       if (kDebugMode && debugMic != null) ...[

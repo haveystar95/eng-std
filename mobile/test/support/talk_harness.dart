@@ -111,6 +111,49 @@ class FakeTalkBackend implements ConversationBackend {
   }
 }
 
+/// A MICROPHONE IN A QUIET ROOM — the recording stays open until something stops it (a tap, the turn's own guard),
+/// as a real one does, and then reports silence. [SilentRecognizer] answers «silence» at once, and the turn rightly
+/// reads a few instant silences as a dead channel — «Нужен микрофон» — where кадр 37-9 draws the listening ring.
+class ListeningRecognizer implements SpeechRecognizer {
+  Completer<SpeechAttempt>? _open;
+
+  @override
+  bool get isReady => true;
+
+  @override
+  Future<bool> get hasPermission async => true;
+
+  @override
+  Future<bool> prepare() async => true;
+
+  @override
+  Future<SpeechAttempt> listenOnce({
+    required List<String> expected,
+    required String localeId,
+    Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
+    List<String> contextualStrings = const [],
+    ValueChanged<String>? onPartial,
+    ValueChanged<double>? onLevel,
+  }) {
+    final open = Completer<SpeechAttempt>();
+    _open = open;
+    return open.future;
+  }
+
+  @override
+  Future<void> stop() async => _close();
+
+  @override
+  Future<void> cancel() async => _close();
+
+  void _close() {
+    final open = _open;
+    _open = null;
+    if (open != null && !open.isCompleted) open.complete(const SpeechAttempt.silent());
+  }
+}
+
 /// A VOICE THAT HOLDS THE LINE UNTIL IT IS LET GO — the role is «speaking» for as long as the test
 /// needs it to be, so the tap that cuts it off (кадр 37-9) has something to cut.
 class HeldVoice extends SessionVoice {
