@@ -6,10 +6,10 @@ namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\ValueObject\DayType;
-use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\RouteStage;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\StageState;
+use App\Modules\Plan\Domain\ValueObject\TalkStage;
 
 /**
  * THE STAGES OF A DAY ON THE ROUTE (PLAN-UI-3): which stages the day has and where each stands.
@@ -25,7 +25,8 @@ use App\Modules\Plan\Domain\ValueObject\StageState;
  * the learner may start today has its first stage `current`.
  *
  * THE SIXTH NODE (наряд CONV-1) is not one of these: the talk has no cards at all, so it is added
- * after them and its state is read off its own journal.
+ * after them and its state is read off the journal of walked stages (наряд CONV-2, п. 2) — a replay
+ * started after the stage was walked leaves the node walked.
  */
 final class RouteStages
 {
@@ -33,7 +34,7 @@ final class RouteStages
      * @param  array<string, array{total: int, answered: int}>  $tallies  by stage value; empty when no card is dealt
      * @param  list<Stage>  $outline  the stages the day will deal, when that is known; empty = go by the type
      * @param  bool  $hasConversation  does this day walk the sixth stage ({@see DayStages::walksConversation()})
-     * @param  ConversationState|null  $conversation  where its talk stands; null — it has not been started
+     * @param  TalkStage|null  $talk  where its sixth stage stands; null — nothing of it yet
      * @return list<RouteStage>
      */
     public static function of(
@@ -43,7 +44,7 @@ final class RouteStages
         bool $availableToday,
         array $outline = [],
         bool $hasConversation = false,
-        ?ConversationState $conversation = null,
+        ?TalkStage $talk = null,
     ): array {
         $dealt = [];
         foreach (Stage::ofCards() as $stage) {
@@ -52,7 +53,7 @@ final class RouteStages
             }
         }
         if ($dealt !== []) {
-            return self::withTalk(self::walk($dealt, $tallies, $closed), $closed, $hasConversation, $conversation);
+            return self::withTalk(self::walk($dealt, $tallies, $closed), $closed, $hasConversation, $talk);
         }
 
         $stages = $outline !== [] ? self::inWalkingOrder($outline) : self::dealtBy($type);
@@ -65,18 +66,18 @@ final class RouteStages
             });
         }
 
-        return self::withTalk($out, $closed, $hasConversation, $conversation);
+        return self::withTalk($out, $closed, $hasConversation, $talk);
     }
 
     /**
      * The talk's own node, after the card stages (наряд CONV-1). It has no cards, so its state is
-     * read off its journal: over — walked; open — the stage being walked; not started — the stage to
-     * walk once the cards are done.
+     * read off the journal of stages: walked — done; a talk going and the stage not walked — the
+     * stage being walked; nothing started — the stage to walk once the cards are done.
      *
      * @param  list<RouteStage>  $stages
      * @return list<RouteStage>
      */
-    private static function withTalk(array $stages, bool $closed, bool $hasConversation, ?ConversationState $conversation): array
+    private static function withTalk(array $stages, bool $closed, bool $hasConversation, ?TalkStage $talk): array
     {
         if (! $hasConversation) {
             return $stages;
@@ -88,8 +89,8 @@ final class RouteStages
             }
         }
         $state = match (true) {
-            $closed, $conversation === ConversationState::Ended => StageState::Done,
-            $conversation !== null, $cardsDone && $stages !== [] => StageState::Current,
+            $closed, $talk === TalkStage::Passed => StageState::Done,
+            $talk === TalkStage::Open, $cardsDone && $stages !== [] => StageState::Current,
             default => StageState::Locked,
         };
         // A talk that is the CURRENT stage takes the «current» mark from the cards: only one node is current.

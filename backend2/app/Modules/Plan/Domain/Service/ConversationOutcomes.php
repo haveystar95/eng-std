@@ -17,17 +17,18 @@ use App\Modules\Plan\Domain\ValueObject\TurnKind;
  * hear it again and a skip is letting it go, and neither is a line of one's own. «Понял вопросы»
  * counts the moves the role judged `understood: false`; a move with no judgement (a rescue, a skip,
  * a turn the model could not rule on) is not a misunderstanding, because nothing was claimed about
- * it. «Фразы дня» are the ones the code matched ({@see SpokenPhrases}) anywhere in the talk.
+ * it. «Фразы дня» are the talk's TARGETS ({@see ConversationTargets}, наряд CONV-2, п. 10) that the code
+ * matched ({@see SpokenPhrases}) anywhere in the talk — the same list the entry card showed and the
+ * ribbon's strip ticked off, so the count on the summary is the count of what the learner was asked for.
  */
 final class ConversationOutcomes
 {
-    /** @param list<ConversationPhrase> $phrases every phrase of the scenes the talk covers */
-    public static function of(Conversation $talk, array $phrases): ConversationOutcome
+    /** @param list<ConversationPhrase> $targets the phrases the talk asks for ({@see ConversationTargets::of()}) */
+    public static function of(Conversation $talk, array $targets): ConversationOutcome
     {
         $said = 0;
         $rescues = 0;
         $notUnderstood = 0;
-        $used = [];
         foreach ($talk->turns() as $turn) {
             if ($turn->kind === TurnKind::Rescue) {
                 $rescues++;
@@ -38,22 +39,23 @@ final class ConversationOutcomes
             if ($turn->understood === false) {
                 $notUnderstood++;
             }
-            foreach ($turn->phrasesUsed as $id) {
-                $used[$id] = true;
-            }
         }
 
-        $known = [];
-        foreach ($phrases as $phrase) {
-            $known[$phrase->id()] = true;
+        $heard = self::heard($talk);
+        $usedIds = [];
+        $notSaid = [];
+        foreach ($targets as $target) {
+            if (isset($heard[$target->id()])) {
+                $usedIds[] = $target->id();
+            } else {
+                $notSaid[] = $target->id();
+            }
         }
-        $usedIds = array_values(array_filter(array_keys($used), static fn (string $id): bool => isset($known[$id])));
-        $notSaid = array_values(array_filter(array_keys($known), static fn (string $id): bool => ! isset($used[$id])));
 
         return new ConversationOutcome(
             saidCount: $said,
             phrasesUsed: $usedIds,
-            phrasesTotal: count($known),
+            phrasesTotal: count($targets),
             notSaid: $notSaid,
             understoodAll: $notUnderstood === 0,
             notUnderstood: $notUnderstood,
@@ -64,12 +66,37 @@ final class ConversationOutcomes
     }
 
     /**
-     * How long the talk took in minutes for the DAY's own count — a talk still running adds the
-     * minutes it has already taken, so «19 минут» of a closed day includes the conversation.
+     * Every phrase of the plan the code heard in the talk so far, by id — what a target's «said» reads.
+     *
+     * @return array<string, true>
      */
-    public static function minutesOf(?Conversation $talk): int
+    public static function heard(Conversation $talk): array
     {
-        return $talk?->minutes() ?? 0;
+        $out = [];
+        foreach ($talk->turns() as $turn) {
+            foreach ($turn->phrasesUsed as $id) {
+                $out[$id] = true;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * How long the day's talks took in minutes, for the DAY's own count (наряд CONV-2, п. 3): the talked time of every
+     * talk of the day, a replay and one still running included — «19 минут» of a closed day is how long the day took —
+     * added up in seconds and rounded up once.
+     *
+     * @param  list<Conversation>  $talks
+     */
+    public static function minutesOf(array $talks): int
+    {
+        $seconds = 0;
+        foreach ($talks as $talk) {
+            $seconds += $talk->activeSeconds();
+        }
+
+        return (int) ceil($seconds / 60);
     }
 
     /** @param list<ConversationTurn> $turns */

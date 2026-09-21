@@ -11,8 +11,11 @@ use App\Modules\Plan\Application\Dto\ConversationTurnView;
 use App\Modules\Plan\Application\Dto\ConversationView;
 use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
+use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\ConversationRules;
+use App\Modules\Plan\Domain\Service\IntentClause;
+use App\Modules\Plan\Domain\ValueObject\Stage;
 
 /**
  * THE TALK AS ONE DOCUMENT. Every number the frames print is counted here — turns left, minutes,
@@ -21,12 +24,16 @@ use App\Modules\Plan\Domain\Service\ConversationRules;
  */
 final readonly class ConversationViews
 {
-    public function __construct(private ConversationRules $rules) {}
+    public function __construct(
+        private ConversationRules $rules,
+        private StagePassageRepository $passages,
+    ) {}
 
     public function of(Conversation $talk, ConversationMaterialView $material): ConversationView
     {
         $current = $material->checkpoint($talk->currentCheckpoint());
         $done = $talk->checkpointsDone();
+        $replay = $this->isReplay($talk);
 
         $scenes = [];
         foreach ($material->checkpoints as $checkpoint) {
@@ -45,6 +52,9 @@ final readonly class ConversationViews
             );
         }
 
+        $heard = ConversationOutcomes::heard($talk);
+        $hint = $talk->hintNative();
+
         return new ConversationView(
             id: $talk->id()->value,
             planId: $talk->planId()->value,
@@ -60,20 +70,34 @@ final readonly class ConversationViews
             turnsLeft: $talk->turnsLeft(),
             hintsEnabled: $talk->hintsEnabled(),
             hintDelayMs: $this->rules->hintDelayMs,
-            hintNative: $talk->hintNative(),
-            turns: array_map(self::turn(...), $talk->turns()),
-            summary: $talk->isEnded() ? $this->summary($talk, $material) : null,
+            // The part after «Скажи, что …» (наряд CONV-2, п. 11) — read as a clause here, so the lines stored before
+            // the rule came out the same way as the new ones.
+            hintNative: $hint === null ? null : IntentClause::of($hint),
+            turns: array_map(fn (ConversationTurn $turn): ConversationTurnView => self::turn($turn, $material), $talk->turns()),
+            summary: $talk->isEnded() ? $this->summary($talk, $material, $replay) : null,
+            talkTitleNative: $material->titleNative,
+            targets: array_map(static fn ($target): array => [
+                'scene_id' => $target->sceneId,
+                'ref' => $target->ref,
+                'text_target' => $target->textTarget,
+                'text_native' => $target->textNative,
+                'said' => isset($heard[$target->id()]),
+            ], $material->targets),
+            replay: $replay,
         );
     }
 
-    /** The summary of a finished talk — the projection of its journal, never a stored second count. */
-    public function summary(Conversation $talk, ConversationMaterialView $material): ConversationSummaryView
+    /**
+     * The summary of a finished talk — the projection of its journal over its targets, never a stored second count.
+     * A replay gives nothing back tomorrow: the day's result is the talk that walked its stage (наряд CONV-2, п. 2).
+     */
+    public function summary(Conversation $talk, ConversationMaterialView $material, bool $replay = false): ConversationSummaryView
     {
-        $outcome = ConversationOutcomes::of($talk, $material->phrases);
+        $outcome = ConversationOutcomes::of($talk, $material->targets);
         $used = array_fill_keys($outcome->phrasesUsed, true);
 
         $phrases = [];
-        foreach ($material->phrases as $phrase) {
+        foreach ($material->targets as $phrase) {
             $phrases[] = [
                 'scene_id' => $phrase->sceneId,
                 'ref' => $phrase->ref,
@@ -94,17 +118,37 @@ final readonly class ConversationViews
             rescues: $outcome->rescues,
             endedReason: $outcome->endedReason?->value,
             minutes: $outcome->minutes,
-            returnsTomorrow: $talk->type()->returnsTomorrow(),
+            returnsTomorrow: $talk->type()->returnsTomorrow() && ! $replay,
         );
     }
 
-    private static function turn(ConversationTurn $turn): ConversationTurnView
+    /**
+     * IS THIS TALK «ЕЩЁ РАЗ» ON A WALKED DAY — the day's sixth stage was walked by ANOTHER talk, one that had ended by
+     * the time this one began (наряд CONV-2, п. 2). A talk begun before the stage was walked is not a replay: it may
+     * yet be the one that walks it, or it was cut by «Ещё раз» itself.
+     */
+    private function isReplay(Conversation $talk): bool
+    {
+        $passage = $this->passages->of($talk->dayId(), Stage::Conversation);
+
+        return $passage !== null
+            && ! $passage->conversationId?->equals($talk->id())
+            && $passage->passedAt <= $talk->startedAt();
+    }
+
+    private static function turn(ConversationTurn $turn, ConversationMaterialView $material): ConversationTurnView
     {
         $phrases = [];
         foreach ($turn->phrasesUsed as $id) {
             $parts = explode(':', $id, 2);
             if (count($parts) === 2) {
-                $phrases[] = ['scene_id' => $parts[0], 'ref' => $parts[1]];
+                $phrase = $material->phrase($id);
+                $phrases[] = [
+                    'scene_id' => $parts[0],
+                    'ref' => $parts[1],
+                    'text_target' => $phrase?->textTarget,
+                    'text_native' => $phrase?->textNative,
+                ];
             }
         }
 

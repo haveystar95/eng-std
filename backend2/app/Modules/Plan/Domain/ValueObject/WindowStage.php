@@ -9,6 +9,10 @@ namespace App\Modules\Plan\Domain\ValueObject;
  * neither empty nor full belong to the CURRENT stage only: a done stage is a full bar and the word
  * «пройдено», a locked one an empty bar and «впереди», and neither carries a number — so a number
  * cannot be printed on a row that has none.
+ *
+ * The TALK's row carries two more things, in every state (наряд CONV-2, п. 12): the title of its entry
+ * — «Поговори с врачом», inflected by the server (кадр 37-5) — and how many scenes the talk walks
+ * («Разговор целиком · 3 сцены» on the rehearsal). Card rows have neither.
  */
 final readonly class WindowStage
 {
@@ -19,6 +23,8 @@ final readonly class WindowStage
         public ?int $total,
         public ?int $minutesLeft,
         public float $share,
+        public ?string $talkTitle = null,
+        public ?int $scenes = null,
     ) {}
 
     public static function done(Stage $stage): self
@@ -54,5 +60,11 @@ final readonly class WindowStage
             max(0, $minutesLeft),
             $total > 0 ? round($answered / $total, 2) : 0.0,
         );
+    }
+
+    /** The talk's row with its entry title and the number of scenes it walks (наряд CONV-2, п. 12). */
+    public function withTalk(?string $title, int $scenes): self
+    {
+        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $title, max(0, $scenes));
     }
 }

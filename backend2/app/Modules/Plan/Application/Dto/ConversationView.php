@@ -11,12 +11,17 @@ namespace App\Modules\Plan\Application\Dto;
  * The whole ribbon travels every time: a talk is a dozen short lines, and a client that lost the
  * connection mid-turn (кадр 37-10) gets the same document from `GET …/conversation/{id}` as from
  * the move that dropped — there is no second, thinner shape to keep in step with this one.
+ *
+ * Since наряд CONV-2: the entry title («Поговори с врачом»), the talk's TARGETS — the phrases it is for, each
+ * with whether it has sounded yet («Скажи в разговоре» on 37-5 and the strip of the ribbon) — and `replay`: the day's
+ * sixth stage was already walked by an earlier talk, so this one is «Ещё раз» on top of a walked day.
  */
 final readonly class ConversationView
 {
     /**
      * @param  list<ConversationSceneView>  $scenes
      * @param  list<ConversationTurnView>  $turns
+     * @param  list<array{scene_id: string, ref: string, text_target: string, text_native: string, said: bool}>  $targets
      */
     public function __construct(
         public string $id,
@@ -36,5 +41,8 @@ final readonly class ConversationView
         public ?string $hintNative,
         public array $turns,
         public ?ConversationSummaryView $summary,
+        public ?string $talkTitleNative = null,
+        public array $targets = [],
+        public bool $replay = false,
     ) {}
 }

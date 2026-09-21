@@ -38,6 +38,37 @@ final class EloquentConversationRepository implements ConversationRepository
         return $row === null ? null : $this->toDomain($row, $this->turnsOf($row->id));
     }
 
+    public function findById(ConversationId $id): ?Conversation
+    {
+        $row = ConversationModel::query()->where('id', $id->value)->first();
+
+        return $row === null ? null : $this->toDomain($row, $this->turnsOf($row->id));
+    }
+
+    public function allForDay(PlanDayId $dayId): array
+    {
+        $rows = ConversationModel::query()->where('day_id', $dayId->value)->orderBy('started_at')->get();
+
+        return array_values($rows->map(fn (ConversationModel $row): Conversation => $this->toDomain($row, $this->turnsOf($row->id)))->all());
+    }
+
+    public function walkedWithoutPassage(): array
+    {
+        $rows = ConversationModel::query()
+            ->where('state', ConversationState::Ended->value)
+            ->whereIn('ended_reason', [ConversationEnd::Natural->value, ConversationEnd::Limit->value, ConversationEnd::Declined->value])
+            ->whereNotExists(static function ($query): void {
+                $query->selectRaw('1')->from('plan_stage_passages')
+                    ->whereColumn('plan_stage_passages.day_id', 'conversations.day_id')
+                    ->where('plan_stage_passages.stage', 'conversation');
+            })
+            ->orderBy('ended_at')
+            ->orderBy('id')
+            ->get();
+
+        return array_values($rows->map(fn (ConversationModel $row): Conversation => $this->toDomain($row, []))->all());
+    }
+
     public function openForDay(PlanDayId $dayId): ?Conversation
     {
         $row = ConversationModel::query()

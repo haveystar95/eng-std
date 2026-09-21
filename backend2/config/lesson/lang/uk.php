@@ -42,4 +42,8 @@ return [
     'unresolved_pronouns' => null,
     'gendered_past_pattern' => null,
     'agreement' => null,
+
+    // «НЕ ПОНЯЛ» НА ЯЗЫКЕ ЦЕЛИ (наряд CONV-2, п. 4а) — what a rescue move of the talk says in the learner's own bubble
+    // (кадр 37-7, en «Sorry?»).
+    'rescue_line' => 'Перепрошую?',
 ];

@@ -19,12 +19,12 @@ use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
-use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
+use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayStages;
-use App\Modules\Plan\Domain\ValueObject\ConversationState;
+use App\Modules\Plan\Domain\ValueObject\TalkStage;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\Service\NativeStrings;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
@@ -52,6 +52,7 @@ final readonly class PlanViews
         private DayDealer $dealer,
         private LearnerHabits $habits,
         private ConversationRepository $conversations,
+        private StagePassageRepository $passages,
         private ConversationRules $rules,
     ) {}
 
@@ -72,12 +73,15 @@ final readonly class PlanViews
         // is not dealt yet but is the learner's next — drawn from what the dealer will deal.
         $tallies = $this->cards->stageTallies($plan->id());
         $outline = $current === null || isset($tallies[$current->id()->value]) ? [] : $this->outline($plan, $current);
-        // The sixth node of every day, in one query too (наряд CONV-1): the talk has no cards, so its
-        // state cannot be read off the tallies.
-        $talks = array_map(
-            static fn (Conversation $talk): ConversationState => $talk->state(),
-            $this->conversations->latestForDays(array_map(static fn (PlanDay $d): PlanDayId => $d->id(), $plan->days())),
-        );
+        // The sixth node of every day, in two queries (наряд CONV-1; walked — наряд CONV-2): the talk has no
+        // cards, so where it stands is read off the journal of stages first and off the day's talks second.
+        $dayIds = array_map(static fn (PlanDay $d): PlanDayId => $d->id(), $plan->days());
+        $passed = $this->passages->ofDays($dayIds, Stage::Conversation);
+        $started = $this->conversations->latestForDays($dayIds);
+        $talks = [];
+        foreach ($dayIds as $dayId) {
+            $talks[$dayId->value] = TalkStage::of(isset($passed[$dayId->value]), isset($started[$dayId->value]));
+        }
 
         $cost = $plan->planCall()->costUsd ?? '0.000000';
         foreach ($plan->scenes() as $scene) {
@@ -204,15 +208,20 @@ final readonly class PlanViews
             $outline = RouteStages::stagesOf($cards);
         }
 
-        return $this->routeDay($plan, $day, $today, $strings, $tallies, $outline, $this->conversations->latestForDay($day->id())?->state());
+        $talk = TalkStage::of(
+            $this->passages->of($day->id(), Stage::Conversation) !== null,
+            $this->conversations->latestForDay($day->id()) !== null,
+        );
+
+        return $this->routeDay($plan, $day, $today, $strings, $tallies, $outline, $talk);
     }
 
     /**
      * @param  array<string, array{total: int, answered: int}>  $tallies
      * @param  list<Stage>  $outline
-     * @param  ConversationState|null  $talk  where the day's latest talk stands (наряд CONV-1); null — none yet
+     * @param  TalkStage|null  $talk  where the day's sixth stage stands (наряды CONV-1, CONV-2); null — nothing of it yet
      */
-    private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline, ?ConversationState $talk = null): DayRouteView
+    private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline, ?TalkStage $talk = null): DayRouteView
     {
         $scene = $plan->sceneOf($day);
         $status = $plan->effectiveDayStatus($day, $today);

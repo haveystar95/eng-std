@@ -82,7 +82,7 @@ final readonly class JudgeCardHandler
             $dayNumbers[$planDay->id()->value] = $planDay->number();
         }
 
-        return new JudgeOutcome($judged, $verdict, $plan->targetLang()->value, $dayNumbers);
+        return new JudgeOutcome($judged, $verdict, $plan->targetLang()->value, $dayNumbers, $command->heard);
     }
 
     private function cardOf(PlanDay $day, DayCardId $id, bool $forUpdate): DayCard

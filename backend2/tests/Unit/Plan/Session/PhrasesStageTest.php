@@ -150,8 +150,8 @@ it('deals every frame its intro, then its recognitions, then its production, and
 
     foreach ([PlanLevel::Beginner, PlanLevel::Intermediate] as $level) {
         // At a ceiling nothing fits in, the ladder has spent every rung and what is left is the FLOOR — which is the
-        // shape asserted below and is the same at both levels: no third recognition, no own-word round, the trainer
-        // still there. Cutting the trainer away, or a frame's last recognition, would break these counts.
+        // shape asserted below and is the same at both levels: no third recognition, two value rounds and the own word,
+        // the trainer still there. Cutting the trainer away, or a frame's last recognition, would break these counts.
         $drafts = s1pStage(null, 0)->build($scene, $level);
         $produce = [CardKind::PhraseRepeat, CardKind::PhraseOtherSlot];
 
@@ -218,14 +218,15 @@ it('builds the beginner «врач» day inside the 690-second ceiling, with not
         ]);
 });
 
-// Canon (решение архитектора 20.09, уточнено при приёмке): «порядок урезания — детерминированный и единственный:
-// (1) третье узнавание каркаса, (2) третий круг «Скажи целиком», (3) ВТОРОЙ круг значений — у каркасов с наименьшим
-// числом реплик в диалоге (при равенстве — позже по визиту). Круг «со своим словом» лестница не снимает НИКОГДА;
-// нижняя граница — «2 узнавания + 1 круг + своё».»
-// CATCHES: ступень не по порядку — второй круг, снятый пока где-то стоит третий, третье узнавание, оставшееся пока
-// уходят круги; урезание, которое не останавливается на попадании под потолок; каркас ниже нижней границы; и — то,
-// ради чего граница и названа — своё слово, снятое лестницей, или тренажёр, снятый целиком.
-it('cuts «Фразы» in exactly one order under a lower ceiling and stops at the floor — the own word survives it', function () {
+// Canon (решение архитектора 20.09; нижняя граница — наряд CONV-2, п. 5): «у каркаса с двумя и более значениями два
+// круга — нижняя граница, не ступень; ступени: третье узнавание → третий круг → стоп-сигнал». The third round goes off
+// the frames the dialogue says least (between two as few — the later in the visit); nothing goes after it, and the own
+// word never goes at all.
+// CATCHES: a rung out of order — a third round cut while a third recognition stands; cutting that does not stop when
+// the stage fits; and — the defect of the owner's gym day (21.09, intermediate: six frames of seven said with ONE value,
+// «That works for me on ___» with «weekdays» only) — a SECOND round cut: a window said with one value is a sentence
+// learned by heart.
+it('cuts «Фразы» in exactly one order under a lower ceiling and stops at two rounds — the floor is not a rung', function () {
     $scene = s1pScene();
     $shape = static fn (int $budget): array => s1pShape(s1pStage(null, $budget)->build($scene, PlanLevel::Intermediate));
 
@@ -243,21 +244,28 @@ it('cuts «Фразы» in exactly one order under a lower ceiling and stops at 
         'p5' => '2 узнавания · 2 круга + своё', 'p6' => '2 узнавания · 3 круга + своё',
     ]);
 
-    // RUNG 3 — at 600 every third round is gone and the SECOND round starts going, again off the least said first:
-    // p3, p5. Not one second round goes while a third is still standing, and not one own word goes at all.
-    expect($shape(600))->toBe([
-        'p1' => '2 узнавания · 2 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 1 круг + своё',
-        'p5' => '2 узнавания · 1 круг + своё', 'p6' => '2 узнавания · 2 круга + своё',
-    ]);
+    // PAST RUNG 2 THERE IS NO RUNG: at 600 every third round is gone and the stage stays over its ceiling — no frame
+    // loses its second value. Until наряд CONV-2 a third rung took p3's and p5's here.
+    $at600 = s1pStage(null, 600);
+    $drafts = $at600->build($scene, PlanLevel::Intermediate);
+    expect(array_unique(array_values(s1pShape($drafts))))->toBe(['2 узнавания · 2 круга + своё'])
+        ->and($at600->seconds($drafts))->toBeGreaterThan(600);
 
-    // THE FLOOR — a ceiling nothing fits in spends every rung and stops there: two recognitions, ONE value round and
-    // the learner's own word on every frame with a window. The stage is dealt over the ceiling rather than broken.
+    // THE FLOOR — a ceiling nothing fits in: two recognitions, TWO value rounds and the learner's own word on every
+    // frame with a window. The stage is dealt over the ceiling rather than broken: the excess is the signal.
     $floor = s1pStage(null, 0);
     $drafts = $floor->build($scene, PlanLevel::Intermediate);
-    expect(array_unique(array_values(s1pShape($drafts))))->toBe(['2 узнавания · 1 круг + своё'])
+    expect(array_unique(array_values(s1pShape($drafts))))->toBe(['2 узнавания · 2 круга + своё'])
         ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot))->toHaveCount(5)
-        // Over the ceiling it was given, and dealt all the same: the excess is a signal, not a refusal to build.
         ->and($floor->seconds($drafts))->toBeGreaterThan(0);
+
+    // A frame of ONE value is said with the one it has — the floor is two rounds where there are two values to say.
+    $oneValue = s1pScene(static function (array $payload): array {
+        $payload['phrases'][4]['slot']['fillers'] = [$payload['phrases'][4]['slot']['fillers'][0]];
+
+        return $payload;
+    });
+    expect(s1pShape(s1pStage(null, 0)->build($oneValue, PlanLevel::Intermediate))['p5'])->toBe('1 узнавания · 1 круг + своё');
 });
 
 // Canon (SESSION-1d, решение архитектора 16.09): «два узнавания КАЖДОМУ каркасу с окном», своё наполнение каждому. Catches
@@ -850,15 +858,30 @@ it('lays out the frame, every filler with the file it sounds as, and the said ph
             'filler_index' => 0, 'text_target' => 'It hurts in his lower back.', 'text_native' => 'У него болит поясница.',
             'pronunciation_native' => 'ит хёртс ин хиз лоуэр бэк', 'audio' => Audio::of('p1'),
         ],
+        // «В разговоре» (кадр 32-1; наряд CONV-2, п. 12): the exchange the phrase is said in, the phrase's place in the
+        // learner's line in characters, and the partner's line it answers — the block the client matched texts to draw.
+        'usage' => [
+            'exchange' => ['ref' => 'x1', 'step' => 1, 'kind' => 'answer'],
+            'line' => ['ref' => 'x1b', 'text_target' => 'It hurts in his lower back.', 'text_native' => 'У него болит поясница.', 'audio' => Audio::of('x1b')],
+            'offset' => 0,
+            'length' => 26,
+            'partner_line' => [
+                'ref' => 'x1', 'text_target' => 'Where does it hurt: his upper back or his lower back?',
+                'text_native' => 'Где болит: вверху спины или в пояснице?', 'audio' => Audio::of('x1'),
+            ],
+        ],
     ]);
 
-    // p6 is said twice: both said fillers are marked, only the first is the phrase's own file.
+    // p6 is said twice: both said fillers are marked, only the first is the phrase's own file — and its usage is the
+    // first line of the visit that says it (x7, an ask: the partner's line there is the answer to it).
     $p6 = $cards->intro($scene, s1pTerm($scene, 'p6'))->payload;
     $fillers = $p6['frame']['slot']['fillers'];
     expect(array_column(array_column($fillers, 'audio'), 'ref'))->toBe(['p6', 'p6.f2', 'p6.f3'])
         ->and(array_column($fillers, 'in_dialogue'))->toBe([true, true, false])
         ->and(array_column($fillers, 'native_line'))->toBe(['Нам нужно сделать рентген?', 'Нам нужно прийти на повторный приём?', 'Нам нужно взять справку для школы?'])
         ->and($p6['said']['text_target'])->toBe('Do we need an X-ray?')
+        ->and($p6['usage']['exchange']['ref'])->toBe('x7')
+        ->and([$p6['usage']['offset'], $p6['usage']['length']])->toBe([0, 19])
         ->and($p6['frame']['kind'])->toBe('ask')
         ->and(CardObjects::fillers($scene, s1pTerm($scene, 'p3'))[1]['native_line'])->toBe('Боль ноющая, когда он наклоняется.');
 });
@@ -926,7 +949,7 @@ it('asks phrase_assemble for the frame\'s words and two words of the frames afte
 
 it('gives every one of the eight kinds its exact keys over the deals of both levels', function () {
     $keys = [
-        'phrase_intro' => ['scene_id', 'frame', 'said'],
+        'phrase_intro' => ['scene_id', 'frame', 'said', 'usage'],
         'phrase_assemble' => ['scene_id', 'frame', 'target_native', 'tiles', 'chips', 'expected'],
         'phrase_choose_back' => ['scene_id', 'prompt', 'options', 'correct'],
         'phrase_slot' => ['scene_id', 'frame', 'prompt_native', 'options', 'correct'],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Service;
 
+use App\Modules\Plan\Application\Dto\ConversationMaterialView;
 use App\Modules\Plan\Application\Dto\DayWindowView;
 use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\WindowDayView;
@@ -50,6 +51,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\ProgramSummary;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\Stage;
+use App\Modules\Plan\Domain\ValueObject\TalkStage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Domain\ValueObject\UnitState;
 use App\Modules\Plan\Domain\ValueObject\VoiceCast;
@@ -84,18 +86,29 @@ final readonly class DayWindowViews
 
     /**
      * @param  list<DayCard>  $cards
-     * @param  Conversation|null  $talk  the day's latest talk (наряд CONV-1) — its sixth row and its highlights
+     * @param  TalkStage|null  $talkStage  where the day's sixth stage stands (наряд CONV-2, п. 2) — null: nothing of it yet
+     * @param  Conversation|null  $walked  the talk that walked the stage — the day's result, what «Что было хорошо» reads
      */
-    public function of(Plan $plan, PlanDay $day, DayStatus $effective, bool $building, ?SceneView $scene, array $cards, ?Conversation $talk = null): DayWindowView
-    {
+    public function of(
+        Plan $plan,
+        PlanDay $day,
+        DayStatus $effective,
+        bool $building,
+        ?SceneView $scene,
+        array $cards,
+        ?TalkStage $talkStage = null,
+        ?Conversation $walked = null,
+    ): DayWindowView {
         $status = WindowStatus::of($effective, $plan->status(), $day->number(), $building);
         $talks = DayStages::walksConversation($day, $this->rules->enabled);
         // One formula for «сколько идёт день»: the cards' minutes plus the talk's own budget, which
         // is not the cards' and never stood under their ceiling ({@see DayBudget}).
         $talkMinutes = $this->budget->talkMinutes($day->type(), $talks);
+        $material = $talks ? $this->material->for($plan, $day) : null;
         $stages = DayWindowStages::of(
             $cards, RouteStages::dealtBy($day->type()), $status, $this->pace,
-            $talks, $talk?->state(), $talkMinutes,
+            $talks, $talkStage, $talkMinutes,
+            $material === null ? null : ['title' => $material->titleNative, 'scenes' => count($material->checkpoints)],
         );
         $states = UnitStates::of($cards);
         $ownScene = $plan->sceneOf($day);
@@ -143,10 +156,10 @@ final readonly class DayWindowViews
                 imageTone: ImageTones::first($ownScene?->image()?->tone, $plan->coverImage()?->tone),
                 status: $status->value,
                 // The talk answers no card, so its minutes are added on top of what the cards cost —
-                // and only while it is still ahead (наряд CONV-1).
+                // and only while its stage is still ahead (наряд CONV-1; «walked» — наряд CONV-2).
                 minutesEstimate: self::plusTalk(
                     DayWindowStages::minutesEstimate($cards, $status, $this->pace),
-                    $talk?->isEnded() === true ? 0 : $talkMinutes,
+                    $talkStage === TalkStage::Passed ? 0 : $talkMinutes,
                 ),
                 minutesSpent: $status === WindowStatus::Passed ? $day->metrics()->minutesSpent : null,
                 goals: array_map(
@@ -155,7 +168,7 @@ final readonly class DayWindowViews
                 ),
             ),
             stages: array_map(static fn (WindowStage $s): WindowStageView => new WindowStageView(
-                $s->stage->value, $s->state->value, $s->doneCount, $s->total, $s->minutesLeft, $s->share,
+                $s->stage->value, $s->state->value, $s->doneCount, $s->total, $s->minutesLeft, $s->share, $s->talkTitle, $s->scenes,
             ), $stages),
             dayProgress: DayWindowStages::progress($stages),
             program: new WindowProgramView(
@@ -165,8 +178,10 @@ final readonly class DayWindowViews
             ),
             allowedAction: $status->action(self::hasSpeak($cards))?->value,
             listening: self::listening($ownScene?->lesson()),
-            highlights: $status === WindowStatus::Passed
-                ? DayHighlights::of($cards, $this->outcome($plan, $day, $talk), new NativeStrings($plan->nativeLang()->value))
+            // «Что было хорошо» (кадр 30-7) is shown when the last stage is walked, before «Закрыть день» — not only
+            // on a day already closed (наряд CONV-2, п. 9): the first pass through a day used to see it empty.
+            highlights: $status === WindowStatus::Passed || DayWindowStages::allWalked($stages)
+                ? DayHighlights::of($cards, $this->outcome($walked, $material), new NativeStrings($plan->nativeLang()->value))
                 : [],
         );
     }
@@ -178,17 +193,16 @@ final readonly class DayWindowViews
     }
 
     /**
-     * The summary of the day's talk, for «Что было хорошо» — read only when the day is passed and
-     * only from a talk that is over: the phrases it needs cost a query, and a talk still running has
-     * no summary to print.
+     * The summary of the talk that walked the day's sixth stage, for «Что было хорошо» — over the talk's targets, the
+     * list the learner was shown. No such talk (none yet, or a day without one) — no lines about it.
      */
-    private function outcome(Plan $plan, PlanDay $day, ?Conversation $talk): ?ConversationOutcome
+    private function outcome(?Conversation $walked, ?ConversationMaterialView $material): ?ConversationOutcome
     {
-        if ($talk === null || ! $talk->isEnded()) {
+        if ($walked === null || $material === null || ! $walked->isEnded()) {
             return null;
         }
 
-        return ConversationOutcomes::of($talk, $this->material->for($plan, $day)->phrases);
+        return ConversationOutcomes::of($walked, $material->targets);
     }
 
     /**

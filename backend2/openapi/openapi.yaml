@@ -2249,14 +2249,20 @@ paths:
         learner's own line back, and the client counts its coverage without the network.
 
 
-        The code rules first, and for free: the words of the frame outside its slot must be covered
-        (the `free` mode of the one speech rule, §`speech` of the day) — otherwise `accepted: false`,
-        `reason_native` «Каркас не
-        прозвучал — скажи его целиком», and no model is called; a frame with no slot, or a value the
-        lesson knows heard whole in the slot, is accepted by the code. Only what is left goes to the
-        model — one call, eight seconds, a daily cap per learner. A model that is silent, answers off
-        the shape or has no call left leaves the attempt ACCEPTED on the code's word, with the words
+        The code rules first, and for free — and the two kinds are two questions (наряд CONV-2, пп. 7–8).
+        «Скажи целиком» asks its frame: the words of the frame outside its slot must be covered (the
+        `free` mode of the one speech rule, §`speech` of the day) — otherwise `accepted: false`,
+        `reason_native` «Каркас не прозвучал — скажи его целиком», and no model is called.
+        `speak_answer` is judged by MEANING AND KEYS, and the frame is not required word for word: a
+        value the lesson knows heard whole — or, for a frame with no slot, the frame's own words — is
+        accepted by the code («Yes it is my first visit» to «Is this your first visit here?»). On both,
+        an attempt that says nothing beyond the frame's own words is refused by the code with the
+        window's hint — «Не сказал главного — в какие дни это подходит» — and silence with «Не расслышал
+        — скажи ещё раз». Only what is left goes to the model, told which question it is (`answer` /
+        `own_value`) — one call, eight seconds, a daily cap per learner. A model that is silent, answers
+        off the shape or has no call left leaves the attempt ACCEPTED on the code's word, with the words
         heard beyond the frame as `slot_value`: a learner who said the frame is not failed by a vendor.
+        The reply says what was judged — `heard` — for «услышал: …» under a refusal.
 
 
         `accepted` on `speak_answer` → the card is answered: `result` is `hinted` when `hinted` was
@@ -3006,7 +3012,7 @@ components:
       type: object
       required: [stage, state]
       properties:
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation], description: '`recall` — «Вспомнить» of the rehearsal; `conversation` — the talk with the agent, the sixth node (наряд CONV-1). The node of the talk is `done` once the journal of stages says it was walked — a replay («Ещё раз») going on beside it does not turn it back (наряд CONV-2)' }
         state:
           type: string
           enum: [done, current, locked]
@@ -3179,7 +3185,7 @@ components:
       type: object
       required: [stage, total, done, state, cards]
       properties:
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation], description: 'The talk''s row (`conversation`) has no cards: `total` and `done` are 0, `cards` empty; `done` once the stage is walked (наряд CONV-2)' }
         total: { type: integer }
         done: { type: integer }
         state:
@@ -3241,14 +3247,16 @@ components:
         One stage row of the day window. `done_count`, `total` and `minutes_left` are NOT null on the
         `current` row only — the client prints a number nowhere else. A day not started has every row
         `locked` (no current row, no number); a passed day has every row `done`.
-      required: [stage, state, done_count, total, minutes_left, share]
+      required: [stage, state, done_count, total, minutes_left, share, talk_title_native, scenes_count]
       properties:
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation], description: 'The stages the day deals, in walking order; the rehearsal has `recall` and `conversation`, a review day its cards and `conversation` (наряд CONV-1). The server sent these two before the enum listed them — CLIENT-CONV-1a §5 п. 7, closed by наряд CONV-2' }
         state: { type: string, enum: [done, current, locked] }
-        done_count: { type: [integer, 'null'] }
+        done_count: { type: [integer, 'null'], description: 'Null on the talk''s row always: it has no cards to count' }
         total: { type: [integer, 'null'] }
-        minutes_left: { type: [integer, 'null'], description: 'By the pace of the stage (`DayPace`), rounded up' }
+        minutes_left: { type: [integer, 'null'], description: 'By the pace of the stage (`DayPace`), rounded up; on the talk''s row — the talk''s own budget' }
         share: { type: number, minimum: 0, maximum: 1, description: 'The row''s bar: 1 done, 0 locked, answered/total current' }
+        talk_title_native: { type: [string, 'null'], description: 'The talk''s row only (наряд CONV-2, п. 12): the entry title «Поговори с врачом» — the role the talk opens with, in the instrumental, inflected by the server (кадр 37-5); «Поговори с собеседником» when the role cannot be inflected with certainty. Null on every card row' }
+        scenes_count: { type: [integer, 'null'], minimum: 0, description: 'The talk''s row only (наряд CONV-2, п. 12): how many scenes the talk walks — 1 on a scene day, all the ready scenes on the rehearsal («Разговор целиком · 3 сцены»), the repeated days'' scenes on a review day. Null on every card row' }
 
     PlanWindowWord:
       type: object
@@ -3454,9 +3462,12 @@ components:
           type: array
           description: >-
             «Что было хорошо» (кадр 37-13, наряд CONV-1): two or three ready lines on the summary of a
-            PASSED day — «Сказал сам 6 реплик из 8», «В разговоре использовал 5 фраз из 7», «Понял все
+            day — «Сказал сам 6 реплик из 8», «В разговоре использовал 5 фраз из 7», «Понял все
             вопросы». Written by the server, inflected by the server; the client prints them in order.
-            Empty until the day is passed, and without the talk's two lines when the day held none.
+            Filled the moment EVERY stage of the day is walked — before «Закрыть день», for кадр 30-7
+            (наряд CONV-2, п. 9) — and on a passed day; empty until then, and without the talk's two
+            lines when the day held none. The talk's lines read the talk that walked the stage, over its
+            targets.
           items: { type: string }
         listening:
           type: array
@@ -3672,7 +3683,7 @@ components:
         reason_native: { type: [string, 'null'], description: 'Одна фраза на родном, чего не хватило; null при зачёте' }
         by: { type: string, enum: [code, model, unavailable], description: 'Кто вынес вердикт' }
         model: { type: [string, 'null'], description: 'Имя модели, если звали её' }
-        prompt_version: { type: [string, 'null'], description: 'Версия промта судьи — `slot_judge.v2`' }
+        prompt_version: { type: [string, 'null'], description: 'Версия промта судьи — `slot_judge.v3` (наряд CONV-2; вердикты, записанные раньше, называют свою)' }
         cost_usd: { type: [string, 'null'], description: 'Цена вызова, шесть знаков после точки' }
         latency_ms: { type: [integer, 'null'], description: 'Сколько отвечала модель' }
         tokens_in: { type: [integer, 'null'] }
@@ -3992,12 +4003,30 @@ components:
       type: object
       title: phrase_intro
       additionalProperties: false
-      description: 'Знакомство с каркасом (32-1): каркас с окном, его наполнения и фраза так, как её говорят в диалоге. Зачёта нет — «Дальше».'
-      required: [scene_id, frame, said]
+      description: 'Знакомство с каркасом (32-1): каркас с окном, его наполнения, фраза так, как её говорят в диалоге, и обмен, в котором она звучит. Зачёта нет — «Дальше».'
+      required: [scene_id, frame, said, usage]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         frame: { $ref: '#/components/schemas/PlanCardFrame' }
         said: { $ref: '#/components/schemas/PlanCardSaid' }
+        usage:
+          type: [object, 'null']
+          description: >-
+            «В разговоре» (32-1, наряд CONV-2, п. 12): первая реплика визита, стоящая на каркасе, реплика собеседника того же
+            обмена и место фразы в реплике ученика — в символах, как `usage` у слова окна (23-0e). Клиент собирал блок сверкой
+            текстов с диалогом дня, и фраза, которой сверка не нашла, блока не получала (CLIENT-CONV-1a §5 п. 5). `offset` /
+            `length` — null, когда фраза стоит в реплике не дословно; всё поле — null, когда ни одна реплика визита не стоит на
+            каркасе.
+          required: [exchange, line, offset, length, partner_line]
+          properties:
+            exchange: { $ref: '#/components/schemas/PlanCardExchange' }
+            line: { $ref: '#/components/schemas/PlanCardLine' }
+            offset: { type: [integer, 'null'], minimum: 0 }
+            length: { type: [integer, 'null'], minimum: 1 }
+            partner_line:
+              oneOf:
+                - $ref: '#/components/schemas/PlanCardLine'
+                - type: 'null'
 
     PlanCardPayloadPhraseAssemble:
       type: object
@@ -4482,13 +4511,25 @@ components:
       type: object
       title: speak_echo
       additionalProperties: false
-      description: 'Повтори за партнёром (35-3): реплика звучит, текст скрыт до ответа, после паузы ученик говорит её сам. Клиент зачитывает сам по покрытию.'
-      required: [scene_id, exchange, partner_line, expected_text, speech_mode, pause_ms]
+      description: >-
+        «Повтори через паузу» (35-3): звучит СВОЯ реплика ученика, текст скрыт до ответа, после паузы ученик говорит её сам.
+        Клиент зачитывает сам по покрытию. С наряда CONV-2 (п. 6) — только реплика ученика: «Говорю сам» — часть ученика, и
+        реплику собеседника («Please bring a towel, use clean shoes…» — день Дена 21.09) его больше не просят повторить.
+        Реплика — следующая свободная (не занятая `speak_answer` и `speak_retell`), а если свободных нет — самая длинная
+        реплика дня, которую не взял `speak_retell`.
+      required: [scene_id, exchange, own_line, partner_line, expected_text, speech_mode, pause_ms]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange: { $ref: '#/components/schemas/PlanCardExchange' }
-        partner_line: { $ref: '#/components/schemas/PlanCardLine' }
-        expected_text: { type: string, description: 'Что должно прозвучать — реплика целиком' }
+        own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
+        partner_line:
+          allOf: [{ $ref: '#/components/schemas/PlanCardLine' }]
+          deprecated: true
+          description: >-
+            ТА ЖЕ реплика ученика, что `own_line`, — только ради сборки клиента 1.0.0 (17), которая читает звучащую реплику
+            под этим ключом и без него пропустила бы карточку (а пропущенная карточка — этап, который не закрыть). Уходит,
+            как только клиент читает `own_line` (ROADMAP, наряд CONV-2). Реплики собеседника здесь нет.
+        expected_text: { type: string, description: 'Что должно прозвучать — своя реплика целиком' }
         speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         pause_ms: { type: integer, description: 'Пауза после звука, прежде чем ждать речь — 3000 мс' }
 
@@ -4547,12 +4588,21 @@ components:
       description: >-
         THE TALK WITH THE AGENT (наряд CONV-1, кадры 37-5…37-12) — the sixth stage of a day, whole:
         the ribbon, whose move it is, the intention offered for the next one and, once it is over,
-        the summary. Everything countable is counted here; the client words nothing.
-      required: [id, plan_id, day, type, state, partner, scene, scenes, minutes_estimate, turns_left, hints, turns, summary]
+        the summary. Everything countable is counted here; the client words nothing. Since наряд CONV-2:
+        the entry title, the TARGETS the talk is for (ticked off turn by turn) and whether it is a replay.
+      required: [id, plan_id, day, type, state, replay, talk_title_native, partner, scene, scenes, minutes_estimate, turns_left, targets, hints, turns, summary]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
         plan_id: { type: string }
         day: { type: integer, description: 'The day''s number' }
+        replay:
+          type: boolean
+          description: >-
+            «Ещё раз» on a walked day (наряд CONV-2, п. 2): the day's sixth stage was walked by an earlier talk that
+            ended of its own, and this one began after it. A replay walks nothing and gives nothing back tomorrow
+            (`summary.returns_tomorrow` false) — the day's result is the talk that walked the stage, and the day
+            closes on it whether the replay is finished or not.
+        talk_title_native: { type: [string, 'null'], description: '«Поговори с врачом» — the entry title (кадр 37-5), the same string as the talk''s row of the window (наряд CONV-2, п. 12)' }
         type:
           type: string
           enum: [day, rehearsal, review]
@@ -4593,6 +4643,23 @@ components:
               state: { type: string, enum: [current, done, locked] }
         minutes_estimate: { type: integer, description: '«около N минут» — the talk''s own, by its kind' }
         turns_left: { type: integer, minimum: 0, description: 'Moves of the scene left; a rescue spends none of them' }
+        targets:
+          type: array
+          description: >-
+            «Скажи в разговоре» (наряд CONV-2, п. 10): the four to seven phrases of the plan the talk is FOR, over its
+            checkpoints in order — inside a scene as its visit says them, over several scenes shared out scene after
+            scene. `said` turns true the move the SERVER hears the phrase (its own rule, `free`), so the entry lists
+            them and the ribbon's strip ticks them off; the summary counts the same list.
+          maxItems: 7
+          items:
+            type: object
+            required: [scene_id, ref, text_target, text_native, said]
+            properties:
+              scene_id: { type: string }
+              ref: { type: string, description: 'The phrase — `p3`' }
+              text_target: { type: string }
+              text_native: { type: string }
+              said: { type: boolean }
         hints:
           type: object
           required: [enabled, delay_ms, native]
@@ -4602,9 +4669,10 @@ components:
             native:
               type: [string, 'null']
               description: >-
-                The intention to offer for the next move, in the learner's language and without a
-                prefix — the client prints «Скажи, что …» itself. Null when hints are off, when the
-                move is not the learner's, and when the talk has ended.
+                The intention to offer for the next move, in the learner's language, AS A CLAUSE — no capital, no
+                closing full stop («у моего сына температура», наряд CONV-2, п. 11) — because the client prints it
+                inside its own «Скажи, что …». Null when hints are off, when the move is not the learner's, and when
+                the talk has ended.
         turns:
           type: array
           description: 'The whole ribbon, oldest first — the talk is a dozen short lines, so it travels whole'
@@ -4625,7 +4693,7 @@ components:
           type: string
           enum: [agent, said, rescue, skip]
           description: 'The role''s line, or what the learner did: said something, asked to hear it again, or let the turn go'
-        text_target: { type: [string, 'null'], description: 'The role''s line, or what the recogniser heard; null for a skip' }
+        text_target: { type: [string, 'null'], description: 'The role''s line, what the recogniser heard, or — on a rescue — what a learner says when they did not catch it, in the language of the talk (en «Sorry?», наряд CONV-2, п. 4а); null for a skip' }
         text_native: { type: [string, 'null'], description: 'The role''s line in the learner''s language; null on the learner''s own' }
         audio:
           oneOf:
@@ -4637,13 +4705,17 @@ components:
           type: array
           description: >-
             The phrases of the plan heard in the learner's line — matched by the SERVER's own rule of
-            spoken grading (`free`), never by the model's opinion. Empty on the role's own lines.
+            spoken grading (`free`), never by the model's opinion — with their texts (наряд CONV-2, п. 10): the
+            underline under a phrase in the learner's bubble, also on a rehearsal, where the phrases of other
+            scenes are not the day's. Empty on the role's own lines.
           items:
             type: object
-            required: [scene_id, ref]
+            required: [scene_id, ref, text_target, text_native]
             properties:
               scene_id: { type: string }
               ref: { type: string, description: 'The phrase — `p3`' }
+              text_target: { type: [string, 'null'] }
+              text_native: { type: [string, 'null'] }
         off_topic: { type: [boolean, 'null'], description: 'Did the move go where this person would not go' }
         created_at: { type: string, format: date-time }
 
@@ -4653,11 +4725,11 @@ components:
       required: [said_count, phrases_used, phrases_total, phrases, understood_all, not_understood, rescues, ended_reason, minutes, returns_tomorrow]
       properties:
         said_count: { type: integer, description: '«Сказал сам N реплик» — moves with words of the learner''s own in them' }
-        phrases_used: { type: integer, description: 'How many phrases of the plan sounded' }
-        phrases_total: { type: integer }
+        phrases_used: { type: integer, description: 'How many of the talk''s targets sounded' }
+        phrases_total: { type: integer, description: 'How many targets the talk has (4–7)' }
         phrases:
           type: array
-          description: 'Every phrase of the talk''s scenes, and whether it sounded — «Фразы дня в разговоре» and «Не прозвучало»'
+          description: 'The talk''s TARGETS — the same list as `targets` (наряд CONV-2, п. 10) — and whether each sounded: «Фразы дня в разговоре» and «Не прозвучало»'
           items:
             type: object
             required: [scene_id, ref, text_target, text_native, audio_url, used]
@@ -4678,12 +4750,13 @@ components:
             `natural` — the role said goodbye; `limit` — the talk reached the money the plan allows it
             and the role closed it on its next move; `declined` — a refused subject pushed twice;
             `replayed` — «Ещё раз» closed it to make room for a new one.
-        minutes: { type: [integer, 'null'], description: '«Разговор окончен · 3 минуты»' }
+        minutes: { type: [integer, 'null'], description: '«Разговор окончен · 3 минуты» — the time the talk was TALKED: the gaps between its neighbouring lines, each counted up to 60 s (наряд CONV-2, п. 3); a talk left open for five hours is two minutes, not three hundred' }
         returns_tomorrow:
           type: boolean
           description: >-
-            Do the phrases that did not sound come back tomorrow (`speak_retell`). False on the
-            rehearsal: there is no tomorrow before the event — «повтори перед приёмом».
+            Do the targets that did not sound come back tomorrow (`speak_retell`). False on the
+            rehearsal — there is no tomorrow before the event, «повтори перед приёмом» — and on a replay:
+            the day's result is the talk that walked its stage (наряд CONV-2, п. 2).
 
     PlanDayCards:
       type: object
@@ -4788,7 +4861,7 @@ components:
           description: This card's stage, counted the same way
           required: [stage, minutes_spent]
           properties:
-            stage: { type: string, enum: [words, phrases, dialogue, listen, speak] }
+            stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall] }
             minutes_spent: { type: integer }
 
     PlanJudgeOutcome:
@@ -4797,9 +4870,10 @@ components:
         The judge's ruling on one attempt (наряд SESSION-1a, разд. 4) and the card as it stands after
         it: answered when accepted, one attempt more when not. `result` and `attempts` are the card's
         own, repeated at the top for the screen that shows nothing else.
-      required: [accepted, slot_value, reason_native, result, attempts, card]
+      required: [accepted, heard, slot_value, reason_native, result, attempts, card]
       properties:
         accepted: { type: boolean, description: 'Whether this attempt passes' }
+        heard: { type: string, description: 'What the server judged — `heard` as it arrived (наряд CONV-2, п. 8): the client prints «услышал: …» under a refusal, so a learner tells a recogniser that misheard from a judge that misjudged' }
         slot_value: { type: [string, 'null'], description: 'What the judge read as the value of the slot; null for a retelling, and when there was none' }
         reason_native: { type: [string, 'null'], description: 'One sentence in the learner''s language saying what was missing; null when accepted' }
         result: { type: [string, 'null'], enum: [passed, hinted, failed, skipped, null], description: '`passed`, or `hinted` when the frame was shown; null while no attempt has been accepted' }

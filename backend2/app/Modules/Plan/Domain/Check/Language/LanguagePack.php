@@ -90,6 +90,17 @@ final readonly class LanguagePack
         return isset($this->data[$key]);
     }
 
+    /**
+     * «НЕ ПОНЯЛ» IN THIS LANGUAGE (наряд CONV-2, п. 4а) — what a rescue move of the talk says in the learner's own
+     * bubble: en «Sorry?». Null for a language nobody has written it for — the move then carries no words, as before.
+     */
+    public function rescueLine(): ?string
+    {
+        $value = $this->data['rescue_line'] ?? null;
+
+        return is_string($value) && trim($value) !== '' ? trim($value) : null;
+    }
+
     /** Is the word one of the list under `$key` (lower-cased, a typographic apostrophe read as a plain one)? */
     public function listed(string $key, string $word): bool
     {

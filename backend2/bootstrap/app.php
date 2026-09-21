@@ -23,6 +23,7 @@ use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanAudioDurationsCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanReconcileTalksCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanCheckReportCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanImagesBackfillCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
@@ -82,6 +83,7 @@ return Application::configure(basePath: dirname(__DIR__))
         PlanCheckReportCommand::class,
         // The length of every stored voice file (SESSION-1a): idempotent, buys nothing.
         PlanAudioDurationsCommand::class,
+        PlanReconcileTalksCommand::class,
         // The model call journal (GEN-3): calls of processes that ended mid-call become `lost` (scheduled).
         SweepLostModelCallsCommand::class,
         VerificationStatsCommand::class,

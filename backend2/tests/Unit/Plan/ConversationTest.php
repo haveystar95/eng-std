@@ -58,7 +58,7 @@ function convAgent(Conversation $talk, ?string $checkpoint = null, ?string $hint
     $talk->spend($cost);
 }
 
-function convLearner(Conversation $talk, TurnKind $kind = TurnKind::Said, array $phrases = []): void
+function convLearner(Conversation $talk, TurnKind $kind = TurnKind::Said, array $phrases = [], string $at = '2026-09-21T10:00:10Z'): void
 {
     $talk->recordLearnerTurn(ConversationTurn::learner(
         id: ConversationTurnId::generate(),
@@ -67,7 +67,24 @@ function convLearner(Conversation $talk, TurnKind $kind = TurnKind::Said, array 
         kind: $kind,
         heard: $kind === TurnKind::Said ? 'It started three days ago.' : null,
         phrasesUsed: $phrases,
-        now: new DateTimeImmutable('2026-09-21T10:00:10Z'),
+        now: new DateTimeImmutable($at),
+    ));
+}
+
+/** The role's line said at a given moment — the gaps between lines are what the talk's minutes are made of. */
+function convAgentAt(Conversation $talk, string $at, string $text = 'What brings you in today?'): void
+{
+    $talk->recordAgentTurn(ConversationTurn::agent(
+        id: ConversationTurnId::generate(),
+        conversationId: $talk->id(),
+        index: $talk->nextIndex(),
+        textTarget: $text,
+        textNative: 'Что вас беспокоит?',
+        audio: null,
+        checkpointDone: null,
+        hintNative: null,
+        cost: new TurnCost,
+        now: new DateTimeImmutable($at),
     ));
 }
 
@@ -96,9 +113,77 @@ it('takes nothing more once it has ended', function () {
     $talk->end(ConversationEnd::Natural, new DateTimeImmutable('2026-09-21T10:03:00Z'));
 
     expect($talk->isEnded())->toBeTrue()
-        ->and($talk->minutes())->toBe(3)
         ->and(fn () => convLearner($talk))->toThrow(ConversationEnded::class)
         ->and(fn () => convAgent($talk))->toThrow(ConversationEnded::class);
+});
+
+/**
+ * Canon (наряд CONV-2, п. 3): «summary.minutes — время разговора, не часов: сумма промежутков между соседними ходами,
+ * каждый ≤ 60 с; разговор, пролежавший открытым пять часов, — 2 минуты». Catches the wall clock between the start and
+ * the end — «Разговор окончен · 323 минуты» on the phone (CLIENT-CONV-1a, §5 п. 12) — and a gap counted in full when
+ * the learner walked away from the talk.
+ */
+it('counts the minutes the talk was talked, not the hours it stood open', function () {
+    $talk = convTalk();
+    convAgentAt($talk, '2026-09-21T10:00:00Z');
+    convLearner($talk, at: '2026-09-21T10:00:40Z');          // 40 s
+    convAgentAt($talk, '2026-09-21T10:00:43Z');             //  3 s
+    convLearner($talk, at: '2026-09-21T15:00:43Z');          // five hours away — counts 60 s
+    convAgentAt($talk, '2026-09-21T15:00:46Z');             //  3 s
+    convLearner($talk, at: '2026-09-21T15:01:00Z');          // 14 s
+    $talk->end(ConversationEnd::Natural, new DateTimeImmutable('2026-09-21T15:01:00Z'));
+
+    $replay = convTalk();
+    convAgentAt($replay, '2026-09-21T15:05:00Z');
+    convLearner($replay, at: '2026-09-21T15:05:30Z');
+
+    expect($talk->activeSeconds())->toBe(40 + 3 + 60 + 3 + 14)
+        ->and($talk->minutes())->toBe(2)
+        // The day counts all its talks in seconds and rounds once: 120 s of this one and 30 s of a replay — 3 minutes.
+        ->and(ConversationOutcomes::minutesOf([$talk]))->toBe(2)
+        ->and(ConversationOutcomes::minutesOf([$talk, $replay]))->toBe(3);
+
+    // A talk with one line has been talked for no time at all — and still says «1 минута» when it is over.
+    $short = convTalk();
+    convAgentAt($short, '2026-09-21T10:00:00Z');
+    $short->end(ConversationEnd::Replayed, new DateTimeImmutable('2026-09-21T11:00:00Z'));
+    expect($short->activeSeconds())->toBe(0)->and($short->minutes())->toBe(1)
+        ->and(ConversationOutcomes::minutesOf([]))->toBe(0);
+});
+
+/**
+ * Canon (наряд CONV-2, п. 2): «„Ещё раз" не снимает „пройден" с этапа … день закрывается по первому естественному
+ * концу». A talk walks the stage when it comes to an end of its OWN — the role's goodbye, the money, a refused subject
+ * — and a talk cut by «Ещё раз» walks nothing. Catches a replayed talk counted as a walked stage, and a limit or a
+ * declined talk that leaves the day waiting for a conversation that is over.
+ */
+it('walks the stage by an end of its own and never by being replayed', function () {
+    foreach ([ConversationEnd::Natural, ConversationEnd::Limit, ConversationEnd::Declined] as $end) {
+        $talk = convTalk();
+        convAgent($talk);
+        expect($talk->passesStage())->toBeFalse($end->value.' before the end');
+        $talk->end($end, new DateTimeImmutable('2026-09-21T10:03:00Z'));
+        expect($talk->passesStage())->toBeTrue($end->value);
+    }
+
+    $cut = convTalk();
+    convAgent($cut);
+    $cut->end(ConversationEnd::Replayed, new DateTimeImmutable('2026-09-21T10:03:00Z'));
+    expect($cut->passesStage())->toBeFalse();
+});
+
+// The line a rescue asks to hear again is the role's line the learner's LAST move answers — what the guard of п. 4б
+// compares the rescue with. Catches a guard that compares with the rescue's own reply or with the opening line.
+it('knows which line of the role the learner\'s last move answers', function () {
+    $talk = convTalk();
+    expect($talk->lineBeforeLastMove())->toBeNull();
+
+    convAgentAt($talk, '2026-09-21T10:00:00Z', 'Hello. What brings you in today?');
+    convLearner($talk);
+    convAgentAt($talk, '2026-09-21T10:00:20Z', 'How long has he had the fever?');
+    convLearner($talk, TurnKind::Rescue);
+
+    expect($talk->lineBeforeLastMove())->toBe('How long has he had the fever?');
 });
 
 /**
@@ -174,27 +259,29 @@ it('offers the next intention only when hints are on and the move is the learner
 });
 
 /**
- * Canon (кадр 37-12): the summary is a PROJECTION of the journal — «сказал сам» counts the moves with words in them, a
- * rescue is asking to hear it again, and «понял вопросы» counts only what the role actually ruled on. Catches a rescue
- * counted as a line said by the learner and a skip counted as a misunderstanding.
+ * Canon (кадр 37-12; наряд CONV-2, п. 10): the summary is a PROJECTION of the journal over the talk's TARGETS — «сказал
+ * сам» counts the moves with words in them, a rescue is asking to hear it again, «понял вопросы» counts only what the
+ * role actually ruled on, and «фразы» are the targets the code heard. Catches a rescue counted as a line said by the
+ * learner, a skip counted as a misunderstanding, and a phrase outside the targets counted into «X из Y».
  */
-it('reads the summary off the journal: said, rescues, understood, and what did not sound', function () {
+it('reads the summary off the journal: said, rescues, understood, and which targets did not sound', function () {
     $talk = convTalk();
-    $phrases = [
+    $targets = [
         new ConversationPhrase('s1', 'p1', 'It hurts in his', 'It hurts in his ___.', 'У него болит ___.'),
         new ConversationPhrase('s1', 'p2', 'It started', 'It started ___.', 'Началось ___.'),
         new ConversationPhrase('s2', 'p1', 'Do we need', 'Do we need ___?', 'Нам нужно ___?'),
     ];
 
     convAgent($talk);
-    convLearner($talk, TurnKind::Said, ['s1:p2']);
+    // s1:p9 is a phrase of the plan the code heard, but not one the talk asks for: it is on the ribbon, not in «X из Y».
+    convLearner($talk, TurnKind::Said, ['s1:p2', 's1:p9']);
     convAgent($talk);
     convLearner($talk, TurnKind::Rescue);
     convAgent($talk);
     convLearner($talk, TurnKind::Skip);
     $talk->end(ConversationEnd::Natural, new DateTimeImmutable('2026-09-21T10:04:00Z'));
 
-    $outcome = ConversationOutcomes::of($talk, $phrases);
+    $outcome = ConversationOutcomes::of($talk, $targets);
 
     expect($outcome->saidCount)->toBe(1)
         ->and($outcome->rescues)->toBe(1)
@@ -204,7 +291,7 @@ it('reads the summary off the journal: said, rescues, understood, and what did n
         ->and($outcome->understoodAll)->toBeTrue()
         ->and($outcome->notUnderstood)->toBe(0)
         ->and($outcome->endedReason)->toBe(ConversationEnd::Natural)
-        ->and($outcome->minutes)->toBe(4);
+        ->and($outcome->minutes)->toBe(1);
 });
 
 /**

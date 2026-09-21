@@ -199,4 +199,9 @@ return [
     // Learner's-language keys: a gendered past form after «I», words that agree with the slot.
     'gendered_past_pattern' => null,
     'agreement' => null,
+
+    // «НЕ ПОНЯЛ» НА ЯЗЫКЕ ЦЕЛИ (наряд CONV-2, п. 4а): what a rescue move of the talk says in the learner's own bubble —
+    // кадр 37-7 draws «Sorry?» there, and a rescue used to come with no words at all. One short line a learner says
+    // when they did not catch the partner; the role hears it in HISTORY too.
+    'rescue_line' => 'Sorry?',
 ];

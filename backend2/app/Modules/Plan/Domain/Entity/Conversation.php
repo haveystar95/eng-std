@@ -41,6 +41,9 @@ use DateTimeImmutable;
  */
 final class Conversation
 {
+    /** The most one gap between two lines counts for in the talk's minutes (наряд CONV-2, п. 3). */
+    public const MAX_GAP_SECONDS = 60;
+
     /**
      * @param  list<string>  $sceneIds  the checkpoints, in the order the talk walks them
      * @param  list<string>  $checkpointsDone
@@ -329,15 +332,70 @@ final class Conversation
         return $this->endedReason;
     }
 
-    /** How long the talk took, in whole minutes, once it is over — «Разговор окончен · 3 минуты». */
+    /**
+     * HOW LONG THE TALK WAS TALKED, once it is over — «Разговор окончен · 3 минуты» — in whole minutes, never less than
+     * one ({@see activeSeconds()}).
+     */
     public function minutes(): ?int
     {
         if ($this->endedAt === null) {
             return null;
         }
-        $seconds = $this->endedAt->getTimestamp() - $this->startedAt->getTimestamp();
 
-        return max(1, (int) ceil($seconds / 60));
+        return max(1, (int) ceil($this->activeSeconds() / 60));
+    }
+
+    /**
+     * THE TIME OF THE TALK, NOT OF THE CLOCK (наряд CONV-2, п. 3): the gaps between neighbouring lines of the journal,
+     * each counted up to {@see MAX_GAP_SECONDS}. A talk begun in the morning and finished after lunch was «323 минуты»
+     * on the phone (CLIENT-CONV-1a, §5 п. 12) — the wall clock, not the conversation; a gap longer than a minute is
+     * the learner away from it, and a minute is what it is allowed to count for.
+     */
+    public function activeSeconds(): int
+    {
+        $seconds = 0;
+        $previous = null;
+        foreach ($this->turns as $turn) {
+            if ($previous !== null) {
+                $gap = $turn->createdAt->getTimestamp() - $previous->createdAt->getTimestamp();
+                $seconds += max(0, min(self::MAX_GAP_SECONDS, $gap));
+            }
+            $previous = $turn;
+        }
+
+        return $seconds;
+    }
+
+    /**
+     * DID THIS TALK WALK THE DAY'S SIXTH STAGE (наряд CONV-2, п. 2): it came to an end of its own — the role said goodbye,
+     * the money ran out, or a refused subject was pushed twice. A talk closed by «Ещё раз» did not end, it was cut; it
+     * walks nothing. Which talk of the day walked the stage is a fact written once ({@see \App\Modules\Plan\Domain\ValueObject\StagePassage}).
+     */
+    public function passesStage(): bool
+    {
+        return $this->state === ConversationState::Ended && $this->endedReason !== null && $this->endedReason !== ConversationEnd::Replayed;
+    }
+
+    /**
+     * The role's line the learner's LAST move answers — what a rescue asks to hear again. Null before the role has said
+     * anything.
+     */
+    public function lineBeforeLastMove(): ?string
+    {
+        $seenMove = false;
+        for ($i = count($this->turns) - 1; $i >= 0; $i--) {
+            $turn = $this->turns[$i];
+            if ($turn->kind !== TurnKind::Agent) {
+                $seenMove = true;
+
+                continue;
+            }
+            if ($seenMove) {
+                return $turn->textTarget;
+            }
+        }
+
+        return null;
     }
 
     private function assertOpen(): void

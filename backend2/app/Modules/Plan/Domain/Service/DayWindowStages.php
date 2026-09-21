@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\Entity\DayCard;
-use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\StageState;
+use App\Modules\Plan\Domain\ValueObject\TalkStage;
 use App\Modules\Plan\Domain\ValueObject\WindowStage;
 use App\Modules\Plan\Domain\ValueObject\WindowStatus;
 
@@ -26,8 +26,10 @@ use App\Modules\Plan\Domain\ValueObject\WindowStatus;
  * - passed: every stage `done`.
  *
  * Since наряд CONV-1 the last row of a day may be the TALK, which has no cards: it is `done` once
- * its journal says the talk ended, `current` when the cards are done and it is not over, `locked`
- * before that — and it never prints «N / M», because there is nothing to count.
+ * the stage is walked — a passage in the journal of stages, not «the latest talk is over», so «Ещё
+ * раз» after a walked talk leaves it `done` (наряд CONV-2, п. 2) — `current` when the cards are done
+ * and it is not walked, `locked` before that; and it never prints «N / M», because there is nothing
+ * to count.
  */
 final class DayWindowStages
 {
@@ -35,8 +37,9 @@ final class DayWindowStages
      * @param  list<DayCard>  $cards  the day's cards — dealt, or the dealer's outline of a day not opened
      * @param  list<Stage>  $withoutCards  what the day's type deals, for a day with no card yet
      * @param  bool  $hasConversation  does the day walk the sixth stage ({@see DayStages::walksConversation()})
-     * @param  ConversationState|null  $conversation  where its talk stands; null — not started
+     * @param  TalkStage|null  $talk  where the sixth stage stands; null — nothing of it yet
      * @param  int  $conversationMinutes  how long the talk is reckoned to take ({@see DayBudget::talkMinutes()})
+     * @param  array{title: string|null, scenes: int}|null  $talkRow  what the talk's row says besides its state: «Поговори с врачом» and how many scenes it walks
      * @return list<WindowStage>
      */
     public static function of(
@@ -45,8 +48,9 @@ final class DayWindowStages
         WindowStatus $status,
         DayPace $pace,
         bool $hasConversation = false,
-        ?ConversationState $conversation = null,
+        ?TalkStage $talk = null,
         int $conversationMinutes = 0,
+        ?array $talkRow = null,
     ): array {
         $tallies = RouteStages::tally($cards);
         $out = [];
@@ -74,15 +78,36 @@ final class DayWindowStages
 
         // THE SIXTH ROW (наряд CONV-1). It has no cards, so it is neither counted nor paced by them:
         // «N / M» belongs to card stages, and the talk's minutes are what the talk is reckoned to
-        // take. It becomes the current stage when the cards are done and the talk is not over.
-        $out[] = match (true) {
-            $status === WindowStatus::Passed, $conversation === ConversationState::Ended => WindowStage::done(Stage::Conversation),
+        // take. It becomes the current stage when the cards are done and the stage is not walked.
+        $row = match (true) {
+            $status === WindowStatus::Passed, $talk === TalkStage::Passed => WindowStage::done(Stage::Conversation),
             $status !== WindowStatus::InProgress => WindowStage::locked(Stage::Conversation),
             $currentFound => WindowStage::locked(Stage::Conversation),
             default => WindowStage::talking(Stage::Conversation, $conversationMinutes),
         };
+        $out[] = $talkRow === null ? $row : $row->withTalk($talkRow['title'], $talkRow['scenes']);
 
         return $out;
+    }
+
+    /**
+     * IS EVERY STAGE OF THE DAY WALKED — cards and the talk alike (наряд CONV-2, п. 9): the moment «Что было хорошо» is
+     * true, which comes BEFORE «Закрыть день» (кадр 30-7 is shown to a day still open). An empty day has walked nothing.
+     *
+     * @param  list<WindowStage>  $stages
+     */
+    public static function allWalked(array $stages): bool
+    {
+        if ($stages === []) {
+            return false;
+        }
+        foreach ($stages as $stage) {
+            if ($stage->state !== StageState::Done) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

@@ -130,13 +130,14 @@ final class FakePlanModel implements PlanModelPort
                 'reason_native' => null,
             ];
 
-        return new ModelReply($payload, 'slot_judge.v2', self::MODEL, 350, 40, '0.000000', 1, '');
+        return new ModelReply($payload, 'slot_judge.v3', self::MODEL, 350, 40, '0.000000', 1, '');
     }
 
     /**
      * The role, played deterministically (наряд CONV-1): it asks, walks one checkpoint per move,
-     * hears every phrase the learner said, and says goodbye when the turns run out — enough for the
-     * whole suite to walk a talk end to end without a network.
+     * hears every phrase the learner said, says a rescue in other words (наряд CONV-2, п. 4б), and says
+     * goodbye when the turns run out — enough for the whole suite to walk a talk end to end without a
+     * network.
      */
     public function conversationTurn(ConversationAgentRequest $request): ModelReply
     {
@@ -146,7 +147,7 @@ final class FakePlanModel implements PlanModelPort
             ? ($this->conversation)($request, $this->conversationCalls)
             : self::conversationPayload($request);
 
-        return new ModelReply($payload, 'conversation_agent.v1', self::MODEL, 900, 90, '0.000000', 2, '');
+        return new ModelReply($payload, 'conversation_agent.v2', self::MODEL, 900, 90, '0.000000', 2, '');
     }
 
     /** @return array<string, mixed> */
@@ -156,8 +157,16 @@ final class FakePlanModel implements PlanModelPort
         $checkpoint = $request->turn === 'rescue' ? null : $request->currentCheckpoint;
 
         return [
-            'reply_target' => $ending ? 'Take care. See you next week.' : 'And what brings you in today?',
-            'reply_native' => $ending ? 'Берегите себя. До встречи на следующей неделе.' : 'Что вас беспокоит?',
+            'reply_target' => match (true) {
+                $ending => 'Take care. See you next week.',
+                $request->turn === 'rescue' => 'What is wrong today?',
+                default => 'And what brings you in today?',
+            },
+            'reply_native' => match (true) {
+                $ending => 'Берегите себя. До встречи на следующей неделе.',
+                $request->turn === 'rescue' => 'Что сегодня не так?',
+                default => 'Что вас беспокоит?',
+            },
             'understood' => $request->turn === 'said' ? true : null,
             'phrases_used' => [],
             'off_topic' => false,
@@ -184,12 +193,12 @@ final class FakePlanModel implements PlanModelPort
 
     public function slotJudgePromptVersion(): string
     {
-        return 'slot_judge.v2';
+        return 'slot_judge.v3';
     }
 
     public function conversationPromptVersion(): string
     {
-        return 'conversation_agent.v1';
+        return 'conversation_agent.v2';
     }
 
     public function lessonPromptVersion(): string

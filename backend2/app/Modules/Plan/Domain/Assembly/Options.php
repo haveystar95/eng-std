@@ -99,6 +99,19 @@ final class Options
         return ['options' => $options, 'correct' => $correctId];
     }
 
+    /**
+     * HOW MUCH TWO TEXTS SAY IN THE SAME WORDS, 0…1 — the measure {@see APART} is a threshold on: the words the two share
+     * against every word either of them has, as a MULTISET (a sentence saying a word twice needs it twice), in the
+     * kernel's canonical form. One measure for «two options mean the same» and for «the role said the learner's line»
+     * (наряд CONV-2): a second measure of sameness beside this one would drift from it.
+     *
+     * Two texts with no comparable words share nothing (0): an empty line is not «the same» as anything.
+     */
+    public static function share(string $a, string $b): float
+    {
+        return self::shareOf(self::words($a), self::words($b));
+    }
+
     private static function key(string $text): string
     {
         return mb_strtolower(trim($text));
@@ -106,7 +119,7 @@ final class Options
 
     /**
      * Does this candidate read as one of the options already taken — at least `$apart` of the words the two have
-     * between them shared, counted as a MULTISET so a sentence saying a word twice needs it twice?
+     * between them shared ({@see share()})?
      *
      * @param  list<string>  $mine
      * @param  list<list<string>>  $taken
@@ -114,23 +127,33 @@ final class Options
     private static function tooClose(array $mine, array $taken, float $apart): bool
     {
         foreach ($taken as $other) {
-            if ($mine === [] || $other === []) {
-                continue;
-            }
-            $left = array_count_values($other);
-            $shared = 0;
-            foreach ($mine as $word) {
-                if (($left[$word] ?? 0) > 0) {
-                    $left[$word]--;
-                    $shared++;
-                }
-            }
-            if ($shared / (count($mine) + count($other) - $shared) >= $apart) {
+            if (self::shareOf($mine, $other) >= $apart) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * @param  list<string>  $mine
+     * @param  list<string>  $other
+     */
+    private static function shareOf(array $mine, array $other): float
+    {
+        if ($mine === [] || $other === []) {
+            return 0.0;
+        }
+        $left = array_count_values($other);
+        $shared = 0;
+        foreach ($mine as $word) {
+            if (($left[$word] ?? 0) > 0) {
+                $left[$word]--;
+                $shared++;
+            }
+        }
+
+        return $shared / (count($mine) + count($other) - $shared);
     }
 
     /**

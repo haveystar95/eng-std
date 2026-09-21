@@ -45,6 +45,6 @@ final class PlanCardJudgeController
         $verdict = $outcome->verdict;
 
         // The card goes out with its shares as shares (`coverage_min` 1.0), like every reply carrying cards.
-        return response()->json(['data' => PlanJson::judge($verdict->accepted, $verdict->slotValue, $verdict->reasonNative, $view)], 200, [], JSON_PRESERVE_ZERO_FRACTION);
+        return response()->json(['data' => PlanJson::judge($verdict->accepted, $verdict->slotValue, $verdict->reasonNative, $view, $outcome->heard)], 200, [], JSON_PRESERVE_ZERO_FRACTION);
     }
 }

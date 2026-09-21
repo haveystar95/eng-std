@@ -19,6 +19,27 @@ interface ConversationRepository
     /** The talk by id, for this learner only — someone else's id reads as «not found». */
     public function find(ConversationId $id, UserId $userId): ?Conversation;
 
+    /**
+     * The talk by id alone — for a talk already reached through its own day (the one the journal of stages names as
+     * the day's result, наряд CONV-2), never for an id a client sent: that is {@see find()}, with its owner.
+     */
+    public function findById(ConversationId $id): ?Conversation;
+
+    /**
+     * Every talk of the day with its lines, oldest first — what the day's minutes are counted from (наряд CONV-2, п. 3).
+     *
+     * @return list<Conversation>
+     */
+    public function allForDay(PlanDayId $dayId): array;
+
+    /**
+     * The talks that came to an end of their own on a day whose sixth stage the journal of stages does not have —
+     * earliest ended first, without their lines: what `plan:reconcile-talks` writes the passages from (наряд CONV-2, п. 2).
+     *
+     * @return list<Conversation>
+     */
+    public function walkedWithoutPassage(): array;
+
     /** The one talk of the day that is not over, if there is one (the partial unique index). */
     public function openForDay(PlanDayId $dayId): ?Conversation;
 

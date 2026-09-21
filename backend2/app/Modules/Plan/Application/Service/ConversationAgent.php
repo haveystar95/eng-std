@@ -21,7 +21,8 @@ use Throwable;
 
 /**
  * THE ROLE'S MOVE (наряд CONV-1, п. 4): what the agent is told, what it answers, and what happens
- * when it does not answer.
+ * when it does not answer. Whether the answer is the role's own is asked by the caller
+ * ({@see ConversationMoves}, наряд CONV-2) — here a call is a call.
  *
  * It is shown the scene it is in, the scenes still ahead with the lines the learner is preparing,
  * the phrases of the plan, everything said so far and the learner's speech in a field of its own.
@@ -38,18 +39,21 @@ final readonly class ConversationAgent
     public function __construct(private PlanModelPort $model) {}
 
     /**
+     * What the role is told before one move.
+     *
      * @param  'start'|'said'|'rescue'|'skip'  $turn
      */
-    public function move(
+    public function request(
         Plan $plan,
         Conversation $talk,
         ConversationMaterialView $material,
         string $turn,
         string $heard,
         int $turnsLeft,
-    ): ConversationAgentReply {
+    ): ConversationAgentRequest {
         $current = $material->checkpoint($talk->currentCheckpoint());
-        $request = new ConversationAgentRequest(
+
+        return new ConversationAgentRequest(
             targetLanguage: LanguageName::of($plan->targetLang()->value),
             nativeLanguage: LanguageName::of($plan->nativeLang()->value),
             level: $plan->level()->value,
@@ -66,7 +70,11 @@ final readonly class ConversationAgent
             turnsLeft: max(0, $turnsLeft),
             offTopicStreak: $talk->offTopicStreak(),
         );
+    }
 
+    /** One call of the role: its answer checked into shape, or {@see ConversationUnavailable}. */
+    public function ask(ConversationAgentRequest $request): ConversationAgentReply
+    {
         try {
             $reply = $this->model->conversationTurn($request);
         } catch (Throwable $e) {
@@ -118,7 +126,7 @@ final readonly class ConversationAgent
     }
 
     /**
-     * @return array{id: string, title_native: string, about_native: string, role_target: string, role_native: string, key_lines: list<array{target: string, native: string}>}
+     * @return array{id: string, title_native: string, about_native: string, role_target: string, role_native: string, key_lines: list<array{target: string, native: string, kind: string, partner: string}>}
      */
     private static function checkpoint(ConversationCheckpoint $checkpoint): array
     {
@@ -129,7 +137,12 @@ final readonly class ConversationAgent
             'role_target' => $checkpoint->roleTarget,
             'role_native' => $checkpoint->roleNative,
             'key_lines' => array_map(
-                static fn (array $line): array => ['target' => $line['target'], 'native' => $line['native']],
+                static fn (array $line): array => [
+                    'target' => $line['target'],
+                    'native' => $line['native'],
+                    'kind' => $line['kind'] ?? 'answer',
+                    'partner' => $line['partner'] ?? '',
+                ],
                 $checkpoint->keyLines,
             ),
         ];

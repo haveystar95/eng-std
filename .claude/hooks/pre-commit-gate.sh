@@ -25,38 +25,55 @@ fi
 cmd="$(printf '%s' "$input" | jq -r '.tool_input.command // ""')"
 cwd="$(printf '%s' "$input" | jq -r '.cwd // "."')"
 
-# Only gate real commits. `git commit` is NOT a literal substring of every commit: git takes options
-# before the subcommand, and `git -C <path> commit -m …` matched nothing here and walked straight past
-# the gates (хвост SESSION-1b, закрыт нарядом BACK-TAILS-1 §2.4). So: find a `git` word, skip the
-# options that may stand between it and the subcommand, and look at the subcommand itself.
-subcommand="$(printf '%s' "$cmd" | awk '
-  { for (i = 1; i <= NF; i++) if ($i == "git" || $i ~ /\/git$/) {
-      j = i + 1
-      while (j <= NF) {
-        if ($j == "-C" || $j == "-c" || $j == "--namespace") { j += 2; continue }   # option with a value
-        if ($j ~ /^-/) { j++; continue }                                            # option without one
-        break
+# Only gate real commits — and EVERY commit in the command, not the first `git` of it (наряд CONV-2, п. 13). The line
+# `git add … && git commit …` walked past the gates twice in CLIENT-CONV-1a: the old reader took the first `git` word, saw
+# `add`, and let the whole chain through with no warning — a silent SKIP_GATES. So: cut the command into its simple
+# commands at `&&`, `||`, `;`, `|`, a newline, a subshell's brackets and a backquote; in each one find a `git` word, skip
+# the options that may stand between it and the subcommand (`git -C <path> commit` is a commit — хвост SESSION-1b,
+# BACK-TAILS-1 §2.4), and look at the subcommand itself. Quotes are read through: `bash -c 'git commit …'` is a commit
+# too, and a false alarm (`echo "git commit"`) costs a gate run, while a missed commit costs the gates. The first commit
+# found decides where the gates run — its own `-C <path>` or `--work-tree=<path>`, else the session's directory — and
+# whether it asked to skip them (`SKIP_GATES=1 git commit …` on the commit itself: a session cannot set the hook's
+# environment, only its own command, so the documented bypass lives on the command line as well).
+found="$(printf '%s\n' "$cmd" | awk '
+  {
+    line = $0
+    gsub(/["\047]/, " ", line)
+    gsub(/&&|\|\||;|\||\(|\)|`|\$\(/, "\n", line)
+    n = split(line, parts, "\n")
+    for (p = 1; p <= n; p++) {
+      m = split(parts[p], w, /[ \t]+/)
+      for (i = 1; i <= m; i++) {
+        if (w[i] != "git" && w[i] !~ /\/git$/) continue
+        dir = ""
+        j = i + 1
+        while (j <= m) {
+          if (w[j] == "") { j++; continue }
+          if (w[j] == "-C") { dir = w[j + 1]; j += 2; continue }                      # the directory it runs in
+          if (w[j] == "-c" || w[j] == "--namespace") { j += 2; continue }            # an option with a value
+          if (w[j] ~ /^--work-tree=/) { dir = w[j]; sub(/^--work-tree=/, "", dir); j++; continue }
+          if (w[j] ~ /^-/) { j++; continue }                                         # an option without one
+          break
+        }
+        if (j <= m && w[j] == "commit") {
+          rest = ""
+          for (k = j + 1; k <= m; k++) rest = rest " " w[k]
+          if (rest ~ /(^| )(--help|--dry-run)( |$)/) continue
+          skip = 0
+          for (k = 1; k < i; k++) if (w[k] == "SKIP_GATES=1") skip = 1
+          print "commit\t" dir "\t" skip
+          exit
+        }
       }
-      if (j <= NF) { print $j; exit }
-    } }')"
-[ "$subcommand" = "commit" ] || exit 0
-case "$cmd" in
-  *"--help"*|*"--dry-run"*) exit 0 ;;
-esac
-
-# Where that commit will run: `git -C <path>` (the last one wins, as git resolves them in order) or
-# `--work-tree=<path>`, else the session's own directory. Without this the gates would be run against
-# the wrong working tree — green over code that is not the code being committed.
-gitdir="$(printf '%s' "$cmd" | awk '
-  { for (i = 1; i < NF; i++) {
-      if ($i == "-C") last = $(i + 1)
-      else if ($i ~ /^--work-tree=/) { sub(/^--work-tree=/, "", $i); last = $i }
-    } }
-  END { print last }')"
+    }
+  }')"
+[ -n "$found" ] || exit 0
+gitdir="$(printf '%s' "$found" | cut -f2)"
+asked="$(printf '%s' "$found" | cut -f3)"
 [ -n "$gitdir" ] && cwd="$gitdir"
 
-# Explicit, loud bypass for a deliberate WIP commit.
-if [ "${SKIP_GATES:-}" = "1" ]; then
+# Explicit, loud bypass for a deliberate WIP commit — set in the hook's environment, or on the commit itself.
+if [ "${SKIP_GATES:-}" = "1" ] || [ "$asked" = "1" ]; then
   echo "⚠️  SKIP_GATES=1 — commit gates bypassed (arch/stan/test/analyze NOT run)." >&2
   exit 0
 fi

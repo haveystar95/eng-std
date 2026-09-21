@@ -7,7 +7,9 @@ namespace App\Modules\Plan\Application\Dto;
 /**
  * THE SUMMARY OF THE TALK (кадр 37-12): «Сказал сам 6 реплик», «Фразы дня в разговоре · 3 из 5»,
  * «Понял все вопросы · переспросил 2 раза», and the phrases that did not sound — with the day they
- * come back on, or, in the rehearsal, with nothing: there is no tomorrow before the event.
+ * come back on, or, in the rehearsal, with nothing: there is no tomorrow before the event. The phrases
+ * are the talk's TARGETS (наряд CONV-2, п. 10), the list the learner was shown on the way in; a replay
+ * returns nothing either — the day's result is the talk that walked the stage (п. 2).
  */
 final readonly class ConversationSummaryView
 {

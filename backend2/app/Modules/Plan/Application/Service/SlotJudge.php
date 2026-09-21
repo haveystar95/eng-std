@@ -11,12 +11,15 @@ use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SlotJudgeQuota;
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Service\FrameParts;
 use App\Modules\Plan\Domain\Service\FrameText;
+use App\Modules\Plan\Domain\Service\NativeStrings;
+use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Shared\Domain\Service\LanguageName;
 use App\Modules\Shared\Domain\Service\SpeechMatch;
 use App\Modules\Shared\Domain\ValueObject\SpeechMode;
@@ -24,17 +27,29 @@ use DateTimeImmutable;
 use Throwable;
 
 /**
- * THE SLOT JUDGE (`slot_judge.v2`, наряд SESSION-1a, разд. 4; наряд BACK-TAILS-1 §1.1): rules on one spoken attempt of
- * a card judged by meaning — the code first, the model only for what the code cannot say, and never a failure the
- * vendor caused.
+ * THE SLOT JUDGE (`slot_judge.v3`, наряд SESSION-1a, разд. 4; наряд BACK-TAILS-1 §1.1; наряд CONV-2, пп. 7–8): rules on
+ * one spoken attempt of a card judged by meaning — the code first, the model only for what the code cannot say, and
+ * never a failure the vendor caused.
  *
- * `speak_answer` and the own-word round of «Скажи целиком» (`phrase_other_slot`) — the only two kinds that ask it
- * ({@see \App\Modules\Plan\Domain\ValueObject\CardKind::asksJudge()}) — in this order:
- * 1. the frame's own words must be heard (the `free` mode of {@see SpeechMatch}) — else rejected by code, and neither
- *    the model nor the day's quota is touched: «say the frame» is not a question of meaning;
- * 2. a frame with no slot has nothing more to judge, and a value the lesson knows for the slot, heard as one run of
- *    words, is a value — both accepted by code, for free;
- * 3. otherwise the model, if today's quota has a call: it rules on the slot alone.
+ * Two kinds ask it ({@see \App\Modules\Plan\Domain\ValueObject\CardKind::asksJudge()}), and they are two different
+ * questions (наряд CONV-2, п. 7):
+ *
+ * - «ОТВЕТЬ СВОИМИ СЛОВАМИ» (`speak_answer`) is judged BY MEANING AND BY KEYS: the learner answers the partner in their
+ *   own words, and the frame is a hint of one way to say it, not a password. On the owner's gym day «Yes it is my first
+ *   visit» to «Is this your first visit here?» was refused three times without the model being asked — «Каркас не
+ *   прозвучал», because the frame was «This is ___.». Here the code accepts a value the lesson knows for the window,
+ *   heard as one run of words, or — for a frame without a window — the frame's own words; everything else is the
+ *   model's, in the mode `answer`;
+ * - THE OWN-WORD ROUND of «Скажи целиком» (`phrase_other_slot`) is the frame said with a value of one's own, the frame
+ *   on the screen: the frame's words must be heard (else «Каркас не прозвучал» by code, no model, no quota), a lesson's
+ *   value is accepted by code, and the model judges the value alone, in the mode `own_value` — where a value that is
+ *   not what the partner mentioned is still right (the towel of п. 8: «I will return the towel» was refused as «не
+ *   назвал, что вернуть», because the partner had said «return the locker key»).
+ *
+ * In both, an attempt that says nothing but the frame's own words — «That works for me» to «which days?» — is refused
+ * by code, free, with the window's hint in the learner's language: «Не сказал главного — в какие дни это подходит»
+ * ({@see NativeStrings::judgeReason()}). The model wrote «Ты не сказал слово в пропуске» there, which names a thing
+ * the learner cannot see.
  *
  * A model that is not asked (quota spent), does not answer, or answers off the shape leaves the attempt ACCEPTED on
  * the code's word — with the words heard beyond the frame as its slot — and counts `judge.unavailable`, so the admin
@@ -59,17 +74,27 @@ final readonly class SlotJudge
     public function judge(Plan $plan, DayCard $card, string $heard, DateTimeImmutable $now): SlotJudgeVerdict
     {
         $payload = $card->payload();
-        $target = $this->packs->for($plan->targetLang()->value)->speech();
+        $pack = $this->packs->for($plan->targetLang()->value);
+        $target = $pack->speech();
+        $strings = new NativeStrings($plan->nativeLang()->value);
         $frame = is_array($payload['frame'] ?? null) ? $payload['frame'] : [];
         $frameTarget = self::text($frame['frame_target'] ?? null);
         $part = FrameParts::part($frameTarget);
+        $answer = $card->kind() === CardKind::SpeakAnswer;
+        $frameSaid = $this->speech->said($heard, $part, SpeechMode::Free, $target);
 
-        if (! $this->speech->said($heard, $part, SpeechMode::Free, $target)) {
+        if ($this->speech->words($heard, $target) === []) {
+            return SlotJudgeVerdict::byCode(false, null, $answer ? $strings->judgeReason('nothing') : self::FRAME_NOT_SAID);
+        }
+        if (! $answer && ! $frameSaid) {
             return SlotJudgeVerdict::byCode(false, null, self::FRAME_NOT_SAID);
         }
 
         $slot = is_array($frame['slot'] ?? null) ? $frame['slot'] : null;
-        if ($slot === null || ! FrameText::hasSlot($frameTarget)) {
+        $windowed = $slot !== null && FrameText::hasSlot($frameTarget);
+        // No window: the frame said is the whole line — for «Скажи целиком» it always is by here; an answer in other
+        // words goes to the model below.
+        if (! $windowed && $frameSaid) {
             return SlotJudgeVerdict::byCode(true, null, null);
         }
 
@@ -86,10 +111,19 @@ final readonly class SlotJudge
             }
         }
 
-        $partner = self::line($payload['partner_line'] ?? null);
         $beyond = $this->speech->slotWords($heard, $part, $target);
+        $hint = trim(self::text($slot['hint_native'] ?? null));
+        if ($windowed && $hint !== '' && self::saysNothing($beyond, $pack)) {
+            return SlotJudgeVerdict::byCode(false, null, $strings->judgeReason('main', $hint));
+        }
+
+        // The own-word round is the frame said with a value of one's own — not a reply to anybody: the partner's line is
+        // not sent, because the model read «что нужно вернуть» off it as «the locker key the partner named» and refused
+        // the owner's towel (наряд CONV-2, п. 8).
+        $partner = $answer ? self::line($payload['partner_line'] ?? null) : self::line(null);
 
         return $this->ask($plan, $now, new SlotJudgeRequest(
+            mode: $answer ? SlotJudgeRequest::MODE_ANSWER : SlotJudgeRequest::MODE_OWN_VALUE,
             targetLanguage: LanguageName::of($plan->targetLang()->value),
             nativeLanguage: LanguageName::of($plan->nativeLang()->value),
             level: $plan->level()->value,
@@ -97,10 +131,25 @@ final readonly class SlotJudge
             partnerLineNative: $partner['text_native'],
             pattern: $frameTarget,
             patternNative: self::text($frame['frame_native'] ?? null),
-            slotHint: self::text($slot['hint_native'] ?? null),
+            slotHint: $hint,
             exampleValues: implode('; ', $values),
             heard: $heard,
         ), fallbackSlot: $beyond === '' ? null : $beyond);
+    }
+
+    /**
+     * Do the words heard beyond the frame say nothing — none at all, or only the words that carry no content of their
+     * own («yes», «that», «please»: the pack's `function_words`)? Then the window is empty, whatever else was said.
+     */
+    private static function saysNothing(string $beyond, LanguagePack $pack): bool
+    {
+        foreach (preg_split('/\s+/u', trim($beyond), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
+            if (! $pack->has('function_words') || ! $pack->listed('function_words', $word)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** The model's ruling, or the code's when the model is not asked, is silent or answers off the shape. */

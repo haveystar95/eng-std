@@ -16,6 +16,7 @@ use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Exception\StageIncomplete;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
+use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
@@ -46,6 +47,7 @@ final readonly class CloseDayHandler
         private PlanRepository $plans,
         private DayCardRepository $cards,
         private ConversationRepository $conversations,
+        private StagePassageRepository $passages,
         private PlanTermRepository $terms,
         private PlanCollectionWriter $collection,
         private DayMetricsCalculator $metrics,
@@ -82,16 +84,18 @@ final readonly class CloseDayHandler
                 }
             }
             // «День пройден» = every stage walked, and since наряд CONV-1 a day dealt with the talk
-            // has six. The talk has no cards to count: its journal is what says it happened, and a
-            // talk that is not over is a stage that is not walked.
-            $talk = $day->hasConversation() ? $this->conversations->latestForDay($day->id()) : null;
-            if ($day->hasConversation() && $talk?->isEnded() !== true) {
+            // has six. The talk has no cards to count: the journal of stages says whether it was
+            // walked (наряд CONV-2, п. 2) — by the FIRST talk that came to an end of its own, so a
+            // «Ещё раз» still going on does not hold a walked day shut.
+            if ($day->hasConversation() && $this->passages->of($day->id(), Stage::Conversation) === null) {
                 throw StageIncomplete::stage(Stage::Conversation, 1);
             }
 
-            // The day's minutes include the talk: it answers no card, and «19 минут» on the summary
-            // is how long the day took, not how long its cards took.
-            $metrics = $this->metrics->calculate($cards, ConversationOutcomes::minutesOf($talk));
+            // The day's minutes include its talks — the one that walked the stage and any replay — counted by the
+            // time they were talked, not by the clock (наряд CONV-2, п. 3): «19 минут» on the summary is how long
+            // the day took, not how long its cards took.
+            $talks = $day->hasConversation() ? $this->conversations->allForDay($day->id()) : [];
+            $metrics = $this->metrics->calculate($cards, ConversationOutcomes::minutesOf($talks));
             $next = $plan->closeDay($command->number, $metrics, $today, $now);
 
             // The day's words and phrases go to the plan's collection — the ordinary mechanism.

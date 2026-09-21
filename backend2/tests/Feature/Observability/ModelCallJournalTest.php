@@ -188,7 +188,7 @@ it('names each plan call in the journal — plan, lesson, repair, judge — whil
     $model->buildLesson($lesson);
     $model->repairLessonCard(new LessonCardRepairRequest('p1', 'frame', [], [], [], null, new EarlierDays, 'English', 'Russian', PlanLevel::Beginner, null, 8, 8));
     $model->judgeNativeSeams(new NativeSeamJudgeRequest('Russian', [['id' => 'p1.f1', 'pattern' => 'x', 'value' => 'y', 'sentence' => 'z']]));
-    $model->judgeSlot(new SlotJudgeRequest('English', 'Russian', 'beginner', 'Where?', 'Где?', 'It hurts ___.', 'Болит ___.', 'где', 'neck', 'it hurts here'));
+    $model->judgeSlot(new SlotJudgeRequest(SlotJudgeRequest::MODE_ANSWER, 'English', 'Russian', 'beginner', 'Where?', 'Где?', 'It hurts ___.', 'Болит ___.', 'где', 'neck', 'it hurts here'));
 
     expect(DB::table('model_calls')->orderBy('started_at')->pluck('purpose')->all())
         ->toBe(['plan', 'lesson', 'repair', 'judge', 'judge'])

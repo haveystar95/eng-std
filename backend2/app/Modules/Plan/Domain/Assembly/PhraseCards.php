@@ -52,13 +52,14 @@ final class PhraseCards
         return $frame !== null && $frame->slot !== null && FrameText::hasSlot($frame->frameTarget) && $frame->fillers() !== [];
     }
 
-    /** 32-1 — the frame, its fillers and the phrase as the dialogue says it. */
+    /** 32-1 — the frame, its fillers, the phrase as the dialogue says it, and the exchange it is said in (`usage`). */
     public function intro(SceneMaterial $scene, PlanTerm $phrase): CardDraft
     {
         return $this->draft(CardKind::PhraseIntro, $phrase, [
             'scene_id' => $scene->sceneId->value,
             'frame' => CardObjects::frame($scene, $phrase),
             'said' => CardObjects::said($scene, $phrase),
+            'usage' => CardObjects::usage($scene, $phrase),
         ]);
     }
 

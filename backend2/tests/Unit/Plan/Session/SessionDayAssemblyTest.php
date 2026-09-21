@@ -176,12 +176,12 @@ it('deals the clean lesson in five stages of exactly 24, 26 or 24, 13, 9 and 8 c
         ])
         ->and(array_unique(array_map(static fn (DayCard $c): string => $c->unitKind()->value, s1daIn($cards, Stage::Listen))))->toBe(['day'])
         // Speak: speak_answer on the seven eligible exchanges (x1–x5, x7, x8; the rescue has no frame), the first six
-        // kept; the echo on the longest partner line of ≤ 18 words the pace line (x3) did not take (x5, 14 words);
-        // the retell on the learner's own line of x8 — the one exchange the six answers left (наряд BACK-TAILS-1 §1.1).
-        // 6 + 1 + 1 = 8.
+        // kept; the retell on the learner's own line of x8 — the one exchange the six answers left (наряд BACK-TAILS-1
+        // §1.1); the echo on the longest learner line of the day besides it, x3 — a line of the learner's, never the
+        // partner's (наряд CONV-2, п. 6). 6 + 1 + 1 = 8.
         ->and(s1daShape(s1daIn($cards, Stage::Speak)))->toBe([
             'speak_answer@x1', 'speak_answer@x2', 'speak_answer@x3', 'speak_answer@x4', 'speak_answer@x5', 'speak_answer@x7',
-            'speak_echo@x5', 'speak_retell@x8',
+            'speak_echo@x3', 'speak_retell@x8',
         ])
         ->and(count($cards))->toBe(24 + 24 + $thirds + 13 + 9 + 8);
 

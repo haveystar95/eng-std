@@ -19,14 +19,14 @@ use App\Modules\Plan\Application\Service\PlanViews;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanDay;
-use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
+use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayStages;
-use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\CardResult;
 use App\Modules\Plan\Domain\ValueObject\Stage;
+use App\Modules\Plan\Domain\ValueObject\TalkStage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Shared\Domain\Service\Clock;
 
@@ -48,6 +48,7 @@ final readonly class GetDayRoomHandler
         private PlanAccess $access,
         private DayCardRepository $cards,
         private ConversationRepository $conversations,
+        private StagePassageRepository $passages,
         private DayDealer $dealer,
         private PlanViews $views,
         private DayWindowViews $windows,
@@ -67,7 +68,15 @@ final readonly class GetDayRoomHandler
         $scene = $plan->sceneOf($day);
         $dealt = $day->openedAt() !== null;
         $cards = $dealt ? $this->cards->forDay($day->id()) : $this->dealer->outline($plan, $day);
+        // The sixth stage (наряд CONV-2, п. 2): walked is a fact of the journal of stages, and the talk that walked it
+        // is the day's result — a replay started after it changes neither.
         $talk = $dealt ? $this->conversations->latestForDay($day->id()) : null;
+        $passage = $dealt ? $this->passages->of($day->id(), Stage::Conversation) : null;
+        $talkStage = $dealt ? TalkStage::of($passage !== null, $talk !== null) : null;
+        $walkedId = $passage?->conversationId;
+        $walked = $walkedId === null
+            ? null
+            : ($talk !== null && $talk->id()->equals($walkedId) ? $talk : $this->conversations->findById($walkedId));
         $metrics = $day->metrics();
         $route = $this->views->day($plan, $day, $today, null, $cards);
         $sceneView = $scene === null ? null : $this->views->scene($plan, $scene);
@@ -80,14 +89,14 @@ final readonly class GetDayRoomHandler
                 $cards,
                 $dealt ? $this->cardViews->forCards($cards, $plan->targetLang()->value, self::dayNumbers($plan->days())) : [],
                 DayStages::walksConversation($day, $this->rules->enabled),
-                $talk,
+                $talkStage,
             ),
             // The numbers of a day that is being walked, not only of one that is over: they are
             // refreshed on every answer, and «сколько уже сделано» is the question of a day in
             // progress. A day not yet opened has nothing to count.
             metrics: $dealt ? new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent) : null,
             program: $this->program($cards),
-            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards, $talk),
+            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards, $talkStage, $walked),
             speech: $this->packs->for($plan->targetLang()->value)->speech(),
             repeatMisses: $this->config->repeatMisses,
         );
@@ -98,14 +107,15 @@ final readonly class GetDayRoomHandler
      * `done`, the ones after `locked`, and a stage with no cards `absent`. Each with its dealt cards in
      * position order — none for a day not opened.
      *
-     * The sixth stage (наряд CONV-1) has no cards, so it carries none: its row says where the talk
-     * stands and its `cards` list is empty — the one place both readings of a day's stages agree.
+     * The sixth stage (наряд CONV-1) has no cards, so it carries none: its row says where the stage
+     * stands — walked by the journal of stages (наряд CONV-2), going, or ahead — and its `cards` list is
+     * empty: the one place both readings of a day's stages agree.
      *
      * @param  list<DayCard>  $cards
      * @param  list<CardView>  $views  the views of a dealt day's cards, in walking order; empty for the outline
      * @return list<StageProgressView>
      */
-    private function stages(array $cards, array $views, bool $walksTalk, ?Conversation $talk): array
+    private function stages(array $cards, array $views, bool $walksTalk, ?TalkStage $talk): array
     {
         $byStage = [];
         foreach ($views as $view) {
@@ -145,8 +155,8 @@ final readonly class GetDayRoomHandler
         // «нет урока, нет и формы». The talk's row joins the others once the day has one.
         if ($walksTalk && $cards !== []) {
             $out[] = new StageProgressView(Stage::Conversation->value, 0, 0, match (true) {
-                $talk?->state() === ConversationState::Ended => StageProgressView::DONE,
-                $talk !== null, ! $currentFound => StageProgressView::CURRENT,
+                $talk === TalkStage::Passed => StageProgressView::DONE,
+                $talk === TalkStage::Open, ! $currentFound => StageProgressView::CURRENT,
                 default => StageProgressView::LOCKED,
             }, []);
         }

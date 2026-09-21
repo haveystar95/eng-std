@@ -6,7 +6,6 @@ namespace App\Modules\Plan\Domain\Assembly;
 
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
-use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\SpeechMode;
 
@@ -23,7 +22,7 @@ use App\Modules\Shared\Domain\ValueObject\SpeechMode;
  */
 final class SpeakCards
 {
-    /** How long `speak_echo` waits after the partner's line before the learner repeats it (кадр 35-3). */
+    /** How long `speak_echo` waits after the line before the learner repeats it (кадр 35-3). */
     public const PAUSE_MS = 3000;
 
     /**
@@ -70,18 +69,40 @@ final class SpeakCards
     }
 
     /**
-     * `speak_echo` (кадр 35-3): the partner's line is heard, its text hidden, and said back after a pause. It opens
-     * with the attempt, and the line the learner repeats is the line they were given — `repeat`.
+     * `speak_echo` — «Повтори через паузу» (кадр 35-3): the learner's OWN line of the exchange is heard, its text
+     * hidden, and said back after a pause (наряд CONV-2, п. 6). It opens with the attempt, and the line the learner
+     * repeats is the line they were given — `repeat`.
      *
-     * @return array<string, mixed>
+     * It used to echo the PARTNER's line: on the owner's gym day (21.09) the stage of «Говорю сам» asked him to say
+     * «Please bring a towel, use clean shoes, and return the locker key after training» — the receptionist's words,
+     * which nobody would ever say in his place. «Говорю сам» is the learner's part and nothing else.
+     *
+     * `partner_line` carries THE SAME LINE for one reason: the client build on the phone (1.0.0 (17)) reads the line
+     * it plays under that key and would skip a card without it — and a skipped card is a stage that never closes. It
+     * goes as soon as the client reads `own_line` (ROADMAP, наряд CONV-2).
+     *
+     * Null when the exchange has no learner line: there is nothing to echo.
+     *
+     * @return array<string, mixed>|null
      */
-    public static function echoLine(SceneMaterial $scene, Exchange $exchange, Message $partner): array
+    public static function echoLine(SceneMaterial $scene, Exchange $exchange): ?array
     {
+        $ownLine = CardObjects::ownLine($scene, $exchange);
+        if ($ownLine === null) {
+            return null;
+        }
+
         return [
             'scene_id' => $scene->sceneId->value,
             'exchange' => CardObjects::exchange($exchange),
-            'partner_line' => CardObjects::line($exchange, $partner),
-            'expected_text' => $partner->textTarget,
+            'own_line' => $ownLine,
+            'partner_line' => [
+                'ref' => $ownLine['ref'],
+                'text_target' => $ownLine['text_target'],
+                'text_native' => $ownLine['text_native'],
+                'audio' => $ownLine['audio'],
+            ],
+            'expected_text' => $ownLine['text_target'],
             'speech_mode' => SpeechMode::Repeat->value,
             'pause_ms' => self::PAUSE_MS,
         ];

@@ -245,16 +245,15 @@ it('reads a frame\'s own words outside its slot, and how many stand before it', 
         ->and(FrameParts::slotAt("He doesn't have a fever."))->toBe(0);
 });
 
-// Canon: listen_pace takes the longest partner line of ≤ 10 words, speak_echo the longest of ≤ 18 other than it.
-it('picks partner lines by length, the lower step between equals, never an excluded one', function () {
+// Canon: listen_pace takes the longest partner line of ≤ 10 words. The partner's words are the listening's alone since
+// наряд CONV-2 (п. 6): «Говорю сам» echoes the learner's own line, so nothing else picks a partner line by length.
+it('picks the pace line by length, the lower step between equals', function () {
     $scene = s1hScene();
 
     expect(array_column($scene->partnerLines(), 'step'))->toBe([1, 2, 3, 4, 5, 6, 7, 8])
         // Steps 3 and 7 both say ten words: the lower wins.
         ->and(PartnerLines::pace($scene)['step'])->toBe(3)
-        ->and(PartnerLines::longest($scene, 10, [3])['step'])->toBe(7)
-        ->and(PartnerLines::longest($scene, PartnerLines::SPEAK_MAX_WORDS, [3])['step'])->toBe(5)
-        ->and(PartnerLines::longest($scene, PartnerLines::SPEAK_MAX_WORDS, [3, 5])['step'])->toBe(1)
+        ->and(PartnerLines::longest($scene, 18)['step'])->toBe(5)
         ->and(PartnerLines::longest($scene, 4))->toBeNull();
 });
 

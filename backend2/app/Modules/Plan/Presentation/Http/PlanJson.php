@@ -245,6 +245,10 @@ final class PlanJson
             'day' => $c->day,
             'type' => $c->type,
             'state' => $c->state,
+            // «Ещё раз» on a day whose sixth stage an earlier talk already walked (наряд CONV-2, п. 2).
+            'replay' => $c->replay,
+            // «Поговори с врачом» — the entry title, inflected by the server (кадр 37-5, наряд CONV-2, п. 12).
+            'talk_title_native' => $c->talkTitleNative,
             'partner' => ['role_native' => $c->partnerRoleNative, 'role_target' => $c->partnerRoleTarget],
             'scene' => ['title_native' => $c->sceneTitleNative, 'title_target' => $c->sceneTitleTarget],
             'scenes' => array_map(static fn (ConversationSceneView $s): array => [
@@ -258,6 +262,9 @@ final class PlanJson
             ], $c->scenes),
             'minutes_estimate' => $c->minutesEstimate,
             'turns_left' => $c->turnsLeft,
+            // «Скажи в разговоре» (37-5) and the strip of the ribbon: the phrases the talk is for, each with whether the
+            // server has heard it yet — the same list the summary counts (наряд CONV-2, п. 10).
+            'targets' => $c->targets,
             'hints' => ['enabled' => $c->hintsEnabled, 'delay_ms' => $c->hintDelayMs, 'native' => $c->hintNative],
             'turns' => array_map(static fn (ConversationTurnView $t): array => [
                 'index' => $t->index,
@@ -368,6 +375,9 @@ final class PlanJson
                 'total' => $s->total,
                 'minutes_left' => $s->minutesLeft,
                 'share' => $s->share,
+                // The talk's row only (наряд CONV-2, п. 12): «Поговори с врачом» and the scenes it walks («· 3 сцены»).
+                'talk_title_native' => $s->talkTitleNative,
+                'scenes_count' => $s->scenesCount,
             ], $w->stages),
             'day_progress' => $w->dayProgress,
             'program' => [
@@ -411,7 +421,7 @@ final class PlanJson
                 ],
             ],
             'allowed_action' => $w->allowedAction,
-            // «Что было хорошо» (кадр 37-13): ready lines, in the frame's order; empty until the day is passed.
+            // «Что было хорошо» (кадр 37-13): ready lines, in the frame's order; empty until every stage is walked.
             'highlights' => $w->highlights,
             'listening' => array_map(static fn (WindowListeningView $q): array => [
                 'question' => $q->question,
@@ -484,15 +494,17 @@ final class PlanJson
     }
 
     /**
-     * The reply of `POST …/cards/{cardId}/judge` (наряд SESSION-1a, разд. 4): the verdict, and the card as it stands
-     * after it — answered when accepted, one attempt more when not.
+     * The reply of `POST …/cards/{cardId}/judge` (наряд SESSION-1a, разд. 4): the verdict, what was heard (наряд CONV-2,
+     * п. 8 — «услышал: …» under a refusal), and the card as it stands after it — answered when accepted, one attempt
+     * more when not.
      *
      * @return array<string, mixed>
      */
-    public static function judge(bool $accepted, ?string $slotValue, ?string $reasonNative, CardView $card): array
+    public static function judge(bool $accepted, ?string $slotValue, ?string $reasonNative, CardView $card, string $heard = ''): array
     {
         return [
             'accepted' => $accepted,
+            'heard' => $heard,
             'slot_value' => $slotValue,
             'reason_native' => $reasonNative,
             'result' => $card->result,

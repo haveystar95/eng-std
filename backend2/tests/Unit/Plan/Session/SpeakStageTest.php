@@ -6,7 +6,6 @@ use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
-use App\Modules\Plan\Domain\Assembly\PartnerLines;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Assembly\SpeakStage;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
@@ -28,10 +27,10 @@ use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
- * «ГОВОРЮ САМ» (наряд SESSION-1a, разд. 1–2; SPEC §4; наряд BACK-TAILS-1 §1.1): at most six `speak_answer` in the order
- * of the visit, then `speak_echo` on a partner line the pace card did not take, and `speak_retell` — «Повтори свою
- * реплику» — on a line OF THE LEARNER'S OWN that no `speak_answer` of the day took; the review day's ten and the
- * rehearsal's twelve. The fake lesson: x1–x5 answer (x4 on a frame without a slot), x6 rescue, x7–x8 ask on one frame.
+ * «ГОВОРЮ САМ» (наряд SESSION-1a, разд. 1–2; SPEC §4; наряд BACK-TAILS-1 §1.1; наряд CONV-2, п. 6): at most six
+ * `speak_answer` in the order of the visit, then `speak_echo` — «Повтори через паузу» — and `speak_retell` — «Повтори свою
+ * реплику» — both on lines OF THE LEARNER'S OWN; the review day's ten. The fake lesson: x1–x5 answer (x4 on a frame
+ * without a slot), x6 rescue, x7–x8 ask on one frame.
  */
 
 /** A fixed scene id — every shuffle and rotation is seeded by it. */
@@ -76,25 +75,14 @@ function s1spAddresses(array $drafts): array
     return array_map(static fn (CardDraft $d): string => $d->payload['scene_id'].':'.$d->unitRef, $drafts);
 }
 
-/** The lesson with the partner line of exchange `$step` saying `$text`. */
-function s1spPartnerSays(Lesson $lesson, int $step, string $text): Lesson
-{
-    return $lesson->withExchanges(array_map(
-        static fn (Exchange $e): Exchange => $e->step !== $step ? $e : $e->withMessages(array_map(
-            static fn (Message $m): Message => $m->isLearner() ? $m : $m->withText($text),
-            $e->messages,
-        )),
-        $lesson->exchanges,
-    ));
-}
-
 it('deals six answers in the order of the visit, then the echo, then the retell — eight cards', function () {
     $drafts = (new SpeakStage)->build(s1spScene());
 
-    // x8 is the one complete exchange the six answers left over, so its learner line is the one said again.
+    // x8 is the one complete exchange the six answers left over, so its learner line is the one said again; the echo
+    // takes the longest learner line of the day besides it (x3).
     expect(s1spShape($drafts))->toBe([
         'speak_answer@x1', 'speak_answer@x2', 'speak_answer@x3', 'speak_answer@x4', 'speak_answer@x5', 'speak_answer@x7',
-        'speak_echo@x5', 'speak_retell@x8',
+        'speak_echo@x3', 'speak_retell@x8',
     ]);
     foreach ($drafts as $draft) {
         expect($draft->unitKind)->toBe(UnitKind::Exchange)
@@ -104,60 +92,54 @@ it('deals six answers in the order of the visit, then the echo, then the retell 
     }
 });
 
-// Canon: speak_echo — the longest partner line of ≤ 18 words the pace card did not take.
-it('echoes the longest partner line of at most eighteen words that is not the pace line', function () {
+/**
+ * Canon (наряд CONV-2, п. 6): «Эхо („Повтори через паузу") и „Повтори свою реплику" — только реплики ученика». The echo
+ * takes the learner line the retell leaves — the next free one, or, with none free, the longest line of the day the retell
+ * did not take — and never a line of the partner. Catches the owner's gym day (21.09), where «Говорю сам» asked him to
+ * repeat the receptionist's «Please bring a towel, use clean shoes, and return the locker key after training».
+ */
+it('echoes a line of the learner\'s own — never the partner\'s', function () {
     $scene = s1spScene();
     $drafts = (new SpeakStage)->build($scene);
     $echo = $drafts[6]->payload;
-    $pace = PartnerLines::pace($scene)['step'];
 
-    // Independently: every partner line of ≤ 18 words but the pace line, longest first, the lower step between equals.
+    // Independently: the longest learner line of ≤ 18 words of a complete exchange but the retell's (x8), lower step first.
     $lengths = [];
     foreach ($scene->lesson->exchanges as $exchange) {
-        $count = Words::count($exchange->partner()->textTarget);
-        if ($exchange->step !== $pace && $count <= 18) {
-            $lengths[$exchange->step] = $count;
+        if ($exchange->kind !== ExchangeKind::Rescue && $exchange->step !== 8 && $exchange->learner() !== null && $exchange->partner() !== null) {
+            $lengths[$exchange->step] = Words::count($exchange->learner()->textTarget);
         }
     }
     uksort($lengths, static fn (int $a, int $b): int => [$lengths[$b], $a] <=> [$lengths[$a], $b]);
-    [$first] = array_keys($lengths);
+    [$longest] = array_keys($lengths);
 
-    expect($pace)->toBe(3)
-        ->and($echo['exchange']['step'])->toBe($first)->toBe(5)
-        ->and($echo['partner_line']['ref'])->not->toBe(SpokenLines::partnerRef($pace));
+    expect($echo['exchange']['step'])->toBe($longest)->toBe(3)
+        ->and($echo['own_line']['ref'])->toBe(SpokenLines::learnerRef(3))
+        ->and($echo['expected_text'])->toBe($scene->exchange(3)->learner()->textTarget)
+        // No word of any partner line on the card.
+        ->and(json_encode($echo, JSON_UNESCAPED_UNICODE))->not->toContain($scene->exchange(3)->partner()->textTarget);
 
-    // Every partner line ≤ 10 words: the longest of ≤ 18 IS the pace line (x3) — the echo must pass it by.
-    $short = s1spScene(1, static fn (Lesson $l): Lesson => $l->withExchanges(array_values(array_filter(
+    // Two free lines (p1 and p2 are no terms of the day, so x1 and x2 have no answer): the retell takes the longer, the
+    // echo the other — the stage asks for no line twice while it has lines to spare.
+    $twoFree = s1spScene(1, null, static fn (PlanTerm $t): bool => ! in_array($t->ref(), ['p1', 'p2'], true));
+    $words = static fn (int $step): int => Words::count($twoFree->exchange($step)->learner()->textTarget);
+    [$longer, $shorter] = $words(1) >= $words(2) ? [1, 2] : [2, 1];
+    expect(s1spShape(array_slice((new SpeakStage)->build($twoFree), -2)))->toBe(["speak_echo@x{$shorter}", "speak_retell@x{$longer}"]);
+
+    // Every learner line longer than eighteen words: nothing to echo and nothing to say back.
+    $nineteen = 'Could you please tell me whether we really need to book a second appointment with you next week?';
+    $long = s1spScene(1, static fn (Lesson $l): Lesson => $l->withExchanges(array_map(
+        static fn (Exchange $e): Exchange => $e->withMessages(array_map(
+            static fn (Message $m): Message => $m->isLearner() ? $m->withText($nineteen.' Please answer.') : $m,
+            $e->messages,
+        )),
         $l->exchanges,
-        static fn (Exchange $e): bool => Words::count($e->partner()->textTarget) <= 10,
-    ))));
-    // Fewer exchanges here, so all of them fit the six answers — x8 among them, and no learner line is left to say
-    // again: the echo is the last card of the stage.
-    expect(PartnerLines::pace($short)['step'])->toBe(3)
-        ->and(s1spShape(array_slice((new SpeakStage)->build($short), -2)))->toBe(['speak_answer@x8', 'speak_echo@x7']);
-
-    // Eighteen words is still a line to echo; nineteen is not.
-    $eighteen = 'It looks like a muscle strain, so he should rest at home and use a heating pad today.';
-    $nineteen = 'It looks like a muscle strain, so he should rest at home and use a warm heating pad today.';
-    expect(Words::count($eighteen))->toBe(18)->and(Words::count($nineteen))->toBe(19)
-        ->and(s1spShape(array_slice((new SpeakStage)->build(s1spScene(1, static fn (Lesson $l): Lesson => s1spPartnerSays($l, 5, $eighteen))), -2)))
-        ->toBe(['speak_echo@x5', 'speak_retell@x8'])
-        ->and(s1spShape(array_slice((new SpeakStage)->build(s1spScene(1, static fn (Lesson $l): Lesson => s1spPartnerSays($l, 5, $nineteen))), -2)))
-        ->toBe(['speak_echo@x1', 'speak_retell@x8']);
-
-    // No partner line fits: the echo is not dealt — the retell is the learner's own line and does not depend on it.
-    $long = s1spScene(1, static function (Lesson $l) use ($nineteen): Lesson {
-        foreach ($l->exchanges as $e) {
-            $l = s1spPartnerSays($l, $e->step, $nineteen);
-        }
-
-        return $l;
-    });
-    expect(PartnerLines::pace($long))->toBeNull()
-        ->and(s1spShape((new SpeakStage)->build($long)))->toBe([
-            'speak_answer@x1', 'speak_answer@x2', 'speak_answer@x3', 'speak_answer@x4', 'speak_answer@x5', 'speak_answer@x7',
-            'speak_retell@x8',
-        ]);
+    )));
+    expect(Words::count($nineteen.' Please answer.'))->toBeGreaterThan(SpeakStage::MAX_WORDS)
+        ->and(array_values(array_filter(
+            (new SpeakStage)->build($long),
+            static fn (CardDraft $d): bool => in_array($d->kind, [CardKind::SpeakEcho, CardKind::SpeakRetell], true),
+        )))->toBe([]);
 });
 
 // Canon (наряд BACK-TAILS-1 §1.1, кадр 35-4): the longest learner line of a complete answer/ask exchange that no
@@ -326,20 +308,27 @@ it('deals no speak_answer for a rescue, a line on no frame, a frame with no term
 });
 
 it('writes speak_echo and speak_retell with exactly their keys', function () {
-    $drafts = (new SpeakStage)->build(s1spScene());
-    $x5 = [
-        'ref' => 'x5',
-        'text_target' => 'It looks like a muscle strain, so he should rest and use a heating pad.',
-        'text_native' => 'Похоже на растяжение мышцы, так что ему нужен покой и грелка.',
-        'audio' => Audio::of('x5'),
+    $scene = s1spScene();
+    $drafts = (new SpeakStage)->build($scene);
+    $x3 = $scene->exchange(3)->learner();
+    $ownX3 = [
+        'ref' => 'x3b',
+        'text_target' => $x3->textTarget,
+        'text_native' => $x3->textNative,
+        'frame_ref' => $drafts[6]->payload['own_line']['frame_ref'],
+        'filler_index' => $drafts[6]->payload['own_line']['filler_index'],
+        'key' => $drafts[6]->payload['own_line']['key'],
+        'audio' => Audio::of('x3b'),
     ];
 
     expect($drafts[6]->kind)->toBe(CardKind::SpeakEcho)
         ->and($drafts[6]->payload)->toBe([
             'scene_id' => s1spSceneId()->value,
-            'exchange' => ['ref' => 'x5', 'step' => 5, 'kind' => 'answer'],
-            'partner_line' => $x5,
-            'expected_text' => 'It looks like a muscle strain, so he should rest and use a heating pad.',
+            'exchange' => ['ref' => 'x3', 'step' => 3, 'kind' => 'answer'],
+            'own_line' => $ownX3,
+            // The same line under the key the client build 1.0.0 (17) plays — until it reads `own_line` (наряд CONV-2).
+            'partner_line' => ['ref' => 'x3b', 'text_target' => $x3->textTarget, 'text_native' => $x3->textNative, 'audio' => Audio::of('x3b')],
+            'expected_text' => $x3->textTarget,
             'speech_mode' => 'repeat',
             'pause_ms' => 3000,
         ])

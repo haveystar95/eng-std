@@ -34,10 +34,12 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Sleep;
 
 /**
- * THE SLOT JUDGE OVER HTTP (`POST …/cards/{card}/judge`, наряд SESSION-1a, разд. 4; наряд BACK-TAILS-1 §1.1): the code
- * before the model, the model only for the slot, the code's word when the model is silent or the day's cap is spent —
- * and the verdict written on the card without a transaction held across the call. Two kinds are judged and no more:
- * `speak_retell` says the learner's own line back and the client counts its coverage.
+ * THE SLOT JUDGE OVER HTTP (`POST …/cards/{card}/judge`, наряд SESSION-1a, разд. 4; наряд BACK-TAILS-1 §1.1; наряд
+ * CONV-2, пп. 7–8): the code before the model, the model only for what the code cannot say, the code's word when the
+ * model is silent or the day's cap is spent — and the verdict written on the card without a transaction held across the
+ * call. Two kinds are judged and no more, and they are two questions: «Ответь своими словами» by meaning and keys, the
+ * own-word round of «Скажи целиком» by the value in its window. `speak_retell` says the learner's own line back and the
+ * client counts its coverage.
  *
  * The cards are inserted by the test with the payloads the registry deals (§4 of the SPEC), so the judge is checked
  * against the frames of the fake lesson whatever the assembly deals around them.
@@ -179,8 +181,29 @@ function sjSorted(array $value): array
 function sjUnavailableHits(): int
 {
     return (int) DB::table('plan_check_counters')
-        ->where('prompt_version', 'slot_judge.v2')->where('check_name', 'judge.unavailable')->where('action', 'counted')
+        ->where('prompt_version', 'slot_judge.v3')->where('check_name', 'judge.unavailable')->where('action', 'counted')
         ->value('hits');
+}
+
+/**
+ * The frames of the owner's gym day 1 (plan 01M32DX8…, 21.09) as the registry dealt them — the cards the judge refused
+ * on his phone.
+ *
+ * @return array<string, mixed>
+ */
+function sjGymAnswer(string $step, string $ref, string $frame, string $native, string $hint, array $fillers, string $partner, string $partnerNative, string $own): array
+{
+    return [
+        'exchange' => ['ref' => "x{$step}", 'step' => (int) $step, 'kind' => 'answer'],
+        'partner_line' => ['ref' => "x{$step}", 'text_target' => $partner, 'text_native' => $partnerNative, 'audio' => sjAudio("x{$step}")],
+        'own_line' => ['ref' => "x{$step}b", 'text_target' => $own, 'text_native' => $own, 'frame_ref' => $ref, 'filler_index' => 0, 'key' => $frame, 'audio' => sjAudio("x{$step}b")],
+        'task_native' => $own,
+        'frame' => sjFrame($ref, $frame, $native, $hint, $fillers),
+        'key' => $frame,
+        'speech_mode' => 'free',
+        'hint' => $frame,
+        'judge' => true,
+    ];
 }
 
 /** The judge model's port as the catalogue hands it out: it records every call and always rules «accepted, knee». */
@@ -239,23 +262,30 @@ function sjJudgeCatalog(ContentModelPort $port): ContentModelCatalog
     };
 }
 
-it('rejects by code an attempt without the frame: no model, no quota, the card open with one attempt', function () {
+/**
+ * Canon (наряд CONV-2, п. 7): «судья speak_answer судит по смыслу и ключам, каркас дословно не требует». The own-word round
+ * of «Скажи целиком» still asks the frame — its frame is on the screen and saying it is the exercise — so an attempt
+ * without the frame's words is refused there by code, free. «Ответь своими словами» is not: a value the lesson knows,
+ * heard alone, IS the answer. Catches «Каркас не прозвучал» said to a learner who answered the question.
+ */
+it('refuses by code a round of «Скажи целиком» without its frame, and hears an answer in other words as an answer', function () {
     config(['plan.slot_judge.daily_cap' => 1]);
     $day = sjOpenDay($this);
-    $card = sjDeal($day, CardKind::SpeakAnswer, sjSpeakAnswer(), UnitKind::Exchange, 'x1');
+    $own = sjDeal($day, CardKind::PhraseOtherSlot, sjOwnSlot(), UnitKind::Phrase, 'p2');
+    $answer = sjDeal($day, CardKind::SpeakAnswer, sjSpeakAnswer(), UnitKind::Exchange, 'x1');
 
-    $data = sjJudge($this, $day, $card, 'lower back')->assertOk()->json('data');
-
+    $data = sjJudge($this, $day, $own, 'three days ago, I think')->assertOk()->json('data');
     expect($data['accepted'])->toBeFalse()
         ->and($data['slot_value'])->toBeNull()
         ->and($data['reason_native'])->toBe('Каркас не прозвучал — скажи его целиком')
+        ->and($data['heard'])->toBe('three days ago, I think')
         ->and($data['result'])->toBeNull()
         ->and($data['attempts'])->toBe(1)
-        ->and($data['card']['id'])->toBe($card)
+        ->and($data['card']['id'])->toBe($own)
         ->and($data['card']['response']['judge']['by'])->toBe('code')
         ->and($day['model']->slotJudgeCalls)->toBe(0)
-        ->and(sjStored($card))->toBe(sjSorted([
-            'heard' => 'lower back',
+        ->and(sjStored($own))->toBe(sjSorted([
+            'heard' => 'three days ago, I think',
             'slot_value' => null,
             'hinted' => false,
             'judge' => [
@@ -264,13 +294,87 @@ it('rejects by code an attempt without the frame: no model, no quota, the card o
             ],
         ]));
 
-    // Silence is an attempt too — and no quota was spent by either: the one call of today still reaches the model.
-    expect(sjJudge($this, $day, $card, '')->assertOk()->json('data.attempts'))->toBe(2);
-    $asked = sjJudge($this, $day, $card, 'It hurts in his left knee')->assertOk()->json('data');
+    // «lower back» to «Where does it hurt?» — no frame, and the answer: a value of the lesson, accepted by code.
+    $heard = sjJudge($this, $day, $answer, 'lower back')->assertOk()->json('data');
+    expect($heard)->toMatchArray(['accepted' => true, 'heard' => 'lower back', 'slot_value' => 'lower back', 'reason_native' => null, 'result' => 'passed'])
+        ->and($day['model']->slotJudgeCalls)->toBe(0);
+
+    // Silence is an attempt too, refused by code in words the learner can act on — and no quota was spent by any of it:
+    // today's one call still reaches the model.
+    $silent = sjDeal($day, CardKind::SpeakAnswer, sjSpeakAnswer(), UnitKind::Exchange, 'x1');
+    expect(sjJudge($this, $day, $silent, '')->assertOk()->json('data'))->toMatchArray(['accepted' => false, 'reason_native' => 'Не расслышал — скажи ещё раз', 'attempts' => 1]);
+    $asked = sjJudge($this, $day, $silent, 'It hurts in his left knee')->assertOk()->json('data');
     expect($asked['accepted'])->toBeTrue()
-        ->and($asked['attempts'])->toBe(3)
+        ->and($asked['attempts'])->toBe(2)
         ->and($day['model']->slotJudgeCalls)->toBe(1)
-        ->and(sjStored($card)['judge']['by'])->toBe('model');
+        ->and(sjStored($silent)['judge']['by'])->toBe('model');
+});
+
+/**
+ * Canon (наряд CONV-2, п. 7), the owner's gym day (21.09): «„Yes it is my first visit" на „Is this your first visit here?"
+ * — зачёт; „That works for me" без дней на вопрос о днях — отказ со строкой „не сказал, какие дни"». The first was refused
+ * three times on his phone by «Каркас не прозвучал» (the frame was «This is ___.»); the second got «Ты не сказал слово в
+ * пропуске» from the model — a word the learner never sees. Catches both.
+ */
+it('passes «Yes it is my first visit» and refuses «That works for me» with the days named, both without the model', function () {
+    $day = sjOpenDay($this, static fn (SlotJudgeRequest $r): array => ['accepted' => false, 'slot_value' => null, 'reason_native' => 'модель не спрашивали']);
+    $visit = sjDeal($day, CardKind::SpeakAnswer, sjGymAnswer('3', 'p3', 'This is ___.', 'Это ___.', 'что это за визит или ситуация',
+        [['my first visit', 'мой первый визит'], ['my trial day', 'мой пробный день']],
+        'Is this your first visit here?', 'Это ваш первый визит сюда?', 'Yes, this is my first visit.'), UnitKind::Exchange, 'x3');
+    $days = sjDeal($day, CardKind::SpeakAnswer, sjGymAnswer('4', 'p4', 'That works for me on ___.', 'Мне это подходит по ___.', 'в какие дни это подходит',
+        [['weekdays', 'будням'], ['weekends', 'выходным']],
+        'We open at six and close at ten on weekdays.', 'В будни мы открываемся в шесть и закрываемся в десять.', 'That works for me on weekdays.'), UnitKind::Exchange, 'x4');
+
+    $passed = sjJudge($this, $day, $visit, 'Yes it is my first visit')->assertOk()->json('data');
+    expect($passed)->toMatchArray(['accepted' => true, 'slot_value' => 'my first visit', 'reason_native' => null, 'result' => 'passed'])
+        ->and(sjStored($visit)['judge']['by'])->toBe('code');
+
+    $refused = sjJudge($this, $day, $days, 'That works for me')->assertOk()->json('data');
+    expect($refused)->toMatchArray(['accepted' => false, 'heard' => 'That works for me', 'slot_value' => null, 'result' => null])
+        ->and($refused['reason_native'])->toBe('Не сказал главного — в какие дни это подходит')
+        ->and(sjStored($days)['judge']['by'])->toBe('code')
+        ->and($day['model']->slotJudgeCalls)->toBe(0);
+
+    // «Yes it is my first day» is not a value the lesson knows: that one is the model's to rule on — by meaning, in the
+    // mode `answer`, never refused by code for want of the frame.
+    $other = sjDeal($day, CardKind::SpeakAnswer, sjGymAnswer('3', 'p3', 'This is ___.', 'Это ___.', 'что это за визит или ситуация',
+        [['my first visit', 'мой первый визит'], ['my trial day', 'мой пробный день']],
+        'Is this your first visit here?', 'Это ваш первый визит сюда?', 'Yes, this is my first visit.'), UnitKind::Exchange, 'x3');
+    sjJudge($this, $day, $other, 'Yes it is my first day')->assertOk();
+    expect($day['model']->slotJudgeCalls)->toBe(1)
+        ->and($day['model']->slotJudgeRequests[0]->mode)->toBe(SlotJudgeRequest::MODE_ANSWER)
+        ->and($day['model']->slotJudgeRequests[0]->heard)->toBe('Yes it is my first day');
+});
+
+/**
+ * Canon (наряд CONV-2, п. 8): «ложный отказ „своего слова" („I'll return the towel" — „не назвал, что вернуть")». The
+ * heard DID reach the model (the request in `api_request_logs`, 21.09 17:00:45): it refused because the partner had said
+ * «return the locker key», and the prompt tied the value to the partner's line. The own-word round now goes to the model
+ * in the mode `own_value` — «a value of the kind the slot asks for, which does not have to be what the partner
+ * mentions» — and the reply says what was heard. Catches the mode lost on the way and a reply without `heard`.
+ */
+it('asks the model about an own value in the mode own_value, with what was heard, and says it back', function () {
+    $day = sjOpenDay($this, static fn (SlotJudgeRequest $r): array => ['accepted' => true, 'slot_value' => 'the towel', 'reason_native' => null]);
+    $towel = sjDeal($day, CardKind::PhraseOtherSlot, [
+        ...sjOwnSlot(),
+        'frame' => sjFrame('p6', "I'll return ___.", 'Я верну ___.', 'что нужно вернуть', [['the locker key', 'ключ от шкафчика'], ['the access card', 'карту доступа']]),
+        'partner_line' => ['ref' => 'x6', 'text_target' => 'Please bring a towel, use clean shoes, and return the locker key after training.', 'text_native' => 'Пожалуйста, возьмите полотенце…', 'audio' => sjAudio('x6')],
+        'key' => "I'll return",
+    ], UnitKind::Phrase, 'p6');
+
+    $data = sjJudge($this, $day, $towel, 'I will return the towel')->assertOk()->json('data');
+    $request = $day['model']->slotJudgeRequests[0];
+
+    expect($data)->toMatchArray(['accepted' => true, 'heard' => 'I will return the towel', 'slot_value' => 'the towel'])
+        ->and($request->mode)->toBe(SlotJudgeRequest::MODE_OWN_VALUE)
+        ->and($request->heard)->toBe('I will return the towel')
+        // The line that named «the locker key» is what the model read the hint off: it no longer reaches the model.
+        ->and($request->partnerLine)->toBe('')->and($request->partnerLineNative)->toBe('')
+        ->and($request->slotHint)->toBe('что нужно вернуть')
+        ->and($request->exampleValues)->toBe('the locker key; the access card')
+        // «OK I will return» is nothing but the frame: refused by code, the model not asked a second time.
+        ->and(sjJudge($this, $day, $towel, 'OK I will return')->assertOk()->json('data.reason_native'))->toBe('Не сказал главного — что нужно вернуть')
+        ->and($day['model']->slotJudgeCalls)->toBe(1);
 });
 
 it('accepts by code a value the lesson knows, said in the frame, without asking the model', function () {
@@ -316,29 +420,32 @@ it('accepts by code a frame without a slot once its words are heard — no model
         'model' => null, 'prompt_version' => null, 'cost_usd' => null, 'latency_ms' => null, 'tokens_in' => null, 'tokens_out' => null,
     ]);
 
-    // The frame's words not heard: rejected by code, the card open — a frame without a slot is still a frame to say.
-    $missed = sjJudge($this, $day, $answer, 'fever')->assertOk()->json('data');
+    // «Скажи целиком» without the frame's words: refused by code, the card open — a frame without a slot is still a frame to say.
+    $missed = sjJudge($this, $day, $own, 'fever')->assertOk()->json('data');
     expect($missed)->toMatchArray(['accepted' => false, 'slot_value' => null, 'reason_native' => 'Каркас не прозвучал — скажи его целиком', 'result' => null, 'attempts' => 1])
-        ->and(sjStored($answer)['judge'])->toBe($byCode(false, 'Каркас не прозвучал — скажи его целиком'));
+        ->and(sjStored($own)['judge'])->toBe($byCode(false, 'Каркас не прозвучал — скажи его целиком'));
 
-    // Heard: nothing is left to judge — accepted by code, no slot value.
+    // Heard: nothing is left to judge — accepted by code, no slot value, on both kinds.
     $passed = sjJudge($this, $day, $answer, 'no, he doesn\'t have a fever')->assertOk()->json('data');
-    expect($passed)->toMatchArray(['accepted' => true, 'slot_value' => null, 'reason_native' => null, 'result' => 'passed', 'attempts' => 2])
+    expect($passed)->toMatchArray(['accepted' => true, 'slot_value' => null, 'reason_native' => null, 'result' => 'passed', 'attempts' => 1])
         ->and($passed['card']['response']['judge']['by'])->toBe('code')
         ->and(sjStored($answer)['slot_value'])->toBeNull()
         ->and(sjStored($answer)['judge'])->toBe($byCode(true, null));
 
     $ownPassed = sjJudge($this, $day, $own, "He doesn't have a fever, doctor.")->assertOk()->json('data');
-    expect($ownPassed)->toMatchArray(['accepted' => true, 'slot_value' => null, 'reason_native' => null, 'result' => null, 'attempts' => 1])
+    expect($ownPassed)->toMatchArray(['accepted' => true, 'slot_value' => null, 'reason_native' => null, 'result' => null, 'attempts' => 2])
         ->and(sjStored($own)['judge'])->toBe($byCode(true, null))
         ->and($day['model']->slotJudgeCalls)->toBe(0)
         ->and(sjUnavailableHits())->toBe(0);
 
-    // No quota was spent: today's one call still reaches the model on a card with a slot.
-    $withSlot = sjDeal($day, CardKind::SpeakAnswer, sjSpeakAnswer(), UnitKind::Exchange, 'x1');
-    sjJudge($this, $day, $withSlot, 'It hurts in his left knee')->assertOk();
+    // An ANSWER without the frame's words is judged by its meaning: «No fever» goes to the model, in the mode `answer`
+    // (наряд CONV-2, п. 7) — the one call of today, so no quota went anywhere before it.
+    $other = sjDeal($day, CardKind::SpeakAnswer, [...sjSpeakAnswer(), 'frame' => $slotless, 'key' => "He doesn't have a fever"], UnitKind::Exchange, 'x4');
+    sjJudge($this, $day, $other, 'No fever')->assertOk();
     expect($day['model']->slotJudgeCalls)->toBe(1)
-        ->and(sjStored($withSlot)['judge']['by'])->toBe('model');
+        ->and($day['model']->slotJudgeRequests[0]->mode)->toBe(SlotJudgeRequest::MODE_ANSWER)
+        ->and($day['model']->slotJudgeRequests[0]->pattern)->toBe("He doesn't have a fever.")
+        ->and(sjStored($other)['judge']['by'])->toBe('model');
 });
 
 it('asks the model about a value the lesson does not know — with the inputs of the card — and a hinted speak_answer passes as hinted', function () {
@@ -352,7 +459,8 @@ it('asks the model about a value the lesson does not know — with the inputs of
         ->and($day['model']->slotJudgeCalls)->toBe(1);
 
     $request = $day['model']->slotJudgeRequests[0];
-    expect($request->targetLanguage)->toBe('English')
+    expect($request->mode)->toBe(SlotJudgeRequest::MODE_ANSWER)
+        ->and($request->targetLanguage)->toBe('English')
         ->and($request->nativeLanguage)->toBe('Russian')
         ->and($request->level)->toBe('intermediate')
         ->and($request->partnerLine)->toBe('Where does it hurt: his upper back or his lower back?')
@@ -368,7 +476,7 @@ it('asks the model about a value the lesson does not know — with the inputs of
         'slot_value' => 'left knee',
         'hinted' => true,
         'judge' => [
-            'accepted' => true, 'reason_native' => null, 'by' => 'model', 'model' => FakePlanModel::MODEL, 'prompt_version' => 'slot_judge.v2',
+            'accepted' => true, 'reason_native' => null, 'by' => 'model', 'model' => FakePlanModel::MODEL, 'prompt_version' => 'slot_judge.v3',
             'cost_usd' => '0.000000', 'latency_ms' => 1, 'tokens_in' => 350, 'tokens_out' => 40,
         ],
     ]));
@@ -383,8 +491,10 @@ it('ignores hinted on «Скажи целиком» — its frame is always on s
     expect($data)->toMatchArray(['accepted' => true, 'slot_value' => 'yesterday', 'result' => null, 'attempts' => 1])
         ->and(DB::table('day_cards')->where('id', $card)->value('result'))->toBeNull()
         ->and(sjStored($card)['hinted'])->toBeFalse()
+        ->and($day['model']->slotJudgeRequests[0]->mode)->toBe(SlotJudgeRequest::MODE_OWN_VALUE)
         ->and($day['model']->slotJudgeRequests[0]->pattern)->toBe('It started ___.')
-        ->and($day['model']->slotJudgeRequests[0]->partnerLine)->toBe('Did it start today, or earlier this week?')
+        // The own-word round answers nobody: the partner's line is not sent (наряд CONV-2, п. 8).
+        ->and($day['model']->slotJudgeRequests[0]->partnerLine)->toBe('')
         ->and($day['model']->slotJudgeRequests[0]->exampleValues)->toBe('three days ago; last night; this morning');
 });
 
@@ -532,27 +642,27 @@ it('builds the call on the judge model with one attempt, its own timeout, the st
         judgeModel: 'gpt-5.4-mini',
         slotJudgeTimeout: 8,
     );
-    $request = new SlotJudgeRequest('English', 'Russian', 'intermediate', 'Where?', 'Где?', 'It hurts in his ___.', 'У него болит ___.', 'где болит', 'neck; shoulder', 'It hurts in his knee');
+    $request = new SlotJudgeRequest(SlotJudgeRequest::MODE_ANSWER, 'English', 'Russian', 'intermediate', 'Where?', 'Где?', 'It hurts in his ___.', 'У него болит ___.', 'где болит', 'neck; shoulder', 'It hurts in his knee');
     $reply = $builder->judgeSlot($request);
 
     $system = (new PlanPromptFiles)->slotJudgeSystem();
     expect($catalog->asked)->toBe([['provider' => ProviderId::OpenAi, 'model' => 'gpt-5.4-mini', 'purpose' => 'plan', 'timeout' => 8, 'retries' => 1, 'journal' => 'judge']])
         ->and($port->calls)->toHaveCount(1)
         ->and($port->calls[0]['prompt']->text)->toBe($system)
-        ->and($port->calls[0]['prompt']->version)->toBe('slot_judge.v2')
+        ->and($port->calls[0]['prompt']->version)->toBe('slot_judge.v3')
         ->and($port->calls[0]['prompt']->sha256)->toBe(hash('sha256', $system))
         ->and($port->calls[0]['prompt']->shape)->toBe(PromptShape::Full)
         ->and($port->calls[0]['schema'])->toBe(PlanSchemas::slotJudge())
         ->and($port->calls[0]['user'])->toBe((new PlanPromptFiles)->slotJudgeUser($request))
         ->and($reply->payload)->toBe(['accepted' => true, 'slot_value' => 'knee', 'reason_native' => null])
-        ->and($reply->promptVersion)->toBe('slot_judge.v2')
+        ->and($reply->promptVersion)->toBe('slot_judge.v3')
         ->and($reply->model)->toBe('gpt-5.4-mini-2026')
         ->and($reply->costUsd)->toBe('0.000150')
         ->and($reply->latencyMs)->toBe(812)
-        ->and($builder->slotJudgePromptVersion())->toBe('slot_judge.v2');
+        ->and($builder->slotJudgePromptVersion())->toBe('slot_judge.v3');
 
     Log::shouldHaveReceived('info')->withArgs(static fn (string $message, array $context): bool => $message === 'plan.slot_judge'
-        && $context === ['prompt_version' => 'slot_judge.v2', 'model' => 'gpt-5.4-mini-2026', 'tokens_in' => 420, 'tokens_out' => 18, 'cost_usd' => '0.000150', 'latency_ms' => 812])->once();
+        && $context === ['prompt_version' => 'slot_judge.v3', 'model' => 'gpt-5.4-mini-2026', 'tokens_in' => 420, 'tokens_out' => 18, 'cost_usd' => '0.000150', 'latency_ms' => 812])->once();
 });
 
 it('threads plan.slot_judge.timeout from config into the builder the container makes', function () {
@@ -563,7 +673,7 @@ it('threads plan.slot_judge.timeout from config into the builder the container m
     app()->forgetInstance(PlanModelPort::class);
 
     $builder = app(PlanModelPort::class);
-    $builder->judgeSlot(new SlotJudgeRequest('answer', 'English', 'Russian', 'intermediate', 'Where?', 'Где?', 'It hurts in his ___.', 'У него болит ___.', 'где болит', 'neck', 'It hurts in his knee'));
+    $builder->judgeSlot(new SlotJudgeRequest(SlotJudgeRequest::MODE_ANSWER, 'English', 'Russian', 'intermediate', 'Where?', 'Где?', 'It hurts in his ___.', 'У него болит ___.', 'где болит', 'neck', 'It hurts in his knee'));
 
     expect($builder)->toBeInstanceOf(ContentModelPlanBuilder::class)
         ->and($catalog->asked)->toHaveCount(1)
@@ -576,7 +686,7 @@ it('lets a caller of the content catalogue ask for one attempt, and keeps the es
     config(['services.openai.api_key' => 'test-key']);
     Sleep::fake();
     Http::fake(['api.openai.com/*' => Http::response('busy', 503)]);
-    $prompt = new RenderedPrompt('rules', 'slot_judge.v2', PromptShape::Full, hash('sha256', 'rules'));
+    $prompt = new RenderedPrompt('rules', 'slot_judge.v3', PromptShape::Full, hash('sha256', 'rules'));
     $schema = PlanSchemas::slotJudge();
 
     $once = app(ContentModelCatalog::class)->get(ProviderId::OpenAi, 'gpt-5.4-mini', 'plan', 8, 1);

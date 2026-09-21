@@ -7,7 +7,10 @@ use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
 use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
+use App\Modules\Shared\Domain\Service\Clock;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +21,9 @@ use Illuminate\Support\Facades\DB;
  * rules — whose move it is, what a rescue costs, who counts the phrases of the plan, when the talk ends — are checked
  * against the server and not against a vendor's mood.
  */
+
+// Every test starts from an empty database: the counters and the journal of stages are read by what they hold.
+uses(RefreshDatabase::class);
 
 // A day walked through is some two hundred answers, past the API's 120 a minute.
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
@@ -113,9 +119,11 @@ it('opens with the role\'s own line, and carries on the same talk when asked aga
         ->and($talk['partner']['role_native'])->not->toBeEmpty()
         ->and($talk['scenes'][0]['state'])->toBe('current')
         ->and($talk['summary'])->toBeNull()
-        // The intention offered is the learner's OWN line of this scene, in their language and bare — the client
-        // prints «Скажи, что …» itself (DECISIONS п. 359). It is the lesson's, not the model's.
-        ->and($talk['hints']['native'])->toBe('У него болит поясница.');
+        ->and($talk['replay'])->toBeFalse()
+        // The intention offered is the learner's OWN line of this scene, in their language — the lesson's, not the
+        // model's (DECISIONS п. 359) — and as a CLAUSE: the client prints «Скажи, что …» around it, and «Скажи, что У
+        // него болит поясница.» was the chip of the first live run (наряд CONV-2, п. 11).
+        ->and($talk['hints']['native'])->toBe('у него болит поясница');
 
     // Asked again: the same talk, not a second one — a phone coming back from the background carries on.
     $again = convStart($this, $token, $id);
@@ -153,8 +161,12 @@ it('asks the role to repeat itself without spending a move of the scene', functi
 
     $after = convTurn($this, $token, $id, $talk['id'], 'rescue', '');
     expect($after['turns_left'])->toBe(4)
-        ->and($after['turns'][1])->toMatchArray(['speaker' => 'learner', 'kind' => 'rescue', 'text_target' => null, 'phrases_used' => []])
-        ->and($after['turns'][2]['understood'])->toBeNull();
+        // The learner's own bubble says what a learner says when they did not catch it — in the language of the talk,
+        // from its pack (наряд CONV-2, п. 4а; кадр 37-7 draws «Sorry?»). It is not a line of their own: no phrases.
+        ->and($after['turns'][1])->toMatchArray(['speaker' => 'learner', 'kind' => 'rescue', 'text_target' => 'Sorry?', 'phrases_used' => []])
+        ->and($after['turns'][2]['understood'])->toBeNull()
+        // …and it is not «сказал сам».
+        ->and(DB::table('conversation_turns')->where('conversation_id', $talk['id'])->where('kind', 'rescue')->value('text_target'))->toBe('Sorry?');
 
     $said = convTurn($this, $token, $id, $talk['id']);
     expect($said['turns_left'])->toBe(3);
@@ -369,21 +381,32 @@ it('gives the phrases the talk did not hear back tomorrow, once, as the line sai
 });
 
 /**
- * Canon (наряд CONV-1, п. 3 + кадр 37-13): the day's summary gets «Что было хорошо» — ready lines, inflected by the
- * server. Catches a client asked to conjugate «6 реплик» and a block printed about a talk that never happened.
+ * Canon (наряд CONV-1, п. 3 + кадр 37-13; наряд CONV-2, п. 9): the day's summary gets «Что было хорошо» — ready lines,
+ * inflected by the server — the moment every stage is walked, BEFORE «Закрыть день»: кадр 30-7 is shown to a day still
+ * open, and on the first pass through a day the block was empty (CLIENT-CONV-1a, §5 п. 2). Catches a client asked to
+ * conjugate «6 реплик», a block printed about a talk that never happened, and a block that waits for the close.
  */
-it('writes «Что было хорошо» on the day it is passed, and nothing before that', function () {
+it('writes «Что было хорошо» once every stage is walked, before the day is closed, and nothing before that', function () {
     [$token, $id] = convDay($this);
-    $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
-    expect($room['window']['highlights'])->toBe([]);
+    $read = fn (): array => $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
+    expect($read()['window']['highlights'])->toBe([]);
 
-    $closed = planWalkDay($this, $token, $id, 1);
-    $highlights = $closed['window']['highlights'];
+    foreach (planOpenDay($this, $token, $id, 1)['cards'] as $card) {
+        planAnswer($this, $token, $id, 1, $card['id'], planWalkResult($card['kind']));
+    }
+    // Five stages walked, the talk not yet: still nothing.
+    expect($read()['window']['highlights'])->toBe([]);
 
-    expect($highlights)->toHaveCount(3)
-        ->and($highlights[0])->toStartWith('Сказал сам ')
-        ->and($highlights[1])->toStartWith('В разговоре использовал ')
-        ->and($highlights[2])->toBe('Понял все вопросы');
+    planTalkThrough($this, $token, $id, 1);
+    $open = $read();
+    expect($open['day']['status'])->toBe('in_progress')
+        ->and($open['window']['highlights'])->toHaveCount(3)
+        ->and($open['window']['highlights'][0])->toStartWith('Сказал сам ')
+        ->and($open['window']['highlights'][1])->toStartWith('В разговоре использовал ')
+        ->and($open['window']['highlights'][2])->toBe('Понял все вопросы');
+
+    $closed = $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk()->json('data');
+    expect($closed['window']['highlights'])->toBe($open['window']['highlights']);
 });
 
 /**
@@ -454,4 +477,299 @@ it('deals five stages while the talk is switched off, and closes the day on them
         ->assertOk()->json('data');
     expect($closed['day']['status'])->toBe('closed')
         ->and(array_column($closed['window']['stages'], 'state'))->toBe(['done', 'done', 'done', 'done', 'done']);
+});
+
+/** A clock the test moves by hand — bound before the first request to the conversation routes, so their handlers read it. */
+function convClock(string $at): object
+{
+    $clock = new class($at) implements Clock
+    {
+        public DateTimeImmutable $at;
+
+        public function __construct(string $at)
+        {
+            $this->at = new DateTimeImmutable($at);
+        }
+
+        public function now(): DateTimeImmutable
+        {
+            return $this->at;
+        }
+    };
+    app()->instance(Clock::class, $clock);
+
+    return $clock;
+}
+
+/** The id of a plan's day — what the journal of stages is keyed by. */
+function convDayId(string $planId, int $number = 1): string
+{
+    return (string) DB::table('plan_days')->where('plan_id', $planId)->where('number', $number)->value('id');
+}
+
+/** @return int the hits of one check of the role's prompt, as the admin panel reads them */
+function convHits(string $code): int
+{
+    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v2')
+        ->where('check_name', $code)->where('action', 'counted')->value('hits');
+}
+
+/**
+ * Canon (наряд CONV-2, п. 1): «ответ роли, совпадающий по Options::APART ≥ 0,5 с любой репликой ученика из плана,
+ * отбрасывается и запрашивается заново с усиленной инструкцией (одна попытка), счётчик». Catches a flipped line reaching
+ * the ribbon, a retry without the reason, a second retry, and a turn billed for one call when two were made.
+ */
+it('asks the role again when it says the learner\'s line, once, with the reason, and counts it', function () {
+    $fake = convAgentSays(static function (ConversationAgentRequest $request): array {
+        $payload = FakePlanModel::conversationPayload($request);
+        // The parent's own question in the doctor's mouth — until the server says why that answer was refused.
+        $payload['reply_target'] = $request->redo === null ? 'Hello. Do we need an X-ray?' : 'Hello. Where does it hurt?';
+
+        return $payload;
+    });
+    [$token, $id] = convDay($this);
+
+    $talk = convStart($this, $token, $id);
+    $second = $fake->conversationRequests[1];
+
+    expect($talk['turns'])->toHaveCount(1)
+        ->and($talk['turns'][0]['text_target'])->toBe('Hello. Where does it hurt?')
+        ->and($fake->conversationCalls)->toBe(2)
+        ->and($second->redo)->toBe(['reason' => 'learner_line', 'said' => 'Hello. Do we need an X-ray?', 'line' => 'Do we need an X-ray?'])
+        ->and($second->turn)->toBe($fake->conversationRequests[0]->turn)
+        ->and(convHits('conversation.learner_line'))->toBe(1)
+        ->and(convHits('conversation.learner_line_kept'))->toBe(0)
+        // Two calls, one line: the turn carries both calls' tokens.
+        ->and((int) DB::table('conversation_turns')->where('conversation_id', $talk['id'])->value('tokens_in'))->toBe(2 * 900);
+});
+
+/**
+ * Canon (п. 1): ONE attempt — the learner is waiting. A second answer that says a learner line too is taken as it is and
+ * counted as kept; a second call that does not come leaves the first answer standing, never «Врач не отвечает». Catches
+ * a guard that loops, and a guard that turns a reply into a 503.
+ */
+it('takes the second answer whatever it says, and keeps the first when the second does not come', function () {
+    $fake = convAgentSays(static function (ConversationAgentRequest $request, int $call): array {
+        if ($request->redo !== null && $request->turn === 'said') {
+            throw new RuntimeException('the vendor timed out');
+        }
+
+        return [...FakePlanModel::conversationPayload($request), 'reply_target' => 'Do we need an X-ray?'];
+    });
+    [$token, $id] = convDay($this);
+
+    $talk = convStart($this, $token, $id);
+    expect($talk['turns'][0]['text_target'])->toBe('Do we need an X-ray?')
+        ->and($fake->conversationCalls)->toBe(2)
+        ->and(convHits('conversation.learner_line_kept'))->toBe(1);
+
+    $after = convTurn($this, $token, $id, $talk['id']);
+    expect($after['turns'])->toHaveCount(3)
+        ->and($after['turns'][2]['text_target'])->toBe('Do we need an X-ray?')
+        ->and($fake->conversationCalls)->toBe(4)
+        ->and(convHits('conversation.learner_line'))->toBe(2)
+        ->and(convHits('conversation.learner_line_kept'))->toBe(2);
+});
+
+/**
+ * Canon (п. 1): when the answer asked for again still says the learner's line, the sentence that says it is cut out —
+ * of the reply and of its translation — and the role's own sentence is said and voiced. Catches a flipped question that
+ * reaches the ribbon because the second answer copied the first (the replay of the owner's rehearsal, report §1), and a
+ * cut translation that no longer matches its line.
+ */
+it('cuts the learner\'s line out when the second answer says it too, and says the rest', function () {
+    convAgentSays(static fn (ConversationAgentRequest $request): array => [
+        ...FakePlanModel::conversationPayload($request),
+        'reply_target' => $request->turn === 'start' ? 'Hello, come in. Do we need an X-ray?' : 'And what brings you in today?',
+        'reply_native' => $request->turn === 'start' ? 'Здравствуйте, проходите. Нам нужен рентген?' : 'Что вас беспокоит?',
+    ]);
+    [$token, $id] = convDay($this);
+
+    $talk = convStart($this, $token, $id);
+
+    expect($talk['turns'][0]['text_target'])->toBe('Hello, come in.')
+        ->and($talk['turns'][0]['text_native'])->toBe('Здравствуйте, проходите.')
+        ->and(convHits('conversation.learner_line'))->toBe(1)
+        ->and(convHits('conversation.learner_line_cut'))->toBe(1)
+        ->and(convHits('conversation.learner_line_kept'))->toBe(0);
+});
+
+/**
+ * Canon (наряд CONV-2, п. 4б): «роль повторяет ПРОЩЕ: тот же смысл, другие слова, короче; страховка — ответ, совпадающий с
+ * предыдущей репликой роли ≥ 0,7, запрашивается заново с инструкцией „перефразируй", счётчик». Both live runs of
+ * CLIENT-CONV-1a got the rescued line back word for word. Catches that, and a rescue compared with the wrong line.
+ */
+it('asks for other words when a rescue says the line again, and counts it', function () {
+    $fake = convAgentSays(static function (ConversationAgentRequest $request): array {
+        $payload = FakePlanModel::conversationPayload($request);
+        if ($request->turn === 'rescue') {
+            $payload['reply_target'] = $request->redo === null ? 'And what brings you in today?' : 'Why are you here?';
+        }
+
+        return $payload;
+    });
+    [$token, $id] = convDay($this);
+
+    $talk = convStart($this, $token, $id);
+    $after = convTurn($this, $token, $id, $talk['id'], 'rescue', '');
+
+    expect($after['turns'][2]['text_target'])->toBe('Why are you here?')
+        ->and($fake->conversationCalls)->toBe(3)
+        ->and($fake->conversationRequests[2]->redo)->toBe(['reason' => 'same_words', 'said' => 'And what brings you in today?', 'line' => null])
+        ->and(convHits('conversation.rescue_same_words'))->toBe(1)
+        ->and($after['turns_left'])->toBe(4);
+});
+
+/**
+ * Canon (наряд CONV-2, п. 2): «„Ещё раз" не снимает „пройден" с этапа: журнал прохождения append-only (решение 298), повтор
+ * — replay, день закрывается по первому естественному концу». The day's result is the talk that walked the stage: what
+ * comes back tomorrow is what IT did not hear. Catches the live defect of CLIENT-CONV-1a (§5 п. 15) — «Ещё раз» after a
+ * finished talk made the row «идёт» and held the day shut — and a replay's words rewriting the day's returns.
+ */
+it('keeps the stage walked through «Ещё раз», closes the day on the first talk, and returns what that talk did not hear', function () {
+    [$token, $id] = convDay($this);
+    foreach (planOpenDay($this, $token, $id, 1)['cards'] as $card) {
+        planAnswer($this, $token, $id, 1, $card['id'], planWalkResult($card['kind']));
+    }
+    // The first talk hears no phrase of the plan: every turn says «My lower back hurts.».
+    $first = planTalkThrough($this, $token, $id, 1);
+    expect($first['state'])->toBe('ended')->and($first['replay'])->toBeFalse();
+
+    $replay = convStart($this, $token, $id, body: ['again' => true]);
+    expect($replay['replay'])->toBeTrue()->and($replay['state'])->toBe('your_turn');
+
+    $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
+    expect(end($room['window']['stages'])['state'])->toBe('done')
+        ->and(end($room['stages'])['state'])->toBe('done')
+        ->and(DB::table('plan_stage_passages')->where('day_id', convDayId($id))->where('stage', 'conversation')->value('conversation_id'))->toBe($first['id']);
+
+    // The replay says the day's first phrase, and its summary gives nothing back — the day's result is the first talk.
+    $said = convTurn($this, $token, $id, $replay['id'], 'said', 'It hurts in his lower back.');
+    while ($said['state'] !== 'ended') {
+        $said = convTurn($this, $token, $id, $replay['id'], 'said', 'It hurts in his lower back.');
+    }
+    expect($said['summary']['returns_tomorrow'])->toBeFalse()
+        ->and($said['summary']['phrases_used'])->toBe(1)
+        ->and(DB::table('plan_stage_passages')->where('day_id', convDayId($id))->count())->toBe(1);
+
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk();
+    planShiftDay($id);
+    $back = array_values(array_filter(
+        planOpenDay($this, $token, $id, 2)['cards'],
+        static fn (array $c): bool => $c['source'] === 'returned' && $c['kind'] === 'speak_retell',
+    ));
+    $frames = array_column(array_column(array_column($back, 'payload'), 'own_line'), 'frame_ref');
+    expect($frames)->toContain('p1');
+});
+
+/**
+ * Canon (наряд CONV-2, п. 3): «summary.minutes — время разговора, не часов … разговор, пролежавший открытым пять часов, —
+ * 2 минуты». Catches the wall clock: «Разговор окончен · 323 минуты» on the phone, and a day's `minutes_spent` of 436.
+ */
+it('reports the minutes the talk was talked, not the hours it stood open', function () {
+    [$token, $id] = convDay($this);
+    $clock = convClock('2026-09-21T10:00:00Z');
+
+    $talk = convStart($this, $token, $id);
+    $clock->at = new DateTimeImmutable('2026-09-21T10:00:20Z');
+    convTurn($this, $token, $id, $talk['id']);
+    $clock->at = new DateTimeImmutable('2026-09-21T15:00:20Z');   // five hours away from the phone
+    convTurn($this, $token, $id, $talk['id']);
+    $clock->at = new DateTimeImmutable('2026-09-21T15:00:40Z');
+    convTurn($this, $token, $id, $talk['id']);
+    $clock->at = new DateTimeImmutable('2026-09-21T15:00:50Z');
+    $ended = convTurn($this, $token, $id, $talk['id']);
+
+    // 20 s + 60 s (the five hours, capped) + 20 s + 10 s = 110 s — two minutes.
+    expect($ended['state'])->toBe('ended')
+        ->and($ended['summary']['minutes'])->toBe(2);
+});
+
+/**
+ * Canon (наряд CONV-2, п. 10): «документ разговора несёт targets[] … said обновляется каждым ходом; итог считает по тому
+ * же списку; phrases_used — с текстом». Catches a strip that never ticks, a summary counting another list than the
+ * entry showed, and a phrase heard on a rehearsal that the client cannot underline for want of its text.
+ */
+it('carries the talk\'s targets, ticks them off turn by turn, and names the heard phrases with their text', function () {
+    [$token, $id] = convDay($this);
+
+    $talk = convStart($this, $token, $id);
+    expect($talk['targets'])->not->toBeEmpty()
+        ->and(count($talk['targets']))->toBeLessThanOrEqual(7)
+        ->and(array_unique(array_column($talk['targets'], 'said')))->toBe([false])
+        ->and(array_keys($talk['targets'][0]))->toBe(['scene_id', 'ref', 'text_target', 'text_native', 'said']);
+
+    $after = convTurn($this, $token, $id, $talk['id'], 'said', 'It started three days ago.');
+    $said = array_values(array_filter($after['targets'], static fn (array $t): bool => $t['said']));
+    expect(array_column($said, 'ref'))->toBe(['p2'])
+        ->and($after['turns'][1]['phrases_used'])->toBe([[
+            'scene_id' => $said[0]['scene_id'], 'ref' => 'p2', 'text_target' => $said[0]['text_target'], 'text_native' => $said[0]['text_native'],
+        ]]);
+
+    $ended = planTalkThrough($this, $token, $id, 1);
+    expect($ended['summary']['phrases_total'])->toBe(count($talk['targets']))
+        ->and(array_column($ended['summary']['phrases'], 'ref'))->toBe(array_column($talk['targets'], 'ref'))
+        ->and($ended['summary']['phrases_used'])->toBe(1);
+});
+
+/**
+ * Canon (наряд CONV-2, п. 12): «talk_title_native („Поговори с врачом"), число сцен в ряду этапа репетиции». The entry
+ * (кадр 37-5) is drawn before any talk exists, so both ride on the talk's row of the window. Catches «Поговори с
+ * собеседником» where the role is known, and a rehearsal entry that cannot say «· 2 сцены».
+ */
+it('names the talk and counts its scenes on the talk\'s row of the window', function () {
+    [$token, $id] = convDay($this, days: 3);
+    $row = function (int $n) use ($token, $id): array {
+        $stages = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/{$n}")->assertOk()->json('data.window.stages');
+
+        return $stages[count($stages) - 1];
+    };
+
+    $day = $row(1);
+    expect($day['stage'])->toBe('conversation')
+        ->and($day['talk_title_native'])->toStartWith('Поговори с ')->not->toBe('Поговори с собеседником')
+        ->and($day['scenes_count'])->toBe(1)
+        ->and(convStart($this, $token, $id)['talk_title_native'])->toBe($day['talk_title_native']);
+
+    planWalkDay($this, $token, $id, 1);
+    planShiftDay($id);
+    planWalkDay($this, $token, $id, 2);
+    planShiftDay($id);
+    planOpenDay($this, $token, $id, 3);
+    expect($row(3)['scenes_count'])->toBe(2)
+        // A card row carries neither.
+        ->and($this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/3")->json('data.window.stages.0.talk_title_native'))->toBeNull();
+});
+
+/**
+ * Canon (наряд CONV-2, п. 2): «запертые дни — починить командой (reconcile), не UPDATE вручную». A talk that ended before
+ * the journal of stages existed has no passage; `plan:reconcile-talks` writes it from the journal of talks — the first
+ * talk that ended of its own — and a second run writes nothing. Catches a day left locked by an open «Ещё раз» after a
+ * finished talk, a replayed talk taken for a walked one, and a reconcile that writes twice.
+ */
+it('writes the passages of talks that ended before the journal of stages, once, from the first natural end', function () {
+    [$token, $id] = convDay($this);
+    foreach (planOpenDay($this, $token, $id, 1)['cards'] as $card) {
+        planAnswer($this, $token, $id, 1, $card['id'], planWalkResult($card['kind']));
+    }
+    $first = planTalkThrough($this, $token, $id, 1);
+    convStart($this, $token, $id, body: ['again' => true]);
+    // The day as it stood before наряд CONV-2: its talk over, its passage never written, a replay going on.
+    DB::table('plan_stage_passages')->where('day_id', convDayId($id))->delete();
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")
+        ->assertStatus(409)->assertJsonPath('meta.stage', 'conversation');
+
+    expect(Artisan::call('plan:reconcile-talks', ['--dry' => true]))->toBe(0)
+        ->and(Artisan::output())->toContain('было 1 / стало 1')->toContain("[--dry] план {$id} · день 1 (in_progress) · разговор {$first['id']} · natural")
+        ->and(DB::table('plan_stage_passages')->where('day_id', convDayId($id))->count())->toBe(0);
+
+    Artisan::call('plan:reconcile-talks');
+    expect(Artisan::output())->toContain('было 1 / стало 0')->toContain('записано прохождений: 1')->toContain($first['id'])
+        ->and(DB::table('plan_stage_passages')->where('day_id', convDayId($id))->value('conversation_id'))->toBe($first['id']);
+
+    Artisan::call('plan:reconcile-talks');
+    expect(Artisan::output())->toContain('было 0 / стало 0')
+        ->and(DB::table('plan_stage_passages')->where('day_id', convDayId($id))->count())->toBe(1);
+
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk();
 });

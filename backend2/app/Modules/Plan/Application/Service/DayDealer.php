@@ -17,6 +17,7 @@ use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Exception\LessonNotReady;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
+use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
@@ -28,6 +29,7 @@ use App\Modules\Plan\Domain\ValueObject\LessonStatus;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
+use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 
 /**
@@ -46,6 +48,7 @@ final readonly class DayDealer
         private NativeDistractorSource $distractors,
         private LanguagePacks $packs,
         private ConversationRepository $conversations,
+        private StagePassageRepository $passages,
         private ConversationMaterial $material,
     ) {}
 
@@ -252,8 +255,11 @@ final readonly class DayDealer
     }
 
     /**
-     * WHAT THE TALK DID NOT HEAR (наряд CONV-1, п. 3): the phrases of the plan that did not sound in an earlier day's
-     * conversation come back on the next day, once, as the learner's own line said aloud.
+     * WHAT THE TALK DID NOT HEAR (наряд CONV-1, п. 3): the phrases a day's talk was FOR — its targets (наряд CONV-2,
+     * п. 10) — that did not sound come back on the next day, once, as the learner's own line said aloud.
+     *
+     * The talk is the one that walked the day's sixth stage (наряд CONV-2, п. 2): a replay after it is an exercise on
+     * top of a walked day, and what it did or did not hear is not the day's result.
      *
      * They are added AFTER the units that failed on cards, so a phrase that did both comes back as what it failed as —
      * a wrong answer is a stronger fact about a phrase than a talk that took another road. The rehearsal's talk gives
@@ -266,11 +272,12 @@ final readonly class DayDealer
     {
         $out = [];
         foreach ($sources as $source) {
-            $talk = $this->conversations->latestForDay($source->id());
+            $walkedId = $this->passages->of($source->id(), Stage::Conversation)?->conversationId;
+            $talk = $walkedId === null ? null : $this->conversations->findById($walkedId);
             if ($talk === null || ! $talk->isEnded() || ! $talk->type()->returnsTomorrow()) {
                 continue;
             }
-            $outcome = ConversationOutcomes::of($talk, $this->material->for($plan, $source)->phrases);
+            $outcome = ConversationOutcomes::of($talk, $this->material->for($plan, $source)->targets);
             foreach ($outcome->notSaid as $id) {
                 [$sceneId, $ref] = array_pad(explode(':', $id, 2), 2, '');
                 if ($sceneId !== '' && $ref !== '') {

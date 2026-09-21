@@ -98,6 +98,33 @@ final class NativeStrings
         'en' => ['dated' => 'By {month} {day} you will say all of this yourself', 'undated' => 'You will say all of this yourself'],
     ];
 
+    /**
+     * THE TALK'S TITLE (кадр 37-5, наряд CONV-2, п. 12): «Поговори с врачом». `{with}` is the preposition, `{role}` the role
+     * in the instrumental ({@see InstrumentalRole}); `anyone` is the title when the role cannot be inflected with
+     * certainty — plain, and never a wrong ending.
+     *
+     * @var array<string, array{with: string, anyone: string}>
+     */
+    private const TALK_TITLE = [
+        'ru' => ['with' => 'Поговори {with} {role}', 'anyone' => 'Поговори с собеседником'],
+        'uk' => ['with' => 'Поговори {with} {role}', 'anyone' => 'Поговори зі співрозмовником'],
+        'en' => ['with' => 'Talk to the {role}', 'anyone' => 'Talk to your partner'],
+    ];
+
+    /**
+     * WHAT THE JUDGE SAYS WHEN THE CODE RULES «NO» (наряд CONV-2, п. 7): `nothing` — nothing was heard at all; `main` —
+     * the frame's own words and nothing of the answer: «That works for me» to «which days?» (the owner's gym day,
+     * 21.09). `{hint}` is the window's hint as the lesson wrote it («в какие дни это подходит»), so the line names what
+     * is missing by its meaning, never «слово в пропуске» — the model's words for it, which the learner cannot act on.
+     *
+     * @var array<string, array{nothing: string, main: string}>
+     */
+    private const JUDGE = [
+        'ru' => ['nothing' => 'Не расслышал — скажи ещё раз', 'main' => 'Не сказал главного — {hint}'],
+        'uk' => ['nothing' => 'Не розчув — скажи ще раз', 'main' => 'Не сказав головного — {hint}'],
+        'en' => ['nothing' => "Didn't catch that — say it again", 'main' => 'The main part is missing — {hint}'],
+    ];
+
     /** How many scene titles the plan summary names. */
     public const SUMMARY_SCENES = 3;
 
@@ -209,6 +236,41 @@ final class NativeStrings
             '{noun}' => $forms[$this->pluralIndex($n)],
             '{of}' => (string) ($of ?? $n),
         ]);
+    }
+
+    /**
+     * «Поговори с врачом» — the entry title of the talk, from the role of the scene it opens with, in the learner's
+     * language. A role that cannot be inflected with certainty — or none — gives «Поговори с собеседником».
+     */
+    public function talkTitle(?string $roleNative): string
+    {
+        $titles = self::TALK_TITLE[$this->table()];
+        $role = trim((string) $roleNative);
+        if ($role === '') {
+            return $titles['anyone'];
+        }
+        if ($this->table() === 'en') {
+            $first = mb_substr($role, 0, 1);
+            $second = mb_substr($role, 1, 1);
+            $lowered = $second !== '' && mb_strtolower($second) === $second ? mb_strtolower($first).mb_substr($role, 1) : $role;
+
+            return strtr($titles['with'], ['{role}' => $lowered]);
+        }
+        $instrumental = InstrumentalRole::of($this->table(), $role);
+
+        return $instrumental === null
+            ? $titles['anyone']
+            : strtr($titles['with'], ['{with}' => InstrumentalRole::with($this->table(), $instrumental), '{role}' => $instrumental]);
+    }
+
+    /**
+     * The judge's own «no» ({@see JUDGE}): `nothing`, or `main` with the window's hint.
+     *
+     * @param  'nothing'|'main'  $key
+     */
+    public function judgeReason(string $key, string $hint = ''): string
+    {
+        return strtr(self::JUDGE[$this->table()][$key], ['{hint}' => trim($hint)]);
     }
 
     private function word(string $key): string

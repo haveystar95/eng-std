@@ -7,6 +7,7 @@ namespace App\Modules\Plan\Application\Command;
 use App\Modules\Plan\Application\Dto\ConversationView;
 use App\Modules\Plan\Application\Service\ConversationMaterial;
 use App\Modules\Plan\Application\Service\ConversationMoves;
+use App\Modules\Plan\Application\Service\ConversationPassing;
 use App\Modules\Plan\Application\Service\ConversationViews;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
@@ -40,12 +41,17 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * A model that did not answer writes NOTHING: the ribbon stays where it was and the learner repeats
  * the move (кадр 37-10). That is why the learner's own line is only recorded inside the aggregate in
  * memory until the role has answered.
+ *
+ * A rescue carries the words the learner's bubble shows — «Sorry?» in the language of the talk (наряд
+ * CONV-2, п. 4а) — and a talk that comes to an end of its own here walks the day's sixth stage, written
+ * in the journal of stages in the same transaction ({@see ConversationPassing}, п. 2).
  */
 final readonly class TakeConversationTurnHandler
 {
     public function __construct(
         private PlanAccess $access,
         private ConversationRepository $conversations,
+        private ConversationPassing $passing,
         private ConversationMaterial $material,
         private ConversationMoves $moves,
         private ConversationViews $views,
@@ -73,9 +79,8 @@ final readonly class TakeConversationTurnHandler
         $material = $this->material->for($plan, $day);
 
         $heard = trim($command->heard);
-        $phrases = $command->kind === TurnKind::Said
-            ? $this->spoken->heardIn($heard, $material->phrases, $this->packs->for($plan->targetLang()->value)->speech())
-            : [];
+        $pack = $this->packs->for($plan->targetLang()->value);
+        $phrases = $command->kind === TurnKind::Said ? $this->spoken->heardIn($heard, $material->phrases, $pack->speech()) : [];
 
         $before = count($talk->turns());
         $talk->recordLearnerTurn(ConversationTurn::learner(
@@ -83,7 +88,11 @@ final readonly class TakeConversationTurnHandler
             conversationId: $talk->id(),
             index: $talk->nextIndex(),
             kind: $command->kind,
-            heard: $command->kind === TurnKind::Said ? $heard : null,
+            heard: match ($command->kind) {
+                TurnKind::Said => $heard,
+                TurnKind::Rescue => $pack->rescueLine(),
+                default => null,
+            },
             phrasesUsed: $phrases,
             now: $this->clock->now(),
         ));
@@ -97,6 +106,7 @@ final readonly class TakeConversationTurnHandler
                 throw ConversationNotYourTurn::state($held['state'] ?? ConversationState::Ended);
             }
             $this->conversations->save($talk);
+            $this->passing->mark($talk);
         });
 
         return $this->views->of($talk, $material);

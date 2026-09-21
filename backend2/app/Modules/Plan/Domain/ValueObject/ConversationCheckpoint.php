@@ -17,9 +17,11 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 final readonly class ConversationCheckpoint
 {
     /**
-     * @param  list<array{target: string, native: string, phrase_ref: string|null}>  $keyLines  the learner's own
-     *   lines of the scene, in order, each with the frame it stands on — that ref is how the hint knows which
-     *   line has already been said and which one to offer next
+     * @param  list<array{target: string, native: string, phrase_ref: string|null, kind?: string, partner?: string}>  $keyLines  the
+     *   learner's own lines of the scene, in order, each with the frame it stands on — that ref is how the hint knows
+     *   which line has already been said and which one to offer next — and the exchange it stands in: `kind` (`ask` —
+     *   the learner asks, the role answers; `answer` — the role speaks, the learner answers) and the role's own line
+     *   there (`partner`), so the role is told both sides of the visit (наряд CONV-2, п. 1)
      */
     public function __construct(
         public string $sceneId,

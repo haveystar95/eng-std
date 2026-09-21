@@ -33,14 +33,15 @@ interface PlanModelPort
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply;
 
     /**
-     * The slot judge (`slot_judge.v2`, наряд SESSION-1a, разд. 4): `{accepted, slot_value, reason_native}` — what the
-     * learner put into the slot and whether it answers. ONE
+     * The slot judge (`slot_judge.v3`, наряд SESSION-1a, разд. 4; v3 — наряд CONV-2): `{accepted, slot_value,
+     * reason_native}` — in the mode the request names, whether the learner's answer says what the slot is about
+     * (`answer`) or whether their own value is a value of the slot's kind (`own_value`). ONE
      * attempt within the judge's own timeout, synchronously inside the learner's request; a silence throws.
      */
     public function judgeSlot(SlotJudgeRequest $request): ModelReply;
 
     /**
-     * ONE MOVE OF THE CONVERSATION AGENT (`conversation_agent.v1`, наряд CONV-1): the role's reply in
+     * ONE MOVE OF THE CONVERSATION AGENT (`conversation_agent.v2`, наряд CONV-1; v2 — наряд CONV-2): the role's reply in
      * both languages, what it judged about the learner's move, the checkpoint it closed, the hint to
      * offer next and whether the talk is over. Synchronous, inside the learner's request, ONE attempt
      * — a retry would only lengthen a wait the learner is sitting through; a silence throws.

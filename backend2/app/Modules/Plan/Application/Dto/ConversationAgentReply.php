@@ -37,6 +37,24 @@ final readonly class ConversationAgentReply
         return $this->end !== self::END_NO;
     }
 
+    /** This answer with its texts cut down to the role's own sentences (наряд CONV-2, {@see \App\Modules\Plan\Domain\Service\RoleLines::withoutLearnerLines()}). */
+    public function saying(string $target, string $native): self
+    {
+        return new self(
+            $target, $native, $this->understood, $this->phrasesUsed, $this->offTopic,
+            $this->checkpointDone, $this->nextHintNative, $this->end, $this->cost,
+        );
+    }
+
+    /** This answer, billed for the refused one before it as well (наряд CONV-2). */
+    public function billedWith(TurnCost $refused): self
+    {
+        return new self(
+            $this->replyTarget, $this->replyNative, $this->understood, $this->phrasesUsed, $this->offTopic,
+            $this->checkpointDone, $this->nextHintNative, $this->end, $refused->plusModelCall($this->cost),
+        );
+    }
+
     public function isDeclined(): bool
     {
         return $this->end === self::END_DECLINED;

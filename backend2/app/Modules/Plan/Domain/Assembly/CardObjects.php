@@ -10,6 +10,7 @@ use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\SpokenLines;
+use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 
 /**
@@ -237,6 +238,35 @@ final class CardObjects
             'text_native' => FrameText::capitalized(($index === null ? null : $scene->nativeLineOf($phrase->ref(), $index)) ?? $phrase->textNative()),
             'pronunciation_native' => $phrase->pronunciationNative(),
             'audio' => Audio::of($phrase->ref()),
+        ];
+    }
+
+    /**
+     * «В РАЗГОВОРЕ» — WHERE THE DAY SAYS THE PHRASE (кадр 32-1, наряд CONV-2, п. 12): the first learner line of the visit
+     * that stands on the frame, the partner's line of the same exchange, and where the phrase itself stands in the
+     * learner's line, in characters — the same reading a word gets in the window (`usage`, кадр 23-0e). The client
+     * matched texts against the day's dialogue to draw the block, and a phrase its match missed had no block at all
+     * (CLIENT-CONV-1a, §5 п. 5).
+     *
+     * `offset`/`length` are null when the phrase is not in the line word for word (a line said with another filler);
+     * the whole value is null when no line of the visit stands on the frame.
+     *
+     * @return array{exchange: array{ref: string, step: int, kind: string}, line: array{ref: string, text_target: string, text_native: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}}, offset: int|null, length: int|null, partner_line: array{ref: string, text_target: string, text_native: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}}|null}|null
+     */
+    public static function usage(SceneMaterial $scene, PlanTerm $phrase): ?array
+    {
+        $first = $scene->lesson->linesOf($phrase->ref())[0] ?? null;
+        if ($first === null) {
+            return null;
+        }
+        $span = Words::spanOfTerm($phrase->textTarget(), $first['message']->textTarget);
+
+        return [
+            'exchange' => self::exchange($first['exchange']),
+            'line' => self::line($first['exchange'], $first['message']),
+            'offset' => $span[0] ?? null,
+            'length' => $span[1] ?? null,
+            'partner_line' => self::partnerLine($first['exchange']),
         ];
     }
 

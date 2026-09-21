@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\ConversationAgentReply;
+use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
 use App\Modules\Plan\Application\Dto\ConversationMaterialView;
+use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\TurnSpeaker;
 use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\Entity\Plan;
+use App\Modules\Plan\Domain\Exception\ConversationUnavailable;
 use App\Modules\Plan\Domain\Service\ConversationRules;
+use App\Modules\Plan\Domain\Service\RoleLines;
 use App\Modules\Plan\Domain\ValueObject\ConversationEnd;
 use App\Modules\Plan\Domain\ValueObject\ConversationTurnId;
 use App\Modules\Plan\Domain\ValueObject\TurnAudio;
@@ -31,6 +35,14 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * asked for with `TURNS_LEFT: 0` — which the prompt reads as «say goodbye now» — so the learner gets
  * a farewell in the role's own words and the talk ends `limit`. A learner is never left mid-sentence
  * because a number was reached.
+ *
+ * THE ANSWER IS CHECKED BEFORE IT IS SAID (наряд CONV-2, пп. 1 и 4б): a reply that says a line of the
+ * learner, or a rescue that says the rescued line again ({@see RoleLines}), is not voiced — the move is
+ * asked for once more with the reason (`REDO`), and counted. Once, because the learner is waiting. When
+ * the second answer says a learner line too — or does not come — the sentence that says it is cut out
+ * if the rest of the answer stands on its own (`…_cut`), and otherwise the answer is said as it is
+ * (`…_kept`): the guard never makes a move worse than no guard, and never turns a reply into «Врач не
+ * отвечает».
  */
 final readonly class ConversationMoves
 {
@@ -38,6 +50,7 @@ final readonly class ConversationMoves
         private ConversationAgent $agent,
         private TurnSpeaker $voice,
         private ConversationRules $rules,
+        private CheckCounters $counters,
         private Clock $clock,
     ) {}
 
@@ -59,7 +72,8 @@ final readonly class ConversationMoves
         // Was the move BEFORE this one already off the scene? Then this one makes two in a row.
         $pushedAgain = $talk->offTopicStreak() > 0;
 
-        $reply = $this->agent->move($plan, $talk, $material, $turn, $heard, $turnsLeft);
+        $request = $this->agent->request($plan, $talk, $material, $turn, $heard, $turnsLeft);
+        $reply = $this->checked($request, $this->agent->ask($request), $talk, $material, $turn);
 
         $turnId = ConversationTurnId::generate();
         // The line is said in the voice of the scene it is said IN — so the role's voice changes with
@@ -113,6 +127,84 @@ final readonly class ConversationMoves
         if ($reason !== null) {
             $talk->end($reason, $now);
         }
+    }
+
+    /**
+     * The role's answer as it will be said: this one when it is the role's own; otherwise the answer to the same move
+     * asked once more with the reason — billed for both calls, because the learner waited for both. When that answer
+     * says a learner line too (or does not come), the sentences that say one are cut out of it if the rest stands on its
+     * own ({@see RoleLines::withoutLearnerLines()}); if nothing would be left, it is said as it is — and counted.
+     */
+    private function checked(
+        ConversationAgentRequest $request,
+        ConversationAgentReply $reply,
+        Conversation $talk,
+        ConversationMaterialView $material,
+        string $turn,
+    ): ConversationAgentReply {
+        $fault = $this->fault($reply, $talk, $material, $turn);
+        if ($fault === null) {
+            return $reply;
+        }
+        $version = $reply->cost->promptVersion ?? '';
+        $this->counters->recordCodes($version, [$fault['code']]);
+
+        try {
+            $answer = $this->agent->ask($request->redo($fault['reason'], $reply->replyTarget, $fault['line']))->billedWith($reply->cost);
+        } catch (ConversationUnavailable) {
+            $answer = $reply;
+        }
+        if ($answer !== $reply && $this->fault($answer, $talk, $material, $turn) === null) {
+            return $answer;
+        }
+        if ($fault['reason'] === RoleLines::REDO_LEARNER_LINE) {
+            $cut = RoleLines::withoutLearnerLines($answer->replyTarget, $answer->replyNative, $material->learnerLines(), self::saidSoFar($talk));
+            if ($cut !== null) {
+                $this->counters->recordCodes($version, [RoleLines::CODE_LEARNER_LINE_CUT]);
+
+                return $answer->saying($cut['target'], $cut['native']);
+            }
+        }
+        $this->counters->recordCodes($version, [$fault['kept']]);
+
+        return $answer;
+    }
+
+    /**
+     * What is wrong with an answer, if anything: a line of the learner said as the role's own (every move), or, on a
+     * rescue, the rescued line said again.
+     *
+     * @return array{reason: 'learner_line'|'same_words', line: string|null, code: string, kept: string}|null
+     */
+    private function fault(ConversationAgentReply $reply, Conversation $talk, ConversationMaterialView $material, string $turn): ?array
+    {
+        $line = RoleLines::learnerLineIn($reply->replyTarget, $material->learnerLines(), self::saidSoFar($talk));
+        if ($line !== null) {
+            return ['reason' => RoleLines::REDO_LEARNER_LINE, 'line' => $line, 'code' => RoleLines::CODE_LEARNER_LINE, 'kept' => RoleLines::CODE_LEARNER_LINE_KEPT];
+        }
+        if ($turn === 'rescue' && RoleLines::repeats($reply->replyTarget, $talk->lineBeforeLastMove())) {
+            return ['reason' => RoleLines::REDO_SAME_WORDS, 'line' => null, 'code' => RoleLines::CODE_SAME_WORDS, 'kept' => RoleLines::CODE_SAME_WORDS_KEPT];
+        }
+
+        return null;
+    }
+
+    /**
+     * Everything the learner has said in the talk, the move being answered included (it is in the journal in memory by
+     * now) — what an echo of theirs is read against.
+     *
+     * @return list<string>
+     */
+    private static function saidSoFar(Conversation $talk): array
+    {
+        $out = [];
+        foreach ($talk->turns() as $turn) {
+            if ($turn->isSpokenByLearner()) {
+                $out[] = (string) $turn->textTarget;
+            }
+        }
+
+        return $out;
     }
 
     /**

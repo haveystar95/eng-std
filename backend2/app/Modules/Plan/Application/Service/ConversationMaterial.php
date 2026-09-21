@@ -12,6 +12,7 @@ use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\FrameParts;
+use App\Modules\Plan\Domain\Service\NativeStrings;
 use App\Modules\Plan\Domain\ValueObject\ConversationCheckpoint;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\DayType;
@@ -30,7 +31,9 @@ use App\Modules\Plan\Domain\ValueObject\VoiceCast;
  *
  * The phrases are the plan's own phrases of those scenes, each with the KEY the server listens for:
  * the frame's words outside its window ({@see FrameParts::part()}) — the same key «Говорю сам» is
- * judged by, so «фраза дня прозвучала» means one thing across the product.
+ * judged by, so «фраза дня прозвучала» means one thing across the product. Four to seven of them are
+ * the talk's targets (наряд CONV-2, п. 10), and its entry title is «Поговори с …» the role it opens
+ * with (п. 12).
  */
 final readonly class ConversationMaterial
 {
@@ -73,7 +76,11 @@ final readonly class ConversationMaterial
             }
         }
 
-        return new ConversationMaterialView($checkpoints, $phrases);
+        return new ConversationMaterialView(
+            $checkpoints,
+            $phrases,
+            (new NativeStrings($plan->nativeLang()->value))->talkTitle($checkpoints[0]->roleNative),
+        );
     }
 
     /**
@@ -111,10 +118,14 @@ final readonly class ConversationMaterial
     }
 
     /**
-     * The learner's own lines of a scene, as the server assembles them — what the role is told the
-     * learner has come to say. A rescue line is «попроси повторить», not a line to lead towards.
+     * The learner's own lines of a scene, as the server assembles them — what the role is told the learner has come to
+     * say — each with the exchange it stands in: who opens it (`ask` — the learner asks and the role answers; `answer` —
+     * the role speaks and the learner answers) and the role's own line there, as the lesson wrote it (наряд CONV-2, п. 1).
+     * A header that only called them «the lines the learner is preparing» left the model to guess the sides, and on the
+     * owner's talks of 21.09 it guessed wrong from the first line. A rescue line is «попроси повторить», not a line to
+     * lead towards.
      *
-     * @return list<array{target: string, native: string, phrase_ref: string|null}>
+     * @return list<array{target: string, native: string, phrase_ref: string|null, kind: string, partner: string}>
      */
     private static function keyLines(PlanScene $scene): array
     {
@@ -131,7 +142,13 @@ final readonly class ConversationMaterial
             $seen[$exchange->step] = true;
             $learner = $exchange->learner();
             if ($learner !== null) {
-                $out[] = ['target' => $learner->textTarget, 'native' => $learner->textNative, 'phrase_ref' => $learner->phraseId];
+                $out[] = [
+                    'target' => $learner->textTarget,
+                    'native' => $learner->textNative,
+                    'phrase_ref' => $learner->phraseId,
+                    'kind' => $exchange->kind === ExchangeKind::Ask ? 'ask' : 'answer',
+                    'partner' => $exchange->partner()->textTarget ?? '',
+                ];
             }
         }
 

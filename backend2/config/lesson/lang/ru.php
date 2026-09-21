@@ -145,4 +145,8 @@ return [
         'min_letters' => 4,
         'after_slot_words' => 2,
     ],
+
+    // «НЕ ПОНЯЛ» НА ЯЗЫКЕ ЦЕЛИ (наряд CONV-2, п. 4а) — what a rescue move of the talk says in the learner's own bubble
+    // (кадр 37-7, en «Sorry?»).
+    'rescue_line' => 'Простите?',
 ];

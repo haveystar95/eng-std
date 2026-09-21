@@ -7,6 +7,7 @@ namespace App\Modules\Plan\Application\Command;
 use App\Modules\Plan\Application\Dto\ConversationView;
 use App\Modules\Plan\Application\Service\ConversationMaterial;
 use App\Modules\Plan\Application\Service\ConversationMoves;
+use App\Modules\Plan\Application\Service\ConversationPassing;
 use App\Modules\Plan\Application\Service\ConversationViews;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Entity\Conversation;
@@ -38,6 +39,7 @@ final readonly class StartConversationHandler
     public function __construct(
         private PlanAccess $access,
         private ConversationRepository $conversations,
+        private ConversationPassing $passing,
         private ConversationMaterial $material,
         private ConversationMoves $moves,
         private ConversationViews $views,
@@ -91,6 +93,7 @@ final readonly class StartConversationHandler
                 $this->conversations->save($open);
             }
             $this->conversations->save($talk);
+            $this->passing->mark($talk);
         });
 
         return $this->views->of($talk, $material);

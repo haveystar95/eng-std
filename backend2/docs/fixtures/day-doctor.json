@@ -1474,6 +1474,37 @@
                             "frame_target": "It hurts in his ___.",
                             "frame_pronunciation_native": "ит хёртс ин хиз ___"
                         },
+                        "usage": {
+                            "line": {
+                                "ref": "x1b",
+                                "audio": {
+                                    "ref": "x1b",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0005",
+                                    "duration_ms": 1890,
+                                    "voice": "learner"
+                                },
+                                "text_native": "У него болит поясница.",
+                                "text_target": "It hurts in his lower back."
+                            },
+                            "length": 26,
+                            "offset": 0,
+                            "exchange": {
+                                "ref": "x1",
+                                "kind": "answer",
+                                "step": 1
+                            },
+                            "partner_line": {
+                                "ref": "x1",
+                                "audio": {
+                                    "ref": "x1",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0047",
+                                    "duration_ms": 3710,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Где болит: вверху спины или в пояснице?",
+                                "text_target": "Where does it hurt: his upper back or his lower back?"
+                            }
+                        },
                         "scene_id": "ulid-0003"
                     },
                     "result": null,
@@ -1486,7 +1517,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0047",
+                    "id": "ulid-0048",
                     "stage": "phrases",
                     "position": 2,
                     "kind": "phrase_intro",
@@ -1501,7 +1532,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -1518,7 +1549,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -1532,7 +1563,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -1546,7 +1577,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -1564,6 +1595,37 @@
                             "frame_target": "It started ___.",
                             "frame_pronunciation_native": "ит стартид ___"
                         },
+                        "usage": {
+                            "line": {
+                                "ref": "x2b",
+                                "audio": {
+                                    "ref": "x2b",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                    "duration_ms": 1820,
+                                    "voice": "learner"
+                                },
+                                "text_native": "Началось три дня назад.",
+                                "text_target": "It started three days ago."
+                            },
+                            "length": 25,
+                            "offset": 0,
+                            "exchange": {
+                                "ref": "x2",
+                                "kind": "answer",
+                                "step": 2
+                            },
+                            "partner_line": {
+                                "ref": "x2",
+                                "audio": {
+                                    "ref": "x2",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                    "duration_ms": 2870,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Началось сегодня или раньше на этой неделе?",
+                                "text_target": "Did it start today, or earlier this week?"
+                            }
+                        },
                         "scene_id": "ulid-0003"
                     },
                     "result": null,
@@ -1576,7 +1638,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0051",
+                    "id": "ulid-0054",
                     "stage": "phrases",
                     "position": 3,
                     "kind": "phrase_intro",
@@ -1591,7 +1653,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                 "duration_ms": 2240,
                                 "voice": "learner"
                             },
@@ -1608,7 +1670,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -1622,7 +1684,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -1636,7 +1698,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -1654,6 +1716,37 @@
                             "frame_target": "The pain is ___ when he bends.",
                             "frame_pronunciation_native": "зэ пэйн из ___ уэн хи бэндз"
                         },
+                        "usage": {
+                            "line": {
+                                "ref": "x3b",
+                                "audio": {
+                                    "ref": "x3b",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0008",
+                                    "duration_ms": 2240,
+                                    "voice": "learner"
+                                },
+                                "text_native": "Боль острая, когда он наклоняется.",
+                                "text_target": "The pain is sharp when he bends."
+                            },
+                            "length": 31,
+                            "offset": 0,
+                            "exchange": {
+                                "ref": "x3",
+                                "kind": "answer",
+                                "step": 3
+                            },
+                            "partner_line": {
+                                "ref": "x3",
+                                "audio": {
+                                    "ref": "x3",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0021",
+                                    "duration_ms": 2940,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Боль острая или скорее ноющая?",
+                                "text_target": "Is the pain sharp, or more of a dull ache?"
+                            }
+                        },
                         "scene_id": "ulid-0003"
                     },
                     "result": null,
@@ -1666,7 +1759,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0055",
+                    "id": "ulid-0058",
                     "stage": "phrases",
                     "position": 4,
                     "kind": "phrase_slot_listen",
@@ -1770,7 +1863,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0056",
+                    "id": "ulid-0059",
                     "stage": "phrases",
                     "position": 5,
                     "kind": "phrase_choose_back",
@@ -1785,7 +1878,7 @@
                         "prompt": {
                             "audio": {
                                 "ref": "p2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -1824,7 +1917,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0057",
+                    "id": "ulid-0060",
                     "stage": "phrases",
                     "position": 6,
                     "kind": "phrase_intro",
@@ -1839,7 +1932,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p4",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0058",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0061",
                                 "duration_ms": 1680,
                                 "voice": "learner"
                             },
@@ -1856,6 +1949,37 @@
                             "frame_target": "He doesn't have a fever.",
                             "frame_pronunciation_native": "хи дазнт хэв э фивер"
                         },
+                        "usage": {
+                            "line": {
+                                "ref": "x4b",
+                                "audio": {
+                                    "ref": "x4b",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0012",
+                                    "duration_ms": 1960,
+                                    "voice": "learner"
+                                },
+                                "text_native": "Нет, температуры нет.",
+                                "text_target": "No, he doesn't have a fever."
+                            },
+                            "length": 23,
+                            "offset": 4,
+                            "exchange": {
+                                "ref": "x4",
+                                "kind": "answer",
+                                "step": 4
+                            },
+                            "partner_line": {
+                                "ref": "x4",
+                                "audio": {
+                                    "ref": "x4",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0062",
+                                    "duration_ms": 1470,
+                                    "voice": "partner"
+                                },
+                                "text_native": "У него есть температура?",
+                                "text_target": "Does he have a fever?"
+                            }
+                        },
                         "scene_id": "ulid-0003"
                     },
                     "result": null,
@@ -1868,7 +1992,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0059",
+                    "id": "ulid-0063",
                     "stage": "phrases",
                     "position": 7,
                     "kind": "phrase_assemble",
@@ -2009,7 +2133,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0060",
+                    "id": "ulid-0064",
                     "stage": "phrases",
                     "position": 8,
                     "kind": "phrase_slot_listen",
@@ -2023,7 +2147,7 @@
                     "payload": {
                         "audio": {
                             "ref": "p3",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                             "duration_ms": 2240,
                             "voice": "learner"
                         },
@@ -2035,7 +2159,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -2049,7 +2173,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -2063,7 +2187,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -2113,7 +2237,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0061",
+                    "id": "ulid-0065",
                     "stage": "phrases",
                     "position": 9,
                     "kind": "phrase_slot_listen",
@@ -2127,7 +2251,7 @@
                     "payload": {
                         "audio": {
                             "ref": "p2.f2",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                             "duration_ms": 1540,
                             "voice": "learner"
                         },
@@ -2139,7 +2263,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -2153,7 +2277,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -2167,7 +2291,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -2217,7 +2341,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0062",
+                    "id": "ulid-0066",
                     "stage": "phrases",
                     "position": 10,
                     "kind": "phrase_other_slot",
@@ -2312,7 +2436,7 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0063",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
                                 "duration_ms": 3710,
                                 "voice": "partner"
                             },
@@ -2330,7 +2454,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0064",
+                    "id": "ulid-0067",
                     "stage": "phrases",
                     "position": 11,
                     "kind": "phrase_intro",
@@ -2345,7 +2469,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p5",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                 "duration_ms": 1470,
                                 "voice": "learner"
                             },
@@ -2362,7 +2486,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -2376,7 +2500,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0066",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0069",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -2390,7 +2514,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0067",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0070",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -2408,6 +2532,37 @@
                             "frame_target": "He will rest ___.",
                             "frame_pronunciation_native": "хи уил рэст ___"
                         },
+                        "usage": {
+                            "line": {
+                                "ref": "x5b",
+                                "audio": {
+                                    "ref": "x5b",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                    "duration_ms": 1890,
+                                    "voice": "learner"
+                                },
+                                "text_native": "Хорошо, он будет отдыхать дома.",
+                                "text_target": "Okay, he will rest at home."
+                            },
+                            "length": 20,
+                            "offset": 6,
+                            "exchange": {
+                                "ref": "x5",
+                                "kind": "answer",
+                                "step": 5
+                            },
+                            "partner_line": {
+                                "ref": "x5",
+                                "audio": {
+                                    "ref": "x5",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0017",
+                                    "duration_ms": 4970,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Похоже на растяжение мышцы, так что ему нужен покой и грелка.",
+                                "text_target": "It looks like a muscle strain, so he should rest and use a heating pad."
+                            }
+                        },
                         "scene_id": "ulid-0003"
                     },
                     "result": null,
@@ -2420,7 +2575,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0068",
+                    "id": "ulid-0072",
                     "stage": "phrases",
                     "position": 12,
                     "kind": "phrase_choose_back",
@@ -2435,7 +2590,7 @@
                         "prompt": {
                             "audio": {
                                 "ref": "p4",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0058",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0061",
                                 "duration_ms": 1680,
                                 "voice": "learner"
                             },
@@ -2474,7 +2629,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0069",
+                    "id": "ulid-0073",
                     "stage": "phrases",
                     "position": 13,
                     "kind": "phrase_assemble",
@@ -2490,7 +2645,7 @@
                             {
                                 "audio": {
                                     "ref": "p3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                     "duration_ms": 2240,
                                     "voice": "learner"
                                 },
@@ -2504,7 +2659,7 @@
                             {
                                 "audio": {
                                     "ref": "p3.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                     "duration_ms": 2170,
                                     "voice": "learner"
                                 },
@@ -2518,7 +2673,7 @@
                             {
                                 "audio": {
                                     "ref": "p3.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 },
@@ -2538,7 +2693,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -2552,7 +2707,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -2566,7 +2721,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -2619,7 +2774,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0070",
+                    "id": "ulid-0074",
                     "stage": "phrases",
                     "position": 14,
                     "kind": "phrase_intro",
@@ -2634,7 +2789,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p6",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                 "duration_ms": 1400,
                                 "voice": "learner"
                             },
@@ -2651,7 +2806,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -2665,7 +2820,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -2679,7 +2834,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -2697,6 +2852,37 @@
                             "frame_target": "Do we need ___?",
                             "frame_pronunciation_native": "ду уи нид ___"
                         },
+                        "usage": {
+                            "line": {
+                                "ref": "x7b",
+                                "audio": {
+                                    "ref": "x7b",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                    "duration_ms": 1400,
+                                    "voice": "learner"
+                                },
+                                "text_native": "Нам нужно сделать рентген?",
+                                "text_target": "Do we need an X-ray?"
+                            },
+                            "length": 19,
+                            "offset": 0,
+                            "exchange": {
+                                "ref": "x7",
+                                "kind": "ask",
+                                "step": 7
+                            },
+                            "partner_line": {
+                                "ref": "x7",
+                                "audio": {
+                                    "ref": "x7",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0078",
+                                    "duration_ms": 3290,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
+                                "text_target": "No, an X-ray is not needed for a muscle strain."
+                            }
+                        },
                         "scene_id": "ulid-0003"
                     },
                     "result": null,
@@ -2709,7 +2895,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0074",
+                    "id": "ulid-0079",
                     "stage": "phrases",
                     "position": 15,
                     "kind": "phrase_other_slot",
@@ -2730,7 +2916,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -2744,7 +2930,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -2758,7 +2944,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -2804,7 +2990,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -2822,7 +3008,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0076",
+                    "id": "ulid-0080",
                     "stage": "phrases",
                     "position": 16,
                     "kind": "phrase_choose_back",
@@ -2837,7 +3023,7 @@
                         "prompt": {
                             "audio": {
                                 "ref": "p5",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                 "duration_ms": 1470,
                                 "voice": "learner"
                             },
@@ -2876,7 +3062,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0077",
+                    "id": "ulid-0081",
                     "stage": "phrases",
                     "position": 17,
                     "kind": "phrase_slot_listen",
@@ -2890,7 +3076,7 @@
                     "payload": {
                         "audio": {
                             "ref": "p6",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                             "duration_ms": 1400,
                             "voice": "learner"
                         },
@@ -2902,7 +3088,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -2916,7 +3102,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -2930,7 +3116,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -2980,7 +3166,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0078",
+                    "id": "ulid-0082",
                     "stage": "phrases",
                     "position": 18,
                     "kind": "phrase_repeat",
@@ -2995,7 +3181,7 @@
                         "key": "He doesn't have a",
                         "audio": {
                             "ref": "p4",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0058",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0061",
                             "duration_ms": 1680,
                             "voice": "learner"
                         },
@@ -3022,7 +3208,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0079",
+                    "id": "ulid-0083",
                     "stage": "phrases",
                     "position": 19,
                     "kind": "phrase_slot_listen",
@@ -3036,7 +3222,7 @@
                     "payload": {
                         "audio": {
                             "ref": "p5.f2",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0066",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0069",
                             "duration_ms": 1820,
                             "voice": "learner"
                         },
@@ -3048,7 +3234,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -3062,7 +3248,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0066",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0069",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -3076,7 +3262,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0067",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0070",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -3126,7 +3312,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0080",
+                    "id": "ulid-0084",
                     "stage": "phrases",
                     "position": 20,
                     "kind": "phrase_assemble",
@@ -3142,7 +3328,7 @@
                             {
                                 "audio": {
                                     "ref": "p6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                     "duration_ms": 1400,
                                     "voice": "learner"
                                 },
@@ -3156,7 +3342,7 @@
                             {
                                 "audio": {
                                     "ref": "p6.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 },
@@ -3170,7 +3356,7 @@
                             {
                                 "audio": {
                                     "ref": "p6.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                     "duration_ms": 1610,
                                     "voice": "learner"
                                 },
@@ -3190,7 +3376,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -3204,7 +3390,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3218,7 +3404,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -3265,7 +3451,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0081",
+                    "id": "ulid-0085",
                     "stage": "phrases",
                     "position": 21,
                     "kind": "phrase_other_slot",
@@ -3286,7 +3472,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -3300,7 +3486,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -3314,7 +3500,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3378,7 +3564,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0082",
+                    "id": "ulid-0086",
                     "stage": "phrases",
                     "position": 22,
                     "kind": "phrase_other_slot",
@@ -3399,7 +3585,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -3413,7 +3599,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0066",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0069",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -3427,7 +3613,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0067",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0070",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -3491,7 +3677,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0083",
+                    "id": "ulid-0087",
                     "stage": "phrases",
                     "position": 23,
                     "kind": "phrase_other_slot",
@@ -3512,7 +3698,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -3526,7 +3712,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3540,7 +3726,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -3591,7 +3777,7 @@
                             "ref": "x7",
                             "audio": {
                                 "ref": "x7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0084",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                 "duration_ms": 3290,
                                 "voice": "partner"
                             },
@@ -3609,7 +3795,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0085",
+                    "id": "ulid-0088",
                     "stage": "phrases",
                     "position": 24,
                     "kind": "phrase_combine",
@@ -3671,7 +3857,7 @@
                                 "said": {
                                     "audio": {
                                         "ref": "p5",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                         "duration_ms": 1470,
                                         "voice": "learner"
                                     },
@@ -3687,7 +3873,7 @@
                                 "said": {
                                     "audio": {
                                         "ref": "p6",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                         "duration_ms": 1400,
                                         "voice": "learner"
                                     },
@@ -3725,7 +3911,7 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0063",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
                                 "duration_ms": 3710,
                                 "voice": "partner"
                             },
@@ -3753,7 +3939,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "ulid-0086",
+                    "id": "ulid-0089",
                     "stage": "dialogue",
                     "position": 1,
                     "kind": "dialogue_partner",
@@ -3794,7 +3980,7 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0063",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
                                 "duration_ms": 3710,
                                 "voice": "partner"
                             },
@@ -3813,7 +3999,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0087",
+                    "id": "ulid-0090",
                     "stage": "dialogue",
                     "position": 2,
                     "kind": "dialogue_answer",
@@ -3952,7 +4138,7 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0063",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
                                 "duration_ms": 3710,
                                 "voice": "partner"
                             },
@@ -3970,7 +4156,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0088",
+                    "id": "ulid-0091",
                     "stage": "dialogue",
                     "position": 3,
                     "kind": "dialogue_partner",
@@ -4011,7 +4197,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -4030,7 +4216,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0089",
+                    "id": "ulid-0092",
                     "stage": "dialogue",
                     "position": 4,
                     "kind": "dialogue_answer",
@@ -4050,7 +4236,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -4064,7 +4250,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -4078,7 +4264,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -4101,7 +4287,7 @@
                                 {
                                     "audio": {
                                         "ref": "p2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                         "duration_ms": 1820,
                                         "voice": "learner"
                                     },
@@ -4115,7 +4301,7 @@
                                 {
                                     "audio": {
                                         "ref": "p2.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                         "duration_ms": 1540,
                                         "voice": "learner"
                                     },
@@ -4129,7 +4315,7 @@
                                 {
                                     "audio": {
                                         "ref": "p2.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                         "duration_ms": 1680,
                                         "voice": "learner"
                                     },
@@ -4154,7 +4340,7 @@
                             "ref": "x2b",
                             "audio": {
                                 "ref": "x2b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0090",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -4169,7 +4355,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -4187,7 +4373,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0091",
+                    "id": "ulid-0093",
                     "stage": "dialogue",
                     "position": 5,
                     "kind": "dialogue_partner",
@@ -4247,7 +4433,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0092",
+                    "id": "ulid-0094",
                     "stage": "dialogue",
                     "position": 6,
                     "kind": "dialogue_answer",
@@ -4267,7 +4453,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -4281,7 +4467,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -4295,7 +4481,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -4318,7 +4504,7 @@
                                 {
                                     "audio": {
                                         "ref": "p3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                         "duration_ms": 2240,
                                         "voice": "learner"
                                     },
@@ -4332,7 +4518,7 @@
                                 {
                                     "audio": {
                                         "ref": "p3.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                         "duration_ms": 2170,
                                         "voice": "learner"
                                     },
@@ -4346,7 +4532,7 @@
                                 {
                                     "audio": {
                                         "ref": "p3.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                         "duration_ms": 2450,
                                         "voice": "learner"
                                     },
@@ -4404,7 +4590,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0093",
+                    "id": "ulid-0095",
                     "stage": "dialogue",
                     "position": 7,
                     "kind": "dialogue_partner",
@@ -4445,7 +4631,7 @@
                             "ref": "x4",
                             "audio": {
                                 "ref": "x4",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0094",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0062",
                                 "duration_ms": 1470,
                                 "voice": "partner"
                             },
@@ -4464,7 +4650,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0095",
+                    "id": "ulid-0096",
                     "stage": "dialogue",
                     "position": 8,
                     "kind": "dialogue_answer",
@@ -4514,7 +4700,7 @@
                             "ref": "x4",
                             "audio": {
                                 "ref": "x4",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0094",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0062",
                                 "duration_ms": 1470,
                                 "voice": "partner"
                             },
@@ -4532,7 +4718,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0096",
+                    "id": "ulid-0097",
                     "stage": "dialogue",
                     "position": 9,
                     "kind": "dialogue_partner",
@@ -4592,7 +4778,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0097",
+                    "id": "ulid-0098",
                     "stage": "dialogue",
                     "position": 10,
                     "kind": "dialogue_rescue",
@@ -4626,7 +4812,7 @@
                             "ref": "x6b",
                             "audio": {
                                 "ref": "x6b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0098",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0099",
                                 "duration_ms": 2660,
                                 "voice": "learner"
                             },
@@ -4639,7 +4825,7 @@
                             "ref": "x6",
                             "audio": {
                                 "ref": "x6",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0099",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0100",
                                 "duration_ms": 2590,
                                 "voice": "partner"
                             },
@@ -4657,7 +4843,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0100",
+                    "id": "ulid-0101",
                     "stage": "dialogue",
                     "position": 11,
                     "kind": "dialogue_answer",
@@ -4677,7 +4863,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -4691,7 +4877,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0066",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0069",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -4705,7 +4891,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0067",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0070",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -4728,7 +4914,7 @@
                                 {
                                     "audio": {
                                         "ref": "p5",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                         "duration_ms": 1470,
                                         "voice": "learner"
                                     },
@@ -4742,7 +4928,7 @@
                                 {
                                     "audio": {
                                         "ref": "p5.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0066",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0069",
                                         "duration_ms": 1820,
                                         "voice": "learner"
                                     },
@@ -4756,7 +4942,7 @@
                                 {
                                     "audio": {
                                         "ref": "p5.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0067",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0070",
                                         "duration_ms": 1820,
                                         "voice": "learner"
                                     },
@@ -4781,7 +4967,7 @@
                             "ref": "x5b",
                             "audio": {
                                 "ref": "x5b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0071",
                                 "duration_ms": 1890,
                                 "voice": "learner"
                             },
@@ -4834,7 +5020,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -4848,7 +5034,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -4862,7 +5048,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -4885,7 +5071,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                         "duration_ms": 1400,
                                         "voice": "learner"
                                     },
@@ -4899,7 +5085,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                         "duration_ms": 2450,
                                         "voice": "learner"
                                     },
@@ -4913,7 +5099,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                         "duration_ms": 1610,
                                         "voice": "learner"
                                     },
@@ -4972,7 +5158,7 @@
                             "ref": "x7",
                             "audio": {
                                 "ref": "x7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0084",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                 "duration_ms": 3290,
                                 "voice": "partner"
                             },
@@ -5011,7 +5197,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -5025,7 +5211,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -5039,7 +5225,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -5062,7 +5248,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                         "duration_ms": 1400,
                                         "voice": "learner"
                                     },
@@ -5076,7 +5262,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                         "duration_ms": 2450,
                                         "voice": "learner"
                                     },
@@ -5090,7 +5276,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                         "duration_ms": 1610,
                                         "voice": "learner"
                                     },
@@ -5194,7 +5380,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0063",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0047",
                                     "duration_ms": 3710,
                                     "voice": "partner"
                                 },
@@ -5220,7 +5406,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0053",
                                     "duration_ms": 2870,
                                     "voice": "partner"
                                 },
@@ -5233,7 +5419,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x2b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0090",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                     "duration_ms": 1820,
                                     "voice": "learner"
                                 },
@@ -5272,7 +5458,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x4",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0094",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0062",
                                     "duration_ms": 1470,
                                     "voice": "partner"
                                 },
@@ -5311,7 +5497,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x5b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0071",
                                     "duration_ms": 1890,
                                     "voice": "learner"
                                 },
@@ -5324,7 +5510,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x6b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0098",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0099",
                                     "duration_ms": 2660,
                                     "voice": "learner"
                                 },
@@ -5337,7 +5523,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0099",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0100",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -5363,7 +5549,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0084",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -5573,7 +5759,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0063",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0047",
                                     "duration_ms": 3710,
                                     "voice": "partner"
                                 },
@@ -5599,7 +5785,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0053",
                                     "duration_ms": 2870,
                                     "voice": "partner"
                                 },
@@ -5612,7 +5798,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x2b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0090",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                     "duration_ms": 1820,
                                     "voice": "learner"
                                 },
@@ -5651,7 +5837,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x4",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0094",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0062",
                                     "duration_ms": 1470,
                                     "voice": "partner"
                                 },
@@ -5690,7 +5876,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x5b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0071",
                                     "duration_ms": 1890,
                                     "voice": "learner"
                                 },
@@ -5703,7 +5889,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x6b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0098",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0099",
                                     "duration_ms": 2660,
                                     "voice": "learner"
                                 },
@@ -5716,7 +5902,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0099",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0100",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -5742,7 +5928,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0084",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -5832,7 +6018,7 @@
                                 "ref": "x6",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0099",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0100",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -5856,7 +6042,7 @@
                                 "ref": "x7",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0084",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -5885,7 +6071,7 @@
                             "ref": "x7",
                             "audio": {
                                 "ref": "x7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0084",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                 "duration_ms": 3290,
                                 "voice": "partner"
                             },
@@ -5922,7 +6108,7 @@
                                 "ref": "x7",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0084",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -5934,7 +6120,7 @@
                                 "ref": "x6",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0099",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0100",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -6196,7 +6382,7 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0063",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
                                 "duration_ms": 3710,
                                 "voice": "partner"
                             },
@@ -6236,7 +6422,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -6250,7 +6436,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -6264,7 +6450,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -6293,7 +6479,7 @@
                             "ref": "x2b",
                             "audio": {
                                 "ref": "x2b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0090",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -6309,7 +6495,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -6349,7 +6535,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -6363,7 +6549,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -6377,7 +6563,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -6489,7 +6675,7 @@
                             "ref": "x4",
                             "audio": {
                                 "ref": "x4",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0094",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0062",
                                 "duration_ms": 1470,
                                 "voice": "partner"
                             },
@@ -6529,7 +6715,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0068",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -6543,7 +6729,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0066",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0069",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -6557,7 +6743,7 @@
                                     {
                                         "audio": {
                                             "ref": "p5.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0067",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0070",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -6586,7 +6772,7 @@
                             "ref": "x5b",
                             "audio": {
                                 "ref": "x5b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0071",
                                 "duration_ms": 1890,
                                 "voice": "learner"
                             },
@@ -6642,7 +6828,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -6656,7 +6842,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0072",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -6670,7 +6856,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0073",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -6729,38 +6915,52 @@
                     "kind": "speak_echo",
                     "unit": {
                         "kind": "exchange",
-                        "ref": "x5"
+                        "ref": "x3"
                     },
                     "source": "today",
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
                         "exchange": {
-                            "ref": "x5",
+                            "ref": "x3",
                             "kind": "answer",
-                            "step": 5
+                            "step": 3
+                        },
+                        "own_line": {
+                            "key": "The pain is",
+                            "ref": "x3b",
+                            "audio": {
+                                "ref": "x3b",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0008",
+                                "duration_ms": 2240,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p3",
+                            "text_native": "Боль острая, когда он наклоняется.",
+                            "text_target": "The pain is sharp when he bends.",
+                            "filler_index": 0
                         },
                         "pause_ms": 3000,
                         "scene_id": "ulid-0003",
                         "speech_mode": "repeat",
                         "partner_line": {
-                            "ref": "x5",
+                            "ref": "x3b",
                             "audio": {
-                                "ref": "x5",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0017",
-                                "duration_ms": 4970,
-                                "voice": "partner"
+                                "ref": "x3b",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0008",
+                                "duration_ms": 2240,
+                                "voice": "learner"
                             },
-                            "text_native": "Похоже на растяжение мышцы, так что ему нужен покой и грелка.",
-                            "text_target": "It looks like a muscle strain, so he should rest and use a heating pad."
+                            "text_native": "Боль острая, когда он наклоняется.",
+                            "text_target": "The pain is sharp when he bends."
                         },
-                        "expected_text": "It looks like a muscle strain, so he should rest and use a heating pad."
+                        "expected_text": "The pain is sharp when he bends."
                     },
                     "result": null,
                     "attempts": 0,
                     "response": null,
                     "unit_kind": "exchange",
-                    "unit_ref": "x5",
+                    "unit_ref": "x3",
                     "source_day_id": null,
                     "answered_at": null,
                     "returns": false
@@ -6983,7 +7183,9 @@
                 "done_count": 0,
                 "total": 24,
                 "minutes_left": 5,
-                "share": 0.0
+                "share": 0.0,
+                "talk_title_native": null,
+                "scenes_count": null
             },
             {
                 "stage": "phrases",
@@ -6991,7 +7193,9 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0.0
+                "share": 0.0,
+                "talk_title_native": null,
+                "scenes_count": null
             },
             {
                 "stage": "dialogue",
@@ -6999,7 +7203,9 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0.0
+                "share": 0.0,
+                "talk_title_native": null,
+                "scenes_count": null
             },
             {
                 "stage": "listen",
@@ -7007,7 +7213,9 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0.0
+                "share": 0.0,
+                "talk_title_native": null,
+                "scenes_count": null
             },
             {
                 "stage": "speak",
@@ -7015,7 +7223,9 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0.0
+                "share": 0.0,
+                "talk_title_native": null,
+                "scenes_count": null
             },
             {
                 "stage": "conversation",
@@ -7023,7 +7233,9 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0.0
+                "share": 0.0,
+                "talk_title_native": "Поговори с регистратором",
+                "scenes_count": 1
             }
         ],
         "day_progress": 0.0,
@@ -7305,7 +7517,7 @@
                         "text": "It started three days ago.",
                         "translation": "Началось три дня назад.",
                         "pronunciation": "ит стартид сри дэйз эгоу",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0048",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0049",
                         "state": "pending",
                         "frame": {
                             "target": "It started ___.",
@@ -7320,21 +7532,21 @@
                                         "native": "три дня назад",
                                         "pronunciation": "сри дэйз эгоу",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0048"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0049"
                                     },
                                     {
                                         "target": "last night",
                                         "native": "вчера вечером",
                                         "pronunciation": "ласт найт",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0049"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0050"
                                     },
                                     {
                                         "target": "this morning",
                                         "native": "сегодня утром",
                                         "pronunciation": "зис морнинг",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0050"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0051"
                                     }
                                 ]
                             }
@@ -7345,7 +7557,7 @@
                         "text": "The pain is sharp when he bends.",
                         "translation": "Боль острая, когда он наклоняется.",
                         "pronunciation": "зэ пэйн из шарп уэн хи бэндз",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0055",
                         "state": "pending",
                         "frame": {
                             "target": "The pain is ___ when he bends.",
@@ -7360,21 +7572,21 @@
                                         "native": "острая",
                                         "pronunciation": "шарп",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0052"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0055"
                                     },
                                     {
                                         "target": "dull",
                                         "native": "ноющая",
                                         "pronunciation": "дал",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0053"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0056"
                                     },
                                     {
                                         "target": "constant",
                                         "native": "постоянная",
                                         "pronunciation": "констант",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0054"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0057"
                                     }
                                 ]
                             }
@@ -7385,7 +7597,7 @@
                         "text": "He doesn't have a fever.",
                         "translation": "Температуры у него нет.",
                         "pronunciation": "хи дазнт хэв э фивер",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0058",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0061",
                         "state": "pending",
                         "frame": {
                             "target": "He doesn't have a fever.",
@@ -7400,7 +7612,7 @@
                         "text": "He will rest at home.",
                         "translation": "Он будет отдыхать дома.",
                         "pronunciation": "хи уил рэст эт хоум",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0065",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0068",
                         "state": "pending",
                         "frame": {
                             "target": "He will rest ___.",
@@ -7415,21 +7627,21 @@
                                         "native": "дома",
                                         "pronunciation": "эт хоум",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0065"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0068"
                                     },
                                     {
                                         "target": "for two days",
                                         "native": "два дня",
                                         "pronunciation": "фор ту дэйз",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0066"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0069"
                                     },
                                     {
                                         "target": "after school",
                                         "native": "после школы",
                                         "pronunciation": "афтер скул",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0067"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0070"
                                     }
                                 ]
                             }
@@ -7440,7 +7652,7 @@
                         "text": "Do we need an X-ray?",
                         "translation": "Нам нужно сделать рентген?",
                         "pronunciation": "ду уи нид эн экс-рэй",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0071",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0075",
                         "state": "pending",
                         "frame": {
                             "target": "Do we need ___?",
@@ -7455,21 +7667,21 @@
                                         "native": "сделать рентген",
                                         "pronunciation": "эн экс-рэй",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0071"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0075"
                                     },
                                     {
                                         "target": "a follow-up appointment",
                                         "native": "прийти на повторный приём",
                                         "pronunciation": "э фоллоу-ап эпойнтмент",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0072"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0076"
                                     },
                                     {
                                         "target": "a sick note",
                                         "native": "взять справку для школы",
                                         "pronunciation": "э сик ноут",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0073"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0077"
                                     }
                                 ]
                             }
@@ -7490,7 +7702,7 @@
                         "partner": {
                             "text": "Where does it hurt: his upper back or his lower back?",
                             "translation": "Где болит: вверху спины или в пояснице?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0063"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0047"
                         },
                         "learner": {
                             "text": "It hurts in his lower back.",
@@ -7507,12 +7719,12 @@
                         "partner": {
                             "text": "Did it start today, or earlier this week?",
                             "translation": "Началось сегодня или раньше на этой неделе?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0075"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0053"
                         },
                         "learner": {
                             "text": "It started three days ago.",
                             "translation": "Началось три дня назад.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0090",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0052",
                             "state": "pending",
                             "phrase_ref": "p2",
                             "filler": "three days ago"
@@ -7541,7 +7753,7 @@
                         "partner": {
                             "text": "Does he have a fever?",
                             "translation": "У него есть температура?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0094"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0062"
                         },
                         "learner": {
                             "text": "No, he doesn't have a fever.",
@@ -7563,7 +7775,7 @@
                         "learner": {
                             "text": "Okay, he will rest at home.",
                             "translation": "Хорошо, он будет отдыхать дома.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0071",
                             "state": "pending",
                             "phrase_ref": "p5",
                             "filler": "at home"
@@ -7575,12 +7787,12 @@
                         "partner": {
                             "text": "He should rest and use a heating pad.",
                             "translation": "Ему нужен покой и грелка.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0099"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0100"
                         },
                         "learner": {
                             "text": "Sorry, could you say that more slowly?",
                             "translation": "Простите, можно помедленнее?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0098",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0099",
                             "state": "pending",
                             "phrase_ref": null,
                             "filler": null
@@ -7592,7 +7804,7 @@
                         "partner": {
                             "text": "No, an X-ray is not needed for a muscle strain.",
                             "translation": "Нет, при растяжении мышцы рентген не нужен.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0084"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0078"
                         },
                         "learner": {
                             "text": "Do we need an X-ray?",
