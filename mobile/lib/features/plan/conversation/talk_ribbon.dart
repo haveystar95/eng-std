@@ -16,9 +16,9 @@ import '../session/session_mic.dart';
 /// THE TALK RIBBON — the component of кадры 37-6…37-8, and the one «Ответь своими словами» stands on
 /// (35-2, «Лента: пузыри и микрофон — компонент „Лента разговора" 37-6…37-8»).
 ///
-/// Two differences between the two screens, and they are the caller's to state, not the widget's:
-/// in the trainer the partner's text is OPEN from the start, in the talk it is CLOSED and opens on a
-/// tap on «текст»; and the trainer has «Пропустить», while the talk has «Не понял».
+/// The partner's text is OPEN from the moment the line sounds, in the talk as in the trainer (правка прохода
+/// 21.09, наряд CLIENT-CONV-1b) — only «Без подсказок» keeps the talk's lines closed. What differs between the two
+/// screens is the caller's to state: the trainer has «Пропустить», the talk «Не понял».
 
 /// The talk's plates on the ribbon — the canvas shadow `0 2px 8px`, ink at 6 % (37-6…37-9, 35-2).
 const List<BoxShadow> kTalkPlateShadow = [BoxShadow(color: AppColors.faintInk, blurRadius: 8, offset: Offset(0, 2))];
@@ -27,18 +27,16 @@ const List<BoxShadow> kTalkPlateShadow = [BoxShadow(color: AppColors.faintInk, b
 const List<double> _speakingBars = [6, 12, 20, 24, 18, 10, 22, 14, 8, 16, 24, 12, 6, 18, 10, 20, 12, 8];
 
 /// THE PARTNER'S LINE (37-6…37-9, 35-2) — a light plate on the left, and everything that belongs to the line
-/// stands INSIDE it (the architect's revision of 21.09, «по кадру»). Three states, as the frames draw them:
+/// stands INSIDE it (the architect's revision of 21.09, «по кадру»). Its states:
 ///
-/// - the role is saying it ([speaking], closed) — the wave alone (37-6 «врач говорит»);
-/// - said and closed — «прослушать» 28 and the «текст» chip in one row (37-6 «врач договорил», 37-8), with
-///   «прервано» over them when the learner cut the line off (37-9);
-/// - open — the words and their translation, «прослушать» 28 in the top right corner (37-8, 35-2).
+/// - open — the words and their translation, «прослушать» 28 in the top right corner; while the line sounds the
+///   circle holds the wave (37-8, 35-2, and — since the pass of 21.09 — the talk from the first word);
+/// - under «Без подсказок» the talk's lines stay closed: while the role says one the plate holds the wave alone
+///   ([speaking], 37-6 «врач говорит»), afterwards «прослушать» 28 alone (37-8 «в „Без подсказок" остаётся только
+///   „прослушать"»); «прервано» stands over either when the learner cut the line off (37-9).
 ///
-/// Under «Без подсказок» the caller passes no [onOpenText] — then there is no chip and no way to open the text
-/// (37-8, «в „Без подсказок" остаётся только „прослушать"»).
-///
-/// Every circle and chip is 28 on the screen and 44 under the finger: the plate trims its padding by the 8 the touch
-/// box adds, so it keeps the frame's size (12 + 28 + 12) and the circle stands where the frame puts it.
+/// Every circle is 28 on the screen and 44 under the finger: the plate trims its padding by the 8 the touch box adds,
+/// so it keeps the frame's size (12 + 28 + 12) and the circle stands where the frame puts it.
 class TalkPartnerBubble extends StatelessWidget {
   const TalkPartnerBubble({
     super.key,
@@ -47,7 +45,6 @@ class TalkPartnerBubble extends StatelessWidget {
     required this.open,
     required this.playing,
     required this.onListen,
-    this.onOpenText,
     this.interrupted = false,
     this.speaking = false,
   });
@@ -61,9 +58,6 @@ class TalkPartnerBubble extends StatelessWidget {
   /// The line's sound is playing — the role's first saying or a replay from «прослушать».
   final bool playing;
   final VoidCallback? onListen;
-
-  /// «текст» — null when the text may not be opened (the talk under «Без подсказок»).
-  final VoidCallback? onOpenText;
 
   /// The learner cut this line off (кадр 37-9) — it stays in the ribbon with «прервано».
   final bool interrupted;
@@ -123,71 +117,27 @@ class TalkPartnerBubble extends StatelessWidget {
     ),
   );
 
-  /// 37-6 «врач договорил», 37-8, 37-9: the pair in one row; «прервано» over it.
+  /// «Без подсказок», the line said (37-8, 37-9): «прослушать» 28 alone; «прервано» over it.
   Widget _closedPlate(AppLocalizations l, Widget listen, Widget? cut) {
-    final openText = onOpenText;
-    final pair = Row(
-      key: const ValueKey('talk-line-actions'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        listen,
-        if (openText != null) ...[
-          const SizedBox(width: 2),
-          TalkTextChip(key: const ValueKey('talk-open-text'), label: l.planTalkOpenText, onTap: openText),
-        ],
-      ],
-    );
+    final row = KeyedSubtree(key: const ValueKey('talk-line-actions'), child: listen);
     return SessionBubble(
       own: false,
-      padding: EdgeInsets.fromLTRB(6, cut == null ? 4 : 12, openText == null ? 6 : 14, 4),
+      padding: EdgeInsets.fromLTRB(6, cut == null ? 4 : 12, 6, 4),
       shadow: kTalkPlateShadow,
       child: cut == null
-          ? pair
+          ? row
           : Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(padding: const EdgeInsets.only(left: 8), child: cut),
-                // The frame sets the row right under «прервано»: the 44 touch boxes reach 8 up over its line, and the
+                // The frame sets the row right under «прервано»: the 44 touch box reaches 8 up over its line, and the
                 // plate is measured by the 36 below it.
-                Align(alignment: Alignment.bottomLeft, widthFactor: 1, heightFactor: 36 / 44, child: pair),
+                Align(alignment: Alignment.bottomLeft, widthFactor: 1, heightFactor: 36 / 44, child: row),
               ],
             ),
     );
   }
-}
-
-/// THE «ТЕКСТ» CHIP (37-6, 37-8, 37-9) — an ink outline 1,5 at 22 %, 28 high with corners 14, 13 in the
-/// secondary ink; a 44 touch target around it.
-class TalkTextChip extends StatelessWidget {
-  const TalkTextChip({super.key, required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox(
-        height: 44,
-        child: Center(
-          child: Container(
-            height: 28,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.markerOutline, width: 1.5),
-            ),
-            child: Text(label, style: AppTextSession.meta.copyWith(color: AppColors.secondary)),
-          ),
-        ),
-      ),
-    ),
-  );
 }
 
 /// A DOCK PLATE 44 (37-7, 35-2) — «Не понял» / «Пропустить» in an ink outline at 22 %, «Подсказать» in brass:
@@ -373,7 +323,8 @@ class _TalkThinkingState extends State<TalkThinking> with SingleTickerProviderSt
 
 /// THE HINT CHIP (37-7, 35-2) — a LIGHT plate with the intention on the learner's language. Never an
 /// ink bubble: an ink bubble on the right is only ever what the learner actually said (37-7,
-/// «Тёмный пузырь»).
+/// «Тёмный пузырь»). By the frame: paper, corners 16, 10 / 14 inside, 15/20 in ink, and the ribbon's own shadow
+/// `0 2px 8px` at 6 % — not the sheet's (отчёт client-conv-1a §1.7, наряд CLIENT-CONV-1b).
 class TalkHintChip extends StatelessWidget {
   const TalkHintChip({super.key, required this.text, this.alignEnd = false});
 
@@ -393,9 +344,9 @@ class TalkHintChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.paper,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: kSessionSheetShadow,
+          boxShadow: kTalkPlateShadow,
         ),
-        child: Text(text, style: AppTextSession.option),
+        child: Text(text, style: AppTextSession.text15),
       ),
     ),
   );

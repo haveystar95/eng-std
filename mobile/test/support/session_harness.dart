@@ -168,6 +168,7 @@ CardEnv probeEnv(
   String localeId = 'en_US',
   bool Function(PlanStage stage)? stageDone,
   bool replay = false,
+  ValueChanged<String>? showScene,
 }) => CardEnv(
   card: card,
   voice: voice ?? QuietVoice(),
@@ -205,6 +206,7 @@ CardEnv probeEnv(
   stageCards: day == null ? const [] : day.stages.firstWhere((s) => s.stage == card.stage).cards,
   scene: day?.scene,
   stageDone: stageDone,
+  showScene: showScene,
 );
 
 class _Auth extends AuthController {
@@ -243,8 +245,9 @@ Future<void> enterHeard(WidgetTester tester, String text) async {
 }
 
 /// Say [text] through the «what was heard» field and wait until the recording closes on the pause and goes to grading
-/// (SESSION-2a §3: 1 s of silence, whatever was said).
-Future<void> sayDebug(WidgetTester tester, String text, {Duration hold = const Duration(milliseconds: 1050)}) async {
+/// (SESSION-2a §3). The pause goes by length (CLIENT-CONV-1b): 1 s once every content word of the card's line is heard,
+/// up to 2 s while one is missing — so the default hold outlasts the longer one, whatever was said.
+Future<void> sayDebug(WidgetTester tester, String text, {Duration hold = const Duration(milliseconds: 2050)}) async {
   await enterHeard(tester, text);
   await tester.pump(hold);
 }

@@ -3871,9 +3871,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionTaskSayLine => 'Скажи свою реплику';
 
   @override
-  String get planSessionTaskAnswerQuestion => 'Ответь на вопрос';
-
-  @override
   String get planSessionTaskRescue => 'Не понял — переспроси';
 
   @override
@@ -4164,9 +4161,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get planTalkOpenText => 'текст';
-
-  @override
   String get planTalkInterrupted => 'прервано';
 
   @override
@@ -4270,4 +4264,77 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planTalkNoMic => 'Нужен микрофон — без него разговор не пройти';
+
+  @override
+  String get planSessionDescRecall => 'Свои реплики всех сцен — посмотри, послушай и скажи вслух';
+
+  @override
+  String planSessionDoneRecall(String minutes) {
+    return 'Вспомнил · $minutes';
+  }
+
+  @override
+  String get planSessionRecallTask => 'Вспомни свои реплики';
+
+  @override
+  String get planSessionRecallLast => 'Дальше — повтори вслух';
+
+  @override
+  String get planWindowRehearsalBefore => 'перед событием';
+
+  @override
+  String planWindowOnWeekday(String weekday) {
+    String _temp0 = intl.Intl.selectLogic(weekday, {
+      'mon': 'в понедельник',
+      'tue': 'во вторник',
+      'wed': 'в среду',
+      'thu': 'в четверг',
+      'fri': 'в пятницу',
+      'sat': 'в субботу',
+      'sun': 'в воскресенье',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get planWindowReviewTitle => 'Что уже было';
+
+  @override
+  String get planWindowRehearsalLead => 'Проговоришь весь разговор с собеседником';
+
+  @override
+  String get planWindowReviewLead => 'Вернёшь фразы прошлых дней и поговоришь с собеседником';
+
+  @override
+  String get planWindowFromScenes => 'Из каких сцен';
+
+  @override
+  String get planWindowFromDays => 'Из каких дней';
+
+  @override
+  String planWindowSourceLines(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n реплики',
+      many: '$n реплик',
+      few: '$n реплики',
+      one: '$n реплика',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSessionTaskWhatSaid => 'Что тебе сказали?';
+
+  @override
+  String planSessionHeardLine(String text) {
+    return 'услышал: $text';
+  }
+
+  @override
+  String planTalkSceneRepeatBefore(String scene) {
+    return '$scene · повтори перед приёмом';
+  }
 }

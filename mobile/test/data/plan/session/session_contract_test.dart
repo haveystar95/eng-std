@@ -32,17 +32,50 @@ void main() {
     expect(count(a) + count(b), 158);
   });
 
-  // The two fixtures together carry EVERY dealt kind: `phrase_slot` opens a frame's series on the beginner day,
-  // whose third recognitions fit under the stage's ceiling (DECISIONS п. 354) — the intermediate day's do not, and
-  // it has none. What this test guards is that no kind of the enum went missing from the fixtures by accident.
-  test('the two fixtures carry every dealt kind between them', () {
+  // The fixtures together carry EVERY dealt kind: `phrase_slot` opens a frame's series on the beginner day, whose
+  // third recognitions fit under the stage's ceiling (DECISIONS п. 354) — the intermediate day's do not, and it has
+  // none; the rehearsal's overview `recall_scenes` is dealt on the rehearsal only (CLIENT-CONV-1b). What this test
+  // guards is that no kind of the enum went missing from the fixtures by accident.
+  test('the fixtures carry every dealt kind between them', () {
     final kinds = <SessionKind>{
-      for (final day in [SessionDay.fromJson(intermediate), SessionDay.fromJson(beginner)])
+      for (final day in [intermediate, beginner, _fixture('day-review'), _fixture('day-rehearsal')].map(SessionDay.fromJson))
         for (final s in day.stages)
           for (final c in s.cards) c.kind,
     };
     expect(kinds, SessionKind.values.toSet());
-    expect(SessionKind.values, hasLength(27));
+    expect(SessionKind.values, hasLength(28));
+  });
+
+  // CLIENT-CONV-1b: the system days as the e2e stand dealt them. A review — «Говорю сам» of the scene day before it, no
+  // scene of its own; the rehearsal — the overview (a day unit, envelope stage `recall`) and the retells of EVERY
+  // scene with their envelope stage `recall` too, although 35-4 is a kind of «Говорю сам»: the envelope decides where
+  // a card is walked.
+  // CATCHES: a retell filed under `speak` (the rehearsal would open on a stage it does not have), an overview skipped
+  // as an unknown kind, a day room that loses the scenes the overview names.
+  test('the system days: a review\'s speak cards; the rehearsal\'s overview and retells under «recall»', () {
+    final review = SessionDay.fromJson(_fixture('day-review'));
+    expect(review.scene, isNull);
+    expect([for (final s in review.stages) if (s.cards.isNotEmpty) s.stage], [PlanStage.speak]);
+    expect(review.stageOf(PlanStage.speak)!.cards.map((c) => c.kind).toSet(), {SessionKind.speakAnswer});
+    expect(review.skipped, 0);
+
+    final rehearsal = SessionDay.fromJson(_fixture('day-rehearsal'));
+    expect(rehearsal.skipped, 0);
+    final recall = rehearsal.stageOf(PlanStage.recall)!.cards;
+    expect(recall, hasLength(10));
+    expect(recall.first.kind, SessionKind.recallScenes);
+    expect(recall.first.unit.isDay, isTrue);
+    expect(recall.skip(1).every((c) => c.kind == SessionKind.speakRetell && c.stage == PlanStage.recall), isTrue);
+    final overview = recall.first.payload as RecallScenesPayload;
+    expect([for (final s in overview.scenes) s.titleNative], ['Запись к врачу', 'У врача с сыном']);
+    expect([for (final s in overview.scenes) s.lines.length], [7, 7]);
+    expect(overview.scenes.first.lines.first.textTarget, 'It hurts in his lower back.');
+    expect(overview.audios, hasLength(14), reason: 'every own line has its sound');
+
+    final room = PlanDayRoom.fromJson(_fixture('day-rehearsal'));
+    expect([for (final s in room.recallScenes) (s.titleNative, s.lines)], [('Запись к врачу', 7), ('У врача с сыном', 7)]);
+    expect(room.cardSceneIds, [overview.scenes.first.sceneId, overview.scenes.last.sceneId]);
+    expect(PlanDayRoom.fromJson(_fixture('day-review')).recallScenes, isEmpty);
   });
 
   test('the envelope: stage, position, unit, source; the payload is its kind\'s model', () {

@@ -32,6 +32,7 @@ class SessionBubble extends StatelessWidget {
     this.footer,
     this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     this.shadow,
+    this.maxWidth = kSessionBubbleMax,
   });
 
   final bool own;
@@ -46,6 +47,9 @@ class SessionBubble extends StatelessWidget {
   /// The talk's plates stand on the ribbon with the canvas shadow (37-6…37-9); the dialogue's bubbles do not.
   final List<BoxShadow>? shadow;
 
+  /// 274 — 80 % of the field; the own line of 34-5 is the wide one, 312, with its wave and «прослушать» 44 inside.
+  final double maxWidth;
+
   /// The bubble's line style — Literata 22 in ink or paper.
   static TextStyle lineStyle({required bool own}) => AppTextSession.target22.copyWith(color: own ? AppColors.paper : AppColors.ink);
 
@@ -54,7 +58,7 @@ class SessionBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MaxWidthBox(
-    maxWidth: kSessionBubbleMax,
+    maxWidth: maxWidth,
     child: Container(
       padding: padding,
       decoration: BoxDecoration(color: own ? AppColors.windowInk : AppColors.paper, borderRadius: BorderRadius.circular(16), boxShadow: shadow),

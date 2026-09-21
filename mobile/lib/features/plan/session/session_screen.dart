@@ -85,6 +85,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   bool _starting = false;
   bool _talkStartFailed = false;
 
+  /// The scene a card that walks several scenes has on screen (37-3), for the card [_shownFor] — the strip follows it.
+  String? _shownScene;
+  int _shownFor = -1;
+
   @override
   void initState() {
     super.initState();
@@ -162,6 +166,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       localeId: localeId,
       expected: expected,
       contextualStrings: strings.take(50).toList(),
+      rules: _session.day?.speech ?? SpeechRules.none,
     );
   };
 
@@ -336,6 +341,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final card = _session.card!;
     final plan = widget.plan;
     final stageCards = q.cardsOf(stage);
+    // THE CARD'S OWN SCENE (наряд CLIENT-CONV-1b): a review and the rehearsal walk several scenes, and the strip names
+    // the one the card is about; a card that turns scenes itself (37-3) names the one on screen.
+    final shown = _shownFor == _session.cardSerial ? _shownScene : null;
+    final scene = (shown == null ? null : _session.currentPlan.sceneById(shown)) ?? _session.sceneOfCard(card);
     // Every kind is recognized in the target language: the native retelling died with BACK-TAILS-1 §1.1.
     final localeId = sttLocaleFor(plan.targetLang);
     final env = CardEnv(
@@ -343,7 +352,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       voice: _voice,
       targetLang: plan.targetLang,
       localeId: localeId,
-      role: _session.scene?.partnerRoleNative?.trim() ?? '',
+      role: scene?.partnerRoleNative?.trim() ?? '',
       submit: (answer) => _session.submit(card, answer),
       next: () async {
         await _voice.stop();
@@ -366,11 +375,22 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       noHints: _session.noHints,
       feed: stage == PlanStage.dialogue ? DialogueFeed.before(stageCards, card) : const [],
       stageCards: stageCards,
-      scene: _session.scene,
+      scene: scene,
       stageDone: q.isDone,
       speech: _session.day?.speech ?? SpeechRules.none,
+      showScene: (id) {
+        if (!mounted || (_shownFor == _session.cardSerial && _shownScene == id)) return;
+        setState(() {
+          _shownFor = _session.cardSerial;
+          _shownScene = id;
+        });
+      },
     );
     final listen = stage == PlanStage.listen;
+    // «Вспомнить» (37-3): the overview is the stage's sheet, not one of its lines — the header carries the stage's
+    // minutes where the lines' count stands on 35-4, and no beads.
+    final overview = card.kind == SessionKind.recallScenes;
+    final overviewMinutes = overview ? _session.day?.minutesLeft(stage) : null;
     final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -384,19 +404,26 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
           SessionHeader(
             stageName: SessionTexts.stage(l, stage),
             progress: q.progress(stage),
-            left: listen
+            left: overview
+                ? (overviewMinutes == null ? '' : l.planSessionApproxMinutes(overviewMinutes))
+                : listen
                 ? SessionTexts.listenLeft(l, card.kind, stageCards)
                 : SessionTexts.left(
                     l,
                     stage,
-                    q.unitsLeft(stage, openUnit: stage == PlanStage.dialogue || stage == PlanStage.speak ? card.unit.ref : null),
+                    q.unitsLeft(
+                      stage,
+                      openUnit: stage == PlanStage.dialogue || stage == PlanStage.speak || stage == PlanStage.recall ? q.unitKey(card) : null,
+                    ),
                   ),
-            beads: listen
+            beads: overview
+                ? const []
+                : listen
                 ? q.cardBeads(stage, kinds: SessionSummaries.listenQuestions, currentCardId: card.id)
-                : q.beads(stage, currentUnit: card.unit.ref),
+                : q.beads(stage, currentUnit: q.unitKey(card)),
             onClose: () => unawaited(_exit()),
           ),
-        SessionSceneStrip(scene: _session.scene),
+        SessionSceneStrip(scene: scene),
         if (_session.offline) const SessionOfflineBanner(),
         Expanded(
           child: AnimatedSwitcher(
@@ -486,6 +513,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     return TalkView(
       controller: talk,
       scene: _session.scene,
+      sceneById: _session.currentPlan.sceneById,
       voice: _voice,
       makeMic: _talkMic,
       phraseTexts: _talkPhrases,
@@ -503,6 +531,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     return TalkSummaryView(
       talk: document!,
       scene: _session.scene,
+      sceneById: _session.currentPlan.sceneById,
       voice: _voice,
       busy: _starting,
       onClose: () => Navigator.of(context).maybePop(),
@@ -527,16 +556,21 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final q = _session.queue!;
     final next = _session.nextStage;
     switch (stage) {
-      case PlanStage.dialogue || PlanStage.listen || PlanStage.speak || PlanStage.recall:
+      case PlanStage.dialogue || PlanStage.listen || PlanStage.speak:
         return _stageTalkSummary(context, stage, next);
-      case PlanStage.words || PlanStage.phrases || PlanStage.conversation || PlanStage.unknown:
+      // «Вспомнить» closes on 30-6 (кадр 37-4): «Вспомнил · около 4 минут» and «Дальше» — no line about what is closed,
+      // a reminder has nothing to close.
+      case PlanStage.words || PlanStage.phrases || PlanStage.recall || PlanStage.conversation || PlanStage.unknown:
         final units = q.unitsOf(stage);
-        final returning = [for (final ref in q.returningUnits(stage)) _returning(stage, ref)];
+        // The rehearsal is the plan's last day: nothing of it comes back tomorrow.
+        final returning = stage == PlanStage.recall ? const <ReturningUnit>[] : [for (final key in q.returningUnits(stage)) _returning(stage, key)];
         return SessionStageSummary(
           title: SessionTexts.done(l, stage, _session.minutesOf(stage) ?? 0),
           rows: _rows(current: next ?? stage),
           returning: returning,
-          closedLine: SessionTexts.closed(l, stage, closed: units.length - returning.length, someReturn: returning.isNotEmpty),
+          closedLine: stage == PlanStage.recall
+              ? null
+              : SessionTexts.closed(l, stage, closed: units.length - returning.length, someReturn: returning.isNotEmpty),
           nextStage: next,
           nextName: next == null ? null : SessionTexts.stage(l, next),
           nextMinutes: next == null ? null : _session.day?.minutesLeft(next),
@@ -561,9 +595,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     };
     final nextMinutes = next == null ? null : _session.day?.minutesLeft(next);
     // «Listen and answer» never returns anything: its unit is the whole visit.
-    final returningRefs = stage == PlanStage.listen ? const <String>[] : q.returningUnits(stage);
+    final returningKeys = stage == PlanStage.listen ? const <String>[] : q.returningUnits(stage);
     final allCards = [for (final s in PlanStage.known) ...q.cardsOf(s)];
-    final returning = [for (final ref in returningRefs) _pair(DialogueFeed.pairOf(allCards, ref))];
+    final returning = [
+      for (final key in returningKeys)
+        if (q.unitCard(stage, key) case final unit?)
+          // The exchange is looked up in its own scene: a review's x3 of one day is not x3 of another.
+          _pair(DialogueFeed.pairOf(allCards.where((c) => c.payload.sceneId == unit.payload.sceneId), unit.unit.ref)),
+    ];
     final units = q.unitsOf(stage);
     return SessionTalkSummary(
       title: title,
@@ -643,21 +682,22 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   }
 
   /// A unit's captions for «Coming back tomorrow» — from the stage's cards: a word — its term and photo,
-  /// a phrase — as it was said.
-  ReturningUnit _returning(PlanStage stage, String ref) {
+  /// a phrase — as it was said. [key] — the unit's key in the stage ([SessionQueue.unitKey]).
+  ReturningUnit _returning(PlanStage stage, String key) {
     final q = _session.queue!;
-    final term = q.payloadOfUnit<WordIntroPayload>(stage, ref)?.term ??
-        q.payloadOfUnit<WordRepeatPayload>(stage, ref)?.term ??
-        q.payloadOfUnit<WordAssemblePayload>(stage, ref)?.term;
+    final ref = q.unitCard(stage, key)?.unit.ref ?? key;
+    final term = q.payloadOfUnit<WordIntroPayload>(stage, key)?.term ??
+        q.payloadOfUnit<WordRepeatPayload>(stage, key)?.term ??
+        q.payloadOfUnit<WordAssemblePayload>(stage, key)?.term;
     if (term != null) return (target: term.textTarget, native: term.textNative, image: term.image);
-    final said = q.payloadOfUnit<PhraseIntroPayload>(stage, ref)?.said;
+    final said = q.payloadOfUnit<PhraseIntroPayload>(stage, key)?.said;
     if (said != null) return (target: said.textTarget, native: said.textNative, image: null);
-    final repeat = q.payloadOfUnit<PhraseRepeatPayload>(stage, ref);
+    final repeat = q.payloadOfUnit<PhraseRepeatPayload>(stage, key);
     if (repeat != null) {
       final f = repeat.frame.filler(repeat.fillerIndex);
       return (target: repeat.expectedText, native: f?.nativeLine ?? repeat.frame.frameNative, image: null);
     }
-    final choose = q.payloadOfUnit<WordChoosePayload>(stage, ref);
+    final choose = q.payloadOfUnit<WordChoosePayload>(stage, key);
     if (choose != null) {
       final target = choose.termToNative ? choose.promptTextTarget : choose.correctOption?.text;
       final native = choose.termToNative ? choose.correctOption?.text : choose.promptTextNative;

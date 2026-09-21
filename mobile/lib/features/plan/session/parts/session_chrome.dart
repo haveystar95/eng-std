@@ -93,18 +93,21 @@ class SessionHeader extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: kSessionCloseInset),
-            child: SizedBox(
-              height: 8,
-              child: Wrap(
-                spacing: 4,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [for (final b in beads) _Bead(b)],
+          // No beads, no row (37-3: the recall sheet's header stands alone over the strip).
+          if (beads.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: kSessionCloseInset),
+              child: SizedBox(
+                height: 8,
+                child: Wrap(
+                  spacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [for (final b in beads) _Bead(b)],
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -209,16 +212,22 @@ class SessionCloseButton extends StatelessWidget {
 /// there, and the contract has no partner photo to put; the partner's role stays where the frame also keeps it, in
 /// the line itself («· с врачом»).
 class SessionSceneStrip extends StatelessWidget {
-  const SessionSceneStrip({super.key, required this.scene});
+  const SessionSceneStrip({super.key, required this.scene, this.title, this.role});
 
   final PlanScene? scene;
+
+  /// The scene's name and the role, when a document names them itself rather than the plan's scene — the talk's
+  /// `scene` and `partner`, which move from scene to scene on the rehearsal (наряд CLIENT-CONV-1b). The photo stays
+  /// [scene]'s.
+  final String? title;
+  final String? role;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final s = scene;
-    final role = SessionTexts.roleInline(s?.partnerRoleNative?.trim() ?? '');
-    final title = s?.titleNative.trim() ?? '';
+    final role = SessionTexts.roleInline((this.role ?? s?.partnerRoleNative)?.trim() ?? '');
+    final title = (this.title ?? s?.titleNative)?.trim() ?? '';
     final line = role.isEmpty ? title : (title.isEmpty ? role : l.planSessionSceneLine(title, role));
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
     final photo = s?.image;

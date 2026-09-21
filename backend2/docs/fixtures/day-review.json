@@ -1,0 +1,1175 @@
+{
+    "plan_id": "01M2QRH5MYEFZ1DEQ78RH54P6X",
+    "day": {
+        "id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
+        "number": 2,
+        "type": "review",
+        "status": "in_progress",
+        "scene_id": null,
+        "title_native": null,
+        "title_target": null,
+        "teaches_native": null,
+        "lesson_status": null,
+        "opens_on": null,
+        "slot": {
+            "code": "today",
+            "date": "2026-09-21",
+            "label_native": "сегодня"
+        },
+        "cards_total": 7,
+        "cards_done": 0,
+        "minutes_spent": 0,
+        "opened_at": "2026-09-21T18:26:04+00:00",
+        "closed_at": null,
+        "stages": [
+            {
+                "stage": "speak",
+                "state": "current"
+            },
+            {
+                "stage": "conversation",
+                "state": "locked"
+            }
+        ]
+    },
+    "scene": null,
+    "stages": [
+        {
+            "stage": "words",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "phrases",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "dialogue",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "listen",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "speak",
+            "total": 7,
+            "done": 0,
+            "state": "current",
+            "cards": [
+                {
+                    "id": "01M32KFKYBTZVRCH88NSPGC5JD",
+                    "stage": "speak",
+                    "position": 1,
+                    "kind": "speak_answer",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x1"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "He has",
+                        "hint": "He has ___.",
+                        "frame": {
+                            "ref": "p1",
+                            "kind": "answer",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p1",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "температура и болит горло",
+                                        "target": "a fever and a sore throat",
+                                        "in_dialogue": true,
+                                        "native_line": "У него температура и болит горло.",
+                                        "pronunciation_native": "э фивэр энд э сор сроут"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p1.f2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "кашель и насморк",
+                                        "target": "a cough and a runny nose",
+                                        "in_dialogue": false,
+                                        "native_line": "У него кашель и насморк.",
+                                        "pronunciation_native": "э коф энд э ранни ноуз"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p1.f3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "боль в ухе",
+                                        "target": "ear pain",
+                                        "in_dialogue": false,
+                                        "native_line": "У него боль в ухе.",
+                                        "pronunciation_native": "ир пэйн"
+                                    }
+                                ],
+                                "hint_native": "симптомы"
+                            },
+                            "frame_native": "У него ___.",
+                            "frame_target": "He has ___.",
+                            "frame_pronunciation_native": "Хи хэз ___."
+                        },
+                        "judge": true,
+                        "exchange": {
+                            "ref": "x1",
+                            "kind": "answer",
+                            "step": 1
+                        },
+                        "own_line": {
+                            "key": "He has",
+                            "ref": "x1b",
+                            "audio": {
+                                "ref": "x1b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p1",
+                            "text_native": "У него температура и болит горло.",
+                            "text_target": "He has a fever and a sore throat.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "free",
+                        "task_native": "У него температура и болит горло.",
+                        "partner_line": {
+                            "ref": "x1",
+                            "audio": {
+                                "ref": "x1",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "partner"
+                            },
+                            "text_native": "Что сегодня беспокоит вашего сына?",
+                            "text_target": "What seems to be the problem with your son today?"
+                        }
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x1",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32KFKYBP2S23KZ6JYQ2ZWFH",
+                    "stage": "speak",
+                    "position": 2,
+                    "kind": "speak_answer",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x2"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "He's been sick",
+                        "hint": "He's been sick ___.",
+                        "frame": {
+                            "ref": "p2",
+                            "kind": "answer",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "уже три дня",
+                                        "target": "for three days",
+                                        "in_dialogue": true,
+                                        "native_line": "Он болеет уже три дня.",
+                                        "pronunciation_native": "фор сри дэйз"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p2.f2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "со вчерашнего дня",
+                                        "target": "since yesterday",
+                                        "in_dialogue": false,
+                                        "native_line": "Он болеет со вчерашнего дня.",
+                                        "pronunciation_native": "синс естэрдэй"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p2.f3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "с понедельника",
+                                        "target": "since Monday",
+                                        "in_dialogue": false,
+                                        "native_line": "Он болеет с понедельника.",
+                                        "pronunciation_native": "синс мандэй"
+                                    }
+                                ],
+                                "hint_native": "как долго"
+                            },
+                            "frame_native": "Он болеет ___.",
+                            "frame_target": "He's been sick ___.",
+                            "frame_pronunciation_native": "Хиз бин сик ___."
+                        },
+                        "judge": true,
+                        "exchange": {
+                            "ref": "x2",
+                            "kind": "answer",
+                            "step": 2
+                        },
+                        "own_line": {
+                            "key": "He's been sick",
+                            "ref": "x2b",
+                            "audio": {
+                                "ref": "x2b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p2",
+                            "text_native": "Он болеет уже три дня.",
+                            "text_target": "He's been sick for three days.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "free",
+                        "task_native": "Он болеет уже три дня.",
+                        "partner_line": {
+                            "ref": "x2",
+                            "audio": {
+                                "ref": "x2",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "partner"
+                            },
+                            "text_native": "Как долго у него эти симптомы?",
+                            "text_target": "How long has he had these symptoms?"
+                        }
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x2",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32KFKYBRG3XPJW6CV3KT2QS",
+                    "stage": "speak",
+                    "position": 3,
+                    "kind": "speak_answer",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x3"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "Should I tell you",
+                        "hint": "Should I tell you ___?",
+                        "frame": {
+                            "ref": "p3",
+                            "kind": "ask",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "его температуру",
+                                        "target": "his temperature",
+                                        "in_dialogue": true,
+                                        "native_line": "Мне сказать вам его температуру?",
+                                        "pronunciation_native": "хиз тэмпрэчэр"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p3.f2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "его вес",
+                                        "target": "his weight",
+                                        "in_dialogue": false,
+                                        "native_line": "Мне сказать вам его вес?",
+                                        "pronunciation_native": "хиз уэйт"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p3.f3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "его возраст",
+                                        "target": "his age",
+                                        "in_dialogue": false,
+                                        "native_line": "Мне сказать вам его возраст?",
+                                        "pronunciation_native": "хиз эйдж"
+                                    }
+                                ],
+                                "hint_native": "какую информацию сообщить"
+                            },
+                            "frame_native": "Мне сказать вам ___?",
+                            "frame_target": "Should I tell you ___?",
+                            "frame_pronunciation_native": "Шуд ай тел ю ___?"
+                        },
+                        "judge": true,
+                        "exchange": {
+                            "ref": "x3",
+                            "kind": "ask",
+                            "step": 3
+                        },
+                        "own_line": {
+                            "key": "Should I tell you",
+                            "ref": "x3b",
+                            "audio": {
+                                "ref": "x3b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p3",
+                            "text_native": "Мне сказать вам его температуру?",
+                            "text_target": "Should I tell you his temperature?",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "free",
+                        "task_native": "Мне сказать вам его температуру?",
+                        "partner_line": null
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x3",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32KFKYBS38GZF4S45AAMNWR",
+                    "stage": "speak",
+                    "position": 4,
+                    "kind": "speak_answer",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x4"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "I gave him",
+                        "hint": "I gave him ___.",
+                        "frame": {
+                            "ref": "p4",
+                            "kind": "answer",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p4",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "парацетамол",
+                                        "target": "paracetamol",
+                                        "in_dialogue": true,
+                                        "native_line": "Я дал(а) ему парацетамол.",
+                                        "pronunciation_native": "пэрэситэмол"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p4.f2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "ибупрофен",
+                                        "target": "ibuprofen",
+                                        "in_dialogue": false,
+                                        "native_line": "Я дал(а) ему ибупрофен.",
+                                        "pronunciation_native": "айбьюпроуфэн"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p4.f3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "сироп от кашля",
+                                        "target": "cough syrup",
+                                        "in_dialogue": false,
+                                        "native_line": "Я дал(а) ему сироп от кашля.",
+                                        "pronunciation_native": "коф сирэп"
+                                    }
+                                ],
+                                "hint_native": "какое лекарство дали"
+                            },
+                            "frame_native": "Я дал(а) ему ___.",
+                            "frame_target": "I gave him ___.",
+                            "frame_pronunciation_native": "Ай гэйв хим ___."
+                        },
+                        "judge": true,
+                        "exchange": {
+                            "ref": "x4",
+                            "kind": "answer",
+                            "step": 4
+                        },
+                        "own_line": {
+                            "key": "I gave him",
+                            "ref": "x4b",
+                            "audio": {
+                                "ref": "x4b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p4",
+                            "text_native": "Я дал(а) ему парацетамол.",
+                            "text_target": "I gave him paracetamol.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "free",
+                        "task_native": "Я дал(а) ему парацетамол.",
+                        "partner_line": {
+                            "ref": "x4",
+                            "audio": {
+                                "ref": "x4",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "partner"
+                            },
+                            "text_native": "Вы давали ему что-нибудь от температуры?",
+                            "text_target": "Did you give him any medicine for the fever?"
+                        }
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x4",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32KFKYB1MHAJQKW2EB0Y902",
+                    "stage": "speak",
+                    "position": 5,
+                    "kind": "speak_answer",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x5"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "It looks like",
+                        "hint": "It looks like ___.",
+                        "frame": {
+                            "ref": "p5",
+                            "kind": "answer",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p5",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "вирусную инфекцию",
+                                        "target": "a viral infection",
+                                        "in_dialogue": true,
+                                        "native_line": "Похоже на вирусную инфекцию.",
+                                        "pronunciation_native": "э вайрэл инфэкшн"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p5.f2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "стрептококковую ангину",
+                                        "target": "strep throat",
+                                        "in_dialogue": false,
+                                        "native_line": "Похоже на стрептококковую ангину.",
+                                        "pronunciation_native": "стреп сроут"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p5.f3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "простуду",
+                                        "target": "a cold",
+                                        "in_dialogue": false,
+                                        "native_line": "Похоже на простуду.",
+                                        "pronunciation_native": "э коулд"
+                                    }
+                                ],
+                                "hint_native": "что это похоже"
+                            },
+                            "frame_native": "Похоже на ___.",
+                            "frame_target": "It looks like ___.",
+                            "frame_pronunciation_native": "Ит лукс лайк ___."
+                        },
+                        "judge": true,
+                        "exchange": {
+                            "ref": "x5",
+                            "kind": "answer",
+                            "step": 5
+                        },
+                        "own_line": {
+                            "key": "It looks like",
+                            "ref": "x5b",
+                            "audio": {
+                                "ref": "x5b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p5",
+                            "text_native": "Похоже на вирусную инфекцию.",
+                            "text_target": "It looks like a viral infection.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "free",
+                        "task_native": "Похоже на вирусную инфекцию.",
+                        "partner_line": {
+                            "ref": "x5",
+                            "audio": {
+                                "ref": "x5",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "partner"
+                            },
+                            "text_native": "Горло у него красное. Похоже на вирусную инфекцию.",
+                            "text_target": "His throat is red. It looks like a viral infection."
+                        }
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x5",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32KFKYBAWXCBA0CC27WCTFN",
+                    "stage": "speak",
+                    "position": 6,
+                    "kind": "speak_answer",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x6"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "What should I do",
+                        "hint": "What should I do ___?",
+                        "frame": {
+                            "ref": "p6",
+                            "kind": "ask",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p6",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "дома",
+                                        "target": "at home",
+                                        "in_dialogue": true,
+                                        "native_line": "Что мне делать дома?",
+                                        "pronunciation_native": "эт хоум"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p6.f2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "сегодня вечером",
+                                        "target": "tonight",
+                                        "in_dialogue": false,
+                                        "native_line": "Что мне делать сегодня вечером?",
+                                        "pronunciation_native": "тунайт"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p6.f3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "в эти выходные",
+                                        "target": "this weekend",
+                                        "in_dialogue": false,
+                                        "native_line": "Что мне делать в эти выходные?",
+                                        "pronunciation_native": "зис уикэнд"
+                                    }
+                                ],
+                                "hint_native": "где или когда"
+                            },
+                            "frame_native": "Что мне делать ___?",
+                            "frame_target": "What should I do ___?",
+                            "frame_pronunciation_native": "Уот шуд ай ду ___?"
+                        },
+                        "judge": true,
+                        "exchange": {
+                            "ref": "x6",
+                            "kind": "ask",
+                            "step": 6
+                        },
+                        "own_line": {
+                            "key": "What should I do",
+                            "ref": "x6b",
+                            "audio": {
+                                "ref": "x6b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p6",
+                            "text_native": "Что мне делать дома?",
+                            "text_target": "What should I do at home?",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "free",
+                        "task_native": "Что мне делать дома?",
+                        "partner_line": null
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x6",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32KFKYBGSJTZ0Z4E5NB41WV",
+                    "stage": "speak",
+                    "position": 7,
+                    "kind": "speak_answer",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x8"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "should I watch for",
+                        "hint": "What ___ should I watch for?",
+                        "frame": {
+                            "ref": "p7",
+                            "kind": "ask",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p7",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "тревожными признаками",
+                                        "target": "warning signs",
+                                        "in_dialogue": true,
+                                        "native_line": "За какими тревожными признаками мне следить?",
+                                        "pronunciation_native": "ворнинг сайнз"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p7.f2",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "побочными эффектами",
+                                        "target": "side effects",
+                                        "in_dialogue": false,
+                                        "native_line": "За какими побочными эффектами мне следить?",
+                                        "pronunciation_native": "сайд ифэктс"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p7.f3",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "новыми симптомами",
+                                        "target": "new symptoms",
+                                        "in_dialogue": false,
+                                        "native_line": "За какими новыми симптомами мне следить?",
+                                        "pronunciation_native": "нью симптомз"
+                                    }
+                                ],
+                                "hint_native": "какие признаки или симптомы"
+                            },
+                            "frame_native": "За какими ___ мне следить?",
+                            "frame_target": "What ___ should I watch for?",
+                            "frame_pronunciation_native": "Уот ___ шуд ай уотч фор?"
+                        },
+                        "judge": true,
+                        "exchange": {
+                            "ref": "x8",
+                            "kind": "ask",
+                            "step": 8
+                        },
+                        "own_line": {
+                            "key": "should I watch for",
+                            "ref": "x8b",
+                            "audio": {
+                                "ref": "x8b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p7",
+                            "text_native": "За какими тревожными признаками мне следить?",
+                            "text_target": "What warning signs should I watch for?",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "free",
+                        "task_native": "За какими тревожными признаками мне следить?",
+                        "partner_line": null
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x8",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                }
+            ]
+        },
+        {
+            "stage": "recall",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "conversation",
+            "total": 0,
+            "done": 0,
+            "state": "locked",
+            "cards": []
+        }
+    ],
+    "metrics": {
+        "cards_total": 7,
+        "minutes_spent": 0
+    },
+    "program": [
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        }
+    ],
+    "window": {
+        "day": {
+            "index": 2,
+            "type": "review",
+            "title_native": null,
+            "title_target": null,
+            "image": null,
+            "image_tone": "#E3DCCF",
+            "status": "in_progress",
+            "minutes_estimate": 11,
+            "minutes_spent": null,
+            "goals": []
+        },
+        "stages": [
+            {
+                "stage": "speak",
+                "state": "current",
+                "done_count": 0,
+                "total": 7,
+                "minutes_left": 5,
+                "share": 0.0
+            },
+            {
+                "stage": "conversation",
+                "state": "locked",
+                "done_count": null,
+                "total": null,
+                "minutes_left": null,
+                "share": 0.0
+            }
+        ],
+        "day_progress": 0.0,
+        "program": {
+            "words": {
+                "summary": {
+                    "total": 0,
+                    "done": 0,
+                    "returns": 0
+                },
+                "items": []
+            },
+            "phrases": {
+                "summary": {
+                    "total": 0,
+                    "done": 0,
+                    "returns": 0
+                },
+                "items": []
+            },
+            "dialogue": {
+                "summary": {
+                    "total": 7,
+                    "done": 0,
+                    "returns": 0
+                },
+                "items": [
+                    {
+                        "step": 1,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "What seems to be the problem with your son today?",
+                            "translation": "Что сегодня беспокоит вашего сына?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "He has a fever and a sore throat.",
+                            "translation": "У него температура и болит горло.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p1",
+                            "filler": "a fever and a sore throat"
+                        }
+                    },
+                    {
+                        "step": 2,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "How long has he had these symptoms?",
+                            "translation": "Как долго у него эти симптомы?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "He's been sick for three days.",
+                            "translation": "Он болеет уже три дня.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p2",
+                            "filler": "for three days"
+                        }
+                    },
+                    {
+                        "step": 3,
+                        "kind": "ask",
+                        "partner": {
+                            "text": "Yes, please tell me the highest reading.",
+                            "translation": "Да, пожалуйста, скажите самый высокий показатель.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "Should I tell you his temperature?",
+                            "translation": "Мне сказать вам его температуру?",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p3",
+                            "filler": "his temperature"
+                        }
+                    },
+                    {
+                        "step": 4,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "Did you give him any medicine for the fever?",
+                            "translation": "Вы давали ему что-нибудь от температуры?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "I gave him paracetamol.",
+                            "translation": "Я дал(а) ему парацетамол.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p4",
+                            "filler": "paracetamol"
+                        }
+                    },
+                    {
+                        "step": 5,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "His throat is red. It looks like a viral infection.",
+                            "translation": "Горло у него красное. Похоже на вирусную инфекцию.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "It looks like a viral infection.",
+                            "translation": "Похоже на вирусную инфекцию.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p5",
+                            "filler": "a viral infection"
+                        }
+                    },
+                    {
+                        "step": 6,
+                        "kind": "ask",
+                        "partner": {
+                            "text": "Give him fluids, let him rest, and check his temperature.",
+                            "translation": "Давайте ему больше жидкости, пусть отдыхает и проверяйте температуру.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "What should I do at home?",
+                            "translation": "Что мне делать дома?",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p6",
+                            "filler": "at home"
+                        }
+                    },
+                    {
+                        "step": 8,
+                        "kind": "ask",
+                        "partner": {
+                            "text": "Come back if he has trouble breathing or can't drink.",
+                            "translation": "Приходите снова, если ему трудно дышать или он не может пить.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "What warning signs should I watch for?",
+                            "translation": "За какими тревожными признаками мне следить?",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p7",
+                            "filler": "warning signs"
+                        }
+                    }
+                ]
+            }
+        },
+        "allowed_action": "continue",
+        "highlights": [],
+        "listening": []
+    },
+    "speech": {
+        "unstressed_words": [
+            "a",
+            "an",
+            "the",
+            "to",
+            "of",
+            "in",
+            "on",
+            "at",
+            "for",
+            "with",
+            "by",
+            "from",
+            "into",
+            "about",
+            "over",
+            "under",
+            "after",
+            "before",
+            "through",
+            "up",
+            "down",
+            "out",
+            "off",
+            "as",
+            "than",
+            "am",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "do",
+            "does",
+            "did",
+            "have",
+            "has",
+            "had",
+            "will",
+            "would",
+            "shall",
+            "should",
+            "can",
+            "could",
+            "may",
+            "might",
+            "must"
+        ],
+        "articles": [
+            "a",
+            "an",
+            "the"
+        ],
+        "abbreviations": [
+            "a.m.",
+            "p.m.",
+            "e.g.",
+            "i.e.",
+            "etc.",
+            "vs.",
+            "Mr.",
+            "Mrs.",
+            "Ms.",
+            "Dr.",
+            "St."
+        ],
+        "number_words": {
+            "zero": "0",
+            "one": "1",
+            "two": "2",
+            "three": "3",
+            "four": "4",
+            "five": "5",
+            "six": "6",
+            "seven": "7",
+            "eight": "8",
+            "nine": "9",
+            "ten": "10",
+            "eleven": "11",
+            "twelve": "12",
+            "thirteen": "13",
+            "fourteen": "14",
+            "fifteen": "15",
+            "sixteen": "16",
+            "seventeen": "17",
+            "eighteen": "18",
+            "nineteen": "19",
+            "twenty": "20",
+            "thirty": "30",
+            "forty": "40",
+            "fifty": "50",
+            "sixty": "60",
+            "seventy": "70",
+            "eighty": "80",
+            "ninety": "90",
+            "hundred": "100",
+            "thousand": "1000"
+        },
+        "repeat_misses": 0
+    }
+}

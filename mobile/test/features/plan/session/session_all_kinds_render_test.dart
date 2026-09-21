@@ -10,9 +10,9 @@ import '../../../support/session_harness.dart';
 /// EVERY DEALT KIND HAS A SCREEN (work orders SESSION-1c §0 and §7, SESSION-2b, FIX-2 §5): each of the 158 cards of
 /// both fixtures renders its own widget on a phone-sized screen, at the fixture's level, with and without «No hints»,
 /// without an exception; no card falls back to an empty box. Each fixture deals all 13 kinds of dialogue, listening
-/// and speaking, and between them they deal every kind but `phrase_slot`, whose turn this scene's seeded cycle never
-/// reaches now that a frame gets two recognitions. The app's own fonts: the test font's square glyphs make a filler
-/// chip («a follow-up appointment») half as wide again as on the phone.
+/// and speaking, and between them they deal every kind of a scene day. The rehearsal's overview (`recall_scenes`, 37-3)
+/// comes from the system days' fixtures. The app's own fonts: the test font's square glyphs make a filler chip («a
+/// follow-up appointment») half as wide again as on the phone.
 void main() {
   setUpAll(setUpPlanGoldens);
 
@@ -43,7 +43,34 @@ void main() {
       all.addAll(kinds);
     }
     expect(conversation, hasLength(13));
-    expect(all, SessionKind.values.toSet());
+    expect(all, SessionKind.values.toSet().difference({SessionKind.recallScenes}), reason: 'the overview is the rehearsal\'s');
+    await settleCard(tester);
+  });
+
+  // The review and the rehearsal (наряд CLIENT-CONV-1b, fixtures from the e2e stand): a review deals «Говорю сам» of
+  // the scene days before it, the rehearsal the overview 37-3 and the retells 35-4 of every scene — two scenes here,
+  // whose exchanges both count from x1.
+  testWidgets('the system days: a review\'s 7 cards and the rehearsal\'s 10 render; the overview is dealt there', (tester) async {
+    final kinds = <SessionKind>{};
+    for (final (name, count) in [('day-review', 7), ('day-rehearsal', 10)]) {
+      final day = sessionFixture(name);
+      var cards = 0;
+      for (final stage in day.stages) {
+        for (final card in stage.cards) {
+          for (final noHints in [false, true]) {
+            await pumpCard(tester, probeEnv(card, CardProbe(), day: day, level: PlanLevel.beginner, noHints: noHints), size: const Size(390, 844));
+            expect(tester.takeException(), isNull, reason: '$name ${card.kind.wire} #${card.position}');
+            expect(find.byWidgetPredicate((w) => w.runtimeType.toString().endsWith('Card')), findsOneWidget, reason: card.kind.wire);
+            await tester.pump(const Duration(milliseconds: 400));
+            expect(tester.takeException(), isNull, reason: '$name ${card.kind.wire} #${card.position} after its autoplay');
+          }
+          kinds.add(card.kind);
+          cards++;
+        }
+      }
+      expect(cards, count, reason: name);
+    }
+    expect(kinds, {SessionKind.speakAnswer, SessionKind.recallScenes, SessionKind.speakRetell});
     await settleCard(tester);
   });
 }

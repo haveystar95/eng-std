@@ -221,6 +221,32 @@ void main() {
       q.apply(answered: _outcome(assemble, 'failed', returns: true).card);
       expect(q.returningUnits(PlanStage.words), [assemble['unit']['ref']]);
     });
+
+    // ПРАВИЛО (наряд CLIENT-CONV-1b, живой проход репетиции): единица этапа — обмен СВОЕЙ сцены. Каждая сцена считает
+    // обмены с x1, и «Вспомнить» держит x3 первой сцены рядом с x3 второй; один этап одной сцены считается по ref, как
+    // и раньше. Обзор 37-3 — единица дня, его в счёте нет.
+    // ЛОВИТ: «ещё 6 реплик» и шесть бусин на девяти пересказах двух сцен — три обмена второй сцены слились с первой.
+    test('a stage of two scenes counts each scene\'s exchanges: nine retells are nine lines', () {
+      final raw = jsonDecode(File('../backend2/docs/fixtures/day-rehearsal.json').readAsStringSync()) as Map<String, dynamic>;
+      final q = SessionQueue(SessionDay.fromJson(raw).stages);
+      final retells = q.cardsOf(PlanStage.recall).where((c) => c.kind == SessionKind.speakRetell).toList();
+      expect(retells, hasLength(9));
+      expect(retells.map((c) => c.unit.ref).toSet(), hasLength(6), reason: 'the refs alone collide across the scenes');
+      expect(q.unitsOf(PlanStage.recall), hasLength(9));
+      expect(q.unitsLeft(PlanStage.recall), 9);
+      expect(q.beads(PlanStage.recall, currentUnit: q.unitKey(retells.first)), hasLength(9));
+
+      final second = retells.lastWhere((c) => c.unit.ref == 'x3');
+      final first = retells.firstWhere((c) => c.unit.ref == 'x3');
+      expect(q.unitKey(first), isNot(q.unitKey(second)));
+      q.markAnswered(first, SessionResult.passed, 1);
+      expect(q.unitDone(PlanStage.recall, q.unitKey(first)), isTrue);
+      expect(q.unitDone(PlanStage.recall, q.unitKey(second)), isFalse, reason: 'x3 of the other scene is still ahead');
+      expect(q.unitCard(PlanStage.recall, q.unitKey(second))!.id, second.id);
+
+      final oneScene = SessionQueue(SessionDay.fromJson(_raw()).stages);
+      expect(oneScene.unitsOf(PlanStage.speak).every((k) => !k.contains('/')), isTrue, reason: 'one scene — the bare refs');
+    });
   });
 
   group('SessionController', () {

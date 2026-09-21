@@ -59,6 +59,39 @@ void main() {
       await tapText(tester, 'Дальше');
       expect(probe.nexts, 1);
     });
+
+    // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b, кадр 33-1): своя реплика → пузырь собеседника с волной →
+    // ОТДЕЛЬНЫЙ блок «Что тебе сказали?» с вопросом и вариантами под ним. Вопрос не стоит над лентой строкой задания:
+    // между прошлой своей репликой и пузырём собеседника его читали репликой разговора.
+    // ЛОВИТ: вопрос снова в строке задания над лентой; блок, разрезанный пузырём; варианты под краем экрана.
+    testWidgets('33-1: своя реплика → пузырь с волной → блок «Что тебе сказали?» с вариантами', (tester) async {
+      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
+      for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 3)) {
+        c['result'] = 'passed';
+        c['attempts'] = 1;
+      }
+      final cards = SessionDay.fromJson(raw).stageOf(PlanStage.dialogue)!.cards;
+      final card = cards.firstWhere((c) => c.position == 3);
+      final payload = card.payload as DialoguePartnerPayload;
+      await pumpCard(tester, probeEnv(card, CardProbe(), feed: DialogueFeed.before(cards, card)), size: const Size(390, 844));
+
+      final own = tester.getRect(find.byType(SessionOwnRow).last);
+      final wave = tester.getRect(find.byKey(const ValueKey('partner-wave')));
+      final task = tester.getRect(find.text('Что тебе сказали?'));
+      final question = tester.getRect(find.byKey(const ValueKey('check-question')));
+      final options = [for (final o in payload.options) tester.getRect(find.byKey(ValueKey('option-${o.id}')))];
+      expect(own.bottom, lessThanOrEqualTo(wave.top), reason: 'своя реплика прошлого обмена — над пузырём собеседника');
+      expect(wave.bottom, lessThanOrEqualTo(task.top), reason: 'блок — под пузырём, а не над лентой');
+      expect(task.bottom, lessThanOrEqualTo(question.top));
+      expect(tester.widget<Text>(find.byKey(const ValueKey('check-question'))).data, payload.questionNative);
+      for (final o in options) {
+        expect(question.bottom, lessThanOrEqualTo(o.top), reason: 'вопрос над вариантами — один блок');
+        expect(o.bottom, lessThanOrEqualTo(844), reason: 'варианты на экране');
+      }
+      expect(find.descendant(of: find.byKey(const ValueKey('check-block')), matching: find.text(payload.questionNative)), findsOneWidget);
+      await settleCard(tester);
+    });
   });
 
   group('33-2 · 33-3 · 33-4 dialogue_answer', () {
@@ -162,7 +195,7 @@ void main() {
       await sayDebug(tester, 'Do we need an X-ray');
       expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');
       await tester.pump();
-      expect(find.text('Ответь на вопрос'), findsOneWidget);
+      expect(find.text('Что тебе сказали?'), findsOneWidget);
       expect(find.text(check.questionNative), findsOneWidget);
       expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply sounds with its text closed');
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
@@ -201,11 +234,14 @@ void main() {
       expect(probe.nexts, 1);
     });
 
-    // ДЕФЕКТ: «варианты без вопроса» (живой проход 18.09, обмены x5/x6): на экране четыре варианта, а строки задания
-    // «Ответь на вопрос» и самого вопроса нет — отвечать не на что, и варианты читаются как чужие.
-    // ПРАВИЛО: наряд FIX-1 §1 — порядок кадра 33-5 стоит на экране целиком: реплика ученика → закрытый ответ →
-    // задание и вопрос над ним → варианты внизу, какой бы длинной ни была лента разговора.
-    testWidgets('варианты без вопроса: задание и вопрос стоят на экране, лента уезжает под них', (tester) async {
+    // ДЕФЕКТ: «варианты без вопроса» (живой проход 18.09, обмены x5/x6): на экране четыре варианта, а строки задания и
+    // самого вопроса нет — отвечать не на что, и варианты читаются как чужие.
+    // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b, порядок кадра 33-1): своя реплика → закрытый ответ
+    // собеседника → ОТДЕЛЬНЫЙ блок «Что тебе сказали?» с вопросом и вариантами под ним — вопрос больше не стоит между
+    // репликами. Блок целиком на экране, какой бы длинной ни была лента разговора.
+    // CATCHES: the question back between the two lines, where it read as a line of the talk; the task or the question
+    // pushed off the screen by a long conversation.
+    testWidgets('варианты без вопроса: блок «Что тебе сказали?» под пузырём, над вариантами, лента уезжает под шапку', (tester) async {
       final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 12)) {
@@ -221,21 +257,17 @@ void main() {
       await sayDebug(tester, 'Do we need an X-ray');
       await tester.pump();
 
-      final task = tester.getRect(find.text('Ответь на вопрос'));
+      final task = tester.getRect(find.text('Что тебе сказали?'));
       final question = tester.getRect(find.byKey(const ValueKey('check-question')));
       final reply = tester.getRect(find.byKey(const ValueKey('reply-wave')));
       final option = tester.getRect(find.byKey(ValueKey('option-${check.options.first.id}')));
-      expect(task.top, greaterThanOrEqualTo(0), reason: 'the task line is on the screen');
-      expect(question.bottom, lessThanOrEqualTo(844), reason: 'and so is the question');
+      expect(reply.bottom, lessThanOrEqualTo(task.top), reason: 'блок стоит под закрытым ответом, а не между репликами');
       expect(task.bottom, lessThanOrEqualTo(question.top), reason: 'задание над вопросом');
-      expect(question.bottom, lessThanOrEqualTo(reply.top), reason: 'вопрос над закрытым пузырём');
-      expect(reply.bottom, lessThanOrEqualTo(option.top), reason: 'варианты внизу');
-
-      // ДОРАБОТКА FIX-1: вопрос — КРУПНО, стилем вопроса карточки, и стоит ОДНИМ БЛОКОМ с пузырём, а не серой
-      // строкой у верхней кромки экрана. ЛОВИТ: возврат вопроса в строку задания (meta 13) и отрыв его от пузыря.
-      expect(tester.widget<Text>(find.byKey(const ValueKey('check-question'))).style, AppTextSession.question);
-      expect(reply.top - question.bottom, lessThan(32), reason: 'вопрос прямо над пузырём, а не через всю ленту');
-      expect(question.top, greaterThan(200), reason: 'блок стоит у пузыря, а не у верхней кромки');
+      expect(question.bottom, lessThanOrEqualTo(option.top), reason: 'вопрос над вариантами — один блок');
+      expect(option.bottom, lessThanOrEqualTo(844), reason: 'the whole block is on the screen');
+      expect(tester.widget<Text>(find.byKey(const ValueKey('check-question'))).style, AppTextSession.question,
+          reason: 'вопрос — крупно, стилем вопроса карточки');
+      expect(find.byKey(const ValueKey('check-block')), findsOneWidget);
     });
 
     // ПРАВИЛО: наряд FIX-1 §1 — вопрос и варианты принадлежат обмену ЭТОЙ карточки, а не соседнему.
@@ -277,7 +309,7 @@ void main() {
 
       expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply comes closed');
       expect(voice.played, contains('x7@1.0'), reason: 'and sounds by itself');
-      expect(find.text('Ответь на вопрос'), findsOneWidget);
+      expect(find.text('Что тебе сказали?'), findsOneWidget);
       expect(find.text(check.questionNative), findsOneWidget);
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing, reason: 'the text stays closed');
       expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');

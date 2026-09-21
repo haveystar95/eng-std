@@ -12,6 +12,7 @@ import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../../conversation/talk_ribbon.dart';
+import '../../conversation/talk_texts.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
 import '../parts/session_line_sheet.dart';
@@ -168,8 +169,8 @@ mixin _JudgedCardState<T extends StatefulWidget> on State<T> {
 
 // ── 35-2 · 35-5 ───────────────────────────────────────────────────────────────────────────────────
 
-/// How the intention was offered.
-enum _Hint { none, silence, button }
+/// How the intention was offered: by the silence, by «Подсказать», or at once after the judge said no.
+enum _Hint { none, silence, button, miss }
 
 /// ANSWER THE PARTNER (35-2; rejected — 35-5), REBUILT ON THE TALK'S RIBBON (наряд CLIENT-CONV-1a):
 /// the same bubbles and the same microphone as кадры 37-6…37-8, with the two differences the canvas
@@ -178,11 +179,13 @@ enum _Hint { none, silence, button }
 ///
 /// The partner's line sounds when the card opens and stands with its translation. THE OWN BUBBLE
 /// APPEARS ONLY ONCE THERE IS SOMETHING IN IT: what is being said, or what was said. Five seconds of
-/// silence — or «Подсказать» — raise the CHIP with the task in the learner's language, and the button
-/// goes away with it (the two never stand together). The attempt goes to the judge with `hinted`.
-/// Accepted — the words the server matched to phrases of the day are underlined in sage, and the card
-/// leaves by itself. Rejected — the judge's own sentence stands in ink under the bubble, «Ещё раз» is
-/// a button and «Пропустить» a link. Under «Без подсказок» there is no chip and no «Подсказать».
+/// silence — or «Подсказать» — raise the CHIP «Скажи, что …» with the task in the learner's language,
+/// and the button goes away with it (the two never stand together). The attempt goes to the judge with
+/// `hinted`. Accepted — the words the server matched to phrases of the day are underlined in sage, and
+/// the card leaves by itself. Rejected — the judge's own sentence stands in ink under the bubble, under it
+/// «услышал: …» with what the phone recognised, the chip comes up AT ONCE (правки прохода 21.09, наряд
+/// CLIENT-CONV-1b — no five seconds after a miss), «Ещё раз» is a button and «Пропустить» a link. Under
+/// «Без подсказок» there is no chip and no «Подсказать».
 ///
 /// AN `ask` EXCHANGE HAS NO QUESTION (work order FIX-2 §3): the learner speaks first, and the
 /// partner's line of that exchange is the ANSWER — the server sends `partner_line: null`. The card
@@ -224,6 +227,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
     _Hint.none => null,
     _Hint.silence => 'silence',
     _Hint.button => 'button',
+    _Hint.miss => 'miss',
   };
 
   @override
@@ -279,6 +283,13 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
         if (mounted) unawaited(env.next());
       }));
+      return;
+    }
+    // A MISS RAISES THE CHIP AT ONCE: the learner has just tried, and five more seconds of silence before the task
+    // shows are five seconds of guessing what the judge wanted. «Спроси сам» has its intention on screen already.
+    if (!env.noHints && !_asks && _hint == _Hint.none) {
+      _silence?.cancel();
+      setState(() => _hint = _Hint.miss);
     }
   }
 
@@ -357,6 +368,9 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
           textAlign: TextAlign.left,
           style: AppTextSession.text15.copyWith(fontWeight: FontWeight.w500),
         ),
+        // «услышал: …» — what the phone recognised, so a refusal over a misheard word reads as one (CLIENT-CONV-1b).
+        const SizedBox(height: 4),
+        SessionHeardText(heard: heard),
       ],
     );
   }
@@ -368,7 +382,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_chipShown) ...[TalkHintChip(text: p.taskNative), const SizedBox(height: 14)],
+          if (_chipShown) ...[TalkHintChip(text: TalkTexts.hint(l, p.taskNative)), const SizedBox(height: 14)],
           Center(child: SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, brass: true, onTap: skip)),
           const SizedBox(height: 14),
           SessionDockButton(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, onTap: tryAgain),
@@ -382,7 +396,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
     };
     return TalkDock(
       debugMic: finished || judging ? null : mic,
-      chip: _chipShown ? TalkHintChip(text: p.taskNative) : null,
+      chip: _chipShown ? TalkHintChip(text: TalkTexts.hint(l, p.taskNative)) : null,
       caption: switch (mic.state) {
         MicState.listening => l.planSessionMicListening,
         MicState.heard => l.planSessionMicHeard,

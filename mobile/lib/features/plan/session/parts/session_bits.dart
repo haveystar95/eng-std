@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../../data/local/cached_image_provider.dart';
@@ -89,12 +90,13 @@ class SessionTask extends StatelessWidget {
   );
 }
 
-/// THE QUESTION OF A CHECK, WHERE THE THING IT ASKS ABOUT IS (33-1, 33-5; наряд FIX-1, доработка).
+/// THE QUESTION OF A CHECK (33-1, 33-5; наряды FIX-1 доработка, CLIENT-CONV-1b).
 ///
-/// The task line small above it, the question itself in the card's own question type (Literata 26) — one block with
-/// the closed bubble under it and the options in the dock. It stands in the card's BODY, not in the task line of the
-/// screen: at the top edge, in grey 13, over a conversation of six exchanges, the question read as chrome and the
-/// learner was left with four options and nothing to answer (живой проход 18.09).
+/// The task line small above it («Что тебе сказали?»), the question itself in the card's own question type (Literata
+/// 26) — the head of the block of options in the dock, APART from the conversation: between the two lines it read as a
+/// line of the talk (правка прохода 21.09). Never the grey task line at the top edge of the screen: over a
+/// conversation of six exchanges the question read as chrome there, and the learner was left with four options and
+/// nothing to answer (живой проход 18.09).
 class SessionCheckQuestion extends StatelessWidget {
   const SessionCheckQuestion({super.key, required this.task, required this.question});
 
@@ -111,6 +113,28 @@ class SessionCheckQuestion extends StatelessWidget {
       Text(question, key: const ValueKey('check-question'), style: AppTextSession.question),
     ],
   );
+}
+
+/// «УСЛЫШАЛ: …» (правки прохода 21.09, наряд CLIENT-CONV-1b) — what the phone's recogniser gave, under a refusal of
+/// the judge (35-2, the own-word round of 32-7): the learner sees whether the verdict was about their sentence or about
+/// a misheard one. 13 in the tertiary ink; nothing heard — nothing drawn.
+class SessionHeardText extends StatelessWidget {
+  const SessionHeardText({super.key, required this.heard, this.center = false});
+
+  final String heard;
+  final bool center;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = heard.trim();
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Text(
+      AppLocalizations.of(context).planSessionHeardLine(text),
+      key: const ValueKey('session-heard-text'),
+      textAlign: center ? TextAlign.center : TextAlign.left,
+      style: AppTextSession.meta,
+    );
+  }
 }
 
 /// BRASS WAVE — the bars are live only while [playing], static afterwards (table «Timing · session»).

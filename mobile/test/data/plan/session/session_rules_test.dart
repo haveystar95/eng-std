@@ -55,13 +55,15 @@ void main() {
       SessionKind.speakAnswer: judged,
       SessionKind.speakEcho: voice,
       SessionKind.speakRetell: voice,
+      // The rehearsal's recall sheet (37-3, CLIENT-CONV-1b): read through, «Дальше» on its last scene.
+      SessionKind.recallScenes: walkthrough,
     };
 
     // CATCHES: a voice kind that may write `failed` (422 and a dropped answer), a judged kind that writes its own pass,
     // a walkthrough that is skipped, and a new kind added without a row.
-    test('the matrix on all 27 kinds: choice passed | failed, voice passed | skipped, judged only skipped, walkthrough passed', () {
+    test('the matrix on all 28 kinds: choice passed | failed, voice passed | skipped, judged only skipped, walkthrough passed', () {
       expect(matrix.keys.toSet(), SessionKind.values.toSet());
-      expect(SessionKind.values, hasLength(27));
+      expect(SessionKind.values, hasLength(28));
       for (final kind in SessionKind.values) {
         final writes = SessionRules.clientWrites(kind);
         expect(writes, matrix[kind], reason: kind.wire);
@@ -91,7 +93,13 @@ void main() {
       ]) {
         expect(k.grading, SessionGrading.voice, reason: k.wire);
       }
-      for (final k in [SessionKind.dialogueRescue, SessionKind.listenDialogue, SessionKind.listenReview, SessionKind.listenPace]) {
+      for (final k in [
+        SessionKind.dialogueRescue,
+        SessionKind.listenDialogue,
+        SessionKind.listenReview,
+        SessionKind.listenPace,
+        SessionKind.recallScenes,
+      ]) {
         expect(k.grading, SessionGrading.pass, reason: k.wire);
       }
       for (final k in [SessionKind.listenQuestion, SessionKind.listenPredict, SessionKind.listenNumber, SessionKind.dialoguePartner]) {
@@ -146,10 +154,11 @@ void main() {
       expect(SessionRules.voiceAccepted(x2, 'it started yesterday', en), isTrue);
       expect(SessionRules.voiceAccepted(x2, 'started yesterday', en), isFalse, reason: 'a two-word frame needs both words');
 
+      // Since CONV-2 the echo is the learner's own line (x3b «The pain is sharp when he bends.»).
       final echo = day.stageOf(PlanStage.speak)!.cards.map((c) => c.payload).whereType<SpeakEchoPayload>().single;
       expect(echo.speechMode, SpeechMode.repeat);
-      expect(SessionRules.voiceAccepted(echo, 'It looks like a muscle strain so he should rest and use a heating pad', en), isTrue);
-      expect(SessionRules.voiceAccepted(echo, 'muscle strain rest', en), isFalse);
+      expect(SessionRules.voiceAccepted(echo, 'The pain is sharp when he bends', en), isTrue);
+      expect(SessionRules.voiceAccepted(echo, 'pain sharp', en), isFalse);
       expect(SessionRules.expectedSpeech(echo), echo.expectedText);
     });
   });

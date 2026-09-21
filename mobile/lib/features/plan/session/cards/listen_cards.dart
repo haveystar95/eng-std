@@ -669,29 +669,14 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
       task: SessionTask(l.planSessionTaskListenChoose, companion: l.planSessionListenWholeOne),
       body: ValueListenableBuilder<Object?>(
         valueListenable: env.voice.playing,
-        builder: (_, playing, _) => SessionOwnRow(
-          listen: SessionListenButton(
-            size: 28,
-            brass: true,
-            label: l.planWindowListen,
-            playing: playing == _ownKey,
-            onTap: () => unawaited(env.voice.play(own.audio, fallback: own.textTarget, key: _ownKey)),
-          ),
-          bubble: SessionBubble(
-            own: true,
+        builder: (_, playing, _) => Align(
+          alignment: Alignment.centerRight,
+          child: _PredictOwnBubble(
             // The learner's own question opens with the rest of the texts — on a pass too, in the
             // 600 ms the card has left (кадр 34-5, «тексты открываются вместе со своей репликой»).
-            text: answered ? own.textTarget : null,
-            translation: answered ? own.textNative : null,
-            child: answered
-                ? null
-                : SessionWave(
-                    key: const ValueKey('predict-own-wave'),
-                    heights: SessionWave.five,
-                    width: 80,
-                    playing: playing == _ownKey,
-                    color: AppColors.paper,
-                  ),
+            line: answered ? own : null,
+            playing: playing == _ownKey,
+            onListen: () => unawaited(env.voice.play(own.audio, fallback: own.textTarget, key: _ownKey)),
           ),
         ),
       ),
@@ -735,6 +720,89 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
       ],
     ),
   );
+}
+
+/// THE LEARNER'S OWN LINE ON 34-5 — THE WIDE BUBBLE OF THE FRAME (отчёт client-conv-1a §1.8, наряд CLIENT-CONV-1b):
+/// ink, at most 312, 12 / 14 inside, and everything of the line INSIDE it — before the answer the long wave of
+/// eighteen bars (paper while it sounds, paper at 45 % at rest) and «прослушать» 44 in a paper outline at 55 %; after
+/// the answer the line and its translation with the same circle beside them.
+class _PredictOwnBubble extends StatelessWidget {
+  const _PredictOwnBubble({required this.line, required this.playing, required this.onListen});
+
+  /// The line once the texts are open; null — closed.
+  final CardLine? line;
+  final bool playing;
+  final VoidCallback onListen;
+
+  /// The frame's eighteen bars, 3 wide and 3 apart, 48 high at most.
+  static const _bars = [3.0, 7.0, 14.0, 27.0, 27.0, 27.0, 40.0, 44.0, 19.0, 48.0, 23.0, 21.0, 39.0, 13.0, 17.0, 7.0, 5.0, 3.0];
+
+  /// The widest the own bubble of this card grows (34-5).
+  static const maxWidth = 312.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final open = line;
+    final listen = Semantics(
+      button: true,
+      label: l.planWindowListen,
+      child: GestureDetector(
+        key: const ValueKey('predict-own-listen'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onListen,
+        child: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.sessionOwnListenOutline, width: 1.5),
+          ),
+          child: const Icon(LucideIcons.volume1, size: 18, color: AppColors.paper),
+        ),
+      ),
+    );
+    return SessionBubble(
+      key: const ValueKey('predict-own'),
+      own: true,
+      maxWidth: maxWidth,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: open == null ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        children: [
+          if (open == null)
+            SizedBox(
+              width: 150,
+              height: 48,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SessionWave(
+                  key: const ValueKey('predict-own-wave'),
+                  heights: _bars,
+                  playing: playing,
+                  color: playing ? AppColors.paper : AppColors.sessionPaperDim,
+                ),
+              ),
+            )
+          else
+            Flexible(
+              child: Column(
+                key: const ValueKey('predict-own-text'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(open.textTarget, style: SessionBubble.lineStyle(own: true)),
+                  const SizedBox(height: 2),
+                  Text(open.textNative, style: SessionBubble.translationStyle(own: true)),
+                ],
+              ),
+            ),
+          const SizedBox(width: 12),
+          listen,
+        ],
+      ),
+    );
+  }
 }
 
 // ── 34-6 ──────────────────────────────────────────────────────────────────────────────────────────

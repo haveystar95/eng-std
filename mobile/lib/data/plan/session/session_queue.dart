@@ -5,7 +5,8 @@
 /// card from the response, the copy after the first failure (`requeued`) goes to the end of the stage (it has the
 /// next position).
 ///
-/// The header count and the beads are by UNITS (`unit.ref`), not by cards: «4 words left».
+/// The header count and the beads are by UNITS (`unit.ref`, with its scene where a stage walks several), not by
+/// cards: «4 words left».
 library;
 
 import '../plan_models.dart';
@@ -115,17 +116,36 @@ class SessionQueue {
     }
   }
 
-  /// The stage's units in order of first appearance.
+  /// THE UNIT'S KEY IN ITS STAGE — its `unit.ref`, and in a stage that walks SEVERAL scenes the ref with its scene
+  /// (наряд CLIENT-CONV-1b). Every scene numbers its units from the first (x1, p1, v1), so the rehearsal's «Вспомнить»
+  /// and a review hold x3 of one scene beside x3 of another — the live pass counted nine retells of two scenes as six
+  /// lines. A stage of one scene keys by the bare ref, as it always did.
+  String unitKey(SessionCard card) => _sceneCount(card.stage) > 1 ? '${card.payload.sceneId}/${card.unit.ref}' : card.unit.ref;
+
+  int _sceneCount(PlanStage stage) => {
+    for (final c in _cards[stage] ?? const <SessionCard>[])
+      if (!c.unit.isDay) c.payload.sceneId,
+  }.length;
+
+  /// The unit's first card in the stage — its scene and its bare ref.
+  SessionCard? unitCard(PlanStage stage, String key) {
+    for (final c in cardsOf(stage)) {
+      if (!c.unit.isDay && unitKey(c) == key) return c;
+    }
+    return null;
+  }
+
+  /// The stage's units in order of first appearance, by [unitKey].
   List<String> unitsOf(PlanStage stage) {
     final seen = <String>{};
     return [
       for (final c in cardsOf(stage))
-        if (!c.unit.isDay && seen.add(c.unit.ref)) c.unit.ref,
+        if (!c.unit.isDay && seen.add(unitKey(c))) unitKey(c),
     ];
   }
 
   /// The unit is closed in the stage — all of its cards are answered.
-  bool unitDone(PlanStage stage, String ref) => cardsOf(stage).where((c) => c.unit.ref == ref).every((c) => c.isAnswered);
+  bool unitDone(PlanStage stage, String key) => cardsOf(stage).where((c) => !c.unit.isDay && unitKey(c) == key).every((c) => c.isAnswered);
 
   /// «N words left» — units that still have an unanswered card in the stage (the current one too). [openUnit] — a unit
   /// counted as left even once its cards are answered: the conversation stages keep the count of the card on screen
@@ -166,17 +186,17 @@ class SessionQueue {
 
   /// The stage's units that will return the next day: the server set `returns` on their card.
   List<String> returningUnits(PlanStage stage) {
-    final refs = <String>{};
+    final keys = <String>{};
     for (final c in cardsOf(stage)) {
-      if (c.returns && !c.unit.isDay) refs.add(c.unit.ref);
+      if (c.returns && !c.unit.isDay) keys.add(unitKey(c));
     }
-    return [for (final ref in unitsOf(stage)) if (refs.contains(ref)) ref];
+    return [for (final key in unitsOf(stage)) if (keys.contains(key)) key];
   }
 
   /// The unit's first card in the stage that has [T] — the unit's captions come from here (word, phrase, photo).
-  T? payloadOfUnit<T extends CardPayload>(PlanStage stage, String ref) {
+  T? payloadOfUnit<T extends CardPayload>(PlanStage stage, String key) {
     for (final c in cardsOf(stage)) {
-      if (c.unit.ref == ref && c.payload is T) return c.payload as T;
+      if (!c.unit.isDay && unitKey(c) == key && c.payload is T) return c.payload as T;
     }
     return null;
   }

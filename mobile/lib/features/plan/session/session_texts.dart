@@ -17,13 +17,15 @@ abstract final class SessionTexts {
     PlanStage.phrases => l.planSessionDescPhrases(units),
     PlanStage.dialogue => l.planSessionDescDialogue,
     PlanStage.listen => l.planSessionDescListen,
-    PlanStage.speak || PlanStage.recall || PlanStage.conversation || PlanStage.unknown => l.planSessionDescSpeak,
+    PlanStage.recall => l.planSessionDescRecall,
+    PlanStage.speak || PlanStage.conversation || PlanStage.unknown => l.planSessionDescSpeak,
   };
 
-  /// «4 words left» — on the right of the header (30-2); the dialogue and speaking count exchanges («lines»).
+  /// «4 words left» — on the right of the header (30-2); the dialogue, speaking and the rehearsal's «Вспомнить»
+  /// count exchanges («lines», кадр 37-4: «ещё 5 реплик» … «ещё 1 реплика»).
   static String left(AppLocalizations l, PlanStage s, int units) => switch (s) {
     PlanStage.phrases => l.planSessionLeftPhrases(units),
-    PlanStage.dialogue || PlanStage.speak => l.planSessionLeftExchanges(units),
+    PlanStage.dialogue || PlanStage.speak || PlanStage.recall => l.planSessionLeftExchanges(units),
     _ => l.planSessionLeftWords(units),
   };
 
@@ -49,6 +51,8 @@ abstract final class SessionTexts {
     return switch (s) {
       PlanStage.phrases => l.planSessionDonePhrases(m),
       PlanStage.dialogue => l.planSessionDoneDialogue(m),
+      // 37-4: «Вспомнил · около 4 минут» — the stage's minutes as the server counted them.
+      PlanStage.recall => l.planSessionDoneRecall(l.planTalkEntryMinutes(minutes)),
       _ => l.planSessionDoneWords(m),
     };
   }

@@ -3700,9 +3700,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskSayLine => 'Say your line';
 
   @override
-  String get planSessionTaskAnswerQuestion => 'Answer the question';
-
-  @override
   String get planSessionTaskRescue => 'Didn\'t catch it — ask again';
 
   @override
@@ -3959,9 +3956,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTalkOpenText => 'text';
-
-  @override
   String get planTalkInterrupted => 'cut short';
 
   @override
@@ -4061,4 +4055,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planTalkNoMic => 'Microphone needed — the talk can\'t go on without it';
+
+  @override
+  String get planSessionDescRecall =>
+      'Your own lines from every scene — look, listen and say them aloud';
+
+  @override
+  String planSessionDoneRecall(String minutes) {
+    return 'Recalled · $minutes';
+  }
+
+  @override
+  String get planSessionRecallTask => 'Recall your lines';
+
+  @override
+  String get planSessionRecallLast => 'Next — say them aloud';
+
+  @override
+  String get planWindowRehearsalBefore => 'before the event';
+
+  @override
+  String planWindowOnWeekday(String weekday) {
+    String _temp0 = intl.Intl.selectLogic(weekday, {
+      'mon': 'on Monday',
+      'tue': 'on Tuesday',
+      'wed': 'on Wednesday',
+      'thu': 'on Thursday',
+      'fri': 'on Friday',
+      'sat': 'on Saturday',
+      'sun': 'on Sunday',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get planWindowReviewTitle => 'What came before';
+
+  @override
+  String get planWindowRehearsalLead => 'You will talk the whole conversation through';
+
+  @override
+  String get planWindowReviewLead =>
+      'You will bring back the phrases of past days and talk them through';
+
+  @override
+  String get planWindowFromScenes => 'From these scenes';
+
+  @override
+  String get planWindowFromDays => 'From these days';
+
+  @override
+  String planWindowSourceLines(int n) {
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n lines', one: '$n line');
+    return '$_temp0';
+  }
+
+  @override
+  String get planSessionTaskWhatSaid => 'What were you told?';
+
+  @override
+  String planSessionHeardLine(String text) {
+    return 'heard: $text';
+  }
+
+  @override
+  String planTalkSceneRepeatBefore(String scene) {
+    return '$scene · go over it before the visit';
+  }
 }

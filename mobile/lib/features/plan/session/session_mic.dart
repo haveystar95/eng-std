@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:eng_std/theme/feedback.dart' show SessionSounds;
 
+import '../../../data/plan/session/speech_match.dart';
 import '../../../data/speech/speech_diagnostics.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import '../../../data/speech/speech_turn.dart';
@@ -34,10 +35,15 @@ typedef MicTurn = ({String transcript, SpeechTurnOutcome outcome});
 /// and the live line; the card computes the pass from [onTurn] and answers with [settle].
 ///
 /// RECORD UNTIL THE PAUSE, NOT UNTIL THE KEY (work order SESSION-2a §3): a recording is closed only by a pause in the
-/// speech ([turnConfig] — 1 s of silence after the last word) or by a tap on the button, and only then is the whole
-/// of what was said handed to the card. The partial result is for the screen and never decides anything: an early
-/// stop on the first covered key cut the owner mid-sentence («smaller» in «Answer in your own words», the first of
-/// two sentences in «Say what you heard»). The pass rule did not change — the moment it is applied did.
+/// speech or by a tap on the button, and only then is the whole of what was said handed to the card. The partial
+/// result is for the screen and never decides anything: an early stop on the first covered key cut the owner
+/// mid-sentence («smaller» in «Answer in your own words», the first of two sentences in «Say what you heard»). The
+/// pass rule did not change — the moment it is applied did.
+///
+/// THE PAUSE GOES BY LENGTH (правка прохода 21.09, наряд CLIENT-CONV-1b): 1 s once every content word of [expected]
+/// has been heard, up to 2 s while one is still missing — the learner who stops for a word mid-line is not cut off,
+/// and the one who said it all does not wait. The mirror of the server's rule of grading is not touched: it is read,
+/// to learn when the line is through, never to pass or fail it here.
 ///
 /// Debug door [submitDebug] — the debug build's «what was heard» field on the simulator, where there is no
 /// microphone: the text takes the same road — the pause, then the final transcript.
@@ -49,6 +55,7 @@ class SessionMic extends ChangeNotifier {
     required this.expected,
     this.contextualStrings = const [],
     this.config = turnConfig,
+    this.rules = SpeechRules.none,
   });
 
   final SpeechRecognizer _recognizer;
@@ -58,8 +65,26 @@ class SessionMic extends ChangeNotifier {
   final String localeId;
 
   /// What should be said — a hint to the engine and the reference for the live line (for «Your slot» a chip
-  /// changes it).
+  /// changes it). It also sets THE LENGTH OF THE CLOSING PAUSE (наряд CLIENT-CONV-1b): until every content word of it
+  /// is heard the recording waits [SpeechTurnConfig.silenceWhileIncomplete], then [SpeechTurnConfig.silenceAfterSpeech]
+  /// ([SpeechMatch.heardAll] over the day's [rules]). Empty — nothing in particular is expected, one pause.
   String expected;
+
+  /// The target language's spoken rules as the day sent them — what «a content word» is for [expected].
+  final SpeechRules rules;
+
+  bool Function(String transcript)? get _heardAll {
+    final line = expected;
+    if (line.trim().isEmpty) return null;
+    return (transcript) => SpeechMatch.heardAll(transcript, line, rules);
+  }
+
+  /// The pause after the last word that closes a recording of [transcript] — the one rule of the engine, for the
+  /// debug field too.
+  Duration _silenceFor(String transcript) {
+    final heardAll = _heardAll;
+    return heardAll == null || heardAll(transcript) ? config.silenceAfterSpeech : config.silenceWhileIncomplete;
+  }
 
   /// The card's words — `SFSpeechRecognitionRequest.contextualStrings`.
   final List<String> contextualStrings;
@@ -131,6 +156,7 @@ class SessionMic extends ChangeNotifier {
         expected: [if (expected.trim().isNotEmpty) expected],
         localeId: localeId,
         contextualStrings: contextualStrings,
+        heardAll: _heardAll,
         onPartial: (text) {
           if (_turn != turn) return;
           _partial = text;
@@ -197,7 +223,8 @@ class SessionMic extends ChangeNotifier {
   }
 
   /// DEBUG FIELD «WHAT WAS HEARD» (debug build only): the text acts as a partial result that no longer changes: the
-  /// recording closes after the pause of [turnConfig], then the final transcript goes to the card.
+  /// recording closes after the pause the engine would wait for it (by its length, [_silenceFor]), then the final
+  /// transcript goes to the card.
   void submitDebug(String text) {
     if (!kDebugMode) return;
     final heard = text.trim();
@@ -211,7 +238,7 @@ class SessionMic extends ChangeNotifier {
     _closed = false;
     _set(MicState.listening);
     SessionSounds.play(SessionSounds.micOn);
-    _debugClose = Timer(config.silenceAfterSpeech, () {
+    _debugClose = Timer(_silenceFor(heard), () {
       if (_disposed) return;
       _closed = true;
       _notify();

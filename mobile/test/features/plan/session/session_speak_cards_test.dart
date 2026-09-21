@@ -46,7 +46,8 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
       await tester.pump();
       expect(find.byKey(const ValueKey('talk-hint-chip')), findsOneWidget);
-      expect(find.text('Началось три дня назад.'), findsOneWidget, reason: 'чип печатает задание сервера как есть');
+      expect(find.text('Скажи, что началось три дня назад'), findsOneWidget,
+          reason: '«Скажи, что …» печатает клиент вокруг задания сервера, как в разговоре (кадр 35-2, CLIENT-CONV-1b)');
       expect(find.byKey(const ValueKey('exit-hint')), findsNothing, reason: 'чип и кнопка вместе не стоят');
 
       await enterHeard(tester, 'It started last night');
@@ -130,15 +131,21 @@ void main() {
       expect(tester.getRect(judge).left, moreOrLessEquals(tester.getRect(find.byType(TalkPartnerBubble)).left, epsilon: 0.5),
           reason: 'слева, от края ленты');
       expect(tester.getRect(judge).top, greaterThanOrEqualTo(tester.getRect(own).bottom), reason: 'под пузырём');
+      // CLIENT-CONV-1b: under the judge's line — what the phone heard; and the chip is up AT ONCE, no five seconds.
+      final heard = find.byKey(const ValueKey('session-heard-text'));
+      expect(tester.widget<Text>(heard).data, 'услышал: It started the car');
+      expect(tester.getRect(heard).top, greaterThanOrEqualTo(tester.getRect(judge).bottom), reason: 'под строкой судьи');
+      expect(find.text('Скажи, что началось три дня назад'), findsOneWidget, reason: 'чип сразу после промаха');
       expect(find.byKey(const ValueKey('talk-mic')), findsNothing);
       expect(dockEnabled(tester, 'Ещё раз'), isTrue);
 
       await tester.tap(find.byKey(const ValueKey('exit-again')));
       await tester.pump();
       expect(find.byKey(const ValueKey('talk-mic')), findsOneWidget, reason: '«Ещё раз» возвращает микрофон');
+      expect(find.byKey(const ValueKey('talk-hint-chip')), findsOneWidget, reason: 'чип остаётся над микрофоном');
       await sayDebug(tester, 'It started this morning');
       await tester.pump();
-      expect(probe.hinted, [false, false], reason: 'подсказку не открывали');
+      expect(probe.hinted, [false, true], reason: 'вторая попытка шла с чипом на экране — честный hinted');
 
       await tester.tap(find.byKey(const ValueKey('exit-skip')));
       await tester.pump();
@@ -212,18 +219,24 @@ void main() {
   });
 
   group('35-3 speak_echo', () {
+    // Since CONV-2 (21.09) the echo is dealt on the LEARNER'S own line and `partner_line` carries that same line for
+    // builds up to 17 (DECISIONS 366–378); the fixtures were regenerated with it. The rules below hold for any line, so
+    // the line is read off the card, not written into the test.
+    SpeakEchoPayload echoOf() => speakAt(7).payload as SpeakEchoPayload;
+
     // CATCHES: the text shown before the answer, a microphone that records during the pause, a pass that leaves before
     // the revealed line is read.
     testWidgets('the line sounds, the pause ring holds the microphone, then the answer — the line opens, matched words in sage', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
+      final line = echoOf().partnerLine;
       await pumpCard(tester, probeEnv(speakAt(7), probe, voice: voice));
       expect(find.text('Повтори через паузу'), findsOneWidget);
       expect(find.text('текст закрыт'), findsOneWidget);
       expect(find.text('слушай'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
-      expect(voice.played, ['x5@1.0']);
+      expect(voice.played, ['${line.audio!.ref}@1.0']);
       expect(find.byKey(const ValueKey('echo-pause-ring')), findsOneWidget);
       expect(find.text('жду'), findsOneWidget);
       expect(find.byKey(const ValueKey('session-debug-heard')), findsNothing, reason: 'the microphone is inactive in the pause');
@@ -232,19 +245,20 @@ void main() {
       await tester.pump();
       expect(find.byKey(const ValueKey('echo-pause-ring')), findsNothing);
       expect(find.text('тап — говорить'), findsOneWidget);
-      expect(find.text('It looks like a muscle strain, so he should rest and use a heating pad.'), findsNothing);
+      expect(find.text(line.textTarget), findsNothing);
 
       // The line is on the screen, so it is said as it stands (`speech_mode: repeat`, FIX-2 §2): every content word,
-      // in its order. «and use heat» would have passed the old 0.7 share and is two content words short of the line.
-      await sayDebug(tester, 'It looks like a muscle strain so he should rest and use a heating pad');
+      // in its order.
+      final said = line.textTarget.replaceAll(RegExp(r'[,.?!]'), '');
+      await sayDebug(tester, said);
       expect(results(probe), [SessionResult.passed]);
       await tester.pump(const Duration(milliseconds: 250));
       final text = tester.widget<SessionMarkedText>(find.byKey(const ValueKey('echo-text')));
-      expect(text.text, 'It looks like a muscle strain, so he should rest and use a heating pad.');
-      expect([for (final m in text.marks) text.text.substring(m.start, m.end)], ['It', 'looks', 'like', 'a', 'muscle', 'strain', 'so', 'he', 'should', 'rest', 'and', 'use', 'a', 'heating', 'pad']);
+      expect(text.text, line.textTarget);
+      expect([for (final m in text.marks) text.text.substring(m.start, m.end)], said.split(' '));
       // Under the eyebrow stands the line's own TRANSLATION. «совпавшее — шалфеем» is the canvas telling its reader
       // what the sage marks mean; it was on the card for a while, and it is not a sentence the learner is told.
-      expect(find.text('Похоже на растяжение мышцы, так что ему нужен покой и грелка.'), findsOneWidget);
+      expect(find.text(line.textNative), findsOneWidget);
       expect(find.text('совпавшее — шалфеем'), findsNothing);
       await settleCard(tester);
       expect(probe.nexts, 0, reason: 'the revealed line waits for «Next»');
@@ -261,7 +275,7 @@ void main() {
       final echo = CardProbe();
       await pumpCard(tester, probeEnv(speakAt(7), echo));
       await tester.pump(const Duration(milliseconds: 3400));
-      await sayDebug(tester, 'It looks like a muscle strain so he should rest and use a heating pad');
+      await sayDebug(tester, echoOf().partnerLine.textTarget.replaceAll(RegExp(r'[,.?!]'), ''));
       expect(results(echo), [SessionResult.passed]);
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();

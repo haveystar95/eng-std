@@ -19,7 +19,7 @@ import 'window_texts.dart';
 /// предложением; хайрлайн и пять рядов этапов 48 с полосой — цифра «N / M» только у текущего. Низ 48:
 /// 24 заходит пилюля вкладок, 24 воздуха. Кнопки на плите нет: она одна и живёт внизу экрана.
 class WindowPlate extends StatelessWidget {
-  const WindowPlate({super.key, required this.window, this.onBack, this.poppedStages = const {}});
+  const WindowPlate({super.key, required this.window, this.onBack, this.poppedStages = const {}, this.system});
 
   final DayWindow window;
   final VoidCallback? onBack;
@@ -27,11 +27,19 @@ class WindowPlate extends StatelessWidget {
   /// Этапы, закрытые с прошлого показа окна, — их галки появляются через 300 мс (`om-check-pop`).
   final Set<PlanStage> poppedStages;
 
+  /// A REVIEW OR THE REHEARSAL (кадры 37-1, 37-2, наряд CLIENT-CONV-1b) — the same plate with its own words: the
+  /// day's kind for the brow, its own title, one status line and one sentence of what the day holds in place of the
+  /// goals; no tab pill under it, so the plate ends 28 below the last row. Null — a scene day (23-0a…0c).
+  final WindowSystemDay? system;
+
   /// Скругление низа плиты.
   static const radius = 28.0;
 
   /// Сколько пилюля вкладок заходит на плиту: она стоит на шве тёмное → бумага.
   static const pillOverlap = 24.0;
+
+  /// Под плитой без пилюли (37-1, 37-2) — 28 воздуха под последним рядом.
+  static const systemBottom = 28.0;
 
   /// Ряд этапа, последний — без воздуха под полосой (низ плиты даёт свои 48).
   static const stageRow = 48.0;
@@ -42,11 +50,12 @@ class WindowPlate extends StatelessWidget {
     final day = window.day;
     final top = MediaQuery.paddingOf(context).top;
     const shape = BorderRadius.vertical(bottom: Radius.circular(radius));
-    final passed = day.status == WindowDayStatus.passed;
-    final goals = WindowTexts.goalsList(l, day.goals);
+    final system = this.system;
+    final passed = day.status == WindowDayStatus.passed && system == null;
+    final goals = system == null ? WindowTexts.goalsList(l, day.goals) : '';
 
     final content = Padding(
-      padding: EdgeInsets.fromLTRB(24, top, 24, 2 * pillOverlap),
+      padding: EdgeInsets.fromLTRB(24, top, 24, system == null ? 2 * pillOverlap : systemBottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
@@ -57,13 +66,18 @@ class WindowPlate extends StatelessWidget {
               children: [
                 _Back(onTap: onBack, label: l.planWindowBack),
                 const SizedBox(width: 12),
-                Text(l.planPlateLabel(day.index).toUpperCase(), style: AppTextWindow.brow),
+                Text((system?.brow ?? l.planPlateLabel(day.index)).toUpperCase(), style: AppTextWindow.brow),
               ],
             ),
           ),
           const SizedBox(height: 8),
-          WindowTitle(text: WindowTexts.title(l, day)),
-          if (passed) ...[
+          WindowTitle(text: system?.title ?? WindowTexts.title(l, day)),
+          if (system != null) ...[
+            const SizedBox(height: 4),
+            Text(system.status, key: const ValueKey('window-system-status'), style: AppTextWindow.status),
+            const SizedBox(height: 24),
+            Text(system.lead, key: const ValueKey('window-system-lead'), style: AppTextWindow.goals),
+          ] else if (passed) ...[
             const SizedBox(height: 2),
             Row(
               children: [

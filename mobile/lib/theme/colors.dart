@@ -344,6 +344,12 @@ abstract final class AppColors {
   /// The divider between the rows of the day plate 30-7 — `rgba(246,243,236,.14)`.
   static const sessionPlateDivider = Color.fromARGB(36, 246, 243, 236);
 
+  /// «Прослушать» 44 inside the learner's own ink bubble (34-5, наряд CLIENT-CONV-1b) — an outline of paper at 55 %.
+  static const sessionOwnListenOutline = Color.fromARGB(140, 246, 243, 236);
+
+  /// The card under a day window of a review or the rehearsal (37-1, 37-2) — `0 2px 8px rgba(46,38,32,.06)`.
+  static const windowSourceShadow = Color.fromARGB(15, _inkR, _inkG, _inkB);
+
   /// Доминантный тон картинки с провода (`image.tone`, `#RRGGBB`) — заливка круга, пока картинка
   /// в пути (наряд PLAN-UI-3). Не цвет палитры, а цвет фотографии: поэтому он приходит с сервера и
   /// читается здесь, где hex законен. Кривой ответ — null, и круг остаётся бумажным.

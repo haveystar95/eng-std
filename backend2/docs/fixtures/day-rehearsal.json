@@ -1,0 +1,1113 @@
+{
+    "plan_id": "01M2QRH5MYEFZ1DEQ78RH54P6X",
+    "day": {
+        "id": "01M2QRH5MZK7AJWAFY9QK73MM4",
+        "number": 3,
+        "type": "rehearsal",
+        "status": "in_progress",
+        "scene_id": null,
+        "title_native": null,
+        "title_target": null,
+        "teaches_native": null,
+        "lesson_status": null,
+        "opens_on": "2026-09-21",
+        "slot": {
+            "code": "today",
+            "date": "2026-09-21",
+            "label_native": "сегодня"
+        },
+        "cards_total": 10,
+        "cards_done": 0,
+        "minutes_spent": 0,
+        "opened_at": "2026-09-21T18:48:56+00:00",
+        "closed_at": null,
+        "stages": [
+            {
+                "stage": "recall",
+                "state": "current"
+            },
+            {
+                "stage": "conversation",
+                "state": "locked"
+            }
+        ]
+    },
+    "scene": null,
+    "stages": [
+        {
+            "stage": "words",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "phrases",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "dialogue",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "listen",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "speak",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "recall",
+            "total": 10,
+            "done": 0,
+            "state": "current",
+            "cards": [
+                {
+                    "id": "01M32MSGBWT7GWFFAYDRJTVHJW",
+                    "stage": "recall",
+                    "position": 1,
+                    "kind": "recall_scenes",
+                    "unit": {
+                        "kind": "day",
+                        "ref": "day"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "scenes": [
+                            {
+                                "lines": [
+                                    {
+                                        "key": "It hurts in his",
+                                        "ref": "x1b",
+                                        "step": 1,
+                                        "audio": {
+                                            "ref": "x1b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p1",
+                                        "text_native": "У него болит поясница.",
+                                        "text_target": "It hurts in his lower back.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "It started",
+                                        "ref": "x2b",
+                                        "step": 2,
+                                        "audio": {
+                                            "ref": "x2b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p2",
+                                        "text_native": "Началось три дня назад.",
+                                        "text_target": "It started three days ago.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "The pain is",
+                                        "ref": "x3b",
+                                        "step": 3,
+                                        "audio": {
+                                            "ref": "x3b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p3",
+                                        "text_native": "Боль острая, когда он наклоняется.",
+                                        "text_target": "The pain is sharp when he bends.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "He doesn't have a",
+                                        "ref": "x4b",
+                                        "step": 4,
+                                        "audio": {
+                                            "ref": "x4b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p4",
+                                        "text_native": "Нет, температуры нет.",
+                                        "text_target": "No, he doesn't have a fever.",
+                                        "filler_index": null
+                                    },
+                                    {
+                                        "key": "He will rest",
+                                        "ref": "x5b",
+                                        "step": 5,
+                                        "audio": {
+                                            "ref": "x5b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p5",
+                                        "text_native": "Хорошо, он будет отдыхать дома.",
+                                        "text_target": "Okay, he will rest at home.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "Do we need",
+                                        "ref": "x7b",
+                                        "step": 7,
+                                        "audio": {
+                                            "ref": "x7b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p6",
+                                        "text_native": "Нам нужно сделать рентген?",
+                                        "text_target": "Do we need an X-ray?",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "Do we need",
+                                        "ref": "x8b",
+                                        "step": 8,
+                                        "audio": {
+                                            "ref": "x8b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p6",
+                                        "text_native": "Нам нужно прийти на повторный приём?",
+                                        "text_target": "Do we need a follow-up appointment?",
+                                        "filler_index": 1
+                                    }
+                                ],
+                                "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                                "title_native": "Запись к врачу",
+                                "title_target": "At the doctor's with a child"
+                            },
+                            {
+                                "lines": [
+                                    {
+                                        "key": "He has",
+                                        "ref": "x1b",
+                                        "step": 1,
+                                        "audio": {
+                                            "ref": "x1b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p1",
+                                        "text_native": "У него температура и болит горло.",
+                                        "text_target": "He has a fever and a sore throat.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "He's been sick",
+                                        "ref": "x2b",
+                                        "step": 2,
+                                        "audio": {
+                                            "ref": "x2b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p2",
+                                        "text_native": "Он болеет уже три дня.",
+                                        "text_target": "He's been sick for three days.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "Should I tell you",
+                                        "ref": "x3b",
+                                        "step": 3,
+                                        "audio": {
+                                            "ref": "x3b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p3",
+                                        "text_native": "Мне сказать вам его температуру?",
+                                        "text_target": "Should I tell you his temperature?",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "I gave him",
+                                        "ref": "x4b",
+                                        "step": 4,
+                                        "audio": {
+                                            "ref": "x4b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p4",
+                                        "text_native": "Я дал(а) ему парацетамол.",
+                                        "text_target": "I gave him paracetamol.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "It looks like",
+                                        "ref": "x5b",
+                                        "step": 5,
+                                        "audio": {
+                                            "ref": "x5b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p5",
+                                        "text_native": "Похоже на вирусную инфекцию.",
+                                        "text_target": "It looks like a viral infection.",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "What should I do",
+                                        "ref": "x6b",
+                                        "step": 6,
+                                        "audio": {
+                                            "ref": "x6b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p6",
+                                        "text_native": "Что мне делать дома?",
+                                        "text_target": "What should I do at home?",
+                                        "filler_index": 0
+                                    },
+                                    {
+                                        "key": "should I watch for",
+                                        "ref": "x8b",
+                                        "step": 8,
+                                        "audio": {
+                                            "ref": "x8b",
+                                            "url": null,
+                                            "duration_ms": null,
+                                            "voice": "learner"
+                                        },
+                                        "frame_ref": "p7",
+                                        "text_native": "За какими тревожными признаками мне следить?",
+                                        "text_target": "What warning signs should I watch for?",
+                                        "filler_index": 0
+                                    }
+                                ],
+                                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                                "title_native": "У врача с сыном",
+                                "title_target": "At the doctor's with your son"
+                            }
+                        ],
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR"
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "day",
+                    "unit_ref": "day",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBWKWF1T5VB7WS87MSX",
+                    "stage": "recall",
+                    "position": 2,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x7"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x7",
+                            "kind": "ask",
+                            "step": 7
+                        },
+                        "own_line": {
+                            "key": "Do we need",
+                            "ref": "x7b",
+                            "audio": {
+                                "ref": "x7b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p6",
+                            "text_native": "Нам нужно сделать рентген?",
+                            "text_target": "Do we need an X-ray?",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "speech_mode": "repeat",
+                        "expected_text": "Do we need an X-ray?"
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x7",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBW19RTNAP9YEFAEXVV",
+                    "stage": "recall",
+                    "position": 3,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x1"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x1",
+                            "kind": "answer",
+                            "step": 1
+                        },
+                        "own_line": {
+                            "key": "It hurts in his",
+                            "ref": "x1b",
+                            "audio": {
+                                "ref": "x1b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p1",
+                            "text_native": "У него болит поясница.",
+                            "text_target": "It hurts in his lower back.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "speech_mode": "repeat",
+                        "expected_text": "It hurts in his lower back."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x1",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBW232WZDYWE3BMA29S",
+                    "stage": "recall",
+                    "position": 4,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x2"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x2",
+                            "kind": "answer",
+                            "step": 2
+                        },
+                        "own_line": {
+                            "key": "It started",
+                            "ref": "x2b",
+                            "audio": {
+                                "ref": "x2b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p2",
+                            "text_native": "Началось три дня назад.",
+                            "text_target": "It started three days ago.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "speech_mode": "repeat",
+                        "expected_text": "It started three days ago."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x2",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBWSP9D7J3NTWF6J83F",
+                    "stage": "recall",
+                    "position": 5,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x3"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x3",
+                            "kind": "answer",
+                            "step": 3
+                        },
+                        "own_line": {
+                            "key": "The pain is",
+                            "ref": "x3b",
+                            "audio": {
+                                "ref": "x3b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p3",
+                            "text_native": "Боль острая, когда он наклоняется.",
+                            "text_target": "The pain is sharp when he bends.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "speech_mode": "repeat",
+                        "expected_text": "The pain is sharp when he bends."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x3",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBWWT5XDHNVP2JMBVZW",
+                    "stage": "recall",
+                    "position": 6,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x4"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x4",
+                            "kind": "answer",
+                            "step": 4
+                        },
+                        "own_line": {
+                            "key": "He doesn't have a",
+                            "ref": "x4b",
+                            "audio": {
+                                "ref": "x4b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p4",
+                            "text_native": "Нет, температуры нет.",
+                            "text_target": "No, he doesn't have a fever.",
+                            "filler_index": null
+                        },
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "speech_mode": "repeat",
+                        "expected_text": "No, he doesn't have a fever."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x4",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBWF3QKDAY73FTC6756",
+                    "stage": "recall",
+                    "position": 7,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x5"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x5",
+                            "kind": "answer",
+                            "step": 5
+                        },
+                        "own_line": {
+                            "key": "He will rest",
+                            "ref": "x5b",
+                            "audio": {
+                                "ref": "x5b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p5",
+                            "text_native": "Хорошо, он будет отдыхать дома.",
+                            "text_target": "Okay, he will rest at home.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "speech_mode": "repeat",
+                        "expected_text": "Okay, he will rest at home."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x5",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBW538KHSHQD5H07PZH",
+                    "stage": "recall",
+                    "position": 8,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x3"
+                    },
+                    "source": "returned",
+                    "source_day": 2,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x3",
+                            "kind": "ask",
+                            "step": 3
+                        },
+                        "own_line": {
+                            "key": "Should I tell you",
+                            "ref": "x3b",
+                            "audio": {
+                                "ref": "x3b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p3",
+                            "text_native": "Мне сказать вам его температуру?",
+                            "text_target": "Should I tell you his temperature?",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "repeat",
+                        "expected_text": "Should I tell you his temperature?"
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x3",
+                    "source_day_id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBWDY1NTT92CAEF4HTD",
+                    "stage": "recall",
+                    "position": 9,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x4"
+                    },
+                    "source": "returned",
+                    "source_day": 2,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x4",
+                            "kind": "answer",
+                            "step": 4
+                        },
+                        "own_line": {
+                            "key": "I gave him",
+                            "ref": "x4b",
+                            "audio": {
+                                "ref": "x4b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p4",
+                            "text_native": "Я дал(а) ему парацетамол.",
+                            "text_target": "I gave him paracetamol.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "repeat",
+                        "expected_text": "I gave him paracetamol."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x4",
+                    "source_day_id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32MSGBW55WJRFZKDYRH602P",
+                    "stage": "recall",
+                    "position": 10,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x5"
+                    },
+                    "source": "returned",
+                    "source_day": 2,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x5",
+                            "kind": "answer",
+                            "step": 5
+                        },
+                        "own_line": {
+                            "key": "It looks like",
+                            "ref": "x5b",
+                            "audio": {
+                                "ref": "x5b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p5",
+                            "text_native": "Похоже на вирусную инфекцию.",
+                            "text_target": "It looks like a viral infection.",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "repeat",
+                        "expected_text": "It looks like a viral infection."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x5",
+                    "source_day_id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
+                    "answered_at": null,
+                    "returns": false
+                }
+            ]
+        },
+        {
+            "stage": "conversation",
+            "total": 0,
+            "done": 0,
+            "state": "locked",
+            "cards": []
+        }
+    ],
+    "metrics": {
+        "cards_total": 10,
+        "minutes_spent": 0
+    },
+    "program": [
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "today",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "returned",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "returned",
+            "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "returned",
+            "state": "pending"
+        }
+    ],
+    "window": {
+        "day": {
+            "index": 3,
+            "type": "rehearsal",
+            "title_native": null,
+            "title_target": null,
+            "image": null,
+            "image_tone": "#E3DCCF",
+            "status": "in_progress",
+            "minutes_estimate": 12,
+            "minutes_spent": null,
+            "goals": []
+        },
+        "stages": [
+            {
+                "stage": "recall",
+                "state": "current",
+                "done_count": 0,
+                "total": 10,
+                "minutes_left": 6,
+                "share": 0.0
+            },
+            {
+                "stage": "conversation",
+                "state": "locked",
+                "done_count": null,
+                "total": null,
+                "minutes_left": null,
+                "share": 0.0
+            }
+        ],
+        "day_progress": 0.0,
+        "program": {
+            "words": {
+                "summary": {
+                    "total": 0,
+                    "done": 0,
+                    "returns": 0
+                },
+                "items": []
+            },
+            "phrases": {
+                "summary": {
+                    "total": 0,
+                    "done": 0,
+                    "returns": 0
+                },
+                "items": []
+            },
+            "dialogue": {
+                "summary": {
+                    "total": 9,
+                    "done": 0,
+                    "returns": 0
+                },
+                "items": [
+                    {
+                        "step": 7,
+                        "kind": "ask",
+                        "partner": {
+                            "text": "No, an X-ray is not needed for a muscle strain.",
+                            "translation": "Нет, при растяжении мышцы рентген не нужен.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "Do we need an X-ray?",
+                            "translation": "Нам нужно сделать рентген?",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p6",
+                            "filler": "an X-ray"
+                        }
+                    },
+                    {
+                        "step": 1,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "Where does it hurt: his upper back or his lower back?",
+                            "translation": "Где болит: вверху спины или в пояснице?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "It hurts in his lower back.",
+                            "translation": "У него болит поясница.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p1",
+                            "filler": "lower back"
+                        }
+                    },
+                    {
+                        "step": 2,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "Did it start today, or earlier this week?",
+                            "translation": "Началось сегодня или раньше на этой неделе?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "It started three days ago.",
+                            "translation": "Началось три дня назад.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p2",
+                            "filler": "three days ago"
+                        }
+                    },
+                    {
+                        "step": 3,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "Is the pain sharp, or more of a dull ache?",
+                            "translation": "Боль острая или скорее ноющая?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "The pain is sharp when he bends.",
+                            "translation": "Боль острая, когда он наклоняется.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p3",
+                            "filler": "sharp"
+                        }
+                    },
+                    {
+                        "step": 4,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "Does he have a fever?",
+                            "translation": "У него есть температура?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "No, he doesn't have a fever.",
+                            "translation": "Нет, температуры нет.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p4",
+                            "filler": null
+                        }
+                    },
+                    {
+                        "step": 5,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "It looks like a muscle strain, so he should rest and use a heating pad.",
+                            "translation": "Похоже на растяжение мышцы, так что ему нужен покой и грелка.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "Okay, he will rest at home.",
+                            "translation": "Хорошо, он будет отдыхать дома.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p5",
+                            "filler": "at home"
+                        }
+                    },
+                    {
+                        "step": 3,
+                        "kind": "ask",
+                        "partner": {
+                            "text": "Yes, please tell me the highest reading.",
+                            "translation": "Да, пожалуйста, скажите самый высокий показатель.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "Should I tell you his temperature?",
+                            "translation": "Мне сказать вам его температуру?",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p3",
+                            "filler": "his temperature"
+                        }
+                    },
+                    {
+                        "step": 4,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "Did you give him any medicine for the fever?",
+                            "translation": "Вы давали ему что-нибудь от температуры?",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "I gave him paracetamol.",
+                            "translation": "Я дал(а) ему парацетамол.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p4",
+                            "filler": "paracetamol"
+                        }
+                    },
+                    {
+                        "step": 5,
+                        "kind": "answer",
+                        "partner": {
+                            "text": "His throat is red. It looks like a viral infection.",
+                            "translation": "Горло у него красное. Похоже на вирусную инфекцию.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "It looks like a viral infection.",
+                            "translation": "Похоже на вирусную инфекцию.",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p5",
+                            "filler": "a viral infection"
+                        }
+                    }
+                ]
+            }
+        },
+        "allowed_action": "continue",
+        "highlights": [],
+        "listening": []
+    },
+    "speech": {
+        "unstressed_words": [
+            "a",
+            "an",
+            "the",
+            "to",
+            "of",
+            "in",
+            "on",
+            "at",
+            "for",
+            "with",
+            "by",
+            "from",
+            "into",
+            "about",
+            "over",
+            "under",
+            "after",
+            "before",
+            "through",
+            "up",
+            "down",
+            "out",
+            "off",
+            "as",
+            "than",
+            "am",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "do",
+            "does",
+            "did",
+            "have",
+            "has",
+            "had",
+            "will",
+            "would",
+            "shall",
+            "should",
+            "can",
+            "could",
+            "may",
+            "might",
+            "must"
+        ],
+        "articles": [
+            "a",
+            "an",
+            "the"
+        ],
+        "abbreviations": [
+            "a.m.",
+            "p.m.",
+            "e.g.",
+            "i.e.",
+            "etc.",
+            "vs.",
+            "Mr.",
+            "Mrs.",
+            "Ms.",
+            "Dr.",
+            "St."
+        ],
+        "number_words": {
+            "zero": "0",
+            "one": "1",
+            "two": "2",
+            "three": "3",
+            "four": "4",
+            "five": "5",
+            "six": "6",
+            "seven": "7",
+            "eight": "8",
+            "nine": "9",
+            "ten": "10",
+            "eleven": "11",
+            "twelve": "12",
+            "thirteen": "13",
+            "fourteen": "14",
+            "fifteen": "15",
+            "sixteen": "16",
+            "seventeen": "17",
+            "eighteen": "18",
+            "nineteen": "19",
+            "twenty": "20",
+            "thirty": "30",
+            "forty": "40",
+            "fifty": "50",
+            "sixty": "60",
+            "seventy": "70",
+            "eighty": "80",
+            "ninety": "90",
+            "hundred": "100",
+            "thousand": "1000"
+        },
+        "repeat_misses": 0
+    }
+}

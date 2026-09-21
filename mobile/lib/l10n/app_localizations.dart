@@ -5637,12 +5637,6 @@ abstract class AppLocalizations {
   /// **'Скажи свою реплику'**
   String get planSessionTaskSayLine;
 
-  /// Сессия, строка задания 33-1: вопрос на понимание реплики собеседника; сам вопрос сервера (question_native) — строкой под заданием (наряд SESSION-2a §5).
-  ///
-  /// In ru, this message translates to:
-  /// **'Ответь на вопрос'**
-  String get planSessionTaskAnswerQuestion;
-
   /// Сессия, строка задания 33-6: «Не понял» в пузыре собеседника и медленный повтор. Канва — «Слушай назначение»: текста задания контракт не отдаёт.
   ///
   /// In ru, this message translates to:
@@ -6039,12 +6033,6 @@ abstract class AppLocalizations {
   /// **'Скажи, что {intent}'**
   String planTalkHintChip(String intent);
 
-  /// Экран разговора (37-6…37-8): кнопка у пузыря собеседника — открывает текст реплики; в «Без подсказок» её нет.
-  ///
-  /// In ru, this message translates to:
-  /// **'текст'**
-  String get planTalkOpenText;
-
   /// Экран разговора (37-9): пометка у реплики собеседника, которую прервали тапом по микрофону.
   ///
   /// In ru, this message translates to:
@@ -6194,6 +6182,96 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Нужен микрофон — без него разговор не пройти'**
   String get planTalkNoMic;
+
+  /// Вход в этап «Вспомнить» (30-1, день репетиции): описание этапа — обзор своих реплик по сценам (37-3), потом пять-шесть из них вслух (35-4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Свои реплики всех сцен — посмотри, послушай и скажи вслух'**
+  String get planSessionDescRecall;
+
+  /// Итог этапа «Вспомнить» (30-6, кадр 37-4): «Вспомнил · около 4 минут»; минуты — строкой planTalkEntryMinutes из минут этапа, которые прислал сервер.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вспомнил · {minutes}'**
+  String planSessionDoneRecall(String minutes);
+
+  /// Обзор «Вспомнить» (37-3): строка задания над репликами сцены.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вспомни свои реплики'**
+  String get planSessionRecallTask;
+
+  /// Обзор «Вспомнить» (37-3): кнопка на последней сцене — за ней пять-шесть своих реплик вслух (35-4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Дальше — повтори вслух'**
+  String get planSessionRecallLast;
+
+  /// Окно дня репетиции (37-1): начало строки статуса — «перед событием · в четверг · не начат».
+  ///
+  /// In ru, this message translates to:
+  /// **'перед событием'**
+  String get planWindowRehearsalBefore;
+
+  /// Окно дня репетиции (37-1): в какой день недели стоит этот день плана — «в четверг». «Сегодня» и «завтра» приходят с сервера готовыми (slot.label_native).
+  ///
+  /// In ru, this message translates to:
+  /// **'{weekday, select, mon{в понедельник} tue{во вторник} wed{в среду} thu{в четверг} fri{в пятницу} sat{в субботу} sun{в воскресенье} other{}}'**
+  String planWindowOnWeekday(String weekday);
+
+  /// Окно дня повторения (37-2): название на плите.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что уже было'**
+  String get planWindowReviewTitle;
+
+  /// Окно дня репетиции (37-1): строка под статусом. Роли в творительном контракт не отдаёт — «с собеседником», как «Поговори с собеседником» на 37-5.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проговоришь весь разговор с собеседником'**
+  String get planWindowRehearsalLead;
+
+  /// Окно дня повторения (37-2): строка под статусом; роль — «с собеседником», как на 37-5.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернёшь фразы прошлых дней и поговоришь с собеседником'**
+  String get planWindowReviewLead;
+
+  /// Окно дня репетиции (37-1): бровь списка сцен под плитой.
+  ///
+  /// In ru, this message translates to:
+  /// **'Из каких сцен'**
+  String get planWindowFromScenes;
+
+  /// Окно дня повторения (37-2): бровь списка дней под плитой.
+  ///
+  /// In ru, this message translates to:
+  /// **'Из каких дней'**
+  String get planWindowFromDays;
+
+  /// Окно дня репетиции (37-1): сколько своих реплик у сцены — счёт списка сервера (карточка «Вспомнить»); пока день не роздан, числа нет и строка не пишется.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}'**
+  String planWindowSourceLines(int n);
+
+  /// Диалог, «Пойми собеседника» (33-1): строка отдельного блока с вопросом и вариантами — под пузырём собеседника, а не между репликами.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что тебе сказали?'**
+  String get planSessionTaskWhatSaid;
+
+  /// «Ответь своими словами» (35-2) и круг своего слова «Скажи целиком» (32-7): отказ — что распознал телефон, строкой под причиной.
+  ///
+  /// In ru, this message translates to:
+  /// **'услышал: {text}'**
+  String planSessionHeardLine(String text);
+
+  /// Итог разговора репетиции (37-12b): подпись несказанных фраз сцены — «Рецепт и аптека · повтори перед приёмом».
+  ///
+  /// In ru, this message translates to:
+  /// **'{scene} · повтори перед приёмом'**
+  String planTalkSceneRepeatBefore(String scene);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -5,12 +5,13 @@ import 'card_kit.dart';
 import 'dialogue_cards.dart';
 import 'listen_cards.dart';
 import 'phrase_cards.dart';
+import 'recall_cards.dart';
 import 'speak_cards.dart';
 import 'word_cards.dart';
 
 /// CARD BY KIND — every dealt kind has its screen: words 6, phrases 9 (SESSION-1b), dialogue 4, listen and answer 6,
-/// speak myself 3 (SESSION-1c). The switch is over the sealed payload, so a new kind cannot compile without a screen;
-/// `dialogue_answer` and `dialogue_ask` share one payload and one widget.
+/// speak myself 3 (SESSION-1c), the rehearsal's recall sheet (CLIENT-CONV-1b). The switch is over the sealed payload,
+/// so a new kind cannot compile without a screen; `dialogue_answer` and `dialogue_ask` share one payload and one widget.
 Widget sessionCardFor(CardEnv env) => switch (env.card.payload) {
   final WordIntroPayload p => WordIntroCard(env: env, payload: p),
   final WordRepeatPayload p => WordRepeatCard(env: env, payload: p),
@@ -40,6 +41,7 @@ Widget sessionCardFor(CardEnv env) => switch (env.card.payload) {
   final SpeakAnswerPayload p => SpeakAnswerCard(env: env, payload: p),
   final SpeakEchoPayload p => SpeakEchoCard(env: env, payload: p),
   final SpeakRetellPayload p => SpeakRetellCard(env: env, payload: p),
+  final RecallScenesPayload p => RecallScenesCard(env: env, payload: p),
   // The choice mixin is a subtype of the sealed payload only for the exhaustiveness check: every class that carries it
   // is one of the cases above.
   ChoicePayload() => throw StateError('a choice payload of no known kind'),

@@ -37,12 +37,16 @@ class TalkView extends StatefulWidget {
     required this.onClose,
     this.phraseTexts = const {},
     this.openSettings,
+    this.sceneById,
   });
 
   final ConversationController controller;
 
-  /// The day's scene — the strip under the header (30-2b).
+  /// The day's scene — the strip's photo when the talk's own scene is not found in the plan.
   final PlanScene? scene;
+
+  /// The plan's scene by id — the photo of the scene the talk is in NOW ([talkStripScene]).
+  final PlanScene? Function(String sceneId)? sceneById;
   final SessionVoice voice;
 
   /// The talk's own microphone: free speech, the target language's locale.
@@ -65,9 +69,6 @@ class TalkView extends StatefulWidget {
 
 class _TalkViewState extends State<TalkView> {
   late final SessionMic _mic;
-
-  /// The role's lines whose text the learner opened, by `index` (37-6 «текст»).
-  final Set<int> _opened = {};
 
   ConversationController get _talk => widget.controller;
 
@@ -151,7 +152,12 @@ class _TalkViewState extends State<TalkView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _header(l, talk),
-        SessionSceneStrip(scene: widget.scene),
+        // The scene the talk is in NOW — on the rehearsal it moves from scene to scene with the role.
+        SessionSceneStrip(
+          scene: talkStripScene(talk, sceneById: widget.sceneById) ?? widget.scene,
+          title: talk.partner.sceneNative,
+          role: talk.partner.roleNative,
+        ),
         Expanded(
           child: CardLayout(
             feed: true,
@@ -236,21 +242,20 @@ class _TalkViewState extends State<TalkView> {
       if (text == null || text.trim().isEmpty) return null;
       return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text, marks: _marksOf(turn));
     }
-    // The role's text is closed until it is opened by a tap. Under «Без подсказок» there is no way
-    // to open it and no button offering one: the texts wait for the summary.
-    final open = _opened.contains(turn.index);
+    // THE ROLE'S TEXT IS OPEN WITH ITS VOICE (правка прохода 21.09, наряд CLIENT-CONV-1b): the words stand from the
+    // first sound, «прослушать» in the corner, no «текст» to tap. Under «Без подсказок» they stay closed, as before —
+    // the texts wait for the summary.
     return ValueListenableBuilder<Object?>(
       key: ValueKey('turn-${turn.index}'),
       valueListenable: widget.voice.playing,
       builder: (_, playing, _) => TalkPartnerBubble(
         text: turn.textTarget ?? '',
         translation: turn.textNative,
-        open: open,
+        open: talk.hints.enabled,
         playing: playing == 'talk-${turn.index}',
         interrupted: _talk.interruptedAt(turn.index),
         speaking: _talk.sounding(turn.index),
         onListen: () => unawaited(widget.voice.play(turn.audio, fallback: turn.textTarget ?? '', key: 'talk-${turn.index}')),
-        onOpenText: talk.hints.enabled ? () => setState(() => _opened.add(turn.index)) : null,
       ),
     );
   }
@@ -299,7 +304,8 @@ class _TalkViewState extends State<TalkView> {
     // «Не расслышал» is the move's again (37-10): «тап — говорить» over the button, the brass ring of
     // «твоя очередь» around it, and the reason under it.
     final caption = switch (phase) {
-      TalkPhase.agentSpeaking => l.planSessionListenCue,
+      // «слушай» over the dimmed button while the role speaks and while it «thinks» (37-6, 37-8).
+      TalkPhase.agentSpeaking || TalkPhase.sending => l.planSessionListenCue,
       TalkPhase.yourTurn when noMic => null,
       TalkPhase.yourTurn => listening ? l.planSessionMicListening : l.planSessionMicTap,
       _ => null,
@@ -369,6 +375,17 @@ class _TalkViewState extends State<TalkView> {
       ],
     );
   }
+}
+
+/// THE PLAN'S SCENE THE TALK IS IN NOW — the photo of the strip (наряд CLIENT-CONV-1b). The document names the
+/// scene by its title (`scene.title_native`, the same as its `scenes[]` entry) and marks it `current`; an ended talk
+/// marks none, and then its last scene is the one named. Null — no such scene in the plan.
+PlanScene? talkStripScene(PlanConversation talk, {PlanScene? Function(String sceneId)? sceneById}) {
+  if (sceneById == null || talk.scenes.isEmpty) return null;
+  final named = talk.scenes.where((s) => s.titleNative == talk.partner.sceneNative).firstOrNull;
+  final current = talk.scenes.where((s) => s.state == TalkSceneState.current).firstOrNull;
+  final scene = named ?? current ?? talk.scenes.last;
+  return sceneById(scene.sceneId);
 }
 
 /// The live line of a talk — Literata 22 centred, the words of the plan's phrases in sage.

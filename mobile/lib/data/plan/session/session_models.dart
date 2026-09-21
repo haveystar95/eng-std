@@ -35,8 +35,9 @@ enum SessionGrading {
   pass,
 }
 
-/// CARD KIND — 28 enum values on the server, 27 are dealt; `listen_pairs` is never dealt and is not here.
-/// `phrase_own_slot` went with work order FIX-2 §5: «своё окно» is the last round of «Скажи целиком».
+/// CARD KIND — every kind the server deals (29 of the 30 enum values since наряд CONV-1 added `recall_scenes`);
+/// `listen_pairs` is never dealt and is not here. `phrase_own_slot` went with work order FIX-2 §5: «своё окно» is the
+/// last round of «Скажи целиком».
 enum SessionKind {
   wordIntro('word_intro', PlanStage.words, SessionGrading.pass),
   wordRepeat('word_repeat', PlanStage.words, SessionGrading.voice),
@@ -64,7 +65,12 @@ enum SessionKind {
   listenNumber('listen_number', PlanStage.listen, SessionGrading.choice),
   speakAnswer('speak_answer', PlanStage.speak, SessionGrading.judge),
   speakEcho('speak_echo', PlanStage.speak, SessionGrading.voice),
-  speakRetell('speak_retell', PlanStage.speak, SessionGrading.voice);
+  speakRetell('speak_retell', PlanStage.speak, SessionGrading.voice),
+
+  /// «Вспомни свои реплики» (кадр 37-3, наряд CONV-1) — the rehearsal's sheet of the learner's own lines, scene by
+  /// scene; read through and never graded. On the rehearsal `speak_retell` stands in the same stage: the ENVELOPE's
+  /// `stage` says where a card is walked, not this list.
+  recallScenes('recall_scenes', PlanStage.recall, SessionGrading.pass);
 
   const SessionKind(this.wire, this.stage, this.grading);
 
@@ -498,6 +504,7 @@ sealed class CardPayload {
     SessionKind.speakAnswer => SpeakAnswerPayload.fromJson(j),
     SessionKind.speakEcho => SpeakEchoPayload.fromJson(j),
     SessionKind.speakRetell => SpeakRetellPayload.fromJson(j),
+    SessionKind.recallScenes => RecallScenesPayload.fromJson(j),
   };
 }
 
@@ -1486,6 +1493,48 @@ class SpeakRetellPayload extends CardPayload {
     ownLine: CardOwnLine.fromJson(_map(j, 'own_line')),
     expectedText: _str(j, 'expected_text'),
     speechMode: SpeechMode.fromWire(j['speech_mode']),
+  );
+}
+
+// ── Recall (the rehearsal) ────────────────────────────────────────────────────────────────────────
+
+/// One scene of «Вспомни свои реплики» (37-3): its names and the learner's OWN lines in it, in the order of the visit.
+class RecallScene {
+  const RecallScene({required this.sceneId, required this.titleTarget, required this.titleNative, required this.lines});
+
+  final String sceneId;
+  final String titleTarget;
+  final String titleNative;
+
+  /// The learner's lines, each with its step, translation and voice — what the rehearsal's talk will ask for. Their
+  /// number is the server's own count of the lines prepared for the scene («4 реплики», кадр 37-1): the talk's
+  /// `scenes[].lines` is the same list counted (`ConversationMaterial::keyLines`, `RecallCards::scenes`).
+  final List<CardOwnLine> lines;
+
+  factory RecallScene.fromJson(Map<String, dynamic> j) => RecallScene(
+    sceneId: _str(j, 'scene_id'),
+    titleTarget: (j['title_target'] as String?) ?? '',
+    titleNative: _str(j, 'title_native'),
+    lines: _list(j, 'lines', CardOwnLine.fromJson),
+  );
+}
+
+/// `recall_scenes` (37-3) — the plan's scenes in the plan's order, each with the learner's own lines. Nothing to
+/// choose and nothing to grade: the card is a sheet, and «Дальше» on its last scene is `passed`.
+class RecallScenesPayload extends CardPayload {
+  const RecallScenesPayload({required super.sceneId, required this.scenes});
+
+  final List<RecallScene> scenes;
+
+  @override
+  Iterable<CardAudio> get audios => [
+    for (final s in scenes)
+      for (final line in s.lines) ?line.audio,
+  ];
+
+  factory RecallScenesPayload.fromJson(Map<String, dynamic> j) => RecallScenesPayload(
+    sceneId: _scene(j),
+    scenes: _list(j, 'scenes', RecallScene.fromJson),
   );
 }
 

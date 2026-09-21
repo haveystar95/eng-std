@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
+import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
 import '../../../support/session_harness.dart';
@@ -69,10 +70,17 @@ void main() {
       const long = 'It hurts in a very long place we have been talking about since the old house by the river';
       await enterHeard(tester, long);
       expect(tester.takeException(), isNull, reason: 'a long live line: no overflow');
-      await tester.pump(const Duration(milliseconds: 1010));
+      // «his» of the frame is not in it: the recording waits the longer pause (CLIENT-CONV-1b, silence by length).
+      await tester.pump(const Duration(milliseconds: 2010));
       await tester.pump();
       expect(probe.judged, [long]);
       expect(find.text('Ты сказал не про время — назови, когда это началось.'), findsOneWidget);
+      // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b): под отказом — «услышал: …» с тем, что распознал телефон;
+      // «Пропустить» на 32-7 — латунная ссылка (§1.8 отчёта 1a).
+      expect(find.text('услышал: $long'), findsOneWidget, reason: 'the heard line under the refusal');
+      final heard = tester.getRect(find.byKey(const ValueKey('session-heard-text')));
+      expect(heard.top, greaterThanOrEqualTo(tester.getRect(find.text('Ты сказал не про время — назови, когда это началось.')).bottom));
+      expect(tester.widget<Text>(find.byKey(const ValueKey('session-skip'))).style!.color, AppColors.brassInk);
       expect(tester.takeException(), isNull, reason: 'the judge\'s reason: no overflow');
       await settleCard(tester);
     });

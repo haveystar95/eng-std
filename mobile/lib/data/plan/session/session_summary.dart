@@ -33,7 +33,8 @@ abstract final class SessionSummaries {
     return (said: said, total: cards.length);
   }
 
-  /// The day's units that come back tomorrow (30-7): the units whose card the server marked `returns`, once each.
+  /// The day's units that come back tomorrow (30-7): the units whose card the server marked `returns`, once each — a
+  /// unit is its scene's (x3 of one scene of a review is not x3 of another).
   static DayReturns dayReturns(SessionQueue queue) {
     final seen = <String>{};
     var words = 0;
@@ -41,7 +42,7 @@ abstract final class SessionSummaries {
     var exchanges = 0;
     for (final stage in PlanStage.known) {
       for (final card in queue.cardsOf(stage)) {
-        if (!card.returns || card.unit.isDay || !seen.add('${card.unit.kind.name}:${card.unit.ref}')) continue;
+        if (!card.returns || card.unit.isDay || !seen.add('${card.payload.sceneId}/${card.unit.kind.name}:${card.unit.ref}')) continue;
         switch (card.unit.kind) {
           case PlanUnitKind.word:
             words++;

@@ -19,6 +19,7 @@ import '../session/session_screen.dart';
 import 'day_voice.dart';
 import 'window/window_action_bar.dart';
 import 'window/window_scroll.dart';
+import 'window/window_sources.dart';
 import 'window/window_texts.dart';
 import 'window/window_word_sheet.dart';
 
@@ -33,6 +34,10 @@ import 'window/window_word_sheet.dart';
 /// ЗАГРУЗКА ДНЯ СРАЗУ (DAY-UI-3): как только окно узнало день, все его фото идут в общий `ImageLoader`, а
 /// весь голос — слова, фразы, обе реплики каждого обмена — в общий загрузчик звука (шесть параллельно,
 /// диск, повторы). К «Начать» и к «прослушать» файлы уже на диске; нет файла — читает телефон.
+///
+/// A REVIEW AND THE REHEARSAL (кадры 37-1, 37-2, наряд CLIENT-CONV-1b) open the same window with their own plate —
+/// the day's kind, its title, one status line, the rows the server dealt — and under it, in place of the three tabs,
+/// the list of what the day is made of ([WindowSourcesScroll]).
 class DayWindowScreen extends ConsumerStatefulWidget {
   const DayWindowScreen({super.key, required this.plan, required this.number});
 
@@ -184,17 +189,32 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
           final window = _windowOf(r);
           if (window == null) return failed();
           final action = window.action;
+          final l = AppLocalizations.of(context);
+          // A review and the rehearsal (37-1, 37-2) are the same window with other rows and, in place of the tabs,
+          // the list of what the day is made of.
+          final system = WindowTexts.system(l, window.day, planTitle: _plan.shortTitle ?? _plan.displayTitle, slot: r.day.slot);
+          final cover = action == null ? 0.0 : WindowActionBar.coverOf(context);
 
           return Stack(
             children: [
-              WindowScroll(
-                window: window,
-                onListen: _listen,
-                onOpenWord: _openWord,
-                onBack: () => Navigator.of(context).maybePop(),
-                poppedStages: _popped,
-                bottomCover: action == null ? 0 : WindowActionBar.coverOf(context),
-              ),
+              if (system != null)
+                WindowSourcesScroll(
+                  window: window,
+                  system: system,
+                  sources: WindowSources.of(l, plan: _plan, room: r, day: window.day),
+                  onBack: () => Navigator.of(context).maybePop(),
+                  poppedStages: _popped,
+                  bottomCover: cover,
+                )
+              else
+                WindowScroll(
+                  window: window,
+                  onListen: _listen,
+                  onOpenWord: _openWord,
+                  onBack: () => Navigator.of(context).maybePop(),
+                  poppedStages: _popped,
+                  bottomCover: cover,
+                ),
               if (action != null)
                 Positioned(
                   left: 0,

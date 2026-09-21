@@ -50,6 +50,7 @@ class CardEnv {
     this.scene,
     this.stageDone,
     this.speech = SpeechRules.none,
+    this.showScene,
   });
 
   final SessionCard card;
@@ -119,6 +120,9 @@ class CardEnv {
   /// The target language's spoken rules, as the DAY sent them (work order FIX-2, item 2) — the phone judges a
   /// spoken attempt by the server's own lists, never by a copy of English in Dart.
   final SpeechRules speech;
+
+  /// A card that walks several scenes names the one on screen — the strip above it follows (37-3, «Вспомнить»).
+  final ValueChanged<String>? showScene;
 
   /// After the second failure the unit comes back tomorrow — the server said so in its answer.
   bool get returnsTomorrow => outcome?.unit.returnsTomorrow ?? false;
@@ -525,6 +529,8 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     bool liveLineInDock = true,
     bool showIdleCaption = true,
     String? missedCaption,
+    String? missedHeard,
+    bool skipBrass = false,
   }) {
     final l = AppLocalizations.of(context);
     // Second attempt without a pass: «once more» is no longer offered — only «Next».
@@ -538,8 +544,11 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
       showHeardLine: showHeardLine,
       heardText: heardText,
       showIdleCaption: showIdleCaption,
-      // The judge's reason stands where «didn't catch that» would (32-7's own-word round, FIX-1 §6).
+      // The judge's reason stands where «didn't catch that» would (32-7's own-word round, FIX-1 §6), and what the
+      // phone heard under it (CLIENT-CONV-1b).
       missedCaption: missedCaption == null || missedCaption.isEmpty ? null : missedCaption,
+      missedHeard: missedHeard,
+      skipBrass: skipBrass,
       liveLine: liveLineInDock ? MicLiveLine.target : MicLiveLine.none,
     );
   }

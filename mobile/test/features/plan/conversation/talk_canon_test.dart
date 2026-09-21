@@ -123,97 +123,98 @@ void main() {
       await settleTalk(tester);
     });
 
-    // ПРАВИЛО (кадр 37-6, правка архитектора 21.09 «по кадру»): всё, что принадлежит реплике роли, стоит
-    // ВНУТРИ её светлого контейнера. Роль говорит — в контейнере одна волна. Договорила — «прослушать» 28
-    // и чип «текст» одним рядом (контейнер 12 + 28 + 12, кружок в 12 от верха и в 14 от края, как в кадре).
-    // Прервана — «прервано» над тем же рядом (37-9). Открыта — слова и кружок 28 в правом верхнем углу,
-    // чипа нет. Кружка снаружи нет ни в одном состоянии.
-    // ЛОВИТ: кружок 44 и чип под пузырём (правка 21.09 до кадра); кружок 28 справа от пузыря и серое
-    // «текст» строкой под ним (лента до правок).
-    testWidgets('37-6: «прослушать» 28 и «текст» — одним рядом внутри пузыря; пока роль говорит — одна волна', (tester) async {
+    // RULE (правка прохода 21.09, наряд CLIENT-CONV-1b): THE ROLE'S TEXT IS OPEN WITH ITS VOICE — the words stand from
+    // the first sound, «прослушать» 28 in the top right corner of the light container (12 from the top, 14 from the
+    // edge, as 37-8 draws an open line), and there is no «текст» to tap. «Прервано» stands over the words of a line cut
+    // off (37-9). Under «Без подсказок» the lines stay CLOSED, as before: the wave alone while the role speaks, then
+    // «прослушать» 28 alone (12 + 28 + 12), and nothing that opens them.
+    // CATCHES: a line that waits for a tap to be read (the pass of 21.09), a «текст» chip left in the container, and
+    // the text opened under «Без подсказок».
+    testWidgets('текст роли открыт по умолчанию, закрыт в «Без подсказок»', (tester) async {
+      Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
+      Rect plate(int index) => tester.getRect(inTurn(index, find.byType(SessionBubble)));
+      Rect circle(int index) => tester.getRect(inTurn(index, find.byKey(const ValueKey('talk-listen')))).deflate(8);
+
       final probe = TalkProbe()..documents.add(open);
       final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
 
-      Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
-      Rect plate(int index) => tester.getRect(inTurn(index, find.byType(SessionBubble)));
-      Rect listen(int index) => tester.getRect(inTurn(index, find.byKey(const ValueKey('talk-listen'))));
-
-      void expectInside(int index, String state) {
-        final p = plate(index);
-        final box = listen(index);
-        expect(inTurn(index, find.byType(SessionListenButton)), findsOneWidget, reason: '$state: кружок один');
-        expect(tester.widget<SessionListenButton>(inTurn(index, find.byType(SessionListenButton))).size, 28, reason: '$state: кружок 28');
-        expect(box.left >= p.left && box.right <= p.right && box.top >= p.top && box.bottom <= p.bottom, isTrue,
-            reason: '$state: кружок внутри контейнера, а не рядом и не под ним');
-        expect(inTurn(index, find.byType(SessionTextExit)), findsNothing, reason: '$state: серого слова нет');
-      }
-
-      // Роль говорит: одна волна, ни кружка, ни чипа.
+      // The role is speaking — and its words are already on screen, the corner circle holding the wave.
       expect(stand.talk.phase, TalkPhase.agentSpeaking);
-      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsOneWidget);
-      expect(inTurn(5, find.byKey(const ValueKey('talk-listen'))), findsNothing, reason: 'пока роль говорит — одна волна');
-      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsNothing);
+      expect(find.text('слушай'), findsOneWidget, reason: '«слушай» over the dimmed button while the role speaks');
+      expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsOneWidget);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsNothing, reason: 'no wave-only plate: the text is open');
+      expect(tester.widget<SessionListenButton>(inTurn(5, find.byType(SessionListenButton))).playing, isTrue);
+      for (final index in [1, 5]) {
+        final p = plate(index);
+        final c = circle(index);
+        expect(tester.widget<SessionListenButton>(inTurn(index, find.byType(SessionListenButton))).size, 28);
+        expect(p.right - c.right, moreOrLessEquals(14, epsilon: 0.5), reason: 'turn $index: 14 from the right edge');
+        expect(c.top - p.top, moreOrLessEquals(12, epsilon: 0.5), reason: 'turn $index: 12 from the top');
+      }
+      expect(find.text('текст'), findsNothing, reason: 'there is nothing to open');
+      expect(find.byType(SessionTextExit), findsNothing);
 
-      // Прошлая реплика, договорена: пара одним рядом, геометрия кадра.
-      expectInside(1, 'договорила');
-      final said = plate(1);
-      final circle = listen(1).deflate(8);
-      final chip = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-open-text'))));
-      expect(said.height, moreOrLessEquals(52, epsilon: 0.5), reason: '12 + 28 + 12, как в кадре');
-      expect(circle.left - said.left, moreOrLessEquals(14, epsilon: 0.5));
-      expect(circle.top - said.top, moreOrLessEquals(12, epsilon: 0.5));
-      expect((chip.center.dy - circle.center.dy).abs(), lessThan(1), reason: 'один ряд');
-      expect(chip.left, greaterThanOrEqualTo(circle.right), reason: '«текст» справа от «прослушать»');
-      expect(chip.right, lessThanOrEqualTo(said.right), reason: 'чип внутри контейнера');
-      expect(inTurn(1, find.byKey(const ValueKey('talk-line-wave'))), findsNothing, reason: 'волна — только пока роль говорит');
-
-      // Прервана: «прервано» над рядом, всё внутри.
+      // Cut off: «прервано» over the open words, inside the container.
       await tester.tap(find.byKey(const ValueKey('talk-mic')));
       await tester.pump();
       await tester.pump();
-      expectInside(5, 'прервана');
-      final cut = plate(5);
       final mark = tester.getRect(inTurn(5, find.byKey(const ValueKey('talk-interrupted'))));
-      expect(mark.top, greaterThanOrEqualTo(cut.top));
-      expect(mark.bottom, lessThanOrEqualTo(listen(5).deflate(8).top + 0.5), reason: '«прервано» над рядом');
-      expect(cut.height, moreOrLessEquals(70, epsilon: 0.5), reason: '12 + 18 + 28 + 12, как в 37-9');
-      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsOneWidget);
-
-      // Открыта: слова, кружок в правом верхнем углу, чипа нет.
-      await tester.tap(inTurn(5, find.byKey(const ValueKey('talk-open-text'))));
-      await tester.pump();
+      expect(mark.top, greaterThanOrEqualTo(plate(5).top));
       expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsOneWidget);
-      expectInside(5, 'открыта');
-      final opened = plate(5);
-      final corner = listen(5).deflate(8);
-      expect(opened.right - corner.right, moreOrLessEquals(14, epsilon: 0.5), reason: 'в 14 от правого края');
-      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsNothing, reason: 'текст открыт — чип ушёл');
+      await settleTalk(tester);
+
+      // «Без подсказок»: closed — the wave alone while the role speaks, then the circle alone.
+      final blind = talkFixtureEdited('conversation-day-open', (json) {
+        (json['hints'] as Map<String, dynamic>)
+          ..['enabled'] = false
+          ..['native'] = null;
+      });
+      final blindProbe = TalkProbe()..documents.add(blind);
+      final blindStand = await pumpTalk(tester, blindProbe, hints: false, phraseTexts: phrases);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsOneWidget, reason: 'the role speaks — the wave alone');
+      expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsNothing);
+      final closed = plate(1);
+      expect(closed.height, moreOrLessEquals(52, epsilon: 0.5), reason: '12 + 28 + 12, as in the frame');
+      expect(circle(1).left - closed.left, moreOrLessEquals(14, epsilon: 0.5));
+      await finishLine(tester, blindStand);
+      expect(find.text('текст'), findsNothing, reason: 'no way to open a line under «Без подсказок»');
       await settleTalk(tester);
     });
 
-    // ПРАВИЛО: кружок внутри контейнера — живая кнопка: тап по нему играет ИМЕННО эту реплику, и в закрытом
-    // контейнере, и в открытом (касание 44 стоит на 8 в поле контейнера, кружок 28 — где его рисует кадр).
-    // ЛОВИТ: кнопку, до которой не доходит палец, потому что её поле касания обрезал контейнер.
-    testWidgets('«прослушать» в контейнере играет свою реплику — закрытую и открытую', (tester) async {
+    // RULE: the circle inside the container is a live button — a tap on it plays EXACTLY this line, open (with hints)
+    // and closed (under «Без подсказок»): the 44 touch box stands 8 into the container's padding, the 28 circle where
+    // the frame draws it.
+    // CATCHES: a button the finger cannot reach because the container clipped its touch box.
+    testWidgets('«прослушать» в контейнере играет свою реплику — открытую и закрытую', (tester) async {
+      Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
+
       final probe = TalkProbe()..documents.add(open);
       final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
       await finishLine(tester, stand);
-      Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
-
-      final closed = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-listen'))));
-      await tester.tapAt(closed.topLeft + const Offset(3, 3), kind: PointerDeviceKind.touch);
-      await tester.pump();
-      expect(stand.voice.played.last, 'talk-1', reason: 'край касания 44 закрытого контейнера — тоже кнопка');
-      stand.voice.finish();
-      await tester.pump();
-
-      await tester.tap(inTurn(1, find.byKey(const ValueKey('talk-open-text'))));
+      // The first line's words are open (CLIENT-CONV-1b), so the ribbon is taller than the screen and rests on the
+      // newest line: bring the first one into view before aiming at its corner.
+      await Scrollable.ensureVisible(tester.element(inTurn(1, find.byKey(const ValueKey('talk-listen')))), alignment: .5);
       await tester.pump();
       final opened = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-listen'))));
       await tester.tapAt(opened.topRight + const Offset(-3, 3), kind: PointerDeviceKind.touch);
       await tester.pump();
-      expect(stand.voice.played.last, 'talk-1', reason: 'угол касания 44 открытого контейнера — тоже кнопка');
+      expect(stand.voice.played.last, 'talk-1', reason: 'the corner of the open container\'s 44 touch box is the button too');
       stand.voice.finish();
+      await settleTalk(tester);
+
+      final blind = talkFixtureEdited('conversation-day-open', (json) {
+        (json['hints'] as Map<String, dynamic>)
+          ..['enabled'] = false
+          ..['native'] = null;
+      });
+      final blindProbe = TalkProbe()..documents.add(blind);
+      final blindStand = await pumpTalk(tester, blindProbe, hints: false, phraseTexts: phrases);
+      await finishLine(tester, blindStand);
+      final closed = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-listen'))));
+      await tester.tapAt(closed.topLeft + const Offset(3, 3), kind: PointerDeviceKind.touch);
+      await tester.pump();
+      expect(blindStand.voice.played.last, 'talk-1', reason: 'the edge of the closed container\'s 44 touch box is the button too');
+      blindStand.voice.finish();
       await settleTalk(tester);
     });
 
@@ -434,6 +435,9 @@ void main() {
           reason: 'подчерк — по ответу сервера, не раньше');
       expect(tester.getTopLeft(find.byKey(const ValueKey('talk-thinking'))).dy, greaterThan(tester.getTopLeft(pending).dy),
           reason: 'три точки — под сказанным');
+      // ПРАВИЛО (§1.8 отчёта 1a, наряд CLIENT-CONV-1b): над погашенной кнопкой — «слушай», пока ход в полёте, как и
+      // пока роль говорит: ученик ждёт ответа, его очередь не наступила.
+      expect(find.text('слушай'), findsOneWidget, reason: 'the caption over the dimmed button while the turn is in flight');
 
       hold.complete();
       await tester.pump();
@@ -657,6 +661,42 @@ void main() {
         }
       });
     }
+
+    // ПРАВИЛО (кадр 37-12b, наряд CLIENT-CONV-1b): итог репетиции — «Ты готов к…», строка «понял» с галкой, и фразы
+    // ГРУППАМИ ПО СЦЕНАМ в порядке разговора: у каждой сцены сперва сказанное под именем сцены, затем несказанное под
+    // «<сцена> · повтори перед приёмом» — завтра у репетиции событие, не день плана.
+    // ЛОВИТ: одну общую кучу фраз двух сцен, «вернётся завтра» у репетиции, строку «понял» без значка.
+    testWidgets('37-12b: репетиция — группы по сценам, «повтори перед приёмом», галка у «понял»', (tester) async {
+      final talk = talkFixture('conversation-rehearsal-ended');
+      await pumpSummary(tester, talk);
+      expect(find.text('Ты готов к приёму'), findsOneWidget);
+      expect(find.byKey(const ValueKey('talk-summary-understood-check')), findsOneWidget);
+      final check = tester.getRect(find.byKey(const ValueKey('talk-summary-understood-check')));
+      final understood = tester.getRect(find.byKey(const ValueKey('talk-summary-understood')));
+      expect(check.size, const Size(20, 20));
+      expect(understood.left - check.right, moreOrLessEquals(12, epsilon: 0.5));
+      expect(find.textContaining('ВЕРНЁТСЯ ЗАВТРА'), findsNothing);
+
+      final tops = <double>[];
+      for (final scene in talk.scenes) {
+        final phrases = talk.summary!.phrases.where((p) => p.sceneId == scene.sceneId);
+        for (final (used, label) in [(true, scene.titleNative), (false, '${scene.titleNative} · повтори перед приёмом')]) {
+          final group = find.byKey(ValueKey('talk-summary-group-${scene.sceneId}-${used ? 'said' : 'not-said'}'));
+          final count = phrases.where((p) => p.used == used).length;
+          if (count == 0) {
+            expect(group, findsNothing);
+            continue;
+          }
+          expect(group, findsOneWidget, reason: '${scene.titleNative}: ${used ? 'said' : 'not said'}');
+          expect(find.descendant(of: group, matching: find.text(label.toUpperCase())), findsOneWidget);
+          final phrase = find.byWidgetPredicate((w) => w.key is ValueKey<String> && (w.key! as ValueKey<String>).value.startsWith('talk-phrase-'));
+          expect(find.descendant(of: group, matching: phrase), findsNWidgets(count));
+          tops.add(tester.getRect(group).top);
+        }
+      }
+      expect(tops, hasLength(4));
+      expect([...tops]..sort(), tops, reason: 'scenes in the talk\'s order, said before not said');
+    });
   });
 
   group('контракт', () {

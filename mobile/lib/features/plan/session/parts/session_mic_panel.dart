@@ -32,6 +32,7 @@ class SessionMicPanel extends StatelessWidget {
     required this.expected,
     required this.onSkip,
     this.missedCaption,
+    this.missedHeard,
     this.showHeardLine = true,
     this.heardText,
     this.liveLine = MicLiveLine.target,
@@ -43,6 +44,7 @@ class SessionMicPanel extends StatelessWidget {
     this.exits,
     this.ring,
     this.enabled = true,
+    this.skipBrass = false,
   });
 
   final SessionMic mic;
@@ -55,6 +57,13 @@ class SessionMicPanel extends StatelessWidget {
 
   /// Caption instead of «didn't catch that, once more» (the judge's rejection reason, 32-9).
   final String? missedCaption;
+
+  /// What the recogniser heard in the refused attempt — «услышал: …» under [missedCaption] (the own-word round of
+  /// 32-7, наряд CLIENT-CONV-1b); null — not drawn.
+  final String? missedHeard;
+
+  /// «Пропустить» in brass (32-7) rather than the secondary ink of the other voice cards.
+  final bool skipBrass;
 
   /// The line with what was heard, above «heard» (in 31-2 its place is taken by the echo in the sheet).
   final bool showHeardLine;
@@ -103,7 +112,7 @@ class SessionMicPanel extends StatelessWidget {
         }
         if (onSkip != null) {
           gap();
-          children.add(_Skip(onTap: active ? onSkip! : null));
+          children.add(_Skip(onTap: active ? onSkip! : null, brass: skipBrass));
         }
       }
 
@@ -169,6 +178,10 @@ class SessionMicPanel extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppTextSession.meta,
           ));
+          if (missedHeard case final text? when text.trim().isNotEmpty) {
+            children.add(const SizedBox(height: 4));
+            children.add(SessionHeardText(heard: text, center: true));
+          }
           skipOrExits(active: true);
       }
       gap();
@@ -218,9 +231,12 @@ class SessionTextExit extends StatelessWidget {
 }
 
 class _Skip extends StatelessWidget {
-  const _Skip({required this.onTap});
+  const _Skip({required this.onTap, this.brass = false});
 
   final VoidCallback? onTap;
+
+  /// In brass (32-7) — the frame's one brass exit on a voice card.
+  final bool brass;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -230,7 +246,11 @@ class _Skip extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        child: Text(AppLocalizations.of(context).planSessionSkip, style: AppTextSession.skip),
+        child: Text(
+          AppLocalizations.of(context).planSessionSkip,
+          key: const ValueKey('session-skip'),
+          style: brass ? AppTextSession.skip.copyWith(color: AppColors.brassInk) : AppTextSession.skip,
+        ),
       ),
     ),
   );

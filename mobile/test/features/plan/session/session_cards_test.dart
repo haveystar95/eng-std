@@ -94,10 +94,12 @@ void main() {
       await settleCard(tester);
     });
 
-    // RULE (SESSION-2a §3): recording until the pause, not until the key — a covered phrase is graded after the 1 s
-    // pause like any other, never on the partial result.
-    // CATCHES: an early stop on coverage (the owner cut mid-sentence), and a pause that no longer closes a recording.
-    testWidgets('recording until the pause, not until the key: word_repeat is graded after 1 s of silence, covered or not', (tester) async {
+    // RULE (SESSION-2a §3): recording until the pause, not until the key — a covered phrase is graded after the pause
+    // like any other, never on the partial result. And THE PAUSE GOES BY LENGTH (правка прохода 21.09, CLIENT-CONV-1b):
+    // 1 s once every content word of the line is heard, 2 s while one is still missing — the silence waits for the rest.
+    // CATCHES: an early stop on coverage (the owner cut mid-sentence), a pause that no longer closes a recording, a
+    // learner stopping for the next word cut off after one second, and a line said through left waiting two.
+    testWidgets('тишина ждёт, пока не услышаны все слова: 1 s after the whole line, up to 2 s while a word is missing', (tester) async {
       final card = fixtureCard(intermediate, SessionKind.wordRepeat);
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
@@ -105,17 +107,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 950));
       expect(probe.answers, isEmpty, reason: 'covered, but the pause has not run out — still recording');
       await tester.pump(const Duration(milliseconds: 60));
-      expect(results(probe), [SessionResult.passed], reason: 'glued «lowerback» covers both words — graded after the pause');
+      expect(results(probe), [SessionResult.passed], reason: 'glued «lowerback» covers both words — graded after the 1 s pause');
       await settleCard(tester);
 
       final miss = CardProbe();
       await pumpCard(tester, probeEnv(card, miss));
       await enterHeard(tester, 'lower');
-      await tester.pump(const Duration(milliseconds: 950));
-      expect(find.text('не расслышал, ещё раз'), findsNothing);
+      await tester.pump(const Duration(milliseconds: 1050));
+      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: '«back» not heard yet — the silence waits for it');
       expect(miss.answers, isEmpty);
-      await tester.pump(const Duration(milliseconds: 60));
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the same 1 s pause closes an uncovered recording');
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: 'still inside the longer pause');
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the 2 s pause closes an incomplete recording');
       await settleCard(tester);
     });
 
@@ -281,7 +285,6 @@ void main() {
         final box = tester.widget<Container>(plate).decoration! as BoxDecoration;
         expect(box.color, AppColors.meaningPlate, reason: 'нейтральная серая плашка');
         expect(box.border, isNull, reason: 'ничего не обведено — и то, что в окне, тоже');
-        expect(find.descendant(of: plate, matching: find.byType(GestureDetector)), findsNothing, reason: 'плашка — не кнопка');
       }
       expect(frameLine(tester).slot, 'lower back', reason: 'в окне — значение, которое говорит диалог');
       expect(find.descendant(of: sheet, matching: find.byType(SessionFrameText)), findsOneWidget, reason: 'каркас — в листе');
@@ -289,6 +292,48 @@ void main() {
       expect(find.descendant(of: sheet, matching: find.text('У него болит поясница.')), findsOneWidget);
       final listen = find.descendant(of: sheet, matching: find.byType(SessionListenButton));
       expect(tester.widget<SessionListenButton>(listen).size, 44, reason: '«прослушать» 44 в углу листа');
+
+      await tapText(tester, 'Дальше');
+      expect(results(probe), [SessionResult.passed]);
+      await settleCard(tester);
+    });
+
+    // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b): тап по значению СТАВИТ его в окно и говорит фразу с ним —
+    // так урок показывает, что «эту часть можно менять». Это не ответ: плашка не выделяется, карточка ничего не пишет до
+    // «Дальше» и кончается `passed`, что бы ни трогали. Тап раньше автозапуска отменяет его — звучит то, что в окне;
+    // «прослушать» дальше играет тоже то, что в окне.
+    // ЛОВИТ: немую плашку, плашку-выбор (обводка), ответ, отправленный тапом, фразу диалога поверх тапнутой.
+    testWidgets('32-1: тап по значению ставит его в окно и говорит фразу с ним — это не ответ', (tester) async {
+      final probe = CardProbe();
+      final voice = QuietVoice();
+      final card = fixtureCard(intermediate, SessionKind.phraseIntro);
+      final p = card.payload as PhraseIntroPayload;
+      final other = p.frame.fillers.firstWhere((f) => f.index != p.said.fillerIndex);
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
+      expect(frameLine(tester).slot, 'lower back');
+
+      await tester.tap(find.byKey(ValueKey('meaning-${other.index}')));
+      await tester.pump();
+      expect(frameLine(tester).slot, other.target, reason: 'значение встало в окно');
+      expect(voice.played, ['${other.audio!.ref}@1.0'], reason: 'звучит фраза с этим значением — сразу, по тапу');
+      expect(voice.fallbacks, ['It hurts in his neck.'], reason: 'без файла телефон читает каркас с этим значением');
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, 'У него болит шея.');
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-reading'))).data, 'ит хёртс ин хиз нэк');
+      expect(probe.answers, isEmpty, reason: 'тап — не ответ');
+      final box = tester.widget<Container>(find.byKey(ValueKey('meaning-${other.index}'))).decoration! as BoxDecoration;
+      expect(box.border, isNull, reason: 'тапнутая плашка не выделяется — выбора здесь нет');
+      expect(box.color, AppColors.meaningPlate);
+
+      await tester.pump(const Duration(seconds: 3));
+      expect(voice.played, hasLength(1), reason: 'автозапуск фразы диалога отменён тапом');
+      await tester.tap(find.descendant(of: find.byKey(const ValueKey('lesson-sheet')), matching: find.byType(SessionListenButton)));
+      await tester.pump();
+      expect(voice.played.last, '${other.audio!.ref}@1.0', reason: '«прослушать» играет то, что в окне');
+
+      await tester.tap(find.byKey(ValueKey('meaning-${p.said.fillerIndex}')));
+      await tester.pump();
+      expect(frameLine(tester).slot, 'lower back');
+      expect(voice.played.last, '${p.said.audio!.ref}@1.0', reason: 'значение диалога — своим файлом фразы');
 
       await tapText(tester, 'Дальше');
       expect(results(probe), [SessionResult.passed]);
@@ -439,6 +484,57 @@ void main() {
       expect(results(wrong), [SessionResult.failed]);
       expect(find.text('Дальше'), findsOneWidget);
       await settleCard(tester);
+    });
+
+    // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b): плитка не играет звук. Тап по плитке и по значению только
+    // СТАВИТ их в ряд — фраза звучит после «Проверить»: верно — собранная фраза, и карточка уходит, когда она сказана
+    // (не раньше обычных 600 мс); неверно — фраза, которую просили, рядом с ошибкой, и «Дальше» руками.
+    // ЛОВИТ: фразу, прочитанную вслух в момент, когда значение легло в окно, — ответ звучал до проверки.
+    testWidgets('плитка не играет звук: 32-2 — фраза звучит только после «Проверить»', (tester) async {
+      final card = fixtureCard(intermediate, SessionKind.phraseAssemble);
+      final p = card.payload as PhraseAssemblePayload;
+      final voice = QuietVoice();
+      final probe = CardProbe();
+      await pumpCard(tester, probeEnv(card, probe, voice: voice));
+      await settleCard(tester);
+      expect(voice.played, isEmpty, reason: 'сборка не звучит сама');
+
+      Future<void> tray(int i) async {
+        await tester.ensureVisible(find.byKey(ValueKey('tray-$i')));
+        await tester.tap(find.byKey(ValueKey('tray-$i')));
+        await tester.pump();
+      }
+
+      for (final w in p.expectedWords) {
+        await tray(p.tiles.indexOf(w));
+      }
+      await tray(p.tiles.length + p.chips.indexWhere((f) => f.index == 0));
+      await tray(p.tiles.length + p.chips.indexWhere((f) => f.index == 1));
+      await settleCard(tester);
+      expect(voice.played, isEmpty, reason: 'ни плитка, ни значение в окне не звучат');
+
+      await tapText(tester, 'Проверить');
+      expect(results(probe), [SessionResult.passed]);
+      expect(voice.played, ['p1.f2@1.0'], reason: 'после «Проверить» — фраза с этим значением');
+      expect(voice.fallbacks, ['It hurts in his neck.']);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(probe.nexts, 0, reason: 'не раньше обычного такта');
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(probe.nexts, 1, reason: 'фраза сказана — карточка уходит сама');
+
+      final wrongVoice = QuietVoice();
+      final wrong = CardProbe();
+      await pumpCard(tester, probeEnv(card, wrong, voice: wrongVoice));
+      for (final w in p.expectedWords) {
+        await tray(p.tiles.indexOf(w));
+      }
+      await tray(p.tiles.length + p.chips.indexWhere((f) => f.index == 0));
+      expect(wrongVoice.played, isEmpty);
+      await tapText(tester, 'Проверить');
+      expect(results(wrong), [SessionResult.failed]);
+      expect(wrongVoice.played, ['p1.f2@1.0'], reason: 'неверно — звучит фраза, которую просили, а не собранная');
+      await settleCard(tester);
+      expect(wrong.nexts, 0, reason: '«Дальше» руками');
     });
 
     testWidgets('phrase_choose_back (32-3): a target phrase — options in the native language', (tester) async {

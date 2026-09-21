@@ -34,9 +34,12 @@ const kWindowInsets = EdgeInsets.only(top: 52, bottom: 34);
 /// Сервер дня для теста: ответ можно поменять между входами в окно, чтения считаются; рядом — что окно
 /// попросило докачать и что оно сказало вслух.
 class WindowServer {
-  WindowServer(this.room);
+  WindowServer(this.room, {Plan? plan}) : plan = plan ?? planFrom('plan_window');
 
   PlanDayRoom room;
+
+  /// The plan the window is opened from — the route a review and the rehearsal read their list off.
+  final Plan plan;
   int reads = 0;
   final RecordingLines lines = RecordingLines();
 
@@ -48,7 +51,7 @@ class WindowServer {
 /// с настоящими длительностями. [launcher] — окно не сразу, а за кнопкой «open», как за плитой таба:
 /// вход и выход настоящие.
 Widget dayWindowApp(WindowServer server, {bool reduceMotion = true, bool launcher = false}) {
-  Widget window() => DayWindowScreen(plan: planFrom('plan_window'), number: server.room.day.number);
+  Widget window() => DayWindowScreen(plan: server.plan, number: server.room.day.number);
 
   return ProviderScope(
     overrides: [
@@ -86,8 +89,8 @@ Widget dayWindowApp(WindowServer server, {bool reduceMotion = true, bool launche
 }
 
 /// Кадр 390 × 844 @2×, экран нарисован, плита измерена.
-Future<void> pumpDayWindow(WidgetTester tester, PlanDayRoom room, {bool reduceMotion = true}) =>
-    pumpDayWindowServer(tester, WindowServer(room), reduceMotion: reduceMotion);
+Future<void> pumpDayWindow(WidgetTester tester, PlanDayRoom room, {bool reduceMotion = true, Plan? plan}) =>
+    pumpDayWindowServer(tester, WindowServer(room, plan: plan), reduceMotion: reduceMotion);
 
 /// То же над [server]; с [launcher] на экране только кнопка «open».
 Future<void> pumpDayWindowServer(

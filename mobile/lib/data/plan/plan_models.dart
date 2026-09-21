@@ -802,6 +802,10 @@ class PlanDayMetrics {
   );
 }
 
+/// A scene of the rehearsal's «Вспомни свои реплики» sheet, as the day room's `recall_scenes` card lists it: which
+/// scene, its name, and how many of the learner's own lines it holds.
+typedef PlanRecallScene = ({String sceneId, String titleNative, int lines});
+
 /// `PlanDayRoom` — the day: the tab reads it for the plate's stage rows (кадр 21-2) and the closed
 /// day (21-4), the session for its header and scene, and the day window its own block (`window`).
 class PlanDayRoom {
@@ -813,6 +817,8 @@ class PlanDayRoom {
     this.scene,
     this.metrics,
     this.windowJson,
+    this.cardSceneIds = const [],
+    this.recallScenes = const [],
   });
 
   final String planId;
@@ -827,25 +833,68 @@ class PlanDayRoom {
   /// которая читает эту же комнату.
   final Object? windowJson;
 
-  factory PlanDayRoom.fromJson(Map<String, dynamic> j) => PlanDayRoom(
-    planId: (j['plan_id'] as String?) ?? '',
-    day: PlanDayRoute.fromJson(j['day'] as Map<String, dynamic>),
-    scene: j['scene'] is Map<String, dynamic>
-        ? PlanScene.fromJson(j['scene'] as Map<String, dynamic>)
-        : null,
-    stages: [
-      for (final s in (j['stages'] as List?) ?? const [])
-        if (s is Map<String, dynamic>) PlanStageProgress.fromJson(s),
-    ],
-    metrics: j['metrics'] is Map<String, dynamic>
-        ? PlanDayMetrics.fromJson(j['metrics'] as Map<String, dynamic>)
-        : null,
-    program: [
-      for (final u in (j['program'] as List?) ?? const [])
-        if (u is Map<String, dynamic>) PlanProgramUnit.fromJson(u),
-    ],
-    windowJson: j['window'],
-  );
+  /// THE SCENES THE DAY'S DEALT CARDS COME FROM, in the order their first card comes — «Из каких дней» of a review
+  /// (кадр 37-2, наряд CLIENT-CONV-1b). A day not dealt has none: the outline carries no cards, and the window then
+  /// falls back to the plan's route.
+  final List<String> cardSceneIds;
+
+  /// «Из каких сцен» of the rehearsal (кадр 37-1) as its `recall_scenes` card lists them — every ready scene of the
+  /// plan in the plan's order, with the learner's own lines counted by the server's list. Empty until the day is dealt.
+  final List<PlanRecallScene> recallScenes;
+
+  factory PlanDayRoom.fromJson(Map<String, dynamic> j) {
+    final sources = _cardSources(j['stages']);
+
+    return PlanDayRoom(
+      planId: (j['plan_id'] as String?) ?? '',
+      day: PlanDayRoute.fromJson(j['day'] as Map<String, dynamic>),
+      scene: j['scene'] is Map<String, dynamic>
+          ? PlanScene.fromJson(j['scene'] as Map<String, dynamic>)
+          : null,
+      stages: [
+        for (final s in (j['stages'] as List?) ?? const [])
+          if (s is Map<String, dynamic>) PlanStageProgress.fromJson(s),
+      ],
+      metrics: j['metrics'] is Map<String, dynamic>
+          ? PlanDayMetrics.fromJson(j['metrics'] as Map<String, dynamic>)
+          : null,
+      program: [
+        for (final u in (j['program'] as List?) ?? const [])
+          if (u is Map<String, dynamic>) PlanProgramUnit.fromJson(u),
+      ],
+      windowJson: j['window'],
+      cardSceneIds: sources.scenes,
+      recallScenes: sources.recall,
+    );
+  }
+
+  /// The scenes of the dealt cards and the rehearsal's recall sheet, read off `stages[].cards` — the stages come in
+  /// walking order, the cards of a stage by `position`. Open reading: a card without a scene is simply not a source.
+  static ({List<String> scenes, List<PlanRecallScene> recall}) _cardSources(Object? stages) {
+    final scenes = <String>[];
+    final recall = <PlanRecallScene>[];
+    for (final s in stages is List ? stages : const []) {
+      if (s is! Map<String, dynamic>) continue;
+      final cards = [for (final c in (s['cards'] as List?) ?? const []) if (c is Map<String, dynamic>) c]
+        ..sort((a, b) => ((a['position'] as num?) ?? 0).compareTo((b['position'] as num?) ?? 0));
+      for (final card in cards) {
+        final payload = card['payload'];
+        if (payload is! Map<String, dynamic>) continue;
+        final sceneId = payload['scene_id'];
+        if (sceneId is String && sceneId.isNotEmpty && !scenes.contains(sceneId)) scenes.add(sceneId);
+        if (card['kind'] != 'recall_scenes' || recall.isNotEmpty) continue;
+        for (final r in (payload['scenes'] as List?) ?? const []) {
+          if (r is! Map<String, dynamic>) continue;
+          final id = r['scene_id'];
+          final title = r['title_native'];
+          if (id is! String || title is! String) continue;
+          recall.add((sceneId: id, titleNative: title, lines: (r['lines'] as List?)?.length ?? 0));
+        }
+      }
+    }
+
+    return (scenes: scenes, recall: recall);
+  }
 
   /// Today's own NEW words — «начни отсюда · 8 новых слов» (plan.plate.stage.sub.start).
   int get newWordsCount => program

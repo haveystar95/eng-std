@@ -87,4 +87,20 @@ void main() {
     expect(photoBox(tester).color, AppColors.paper);
     expect(photoBox(tester).image, isNull);
   });
+
+  // ПРАВИЛО (кадр 37-5, §1.8 отчёта CLIENT-CONV-1a): у каждого из трёх правил — свой значок 20 слева (разговор,
+  // «не понял» — вопрос в круге, «считается» — галка), текст правила — через 12 от значка.
+  // ЛОВИТ: правила голым текстом — 37-5 до приёмки 1b.
+  testWidgets('37-5: три правила со значками 20 слева', (tester) async {
+    await pumpEntry(tester, day.scene);
+    for (final rule in ['talk', 'rescue', 'counts']) {
+      final row = find.byKey(ValueKey('talk-entry-rule-$rule'));
+      expect(row, findsOneWidget, reason: rule);
+      final icon = find.descendant(of: row, matching: find.byWidgetPredicate((w) => w.runtimeType.toString() == 'SvgPicture'));
+      expect(icon, findsOneWidget, reason: '$rule: its icon');
+      expect(tester.getSize(icon), const Size(20, 20));
+      final text = find.descendant(of: row, matching: find.byType(Text));
+      expect(tester.getRect(text).left - tester.getRect(icon).right, moreOrLessEquals(12, epsilon: 0.5));
+    }
+  });
 }

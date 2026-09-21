@@ -2,10 +2,15 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../../../data/plan/day_window.dart';
 import '../../../../data/plan/plan_models.dart';
+import '../../plan_format.dart';
 import '../../plan_stage_text.dart';
 
 /// Вкладки программы окна — в порядке кадра 23-0d.
 enum WindowTab { words, phrases, dialogue }
+
+/// The plate of a review or the rehearsal (кадры 37-1, 37-2): its brow, its title, one status line and one sentence
+/// of what the day holds.
+typedef WindowSystemDay = ({String brow, String title, String status, String lead});
 
 /// СЛОВА ОКНА ДНЯ И ШИТА СЛОВА — всё из словаря плана (`docs/plan-ui-glossary.md`), числа — из ответа сервера.
 /// Здесь только выбор ключа и склейка частей; ни одного числа, посчитанного на телефоне.
@@ -16,6 +21,57 @@ abstract final class WindowTexts {
     PlanDayType.rehearsal => l.planRouteDayRehearsal,
     _ => day.titleNative ?? '',
   };
+
+  /// THE PLATE OF A REVIEW OR THE REHEARSAL (кадры 37-1, 37-2, наряд CLIENT-CONV-1b); null — a scene day.
+  ///
+  /// The brow is the day's kind, the title — the plan's name on the rehearsal («Приём у врача») and «Что уже было» on
+  /// a review. The status line: the rehearsal opens with «перед событием» and the day's date as a weekday («в
+  /// четверг»; «сегодня» / «завтра» come ready in the slot), then the state word, then the minutes the server sent —
+  /// all of it before the start, what was spent once passed; while the day goes on the current row says its own.
+  /// The two leads name the partner «собеседник»: the role arrives in the nominative only (as on 37-5).
+  static WindowSystemDay? system(AppLocalizations l, WindowDay day, {required String planTitle, PlanDaySlot? slot}) {
+    final (state, minutes) = switch (day.status) {
+      WindowDayStatus.notStarted => (
+        l.planWindowStateNotStarted,
+        day.minutesEstimate == null ? null : l.planTalkEntryMinutes(day.minutesEstimate!),
+      ),
+      WindowDayStatus.inProgress => (l.planWindowStateInProgress, null),
+      WindowDayStatus.passed => (l.planSessionStateDone, day.minutesSpent == null ? null : l.planMinutesCount(day.minutesSpent!)),
+    };
+    String line(List<String> parts) => parts.reduce((a, b) => l.planWindowJoin(a, b));
+
+    return switch (day.type) {
+      PlanDayType.rehearsal => (
+        brow: l.planRouteDayRehearsal,
+        title: planTitle,
+        status: line([l.planWindowRehearsalBefore, ?_when(l, slot), state, ?minutes]),
+        lead: l.planWindowRehearsalLead,
+      ),
+      PlanDayType.review => (
+        brow: l.planRouteDayReview,
+        title: l.planWindowReviewTitle,
+        status: line([state, ?minutes]),
+        lead: l.planWindowReviewLead,
+      ),
+      PlanDayType.scene || PlanDayType.unknown => null,
+    };
+  }
+
+  /// When the day stands: «сегодня» / «завтра» as the server wrote them, otherwise its date's weekday — «в четверг».
+  static String? _when(AppLocalizations l, PlanDaySlot? slot) {
+    switch (slot?.code) {
+      case PlanSlotCode.today || PlanSlotCode.tomorrow:
+        final label = slot?.labelNative?.trim() ?? '';
+        return label.isEmpty ? null : label;
+      case PlanSlotCode.date || PlanSlotCode.past:
+        final date = PlanFormat.parseWireDate(slot?.date);
+        return date == null ? null : l.planWindowOnWeekday(_weekdays[date.weekday - 1]);
+      case PlanSlotCode.unscheduled || PlanSlotCode.unknown || null:
+        return null;
+    }
+  }
+
+  static const _weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
   /// «не начат · ≈ 20 минут» / «идёт · ≈ 12 мин» (23-0a, 23-0b); у пройденного дня на месте статуса —
   /// строка итога «День пройден · 19 минут» (23-0c). Без минут от сервера — одно слово.

@@ -279,7 +279,9 @@ class SessionStageSummary extends StatelessWidget {
   final String title;
   final List<StageRow> rows;
   final List<ReturningUnit> returning;
-  final String closedLine;
+
+  /// «The other N words are done.»; null — the stage closes nothing («Вспомнить», 37-4).
+  final String? closedLine;
   final PlanStage? nextStage;
   final String? nextName;
   final int? nextMinutes;
@@ -327,9 +329,9 @@ class SessionStageSummary extends StatelessWidget {
                         const SizedBox(height: 32),
                       ] else
                         const SizedBox(height: 70),
-                      Text(closedLine, style: AppTextSession.body),
+                      if (closedLine case final line?) Text(line, style: AppTextSession.body),
                       if (nextStage != null && nextName != null) ...[
-                        const SizedBox(height: 20),
+                        if (closedLine != null) const SizedBox(height: 20),
                         SessionEyebrow(l.planSessionNext),
                         const SizedBox(height: 14),
                         SessionSheet(

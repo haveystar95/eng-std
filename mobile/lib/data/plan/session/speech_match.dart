@@ -147,6 +147,24 @@ abstract final class SpeechMatch {
     return lost <= (rules.repeatMisses < 0 ? 0 : rules.repeatMisses);
   }
 
+  /// EVERY CONTENT WORD OF [expected] IS ALREADY IN WHAT WAS HEARD — when a recording may close on the short pause
+  /// (наряд CLIENT-CONV-1b, «тишина по длине»). NOT A VERDICT: nothing is graded by it, the card's own rule still
+  /// judges the whole transcript after the close; it only tells the microphone that the learner has said the line
+  /// through and is not stopping in the middle of it. Content words as [repeated] counts them — the pack's unstressed
+  /// words aside, all of a text made of nothing else — heard as a multiset in any order, the recogniser's boundaries
+  /// and trailing sibilants forgiven. An empty [expected] asks for nothing, and there is nothing to be through with.
+  static bool heardAll(String heard, String expected, SpeechRules rules) {
+    final every = words(expected, rules);
+    var wanted = _without(every, rules.unstressed);
+    if (wanted.isEmpty) wanted = every;
+    if (wanted.isEmpty) return false;
+    final available = _counts(heardWords(heard, expected, rules));
+    for (final w in wanted) {
+      if (!_consume(available, w)) return false;
+    }
+    return true;
+  }
+
   /// `free`: were at least [min] of the key's words (articles aside) heard, each heard word spent once?
   static bool covers(String heard, String expected, double min, SpeechRules rules) =>
       coverageOf(heard, expected, rules) + _epsilon >= min && _without(words(expected, rules), rules.articles).isNotEmpty;

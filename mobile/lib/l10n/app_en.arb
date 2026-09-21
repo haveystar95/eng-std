@@ -2226,7 +2226,6 @@
   "planSessionPaceLabel": "pace",
   "planSessionTaskCollectAnswer": "Build your answer",
   "planSessionTaskSayLine": "Say your line",
-  "planSessionTaskAnswerQuestion": "Answer the question",
   "planSessionTaskRescue": "Didn't catch it — ask again",
   "planSessionAnyChip": "any of them is your answer",
   "planSessionNotUnderstood": "Didn't catch that",
@@ -2314,7 +2313,6 @@
       }
     }
   },
-  "planTalkOpenText": "text",
   "planTalkInterrupted": "cut short",
   "planTalkSilenceEnds": "silence ends it",
   "planTalkUnheard": "didn't catch that — say it again",
@@ -2370,5 +2368,55 @@
   "planSessionInTalk": "In the talk",
   "planSessionOwnWordChip": "your own word",
   "planTalkRescueMark": "asked again",
-  "planTalkNoMic": "Microphone needed — the talk can't go on without it"
+  "planTalkNoMic": "Microphone needed — the talk can't go on without it",
+  "planSessionDescRecall": "Your own lines from every scene — look, listen and say them aloud",
+  "planSessionDoneRecall": "Recalled · {minutes}",
+  "@planSessionDoneRecall": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionRecallTask": "Recall your lines",
+  "planSessionRecallLast": "Next — say them aloud",
+  "planWindowRehearsalBefore": "before the event",
+  "planWindowOnWeekday": "{weekday, select, mon{on Monday} tue{on Tuesday} wed{on Wednesday} thu{on Thursday} fri{on Friday} sat{on Saturday} sun{on Sunday} other{}}",
+  "@planWindowOnWeekday": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "planWindowReviewTitle": "What came before",
+  "planWindowRehearsalLead": "You will talk the whole conversation through",
+  "planWindowReviewLead": "You will bring back the phrases of past days and talk them through",
+  "planWindowFromScenes": "From these scenes",
+  "planWindowFromDays": "From these days",
+  "planWindowSourceLines": "{n, plural, one{{n} line} other{{n} lines}}",
+  "@planWindowSourceLines": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionTaskWhatSaid": "What were you told?",
+  "planSessionHeardLine": "heard: {text}",
+  "@planSessionHeardLine": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "planTalkSceneRepeatBefore": "{scene} · go over it before the visit",
+  "@planTalkSceneRepeatBefore": {
+    "placeholders": {
+      "scene": {
+        "type": "String"
+      }
+    }
+  }
 }

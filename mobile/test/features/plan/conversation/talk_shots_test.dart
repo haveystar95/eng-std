@@ -218,10 +218,9 @@ void main() {
     await settleTalk(tester);
   });
 
-  testWidgets('07 текст реплики открыт тапом', (tester) async {
+  // Since CLIENT-CONV-1b the role's text is open with its voice — there is no «текст» to tap any more.
+  testWidgets('07 текст реплики открыт с голосом', (tester) async {
     await pumpTalkShot(tester, open);
-    await tester.tap(find.byKey(const ValueKey('talk-open-text')).first);
-    await tester.pump();
     await shoot(tester, '07-37-6-text-open');
     await settleTalk(tester);
   });

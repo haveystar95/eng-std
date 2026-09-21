@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -89,9 +90,13 @@ class TalkEntryView extends StatelessWidget {
                         ),
                       ],
                       const SizedBox(height: 24),
-                      for (final line in [l.planTalkEntryRuleStart, l.planTalkEntryRuleRescue, l.planTalkEntryRuleCounts]) ...[
-                        if (line != l.planTalkEntryRuleStart) const SizedBox(height: 14),
-                        Text(line, style: AppTextSession.body),
+                      for (final (i, (icon, line)) in [
+                        (_RuleIcon.talk, l.planTalkEntryRuleStart),
+                        (_RuleIcon.rescue, l.planTalkEntryRuleRescue),
+                        (_RuleIcon.counts, l.planTalkEntryRuleCounts),
+                      ].indexed) ...[
+                        if (i > 0) const SizedBox(height: 14),
+                        _Rule(icon: icon, text: line),
                       ],
                       const SizedBox(height: 24),
                       _NoHintsRow(value: noHints, onChanged: onNoHints),
@@ -123,6 +128,42 @@ class TalkEntryView extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The three rules' marks (кадр 37-5), cut from the canvas: the talk (the dialogue's own mark), the question mark in a
+/// circle for «Не понял», the check for what counts.
+enum _RuleIcon {
+  talk('assets/stages/dialogue.svg'),
+  rescue('assets/icons/talk-rule-rescue.svg'),
+  counts('assets/icons/talk-check.svg');
+
+  const _RuleIcon(this.asset);
+
+  final String asset;
+}
+
+/// A RULE OF 37-5 — its mark 20 in the secondary ink on the line's first row, 12, the sentence 15/20.
+class _Rule extends StatelessWidget {
+  const _Rule({required this.icon, required this.text});
+
+  final _RuleIcon icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    key: ValueKey('talk-entry-rule-${icon.name}'),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SvgPicture.asset(
+        icon.asset,
+        width: 20,
+        height: 20,
+        colorFilter: const ColorFilter.mode(AppColors.secondary, BlendMode.srcIn),
+      ),
+      const SizedBox(width: 12),
+      Expanded(child: Text(text, style: AppTextSession.body)),
+    ],
+  );
 }
 
 /// THE SCENE'S PHOTO (кадр 37-5) — between the strip and the eyebrow, 170 high with corners 12, the photo covering

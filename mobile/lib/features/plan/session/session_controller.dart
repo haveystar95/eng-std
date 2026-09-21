@@ -203,7 +203,25 @@ class SessionController extends ChangeNotifier {
   bool get advancing => _advancing;
   bool get offline => outbox.offline;
   bool get noHints => _noHints;
-  PlanScene? get scene => _day?.scene;
+
+  /// THE SCENE THE STRIP NAMES. A scene day has its own; a review and the rehearsal have none (наряд
+  /// CLIENT-CONV-1b), and there the strip names the scene of the day's first card — the rehearsal's recall sheet
+  /// starts with the plan's first scene, a review with the first scene it brings back.
+  PlanScene? get scene => _day?.scene ?? _sceneById(_firstCardScene);
+
+  /// The scene a card belongs to — the day's own, or on a day without one the card's (`payload.scene_id`).
+  PlanScene? sceneOfCard(SessionCard card) => _day?.scene ?? _sceneById(card.payload.sceneId) ?? scene;
+
+  String? get _firstCardScene {
+    for (final s in _day?.stages ?? const <SessionStageCards>[]) {
+      for (final c in s.cards) {
+        if (c.payload.sceneId.isNotEmpty) return c.payload.sceneId;
+      }
+    }
+    return null;
+  }
+
+  PlanScene? _sceneById(String? id) => currentPlan.sceneById(id) ?? plan.sceneById(id);
 
   SessionAnswerOutcome? outcomeOf(String cardId) => _outcomes[cardId];
   int? minutesOf(PlanStage stage) => _stageMinutes[stage];

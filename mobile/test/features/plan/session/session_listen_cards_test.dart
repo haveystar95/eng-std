@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
+import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionWave;
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
 import 'package:eng_std/features/plan/session/parts/session_choice.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -280,6 +281,47 @@ void main() {
       }
       await settleCard(tester);
       expect(probe.nexts, 1);
+    });
+
+    // ПРАВИЛО (кадр 34-5, §1.8 отчёта 1a): своя реплика — ШИРОКИЙ пузырь справа, до 312 (у ленты — 274): до ответа в нём
+    // волна из восемнадцати полос и «прослушать» 44 в бумажном контуре 55 %; после ответа — текст и перевод, «прослушать»
+    // остаётся и играет свою реплику.
+    // ЛОВИТ: узкий пузырь общей ширины и кружок без контура — 34-5 до приёмки.
+    testWidgets('34-5: свой пузырь широкий — волна и «прослушать» до ответа, текст и перевод после', (tester) async {
+      final voice = QuietVoice();
+      final card = listenAt(6);
+      final p = card.payload as ListenPredictPayload;
+      await pumpCard(tester, probeEnv(card, CardProbe(), voice: voice));
+      await settleCard(tester);
+      final bubble = find.byKey(const ValueKey('predict-own'));
+      expect(tester.widget<SessionBubble>(bubble).maxWidth, 312);
+      expect(find.byKey(const ValueKey('predict-own-text')), findsNothing, reason: 'текст закрыт до ответа');
+      final wave = find.byKey(const ValueKey('predict-own-wave'));
+      expect(tester.widget<SessionWave>(wave).heights, hasLength(18));
+      final listen = find.byKey(const ValueKey('predict-own-listen'));
+      expect(tester.getSize(listen), const Size(44, 44));
+      final circle = tester.widget<Container>(find.descendant(of: listen, matching: find.byType(Container)).first).decoration! as BoxDecoration;
+      expect((circle.border! as Border).top.color, AppColors.sessionOwnListenOutline);
+      final plate = tester.getRect(find.byKey(ValueKey('option-${p.options.first.id}')));
+      expect(tester.getRect(bubble).right, moreOrLessEquals(plate.right, epsilon: 0.5), reason: 'справа, по краю поля');
+      expect(tester.getRect(bubble).width, greaterThan(kSessionBubbleMax - 60), reason: 'волна держит пузырь широким');
+
+      final correct = p.options.firstWhere((o) => o.id == p.correct);
+      await tester.tap(find.byKey(ValueKey('option-${correct.id}')));
+      await tester.pump();
+      await tester.tap(find.byKey(ValueKey('option-${correct.id}')));
+      await tester.pump();
+      await tapText(tester, 'Это ответ');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('predict-own-text')), findsOneWidget, reason: 'после ответа — текст');
+      expect(find.byKey(const ValueKey('predict-own-wave')), findsNothing);
+      expect(tester.getRect(bubble).width, lessThanOrEqualTo(312));
+      final before = voice.played.length;
+      await tester.tap(listen);
+      await tester.pump();
+      expect(voice.played, hasLength(before + 1), reason: '«прослушать» играет свою реплику и после ответа');
+      expect(voice.played.last, 'x7b@1.0');
+      await settleCard(tester);
     });
 
     // CATCHES: a wrong answer that leaves by itself, and a card that lets a second answer through.

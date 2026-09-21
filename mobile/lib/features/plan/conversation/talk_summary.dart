@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -11,14 +12,21 @@ import '../session/parts/session_bits.dart';
 import '../session/parts/session_chrome.dart';
 import '../session/parts/session_mic_panel.dart' show SessionTextExit;
 import '../session/session_voice.dart';
+import 'talk_screen.dart' show talkStripScene;
 
-/// THE TALK'S SUMMARY (кадр 37-12) — what was said, what was understood, which phrases of the day
+/// THE TALK'S SUMMARY (кадры 37-12, 37-12b) — what was said, what was understood, which phrases of the day
 /// sounded and what did not.
 ///
 /// EVERY NUMBER AND EVERY INFLECTION IS THE SERVER'S. The client chooses which sentence to print and
 /// prints it: «Сказал сам N реплик», «Понял все вопросы» / «Понял вопросы, кроме одного», «переспросил
 /// N раз», «3 из 5». Whether what did not sound comes back tomorrow is `returns_tomorrow`, not a guess
-/// from the kind of day.
+/// from the kind of day — and it is also what shapes the list (наряд CLIENT-CONV-1b):
+///
+/// - it comes back (a scene day, a review) — the phrases that sounded under «Фразы дня в разговоре · 3 из 5», then
+///   «Не прозвучало — вернётся завтра» with the rest (37-12);
+/// - it does not (the rehearsal: tomorrow is the event) — one list under «Фразы дня в разговоре · 3 из 4», GROUPED BY
+///   SCENE in the order the talk walked them, and what did not sound in a scene stands under «<сцена> · повтори перед
+///   приёмом» (37-12b).
 class TalkSummaryView extends StatelessWidget {
   const TalkSummaryView({
     super.key,
@@ -29,10 +37,16 @@ class TalkSummaryView extends StatelessWidget {
     required this.onNext,
     required this.onClose,
     this.busy = false,
+    this.sceneById,
   });
 
   final PlanConversation talk;
+
+  /// The day's scene — the strip's photo when the talk's own scene is not found in the plan.
   final PlanScene? scene;
+
+  /// The plan's scene by id — the photo of the scene the talk ended in.
+  final PlanScene? Function(String sceneId)? sceneById;
   final SessionVoice voice;
 
   /// «Ещё раз» — a NEW talk (`again: true`); the server closes the old one as `replayed`.
@@ -64,7 +78,11 @@ class TalkSummaryView extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
                   child: Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: onClose, label: l.planSessionClose)),
                 ),
-                SessionSceneStrip(scene: scene),
+                SessionSceneStrip(
+                  scene: talkStripScene(talk, sceneById: sceneById) ?? scene,
+                  title: talk.partner.sceneNative,
+                  role: talk.partner.roleNative,
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(kSessionGutter, 24, kSessionGutter, 0),
                   child: Column(
@@ -76,21 +94,23 @@ class TalkSummaryView extends StatelessWidget {
                         style: AppTextSession.stageTitle,
                       ),
                       const SizedBox(height: 14),
-                      Text(understoodLine, key: const ValueKey('talk-summary-understood'), style: AppTextSession.body),
-                      if (s.said.isNotEmpty) ...[
-                        const SizedBox(height: 40),
-                        SessionEyebrow(l.planTalkPhrasesOf(s.phrasesUsed, s.phrasesTotal)),
-                        const SizedBox(height: 14),
-                        ..._group(context, s.said),
-                      ],
-                      if (s.notSaid.isNotEmpty) ...[
-                        const SizedBox(height: 32),
-                        SessionEyebrow(
-                          s.returnsTomorrow ? l.planTalkNotSaidTomorrow : l.planTalkNotSaidRehearsal,
-                        ),
-                        const SizedBox(height: 14),
-                        ..._group(context, s.notSaid),
-                      ],
+                      // The line of understanding carries its check (37-12, 37-12b) and reads in ink.
+                      Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/icons/talk-check.svg',
+                            key: const ValueKey('talk-summary-understood-check'),
+                            width: 20,
+                            height: 20,
+                            colorFilter: const ColorFilter.mode(AppColors.secondary, BlendMode.srcIn),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(understoodLine, key: const ValueKey('talk-summary-understood'), style: AppTextSession.text15),
+                          ),
+                        ],
+                      ),
+                      ...s.returnsTomorrow ? _returning(context, s) : _byScene(context, s),
                     ],
                   ),
                 ),
@@ -113,22 +133,74 @@ class TalkSummaryView extends StatelessWidget {
     );
   }
 
-  /// The phrases of a group. A talk that walks SEVERAL scenes (the rehearsal) names each scene over
-  /// its own phrases, as кадр 37-12 does; a talk of one scene has nothing to name — the strip above
-  /// already says which one it is.
-  List<Widget> _group(BuildContext context, List<TalkPhrase> phrases) {
+  /// 37-12: what sounded, then «Не прозвучало — вернётся завтра». A talk of several scenes (a review) names each
+  /// scene over its own phrases inside each part; a talk of one scene has nothing to name — the strip says it.
+  List<Widget> _returning(BuildContext context, TalkSummary s) {
+    final l = AppLocalizations.of(context);
+    return [
+      if (s.said.isNotEmpty) ...[
+        const SizedBox(height: 32),
+        SessionEyebrow(l.planTalkPhrasesOf(s.phrasesUsed, s.phrasesTotal)),
+        const SizedBox(height: 14),
+        ..._plates(s.said, named: talk.scenes.length > 1),
+      ],
+      if (s.notSaid.isNotEmpty) ...[
+        SizedBox(height: s.said.isEmpty ? 32 : 16),
+        SessionEyebrow(l.planTalkNotSaidTomorrow),
+        const SizedBox(height: 10),
+        ..._plates(s.notSaid, named: talk.scenes.length > 1),
+      ],
+    ];
+  }
+
+  /// 37-12b: one list, scene by scene in the order the talk walked them; in each scene what sounded under its name
+  /// and what did not under «<сцена> · повтори перед приёмом» — there is no tomorrow before the event.
+  List<Widget> _byScene(BuildContext context, TalkSummary s) {
+    final l = AppLocalizations.of(context);
+    final order = [for (final scene in talk.scenes) scene.sceneId];
+    for (final p in s.phrases) {
+      if (!order.contains(p.sceneId)) order.add(p.sceneId);
+    }
+    final groups = <Widget>[];
+    for (final sceneId in order) {
+      final title = _sceneTitle(sceneId);
+      for (final used in [true, false]) {
+        final phrases = [for (final p in s.phrases) if (p.sceneId == sceneId && p.used == used) p];
+        if (phrases.isEmpty) continue;
+        final label = title == null
+            ? (used ? null : l.planTalkNotSaidRehearsal)
+            : (used ? title : l.planTalkSceneRepeatBefore(title));
+        groups.add(Column(
+          key: ValueKey('talk-summary-group-$sceneId-${used ? 'said' : 'not-said'}'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (label != null) ...[SessionEyebrow(label), const SizedBox(height: 10)],
+            ..._plates(phrases, named: false),
+          ],
+        ));
+      }
+    }
+    if (groups.isEmpty) return const [];
+    return [
+      const SizedBox(height: 32),
+      SessionEyebrow(l.planTalkPhrasesOf(s.phrasesUsed, s.phrasesTotal)),
+      const SizedBox(height: 14),
+      for (final (i, group) in groups.indexed) ...[if (i > 0) const SizedBox(height: 16), group],
+    ];
+  }
+
+  /// The plates of one part, 8 apart; [named] — a scene's name stands over its own plates (a review's two scenes).
+  List<Widget> _plates(List<TalkPhrase> phrases, {required bool named}) {
     final rows = <Widget>[];
     String? scene;
     for (final p in phrases) {
-      if (talk.scenes.length > 1) {
+      if (named) {
         final title = _sceneTitle(p.sceneId);
         if (title != null && title != scene) {
           scene = title;
-          if (rows.isNotEmpty) rows.add(const SizedBox(height: 20));
-          rows.add(Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(title, style: AppTextSession.text15),
-          ));
+          if (rows.isNotEmpty) rows.add(const SizedBox(height: 16));
+          rows.add(SessionEyebrow(title));
+          rows.add(const SizedBox(height: 10));
         }
       }
       if (rows.isNotEmpty && rows.last is _PhraseRow) rows.add(const SizedBox(height: 8));

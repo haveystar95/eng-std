@@ -24,6 +24,23 @@ void main() {
   /// Russian names no articles: its «a» is an ordinary word.
   const ru = SpeechRules();
 
+  // THE MOMENT A RECORDING CLOSES, NOT ITS GRADE (правка прохода 21.09, наряд CLIENT-CONV-1b): «all content words heard»
+  // decides between the short and the long pause. The content words are the line's words minus the pack's unstressed
+  // ones, as a multiset, in any order; a line of unstressed words only waits for all of them.
+  // CATCHES: a pause that stays long after the line was said (the unstressed «in his» still waited for), and one that
+  // turns short while a content word is still missing.
+  test('heardAll: every content word of the line, in any order; the unstressed ones are not waited for', () {
+    expect(SpeechMatch.heardAll('It hurts his lower back', 'It hurts in his lower back.', en), isTrue, reason: '«in» is unstressed');
+    expect(SpeechMatch.heardAll('It hurts in lower back', 'It hurts in his lower back.', en), isFalse,
+        reason: '«his» is not in the pack\'s unstressed list — it is waited for');
+    expect(SpeechMatch.heardAll('his lower back it hurts', 'It hurts in his lower back.', en), isTrue, reason: 'order does not matter here');
+    expect(SpeechMatch.heardAll('It hurts in his lower', 'It hurts in his lower back.', en), isFalse, reason: '«back» is still ahead');
+    expect(SpeechMatch.heardAll('', 'It hurts in his lower back.', en), isFalse);
+    expect(SpeechMatch.heardAll('He has had it', 'He has had it.', en), isTrue, reason: 'a line of unstressed words waits for them all');
+    expect(SpeechMatch.heardAll('He has', 'He has had it.', en), isFalse);
+    expect(SpeechMatch.heardAll('three three', 'three days, three nights', en), isFalse, reason: 'a multiset: each heard word once');
+  });
+
   // Canon: «нормализация — регистр, знаки, сокращения, числа словом/цифрой, сокращённые формы (I'd = I would)».
   // Catches a comparison done on the raw strings: the two readings below are the SAME sentence said by two
   // recognisers, and the owner's live day asked for exactly this one.

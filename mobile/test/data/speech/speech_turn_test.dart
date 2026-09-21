@@ -164,6 +164,51 @@ void main() {
     });
   });
 
+  // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b): ТИШИНА ПО ДЛИНЕ. Пока `heardAll` говорит «нет» — не все
+  // смысловые слова строки услышаны, — запись ждёт [SpeechTurnConfig.silenceWhileIncomplete] (2 с); как только
+  // говорит «да», закрывает прежняя секунда. Мерится от последнего слова, как и была; кто `heardAll` не дал
+  // (разговор, коллекции), живёт по одной секунде.
+  // ЛОВИТ: ученика, которого обрывают через секунду посреди строки, пока он ищет следующее слово (проход 21.09), и
+  // строку, сказанную целиком, которая держит лишнюю секунду.
+  test('тишина ждёт, пока не услышаны все слова: 2 с посреди строки, 1 с после неё', () {
+    fakeAsync((fake) {
+      bool whole(String heard) => heard.split(' ').length >= 4;
+
+      final mic = _DrivenRecognizer();
+      final turn = SpeechTurn(mic, config: config);
+      SpeechTurnResult? result;
+      turn.listen(expected: const ['my lower back hurts'], localeId: 'en_US', heardAll: whole).then((r) => result = r);
+      fake.flushMicrotasks();
+
+      mic.say('my lower');
+      fake.elapse(const Duration(milliseconds: 1500));
+      expect(result, isNull, reason: 'посреди строки секунды мало — тишина ждёт недосказанное');
+      mic.say('my lower back hurts');
+      fake.elapse(const Duration(milliseconds: 900));
+      expect(result, isNull);
+      fake.elapse(const Duration(milliseconds: 200));
+      expect(result?.transcript, 'my lower back hurts', reason: 'строка целиком — закрывает прежняя секунда');
+
+      final short = _DrivenRecognizer();
+      SpeechTurnResult? cut;
+      SpeechTurn(short, config: config).listen(expected: const ['my lower back hurts'], localeId: 'en_US', heardAll: whole).then((r) => cut = r);
+      fake.flushMicrotasks();
+      short.say('my lower');
+      fake.elapse(const Duration(milliseconds: 1900));
+      expect(cut, isNull);
+      fake.elapse(const Duration(milliseconds: 200));
+      expect(cut?.transcript, 'my lower', reason: 'недосказанное закрывают две секунды тишины, не больше');
+
+      final any = _DrivenRecognizer();
+      SpeechTurnResult? talk;
+      SpeechTurn(any, config: config).listen(expected: const [], localeId: 'en_US').then((r) => talk = r);
+      fake.flushMicrotasks();
+      any.say('my lower');
+      fake.elapse(const Duration(milliseconds: 1100));
+      expect(talk?.transcript, 'my lower', reason: 'без `heardAll` — одна секунда, как у всех микрофонов');
+    });
+  });
+
   // ДЕФЕКТ: «термин из двух слов режется до первого» (живой проход 18.09, микрофон в коллекциях).
   // ПРАВИЛО: наряд FIX-1, п. 3 — глухота переоткрытия не считается тишиной.
   // ЛОВИТ: отсчёт тишины, который идёт от последнего слова СКВОЗЬ закрытый микрофон. Плагин

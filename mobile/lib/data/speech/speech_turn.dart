@@ -23,6 +23,7 @@ import 'speech_recognizer.dart';
 class SpeechTurnConfig {
   const SpeechTurnConfig({
     this.silenceAfterSpeech = const Duration(seconds: 1),
+    this.silenceWhileIncomplete = const Duration(seconds: 2),
     this.maxRecording = const Duration(seconds: 15),
     this.echoCoverage = 0.7,
     this.reopenGap = const Duration(milliseconds: 120),
@@ -36,7 +37,18 @@ class SpeechTurnConfig {
   /// после последнего слова — или тап. Секунда стоит ЗДЕСЬ, в значении по умолчанию, а не у каждого
   /// вызывающего: пока у коллекций было своё число (2 с) и свой пол (5 с), а у дня своё, «микрофон»
   /// означал в приложении три разные вещи.
+  ///
+  /// SILENCE BY LENGTH (правка прохода 21.09, наряд CLIENT-CONV-1b): this second is the pause once EVERY content
+  /// word of what is expected has been heard ([SpeechTurn.listen] `heardAll`); before that the learner is still in
+  /// the middle of the line, and the pause that closes the recording is [silenceWhileIncomplete]. A microphone that
+  /// expects nothing in particular (the talk, the collections trainer) passes no `heardAll` and keeps this one pause.
+  /// Only the MOMENT of closing depends on it — what the attempt is worth is still the card's own rule, applied to
+  /// the whole transcript after the close.
   final Duration silenceAfterSpeech;
+
+  /// The pause that closes a recording while some content word of the expected line has not been heard yet — up to
+  /// 2 s; the moment the last one arrives, the next pause is [silenceAfterSpeech] again.
+  final Duration silenceWhileIncomplete;
   final Duration maxRecording;
   final double echoCoverage;
 
@@ -84,6 +96,7 @@ class SpeechTurnConfig {
 
   SpeechTurnConfig copyWith({
     Duration? silenceAfterSpeech,
+    Duration? silenceWhileIncomplete,
     Duration? maxRecording,
     double? echoCoverage,
     Duration? reopenGap,
@@ -93,6 +106,7 @@ class SpeechTurnConfig {
     Duration? enginePause,
   }) => SpeechTurnConfig(
     silenceAfterSpeech: silenceAfterSpeech ?? this.silenceAfterSpeech,
+    silenceWhileIncomplete: silenceWhileIncomplete ?? this.silenceWhileIncomplete,
     maxRecording: maxRecording ?? this.maxRecording,
     echoCoverage: echoCoverage ?? this.echoCoverage,
     reopenGap: reopenGap ?? this.reopenGap,
@@ -212,6 +226,9 @@ class SpeechTurn {
   bool _closing = false;
   bool _manualStop = false;
 
+  /// «Every content word of the expected line is heard» — for the current turn; null — no line is expected.
+  bool Function(String transcript)? _heardAll;
+
   bool get isListening => _turn != null && !_turn!.isCompleted;
 
   /// Всё, что услышано на этот момент — склейка плюс текущий кусок.
@@ -222,11 +239,16 @@ class SpeechTurn {
   /// [expected] и [contextualStrings] едут в плагин подсказкой; [echoOf] — «в склейке узнана
   /// реплика роли» (покрытие ≥ [SpeechTurnConfig.echoCoverage] считает вызывающий, движок только
   /// спрашивает).
+  ///
+  /// [heardAll] — «every content word of the expected line is in this transcript» (наряд CLIENT-CONV-1b): while it
+  /// says no, the pause that closes the recording is [SpeechTurnConfig.silenceWhileIncomplete]; once it says yes,
+  /// [SpeechTurnConfig.silenceAfterSpeech]. It closes nothing by itself — a pause still has to fall.
   Future<SpeechTurnResult> listen({
     required List<String> expected,
     required String localeId,
     List<String> contextualStrings = const [],
     bool Function(String transcript)? echoOf,
+    bool Function(String transcript)? heardAll,
     ValueChanged<String>? onPartial,
     VoidCallback? onSpeechStarted,
     ValueChanged<double>? onLevel,
@@ -245,6 +267,7 @@ class SpeechTurn {
     _manualStop = false;
     _onPartial = onPartial;
     _onSpeechStarted = onSpeechStarted;
+    _heardAll = heardAll;
     diagnostics?.turnStarted();
 
     _armRecordingCap();
@@ -439,11 +462,19 @@ class SpeechTurn {
     _scheduleSilence();
   }
 
+  /// The pause after the last word that closes THIS recording — by the length of what has been said so far.
+  Duration get _silence {
+    final heardAll = _heardAll;
+    if (heardAll == null || heardAll(transcript)) return config.silenceAfterSpeech;
+    return config.silenceWhileIncomplete;
+  }
+
   void _scheduleSilence() {
     _silenceTimer?.cancel();
     final since = _openedAt == null ? Duration.zero : _now().difference(_openedAt!);
     final floor = config.minWaitBeforeSilence - since;
-    final wait = config.silenceAfterSpeech > floor ? config.silenceAfterSpeech : floor;
+    final silence = _silence;
+    final wait = silence > floor ? silence : floor;
     _silenceTimer = Timer(wait, () {
       if (!isListening) return;
       _settle(

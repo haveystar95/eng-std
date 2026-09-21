@@ -41,88 +41,30 @@ void _autoplay(State state, CardEnv env, CardAudio? audio, String fallback, Obje
   });
 }
 
-/// PHRASE PLATE (32-3…32-6, 32-8) — `#EFEBE3` across the sheet's whole field, the phrase in Literata 30
-/// left-aligned, «Listen» 44 in the bottom-right corner.
-class _PhrasePlate extends StatelessWidget {
-  const _PhrasePlate({required this.child, this.listen, this.topLeft});
-
-  final Widget child;
-  final Widget? listen;
-  final Widget? topLeft;
-
-  /// The plate is at least 208 high; a long phrase grows it — the text is not clipped.
-  @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: AppColors.ground,
-    child: Stack(
-      children: [
-        Container(
-          constraints: const BoxConstraints(minHeight: 208),
-          padding: EdgeInsets.fromLTRB(20, topLeft == null ? 20 : 52, 20, listen == null ? 20 : 64),
-          alignment: Alignment.centerLeft,
-          child: child,
-        ),
-        if (topLeft != null) Positioned(left: 20, top: 20, child: topLeft!),
-        if (listen != null) Positioned(right: 16, bottom: 16, child: listen!),
-      ],
-    ),
-  );
-}
-
-/// The text part of the phrase sheet — eyebrow, reading, translation. A sheet may carry no eyebrow at all: the frame
-/// with its filler in the slot already says what the card is about.
-class _PhraseFooter extends StatelessWidget {
-  const _PhraseFooter({this.eyebrow, this.reading, this.native});
-
-  final String? eyebrow;
-  final String? reading;
-  final String? native;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = <Widget>[
-      if (eyebrow case final text?) SessionEyebrow(text),
-      if (reading case final text?) Text(text, style: AppTextSession.meta),
-      if (native case final text?) Text(text, style: AppTextSession.body),
-    ];
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (i, row) in rows.indexed) ...[if (i > 0) const SizedBox(height: 4), row],
-        ],
-      ),
-    );
-  }
-}
-
-/// The phrase sheet: the plate on top and the text part; no text part (32-4) — the plate alone.
-class _PhraseSheet extends StatelessWidget {
-  const _PhraseSheet({required this.plate, this.footer});
-
-  final Widget plate;
-  final Widget? footer;
-
-  @override
-  Widget build(BuildContext context) => SessionSheet(
-    padding: EdgeInsets.zero,
-    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [plate, ?footer]),
-  );
-}
-
-/// THE LESSON SHEET (кадры 32-1, 32-7) — ONE paper sheet, as the frames draw it now: an eyebrow (32-7), the frame in
-/// Literata with its window, the reading, the native sentence, and «прослушать» 44 in the bottom right corner on the
-/// ground's fill. The older sheet — a ground plate over a paper footer — still carries the other cards of series 32.
+/// THE PHRASE SHEET OF SERIES 32 (кадры 32-1, 32-7; наряд CLIENT-CONV-1b — the other cards of the series too) — ONE
+/// paper sheet: an eyebrow, the phrase in Literata with its window, the reading, the native sentence, and «прослушать»
+/// 44 in the bottom right corner on the ground's fill. The older sheet — a ground plate over a paper footer — is gone
+/// from every card of the series: a series whose cards draw the same phrase two ways reads as two products.
 class _LessonSheet extends StatelessWidget {
-  const _LessonSheet({required this.frame, this.eyebrow, this.reading, this.native, this.listen, this.padding = 20, this.listenGap = 12});
+  const _LessonSheet({
+    required this.frame,
+    this.eyebrow,
+    this.reading,
+    this.native,
+    this.listen,
+    this.bottomLeft,
+    this.padding = 20,
+    this.listenGap = 12,
+  });
 
   final Widget frame;
   final String? eyebrow;
   final String? reading;
   final String? native;
   final Widget? listen;
+
+  /// On the left of the «прослушать» row — the wave of a line that sounds (32-8).
+  final Widget? bottomLeft;
 
   /// 20 on 32-1, 24 on 32-7.
   final double padding;
@@ -148,7 +90,10 @@ class _LessonSheet extends StatelessWidget {
           const SizedBox(height: 4),
           Text(text, key: const ValueKey('lesson-native'), style: AppTextSession.body),
         ],
-        if (listen case final button?) ...[SizedBox(height: listenGap), Align(alignment: Alignment.centerRight, child: button)],
+        if (listen != null || bottomLeft != null) ...[
+          SizedBox(height: listenGap),
+          Row(children: [?bottomLeft, const Spacer(), ?listen]),
+        ],
       ],
     ),
   );
@@ -181,11 +126,16 @@ class _FillerChips extends StatelessWidget {
 
 /// THE MEANINGS AS NEUTRAL PLATES (кадр 32-1) — «это карточка-урок, здесь ничего не выбирают»: each meaning is a grey
 /// plate across the whole width with the word in Literata 17 and its translation under it. None of them is marked, not
-/// even the one standing in the window, and none of them is a button — nothing here looks like a choice.
+/// even the one standing in the window — nothing here looks like a choice, and nothing is graded.
+///
+/// A TAP PUTS THE MEANING INTO THE WINDOW (правка прохода 21.09, наряд CLIENT-CONV-1b): the frame above takes it, and
+/// the phrase is said with it — this is how the lesson shows what «эту часть можно менять» means. It is not an
+/// answer: the card still ends in «Дальше» and `passed`, whatever was tapped.
 class _MeaningPlates extends StatelessWidget {
-  const _MeaningPlates({required this.fillers});
+  const _MeaningPlates({required this.fillers, required this.onTap});
 
   final List<CardFiller> fillers;
+  final ValueChanged<CardFiller> onTap;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -194,17 +144,28 @@ class _MeaningPlates extends StatelessWidget {
     children: [
       for (final (i, f) in fillers.indexed) ...[
         if (i > 0) const SizedBox(height: 8),
-        Container(
-          key: ValueKey('meaning-${f.index}'),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: AppColors.meaningPlate, borderRadius: BorderRadius.circular(12)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(f.target, style: AppTextSession.meaning),
-              const SizedBox(height: 2),
-              Text(f.native, style: AppTextSession.body),
-            ],
+        Semantics(
+          button: true,
+          label: f.target,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              AppHaptics.light();
+              onTap(f);
+            },
+            child: Container(
+              key: ValueKey('meaning-${f.index}'),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: AppColors.meaningPlate, borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(f.target, style: AppTextSession.meaning),
+                  const SizedBox(height: 2),
+                  Text(f.native, style: AppTextSession.body),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -216,8 +177,9 @@ class _MeaningPlates extends StatelessWidget {
 
 /// FRAME INTRO (кадр 32-1) — A LESSON CARD, NOT A TASK (наряд CLIENT-CONV-1a): «Посмотри и
 /// послушай», the frame with a filler always in its slot, and under it the meanings as NEUTRAL
-/// PLATES with the caption «эту часть можно менять». Nothing here is chosen: the plates show what
-/// the changing part can hold, and the card ends in «Дальше».
+/// PLATES with the caption «эту часть можно менять». Nothing here is chosen as an answer: a tap on a
+/// plate puts that meaning into the window and says the phrase with it (CLIENT-CONV-1b), and the card
+/// ends in «Дальше».
 ///
 /// THE THIRD STATE — one meaning, no window: the phrase stands whole, the line of sense says so in
 /// as many words, and under it «В разговоре» holds the exchange the phrase is said in. That exchange
@@ -236,25 +198,46 @@ class PhraseIntroCard extends StatefulWidget {
 }
 
 class _PhraseIntroCardState extends State<PhraseIntroCard> {
+  static const _key = 'intro-phrase';
+
   Timer? _autoplayTimer;
+
+  /// The meaning the learner put into the window with a tap; null — the dialogue's own stands there.
+  CardFiller? _picked;
 
   /// The frame has a slot with more than one meaning — the plates stand under it. One meaning (or a
   /// frame without a slot) is the canvas' third state: the phrase whole, no plates.
   bool get _changeable => widget.payload.frame.hasSlot && widget.payload.frame.fillers.length > 1;
 
-  /// What stands in the slot — the filler the dialogue says, otherwise the first one (the one the
-  /// dialogue says may be missing from the card, SESSION-1e).
+  /// What stands in the slot — the meaning tapped last, otherwise the filler the dialogue says, otherwise the
+  /// first one (the one the dialogue says may be missing from the card, SESSION-1e).
   CardFiller? get _shown {
     final frame = widget.payload.frame;
     if (!_changeable) return frame.filler(widget.payload.said.fillerIndex);
-    return frame.filler(widget.payload.said.fillerIndex) ?? frame.fillers.first;
+    return _picked ?? frame.filler(widget.payload.said.fillerIndex) ?? frame.fillers.first;
+  }
+
+  /// The phrase as it stands in the window, and its voice: the dialogue's own line is the phrase's own file; any
+  /// other meaning is the frame said with that meaning (`p2.f3`).
+  (CardAudio?, String) get _voiceOfShown {
+    final p = widget.payload;
+    final shown = _shown;
+    if (shown == null || shown.index == p.said.fillerIndex) return (p.said.audio, p.said.textTarget);
+    return (shown.audio, p.frame.filledWith(shown.target));
+  }
+
+  void _pick(CardFiller filler) {
+    _autoplayTimer?.cancel();
+    setState(() => _picked = filler);
+    final (audio, text) = _voiceOfShown;
+    unawaited(widget.env.voice.play(audio, fallback: text, key: _key));
   }
 
   @override
   void initState() {
     super.initState();
     final said = widget.payload.said;
-    _autoplayTimer = autoplayOnce(this, widget.env, said.audio, said.textTarget, 'intro-phrase');
+    _autoplayTimer = autoplayOnce(this, widget.env, said.audio, said.textTarget, _key);
   }
 
   @override
@@ -270,6 +253,7 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
     final p = widget.payload;
     final frame = p.frame;
     final shown = _shown;
+    final (shownAudio, shownText) = _voiceOfShown;
     final pair = _changeable ? null : env.exchangeOf?.call(p.said.textTarget);
     return CardLayout(
       bodyGap: _changeable ? 16 : 24,
@@ -294,13 +278,14 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
                 : SessionFrameText.plain(frame.hasSlot ? p.said.textTarget : frame.frameTarget, style: AppTextSession.frameLesson),
             reading: _pronunciation(frame, shown),
             native: _native(frame, shown),
-            listen: CardListen(env: env, audio: p.said.audio, fallback: p.said.textTarget, playKey: 'intro-phrase', onPaper: true),
+            // «Прослушать» says the phrase as it stands in the window — with the meaning tapped last.
+            listen: CardListen(env: env, audio: shownAudio, fallback: shownText, playKey: _key, onPaper: true),
           ),
           if (_changeable) ...[
             const SizedBox(height: 16),
             Text(l.planSessionChangeable, key: const ValueKey('changeable-caption'), style: AppTextSession.meta),
             const SizedBox(height: 14),
-            _MeaningPlates(fillers: frame.fillers),
+            _MeaningPlates(fillers: frame.fillers, onTap: _pick),
           ] else if (pair != null) ...[
             const SizedBox(height: 32),
             SessionEyebrow(l.planSessionInTalk),
@@ -367,6 +352,11 @@ class _InTalk extends StatelessWidget {
 /// TRANSLATION → ASSEMBLY (32-2): the frame's tiles and the filler chips in one tray; the slot in the row is an
 /// empty chip until a filler is chosen; «Check»; pass — words = `expected.words`, the slot at `slot_at`, filler =
 /// `expected.filler_index`. Tiles are lower-case — the client capitalizes the first word of the assembled row.
+///
+/// A TAP ON A TILE ONLY PLACES IT (правка прохода 21.09, наряд CLIENT-CONV-1b): the chip used to voice the whole
+/// phrase with its filler the moment it went into the row, which read the answer out before it was checked. The
+/// phrase sounds AFTER «Проверить» — the phrase the card asked for, with its own filler: right, it is what was built
+/// and the card leaves when it has been said; wrong, it is the answer, heard beside the mistake.
 class PhraseAssembleCard extends StatefulWidget {
   const PhraseAssembleCard({super.key, required this.env, required this.payload});
 
@@ -391,6 +381,8 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
     return null;
   }
 
+  /// A tap on the tray PLACES a piece — a word at the end of the row, a chip into the slot. It says nothing: the
+  /// phrase is heard after «Проверить» ([_check]).
   void _tapTray(int i) {
     final tiles = p.tiles.length;
     setState(() {
@@ -406,10 +398,25 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
         _pieces.add(SlotPiece(filler));
       }
     });
-    if (i >= tiles) {
-      final f = p.chips[i - tiles];
-      unawaited(widget.env.voice.play(f.audio, fallback: p.frame.filledWith(f.target), key: 'chip-${f.index}'));
+  }
+
+  /// The phrase the card asked for — the frame with `expected.filler_index` — and its voice.
+  CardFiller? get _expectedFiller {
+    final at = p.fillerIndex;
+    if (at == null) return null;
+    for (final c in p.chips) {
+      if (c.index == at) return c;
     }
+    return p.frame.filler(at);
+  }
+
+  Future<void> _sayPhrase() {
+    final f = _expectedFiller;
+    return widget.env.voice.play(
+      f?.audio,
+      fallback: f == null ? p.frame.frameTarget : p.frame.filledWith(f.target),
+      key: 'assembled-phrase',
+    );
   }
 
   void _check() {
@@ -430,9 +437,12 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
       response: SessionResponse(mode: 'tiles', fillerIndex: _slot?.filler.index),
     ));
     if (ok) {
-      unawaited(Future<void>.delayed(AppMotion.sessionAutoAdvance, () {
+      // Right: the phrase is said, and the card leaves once it has been — never sooner than the usual beat.
+      unawaited(Future.wait([_sayPhrase(), Future<void>.delayed(AppMotion.sessionAutoAdvance)]).then((_) {
         if (mounted) unawaited(widget.env.next());
       }));
+    } else {
+      unawaited(_sayPhrase());
     }
   }
 
@@ -560,12 +570,11 @@ class _PhraseChooseBackCardState extends State<PhraseChooseBackCard> with Choice
       bodyGap: 12,
       centerBody: true,
       task: SessionTask(l.planSessionTaskChooseTranslation),
-      body: _PhraseSheet(
-        plate: _PhrasePlate(
-          listen: CardListen(env: env, audio: p.audio, fallback: p.textTarget, playKey: _key),
-          child: SessionFrameText.plain(p.textTarget, style: AppTextSession.frame),
-        ),
-        footer: _PhraseFooter(eyebrow: l.planSessionBrowPhrase, reading: p.pronunciationNative),
+      body: _LessonSheet(
+        eyebrow: l.planSessionBrowPhrase,
+        frame: SessionFrameText.plain(p.textTarget, style: AppTextSession.frame),
+        reading: p.pronunciationNative,
+        listen: CardListen(env: env, audio: p.audio, fallback: p.textTarget, playKey: _key, onPaper: true),
       ),
       bottom: optionsDock(context),
     );
@@ -614,14 +623,12 @@ class _PhraseSlotCardState extends State<PhraseSlotCard> with ChoiceCardState<Ph
             ),
           ),
           const SizedBox(height: 20),
-          _PhraseSheet(
-            plate: _PhrasePlate(
-              child: SessionFrameText.frame(
-                p.frame,
-                style: AppTextSession.frame,
-                slot: answered ? p.correctOption?.text : null,
-                look: answered ? SlotLook.sage : SlotLook.empty,
-              ),
+          _LessonSheet(
+            frame: SessionFrameText.frame(
+              p.frame,
+              style: AppTextSession.frame,
+              slot: answered ? p.correctOption?.text : null,
+              look: answered ? SlotLook.sage : SlotLook.empty,
             ),
           ),
         ],
@@ -772,16 +779,12 @@ class _PhraseRepeatCardState extends State<PhraseRepeatCard> with VoiceCardState
       centerBody: true,
       fadeStop: 0.30,
       task: SessionTask(l.planSessionTaskSayPhrase),
-      body: _PhraseSheet(
-        plate: _PhrasePlate(
-          listen: CardListen(env: env, audio: p.audio, fallback: p.expectedText, playKey: _key, rate: kRepeatRate),
-          child: SessionFrameText.plain(p.expectedText, style: AppTextSession.frame, underline: _keyRange),
-        ),
-        footer: _PhraseFooter(
-          eyebrow: l.planSessionBrowPhrase,
-          reading: _pronunciation(p.frame, filler),
-          native: _native(p.frame, filler),
-        ),
+      body: _LessonSheet(
+        eyebrow: l.planSessionBrowPhrase,
+        frame: SessionFrameText.plain(p.expectedText, style: AppTextSession.frame, underline: _keyRange),
+        reading: _pronunciation(p.frame, filler),
+        native: _native(p.frame, filler),
+        listen: CardListen(env: env, audio: p.audio, fallback: p.expectedText, playKey: _key, rate: kRepeatRate, onPaper: true),
       ),
       bottom: voiceDock(context),
     );
@@ -1012,7 +1015,15 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
           ],
         ],
       ),
-      bottom: voiceDock(context, showIdleCaption: false, missedCaption: _reason),
+      // «Пропустить» in brass, as the frame draws it (отчёт client-conv-1a §1.8); a refusal of the own word says what
+      // the phone heard under the judge's reason.
+      bottom: voiceDock(
+        context,
+        showIdleCaption: false,
+        missedCaption: _reason,
+        missedHeard: _reason == null ? null : heard,
+        skipBrass: true,
+      ),
     );
   }
 }
@@ -1196,18 +1207,14 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
         task: SessionTask(l.planSessionTaskWhatAnswer),
         body: line == null
             ? const SizedBox.shrink()
-            : _PhraseSheet(
-                plate: ValueListenableBuilder<Object?>(
-                  valueListenable: env.voice.playing,
-                  builder: (_, playing, _) => _PhrasePlate(
-                    topLeft: SessionWave(heights: SessionWave.five, width: 80, playing: playing == _partnerKey),
-                    listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _partnerKey),
-                    child: Text(line.textTarget, style: AppTextSession.frame),
-                  ),
-                ),
-                footer: _PhraseFooter(
+            : ValueListenableBuilder<Object?>(
+                valueListenable: env.voice.playing,
+                builder: (_, playing, _) => _LessonSheet(
                   eyebrow: env.role.isEmpty ? l.planSessionBrowFrame : l.planSessionBrowPartnerAsks(env.role),
+                  frame: Text(line.textTarget, style: AppTextSession.frame),
                   native: line.textNative,
+                  bottomLeft: SessionWave(heights: SessionWave.five, width: 80, playing: playing == _partnerKey),
+                  listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _partnerKey, onPaper: true),
                 ),
               ),
         bottom: Column(
@@ -1276,29 +1283,26 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
               ),
             ),
           const SizedBox(height: 48),
-          _PhraseSheet(
-            plate: _PhrasePlate(
-              listen: filled == null
-                  ? null
-                  : CardListen(
-                      env: env,
-                      audio: filled.audio,
-                      fallback: frame.frameTarget.replaceFirst(kSlotMark, filled.target),
-                      playKey: 'combine-filler',
-                    ),
-              child: SessionFrameText(
-                before: parts.before,
-                after: parts.after,
-                style: AppTextSession.frame,
-                frameColor: filled == null ? null : AppColors.verdictKnown,
-                slot: filled?.target,
-                look: filled == null ? SlotLook.empty : SlotLook.sage,
-              ),
+          _LessonSheet(
+            eyebrow: filled == null ? l.planSessionBrowFrame : l.planSessionBrowAssembled,
+            frame: SessionFrameText(
+              before: parts.before,
+              after: parts.after,
+              style: AppTextSession.frame,
+              frameColor: filled == null ? null : AppColors.verdictKnown,
+              slot: filled?.target,
+              look: filled == null ? SlotLook.empty : SlotLook.sage,
             ),
-            footer: _PhraseFooter(
-              eyebrow: filled == null ? l.planSessionBrowFrame : l.planSessionBrowAssembled,
-              native: filled == null ? frame.frameNative : (filled.nativeLine ?? frame.frameNative.replaceFirst(kSlotMark, filled.native)),
-            ),
+            native: filled == null ? frame.frameNative : (filled.nativeLine ?? frame.frameNative.replaceFirst(kSlotMark, filled.native)),
+            listen: filled == null
+                ? null
+                : CardListen(
+                    env: env,
+                    audio: filled.audio,
+                    fallback: frame.frameTarget.replaceFirst(kSlotMark, filled.target),
+                    playKey: 'combine-filler',
+                    onPaper: true,
+                  ),
           ),
         ],
       ),

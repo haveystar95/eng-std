@@ -215,7 +215,8 @@ class _QuietPronouncer extends Pronouncer {
 }
 
 /// The talk on a full 390 × 844 screen, animations off, Russian interface. Returns the controller and
-/// the microphones the screen made.
+/// the microphones the screen made. Every call is a NEW talk (its own key): a second talk within one test does not
+/// inherit the first one's screen, still listening to the first controller.
 typedef TalkStand = ({ConversationController talk, HeldVoice voice, List<SessionMic> mics});
 
 Future<TalkStand> pumpTalk(
@@ -253,6 +254,7 @@ Future<TalkStand> pumpTalk(
         body: SafeArea(
           bottom: false,
           child: TalkView(
+            key: UniqueKey(),
             controller: talk,
             scene: null,
             voice: voice,

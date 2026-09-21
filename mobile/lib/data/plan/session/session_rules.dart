@@ -110,7 +110,8 @@ abstract final class SessionRules {
     SessionKind.dialogueRescue ||
     SessionKind.listenDialogue ||
     SessionKind.listenReview ||
-    SessionKind.listenPace => _walkthrough,
+    SessionKind.listenPace ||
+    SessionKind.recallScenes => _walkthrough,
   };
 
   static const Set<SessionResult> _choice = {SessionResult.passed, SessionResult.failed};
