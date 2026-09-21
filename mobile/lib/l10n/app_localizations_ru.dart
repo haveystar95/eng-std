@@ -4128,8 +4128,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planTalkEntryTitle => 'Поговори с собеседником';
 
   @override
-  String planTalkEntryMinutes(String minutes) {
-    return 'около $minutes';
+  String planTalkEntryMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'около $n минуты',
+      many: 'около $n минут',
+      few: 'около $n минут',
+      one: 'около $n минуты',
+    );
+    return '$_temp0';
   }
 
   @override

@@ -5250,12 +5250,12 @@
   "@planTalkEntryTitle": {
     "description": "Вход в разговор (37-5): заголовок. Роль без склонения — «собеседник», как на входе в «Говорю сам»: контракт отдаёт роль только в именительном (полоса сцены над заголовком называет её словом)."
   },
-  "planTalkEntryMinutes": "около {minutes}",
+  "planTalkEntryMinutes": "{n, plural, one{около {n} минуты} few{около {n} минут} many{около {n} минут} other{около {n} минуты}}",
   "@planTalkEntryMinutes": {
-    "description": "Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут»; minutes — planMinutesCount.",
+    "description": "Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут». После «около» — родительный падеж, поэтому своя форма, а не planMinutesCount (живой прогон поймал «около 3 минуты»).",
     "placeholders": {
-      "minutes": {
-        "type": "String"
+      "n": {
+        "type": "int"
       }
     }
   },

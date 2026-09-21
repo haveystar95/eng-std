@@ -173,7 +173,9 @@ void main() {
       await tester.pump(const Duration(seconds: 6));
       expect(find.byKey(const ValueKey('talk-hint-chip')), findsOneWidget);
       expect(find.byKey(const ValueKey('talk-hint')), findsNothing);
-      expect(find.text('Скажи, что У моего сына температура.'), findsOneWidget);
+      // Сервер шлёт намерение ЦЕЛЫМ предложением, и в «Скажи, что …» оно встаёт придаточным: строчная
+      // буква, без точки. Живой прогон поймал «Скажи, что У моего сына температура.».
+      expect(find.text('Скажи, что у моего сына температура'), findsOneWidget);
       await settleTalk(tester);
     });
   });

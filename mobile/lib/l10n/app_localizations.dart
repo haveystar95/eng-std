@@ -5991,11 +5991,11 @@ abstract class AppLocalizations {
   /// **'Поговори с собеседником'**
   String get planTalkEntryTitle;
 
-  /// Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут»; minutes — planMinutesCount.
+  /// Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут». После «около» — родительный падеж, поэтому своя форма, а не planMinutesCount (живой прогон поймал «около 3 минуты»).
   ///
   /// In ru, this message translates to:
-  /// **'около {minutes}'**
-  String planTalkEntryMinutes(String minutes);
+  /// **'{n, plural, one{около {n} минуты} few{около {n} минут} many{около {n} минут} other{около {n} минуты}}'**
+  String planTalkEntryMinutes(int n);
 
   /// Вход в разговор репетиции (37-5): бровь вместо названия сцены — разговор идёт по всем сценам плана.
   ///

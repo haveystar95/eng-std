@@ -2285,7 +2285,7 @@
   "planPlateStageTalk": "Talk",
   "planPlateStageRecall": "Recall",
   "planTalkEntryTitle": "Talk to the person",
-  "planTalkEntryMinutes": "about {minutes}",
+  "planTalkEntryMinutes": "{n, plural, one{about {n} minute} other{about {n} minutes}}",
   "@planTalkEntryMinutes": {
     "placeholders": {
       "minutes": {

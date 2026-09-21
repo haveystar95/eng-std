@@ -3923,8 +3923,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkEntryTitle => 'Talk to the person';
 
   @override
-  String planTalkEntryMinutes(String minutes) {
-    return 'about $minutes';
+  String planTalkEntryMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'about $n minutes',
+      one: 'about $n minute',
+    );
+    return '$_temp0';
   }
 
   @override

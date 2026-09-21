@@ -19,6 +19,7 @@ import '../session/session_mic.dart';
 import '../session/session_voice.dart';
 import 'conversation_controller.dart';
 import 'talk_ribbon.dart';
+import 'talk_texts.dart';
 
 /// THE TALK (кадры 37-6…37-11) — the ribbon, the microphone and the three ways a move can fail.
 ///
@@ -273,7 +274,7 @@ class _TalkViewState extends State<TalkView> {
         TalkTrouble.agentSilent => TalkNotice(text: l.planTalkSilent, onRetry: () => unawaited(_talk.retry())),
         _ => null,
       },
-      chip: _talk.chipShown && _talk.hintNative != null ? TalkHintChip(text: l.planTalkHintChip(_talk.hintNative!)) : null,
+      chip: _talk.chipShown && _talk.hintNative != null ? TalkHintChip(text: TalkTexts.hint(l, _talk.hintNative!)) : null,
       liveLine: listening && _mic.partial.trim().isNotEmpty
           ? _LiveLine(words: LiveLine.of(_mic.partial, _expected, listening: !_mic.closed))
           : null,

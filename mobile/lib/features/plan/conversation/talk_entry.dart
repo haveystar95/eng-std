@@ -80,7 +80,7 @@ class TalkEntryView extends StatelessWidget {
                       if (minutes != null) ...[
                         const SizedBox(height: 14),
                         Text(
-                          l.planTalkEntryMinutes(l.planMinutesCount(minutes!)),
+                          l.planTalkEntryMinutes(minutes!),
                           key: const ValueKey('talk-entry-minutes'),
                           style: AppTextSession.meta,
                         ),
