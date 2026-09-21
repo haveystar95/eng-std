@@ -432,8 +432,8 @@ plan:reconcile-talks → «дней … было 1 / стало 0 · запис�
 `9052efcd4409e197de503138cd9f0488e2eda7188a8e2ce9f89672c873cf0b04`; `slot_judge.v3.md` — sha256
 `035411394c79d4e6f3d814f96933eecf2f7b56323e32f2cd26525cff26d7b6e4`.
 
-**Коммиты** (ветка `conv-2`, в `main` — fast-forward): код — `ffad4461`; документы — {{DOCS}}; шаги на бой и хеши —
-последний коммит наряда.
+**Коммиты** (ветка `conv-2`, в `main` — fast-forward): код — `ffad4461`; документы — `2dcf583e`; шаги на бой, хеши и
+handoff — последний коммит наряда (тот, что несёт этот абзац).
 
 **Ворота** (один раз в конце, на коде ветки — сайдкар `wt_conv2`, база `wordtrainer_conv2_test`): `composer check` —
 OpenAPI `openapi.yaml` ok и `openapi-admin.yaml` ok (3.1.0), deptrac **0** нарушений (3 «uncovered» — давние, Identity),
@@ -455,7 +455,62 @@ PHPStan **0** ошибок, Pest **2386 passed** (18 735 утверждений,
 старый день «не пройденным»: миграция и дописчик идут кодом ветки ДО слияния (таблица аддитивная, старый код её не
 читает), потом слияние и перезапуск воркера.
 
-{{DEPLOY}}
+Выполнено 21.09, 22:28–22:35 (+03:00), из `backend2/` основного дерева; код ветки смонтирован как `/wt`.
+
+1. **Что в очереди** (только чтение) — ровно одна миграция:
+
+   ```bash
+   docker compose run --rm --no-deps -v <worktree>/backend2:/wt -w /wt app php artisan migrate:status --pending
+   ```
+   `2026_09_21_200000_create_plan_stage_passages … Pending`
+
+2. **Копия && миграция — одной командой:**
+
+   ```bash
+   bash scripts/db-backup.sh --safety && docker compose run --rm --no-deps -v <worktree>/backend2:/wt -w /wt app php artisan migrate --force
+   ```
+   `backup: storage/db-backups/wordtrainer-20260921-222854.sql.gz ( 21M)` · `safety copy: nothing pruned` ·
+   `2026_09_21_200000_create_plan_stage_passages … 159.70ms DONE`
+
+3. **Запертые дни — командой, не UPDATE** (`--dry`, потом запись, потом повтор — идемпотентность):
+
+   ```bash
+   docker compose run --rm --no-deps -v <worktree>/backend2:/wt -w /wt app php artisan plan:reconcile-talks --dry
+   docker compose run --rm --no-deps -v <worktree>/backend2:/wt -w /wt app php artisan plan:reconcile-talks
+   ```
+   ```
+   план 01M2TSRM3DJPGCR5VQNBE8N3S7 · день 3 (in_progress) · разговор 01M32DKPMFR6QDX7S2YC5FNR8E · natural · 2026-09-21T16:46:28+00:00
+   план 01M32DX8QCABM348XP45Z1ZD4M · день 1 (closed) · разговор 01M32FJ5FQNRNSQH6PNC7DP5E0 · natural · 2026-09-21T17:18:42+00:00
+   дней с оконченным разговором и без прохождения шестого этапа: было 2 / стало 0
+   записано прохождений: 2
+   (повторный запуск) было 0 / стало 0 · записано прохождений: 0
+   ```
+
+4. **Слияние:** `git merge --ff-only conv-2` в основном дереве — `e460f182..2dcf583e`; грязные файлы параллельной
+   клиентской сессии (`mobile/…`, `docs/plan-ui-glossary.md`) с файлами ветки не пересекаются — не тронуты.
+
+5. **Воркер:** `docker compose restart horizon` → `horizon:status` — «Horizon is running».
+
+6. **Проверка боя:**
+   - рубильник: `.env` — `PLAN_CONVERSATION_ENABLED=true`; `bootstrap/cache/` — только `packages.php`, `services.php`;
+     `config:show plan.conversation` — `enabled true`; команда `plan:reconcile-talks` зарегистрирована;
+   - `GET /up` — 200, `GET /api/v1/plans` без токена — 401; в логах `app` и `horizon` за 15 минут — ни одной ошибки;
+   - дни Дена тем же обработчиком, что читает телефон (`tools/day-state.php`, сессия только на чтение):
+
+     ```
+     план 01M32DX8… день 1 (closed): окно — conversation done, «Поговори с администратором», сцен 1; кабинет — done;
+       «Что было хорошо»: Сказал сам 6 реплик из 8 · В разговоре использовал 0 фраз из 7 · Понял все вопросы;
+       прохождение: разговор 01M32FJ5FQNRNSQH6PNC7DP5E0 · 2026-09-21 17:18:42+00
+     план 01M2TSRM… день 3: PlanNotFound — план удалён (`status = deleted`), API его не отдаёт; прохождение записано
+     ```
+     «0 фраз из 7» у разговора зала — не поломка выката: так считает сверка фраз по ключу каркаса (Ден говорил «Weekdays
+     works for me», «Yes it is my first visit» — своими словами); это хвост «сверка фраз строже человека» (§9 п. 2).
+
+7. **Общая тестовая база** `wordtrainer_test` — догнана той же миграцией
+   (`docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate --force`, 302 мс). Без этого хук
+   ворот основного дерева, уже на новом коде, валил 6 тестов: `SessionReturnsTest` и `SessionPhraseWindowsTest` живут без
+   `RefreshDatabase` и ходят в базовую тестовую базу, а не в базу своего процесса. После новой миграции её нужно догонять
+   до первого коммита, который гонит ворота на основном дереве.
 
 ---
 
