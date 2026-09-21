@@ -2368,5 +2368,7 @@
   "planSessionFrameWhole": "This phrase is said whole — nothing in it changes",
   "planSessionChangeable": "this part can change",
   "planSessionInTalk": "In the talk",
-  "planSessionOwnWordChip": "your own word"
+  "planSessionOwnWordChip": "your own word",
+  "planTalkRescueMark": "asked again",
+  "planTalkNoMic": "Microphone needed — the talk can't go on without it"
 }

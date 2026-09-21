@@ -489,6 +489,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       voice: _voice,
       makeMic: _talkMic,
       phraseTexts: _talkPhrases,
+      openSettings: _openSettings,
       onSummary: _session.talkEnded,
       onClose: () => Navigator.of(context).maybePop(),
     );

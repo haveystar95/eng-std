@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/conversation/conversation_models.dart';
+import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/conversation/conversation_controller.dart';
 import 'package:eng_std/features/plan/conversation/talk_ribbon.dart';
 import 'package:eng_std/features/plan/session/session_mic.dart';
 
-import '../../../support/session_harness.dart' show enterHeard;
+import '../../../support/session_harness.dart' show SilentRecognizer, enterHeard;
 import '../../../support/talk_harness.dart';
 
 /// THE TALK WITH THE AGENT ON THE REAL SCREEN (наряд CLIENT-CONV-1a, кадры 37-6…37-12).
@@ -133,6 +136,25 @@ void main() {
       expect(tester.widget<TalkSageUnderline>(find.byType(TalkSageUnderline)).marks, isEmpty);
       await settleTalk(tester);
     });
+
+    // ПРАВИЛО (кадр 37-7, «после „Не понял"»): переспрос виден в ленте — пометкой на стороне ученика.
+    // Тёмный пузырь — только сказанное, а слов у переспроса сервер не пишет (`text_target` пуст),
+    // поэтому «Sorry?» канвы телефон не выдумывает.
+    // ЛОВИТ: две одинаковые реплики роли подряд без единого знака между ними — так лента выглядела в
+    // живом прогоне; и пустой тёмный пузырь на месте переспроса.
+    testWidgets('переспрос — пометка в ленте, не тёмный пузырь', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      await pumpTalk(tester, probe, phraseTexts: phrases);
+
+      // Журнал: 1 роль · 2 переспрос · 3 роль повторяет · 4 сказал · 5 роль.
+      expect(find.byType(TalkRescueMark), findsOneWidget);
+      expect(find.text('переспросил'), findsOneWidget);
+      expect(find.byType(TalkOwnBubble), findsOneWidget, reason: 'тёмный пузырь — только у сказанного (ход 4)');
+      final mark = tester.getTopLeft(find.byKey(const ValueKey('turn-2'))).dy;
+      expect(tester.getTopLeft(find.byKey(const ValueKey('turn-1'))).dy, lessThan(mark));
+      expect(tester.getTopLeft(find.byKey(const ValueKey('turn-3'))).dy, greaterThan(mark), reason: 'пометка стоит между двумя репликами роли');
+      await settleTalk(tester);
+    });
   });
 
   group('37-7 · «Без подсказок»', () {
@@ -176,6 +198,71 @@ void main() {
       // Сервер шлёт намерение ЦЕЛЫМ предложением, и в «Скажи, что …» оно встаёт придаточным: строчная
       // буква, без точки. Живой прогон поймал «Скажи, что У моего сына температура.».
       expect(find.text('Скажи, что у моего сына температура'), findsOneWidget);
+      await settleTalk(tester);
+    });
+  });
+
+  group('37-8 · 37-10 · сказанное до ответа сервера', () {
+    // ПРАВИЛО (кадр 37-8): сказанное встаёт в ленту СРАЗУ, а три точки «врач думает» — под ним.
+    // Подчерка ещё нет: какие фразы прозвучали, скажет сервер вместе с ответом, и тогда его копия
+    // реплики заменяет телефонную — не рядом с ней.
+    // ЛОВИТ: ленту, где пока идёт запрос, стоят только три точки — ученик не видит, что его услышали
+    // (живой прогон); и двойную реплику, когда ответ пришёл.
+    testWidgets('ход в полёте — сказанное уже в ленте, три точки после него', (tester) async {
+      const line = 'He has a sore throat.';
+      final answered = talkFixtureEdited('conversation-day-open', (json) {
+        final turns = json['turns'] as List<dynamic>;
+        turns.addAll([
+          {
+            ...(turns[3] as Map<String, dynamic>),
+            'index': 6,
+            'text_target': line,
+            'phrases_used': <Object>[],
+          },
+          {...(turns[4] as Map<String, dynamic>), 'index': 7},
+        ]);
+      });
+      final hold = Completer<void>();
+      final probe = TalkProbe()
+        ..documents.addAll([open, answered])
+        ..holdMove = hold;
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+      await finishLine(tester, stand);
+      await _say(tester, text: line);
+
+      expect(stand.talk.phase, TalkPhase.sending);
+      final pending = find.byKey(const ValueKey('talk-pending'));
+      expect(find.descendant(of: pending, matching: find.text(line)), findsOneWidget);
+      expect(tester.widget<TalkSageUnderline>(find.descendant(of: pending, matching: find.byType(TalkSageUnderline))).marks, isEmpty,
+          reason: 'подчерк — по ответу сервера, не раньше');
+      expect(tester.getTopLeft(find.byKey(const ValueKey('talk-thinking'))).dy, greaterThan(tester.getTopLeft(pending).dy),
+          reason: 'три точки — под сказанным');
+
+      hold.complete();
+      await tester.pump();
+      await tester.pump();
+      expect(pending, findsNothing);
+      expect(find.byKey(const ValueKey('talk-thinking')), findsNothing);
+      expect(find.text(line), findsOneWidget, reason: 'копия сервера заменила телефонную');
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (кадр 37-10): сбой не стирает сказанное — реплика стоит в ленте над плашкой, пока ход
+    // не уйдёт снова. «Повторить» шлёт именно её.
+    // ЛОВИТ: плашку «связь пропала» над лентой, из которой пропало то, что ученик только что сказал.
+    testWidgets('сбой — сказанное остаётся в ленте', (tester) async {
+      const line = 'He has a sore throat.';
+      final probe = TalkProbe()
+        ..documents.addAll([open, open])
+        ..failMove = _offline();
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+      await finishLine(tester, stand);
+      await _say(tester, text: line);
+
+      expect(stand.talk.trouble, TalkTrouble.offline);
+      final pending = find.byKey(const ValueKey('talk-pending'));
+      expect(find.descendant(of: pending, matching: find.text(line)), findsOneWidget);
+      expect(find.byKey(const ValueKey('talk-thinking')), findsNothing, reason: 'никто не думает — запрос упал');
       await settleTalk(tester);
     });
   });
@@ -255,6 +342,37 @@ void main() {
       await settleTalk(tester);
     });
 
+    // ПРАВИЛО: микрофон, который не пишет (нет разрешения, нет распознавания на устройстве), СКАЗАН
+    // словами, и рядом «Разрешить» — те же два шага, что у «Нужен микрофон» карточек (30-3). Кнопка
+    // гаснет: «тап — говорить» над ней не стоит.
+    // ЛОВИТ: живой прогон — симулятор без ассетов распознавания: после прерывания кнопка звала
+    // «тап — говорить», а тап не делал ничего и ничего не объяснял.
+    testWidgets('микрофон не пишет — сказано, и «Разрешить» спрашивает систему', (tester) async {
+      final recognizer = _GrantedOnAsk();
+      final probe = TalkProbe()..documents.add(open);
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases, recognizer: recognizer);
+      await finishLine(tester, stand);
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      await tester.pump();
+
+      expect(stand.mics.single.state, MicState.unavailable);
+      expect(find.text('тап — говорить'), findsNothing, reason: 'не звать туда, где ничего не случится');
+      expect(find.text('Нужен микрофон — без него разговор не пройти'), findsOneWidget);
+      expect(find.byKey(const ValueKey('talk-rescue')), findsOneWidget, reason: '«Не понял» остаётся');
+      expect(probe.moves, isEmpty, reason: 'запись, которой не было, не покупает ход');
+
+      recognizer.granted = true;
+      await tester.tap(find.byKey(const ValueKey('talk-allow-mic')));
+      await tester.pump();
+      await tester.pump();
+      expect(recognizer.asked, 1);
+      expect(stand.mics.single.state, MicState.idle);
+      expect(find.byKey(const ValueKey('talk-allow-mic')), findsNothing);
+      expect(find.text('тап — говорить'), findsOneWidget, reason: 'система разрешила — кнопка снова зовёт');
+      await settleTalk(tester);
+    });
+
     // ПРАВИЛО: пустая запись НЕ уходит на сервер — «не расслышал» стоит ничего и решается на месте.
     // ЛОВИТ: тишину, купленную как ход.
     testWidgets('пустая запись не покупает ход', (tester) async {
@@ -314,4 +432,35 @@ void main() {
       expect(rehearsal.summary!.notSaid, isNotEmpty);
     });
   });
+}
+
+/// A recogniser the system refuses until «Разрешить» asks it again and it is [granted].
+class _GrantedOnAsk extends SilentRecognizer {
+  _GrantedOnAsk() : super(available: false);
+
+  bool granted = false;
+  int asked = 0;
+
+  @override
+  bool get isReady => granted;
+
+  @override
+  Future<bool> get hasPermission async => granted;
+
+  @override
+  Future<bool> prepare() async {
+    asked++;
+    return granted;
+  }
+
+  @override
+  Future<SpeechAttempt> listenOnce({
+    required List<String> expected,
+    required String localeId,
+    Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
+    List<String> contextualStrings = const [],
+    ValueChanged<String>? onPartial,
+    ValueChanged<double>? onLevel,
+  }) async => granted ? const SpeechAttempt.silent() : const SpeechAttempt.unavailable();
 }

@@ -20,6 +20,7 @@ import 'package:eng_std/data/pronouncer.dart';
 import 'package:eng_std/features/plan/conversation/conversation_controller.dart';
 import 'package:eng_std/features/plan/conversation/talk_screen.dart';
 import 'package:eng_std/features/plan/session/session_mic.dart';
+import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/data/speech/speech_turn.dart';
 import 'package:eng_std/features/plan/session/session_voice.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -56,6 +57,10 @@ class TalkProbe {
 
   /// Thrown by the next read.
   Object? failRead;
+
+  /// The next move waits for this before it answers — the request «in flight» (кадр 37-8, «врач
+  /// думает»); cleared once waited on.
+  Completer<void>? holdMove;
   int _at = 0;
 
   PlanConversation get _next {
@@ -81,6 +86,11 @@ class FakeTalkBackend implements ConversationBackend {
   @override
   Future<PlanConversation> move(String planId, String conversationId, {required String kind, String? heard}) async {
     probe.moves.add((kind: kind, heard: heard));
+    final hold = probe.holdMove;
+    if (hold != null) {
+      probe.holdMove = null;
+      await hold.future;
+    }
     final fail = probe.failMove;
     if (fail != null) {
       probe.failMove = null;
@@ -172,6 +182,8 @@ Future<TalkStand> pumpTalk(
   bool hints = true,
   bool open = true,
   VoidCallback? onSummary,
+  SpeechRecognizer? recognizer,
+  Future<void> Function()? openSettings,
 }) async {
   tester.view.physicalSize = const Size(390, 844) * 2;
   tester.view.devicePixelRatio = 2;
@@ -202,9 +214,10 @@ Future<TalkStand> pumpTalk(
             scene: null,
             voice: voice,
             phraseTexts: phraseTexts,
+            openSettings: openSettings,
             makeMic: () {
               final mic = SessionMic(
-                recognizer: SilentRecognizer(),
+                recognizer: recognizer ?? SilentRecognizer(),
                 localeId: 'en_US',
                 expected: '',
                 config: const SpeechTurnConfig(silenceAfterSpeech: ConversationController.silenceClosesTurn),

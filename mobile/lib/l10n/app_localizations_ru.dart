@@ -4264,4 +4264,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionOwnWordChip => 'своё слово';
+
+  @override
+  String get planTalkRescueMark => 'переспросил';
+
+  @override
+  String get planTalkNoMic => 'Нужен микрофон — без него разговор не пройти';
 }

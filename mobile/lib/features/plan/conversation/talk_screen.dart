@@ -37,6 +37,7 @@ class TalkView extends StatefulWidget {
     required this.onSummary,
     required this.onClose,
     this.phraseTexts = const {},
+    this.openSettings,
   });
 
   final ConversationController controller;
@@ -55,6 +56,9 @@ class TalkView extends StatefulWidget {
   /// The day's phrases by `ref` — the text the server's `phrases_used` names. Without the text there
   /// is no underline: the client does not guess which words the server matched.
   final Map<String, String> phraseTexts;
+
+  /// iOS Settings — the only way left once the system will not ask for the microphone again.
+  final Future<void> Function()? openSettings;
 
   @override
   State<TalkView> createState() => _TalkViewState();
@@ -108,6 +112,13 @@ class _TalkViewState extends State<TalkView> {
       if (!mounted) return;
     }
     await _mic.tap();
+  }
+
+  /// «Разрешить» under a microphone that cannot record: ask the system again; once it will not ask any
+  /// more, Settings are the only way — the same two steps as «Нужен микрофон» of the cards (30-3).
+  Future<void> _allowMic() async {
+    final ok = await _mic.askAgain();
+    if (!ok && _mic.blockedInSettings) await widget.openSettings?.call();
   }
 
   /// Every phrase of the day, as one reference line — the live line paints the words of the plan
@@ -196,6 +207,13 @@ class _TalkViewState extends State<TalkView> {
       rows.add(row);
       previous = turn;
     }
+    // The move the server has not answered: what the learner said stays on screen while the role
+    // «thinks» and after a failure (кадры 37-8, 37-10) — the phone's own words, until the server's
+    // copy of them arrives with the answer.
+    if (_pendingRow() case final row?) {
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 8));
+      rows.add(row);
+    }
     if (_talk.phase == TalkPhase.sending) {
       if (rows.isNotEmpty) rows.add(const SizedBox(height: 16));
       rows.add(const TalkThinking());
@@ -211,6 +229,9 @@ class _TalkViewState extends State<TalkView> {
 
   Widget? _turnRow(PlanConversation talk, TalkTurn turn) {
     if (turn.isOwn) {
+      // «Не понял» is a tap, not speech, and the server writes no words for it: the ribbon marks the
+      // act, and no ink bubble pretends the learner said something (кадр 37-7, «Тёмный пузырь»).
+      if (turn.kind == TalkTurnKind.rescue) return TalkRescueMark(key: ValueKey('turn-${turn.index}'));
       final text = turn.textTarget;
       // A skipped turn has no words of its own — the ribbon simply goes on.
       if (text == null || text.trim().isEmpty) return null;
@@ -234,6 +255,18 @@ class _TalkViewState extends State<TalkView> {
     );
   }
 
+  /// The pending move as a row: what was said, without an underline — the server has not matched
+  /// it yet; a rescue as its mark; a skip as nothing.
+  Widget? _pendingRow() {
+    final move = _talk.pendingMove;
+    if (move == null) return null;
+    return switch (move.kind) {
+      'rescue' => const TalkRescueMark(key: ValueKey('talk-pending')),
+      'said' when (move.heard ?? '').trim().isNotEmpty => TalkOwnBubble(key: const ValueKey('talk-pending'), text: move.heard),
+      _ => null,
+    };
+  }
+
   /// The ranges of the learner's line the SERVER matched to phrases of the plan. A phrase whose text
   /// this day does not carry leaves no mark: the contract names the phrase by `ref` only.
   List<({int start, int end})> _marksOf(TalkTurn turn) {
@@ -252,9 +285,14 @@ class _TalkViewState extends State<TalkView> {
     final phase = _talk.phase;
     final listening = _mic.isListening;
     final yourTurn = phase == TalkPhase.yourTurn;
+    // A microphone that cannot record (no permission, no recognition on the device) is SAID, not left
+    // looking ready: «тап — говорить» over a button that does nothing is the one thing this dock must
+    // not print (caught live on a simulator without recognition assets).
+    final noMic = _mic.state == MicState.unavailable;
     final look = switch (phase) {
       TalkPhase.agentSpeaking => TalkMicLook.dimmed,
       TalkPhase.sending || TalkPhase.opening || TalkPhase.openFailed || TalkPhase.ended => TalkMicLook.busy,
+      TalkPhase.yourTurn when noMic => TalkMicLook.busy,
       TalkPhase.yourTurn => listening ? TalkMicLook.listening : TalkMicLook.waiting,
     };
     final trouble = _talk.trouble;
@@ -262,6 +300,7 @@ class _TalkViewState extends State<TalkView> {
       TalkTrouble.unheard => l.planTalkUnheard,
       _ => switch (phase) {
         TalkPhase.agentSpeaking => l.planSessionListenCue,
+        TalkPhase.yourTurn when noMic => null,
         TalkPhase.yourTurn => listening ? l.planSessionMicListening : l.planSessionMicTap,
         _ => null,
       },
@@ -270,8 +309,14 @@ class _TalkViewState extends State<TalkView> {
     return TalkDock(
       debugMic: yourTurn ? _mic : null,
       notice: switch (trouble) {
-        TalkTrouble.offline => TalkNotice(text: l.planTalkOffline, onRetry: () => unawaited(_talk.retry())),
-        TalkTrouble.agentSilent => TalkNotice(text: l.planTalkSilent, onRetry: () => unawaited(_talk.retry())),
+        TalkTrouble.offline => TalkNotice(text: l.planTalkOffline, onAction: () => unawaited(_talk.retry())),
+        TalkTrouble.agentSilent => TalkNotice(text: l.planTalkSilent, onAction: () => unawaited(_talk.retry())),
+        _ when yourTurn && noMic => TalkNotice(
+          text: l.planTalkNoMic,
+          actionLabel: l.planSessionNoMicAllow,
+          actionKey: const ValueKey('talk-allow-mic'),
+          onAction: () => unawaited(_allowMic()),
+        ),
         _ => null,
       },
       chip: _talk.chipShown && _talk.hintNative != null ? TalkHintChip(text: TalkTexts.hint(l, _talk.hintNative!)) : null,
@@ -295,7 +340,7 @@ class _TalkViewState extends State<TalkView> {
       mic: TalkMicButton(
         look: look,
         label: l.planSessionMicTap,
-        onTap: phase == TalkPhase.agentSpeaking || yourTurn ? () => unawaited(_tapMic()) : null,
+        onTap: phase == TalkPhase.agentSpeaking || (yourTurn && !noMic) ? () => unawaited(_tapMic()) : null,
       ),
     );
   }

@@ -4055,4 +4055,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionOwnWordChip => 'your own word';
+
+  @override
+  String get planTalkRescueMark => 'asked again';
+
+  @override
+  String get planTalkNoMic => 'Microphone needed — the talk can\'t go on without it';
 }

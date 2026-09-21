@@ -142,6 +142,13 @@ class ConversationController extends ChangeNotifier {
   /// The intention to offer, as the server worded it — null when there is none.
   String? get hintNative => _talk?.hints.native;
 
+  /// THE MOVE THE SERVER HAS NOT ANSWERED YET — the learner's own line while it is in flight, and
+  /// after a failure until it is sent again (кадры 37-8 «врач думает» and 37-10 keep it in the
+  /// ribbon). The server writes the learner's line only together with the role's answer, so for these
+  /// seconds the phone is the only one who knows what was said; the server's own copy replaces it the
+  /// moment a document arrives. Null — nothing is waiting.
+  TalkMove? get pendingMove => _lastMove;
+
   bool interruptedAt(int index) => _interrupted.contains(index);
 
   /// Is the role's line [index] the one that is sounding now.

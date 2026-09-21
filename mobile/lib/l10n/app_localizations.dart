@@ -6182,6 +6182,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'своё слово'**
   String get planSessionOwnWordChip;
+
+  /// Лента разговора (37-7 «после „Не понял"»): пометка на стороне ученика там, где он нажал «Не понял». Не тёмный пузырь: сервер не пишет слов для переспроса, а тёмный пузырь — только сказанное.
+  ///
+  /// In ru, this message translates to:
+  /// **'переспросил'**
+  String get planTalkRescueMark;
+
+  /// Экран разговора: микрофон не пишет (нет разрешения или распознавания на устройстве). Рядом «Разрешить» — спросить систему ещё раз или открыть настройки, как на «Нужен микрофон» (30-3). Вместо «тап — говорить» над кнопкой, которая ничего не делает (пойман живым прогоном).
+  ///
+  /// In ru, this message translates to:
+  /// **'Нужен микрофон — без него разговор не пройти'**
+  String get planTalkNoMic;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

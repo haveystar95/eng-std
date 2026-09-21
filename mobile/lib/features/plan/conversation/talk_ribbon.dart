@@ -109,6 +109,23 @@ class TalkOwnBubble extends StatelessWidget {
   );
 }
 
+/// «ПЕРЕСПРОСИЛ» — the learner's «Не понял» in the ribbon: a quiet mark on the learner's side, not an
+/// ink bubble. The canvas draws «Sorry?» in an own bubble (37-7 «после „Не понял"»), but the server
+/// writes no words for a rescue and an ink bubble is only ever what the learner said; the mark keeps
+/// the two identical lines of the role from reading as a glitch (отчёт §5).
+class TalkRescueMark extends StatelessWidget {
+  const TalkRescueMark({super.key});
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerRight,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Text(AppLocalizations.of(context).planTalkRescueMark, style: AppTextSession.meta),
+    ),
+  );
+}
+
 /// A LINE WITH PHRASES OF THE DAY UNDER A THIN SAGE RULE (37-8, «фразы дня видны тонкой линией
 /// шалфея»). Ranges outside the text, or crossing each other, are ignored — a mark the client cannot
 /// place is not drawn somewhere else.
@@ -453,10 +470,14 @@ class TalkDock extends StatelessWidget {
 /// A FAILURE PLATE (37-10) — one sentence and, when there is something to repeat, «Повторить». It
 /// says what happened in what the learner can see: no «error», no «server», no «API».
 class TalkNotice extends StatelessWidget {
-  const TalkNotice({super.key, required this.text, this.onRetry});
+  const TalkNotice({super.key, required this.text, this.onAction, this.actionLabel, this.actionKey = const ValueKey('talk-retry')});
 
   final String text;
-  final VoidCallback? onRetry;
+  final VoidCallback? onAction;
+
+  /// The action's words — «Повторить» unless the notice asks for something else («Разрешить»).
+  final String? actionLabel;
+  final Key actionKey;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -466,13 +487,13 @@ class TalkNotice extends StatelessWidget {
     child: Row(
       children: [
         Expanded(child: Text(text, style: AppTextSession.meta)),
-        if (onRetry != null) ...[
+        if (onAction != null) ...[
           const SizedBox(width: 12),
           SessionTextExit(
-            key: const ValueKey('talk-retry'),
-            label: AppLocalizations.of(context).planTabRetry,
+            key: actionKey,
+            label: actionLabel ?? AppLocalizations.of(context).planTabRetry,
             brass: true,
-            onTap: onRetry,
+            onTap: onAction,
           ),
         ],
       ],
