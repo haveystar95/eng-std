@@ -17,8 +17,8 @@ import '../session/parts/session_chrome.dart';
 import '../session/session_mic.dart';
 import '../session/session_voice.dart';
 import 'conversation_controller.dart';
+import 'talk_phrases.dart';
 import 'talk_ribbon.dart';
-import 'talk_texts.dart';
 
 /// THE TALK (кадры 37-6…37-11) — the ribbon, the microphone and the three ways a move can fail.
 ///
@@ -56,8 +56,8 @@ class TalkView extends StatefulWidget {
   final VoidCallback onSummary;
   final VoidCallback onClose;
 
-  /// The day's phrases by `ref` — the text the server's `phrases_used` names. Without the text there
-  /// is no underline: the client does not guess which words the server matched.
+  /// The day's phrases by `ref` — the text of a `phrases_used` entry from a server that sent the ref alone (before
+  /// CONV-2). Without any text there is no underline: the client does not guess which words the server matched.
   final Map<String, String> phraseTexts;
 
   /// iOS Settings — the only way left once the system will not ask for the microphone again.
@@ -121,9 +121,29 @@ class _TalkViewState extends State<TalkView> {
     if (!ok && _mic.blockedInSettings) await widget.openSettings?.call();
   }
 
-  /// Every phrase of the day, as one reference line — the live line paints the words of the plan
-  /// that have already sounded in sage (37-7 «слушаю»).
-  String get _expected => widget.phraseTexts.values.join(' ');
+  /// Every phrase the talk is for, as one reference line — the live line paints the words of the plan that have
+  /// already sounded in sage (37-7 «слушаю»). A talk whose server sent no targets reads the day's phrases.
+  String get _expected {
+    final targets = _talk.talk?.targets ?? const <TalkTarget>[];
+    return targets.isNotEmpty ? targets.map((t) => t.textTarget).join(' ') : widget.phraseTexts.values.join(' ');
+  }
+
+  /// THE PHRASE STRIP (наряд CLIENT-CONV-1c §4) — «фразы · N из M» off the latest answer's `targets[]`; a talk whose
+  /// server sent none has no strip.
+  Widget? _strip(PlanConversation talk) => talk.targets.isEmpty
+      ? null
+      : TalkPhraseStrip(
+          said: talk.targetsSaid,
+          total: talk.targets.length,
+          onTap: () => unawaited(
+            showTalkPhraseSheet(
+              context,
+              talk: _talk,
+              targets: () => _talk.talk?.targets ?? const <TalkTarget>[],
+              voice: widget.voice,
+            ),
+          ),
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -172,8 +192,12 @@ class _TalkViewState extends State<TalkView> {
     );
   }
 
-  String _openFailure(AppLocalizations l) =>
-      problemCodeOf(_talk.openError) == 'plan_conversation_not_in_day' ? l.planTalkNotInDay : l.planTalkOpenFailed;
+  String _openFailure(AppLocalizations l) => switch (problemCodeOf(_talk.openError)) {
+    'plan_conversation_not_in_day' => l.planTalkNotInDay,
+    // «Ещё раз» of a replay (BACK-TAILS-2): the day's replays are spent for today.
+    'plan_conversation_replay_limit' => l.planWindowTalkReplayLimit,
+    _ => l.planTalkOpenFailed,
+  };
 
   /// The talk's header: the cross, the stage's name and the talk's own minutes. No bar and no beads —
   /// the talk has no cards, and a bar would be a number the phone made up.
@@ -234,12 +258,12 @@ class _TalkViewState extends State<TalkView> {
 
   Widget? _turnRow(PlanConversation talk, TalkTurn turn) {
     if (turn.isOwn) {
-      // «Не понял» is a tap, not speech, and the server writes no words for it: the ribbon marks the
-      // act, and no ink bubble pretends the learner said something (кадр 37-7, «Тёмный пузырь»).
-      if (turn.kind == TalkTurnKind.rescue) return TalkRescueMark(key: ValueKey('turn-${turn.index}'));
       final text = turn.textTarget;
-      // A skipped turn has no words of its own — the ribbon simply goes on.
+      // A skipped turn has no words of its own — the ribbon simply goes on. A rescue has the SERVER'S words for it —
+      // «Sorry?» in the language of the talk (CONV-2 п. 4а) — and stands as the learner's own ink bubble, with no
+      // translation under it and no underline in it (кадр 37-7 «после „Не понял"»).
       if (text == null || text.trim().isEmpty) return null;
+      if (turn.kind == TalkTurnKind.rescue) return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text);
       return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text, marks: _marksOf(turn));
     }
     // THE ROLE'S TEXT IS OPEN WITH ITS VOICE (правка прохода 21.09, наряд CLIENT-CONV-1b): the words stand from the
@@ -260,25 +284,26 @@ class _TalkViewState extends State<TalkView> {
     );
   }
 
-  /// The pending move as a row: what was said, without an underline — the server has not matched
-  /// it yet; a rescue as its mark; a skip as nothing.
+  /// The pending move as a row: what was said, without an underline — the server has not matched it yet. A rescue and a
+  /// skip wait for the server: the words of a rescue are the server's (its pack's «Sorry?»), and the phone does not
+  /// write them in its place.
   Widget? _pendingRow() {
     final move = _talk.pendingMove;
     if (move == null) return null;
     return switch (move.kind) {
-      'rescue' => const TalkRescueMark(key: ValueKey('talk-pending')),
       'said' when (move.heard ?? '').trim().isNotEmpty => TalkOwnBubble(key: const ValueKey('talk-pending'), text: move.heard),
       _ => null,
     };
   }
 
-  /// The ranges of the learner's line the SERVER matched to phrases of the plan. A phrase whose text
-  /// this day does not carry leaves no mark: the contract names the phrase by `ref` only.
+  /// The ranges of the learner's line the SERVER matched to phrases of the plan — by the phrase's own text, which
+  /// `phrases_used` carries since CONV-2 (a phrase of another scene of the rehearsal too); from a server that sent the
+  /// ref alone — by the day's text of that ref. No text at all — no mark.
   List<({int start, int end})> _marksOf(TalkTurn turn) {
     final text = turn.textTarget ?? '';
     final marks = <({int start, int end})>[];
     for (final used in turn.phrasesUsed) {
-      final phrase = widget.phraseTexts[used.ref];
+      final phrase = used.textTarget ?? widget.phraseTexts[used.ref];
       if (phrase == null) continue;
       marks.addAll(HeardWords.matched(text, phrase));
     }
@@ -314,6 +339,7 @@ class _TalkViewState extends State<TalkView> {
 
     return TalkDock(
       debugMic: yourTurn ? _mic : null,
+      strip: _strip(talk),
       notice: switch (trouble) {
         TalkTrouble.offline => TalkNotice(text: l.planTalkOffline, onAction: () => unawaited(_talk.retry())),
         TalkTrouble.agentSilent => TalkNotice(text: l.planTalkSilent, onAction: () => unawaited(_talk.retry())),
@@ -325,7 +351,8 @@ class _TalkViewState extends State<TalkView> {
         ),
         _ => null,
       },
-      chip: _talk.chipShown && _talk.hintNative != null ? TalkHintChip(text: TalkTexts.hint(l, _talk.hintNative!)) : null,
+      // The intention comes as a clause (CONV-2 п. 11) and goes into «Скажи, что …» as it came.
+      chip: _talk.chipShown && _talk.hintNative != null ? TalkHintChip(text: l.planTalkHintChip(_talk.hintNative!)) : null,
       liveLine: listening && _mic.partial.trim().isNotEmpty
           ? _LiveLine(words: LiveLine.of(_mic.partial, _expected, listening: !_mic.closed))
           : null,
@@ -354,14 +381,17 @@ class _TalkViewState extends State<TalkView> {
   }
 
   /// THE END (кадр 37-11): the role's goodbye stays in the ribbon and a sheet rises over it —
-  /// «Разговор окончен · N минут» and one button.
+  /// «Разговор окончен · N минут» and one button; the phrase strip stays over it with the talk's final count (наряд
+  /// CLIENT-CONV-1c §4 — the frame draws the sheet alone).
   Widget _endSheet(AppLocalizations l, PlanConversation talk) {
     final minutes = talk.summary?.minutes;
+    final strip = _strip(talk);
     return Column(
       key: const ValueKey('talk-end-sheet'),
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (strip != null) ...[strip, const SizedBox(height: 14)],
         SessionSheet(
           child: Row(
             children: [

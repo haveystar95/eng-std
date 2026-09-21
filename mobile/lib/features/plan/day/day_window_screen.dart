@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../data/api_client.dart' show problemCodeOf;
 import '../../../data/audio_loader.dart';
 import '../../../data/image_loader.dart';
 import '../../../data/line_audio.dart';
@@ -13,9 +14,13 @@ import '../../../data/plan/day_providers.dart';
 import '../../../data/plan/day_window.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
+import '../conversation/conversation_controller.dart';
+import '../conversation/talk_replay_screen.dart';
 import '../plan_providers.dart';
 import '../plan_tab_parts.dart' show PlanLoadFailedCard;
+import '../session/parts/session_bits.dart' show SessionDockButton;
 import '../session/session_screen.dart';
+import '../session/session_voice.dart';
 import 'day_voice.dart';
 import 'window/window_action_bar.dart';
 import 'window/window_scroll.dart';
@@ -38,6 +43,9 @@ import 'window/window_word_sheet.dart';
 /// A REVIEW AND THE REHEARSAL (кадры 37-1, 37-2, наряд CLIENT-CONV-1b) open the same window with their own plate —
 /// the day's kind, its title, one status line, the rows the server dealt — and under it, in place of the three tabs,
 /// the list of what the day is made of ([WindowSourcesScroll]).
+///
+/// A WALKED DAY OF ANY KIND may offer the talk again (`window.talk_again`, наряд CLIENT-CONV-1c §9г): «Повторить
+/// разговор» starts a new talk over the walked stage on the talk's own screens ([TalkReplayScreen]).
 class DayWindowScreen extends ConsumerStatefulWidget {
   const DayWindowScreen({super.key, required this.plan, required this.number});
 
@@ -52,6 +60,9 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
   /// План окна — тот, с которым пришли, или он же уже запущенный (см. [_act]).
   late Plan _plan = widget.plan;
   DayVoice? _voice;
+
+  /// «Повторить разговор» is on its way — the start waits on a model and a voice.
+  bool _replaying = false;
 
   /// Этапы, закрытые с прошлого ответа сервера, — их галки появятся через 300 мс.
   Set<PlanStage> _popped = const {};
@@ -168,6 +179,47 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
     unawaited(ref.read(planTabProvider.notifier).refresh());
   }
 
+  /// «ПОВТОРИТЬ РАЗГОВОР» (наряд CLIENT-CONV-1c §9г, `window.talk_again`): the one POST of a talk's start, here, so its
+  /// answer is heard where the button is — started, the talk opens on the screen every talk has (37-6…37-12); a 409
+  /// `plan_conversation_replay_limit` is a sheet over the window, «Разговор сегодня уже повторяли — вернись завтра»,
+  /// and anything else the talk's own «could not start». «Ещё раз» of the cards is untouched: it is the other action.
+  Future<void> _replayTalk() async {
+    if (_replaying) return;
+    setState(() => _replaying = true);
+    final voice = SessionVoice(lines: ref.read(lineAudioCacheProvider), targetLang: _plan.targetLang);
+    unawaited(voice.warmUp().catchError((Object _) {}));
+    final talk = ConversationController(
+      backend: ApiConversationBackend(ref.read(apiClientProvider)),
+      planId: _plan.id,
+      day: widget.number,
+      voice: voice,
+      hints: !await ref.read(planStoreProvider).noHints(_plan.id),
+    );
+    // The talk's screen opens on the server's answer: the role's first line is said there, not over the window.
+    await talk.openAnswered();
+    if (!mounted) {
+      talk.dispose();
+      unawaited(voice.release());
+      return;
+    }
+    setState(() => _replaying = false);
+    if (talk.phase == TalkPhase.openFailed) {
+      final l = AppLocalizations.of(context);
+      final limit = problemCodeOf(talk.openError) == 'plan_conversation_replay_limit';
+      talk.dispose();
+      unawaited(voice.release());
+      AppHaptics.warning();
+      await _showWindowNotice(context, limit ? l.planWindowTalkReplayLimit : l.planTalkOpenFailed);
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => TalkReplayScreen(plan: _plan, number: widget.number, talk: talk, voice: voice)),
+    );
+    if (!mounted) return;
+    ref.invalidate(dayRoomProvider(_address));
+    unawaited(ref.read(planTabProvider.notifier).refresh());
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(dayRoomProvider(_address), (previous, next) {
@@ -193,7 +245,11 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
           // A review and the rehearsal (37-1, 37-2) are the same window with other rows and, in place of the tabs,
           // the list of what the day is made of.
           final system = WindowTexts.system(l, window.day, planTitle: _plan.shortTitle ?? _plan.displayTitle, slot: r.day.slot);
-          final cover = action == null ? 0.0 : WindowActionBar.coverOf(context);
+          // «Повторить разговор» (37-1 «пройден»): the one button of a walked day that has no other action, a brass link
+          // over the button of one that has (a walked scene day keeps its «Ещё раз»).
+          final talkAgain = window.talkAgain;
+          final hasBar = action != null || talkAgain;
+          final cover = hasBar ? WindowActionBar.coverOf(context, withSecondary: action != null && talkAgain) : 0.0;
 
           return Stack(
             children: [
@@ -201,7 +257,7 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
                 WindowSourcesScroll(
                   window: window,
                   system: system,
-                  sources: WindowSources.of(l, plan: _plan, room: r, day: window.day),
+                  sources: WindowSources.of(l, plan: _plan, window: window),
                   onBack: () => Navigator.of(context).maybePop(),
                   poppedStages: _popped,
                   bottomCover: cover,
@@ -215,15 +271,20 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
                   poppedStages: _popped,
                   bottomCover: cover,
                 ),
-              if (action != null)
+              if (hasBar)
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: WindowActionBar(
-                    label: WindowTexts.action(AppLocalizations.of(context), action),
-                    onTap: () => unawaited(_act(action, r)),
-                  ),
+                  child: action == null
+                      ? WindowActionBar(label: l.planWindowTalkAgain, busy: _replaying, onTap: () => unawaited(_replayTalk()))
+                      : WindowActionBar(
+                          label: WindowTexts.action(l, action),
+                          onTap: () => unawaited(_act(action, r)),
+                          secondaryLabel: talkAgain ? l.planWindowTalkAgain : null,
+                          onSecondary: talkAgain ? () => unawaited(_replayTalk()) : null,
+                          busy: _replaying,
+                        ),
                 ),
             ],
           );
@@ -231,6 +292,40 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
       ),
     );
   }
+
+  /// A sentence on a sheet over the window, and «Понятно» — the replay limit of today (409
+  /// `plan_conversation_replay_limit`), or a talk that did not start. The session's own sheet: the ground, corners 22,
+  /// the handle, one sentence, one button.
+  static Future<void> _showWindowNotice(BuildContext context, String text) => showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: AppColors.ground,
+    barrierColor: AppColors.windowSheetScrim,
+    elevation: 0,
+    isScrollControlled: true,
+    sheetAnimationStyle: const AnimationStyle(duration: AppMotion.sessionExitSheet, curve: AppMotion.windowEaseOutCubic),
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
+    builder: (sheet) => Padding(
+      key: const ValueKey('window-notice-sheet'),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.paddingOf(sheet).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(color: AppColors.markerOutline, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(text, key: const ValueKey('window-notice-text'), style: AppTextSession.sheetTitle),
+          const SizedBox(height: 32),
+          SessionDockButton(label: AppLocalizations.of(sheet).planSheetCta, onTap: () => Navigator.of(sheet).pop()),
+        ],
+      ),
+    ),
+  );
 
   /// Окно из ответа, или null — ответа нет, или в нём слово, которого у окна нет.
   static DayWindow? _windowOf(PlanDayRoom? room) {

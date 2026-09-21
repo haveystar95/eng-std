@@ -5517,42 +5517,6 @@ abstract class AppLocalizations {
   /// **'Вернётся завтра'**
   String get planSessionReturnsTomorrow;
 
-  /// Сессия, итог этапа «Слова» (30-6): заголовок с минутами этапа от сервера.
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова пройдены · {minutes}'**
-  String planSessionDoneWords(String minutes);
-
-  /// Сессия, итог этапа «Фразы» (30-6): заголовок с минутами этапа от сервера.
-  ///
-  /// In ru, this message translates to:
-  /// **'Фразы пройдены · {minutes}'**
-  String planSessionDonePhrases(String minutes);
-
-  /// Сессия, итог этапа «Слова» (30-6): под списком возвратов.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{Остальное {n} слово закрыто.} few{Остальные {n} слова закрыты.} many{Остальные {n} слов закрыты.} other{Остальные {n} слова закрыты.}}'**
-  String planSessionRestWords(int n);
-
-  /// Сессия, итог этапа «Слова» (30-6) без возвратов.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово закрыто.} few{Все {n} слова закрыты.} many{Все {n} слов закрыты.} other{Все {n} слова закрыты.}}'**
-  String planSessionAllWords(int n);
-
-  /// Сессия, итог этапа «Фразы» (30-6): под списком возвратов.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{Остальная {n} фраза закрыта.} few{Остальные {n} фразы закрыты.} many{Остальные {n} фраз закрыты.} other{Остальные {n} фразы закрыты.}}'**
-  String planSessionRestPhrases(int n);
-
-  /// Сессия, итог этапа «Фразы» (30-6) без возвратов.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза закрыта.} few{Все {n} фразы закрыты.} many{Все {n} фраз закрыты.} other{Все {n} фразы закрыты.}}'**
-  String planSessionAllPhrases(int n);
-
   /// Сессия, шит выхода (30-8): заголовок.
   ///
   /// In ru, this message translates to:
@@ -5865,47 +5829,11 @@ abstract class AppLocalizations {
   /// **'Подсказать'**
   String get planSessionHintAction;
 
-  /// Сессия, итог этапа «Диалог» (33-8); minutes — planMinutesCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'Диалог пройден · {minutes}'**
-  String planSessionDoneDialogue(String minutes);
-
-  /// Сессия, итог этапа (33-8, 35-6): под репликами, которые вернутся завтра.
-  ///
-  /// In ru, this message translates to:
-  /// **'Остальные реплики закрыты.'**
-  String get planSessionRestExchanges;
-
-  /// Сессия, итог этапа (33-8, 35-6): ничего не вернётся.
-  ///
-  /// In ru, this message translates to:
-  /// **'Все реплики закрыты.'**
-  String get planSessionAllExchanges;
-
-  /// Сессия, итог этапа «Слушаю и отвечаю» (34-8): верно отвеченные вопросы слушания из всех.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{Понял {n} вопрос из {m}} few{Понял {n} вопроса из {m}} many{Понял {n} вопросов из {m}} other{Понял {n} вопроса из {m}}}'**
-  String planSessionUnderstoodCount(int n, int m);
-
-  /// Сессия, итог этапа «Говорю сам» (35-6): зачтённые карточки этапа из всех.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{Сказал сам {n} реплику из {m}} few{Сказал сам {n} реплики из {m}} many{Сказал сам {n} реплик из {m}} other{Сказал сам {n} реплики из {m}}}'**
-  String planSessionSpokeCount(int n, int m);
-
-  /// Сессия, 35-6: строка над кнопкой — минуты дня справа.
+  /// Итог этапа (30-6, наряд CLIENT-CONV-1c): плашка «Дальше», когда следующего этапа нет, — итог дня, минуты дня справа.
   ///
   /// In ru, this message translates to:
   /// **'Итог дня'**
   String get planSessionDayTotal;
-
-  /// Сессия, 35-6: кнопка — к итогу дня 30-7.
-  ///
-  /// In ru, this message translates to:
-  /// **'День пройден'**
-  String get planSessionDayDoneAction;
 
   /// Сессия, итог дня (30-7); minutes — planMinutesCount.
   ///
@@ -5979,12 +5907,6 @@ abstract class AppLocalizations {
   /// **'Вспомнить'**
   String get planPlateStageRecall;
 
-  /// Вход в разговор (37-5): заголовок. Роль без склонения — «собеседник», как на входе в «Говорю сам»: контракт отдаёт роль только в именительном (полоса сцены над заголовком называет её словом).
-  ///
-  /// In ru, this message translates to:
-  /// **'Поговори с собеседником'**
-  String get planTalkEntryTitle;
-
   /// Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут». После «около» — родительный падеж, поэтому своя форма, а не planMinutesCount (живой прогон поймал «около 3 минуты»).
   ///
   /// In ru, this message translates to:
@@ -5996,6 +5918,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Разговор целиком'**
   String get planTalkEntryWhole;
+
+  /// Вход в разговор репетиции (37-5): сколько сцен в разговоре — вторая часть брови «Разговор целиком · 3 сцены».
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} сцена} few{{n} сцены} many{{n} сцен} other{{n} сцены}}'**
+  String planTalkEntryScenes(int n);
 
   /// Вход в разговор (37-5): первая строка правил. Роль без склонения — «собеседник».
   ///
@@ -6027,7 +5955,7 @@ abstract class AppLocalizations {
   /// **'Не понял'**
   String get planTalkRescueAction;
 
-  /// Экран разговора (37-7): чип подсказки — префикс печатает клиент, намерение intent приходит готовым (hints.native, без префикса).
+  /// Экран разговора (37-7) и «Ответь своими словами» (35-2): чип подсказки — префикс печатает клиент. В разговоре intent приходит придаточным (hints.native, CONV-2 п. 11) и печатается как есть; у карточки 35-2 task_native — предложение, его в придаточное переводит зеркало IntentClause.
   ///
   /// In ru, this message translates to:
   /// **'Скажи, что {intent}'**
@@ -6171,12 +6099,6 @@ abstract class AppLocalizations {
   /// **'своё слово'**
   String get planSessionOwnWordChip;
 
-  /// Лента разговора (37-7 «после „Не понял"»): пометка на стороне ученика там, где он нажал «Не понял». Не тёмный пузырь: сервер не пишет слов для переспроса, а тёмный пузырь — только сказанное.
-  ///
-  /// In ru, this message translates to:
-  /// **'переспросил'**
-  String get planTalkRescueMark;
-
   /// Экран разговора: микрофон не пишет (нет разрешения или распознавания на устройстве). Рядом «Разрешить» — спросить систему ещё раз или открыть настройки, как на «Нужен микрофон» (30-3). Вместо «тап — говорить» над кнопкой, которая ничего не делает (пойман живым прогоном).
   ///
   /// In ru, this message translates to:
@@ -6188,12 +6110,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Свои реплики всех сцен — посмотри, послушай и скажи вслух'**
   String get planSessionDescRecall;
-
-  /// Итог этапа «Вспомнить» (30-6, кадр 37-4): «Вспомнил · около 4 минут»; минуты — строкой planTalkEntryMinutes из минут этапа, которые прислал сервер.
-  ///
-  /// In ru, this message translates to:
-  /// **'Вспомнил · {minutes}'**
-  String planSessionDoneRecall(String minutes);
 
   /// Обзор «Вспомнить» (37-3): строка задания над репликами сцены.
   ///
@@ -6249,19 +6165,13 @@ abstract class AppLocalizations {
   /// **'Из каких дней'**
   String get planWindowFromDays;
 
-  /// Окно дня репетиции (37-1): сколько своих реплик у сцены — счёт списка сервера (карточка «Вспомнить»); пока день не роздан, числа нет и строка не пишется.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}'**
-  String planWindowSourceLines(int n);
-
   /// Диалог, «Пойми собеседника» (33-1): строка отдельного блока с вопросом и вариантами — под пузырём собеседника, а не между репликами.
   ///
   /// In ru, this message translates to:
   /// **'Что тебе сказали?'**
   String get planSessionTaskWhatSaid;
 
-  /// «Ответь своими словами» (35-2) и круг своего слова «Скажи целиком» (32-7): отказ — что распознал телефон, строкой под причиной.
+  /// «Ответь своими словами» (35-2) и круг своего слова «Скажи целиком» (32-7): отказ судьи — что он судил (heard ответа судьи, CONV-2 п. 8), строкой под причиной; без поля — что распознал телефон.
   ///
   /// In ru, this message translates to:
   /// **'услышал: {text}'**
@@ -6272,6 +6182,186 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{scene} · повтори перед приёмом'**
   String planTalkSceneRepeatBefore(String scene);
+
+  /// Имя этапа дня повторения (кадр 37-2, наряд CLIENT-CONV-1c): id repetition, который BACK-TAILS-2 даёт этапу карточек повторения вместо speak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторение'**
+  String get planPlateStageRepetition;
+
+  /// Итог этапа (30-6): заголовок «Слова» — к нему через « · » минуты этапа сервера (решение архитектора 22.09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова пройдены'**
+  String get planSessionPassedWords;
+
+  /// Итог этапа (30-6): заголовок «Фразы» — к нему через « · » минуты этапа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы пройдены'**
+  String get planSessionPassedPhrases;
+
+  /// Итог этапа (30-6, кадр SESSION-DES-4 «Диалог пройден · 3 минуты»): заголовок «Диалог» — к нему через « · » минуты этапа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог пройден'**
+  String get planSessionPassedDialogue;
+
+  /// Итог этапа (30-6): заголовок «Слушаю и отвечаю» — к нему через « · » минуты этапа (решение архитектора 22.09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушаю и отвечаю — пройдено'**
+  String get planSessionPassedListen;
+
+  /// Итог этапа (30-6): заголовок «Говорю сам» — к нему через « · » минуты этапа (решение архитектора 22.09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Говорю сам — пройдено'**
+  String get planSessionPassedSpeak;
+
+  /// Итог этапа (30-6, день репетиции): заголовок «Вспомнить» — к нему через « · » минуты этапа (решение архитектора 22.09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Вспомнить — пройдено'**
+  String get planSessionPassedRecall;
+
+  /// Итог этапа (30-6, день повторения): заголовок «Повторение» — к нему через « · » минуты этапа (решение архитектора 22.09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторение пройдено'**
+  String get planSessionPassedRepetition;
+
+  /// Итог этапа «Слова» (30-6), первая строка: сколько слов в этапе и сколько из них зачтено с первой попытки без подсказки — по карточкам сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}'**
+  String planSessionFirstTryWords(int n, int first);
+
+  /// Итог этапа «Фразы» (30-6), первая строка: фразы этапа и зачтённые с первой попытки без подсказки.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}'**
+  String planSessionFirstTryPhrases(int n, int first);
+
+  /// Итог этапа «Диалог» и «Говорю сам» (30-6, кадр «8 реплик, 6 с первого раза»), первая строка: реплики этапа и зачтённые с первой попытки без подсказки.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}'**
+  String planSessionFirstTryLines(int n, int first);
+
+  /// Итог этапа «Слушаю и отвечаю» (30-6), первая строка: вопросы слушания и отвеченные верно с первого раза.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}'**
+  String planSessionFirstTryQuestions(int n, int first);
+
+  /// Итог этапа «Повторение» (30-6), первая строка: карточки этапа и зачтённые с первой попытки без подсказки.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}'**
+  String planSessionFirstTryCards(int n, int first);
+
+  /// Итог этапа «Вспомнить» (30-6), первая строка: «6 реплик из 2 сцен» — свои реплики, сказанные вслух, и из скольких сцен.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}'**
+  String planSessionRecallLinesOfScenes(int n, int scenes);
+
+  /// Итог этапа (30-6), вторая строка: сколько единиц этапа вернётся завтра — по возвратам сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}'**
+  String planSessionStageReturns(int n);
+
+  /// Итог этапа (30-6), вторая строка, когда у этапа возвратов нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'завтра ничего не вернётся'**
+  String get planSessionStageNoReturns;
+
+  /// Итог этапа «Диалог» (30-6, кадр «сказал вслух 5 своих реплик»), вторая строка: свои реплики диалога, зачтённые голосом.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{сказал вслух {n} свою реплику} few{сказал вслух {n} свои реплики} many{сказал вслух {n} своих реплик} other{сказал вслух {n} своей реплики}}'**
+  String planSessionSaidAloud(int n);
+
+  /// Итог этапа «Диалог» (30-6, кадр «дважды переспросил — врач повторил медленнее»), третья строка: пройденные обмены «Не понял» диалога; role — роль собеседника сцены строчной.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}'**
+  String planSessionRescuedSlower(int n, String role);
+
+  /// Итог этапа «Слова» (30-6), третья строка — тёплая, одна на этап (решение архитектора 22.09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Эти слова ты теперь узнаёшь — дальше они встретятся во фразах'**
+  String get planSessionWarmWords;
+
+  /// Итог этапа «Фразы» (30-6), третья строка — тёплая, одна на этап.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы собраны и сказаны вслух — в диалоге они пригодятся'**
+  String get planSessionWarmPhrases;
+
+  /// Итог этапа «Слушаю и отвечаю» (30-6), третья строка — тёплая, одна на этап.
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплики собеседника ты понимаешь на слух'**
+  String get planSessionWarmListen;
+
+  /// Итог этапа «Говорю сам» (30-6), третья строка — тёплая, одна на этап.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свои реплики ты сказал сам — дальше живой разговор'**
+  String get planSessionWarmSpeak;
+
+  /// Итог этапа «Вспомнить» (30-6), третья строка — тёплая, одна на этап.
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплики на месте — дальше разговор целиком'**
+  String get planSessionWarmRecall;
+
+  /// Итог этапа «Повторение» (30-6), третья строка — тёплая, одна на этап.
+  ///
+  /// In ru, this message translates to:
+  /// **'Всё, что возвращалось, сказано ещё раз'**
+  String get planSessionWarmRepetition;
+
+  /// Вход в разговор (37-5, SESSION-DES-4): бровь списка фраз, ради которых разговор (targets ряда разговора окна).
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи в разговоре'**
+  String get planTalkEntrySay;
+
+  /// Лента разговора (37-6…37-11): полоска над микрофоном — сколько фраз разговора уже прозвучало (targets[].said сервера). Единственный счётчик ленты, назван нарядом.
+  ///
+  /// In ru, this message translates to:
+  /// **'фразы · {said} из {total}'**
+  String planTalkStrip(int said, int total);
+
+  /// Лист фраз (37-8d): заголовок — открывается тапом по полоске ленты.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы дня'**
+  String get planTalkSheetTitle;
+
+  /// Итог разговора-повтора (37-12, replay: true): группа несказанного — повтор ничего не возвращает завтра, и строки «вернётся завтра» у него нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не прозвучало'**
+  String get planTalkNotSaid;
+
+  /// Окно пройденного дня (37-1 «пройден»; window.talk_again, BACK-TAILS-2): кнопка нового разговора поверх пройденного этапа — тот же экран разговора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить разговор'**
+  String get planWindowTalkAgain;
+
+  /// Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор сегодня уже повторяли — вернись завтра'**
+  String get planWindowTalkReplayLimit;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

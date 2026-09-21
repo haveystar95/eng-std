@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -211,6 +212,39 @@ void main() {
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget, reason: 'the text opens');
       await settleCard(tester);
       expect(probe.nexts, 1, reason: 'a right answer leaves by itself, as in every other check');
+    });
+
+    // RULE (33-5, found by the snapshots of CLIENT-CONV-1c): an ask answered with a chip holds its answer for the check,
+    // so while its own line sounds — before the check comes up — «Дальше» is closed; the answer and the choice fly
+    // together once the check is answered.
+    // CATCHES: «Дальше» tapped during the own line leaving the card with the answer unsent — the stage dealt the same
+    // ask again and again.
+    testWidgets('chips: «Дальше» stays closed while the held answer waits for its check', (tester) async {
+      final probe = CardProbe();
+      final voice = _HoldingVoice();
+      final card = dialogueAt(12);
+      final check = (card.payload as DialogueAnswerPayload).check!;
+      // The test font draws every letter a square: «a follow-up appointment» needs the wider phone to stay on one line.
+      await pumpCard(tester, probeEnv(card, probe, voice: voice, level: PlanLevel.beginner), size: const Size(430, 932));
+      await tester.tap(find.byKey(const ValueKey('chip-0')));
+      await tester.pump();
+      expect(voice.holding, isTrue, reason: 'the own line is sounding');
+      expect(probe.answers, isEmpty, reason: 'held for the choice');
+      expect(dockEnabled(tester, 'Дальше'), isFalse);
+      await tapText(tester, 'Дальше');
+      expect(probe.nexts, 0, reason: 'the card does not leave with its answer unsent');
+
+      voice.letGo();
+      await tester.pump();
+      await tester.pump();
+      expect(find.text(check.questionNative), findsOneWidget, reason: 'the check comes up after the line');
+      await tapText(tester, check.options.firstWhere((o) => o.id == check.correct).text);
+      await tester.pump();
+      expect(results(probe), [SessionResult.passed]);
+      expect(probe.answers.single.response?.mode, 'chips');
+      expect(probe.answers.single.choice, check.correct);
+      await settleCard(tester);
+      expect(probe.nexts, 1);
     });
 
     // CATCHES: a wrong choice that leaves by itself, and one that keeps the reply closed (the learner never learns
@@ -463,4 +497,22 @@ void main() {
       await settleCard(tester);
     });
   });
+}
+
+/// A voice whose FIRST line sounds until [letGo] — the own line of a chip, long enough to be tapped over.
+class _HoldingVoice extends QuietVoice {
+  Completer<void>? _hold = Completer<void>();
+
+  bool get holding => _hold != null && !_hold!.isCompleted;
+
+  void letGo() => _hold?.complete();
+
+  @override
+  Future<void> play(CardAudio? audio, {required String fallback, double rate = 1.0, Object? key, bool slowFallback = false}) async {
+    await super.play(audio, fallback: fallback, rate: rate, key: key, slowFallback: slowFallback);
+    final hold = _hold;
+    if (hold == null) return;
+    await hold.future;
+    _hold = null;
+  }
 }

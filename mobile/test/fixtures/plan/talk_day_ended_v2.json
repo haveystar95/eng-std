@@ -1,0 +1,286 @@
+{
+ "id": "01M32MJYCV2K6EJSN6JCNV5EQC",
+ "plan_id": "01M2H13E1QT6F5D4FKJSEKTAD7",
+ "day": 1,
+ "type": "day",
+ "state": "ended",
+ "replay": true,
+ "talk_title_native": "Поговори с врачом",
+ "partner": {
+  "role_native": "Врач",
+  "role_target": "Doctor"
+ },
+ "scene": {
+  "title_native": "Приём у врача",
+  "title_target": "Doctor visit"
+ },
+ "scenes": [
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "title_native": "Приём у врача",
+   "title_target": "Doctor visit",
+   "role_native": "Врач",
+   "role_target": "Doctor",
+   "lines": 7,
+   "state": "done"
+  }
+ ],
+ "minutes_estimate": 3,
+ "turns_left": 1,
+ "targets": [
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "ref": "p1",
+   "text_target": "My son has a fever.",
+   "text_native": "У моего сына температура.",
+   "said": true
+  },
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "ref": "p2",
+   "text_target": "He has had it for three days.",
+   "text_native": "Это у него уже уже три дня.",
+   "said": true
+  },
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "ref": "p3",
+   "text_target": "His temperature is 39 degrees.",
+   "text_native": "У него температура 39 градусов.",
+   "said": false
+  },
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "ref": "p4",
+   "text_target": "He also has a sore throat.",
+   "text_native": "У него ещё болит горло.",
+   "said": false
+  },
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "ref": "p5",
+   "text_target": "He should rest at home.",
+   "text_native": "Ему нужно отдыхать дома.",
+   "said": false
+  },
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "ref": "p6",
+   "text_target": "How often should I give the paracetamol?",
+   "text_native": "Как часто мне давать парацетамол?",
+   "said": true
+  },
+  {
+   "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+   "ref": "p7",
+   "text_target": "When should we come back if he gets worse?",
+   "text_native": "Когда нам нужно прийти снова если ему станет хуже?",
+   "said": false
+  }
+ ],
+ "hints": {
+  "enabled": true,
+  "delay_ms": 5000,
+  "native": null
+ },
+ "turns": [
+  {
+   "index": 1,
+   "speaker": "partner",
+   "kind": "agent",
+   "text_target": "What seems to be the problem today?",
+   "text_native": "Что вас беспокоит сегодня?",
+   "audio": null,
+   "understood": null,
+   "phrases_used": [],
+   "off_topic": false,
+   "created_at": "2026-09-21T18:45:23+00:00"
+  },
+  {
+   "index": 2,
+   "speaker": "learner",
+   "kind": "said",
+   "text_target": "My son has a fever.",
+   "text_native": null,
+   "audio": null,
+   "understood": null,
+   "phrases_used": [
+    {
+     "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+     "ref": "p1",
+     "text_target": "My son has a fever.",
+     "text_native": "У моего сына температура."
+    }
+   ],
+   "off_topic": null,
+   "created_at": "2026-09-21T18:45:23+00:00"
+  },
+  {
+   "index": 3,
+   "speaker": "partner",
+   "kind": "agent",
+   "text_target": "How long has he had it?",
+   "text_native": "Как давно у него это?",
+   "audio": null,
+   "understood": true,
+   "phrases_used": [],
+   "off_topic": false,
+   "created_at": "2026-09-21T18:45:24+00:00"
+  },
+  {
+   "index": 4,
+   "speaker": "learner",
+   "kind": "rescue",
+   "text_target": "Sorry?",
+   "text_native": null,
+   "audio": null,
+   "understood": null,
+   "phrases_used": [],
+   "off_topic": null,
+   "created_at": "2026-09-21T18:45:24+00:00"
+  },
+  {
+   "index": 5,
+   "speaker": "partner",
+   "kind": "agent",
+   "text_target": "How long has he been sick?",
+   "text_native": "Как долго он болеет?",
+   "audio": null,
+   "understood": null,
+   "phrases_used": [],
+   "off_topic": false,
+   "created_at": "2026-09-21T18:45:25+00:00"
+  },
+  {
+   "index": 6,
+   "speaker": "learner",
+   "kind": "said",
+   "text_target": "He has had it for three days.",
+   "text_native": null,
+   "audio": null,
+   "understood": null,
+   "phrases_used": [
+    {
+     "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+     "ref": "p2",
+     "text_target": "He has had it for three days.",
+     "text_native": "Это у него уже уже три дня."
+    }
+   ],
+   "off_topic": null,
+   "created_at": "2026-09-21T18:45:25+00:00"
+  },
+  {
+   "index": 7,
+   "speaker": "partner",
+   "kind": "agent",
+   "text_target": "How high is his temperature?",
+   "text_native": "Какая у него температура?",
+   "audio": null,
+   "understood": true,
+   "phrases_used": [],
+   "off_topic": false,
+   "created_at": "2026-09-21T18:45:27+00:00"
+  },
+  {
+   "index": 8,
+   "speaker": "learner",
+   "kind": "said",
+   "text_target": "How often should I give the paracetamol?",
+   "text_native": null,
+   "audio": null,
+   "understood": null,
+   "phrases_used": [
+    {
+     "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+     "ref": "p6",
+     "text_target": "How often should I give the paracetamol?",
+     "text_native": "Как часто мне давать парацетамол?"
+    }
+   ],
+   "off_topic": null,
+   "created_at": "2026-09-21T18:45:27+00:00"
+  },
+  {
+   "index": 9,
+   "speaker": "partner",
+   "kind": "agent",
+   "text_target": "Give it every six hours if the fever stays high.",
+   "text_native": "Давайте его каждые шесть часов, если температура остаётся высокой.",
+   "audio": null,
+   "understood": true,
+   "phrases_used": [],
+   "off_topic": false,
+   "created_at": "2026-09-21T18:45:28+00:00"
+  }
+ ],
+ "summary": {
+  "said_count": 3,
+  "phrases_used": 3,
+  "phrases_total": 7,
+  "phrases": [
+   {
+    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+    "ref": "p1",
+    "text_target": "My son has a fever.",
+    "text_native": "У моего сына температура.",
+    "audio_url": null,
+    "used": true
+   },
+   {
+    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+    "ref": "p2",
+    "text_target": "He has had it for three days.",
+    "text_native": "Это у него уже уже три дня.",
+    "audio_url": null,
+    "used": true
+   },
+   {
+    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+    "ref": "p3",
+    "text_target": "His temperature is 39 degrees.",
+    "text_native": "У него температура 39 градусов.",
+    "audio_url": null,
+    "used": false
+   },
+   {
+    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+    "ref": "p4",
+    "text_target": "He also has a sore throat.",
+    "text_native": "У него ещё болит горло.",
+    "audio_url": null,
+    "used": false
+   },
+   {
+    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+    "ref": "p5",
+    "text_target": "He should rest at home.",
+    "text_native": "Ему нужно отдыхать дома.",
+    "audio_url": null,
+    "used": false
+   },
+   {
+    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+    "ref": "p6",
+    "text_target": "How often should I give the paracetamol?",
+    "text_native": "Как часто мне давать парацетамол?",
+    "audio_url": null,
+    "used": true
+   },
+   {
+    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+    "ref": "p7",
+    "text_target": "When should we come back if he gets worse?",
+    "text_native": "Когда нам нужно прийти снова если ему станет хуже?",
+    "audio_url": null,
+    "used": false
+   }
+  ],
+  "understood_all": true,
+  "not_understood": 0,
+  "rescues": 1,
+  "ended_reason": "natural",
+  "minutes": 1,
+  "returns_tomorrow": false
+ }
+}

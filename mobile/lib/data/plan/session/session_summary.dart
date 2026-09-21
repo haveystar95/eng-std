@@ -1,5 +1,5 @@
-/// THE NUMBERS OF THE STAGE AND DAY SUMMARIES (work order SESSION-1c, sections 3–5; canvases 34-8, 35-6, 30-7) — read
-/// off the cards the server returned, never counted from the learner's taps: a summary shown after a session resumed
+/// THE NUMBERS OF THE STAGE AND DAY SUMMARIES (work orders SESSION-1c, CLIENT-CONV-1c; canvases 30-6, 30-7) — read off
+/// the cards the server returned, never counted from the learner's taps: a summary shown after a session resumed
 /// tomorrow says the same.
 ///
 /// Pure functions, not a single widget.
@@ -15,22 +15,51 @@ typedef DayReturns = ({int words, int phrases, int exchanges});
 /// What the day summary says about the next day's lesson.
 enum NextDayLesson { building, ready }
 
+/// THE NUMBERS OF ONE STAGE'S SUMMARY (30-6, решение архитектора 22.09): [units] — the stage's words, phrases, lines,
+/// questions or cards; [firstTry] — how many of them were passed at the first attempt without a hint; [returns] — its
+/// units the server sends back tomorrow; for «Вспомнить», [scenes] — how many scenes its lines come from; for «Диалог»,
+/// [saidAloud] — the learner's own lines passed by voice and [rescues] — the «Не понял» exchanges walked.
+typedef StageTally = ({int units, int firstTry, int returns, int scenes, int saidAloud, int rescues});
+
 abstract final class SessionSummaries {
   /// The listening questions — the choices of «Listen and answer».
   static const Set<SessionKind> listenQuestions = {SessionKind.listenQuestion, SessionKind.listenPredict, SessionKind.listenNumber};
 
-  /// «Understood N questions of M» (34-8): the listening questions answered right, of all of them.
-  static ({int right, int total}) understood(Iterable<SessionCard> listenCards) {
-    final questions = listenCards.where((c) => listenQuestions.contains(c.kind)).toList();
-    return (right: questions.where((c) => c.result == SessionResult.passed).length, total: questions.length);
-  }
-
-  /// «Said N lines of M myself» (35-6): the cards of «Speak myself» passed — by the learner's voice or by the judge,
-  /// with the frame hinted or not — of all of them.
-  static ({int said, int total}) spoke(Iterable<SessionCard> speakCards) {
-    final cards = speakCards.toList();
-    final said = cards.where((c) => c.result == SessionResult.passed || c.result == SessionResult.hinted).length;
-    return (said: said, total: cards.length);
+  /// THE TALLY OF [stage] (30-6). «С первого раза» is a card `passed` at its first attempt — never `hinted`, never after
+  /// a lapse (a lapse deals a copy, and the copy's unit is not first-time any more), never skipped:
+  ///
+  /// - «Слушаю и отвечаю» counts its QUESTIONS — its unit is the whole visit, and a question answered wrong is final;
+  /// - «Повторение» counts its CARDS as dealt (a lapse's copy is not a second card of the day);
+  /// - «Вспомнить» counts its lines said aloud and the scenes they come from; its sheet of lines is not a line;
+  /// - every other stage counts its UNITS ([SessionQueue.unitsOf]) — a unit is first-time when all of its cards are.
+  static StageTally stageTally(SessionQueue queue, PlanStage stage) {
+    final cards = queue.cardsOf(stage);
+    bool firstTime(SessionCard c) => c.result == SessionResult.passed && c.attempts <= 1;
+    final returns = queue.returningUnits(stage).length;
+    switch (stage) {
+      case PlanStage.listen:
+        final questions = [for (final c in cards) if (listenQuestions.contains(c.kind)) c];
+        return (units: questions.length, firstTry: questions.where(firstTime).length, returns: returns, scenes: 0, saidAloud: 0, rescues: 0);
+      case PlanStage.repetition:
+        final dealt = [for (final c in cards) if (c.retryOf == null) c];
+        return (units: dealt.length, firstTry: dealt.where(firstTime).length, returns: returns, scenes: 0, saidAloud: 0, rescues: 0);
+      case PlanStage.recall:
+        final lines = [for (final c in cards) if (c.kind != SessionKind.recallScenes && c.retryOf == null) c];
+        final scenes = {for (final c in lines) c.payload.sceneId}.length;
+        return (units: lines.length, firstTry: lines.where(firstTime).length, returns: 0, scenes: scenes, saidAloud: 0, rescues: 0);
+      default:
+        final units = queue.unitsOf(stage);
+        final first = units.where((key) {
+          final own = [for (final c in cards) if (!c.unit.isDay && queue.unitKey(c) == key) c];
+          return own.isNotEmpty && own.every(firstTime);
+        }).length;
+        final aloud = cards.where((c) =>
+            (c.kind == SessionKind.dialogueAnswer || c.kind == SessionKind.dialogueAsk) &&
+            (c.result == SessionResult.passed || c.result == SessionResult.hinted) &&
+            c.response?['mode'] != 'chips').length;
+        final rescues = cards.where((c) => c.kind == SessionKind.dialogueRescue && c.result == SessionResult.passed).length;
+        return (units: units.length, firstTry: first, returns: returns, scenes: 0, saidAloud: aloud, rescues: rescues);
+    }
   }
 
   /// The day's units that come back tomorrow (30-7): the units whose card the server marked `returns`, once each — a

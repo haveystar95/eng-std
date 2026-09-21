@@ -124,18 +124,22 @@ class _FillerChips extends StatelessWidget {
   );
 }
 
-/// THE MEANINGS AS NEUTRAL PLATES (кадр 32-1) — «это карточка-урок, здесь ничего не выбирают»: each meaning is a grey
-/// plate across the whole width with the word in Literata 17 and its translation under it. None of them is marked, not
-/// even the one standing in the window — nothing here looks like a choice, and nothing is graded.
+/// THE MEANINGS AS PLATES (кадр 32-1) — «это карточка-урок, здесь ничего не выбирают»: each meaning is a grey plate
+/// across the whole width with the word in Literata 17 and its translation under it. Before a tap none of them is
+/// marked, not even the one standing in the window — nothing here looks like a question, and nothing is graded.
 ///
 /// A TAP PUTS THE MEANING INTO THE WINDOW (правка прохода 21.09, наряд CLIENT-CONV-1b): the frame above takes it, and
-/// the phrase is said with it — this is how the lesson shows what «эту часть можно менять» means. It is not an
-/// answer: the card still ends in «Дальше» and `passed`, whatever was tapped.
+/// the phrase is said with it — this is how the lesson shows what «эту часть можно менять» means. The tapped plate
+/// turns to paper in a thin brass outline, the same meaning as the window's (32-1 «значение выбрано», SESSION-DES-4);
+/// the rest stay neutral. It is not an answer: the card still ends in «Дальше» and `passed`, whatever was tapped.
 class _MeaningPlates extends StatelessWidget {
-  const _MeaningPlates({required this.fillers, required this.onTap});
+  const _MeaningPlates({required this.fillers, required this.onTap, this.selected});
 
   final List<CardFiller> fillers;
   final ValueChanged<CardFiller> onTap;
+
+  /// The filler index the learner tapped last; null — nothing was tapped yet.
+  final int? selected;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -146,6 +150,7 @@ class _MeaningPlates extends StatelessWidget {
         if (i > 0) const SizedBox(height: 8),
         Semantics(
           button: true,
+          selected: selected == f.index,
           label: f.target,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -155,8 +160,17 @@ class _MeaningPlates extends StatelessWidget {
             },
             child: Container(
               key: ValueKey('meaning-${f.index}'),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: AppColors.meaningPlate, borderRadius: BorderRadius.circular(12)),
+              // The outline takes its 1.5 out of the padding, so a chosen plate keeps the neutral one's size.
+              padding: selected == f.index
+                  ? const EdgeInsets.symmetric(horizontal: 10.5, vertical: 6.5)
+                  : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: selected == f.index
+                  ? BoxDecoration(
+                      color: AppColors.paper,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.brassInk, width: 1.5),
+                    )
+                  : BoxDecoration(color: AppColors.meaningPlate, borderRadius: BorderRadius.circular(12)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -285,7 +299,7 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
             const SizedBox(height: 16),
             Text(l.planSessionChangeable, key: const ValueKey('changeable-caption'), style: AppTextSession.meta),
             const SizedBox(height: 14),
-            _MeaningPlates(fillers: frame.fillers, onTap: _pick),
+            _MeaningPlates(fillers: frame.fillers, selected: _picked?.index, onTap: _pick),
           ] else if (pair != null) ...[
             const SizedBox(height: 32),
             SessionEyebrow(l.planSessionInTalk),
@@ -826,6 +840,10 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
   /// Why the judge did not accept the own word; null — nothing was rejected.
   String? _reason;
 
+  /// What the judge judged on the refused own word (`heard` of its answer, CONV-2 п. 8) — «услышал: …» under the
+  /// reason; null — the answer carries none, and the line says what the phone recognised.
+  String? _judgedHeard;
+
   CardFrame get _frame => widget.payload.frame;
 
   List<CardSayWholeRound> get _values => widget.payload.rounds;
@@ -903,6 +921,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
       if (!mounted) return false;
       setState(() {
         _reason = outcome.accepted ? null : (outcome.reasonNative ?? '');
+        _judgedHeard = outcome.heard;
         if (outcome.accepted && outcome.slotValue != null) _heardSlot = outcome.slotValue;
       });
       return outcome.accepted;
@@ -936,6 +955,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
     _parts = null;
     _heardSlot = null;
     _reason = null;
+    _judgedHeard = null;
   }
 
   @override
@@ -1016,12 +1036,12 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
         ],
       ),
       // «Пропустить» in brass, as the frame draws it (отчёт client-conv-1a §1.8); a refusal of the own word says what
-      // the phone heard under the judge's reason.
+      // the judge judged under its reason (the phone's own hearing when the answer carries none).
       bottom: voiceDock(
         context,
         showIdleCaption: false,
         missedCaption: _reason,
-        missedHeard: _reason == null ? null : heard,
+        missedHeard: _reason == null ? null : (_judgedHeard ?? heard),
         skipBrass: true,
       ),
     );

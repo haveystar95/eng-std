@@ -139,7 +139,15 @@ class SessionHeardText extends StatelessWidget {
 
 /// BRASS WAVE — the bars are live only while [playing], static afterwards (table «Timing · session»).
 class SessionWave extends StatefulWidget {
-  const SessionWave({super.key, required this.heights, this.barWidth = 3, this.width, this.playing = false, this.color = AppColors.brassInk});
+  const SessionWave({
+    super.key,
+    required this.heights,
+    this.barWidth = 3,
+    this.width,
+    this.playing = false,
+    this.color = AppColors.brassInk,
+    this.bottomAligned = false,
+  });
 
   /// Five bars of the «listen» button and of the microphone (10/18/24/14/20).
   static const List<double> five = [10, 18, 24, 14, 20];
@@ -154,6 +162,10 @@ class SessionWave extends StatefulWidget {
   final double? width;
   final bool playing;
   final Color color;
+
+  /// The bars stand on one line, as the wave along a plate's bottom edge does (37-6, `align-items: flex-end`); false —
+  /// they are centred on the wave's middle, as everywhere else.
+  final bool bottomAligned;
 
   @override
   State<SessionWave> createState() => _SessionWaveState();
@@ -211,7 +223,7 @@ class _SessionWaveState extends State<SessionWave> with SingleTickerProviderStat
           return Row(
             mainAxisSize: widget.width == null ? MainAxisSize.min : MainAxisSize.max,
             mainAxisAlignment: widget.width == null ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: widget.bottomAligned ? CrossAxisAlignment.end : CrossAxisAlignment.center,
             children: widget.width == null
                 ? [for (var i = 0; i < bars.length; i++) ...[if (i > 0) const SizedBox(width: 3), bars[i]]]
                 : bars,

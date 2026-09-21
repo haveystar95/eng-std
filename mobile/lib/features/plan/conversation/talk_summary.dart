@@ -19,14 +19,14 @@ import 'talk_screen.dart' show talkStripScene;
 ///
 /// EVERY NUMBER AND EVERY INFLECTION IS THE SERVER'S. The client chooses which sentence to print and
 /// prints it: «Сказал сам N реплик», «Понял все вопросы» / «Понял вопросы, кроме одного», «переспросил
-/// N раз», «3 из 5». Whether what did not sound comes back tomorrow is `returns_tomorrow`, not a guess
-/// from the kind of day — and it is also what shapes the list (наряд CLIENT-CONV-1b):
+/// N раз», «3 из 5». The list's shape is the kind of talk (наряды CLIENT-CONV-1b, CLIENT-CONV-1c):
 ///
-/// - it comes back (a scene day, a review) — the phrases that sounded under «Фразы дня в разговоре · 3 из 5», then
-///   «Не прозвучало — вернётся завтра» with the rest (37-12);
-/// - it does not (the rehearsal: tomorrow is the event) — one list under «Фразы дня в разговоре · 3 из 4», GROUPED BY
-///   SCENE in the order the talk walked them, and what did not sound in a scene stands under «<сцена> · повтори перед
-///   приёмом» (37-12b).
+/// - a scene day or a review — the phrases that sounded under «Фразы дня в разговоре · 3 из 5», then the rest under
+///   «Не прозвучало — вернётся завтра» when the server says they come back (`returns_tomorrow`, 37-12), or under «Не
+///   прозвучало» when it does not — a replay over a walked stage (CONV-2 п. 2) gives nothing back tomorrow;
+/// - the rehearsal (tomorrow is the event) — one list under «Фразы дня в разговоре · 3 из 4», GROUPED BY SCENE in the
+///   order the talk walked them, and what did not sound in a scene stands under «<сцена> · повтори перед приёмом»
+///   (37-12b).
 class TalkSummaryView extends StatelessWidget {
   const TalkSummaryView({
     super.key,
@@ -110,7 +110,7 @@ class TalkSummaryView extends StatelessWidget {
                           ),
                         ],
                       ),
-                      ...s.returnsTomorrow ? _returning(context, s) : _byScene(context, s),
+                      ...rehearsal ? _byScene(context, s) : _returning(context, s),
                     ],
                   ),
                 ),
@@ -133,8 +133,9 @@ class TalkSummaryView extends StatelessWidget {
     );
   }
 
-  /// 37-12: what sounded, then «Не прозвучало — вернётся завтра». A talk of several scenes (a review) names each
-  /// scene over its own phrases inside each part; a talk of one scene has nothing to name — the strip says it.
+  /// 37-12: what sounded, then «Не прозвучало — вернётся завтра» (or «Не прозвучало» when nothing comes back — a
+  /// replay). A talk of several scenes (a review) names each scene over its own phrases inside each part; a talk of one
+  /// scene has nothing to name — the strip says it.
   List<Widget> _returning(BuildContext context, TalkSummary s) {
     final l = AppLocalizations.of(context);
     return [
@@ -146,7 +147,7 @@ class TalkSummaryView extends StatelessWidget {
       ],
       if (s.notSaid.isNotEmpty) ...[
         SizedBox(height: s.said.isEmpty ? 32 : 16),
-        SessionEyebrow(l.planTalkNotSaidTomorrow),
+        SessionEyebrow(s.returnsTomorrow ? l.planTalkNotSaidTomorrow : l.planTalkNotSaid),
         const SizedBox(height: 10),
         ..._plates(s.notSaid, named: talk.scenes.length > 1),
       ],

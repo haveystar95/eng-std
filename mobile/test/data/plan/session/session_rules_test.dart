@@ -231,15 +231,83 @@ void main() {
       expect(SessionRules.roundAccepted(p, p.rounds[1], 'it hurts in his neck', en), isTrue);
     });
 
-    // RULE (FIX-1 §5, наряд FIX-2 §5): «Ещё раз» с итога дня не может спросить судью — сервер откажет отвеченной
-    // карточке, — и телефон судит ТО ЖЕ, что судил бы судья: ключ, то есть слова каркаса вне окна, в режиме `free`.
-    // CATCHES: повтор, который принимает любой звук (так было до FIX-1); и «Скажи целиком», у которой круг своего
-    // слова сверяют с фразой круга значений — своё слово с ней не совпадёт никогда.
-    test('a replay grades what the judge would have: the frame\'s own words, the window anyone\'s', () {
-      final answer = day.stageOf(PlanStage.speak)!.cards.map((c) => c.payload).whereType<SpeakAnswerPayload>().first;
+    // RULE (инвариант «клиент не строже сервера»; наряд CLIENT-CONV-1c §1, CONV-2 §8 п. 1 и п. 7): «Ещё раз» с итога дня
+    // не может спросить судью — сервер откажет отвеченной карточке, — и телефон судит сам. `speak_answer` судится ПО
+    // СМЫСЛУ: каркас — подсказка, не пароль. Телефон отказывает ТОЛЬКО там, где сервер отказывает своим кодом, до модели:
+    // не услышано ни слова; окно с подсказкой — и сверх слов каркаса ничего (артикли дня не в счёт). Всё остальное —
+    // дело модели, а модели у телефона нет: он принимает. Попытки — живые, Дена 21.09 (CONV-2 §2.4), и «врач» фикстур.
+    // CATCHES: повтор, где телефон требует слова каркаса и показывает промах там, где сервер зачёл («Yes it is my first
+    // visit» на каркас «This is ___.» — сборка 18); и повтор, принимающий пустоту или один каркас без значения.
+    test('a replay of «Ответь своими словами» refuses only what the server refuses by code', () {
+      SpeakAnswerPayload answer(String frame, String? hint, List<String> values) => SpeakAnswerPayload.fromJson({
+        'scene_id': 'ulid-scene',
+        'exchange': {'ref': 'x3', 'step': 3, 'kind': 'answer'},
+        'partner_line': {'ref': 'x3', 'text_target': 'Is this your first visit here?', 'text_native': 'Вы здесь впервые?'},
+        'own_line': {'ref': 'x3b', 'text_target': 'This is my first visit.', 'text_native': 'Это мой первый визит.'},
+        'task_native': 'Это мой первый визит.',
+        'frame': {
+          'ref': 'p3',
+          'kind': 'answer',
+          'frame_target': frame,
+          'frame_native': frame,
+          'slot': {
+            'hint_native': hint,
+            'fillers': [for (final (i, v) in values.indexed) {'index': i, 'target': v, 'native': v, 'in_dialogue': i == 0}],
+          },
+        },
+        'key': null,
+        'speech_mode': 'free',
+        'hint': frame,
+        'judge': true,
+      });
+      final visit = answer('This is ___.', 'какой это визит', ['my first visit', 'my second visit']);
+      final days = answer('That works for me on ___.', 'в какие дни это подходит', ['weekdays', 'weekends']);
+      final key = answer("I'll return ___.", 'что нужно вернуть', ['the locker key', 'the access card']);
+
+      // What the server passed — the phone passes too.
+      expect(SessionRules.replayAccepted(visit, 'Yes it is my first visit', en), isTrue, reason: 'a value of the window — by code');
+      expect(SessionRules.replayAccepted(visit, 'Yes it my first visit', en), isTrue, reason: 'the frame is not a password');
+      expect(SessionRules.replayAccepted(visit, 'Yes it is my first day', en), isTrue, reason: 'the model passed it — the phone has no model');
+      expect(SessionRules.replayAccepted(days, 'That works for me for weekdays', en), isTrue);
+      // What the server refused by code — the phone refuses too.
+      expect(SessionRules.replayAccepted(days, 'That works for me', en), isFalse, reason: '«Не сказал главного — в какие дни»');
+      expect(SessionRules.replayAccepted(days, 'That works for me on the', en), isFalse, reason: 'an article says nothing');
+      expect(SessionRules.replayAccepted(days, '', en), isFalse, reason: '«Не расслышал»');
+      expect(SessionRules.replayAccepted(days, ' … ', en), isFalse);
+      // The server's function words are wider than the day's articles: «OK» the server refuses by code, and the phone
+      // takes it — a phone looser than the server is allowed, a stricter one never.
+      expect(SessionRules.replayAccepted(key, 'OK I will return', en), isTrue);
+      expect(SessionRules.answerRefusedByCode(key.frame, 'I will return', en), isTrue);
+
+      // No window, or a window without its hint — the server asks the model about anything heard: so does not refuse.
+      final whole = answer("He doesn't have a fever.", null, const []);
+      expect(SessionRules.replayAccepted(whole, 'No fever at all', en), isTrue);
+      final unhinted = answer('That works for me on ___.', null, ['weekdays']);
+      expect(SessionRules.replayAccepted(unhinted, 'That works for me', en), isTrue);
+
+      // THE SPOKEN WORD, as the server counts it (`SpeechMatch::slotWords`): it belongs to the frame only when every
+      // comparable word it folds into is still unspent there. «the over-the-counter» spends the frame's «the» on the
+      // first word, so the whole «over-the-counter» is left over — content, and the server asks the model.
+      // CATCHES (invariant review of 1c): counting per comparable word left «the» over, and the phone refused it.
+      final counter = answer('Is this over-the-counter or ___?', 'или нужен рецепт', ['by prescription']);
+      final part = SessionRules.framePart(counter.frame.frameTarget);
+      expect(SpeechMatch.beyondKey('Is this the over-the-counter or', part, en), ['over the counter']);
+      expect(SessionRules.replayAccepted(counter, 'Is this the over-the-counter or', en), isTrue);
+      expect(SessionRules.replayAccepted(counter, 'Is this over-the-counter or the', en), isFalse, reason: 'an article alone beyond it');
+
+      // The fixture's own cards: a known value passes, the frame alone does not.
+      for (final p in day.stageOf(PlanStage.speak)!.cards.map((c) => c.payload).whereType<SpeakAnswerPayload>()) {
+        if (!p.frame.hasSlot || p.frame.slot?.hintNative == null) continue;
+        expect(SessionRules.replayAccepted(p, 'well ${p.frame.fillers.first.target}', en), isTrue, reason: p.frame.frameTarget);
+        expect(SessionRules.replayAccepted(p, SessionRules.framePart(p.frame.frameTarget), en), isFalse, reason: p.frame.frameTarget);
+      }
+    });
+
+    // RULE (FIX-2 §5, CONV-2 п. 7): the OWN-WORD round of «Скажи целиком» is the frame said with a word of one's own —
+    // the server asks for the frame there (`Каркас не прозвучал` by code), and so does the phone.
+    // CATCHES: the own-word round checked against a value round's phrase, which an own word never matches.
+    test('a replay of the own-word round asks for the frame, the word is anyone\'s', () {
       final whole = first<PhraseOtherSlotPayload>(PlanStage.phrases);
-      expect(SessionRules.replayAccepted(answer, 'it hurts in his knee', en), isTrue);
-      expect(SessionRules.replayAccepted(answer, 'knee', en), isFalse, reason: 'no frame');
       expect(SessionRules.replayAccepted(whole, 'it hurts in his elbow', en), isTrue, reason: 'the own word');
       expect(SessionRules.replayAccepted(whole, 'my elbow', en), isFalse, reason: 'no frame');
     });

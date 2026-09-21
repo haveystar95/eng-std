@@ -10,64 +10,33 @@ import '../../../../data/plan/plan_models.dart';
 import 'window_plate.dart';
 import 'window_texts.dart';
 
-/// One card under the plate of a review or the rehearsal (кадры 37-1, 37-2): a scene the day is made of, or the day
-/// of the route it comes from. [lines] — how many of the learner's own lines the scene holds, when the server has
-/// counted them (the rehearsal's recall sheet); null — no number is printed.
-typedef WindowSource = ({String key, String title, int? lines, PlanImage? image});
+/// One card under the plate of a review or the rehearsal (кадры 37-1, 37-2): a scene the day is made of — its name, or
+/// on a review its day of the route and its name — and its photo.
+typedef WindowSource = ({String key, String title, PlanImage? image});
 
-/// WHERE A REVIEW AND THE REHEARSAL COME FROM (кадры 37-1 «Из каких сцен», 37-2 «Из каких дней»; наряд
-/// CLIENT-CONV-1b).
+/// WHERE A REVIEW AND THE REHEARSAL COME FROM (кадры 37-1 «Из каких сцен», 37-2 «Из каких дней») — THE SERVER'S LIST,
+/// `window.sources[]` (наряд BACK-TAILS-2; CLIENT-CONV-1c §9б), in its order. No field, or nothing in it — no list at
+/// all: the client does not work out which scenes or days a day is made of (the reading of cards and the rule of
+/// dealing that stood here in CLIENT-CONV-1b are gone with it).
 ///
-/// The day window's block carries no such list, so it is read off what the day room does carry, in this order:
-///
-/// - a DEALT day — its own cards: the rehearsal's `recall_scenes` sheet names every scene with its lines, a review's
-///   cards name the scenes they were dealt from (`payload.scene_id`), and those scenes' days of the route are the days
-///   it brings back;
-/// - a day NOT DEALT yet — the outline has no cards to read, so the list follows the rule the server deals by: the
-///   rehearsal walks every ready scene of the plan in the plan's order, a review the two scene days before it
-///   (`DayDealer`, `ConversationMaterial::scenesOf`). No count is printed there — nothing has been counted yet.
-///
-/// The one number on the cards is the rehearsal's «N реплик», the length of the server's own list; «N карточек» of
-/// кадр 37-2 is not sent, and the client does not count cards (отчёт client-conv-1b §5).
+/// The rehearsal names each scene (37-1); a review names each by its day — «День 1 · Запись к врачу» (37-2) — and a
+/// scene without a day of the route by its name alone. No number stands on the cards: the list carries none, and the
+/// client does not count lines or cards.
 abstract final class WindowSources {
-  static List<WindowSource> of(AppLocalizations l, {required Plan plan, required PlanDayRoom room, required WindowDay day}) =>
-      switch (day.type) {
-        PlanDayType.rehearsal => _scenes(plan, room),
-        PlanDayType.review => _days(l, plan, room, day.index),
-        PlanDayType.scene || PlanDayType.unknown => const [],
-      };
-
-  static List<WindowSource> _scenes(Plan plan, PlanDayRoom room) {
-    if (room.recallScenes.isNotEmpty) {
-      return [
-        for (final s in room.recallScenes)
-          (key: s.sceneId, title: s.titleNative, lines: s.lines, image: plan.sceneById(s.sceneId)?.image),
-      ];
-    }
-    final ready = [for (final s in plan.scenes) if (s.lessonStatus == LessonStatus.ready) s]
-      ..sort((a, b) => a.order.compareTo(b.order));
-    return [for (final s in ready) (key: s.id, title: s.titleNative, lines: null, image: s.image)];
-  }
-
-  static List<WindowSource> _days(AppLocalizations l, Plan plan, PlanDayRoom room, int number) {
-    final sceneDays = [for (final d in plan.days) if (d.type == PlanDayType.scene && d.number < number) d]
-      ..sort((a, b) => a.number.compareTo(b.number));
-    final List<PlanDayRoute> days;
-    if (room.cardSceneIds.isNotEmpty) {
-      days = [for (final d in sceneDays) if (room.cardSceneIds.contains(d.sceneId)) d];
-    } else {
-      days = sceneDays.length <= 2 ? sceneDays : sceneDays.sublist(sceneDays.length - 2);
-    }
-    return [
-      for (final d in days)
+  static List<WindowSource> of(AppLocalizations l, {required Plan plan, required DayWindow window}) => switch (window.day.type) {
+    PlanDayType.rehearsal => [
+      for (final s in window.sources) (key: s.sceneId, title: s.titleNative, image: plan.sceneById(s.sceneId)?.image),
+    ],
+    PlanDayType.review => [
+      for (final s in window.sources)
         (
-          key: d.id,
-          title: l.planRouteDayTitle(d.number, d.titleNative ?? plan.sceneOf(d)?.titleNative ?? ''),
-          lines: null,
-          image: plan.sceneOf(d)?.image,
+          key: s.sceneId,
+          title: s.dayNumber == null ? s.titleNative : l.planRouteDayTitle(s.dayNumber!, s.titleNative),
+          image: plan.sceneById(s.sceneId)?.image,
         ),
-    ];
-  }
+    ],
+    PlanDayType.scene || PlanDayType.unknown => const [],
+  };
 }
 
 /// THE WINDOW OF A REVIEW OR THE REHEARSAL (кадры 37-1, 37-2) — «второй компонент окна: это то же окно дня 23-0a,
@@ -165,8 +134,8 @@ class _WindowSourcesScrollState extends State<WindowSourcesScroll> {
 }
 
 /// A card of the list (37-1, 37-2): 72 high, paper, corners 16, the faint shadow; the scene's photo 48 with corners
-/// 12 on its tone, the name 15/20 in ink, and on the right the server's count of lines when there is one. A long
-/// name wraps and the card grows with it — nothing in the plan's windows is cut.
+/// 12 on its tone and the name 15/20 in ink. A long name wraps and the card grows with it — nothing in the plan's
+/// windows is cut.
 class _SourceCard extends StatelessWidget {
   const _SourceCard({required this.source});
 
@@ -174,10 +143,8 @@ class _SourceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
     final photo = source.image;
-    final lines = source.lines;
     return Container(
       key: ValueKey('window-source-${source.key}'),
       constraints: const BoxConstraints(minHeight: 72),
@@ -206,10 +173,6 @@ class _SourceCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(source.title, style: AppTextSession.text15)),
-          if (lines != null && lines > 0) ...[
-            const SizedBox(width: 12),
-            Text(l.planWindowSourceLines(lines), key: ValueKey('window-source-lines-${source.key}'), style: AppTextSession.meta),
-          ],
         ],
       ),
     );

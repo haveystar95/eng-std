@@ -39,9 +39,6 @@ class FeedLine {
   final FeedMark mark;
 }
 
-/// The two lines of an exchange — «comes back tomorrow» on the stage summaries (33-8, 35-6).
-typedef ExchangePair = ({CardLine? partner, CardLine? own, bool learnerFirst});
-
 abstract final class DialogueFeed {
   /// The lines [card] draws itself, in the order it draws them.
   static List<FeedLine> linesOf(SessionCard card) {
@@ -116,40 +113,6 @@ abstract final class DialogueFeed {
   /// The frame said with [filler]: the filler in the slot, no space before the closing mark.
   static String filledSentence(CardFrame frame, CardFiller filler) =>
       frame.filledWith(filler.target).replaceAllMapped(RegExp(r'\s+([.,!?;:…])'), (m) => m[1]!);
-
-  /// The partner's and the learner's line of [exchangeRef] from any card of [cards] that carries them — by line
-  /// `ref`: the partner's is the exchange's own ref, the learner's has `b`. An `ask` and a `rescue` start with the
-  /// learner.
-  static ExchangePair pairOf(Iterable<SessionCard> cards, String exchangeRef) {
-    CardLine? partner;
-    CardLine? own;
-    var learnerFirst = false;
-    for (final card in cards) {
-      final lines = switch (card.payload) {
-        DialoguePartnerPayload(:final partnerLine) => [partnerLine],
-        final DialogueAnswerPayload p => [?p.partnerLine, saidOwnLine(p, card.response)],
-        DialogueRescuePayload(:final rescueLine, :final partnerRepeat) => [rescueLine, partnerRepeat],
-        SpeakAnswerPayload(:final partnerLine, :final ownLine) => [?partnerLine, ownLine],
-        SpeakEchoPayload(:final partnerLine) => [partnerLine],
-        // 35-4 carries the learner's own line only (BACK-TAILS-1 §1.1).
-        SpeakRetellPayload(:final ownLine) => [ownLine],
-        _ => const <CardLine>[],
-      };
-      for (final line in lines) {
-        if (line.ref == exchangeRef) partner ??= line;
-        if (line.ref == '${exchangeRef}b') own ??= line;
-      }
-      final exchange = switch (card.payload) {
-        DialogueAnswerPayload(:final exchange) ||
-        DialogueRescuePayload(:final exchange) ||
-        DialoguePartnerPayload(:final exchange) ||
-        SpeakAnswerPayload(:final exchange) => exchange,
-        _ => null,
-      };
-      if (exchange != null && exchange.ref == exchangeRef && exchange.kind != 'answer') learnerFirst = true;
-    }
-    return (partner: partner, own: own, learnerFirst: learnerFirst);
-  }
 
   static String _exchangeRef(SessionCard card) => switch (card.payload) {
     DialoguePartnerPayload(:final exchange) ||

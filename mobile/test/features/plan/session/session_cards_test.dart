@@ -298,11 +298,13 @@ void main() {
       await settleCard(tester);
     });
 
-    // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b): тап по значению СТАВИТ его в окно и говорит фразу с ним —
-    // так урок показывает, что «эту часть можно менять». Это не ответ: плашка не выделяется, карточка ничего не пишет до
-    // «Дальше» и кончается `passed`, что бы ни трогали. Тап раньше автозапуска отменяет его — звучит то, что в окне;
-    // «прослушать» дальше играет тоже то, что в окне.
-    // ЛОВИТ: немую плашку, плашку-выбор (обводка), ответ, отправленный тапом, фразу диалога поверх тапнутой.
+    // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b; кадр 32-1 «значение выбрано», наряд CLIENT-CONV-1c §8): тап по
+    // значению СТАВИТ его в окно и говорит фразу с ним — так урок показывает, что «эту часть можно менять». Тапнутая
+    // плашка — бумага с тонким контуром латуни (1.5), остальные нейтральные; размер плашки тот же. Это не ответ:
+    // карточка ничего не пишет до «Дальше» и кончается `passed`, что бы ни трогали. Тап раньше автозапуска отменяет его —
+    // звучит то, что в окне; «прослушать» дальше играет тоже то, что в окне.
+    // ЛОВИТ: немую плашку, тапнутую плашку без третьего состояния кадра, две выделенные плашки, ответ, отправленный тапом,
+    // фразу диалога поверх тапнутой.
     testWidgets('32-1: тап по значению ставит его в окно и говорит фразу с ним — это не ответ', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
@@ -320,9 +322,16 @@ void main() {
       expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, 'У него болит шея.');
       expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-reading'))).data, 'ит хёртс ин хиз нэк');
       expect(probe.answers, isEmpty, reason: 'тап — не ответ');
-      final box = tester.widget<Container>(find.byKey(ValueKey('meaning-${other.index}'))).decoration! as BoxDecoration;
-      expect(box.border, isNull, reason: 'тапнутая плашка не выделяется — выбора здесь нет');
-      expect(box.color, AppColors.meaningPlate);
+      BoxDecoration boxOf(int index) => tester.widget<Container>(find.byKey(ValueKey('meaning-$index'))).decoration! as BoxDecoration;
+      final box = boxOf(other.index);
+      expect(box.color, AppColors.paper, reason: 'тапнутая плашка — бумага');
+      expect(box.border, Border.all(color: AppColors.brassInk, width: 1.5), reason: 'с тонким контуром латуни');
+      for (final f in p.frame.fillers.where((f) => f.index != other.index)) {
+        expect(boxOf(f.index).border, isNull, reason: 'остальные нейтральные');
+        expect(boxOf(f.index).color, AppColors.meaningPlate);
+      }
+      expect(tester.getSize(find.byKey(ValueKey('meaning-${other.index}'))).height,
+          tester.getSize(find.byKey(ValueKey('meaning-${p.said.fillerIndex}'))).height, reason: 'контур не меняет размер плашки');
 
       await tester.pump(const Duration(seconds: 3));
       expect(voice.played, hasLength(1), reason: 'автозапуск фразы диалога отменён тапом');
@@ -334,6 +343,8 @@ void main() {
       await tester.pump();
       expect(frameLine(tester).slot, 'lower back');
       expect(voice.played.last, '${p.said.audio!.ref}@1.0', reason: 'значение диалога — своим файлом фразы');
+      expect(boxOf(p.said.fillerIndex!).border, isNotNull, reason: 'выбрано то, что тапнули последним');
+      expect(boxOf(other.index).border, isNull, reason: 'одна выделенная плашка');
 
       await tapText(tester, 'Дальше');
       expect(results(probe), [SessionResult.passed]);

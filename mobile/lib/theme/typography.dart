@@ -1344,6 +1344,16 @@ abstract final class AppTextSession {
     color: AppColors.ink,
   );
 
+  /// A phrase of the talk in a list — «Скажи в разговоре» on the entry (37-5) and a row of the phrase sheet (37-8d):
+  /// Literata 17/500, line 23 (SESSION-DES-4).
+  static const phrase17 = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 17,
+    height: 23 / 17,
+    color: AppColors.ink,
+  );
+
   /// A meaning on its neutral plate (32-1) — Literata 17/500, 1.2: the token list's «термин в списке слов».
   static const meaning = TextStyle(
     fontFamily: AppFonts.literata,

@@ -71,11 +71,28 @@ void main() {
     expect([for (final s in overview.scenes) s.lines.length], [7, 7]);
     expect(overview.scenes.first.lines.first.textTarget, 'It hurts in his lower back.');
     expect(overview.audios, hasLength(14), reason: 'every own line has its sound');
+  });
 
-    final room = PlanDayRoom.fromJson(_fixture('day-rehearsal'));
-    expect([for (final s in room.recallScenes) (s.titleNative, s.lines)], [('Запись к врачу', 7), ('У врача с сыном', 7)]);
-    expect(room.cardSceneIds, [overview.scenes.first.sceneId, overview.scenes.last.sceneId]);
-    expect(PlanDayRoom.fromJson(_fixture('day-review')).recallScenes, isEmpty);
+  // RULE (CLIENT-CONV-1c §9д): «Вспомнить» is the learner's own lines only — a partner's line is not drawn even if the
+  // server still sends one. Whose a line is: its `speaker`, else the voice of its sound, else its ref (`x3` / `x3b`).
+  // CATCHES: the partner's lines in the rehearsal's sheet (the stand before BACK-TAILS-2 sent them), a learner's line
+  // lost to the filter.
+  test('the rehearsal\'s overview keeps the learner\'s lines only, however the partner\'s line is marked', () {
+    final json = _fixture('day-rehearsal');
+    final card = ((json['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'recall')['cards'] as List)
+        .cast<Map<String, dynamic>>()
+        .first;
+    final scene = ((card['payload'] as Map<String, dynamic>)['scenes'] as List).cast<Map<String, dynamic>>().first;
+    final lines = (scene['lines'] as List).cast<Map<String, dynamic>>();
+    lines.insertAll(0, [
+      {'ref': 'x1', 'speaker': 'partner', 'text_target': 'Where does it hurt?', 'text_native': 'Где болит?'},
+      {'ref': 'x1', 'audio': {'ref': 'x1', 'url': null, 'voice': 'partner'}, 'text_target': 'How long?', 'text_native': 'Как давно?'},
+      {'ref': 'x2', 'text_target': 'Does it hurt now?', 'text_native': 'Сейчас болит?'},
+    ]);
+    final overview = SessionDay.fromJson(json).stageOf(PlanStage.recall)!.cards.first.payload as RecallScenesPayload;
+    expect([for (final s in overview.scenes) s.lines.length], [7, 7]);
+    expect(overview.scenes.first.lines.first.textTarget, 'It hurts in his lower back.');
+    expect([for (final s in overview.scenes) for (final l in s.lines) l.ref].every((r) => r.endsWith('b')), isTrue);
   });
 
   test('the envelope: stage, position, unit, source; the payload is its kind\'s model', () {
@@ -100,6 +117,15 @@ void main() {
     expect(listen.first.unit.isDay, isTrue);
     expect(day.minutesLeft(PlanStage.words), 5);
     expect(day.minutesLeft(PlanStage.phrases), isNull);
+    // BACK-TAILS-2 (CLIENT-CONV-1c §9а): every row carries its planned `minutes` — a stage ahead says them («Дальше ·
+    // Фразы ≈ 4 мин» on 30-6); the current one keeps its remainder.
+    final tails = _fixture('day-doctor');
+    for (final s in ((tails['window'] as Map<String, dynamic>)['stages'] as List).cast<Map<String, dynamic>>()) {
+      s['minutes'] = s['stage'] == 'words' ? 6 : 4;
+    }
+    final planned = SessionDay.fromJson(tails);
+    expect(planned.minutesLeft(PlanStage.words), 5, reason: 'the current row\'s remainder, not its plan');
+    expect(planned.minutesLeft(PlanStage.phrases), 4);
   });
 
   test('word and phrase payloads — the contract\'s fields in their places', () {

@@ -7,7 +7,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../../data/plan/plan_models.dart';
-import '../../../../data/plan/session/session_models.dart';
+import '../session_texts.dart' show StageLine;
 import 'session_bits.dart';
 import 'session_chrome.dart';
 
@@ -255,21 +255,22 @@ class _NoHintsCard extends StatelessWidget {
   }
 }
 
-/// A unit that comes back tomorrow — as a pair of text lines (and a photo for a word).
-typedef ReturningUnit = ({String target, String native, CardImage? image});
+/// What comes after a stage (30-6 «Дальше»): the next stage — its glyph, its name and «≈ N мин» when the server sent
+/// its minutes; or, after the day's last stage with cards, the day's total — no glyph, the day's minutes.
+typedef StageNext = ({PlanStage? stage, String name, String? value});
 
-/// STAGE SUMMARY (canvas 30-6): cross, scene strip, «Words done · 6 minutes», stage dots; «Coming back
-/// tomorrow» — the units with a return; «The other N words are done.»; «Next» — the next stage and its minutes.
+/// THE STAGE SUMMARY (кадр 30-6, SESSION-DES-4; решение архитектора 22.09) — ONE COMPONENT FOR EVERY STAGE BUT THE TALK
+/// (its own is 37-12): Слова, Фразы, Диалог, Слушаю и отвечаю, Говорю сам, Вспомнить, Повторение. The cross, the scene
+/// strip; a sage ring 32 with its check; the title with the stage's minutes; the day's stage dots; three lines in words
+/// (the third grey); «Дальше» and the plate of what comes next; one button. No percentages, no points, no «8 из 8», no
+/// «Остальные закрыты», and no list of what comes back — the day summary (30-7) says that.
 class SessionStageSummary extends StatelessWidget {
   const SessionStageSummary({
     super.key,
     required this.title,
     required this.rows,
-    required this.returning,
-    required this.closedLine,
-    required this.nextStage,
-    required this.nextName,
-    required this.nextMinutes,
+    required this.lines,
+    required this.next,
     required this.scene,
     required this.onClose,
     required this.onNext,
@@ -278,13 +279,10 @@ class SessionStageSummary extends StatelessWidget {
 
   final String title;
   final List<StageRow> rows;
-  final List<ReturningUnit> returning;
 
-  /// «The other N words are done.»; null — the stage closes nothing («Вспомнить», 37-4).
-  final String? closedLine;
-  final PlanStage? nextStage;
-  final String? nextName;
-  final int? nextMinutes;
+  /// Two or three — a line with nothing to say is not given.
+  final List<StageLine> lines;
+  final StageNext next;
   final PlanScene? scene;
   final VoidCallback onClose;
   final VoidCallback? onNext;
@@ -293,6 +291,7 @@ class SessionStageSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final nextStage = next.stage;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -315,39 +314,56 @@ class SessionStageSummary extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(title, style: AppTextSession.stageTitle),
+                      const Align(alignment: Alignment.centerLeft, child: _PassedRing()),
+                      const SizedBox(height: 14),
+                      Text(title, key: const ValueKey('stage-summary-title'), style: AppTextSession.stageTitle),
                       const SizedBox(height: 14),
                       SessionStageDots(rows: rows),
-                      if (returning.isNotEmpty) ...[
-                        const SizedBox(height: 70),
-                        SessionEyebrow(l.planSessionReturnsTomorrow),
-                        const SizedBox(height: 14),
-                        for (final u in returning) ...[
-                          if (u != returning.first) const SizedBox(height: 12),
-                          _ReturningRow(unit: u),
+                    ],
+                  ),
+                ),
+                if (lines.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(kSessionGutter, 32, kSessionGutter, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final (i, line) in lines.indexed) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          Text(
+                            line.text,
+                            key: ValueKey('stage-summary-line-$i'),
+                            style: line.soft ? AppTextSession.body : AppTextSession.text15,
+                          ),
                         ],
-                        const SizedBox(height: 32),
-                      ] else
-                        const SizedBox(height: 70),
-                      if (closedLine case final line?) Text(line, style: AppTextSession.body),
-                      if (nextStage != null && nextName != null) ...[
-                        if (closedLine != null) const SizedBox(height: 20),
-                        SessionEyebrow(l.planSessionNext),
-                        const SizedBox(height: 14),
-                        SessionSheet(
-                          child: SizedBox(
-                            height: 20,
-                            child: Row(
-                              children: [
-                                sessionStageGlyph(nextStage!, AppColors.tertiary),
+                      ],
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 32, kSessionGutter, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SessionEyebrow(l.planSessionNext),
+                      const SizedBox(height: 14),
+                      SessionSheet(
+                        key: const ValueKey('stage-summary-next'),
+                        // The row is 20 high as the frame draws it; a longer name wraps and the plate grows — nothing
+                        // in a session is cut.
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 20),
+                          child: Row(
+                            children: [
+                              if (nextStage != null) ...[sessionStageGlyph(nextStage, AppColors.tertiary), const SizedBox(width: 12)],
+                              Expanded(child: Text(next.name, style: AppTextSession.text15)),
+                              if (next.value case final value?) ...[
                                 const SizedBox(width: 12),
-                                Expanded(child: Text(nextName!, style: AppTextSession.text15)),
-                                if (nextMinutes != null) Text(l.planSessionApproxMinutes(nextMinutes!), style: AppTextSession.meta),
+                                Text(value, style: AppTextSession.meta),
                               ],
-                            ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -361,135 +377,19 @@ class SessionStageSummary extends StatelessWidget {
   }
 }
 
-class _ReturningRow extends StatelessWidget {
-  const _ReturningRow({required this.unit});
-
-  final ReturningUnit unit;
+/// THE STAGE IS CLOSED (30-6): a sage ring 32 — a line 1.5 — with a sage check 16 inside.
+class _PassedRing extends StatelessWidget {
+  const _PassedRing();
 
   @override
   Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 56),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), boxShadow: kSessionSheetShadow),
-    child: Row(
-      children: [
-        if (unit.image != null) ...[
-          SizedBox(width: 40, height: 40, child: SessionPhoto(image: unit.image, height: 40)),
-          const SizedBox(width: 12),
-        ],
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(unit.target, style: AppTextSession.target22),
-              const SizedBox(height: 2),
-              Text(unit.native, style: AppTextSession.body),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        const SessionReturnDot(),
-      ],
-    ),
+    key: const ValueKey('stage-summary-ring'),
+    width: 32,
+    height: 32,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.verdictKnown, width: 1.5)),
+    child: const Icon(LucideIcons.check, size: 16, color: AppColors.verdictKnown),
   );
-}
-
-/// THE SUMMARY OF A CONVERSATION STAGE (canvases 33-8, 34-8, 35-6; work order SESSION-1c): cross, scene strip, the
-/// title in Literata («Dialogue done · 7 minutes», «Understood 4 questions of 5», «Said 5 lines of 6 myself»), no stage
-/// dots; «Coming back tomorrow» — the returning exchanges as pairs of bubbles; the line about the rest; at the bottom
-/// the row of what comes next («Listen and answer · ≈ 4 min», «Day total · 19 minutes») over the button.
-class SessionTalkSummary extends StatelessWidget {
-  const SessionTalkSummary({
-    super.key,
-    required this.title,
-    required this.returning,
-    required this.closedLine,
-    required this.nextLabel,
-    required this.nextValue,
-    required this.buttonLabel,
-    required this.scene,
-    required this.onClose,
-    required this.onNext,
-    this.busy = false,
-  });
-
-  final String title;
-
-  /// Each returning exchange as its pair of bubbles.
-  final List<Widget> returning;
-
-  /// «The other lines are done.»; null — no line.
-  final String? closedLine;
-  final String? nextLabel;
-  final String? nextValue;
-  final String buttonLabel;
-  final PlanScene? scene;
-  final VoidCallback onClose;
-  final VoidCallback? onNext;
-  final bool busy;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
-                  child: Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: onClose, label: l.planSessionClose)),
-                ),
-                SessionSceneStrip(scene: scene),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(kSessionGutter, 24, kSessionGutter, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(title, key: const ValueKey('talk-summary-title'), style: AppTextSession.stageTitle),
-                      if (returning.isNotEmpty) ...[
-                        const SizedBox(height: 72),
-                        SessionEyebrow(l.planSessionReturnsTomorrow),
-                        const SizedBox(height: 14),
-                        for (final (i, pair) in returning.indexed) ...[if (i > 0) const SizedBox(height: 16), pair],
-                      ],
-                      if (closedLine != null) ...[
-                        SizedBox(height: returning.isEmpty ? 72 : 56),
-                        Text(closedLine!, style: AppTextSession.body),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SessionDock(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (nextLabel != null) ...[
-                Row(
-                  key: const ValueKey('talk-summary-next'),
-                  children: [
-                    Expanded(child: Text(nextLabel!, style: AppTextSession.body)),
-                    if (nextValue != null) Text(nextValue!, style: AppTextSession.meta),
-                  ],
-                ),
-                const SizedBox(height: 14),
-              ],
-              SessionDockButton(label: buttonLabel, busy: busy, onTap: onNext),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 /// THE DAY SUMMARY (canvas 30-7): cross, scene strip, «Day done · 19 minutes»; the dark plate of the day's stages, each

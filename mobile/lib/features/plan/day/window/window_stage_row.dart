@@ -12,12 +12,15 @@ import 'window_texts.dart';
 /// РЯД ЭТАПА НА ПЛИТЕ ОКНА (кадры 23-0a…0c): значок 20 · 12 · слово · состояние словами · цифра —
 /// только у текущего — и через 8 полоса 3 под ним. Запертый ряд серый, текущий — 600 и латунное «идёт».
 class WindowStageRow extends StatelessWidget {
-  const WindowStageRow({super.key, required this.stage, this.popCheck = false});
+  const WindowStageRow({super.key, required this.stage, this.popCheck = false, this.aroundMinutes = false});
 
   final WindowStage stage;
 
   /// Этап только что закрыт — галка-бейдж появляется `om-check-pop`.
   final bool popCheck;
+
+  /// A row of a review or the rehearsal (37-1, 37-2): its minutes in words, «около 4 минут».
+  final bool aroundMinutes;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +65,12 @@ class WindowStageRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(WindowTexts.stageState(l, stage), maxLines: 1, softWrap: false, style: AppTextWindow.stageState.copyWith(color: stateColor)),
+              Text(
+                WindowTexts.stageState(l, stage, around: aroundMinutes),
+                maxLines: 1,
+                softWrap: false,
+                style: AppTextWindow.stageState.copyWith(color: stateColor),
+              ),
               if (count != null) ...[
                 const SizedBox(width: 12),
                 Text(count, maxLines: 1, softWrap: false, style: AppTextWindow.stageCount),

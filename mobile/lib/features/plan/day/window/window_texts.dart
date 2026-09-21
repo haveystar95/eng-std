@@ -90,14 +90,21 @@ abstract final class WindowTexts {
       ? (day.minutesSpent == null ? null : l.planMinutesCount(day.minutesSpent!))
       : _approx(l, day.minutesEstimate, long: false);
 
-  /// Слово ряда этапа: «пройдено», «идёт · ≈ 8 мин», «впереди».
-  static String stageState(AppLocalizations l, WindowStage stage) => switch (stage.state) {
-    WindowStageState.done => l.planPlateStateDone,
-    WindowStageState.current => stage.minutesLeft == null
-        ? l.planPlateStateCurrent
-        : l.planWindowJoin(l.planPlateStateCurrent, _approx(l, stage.minutesLeft, long: false)!),
-    WindowStageState.locked => l.planPlateStateAhead,
-  };
+  /// The word of a stage row: «пройдено», «идёт · ≈ 8 мин», and on a row ahead its planned minutes «≈ 4 мин» when the
+  /// server sent them (`stages[].minutes`, BACK-TAILS-2; кадры 23-0a, 37-1, 37-2), else «впереди». The current row says
+  /// its remainder (`minutes_left`): it is truer than the plan once the stage is under way. [around] — a review or the
+  /// rehearsal, whose frames say the minutes in words, as their status line does: «около 4 минут», «идёт · около 6 минут».
+  static String stageState(AppLocalizations l, WindowStage stage, {bool around = false}) {
+    String? minutes(int? m) => m == null ? null : (around ? l.planTalkEntryMinutes(m) : _approx(l, m, long: false));
+    return switch (stage.state) {
+      WindowStageState.done => l.planPlateStateDone,
+      WindowStageState.current => switch (minutes(stage.minutesLeft)) {
+        null => l.planPlateStateCurrent,
+        final m => l.planWindowJoin(l.planPlateStateCurrent, m),
+      },
+      WindowStageState.locked => minutes(stage.minutes) ?? l.planPlateStateAhead,
+    };
+  }
 
   /// «6 / 16» — только у текущего ряда: у остальных сервер цифры не прислал, и строки нет.
   static String? stageCount(AppLocalizations l, WindowStage stage) =>

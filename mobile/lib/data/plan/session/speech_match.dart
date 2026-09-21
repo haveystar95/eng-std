@@ -29,6 +29,8 @@
 /// Pure functions, not a single widget and not a single network call.
 library;
 
+import 'dart:math' as math;
+
 /// How a spoken attempt is compared with what was asked for — the card says which, on the wire.
 enum SpeechMode {
   /// The text is on screen: every content word, in its order.
@@ -292,6 +294,37 @@ abstract final class SpeechMatch {
   /// How many heard tokens may be joined back into one expected word, and how many expected words one glued token may
   /// be cut into — the server's `SpokenWordBoundary::MAX_JOIN`.
   static const int _maxJoin = 3;
+
+  /// THE WORDS HEARD BEYOND [key] — the SPOKEN words of [heard] that [key]'s own words do not account for, in the order
+  /// heard, each in its comparable form (a spoken word that folds into several comparable words stays one entry,
+  /// «over the counter»). A mirror of the server's `SpeechMatch::slotWords()` as its judge reads it: the word is the
+  /// spoken one — it belongs to the key only when EVERY comparable word it folds into is still unspent there, else the
+  /// whole spoken word is left over; and the words are EXACT — no trailing sibilant forgiven, no boundary re-cut —
+  /// because what matters is what the server would find left over. Counted per comparable word instead, «the
+  /// over-the-counter» against the key «over-the-counter» left «the» over where the server leaves «over-the-counter» —
+  /// the phone refused what the server hands to the model (invariant review, CLIENT-CONV-1c).
+  static List<String> beyondKey(String heard, String key, SpeechRules rules) {
+    final available = _counts(words(key, rules));
+    final surface = heard.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final stream = words(surface.join(' '), rules);
+    final beyond = <String>[];
+    var taken = 0;
+    for (var i = 0; i < surface.length; i++) {
+      // The comparable words of THIS spoken word: what the whole line folds into, less what the words after it fold into.
+      final rest = words(surface.skip(i + 1).join(' '), rules).length;
+      final count = math.max(0, stream.length - rest - taken);
+      final tokens = stream.sublist(taken, taken + count);
+      taken += count;
+      if (tokens.isEmpty) continue;
+      final need = _counts(tokens);
+      if (need.entries.every((e) => (available[e.key] ?? 0) >= e.value)) {
+        need.forEach((token, n) => available[token] = available[token]! - n);
+        continue;
+      }
+      beyond.add(tokens.join(' '));
+    }
+    return beyond;
+  }
 
   /// Whether the words of [value] stand consecutively in [heard] — articles do not count on either side.
   static bool containsSequence(String heard, String value, SpeechRules rules) {

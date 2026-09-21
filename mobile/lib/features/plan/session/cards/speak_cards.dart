@@ -6,13 +6,13 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../../data/plan/session/heard_words.dart';
+import '../../../../data/plan/session/intent_clause.dart';
 import '../../../../data/plan/session/live_line.dart';
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
 import '../../../../data/plan/session/session_rules.dart';
 import '../../../../data/speech/speech_turn.dart';
 import '../../conversation/talk_ribbon.dart';
-import '../../conversation/talk_texts.dart';
 import '../parts/session_bits.dart';
 import '../parts/session_bubbles.dart';
 import '../parts/session_line_sheet.dart';
@@ -40,6 +40,10 @@ mixin _JudgedCardState<T extends StatefulWidget> on State<T> {
   int attempts = 0;
   String heard = '';
   bool _noMicReported = false;
+
+  /// «услышал: …» under a refusal — what the JUDGE judged (`heard` of its answer, CONV-2 п. 8), and what the phone
+  /// recognised when the answer carries none.
+  String get judgedHeard => verdict?.heard ?? heard;
 
   /// Whether the frame was on screen before the attempt that goes to the judge.
   bool get hintedNow => false;
@@ -182,10 +186,13 @@ enum _Hint { none, silence, button, miss }
 /// silence — or «Подсказать» — raise the CHIP «Скажи, что …» with the task in the learner's language,
 /// and the button goes away with it (the two never stand together). The attempt goes to the judge with
 /// `hinted`. Accepted — the words the server matched to phrases of the day are underlined in sage, and
-/// the card leaves by itself. Rejected — the judge's own sentence stands in ink under the bubble, under it
-/// «услышал: …» with what the phone recognised, the chip comes up AT ONCE (правки прохода 21.09, наряд
-/// CLIENT-CONV-1b — no five seconds after a miss), «Ещё раз» is a button and «Пропустить» a link. Under
-/// «Без подсказок» there is no chip and no «Подсказать».
+/// the card leaves by itself. Rejected (35-2d, SESSION-DES-4) — the judge's own sentence stands in ink under
+/// the bubble, under it «услышал: …» with what the judge judged, and RIGHT UNDER THEM the chip, in paper, AT
+/// ONCE — no five seconds after a miss and no second tap for the hint; «Ещё раз» is a button and «Пропустить»
+/// a link over it. Under «Без подсказок» there is no chip and no «Подсказать».
+///
+/// The chip's task is the card's `task_native` — the learner's line as a sentence — made the clause of «Скажи,
+/// что …» by the server's own rule ([IntentClause]); the talk's intention needs none, it comes as a clause.
 ///
 /// AN `ask` EXCHANGE HAS NO QUESTION (work order FIX-2 §3): the learner speaks first, and the
 /// partner's line of that exchange is the ANSWER — the server sends `partner_line: null`. The card
@@ -360,7 +367,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         bubble,
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         // The judge's sentence reads from the left edge of the ribbon — Inter 15/500 in ink, as the frame sets it.
         Text(
           why,
@@ -368,21 +375,27 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
           textAlign: TextAlign.left,
           style: AppTextSession.text15.copyWith(fontWeight: FontWeight.w500),
         ),
-        // «услышал: …» — what the phone recognised, so a refusal over a misheard word reads as one (CLIENT-CONV-1b).
+        // «услышал: …» — what the judge judged, so a refusal over a misheard word reads as one (CONV-2 п. 8).
         const SizedBox(height: 4),
-        SessionHeardText(heard: heard),
+        SessionHeardText(heard: judgedHeard),
+        // The chip right under the refusal, at once (35-2d): the way to say it is on screen before the next attempt.
+        if (_chipShown) ...[const SizedBox(height: 12), _chip(l, stretch: true)],
       ],
     );
   }
 
+  /// «Скажи, что …» — the card's task as the clause of the client's own sentence.
+  Widget _chip(AppLocalizations l, {bool stretch = false}) =>
+      TalkHintChip(text: l.planTalkHintChip(IntentClause.of(p.taskNative)), stretch: stretch);
+
   Widget _dock(AppLocalizations l) {
-    // Rejected: the way on is a button, and «Пропустить» is a link under it (кадр 35-2 «не зачтено»).
+    // Rejected: the way on is a button, and «Пропустить» is a link over it (кадр 35-2 «не зачтено»); the chip stands in
+    // the ribbon, under the judge's sentence.
     if (rejected) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_chipShown) ...[TalkHintChip(text: TalkTexts.hint(l, p.taskNative)), const SizedBox(height: 14)],
           Center(child: SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, brass: true, onTap: skip)),
           const SizedBox(height: 14),
           SessionDockButton(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, onTap: tryAgain),
@@ -396,7 +409,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
     };
     return TalkDock(
       debugMic: finished || judging ? null : mic,
-      chip: _chipShown ? TalkHintChip(text: TalkTexts.hint(l, p.taskNative)) : null,
+      chip: _chipShown ? _chip(l) : null,
       caption: switch (mic.state) {
         MicState.listening => l.planSessionMicListening,
         MicState.heard => l.planSessionMicHeard,
@@ -421,11 +434,12 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
 
 enum _Echo { listening, waiting, ready }
 
-/// ECHO AFTER A PAUSE (35-3): the partner's line sounds (the wave moves), its text closed; after the sound a brass ring
+/// ECHO AFTER A PAUSE (35-3): the LEARNER'S OWN line sounds (the wave moves), its text closed — «Говорю сам» is the
+/// learner's part (CONV-2 п. 6; the card reads `own_line` and never the partner's); after the sound a brass ring
 /// around the microphone holds `pause_ms` (the microphone inactive, «waiting»), then the microphone opens — the
-/// recording starts on a tap, as on every card (30-3). The pass is coverage (`coverage_min`); after the answer the line
-/// opens with every word heard marked in sage (the marks by word, the punctuation outside), and the card waits for
-/// «Next». Two misses — `skipped`, the line opens too.
+/// recording starts on a tap, as on every card (30-3). The pass is the card's own `speech_mode`; after the answer the
+/// line opens with every word heard marked in sage (the marks by word, the punctuation outside) and its translation
+/// under it, and the card waits for «Next». Two misses — `skipped`, the line opens too.
 class SpeakEchoCard extends StatefulWidget {
   const SpeakEchoCard({super.key, required this.env, required this.payload});
 
@@ -484,7 +498,7 @@ class _SpeakEchoCardState extends State<SpeakEchoCard> with VoiceCardState<Speak
   Future<void> _listen() async {
     if (!mounted) return;
     setState(() => _phase = _Echo.listening);
-    await env.voice.play(p.partnerLine.audio, fallback: p.partnerLine.textTarget, key: _key);
+    await env.voice.play(p.ownLine.audio, fallback: p.ownLine.textTarget, key: _key);
     if (!mounted || done) return;
     setState(() => _phase = _Echo.waiting);
     _pause = Timer(_pauseLength, () {
@@ -502,7 +516,7 @@ class _SpeakEchoCardState extends State<SpeakEchoCard> with VoiceCardState<Speak
     final noMic = noMicBody((s) => SessionTexts.stage(AppLocalizations.of(context), s));
     if (noMic != null) return noMic;
     final l = AppLocalizations.of(context);
-    final line = p.partnerLine;
+    final line = p.ownLine;
     return CardLayout(
       bodyGap: 12,
       centerBody: true,
@@ -544,7 +558,7 @@ class _SpeakEchoCardState extends State<SpeakEchoCard> with VoiceCardState<Speak
             child: SessionTextExit(
               key: const ValueKey('echo-replay'),
               label: l.planSessionReplay,
-              onTap: () => unawaited(env.voice.play(p.partnerLine.audio, fallback: p.partnerLine.textTarget, key: _key)),
+              onTap: () => unawaited(env.voice.play(p.ownLine.audio, fallback: p.ownLine.textTarget, key: _key)),
             ),
           ),
           const SizedBox(height: 14),

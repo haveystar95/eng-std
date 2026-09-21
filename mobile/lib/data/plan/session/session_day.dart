@@ -121,10 +121,12 @@ class SessionDay {
     return null;
   }
 
-  /// «≈ N min» — only for the window's current stage; for the others the server does not send the number.
+  /// «≈ N min» — the stage's remainder while it is the window's current one (`minutes_left`), else its planned minutes
+  /// (`minutes`, наряд BACK-TAILS-2 — every row carries them); a server that sends neither — null, and no number is
+  /// printed.
   int? minutesLeft(PlanStage stage) {
     for (final s in window?.stages ?? const <WindowStage>[]) {
-      if (s.stage == stage) return s.minutesLeft;
+      if (s.stage == stage) return s.minutesLeft ?? s.minutes;
     }
     return null;
   }

@@ -156,6 +156,24 @@ class ConversationController extends ChangeNotifier {
 
   /// START (кадр 37-5) — or step back into the talk this day already has open: the same call answers
   /// with it, so a phone coming back from the background continues where it stood.
+  /// [open], answered as soon as the SERVER has answered — the role's first line may still be sounding. A screen that
+  /// shows the ribbon on this answer shows the line while it is said (37-6); [open] itself returns only once the line
+  /// has been said, and a screen waiting on it would hold the role's first words over the entry (37-5).
+  Future<void> openAnswered({bool again = false}) {
+    final answered = Completer<void>();
+    void heard() {
+      if (_phase != TalkPhase.opening && !answered.isCompleted) answered.complete();
+    }
+
+    addListener(heard);
+    unawaited(open(again: again).whenComplete(() {
+      if (!answered.isCompleted) answered.complete();
+    }));
+    return answered.future.whenComplete(() {
+      if (!_disposed) removeListener(heard);
+    });
+  }
+
   Future<void> open({bool again = false}) async {
     _phase = TalkPhase.opening;
     _openError = null;

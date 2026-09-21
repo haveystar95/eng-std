@@ -226,6 +226,13 @@ abstract final class AppMotion {
   static const sessionDayPlate = Duration(milliseconds: 200);
   static const sessionDayPlateDelay = Duration(milliseconds: 80);
 
+  /// «The phrase strip · a phrase has sounded» (37-8b, SESSION-DES-4): the strip goes sage 15 % with a sage check left
+  /// of its chevron for 260 ms, then back to paper.
+  static const talkStripFlash = Duration(milliseconds: 260);
+
+  /// «The phrase sheet» (37-8d) rises and falls as the exit sheet does.
+  static const talkPhraseSheet = sessionExitSheet;
+
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);
 

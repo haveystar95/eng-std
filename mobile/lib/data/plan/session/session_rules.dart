@@ -190,23 +190,40 @@ abstract final class SessionRules {
   };
 
   /// THE PHONE'S VERDICT WHERE THERE IS NO JUDGE TO ASK — «Once more» from the day summary (FIX-1 §5). The server
-  /// refuses a card of a walked day (`plan_card_answered`), so a replay grades what the judge would have graded the
-  /// way every voice card is graded: the KEY — the frame's own words, in the `free` mode. What went into the window
-  /// is anyone's; that is what the judge was for, and a replay does not pretend to have one.
+  /// refuses a card of a walked day (`plan_card_answered`), so a replay is graded on the phone — and a phone verdict may
+  /// NEVER be stricter than the judge's (the invariant «клиент не строже сервера»; наряд CLIENT-CONV-1c §1, CONV-2 §8
+  /// п. 1). The two kinds that ask the judge ask it different things (CONV-2 п. 7), so they are graded differently:
   ///
-  /// Both kinds that ask the judge land here, and both ask it about the SAME thing: `speak_answer` about the whole
-  /// card, «Скажи целиком» about its own-word round (its value rounds never reach this — they are graded on the
-  /// phone anyway). So both are read off the frame, never off a round's expected phrase: a learner saying their own
-  /// word would never match the phrase the round was dealt with.
+  /// - `speak_answer` is judged BY MEANING: the frame is one way to say the answer, not a password («Yes, it is my first
+  ///   visit» to «Is this your first visit here?» passes whatever the frame). The phone refuses only what the server
+  ///   refuses BY ITS OWN CODE, before any model: nothing heard, or — a frame with a window and its hint — nothing heard
+  ///   beyond the frame's own words ([answerRefusedByCode]). Everything else is the model's to rule on; the phone has no
+  ///   model, so it takes it. Before this the replay asked for the frame's words and showed a miss where the server had
+  ///   passed the same answer.
+  /// - the own-word round of «Скажи целиком» is the frame said with a word of one's own, and the server asks for the
+  ///   frame there too (`Каркас не прозвучал` by code): the frame's own words, in the round's mode. Its value rounds
+  ///   never reach this — they are graded on the phone anyway.
   ///
-  /// Before this, a replay accepted ANY speech at all — the first sound heard closed the card as a pass.
+  /// The live line is the only other place the phone reads an answer — and there it colours words, it does not judge.
   static bool replayAccepted(CardPayload payload, String heard, SpeechRules rules) => switch (payload) {
-    SpeakAnswerPayload(:final frame, :final speechMode) =>
-      SpeechMatch.said(heard, framePart(frame.frameTarget), speechMode, rules),
+    SpeakAnswerPayload(:final frame) => !answerRefusedByCode(frame, heard, rules),
     PhraseOtherSlotPayload(:final frame, :final ownRound) =>
       SpeechMatch.said(heard, framePart(frame.frameTarget), ownRound?.speechMode ?? SpeechMode.free, rules),
     _ => voiceAccepted(payload, heard, rules),
   };
+
+  /// WOULD THE SERVER REFUSE THIS ANSWER WITHOUT ASKING THE MODEL (`SlotJudge::judge`, mode `answer`)? Only two answers
+  /// are refused that way: nothing heard at all («Не расслышал — скажи ещё раз»), and — when the frame has a window and
+  /// the window a hint — nothing said beyond the frame's own words, no known value of the window among them («Не сказал
+  /// главного — {подсказка}»). The server counts its pack's FUNCTION words as nothing too; the phone has only the day's
+  /// articles of that list, so it refuses a subset of what the server refuses — «That works for me, please» the server
+  /// refuses and the phone takes — and never the other way round.
+  static bool answerRefusedByCode(CardFrame frame, String heard, SpeechRules rules) {
+    if (SpeechMatch.words(heard, rules).isEmpty) return true;
+    if (!frame.hasSlot || frame.slot?.hintNative == null) return false;
+    if (frame.fillers.any((f) => SpeechMatch.containsSequence(heard, f.target, rules))) return false;
+    return SpeechMatch.beyondKey(heard, framePart(frame.frameTarget), rules).every(rules.articles.contains);
+  }
 
   /// THE FRAME'S OWN WORDS — the frame outside its slot, without the closing mark: what must be heard for the frame
   /// to have been said, whatever went into the slot. A mirror of the server's `FrameParts::part()`:
@@ -249,7 +266,8 @@ abstract final class SessionRules {
     DialogueAnswerPayload(:final ownLine) => ownLine.textTarget,
     SpeakEchoPayload(:final expectedText) => expectedText,
     SpeakRetellPayload(:final expectedText) => expectedText,
-    SpeakAnswerPayload(:final frame) => framePart(frame.frameTarget),
+    // The learner's own line, its value in the window: the frame alone is what the server refuses by code.
+    SpeakAnswerPayload(:final ownLine) => ownLine.textTarget,
     _ => '',
   };
 

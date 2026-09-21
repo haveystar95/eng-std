@@ -5,17 +5,20 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../data/local/cached_image_provider.dart';
+import '../../../data/plan/conversation/conversation_models.dart';
 import '../../../data/plan/plan_models.dart';
 import '../session/parts/session_bits.dart';
 import '../session/parts/session_chrome.dart';
 
-/// THE WAY INTO THE TALK (кадр 37-5) — the sixth stage's own entry, in place of 30-1: the scene strip
-/// with the role, the scene's photo, the eyebrow, «Поговори с собеседником», the minutes, THREE lines of
-/// rules on the learner's language, «Без подсказок» and one button.
+/// THE WAY INTO THE TALK (кадр 37-5, SESSION-DES-4) — the sixth stage's own entry, in place of 30-1: the scene strip
+/// with the role, the scene's photo band, the eyebrow, the title the server wrote («Поговори с врачом»), the minutes,
+/// THREE lines of rules on the learner's language, «Скажи в разговоре» — the phrases the talk is for — «Без подсказок»
+/// and one button.
 ///
-/// Nothing here is counted on the phone. The minutes are the server's row of the stage
-/// (`stages[].minutes_left`) and are simply absent when it did not send them; the role and the scene
-/// come from the day. «Без подсказок» is sent once, with the start, and is fixed for that talk.
+/// Nothing here is counted or worded on the phone. The minutes are the server's row of the stage
+/// (`stages[].minutes_left`), the title and the scenes' count its talk row's (`talk_title_native`, `scenes_count`,
+/// CONV-2 п. 12), the phrases its `targets` (архитектор 22.09); each is simply absent when it did not come. «Без
+/// подсказок» is sent once, with the start, and is fixed for that talk — «Начать разговор» is the only call here.
 class TalkEntryView extends StatelessWidget {
   const TalkEntryView({
     super.key,
@@ -26,6 +29,9 @@ class TalkEntryView extends StatelessWidget {
     required this.onNoHints,
     required this.onStart,
     required this.onBack,
+    this.title,
+    this.scenesCount,
+    this.targets = const [],
     this.starting = false,
     this.failure,
   });
@@ -34,6 +40,15 @@ class TalkEntryView extends StatelessWidget {
 
   /// «около N минут»; null — the server did not send the stage's minutes and the line is not drawn.
   final int? minutes;
+
+  /// «Поговори с врачом» — the talk row's `talk_title_native`; null — no title line (the client has none of its own).
+  final String? title;
+
+  /// «Разговор целиком · 3 сцены» on the rehearsal — the talk row's `scenes_count`; null — the eyebrow without it.
+  final int? scenesCount;
+
+  /// «Скажи в разговоре» — the talk row's `targets`, in the server's order; empty — no block.
+  final List<TalkTarget> targets;
 
   /// The rehearsal talks the whole visit through, not one scene.
   final bool rehearsal;
@@ -51,9 +66,11 @@ class TalkEntryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final scenes = scenesCount;
     final eyebrow = rehearsal
-        ? l.planTalkEntryWhole
+        ? (scenes == null || scenes < 1 ? l.planTalkEntryWhole : l.planWindowJoin(l.planTalkEntryWhole, l.planTalkEntryScenes(scenes)))
         : l.planWindowJoin(l.planPlateStageTalk, scene?.titleNative.trim() ?? '');
+    final title = this.title;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -79,8 +96,10 @@ class TalkEntryView extends StatelessWidget {
                       _ScenePhoto(scene: scene),
                       const SizedBox(height: 20),
                       SessionEyebrow(eyebrow),
-                      const SizedBox(height: 8),
-                      Text(l.planTalkEntryTitle, key: const ValueKey('talk-entry-title'), style: AppTextSession.stageTitle),
+                      if (title != null) ...[
+                        const SizedBox(height: 8),
+                        Text(title, key: const ValueKey('talk-entry-title'), style: AppTextSession.stageTitle),
+                      ],
                       if (minutes != null) ...[
                         const SizedBox(height: 4),
                         Text(
@@ -97,6 +116,12 @@ class TalkEntryView extends StatelessWidget {
                       ].indexed) ...[
                         if (i > 0) const SizedBox(height: 14),
                         _Rule(icon: icon, text: line),
+                      ],
+                      if (targets.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        SessionEyebrow(l.planTalkEntrySay),
+                        const SizedBox(height: 14),
+                        _TargetsWindow(targets: targets),
                       ],
                       const SizedBox(height: 24),
                       _NoHintsRow(value: noHints, onChanged: onNoHints),
@@ -166,8 +191,72 @@ class _Rule extends StatelessWidget {
   );
 }
 
-/// THE SCENE'S PHOTO (кадр 37-5) — between the strip and the eyebrow, 170 high with corners 12, the photo covering
-/// the card on the scene's tone while it comes in. A scene without a photo keeps the card's shape as a paper plate.
+/// «СКАЖИ В РАЗГОВОРЕ» (кадр 37-5, SESSION-DES-4) — the talk's phrases between the rules and «Без подсказок»: each the
+/// phrase in Literata 17/23 in ink and its translation 15/20 in grey under it, 10 between them. A WINDOW 116 high that
+/// scrolls on its own, its lower edge fading into the ground over 28 — the bottom phrase is cut by the edge, so the
+/// screen keeps the switch and the button where the frame puts them.
+class _TargetsWindow extends StatelessWidget {
+  const _TargetsWindow({required this.targets});
+
+  final List<TalkTarget> targets;
+
+  static const double height = 116;
+  static const double fade = 28;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    key: const ValueKey('talk-entry-targets'),
+    height: height,
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: fade),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, t) in targets.indexed) ...[
+                  if (i > 0) const SizedBox(height: 10),
+                  Column(
+                    key: ValueKey('talk-entry-target-${t.sceneId}-${t.ref}'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(t.textTarget, style: AppTextSession.phrase17),
+                      const SizedBox(height: 2),
+                      Text(t.textNative, style: AppTextSession.body),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: fade,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.groundClear, AppColors.ground],
+                  stops: [0, 0.9],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// THE SCENE'S PHOTO BAND (кадр 37-5, SESSION-DES-4) — between the strip and the eyebrow, 64 high with corners 12 (it was
+/// 170 before the phrases came onto the screen), the photo covering the band on the scene's tone while it comes in. A
+/// scene without a photo keeps the band's shape as a paper plate.
 class _ScenePhoto extends StatelessWidget {
   const _ScenePhoto({required this.scene});
 
@@ -181,7 +270,7 @@ class _ScenePhoto extends StatelessWidget {
       key: const ValueKey('talk-entry-photo'),
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        height: 170,
+        height: 64,
         decoration: BoxDecoration(
           color: photo == null ? AppColors.paper : AppColors.wireTone(photo.tone),
           image: photo == null ? null : DecorationImage(image: CachedNetworkImage(photo.urlFor(342, dpr)), fit: BoxFit.cover),

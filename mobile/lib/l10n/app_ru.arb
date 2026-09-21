@@ -4797,60 +4797,6 @@
   "@planSessionReturnsTomorrow": {
     "description": "Сессия, итог этапа (30-6): лейбл над единицами, которые вернутся на следующий день."
   },
-  "planSessionDoneWords": "Слова пройдены · {minutes}",
-  "@planSessionDoneWords": {
-    "description": "Сессия, итог этапа «Слова» (30-6): заголовок с минутами этапа от сервера.",
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
-  "planSessionDonePhrases": "Фразы пройдены · {minutes}",
-  "@planSessionDonePhrases": {
-    "description": "Сессия, итог этапа «Фразы» (30-6): заголовок с минутами этапа от сервера.",
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
-  "planSessionRestWords": "{n, plural, one{Остальное {n} слово закрыто.} few{Остальные {n} слова закрыты.} many{Остальные {n} слов закрыты.} other{Остальные {n} слова закрыты.}}",
-  "@planSessionRestWords": {
-    "description": "Сессия, итог этапа «Слова» (30-6): под списком возвратов.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "planSessionAllWords": "{n, plural, one{{n} слово закрыто.} few{Все {n} слова закрыты.} many{Все {n} слов закрыты.} other{Все {n} слова закрыты.}}",
-  "@planSessionAllWords": {
-    "description": "Сессия, итог этапа «Слова» (30-6) без возвратов.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "planSessionRestPhrases": "{n, plural, one{Остальная {n} фраза закрыта.} few{Остальные {n} фразы закрыты.} many{Остальные {n} фраз закрыты.} other{Остальные {n} фразы закрыты.}}",
-  "@planSessionRestPhrases": {
-    "description": "Сессия, итог этапа «Фразы» (30-6): под списком возвратов.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "planSessionAllPhrases": "{n, plural, one{{n} фраза закрыта.} few{Все {n} фразы закрыты.} many{Все {n} фраз закрыты.} other{Все {n} фразы закрыты.}}",
-  "@planSessionAllPhrases": {
-    "description": "Сессия, итог этапа «Фразы» (30-6) без возвратов.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "planSessionExitTitle": "Выйти? Прогресс сохранится",
   "@planSessionExitTitle": {
     "description": "Сессия, шит выхода (30-8): заголовок."
@@ -5099,54 +5045,9 @@
   "@planSessionHintAction": {
     "description": "Сессия, 35-5: второй из трёх выходов — открыть каркас."
   },
-  "planSessionDoneDialogue": "Диалог пройден · {minutes}",
-  "@planSessionDoneDialogue": {
-    "description": "Сессия, итог этапа «Диалог» (33-8); minutes — planMinutesCount.",
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
-  "planSessionRestExchanges": "Остальные реплики закрыты.",
-  "@planSessionRestExchanges": {
-    "description": "Сессия, итог этапа (33-8, 35-6): под репликами, которые вернутся завтра."
-  },
-  "planSessionAllExchanges": "Все реплики закрыты.",
-  "@planSessionAllExchanges": {
-    "description": "Сессия, итог этапа (33-8, 35-6): ничего не вернётся."
-  },
-  "planSessionUnderstoodCount": "{n, plural, one{Понял {n} вопрос из {m}} few{Понял {n} вопроса из {m}} many{Понял {n} вопросов из {m}} other{Понял {n} вопроса из {m}}}",
-  "@planSessionUnderstoodCount": {
-    "description": "Сессия, итог этапа «Слушаю и отвечаю» (34-8): верно отвеченные вопросы слушания из всех.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "m": {
-        "type": "int"
-      }
-    }
-  },
-  "planSessionSpokeCount": "{n, plural, one{Сказал сам {n} реплику из {m}} few{Сказал сам {n} реплики из {m}} many{Сказал сам {n} реплик из {m}} other{Сказал сам {n} реплики из {m}}}",
-  "@planSessionSpokeCount": {
-    "description": "Сессия, итог этапа «Говорю сам» (35-6): зачтённые карточки этапа из всех.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "m": {
-        "type": "int"
-      }
-    }
-  },
   "planSessionDayTotal": "Итог дня",
   "@planSessionDayTotal": {
-    "description": "Сессия, 35-6: строка над кнопкой — минуты дня справа."
-  },
-  "planSessionDayDoneAction": "День пройден",
-  "@planSessionDayDoneAction": {
-    "description": "Сессия, 35-6: кнопка — к итогу дня 30-7."
+    "description": "Итог этапа (30-6, наряд CLIENT-CONV-1c): плашка «Дальше», когда следующего этапа нет, — итог дня, минуты дня справа."
   },
   "planSessionDayDoneTitle": "День пройден · {minutes}",
   "@planSessionDayDoneTitle": {
@@ -5242,10 +5143,6 @@
   "@planPlateStageRecall": {
     "description": "Имя этапа репетиции (кадры 37-1, 37-3): свои реплики плана, прочитанные и сказанные вслух."
   },
-  "planTalkEntryTitle": "Поговори с собеседником",
-  "@planTalkEntryTitle": {
-    "description": "Вход в разговор (37-5): заголовок. Роль без склонения — «собеседник», как на входе в «Говорю сам»: контракт отдаёт роль только в именительном (полоса сцены над заголовком называет её словом)."
-  },
   "planTalkEntryMinutes": "{n, plural, one{около {n} минуты} few{около {n} минут} many{около {n} минут} other{около {n} минуты}}",
   "@planTalkEntryMinutes": {
     "description": "Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут». После «около» — родительный падеж, поэтому своя форма, а не planMinutesCount (живой прогон поймал «около 3 минуты»).",
@@ -5259,6 +5156,7 @@
   "@planTalkEntryWhole": {
     "description": "Вход в разговор репетиции (37-5): бровь вместо названия сцены — разговор идёт по всем сценам плана."
   },
+  "planTalkEntryScenes": "{n, plural, one{{n} сцена} few{{n} сцены} many{{n} сцен} other{{n} сцены}}",
   "@planTalkEntryScenes": {
     "description": "Вход в разговор репетиции (37-5): сколько сцен в разговоре — вторая часть брови «Разговор целиком · 3 сцены».",
     "placeholders": {
@@ -5289,7 +5187,7 @@
   },
   "planTalkHintChip": "Скажи, что {intent}",
   "@planTalkHintChip": {
-    "description": "Экран разговора (37-7): чип подсказки — префикс печатает клиент, намерение intent приходит готовым (hints.native, без префикса).",
+    "description": "Экран разговора (37-7) и «Ответь своими словами» (35-2): чип подсказки — префикс печатает клиент. В разговоре intent приходит придаточным (hints.native, CONV-2 п. 11) и печатается как есть; у карточки 35-2 task_native — предложение, его в придаточное переводит зеркало IntentClause.",
     "placeholders": {
       "intent": {
         "type": "String"
@@ -5411,10 +5309,6 @@
   "@planSessionOwnWordChip": {
     "description": "«Скажи целиком» (32-7): последняя плашка ряда значений — круг своего слова."
   },
-  "planTalkRescueMark": "переспросил",
-  "@planTalkRescueMark": {
-    "description": "Лента разговора (37-7 «после „Не понял\"»): пометка на стороне ученика там, где он нажал «Не понял». Не тёмный пузырь: сервер не пишет слов для переспроса, а тёмный пузырь — только сказанное."
-  },
   "planTalkNoMic": "Нужен микрофон — без него разговор не пройти",
   "@planTalkNoMic": {
     "description": "Экран разговора: микрофон не пишет (нет разрешения или распознавания на устройстве). Рядом «Разрешить» — спросить систему ещё раз или открыть настройки, как на «Нужен микрофон» (30-3). Вместо «тап — говорить» над кнопкой, которая ничего не делает (пойман живым прогоном)."
@@ -5422,15 +5316,6 @@
   "planSessionDescRecall": "Свои реплики всех сцен — посмотри, послушай и скажи вслух",
   "@planSessionDescRecall": {
     "description": "Вход в этап «Вспомнить» (30-1, день репетиции): описание этапа — обзор своих реплик по сценам (37-3), потом пять-шесть из них вслух (35-4)."
-  },
-  "planSessionDoneRecall": "Вспомнил · {minutes}",
-  "@planSessionDoneRecall": {
-    "description": "Итог этапа «Вспомнить» (30-6, кадр 37-4): «Вспомнил · около 4 минут»; минуты — строкой planTalkEntryMinutes из минут этапа, которые прислал сервер.",
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
   },
   "planSessionRecallTask": "Вспомни свои реплики",
   "@planSessionRecallTask": {
@@ -5473,22 +5358,13 @@
   "@planWindowFromDays": {
     "description": "Окно дня повторения (37-2): бровь списка дней под плитой."
   },
-  "planWindowSourceLines": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}",
-  "@planWindowSourceLines": {
-    "description": "Окно дня репетиции (37-1): сколько своих реплик у сцены — счёт списка сервера (карточка «Вспомнить»); пока день не роздан, числа нет и строка не пишется.",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "planSessionTaskWhatSaid": "Что тебе сказали?",
   "@planSessionTaskWhatSaid": {
     "description": "Диалог, «Пойми собеседника» (33-1): строка отдельного блока с вопросом и вариантами — под пузырём собеседника, а не между репликами."
   },
   "planSessionHeardLine": "услышал: {text}",
   "@planSessionHeardLine": {
-    "description": "«Ответь своими словами» (35-2) и круг своего слова «Скажи целиком» (32-7): отказ — что распознал телефон, строкой под причиной.",
+    "description": "«Ответь своими словами» (35-2) и круг своего слова «Скажи целиком» (32-7): отказ судьи — что он судил (heard ответа судьи, CONV-2 п. 8), строкой под причиной; без поля — что распознал телефон.",
     "placeholders": {
       "text": {
         "type": "String"
@@ -5503,5 +5379,199 @@
         "type": "String"
       }
     }
+  },
+  "planPlateStageRepetition": "Повторение",
+  "@planPlateStageRepetition": {
+    "description": "Имя этапа дня повторения (кадр 37-2, наряд CLIENT-CONV-1c): id repetition, который BACK-TAILS-2 даёт этапу карточек повторения вместо speak."
+  },
+  "planSessionPassedWords": "Слова пройдены",
+  "@planSessionPassedWords": {
+    "description": "Итог этапа (30-6): заголовок «Слова» — к нему через « · » минуты этапа сервера (решение архитектора 22.09)."
+  },
+  "planSessionPassedPhrases": "Фразы пройдены",
+  "@planSessionPassedPhrases": {
+    "description": "Итог этапа (30-6): заголовок «Фразы» — к нему через « · » минуты этапа."
+  },
+  "planSessionPassedDialogue": "Диалог пройден",
+  "@planSessionPassedDialogue": {
+    "description": "Итог этапа (30-6, кадр SESSION-DES-4 «Диалог пройден · 3 минуты»): заголовок «Диалог» — к нему через « · » минуты этапа."
+  },
+  "planSessionPassedListen": "Слушаю и отвечаю — пройдено",
+  "@planSessionPassedListen": {
+    "description": "Итог этапа (30-6): заголовок «Слушаю и отвечаю» — к нему через « · » минуты этапа (решение архитектора 22.09)."
+  },
+  "planSessionPassedSpeak": "Говорю сам — пройдено",
+  "@planSessionPassedSpeak": {
+    "description": "Итог этапа (30-6): заголовок «Говорю сам» — к нему через « · » минуты этапа (решение архитектора 22.09)."
+  },
+  "planSessionPassedRecall": "Вспомнить — пройдено",
+  "@planSessionPassedRecall": {
+    "description": "Итог этапа (30-6, день репетиции): заголовок «Вспомнить» — к нему через « · » минуты этапа (решение архитектора 22.09)."
+  },
+  "planSessionPassedRepetition": "Повторение пройдено",
+  "@planSessionPassedRepetition": {
+    "description": "Итог этапа (30-6, день повторения): заголовок «Повторение» — к нему через « · » минуты этапа (решение архитектора 22.09)."
+  },
+  "planSessionFirstTryWords": "{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}",
+  "@planSessionFirstTryWords": {
+    "description": "Итог этапа «Слова» (30-6), первая строка: сколько слов в этапе и сколько из них зачтено с первой попытки без подсказки — по карточкам сервера.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryPhrases": "{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}",
+  "@planSessionFirstTryPhrases": {
+    "description": "Итог этапа «Фразы» (30-6), первая строка: фразы этапа и зачтённые с первой попытки без подсказки.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryLines": "{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}",
+  "@planSessionFirstTryLines": {
+    "description": "Итог этапа «Диалог» и «Говорю сам» (30-6, кадр «8 реплик, 6 с первого раза»), первая строка: реплики этапа и зачтённые с первой попытки без подсказки.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryQuestions": "{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}",
+  "@planSessionFirstTryQuestions": {
+    "description": "Итог этапа «Слушаю и отвечаю» (30-6), первая строка: вопросы слушания и отвеченные верно с первого раза.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryCards": "{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}",
+  "@planSessionFirstTryCards": {
+    "description": "Итог этапа «Повторение» (30-6), первая строка: карточки этапа и зачтённые с первой попытки без подсказки.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}",
+  "@planSessionRecallLinesOfScenes": {
+    "description": "Итог этапа «Вспомнить» (30-6), первая строка: «6 реплик из 2 сцен» — свои реплики, сказанные вслух, и из скольких сцен.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "scenes": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionStageReturns": "{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}",
+  "@planSessionStageReturns": {
+    "description": "Итог этапа (30-6), вторая строка: сколько единиц этапа вернётся завтра — по возвратам сервера.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionStageNoReturns": "завтра ничего не вернётся",
+  "@planSessionStageNoReturns": {
+    "description": "Итог этапа (30-6), вторая строка, когда у этапа возвратов нет."
+  },
+  "planSessionSaidAloud": "{n, plural, one{сказал вслух {n} свою реплику} few{сказал вслух {n} свои реплики} many{сказал вслух {n} своих реплик} other{сказал вслух {n} своей реплики}}",
+  "@planSessionSaidAloud": {
+    "description": "Итог этапа «Диалог» (30-6, кадр «сказал вслух 5 своих реплик»), вторая строка: свои реплики диалога, зачтённые голосом.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionRescuedSlower": "{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}",
+  "@planSessionRescuedSlower": {
+    "description": "Итог этапа «Диалог» (30-6, кадр «дважды переспросил — врач повторил медленнее»), третья строка: пройденные обмены «Не понял» диалога; role — роль собеседника сцены строчной.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionWarmWords": "Эти слова ты теперь узнаёшь — дальше они встретятся во фразах",
+  "@planSessionWarmWords": {
+    "description": "Итог этапа «Слова» (30-6), третья строка — тёплая, одна на этап (решение архитектора 22.09)."
+  },
+  "planSessionWarmPhrases": "Фразы собраны и сказаны вслух — в диалоге они пригодятся",
+  "@planSessionWarmPhrases": {
+    "description": "Итог этапа «Фразы» (30-6), третья строка — тёплая, одна на этап."
+  },
+  "planSessionWarmListen": "Реплики собеседника ты понимаешь на слух",
+  "@planSessionWarmListen": {
+    "description": "Итог этапа «Слушаю и отвечаю» (30-6), третья строка — тёплая, одна на этап."
+  },
+  "planSessionWarmSpeak": "Свои реплики ты сказал сам — дальше живой разговор",
+  "@planSessionWarmSpeak": {
+    "description": "Итог этапа «Говорю сам» (30-6), третья строка — тёплая, одна на этап."
+  },
+  "planSessionWarmRecall": "Реплики на месте — дальше разговор целиком",
+  "@planSessionWarmRecall": {
+    "description": "Итог этапа «Вспомнить» (30-6), третья строка — тёплая, одна на этап."
+  },
+  "planSessionWarmRepetition": "Всё, что возвращалось, сказано ещё раз",
+  "@planSessionWarmRepetition": {
+    "description": "Итог этапа «Повторение» (30-6), третья строка — тёплая, одна на этап."
+  },
+  "planTalkEntrySay": "Скажи в разговоре",
+  "@planTalkEntrySay": {
+    "description": "Вход в разговор (37-5, SESSION-DES-4): бровь списка фраз, ради которых разговор (targets ряда разговора окна)."
+  },
+  "planTalkStrip": "фразы · {said} из {total}",
+  "@planTalkStrip": {
+    "description": "Лента разговора (37-6…37-11): полоска над микрофоном — сколько фраз разговора уже прозвучало (targets[].said сервера). Единственный счётчик ленты, назван нарядом.",
+    "placeholders": {
+      "said": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planTalkSheetTitle": "Фразы дня",
+  "@planTalkSheetTitle": {
+    "description": "Лист фраз (37-8d): заголовок — открывается тапом по полоске ленты."
+  },
+  "planTalkNotSaid": "Не прозвучало",
+  "@planTalkNotSaid": {
+    "description": "Итог разговора-повтора (37-12, replay: true): группа несказанного — повтор ничего не возвращает завтра, и строки «вернётся завтра» у него нет."
+  },
+  "planWindowTalkAgain": "Повторить разговор",
+  "@planWindowTalkAgain": {
+    "description": "Окно пройденного дня (37-1 «пройден»; window.talk_again, BACK-TAILS-2): кнопка нового разговора поверх пройденного этапа — тот же экран разговора."
+  },
+  "planWindowTalkReplayLimit": "Разговор сегодня уже повторяли — вернись завтра",
+  "@planWindowTalkReplayLimit": {
+    "description": "Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан."
   }
 }

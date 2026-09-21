@@ -143,9 +143,15 @@ class SessionJudgeOutcome {
     this.result,
     required this.attempts,
     this.card,
+    this.heard,
   });
 
   final bool accepted;
+
+  /// WHAT THE JUDGE JUDGED — `heard` as it reached the server (наряд CONV-2, п. 8): «услышал: …» under a refusal is
+  /// this, so a learner tells a recogniser that misheard from a judge that misjudged. Null — a server before that (or a
+  /// verdict the phone gave itself), and the screen prints what the phone recognised.
+  final String? heard;
 
   /// What the server heard in the slot.
   final String? slotValue;
@@ -168,5 +174,6 @@ class SessionJudgeOutcome {
     result: SessionResult.fromWire(j['result']),
     attempts: (j['attempts'] as num?)?.toInt() ?? 0,
     card: j['card'] is Map<String, dynamic> ? SessionCard.fromJson(j['card'] as Map<String, dynamic>) : null,
+    heard: j['heard'] is String && (j['heard'] as String).trim().isNotEmpty ? j['heard'] as String : null,
   );
 }

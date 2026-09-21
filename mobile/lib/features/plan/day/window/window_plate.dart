@@ -106,7 +106,11 @@ class WindowPlate extends StatelessWidget {
                     height: i == window.stages.length - 1 ? null : stageRow,
                     child: Align(
                       alignment: Alignment.topCenter,
-                      child: WindowStageRow(stage: stage, popCheck: poppedStages.contains(stage.stage)),
+                      child: WindowStageRow(
+                        stage: stage,
+                        popCheck: poppedStages.contains(stage.stage),
+                        aroundMinutes: system != null,
+                      ),
                     ),
                   ),
               ],

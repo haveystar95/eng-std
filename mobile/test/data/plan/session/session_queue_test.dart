@@ -479,11 +479,17 @@ void main() {
       stays.dispose();
     });
 
-    test('the judge gets the card\'s real hinted; the day\'s minutes — the freshest server number', () async {
+    // RULE (CLIENT-CONV-1c §9ж): «День пройден · N минут» is the day's `minutes_spent` as the server gives it in the day
+    // read after a stage and after the talk — the talk's minutes are among them only there (BACK-TAILS-2). An answer's
+    // own `day.minutes_spent` is not a second number beside it, and the phone does not pick the larger of two.
+    // CATCHES: the day summary counting the cards' minutes without the talk's, «the freshest of two» coming back.
+    test('the judge gets the card\'s real hinted; the day\'s minutes — the day the server reads, not an answer', () async {
       final raw = _raw();
-      final backend = _FakeBackend([raw])
+      final later = _raw();
+      (later['day'] as Map<String, dynamic>)['minutes_spent'] = 7;
+      final backend = _FakeBackend([raw, later])
         ..onJudge = ((id) => const SessionJudgeOutcome(accepted: false, attempts: 1))
-        ..onAnswer = ((id, a) async => _outcome(_cardJson(raw, 'words', 1), 'passed', minutes: 7));
+        ..onAnswer = ((id, a) async => _outcome(_cardJson(raw, 'words', 1), 'passed', minutes: 9));
       final session = SessionController(backend: backend, plan: _plan(), number: 1);
       await session.load();
       session.startStage();
@@ -494,7 +500,9 @@ void main() {
       expect(session.dayMinutes, 0);
       session.submit(card, const SessionAnswer(result: SessionResult.passed, attempts: 1));
       await session.outbox.drained;
-      expect(session.dayMinutes, 7);
+      expect(session.dayMinutes, 0, reason: 'the answer\'s minutes are not the day\'s');
+      await session.afterTalk();
+      expect(session.dayMinutes, 7, reason: 'the day read again');
       session.dispose();
     });
   });
@@ -546,8 +554,11 @@ void main() {
         if (SessionRules.mayWrite(card.kind, SessionResult.passed)) {
           session.submit(card, const SessionAnswer(result: SessionResult.passed, attempts: 1));
         } else {
-          // THE PHONE GRADES A REPLAY (наряд FIX-1 §5): coverage of the frame's own words, not «any sound at all».
-          final missed = await session.judge(card, 'привет как дела');
+          // THE PHONE GRADES A REPLAY (наряд FIX-1 §5) — and is never stricter than the judge was (CLIENT-CONV-1c §1): a
+          // `speak_answer` is refused where the server refuses by code, nothing heard among it; the model's part of the
+          // verdict the phone does not have, so it does not guess it (session_rules_test «a replay of «Ответь своими
+          // словами» refuses only what the server refuses by code»).
+          final missed = await session.judge(card, ' … ');
           expect(missed.accepted, isFalse, reason: 'a replay is graded, not waved through');
           final verdict = await session.judge(card, SessionRules.expectedSpeech(card.payload));
           expect(verdict.accepted, isTrue);

@@ -1436,30 +1436,35 @@ class SpeakAnswerPayload extends CardPayload {
   );
 }
 
-/// `speak_echo` (35-3).
+/// `speak_echo` (35-3) — «Повтори через паузу» on the LEARNER'S OWN line (наряд CONV-2, п. 6: «Говорю сам» is the
+/// learner's part, and the partner's line is not theirs to repeat). The line is `own_line`; the deprecated
+/// `partner_line` the server kept for build 1.0.0 (17) is not read at all (наряд CLIENT-CONV-1c §2в) — its absence is
+/// the contract going on.
 class SpeakEchoPayload extends CardPayload {
   const SpeakEchoPayload({
     required super.sceneId,
     required this.exchange,
-    required this.partnerLine,
+    required this.ownLine,
     required this.expectedText,
     required this.speechMode,
     required this.pauseMs,
   });
 
   final CardExchange exchange;
-  final CardLine partnerLine;
+
+  /// The learner's own line — it sounds, its text closed until the answer, its translation opens with it.
+  final CardOwnLine ownLine;
   final String expectedText;
   final SpeechMode speechMode;
   final int pauseMs;
 
   @override
-  Iterable<CardAudio> get audios => [?partnerLine.audio];
+  Iterable<CardAudio> get audios => [?ownLine.audio];
 
   factory SpeakEchoPayload.fromJson(Map<String, dynamic> j) => SpeakEchoPayload(
     sceneId: _scene(j),
     exchange: CardExchange.fromJson(_map(j, 'exchange')),
-    partnerLine: CardLine.fromJson(_map(j, 'partner_line')),
+    ownLine: CardOwnLine.fromJson(_map(j, 'own_line')),
     expectedText: _str(j, 'expected_text'),
     speechMode: SpeechMode.fromWire(j['speech_mode']),
     pauseMs: _int(j, 'pause_ms'),
@@ -1515,8 +1520,23 @@ class RecallScene {
     sceneId: _str(j, 'scene_id'),
     titleTarget: (j['title_target'] as String?) ?? '',
     titleNative: _str(j, 'title_native'),
-    lines: _list(j, 'lines', CardOwnLine.fromJson),
+    lines: [
+      for (final line in _list(j, 'lines', (l) => (json: l, line: CardOwnLine.fromJson(l))))
+        if (_isLearnersLine(line.json)) line.line,
+    ],
   );
+
+  /// «ВСПОМНИТЬ» IS THE LEARNER'S OWN LINES ONLY (наряд CLIENT-CONV-1c §9д): a line of the partner is not drawn even if
+  /// a server still sends one. Whose a line is, is read off what the line says about itself — a `speaker`, else the
+  /// voice of its sound, else its ref (`x3` the partner's, `x3b` the learner's: the contract's audio refs).
+  static bool _isLearnersLine(Map<String, dynamic> j) {
+    final speaker = j['speaker'];
+    if (speaker is String) return speaker == 'learner';
+    final voice = j['audio'] is Map<String, dynamic> ? (j['audio'] as Map<String, dynamic>)['voice'] : null;
+    if (voice is String) return voice == 'learner';
+    final ref = j['ref'];
+    return ref is! String || !RegExp(r'^x\d+$').hasMatch(ref);
+  }
 }
 
 /// `recall_scenes` (37-3) — the plan's scenes in the plan's order, each with the learner's own lines. Nothing to

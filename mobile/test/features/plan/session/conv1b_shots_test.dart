@@ -375,7 +375,8 @@ void main() {
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 200));
     }
-    expect(find.textContaining('Вспомнил'), findsOneWidget);
+    // Since CLIENT-CONV-1c the stage summary is one component for every stage (30-6, решение архитектора 22.09).
+    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, startsWith('Вспомнить — пройдено'));
     await shoot(tester, '12-37-4-recall-summary');
   });
 

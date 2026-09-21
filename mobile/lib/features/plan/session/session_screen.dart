@@ -29,7 +29,6 @@ import '../plan_providers.dart';
 import 'cards/card_host.dart';
 import 'cards/card_kit.dart';
 import 'parts/session_bits.dart';
-import 'parts/session_bubbles.dart';
 import 'parts/session_chrome.dart';
 import 'parts/session_stage.dart';
 import 'session_controller.dart';
@@ -413,7 +412,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                     stage,
                     q.unitsLeft(
                       stage,
-                      openUnit: stage == PlanStage.dialogue || stage == PlanStage.speak || stage == PlanStage.recall ? q.unitKey(card) : null,
+                      openUnit: stage == PlanStage.dialogue ||
+                              stage == PlanStage.speak ||
+                              stage == PlanStage.repetition ||
+                              stage == PlanStage.recall
+                          ? q.unitKey(card)
+                          : null,
                     ),
                   ),
             beads: overview
@@ -482,6 +486,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   Widget _talkEntry(BuildContext context) => TalkEntryView(
     scene: _session.scene,
     minutes: _session.talkMinutes,
+    title: _session.talkTitle,
+    scenesCount: _session.talkScenesCount,
+    targets: _session.talkTargets,
     rehearsal: _session.day?.day.type == PlanDayType.rehearsal,
     noHints: _session.noHints,
     onNoHints: (v) => unawaited(_session.setNoHints(v)),
@@ -497,7 +504,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       _starting = true;
       _talkStartFailed = false;
     });
-    await talk.open();
+    // The ribbon opens on the server's answer, and the role's first line is said in it (37-6), not over the entry.
+    await talk.openAnswered();
     if (!mounted) return;
     setState(() => _starting = false);
     if (talk.phase == TalkPhase.openFailed) {
@@ -550,104 +558,25 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     setState(() => _starting = false);
   }
 
+  /// THE STAGE SUMMARY (30-6) — one component for every stage with cards (решение архитектора 22.09); the talk's own is
+  /// 37-12. What comes next is the next stage and the server's «≈ N мин» for it, or — after the day's last stage with
+  /// cards — the day's total.
   Widget _summary(BuildContext context) {
     final l = AppLocalizations.of(context);
     final stage = _session.stage;
     final q = _session.queue!;
     final next = _session.nextStage;
-    switch (stage) {
-      case PlanStage.dialogue || PlanStage.listen || PlanStage.speak:
-        return _stageTalkSummary(context, stage, next);
-      // «Вспомнить» closes on 30-6 (кадр 37-4): «Вспомнил · около 4 минут» and «Дальше» — no line about what is closed,
-      // a reminder has nothing to close.
-      case PlanStage.words || PlanStage.phrases || PlanStage.recall || PlanStage.conversation || PlanStage.unknown:
-        final units = q.unitsOf(stage);
-        // The rehearsal is the plan's last day: nothing of it comes back tomorrow.
-        final returning = stage == PlanStage.recall ? const <ReturningUnit>[] : [for (final key in q.returningUnits(stage)) _returning(stage, key)];
-        return SessionStageSummary(
-          title: SessionTexts.done(l, stage, _session.minutesOf(stage) ?? 0),
-          rows: _rows(current: next ?? stage),
-          returning: returning,
-          closedLine: stage == PlanStage.recall
-              ? null
-              : SessionTexts.closed(l, stage, closed: units.length - returning.length, someReturn: returning.isNotEmpty),
-          nextStage: next,
-          nextName: next == null ? null : SessionTexts.stage(l, next),
-          nextMinutes: next == null ? null : _session.day?.minutesLeft(next),
-          scene: _session.scene,
-          onClose: () => Navigator.of(context).maybePop(),
-          onNext: _session.continueAfterSummary,
-        );
-    }
-  }
-
-  /// 33-8 · 34-8 · 35-6 — the summary of a CARD stage that is a conversation; the talk's own is 37-12.
-  Widget _stageTalkSummary(BuildContext context, PlanStage stage, PlanStage? next) {
-    final l = AppLocalizations.of(context);
-    final q = _session.queue!;
-    final cards = q.cardsOf(stage);
-    final understood = SessionSummaries.understood(cards);
-    final spoke = SessionSummaries.spoke(cards);
-    final title = switch (stage) {
-      PlanStage.listen => l.planSessionUnderstoodCount(understood.right, understood.total),
-      PlanStage.speak => l.planSessionSpokeCount(spoke.said, spoke.total),
-      _ => SessionTexts.done(l, stage, _session.minutesOf(stage) ?? 0),
-    };
     final nextMinutes = next == null ? null : _session.day?.minutesLeft(next);
-    // «Listen and answer» never returns anything: its unit is the whole visit.
-    final returningKeys = stage == PlanStage.listen ? const <String>[] : q.returningUnits(stage);
-    final allCards = [for (final s in PlanStage.known) ...q.cardsOf(s)];
-    final returning = [
-      for (final key in returningKeys)
-        if (q.unitCard(stage, key) case final unit?)
-          // The exchange is looked up in its own scene: a review's x3 of one day is not x3 of another.
-          _pair(DialogueFeed.pairOf(allCards.where((c) => c.payload.sceneId == unit.payload.sceneId), unit.unit.ref)),
-    ];
-    final units = q.unitsOf(stage);
-    return SessionTalkSummary(
-      title: title,
-      returning: returning,
-      closedLine: stage == PlanStage.listen || units.isEmpty
-          ? null
-          : SessionTexts.closed(l, stage, closed: units.length - returning.length, someReturn: returning.isNotEmpty),
-      nextLabel: next == null ? l.planSessionDayTotal : SessionTexts.stage(l, next),
-      nextValue: next == null
-          ? l.planMinutesCount(_session.dayMinutes)
-          : nextMinutes == null
-          ? null
-          : l.planSessionApproxMinutes(nextMinutes),
-      buttonLabel: next == null ? l.planSessionDayDoneAction : l.planSessionNext,
+    return SessionStageSummary(
+      title: SessionTexts.passed(l, stage, _session.minutesOf(stage)),
+      rows: _rows(current: next ?? stage),
+      lines: SessionTexts.stageLines(l, stage, SessionSummaries.stageTally(q, stage), role: _session.scene?.partnerRoleNative),
+      next: next == null
+          ? (stage: null, name: l.planSessionDayTotal, value: l.planMinutesCount(_session.dayMinutes))
+          : (stage: next, name: SessionTexts.stage(l, next), value: nextMinutes == null ? null : l.planSessionApproxMinutes(nextMinutes)),
       scene: _session.scene,
       onClose: () => Navigator.of(context).maybePop(),
       onNext: _session.continueAfterSummary,
-    );
-  }
-
-  /// A returning exchange as its two bubbles — the partner's line and the learner's, with the brass mark.
-  Widget _pair(ExchangePair pair) {
-    final partner = pair.partner;
-    final own = pair.own;
-    final rows = <Widget>[
-      if (partner != null)
-        SessionPartnerRow(
-          bubble: SessionBubble(own: false, text: partner.textTarget, translation: partner.textNative),
-          listen: SessionListenButton(
-            size: 28,
-            brass: true,
-            label: AppLocalizations.of(context).planWindowListen,
-            onTap: () => unawaited(_voice.play(partner.audio, fallback: partner.textTarget, key: 'summary-${partner.ref}')),
-          ),
-        ),
-      if (own != null)
-        SessionOwnRow(
-          mark: FeedMark.returns,
-          bubble: SessionBubble(own: true, text: own.textTarget, translation: own.textNative),
-        ),
-    ];
-    final ordered = pair.learnerFirst ? rows.reversed.toList() : rows;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [for (final (i, row) in ordered.indexed) ...[if (i > 0) const SizedBox(height: 8), row]],
     );
   }
 
@@ -679,30 +608,5 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         if (context.mounted) Navigator.of(context).pop();
       },
     );
-  }
-
-  /// A unit's captions for «Coming back tomorrow» — from the stage's cards: a word — its term and photo,
-  /// a phrase — as it was said. [key] — the unit's key in the stage ([SessionQueue.unitKey]).
-  ReturningUnit _returning(PlanStage stage, String key) {
-    final q = _session.queue!;
-    final ref = q.unitCard(stage, key)?.unit.ref ?? key;
-    final term = q.payloadOfUnit<WordIntroPayload>(stage, key)?.term ??
-        q.payloadOfUnit<WordRepeatPayload>(stage, key)?.term ??
-        q.payloadOfUnit<WordAssemblePayload>(stage, key)?.term;
-    if (term != null) return (target: term.textTarget, native: term.textNative, image: term.image);
-    final said = q.payloadOfUnit<PhraseIntroPayload>(stage, key)?.said;
-    if (said != null) return (target: said.textTarget, native: said.textNative, image: null);
-    final repeat = q.payloadOfUnit<PhraseRepeatPayload>(stage, key);
-    if (repeat != null) {
-      final f = repeat.frame.filler(repeat.fillerIndex);
-      return (target: repeat.expectedText, native: f?.nativeLine ?? repeat.frame.frameNative, image: null);
-    }
-    final choose = q.payloadOfUnit<WordChoosePayload>(stage, key);
-    if (choose != null) {
-      final target = choose.termToNative ? choose.promptTextTarget : choose.correctOption?.text;
-      final native = choose.termToNative ? choose.correctOption?.text : choose.promptTextNative;
-      return (target: target ?? ref, native: native ?? '', image: choose.promptImage);
-    }
-    return (target: ref, native: '', image: null);
   }
 }

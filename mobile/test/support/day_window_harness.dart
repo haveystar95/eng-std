@@ -14,11 +14,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/audio_mixer.dart';
 import 'package:eng_std/data/line_audio.dart';
+import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/plan/day_providers.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
+import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/day/day_window_screen.dart';
 import 'package:eng_std/features/plan/day/window/window_compact_header.dart';
 import 'package:eng_std/features/plan/day/window/window_pill.dart';
@@ -34,17 +37,27 @@ const kWindowInsets = EdgeInsets.only(top: 52, bottom: 34);
 /// Сервер дня для теста: ответ можно поменять между входами в окно, чтения считаются; рядом — что окно
 /// попросило докачать и что оно сказало вслух.
 class WindowServer {
-  WindowServer(this.room, {Plan? plan}) : plan = plan ?? planFrom('plan_window');
+  WindowServer(this.room, {Plan? plan, this.api, this.db, this.recognizer}) : plan = plan ?? planFrom('plan_window');
 
   PlanDayRoom room;
 
-  /// The plan the window is opened from — the route a review and the rehearsal read their list off.
+  /// The plan the window is opened from.
   final Plan plan;
   int reads = 0;
   final RecordingLines lines = RecordingLines();
 
   /// Тексты, отданные синтезу или плееру, по порядку.
   final List<String> spoken = [];
+
+  /// What the window's writes reach — «Повторить разговор» starts a talk through it (наряд CLIENT-CONV-1c §9г); null —
+  /// the app's own client, for tests that never write.
+  final ApiClient? api;
+
+  /// The local store the talk reads «Без подсказок» from; null — the app's own.
+  final AppDatabase? db;
+
+  /// The microphone of a talk the window opens; null — the app's own.
+  final SpeechRecognizer? recognizer;
 }
 
 /// Экран окна над ответом сервера. [reduceMotion] — снимок (конечные состояния); без него — поведение
@@ -61,6 +74,9 @@ Widget dayWindowApp(WindowServer server, {bool reduceMotion = true, bool launche
         return server.room;
       }),
       lineAudioCacheProvider.overrideWithValue(server.lines),
+      if (server.api case final api?) apiClientProvider.overrideWithValue(api),
+      if (server.db case final db?) appDatabaseProvider.overrideWithValue(db),
+      if (server.recognizer case final recognizer?) speechRecognizerProvider.overrideWithValue(recognizer),
     ],
     child: MaterialApp(
       debugShowCheckedModeBanner: false,

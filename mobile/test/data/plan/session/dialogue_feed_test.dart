@@ -85,17 +85,4 @@ void main() {
     final skipped = _dialogueAnsweredBefore(3, skipped: {2});
     expect(DialogueFeed.before(dialogueOf(skipped), at(skipped, 3)).firstWhere((f) => f.own).mark, FeedMark.none);
   });
-
-  test('an exchange\'s pair from any card that carries it; an ask starts with the learner', () {
-    final day = SessionDay.fromJson(_raw());
-    final all = [for (final s in day.stages) ...s.cards];
-    final x1 = DialogueFeed.pairOf(all, 'x1');
-    expect(x1.partner?.textTarget, 'Where does it hurt: his upper back or his lower back?');
-    expect(x1.own?.textTarget, 'It hurts in his lower back.');
-    expect(x1.learnerFirst, isFalse);
-    final x7 = DialogueFeed.pairOf(all, 'x7');
-    expect(x7.own?.textTarget, 'Do we need an X-ray?');
-    expect(x7.partner?.textTarget, 'No, an X-ray is not needed for a muscle strain.');
-    expect(x7.learnerFirst, isTrue);
-  });
 }

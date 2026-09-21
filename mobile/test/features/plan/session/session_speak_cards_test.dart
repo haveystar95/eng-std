@@ -102,12 +102,21 @@ void main() {
     });
 
     // ПРАВИЛО (кадр 35-2 «сказал · не зачтено»): сказанное остаётся в тёмном пузыре — ЦВЕТОМ БУМАГИ, как любая
-    // своя реплика; строка судьи — Inter 15/500 чернилами, слева под пузырём, от края ленты (24); «Ещё раз» —
-    // кнопкой, «Пропустить» — ссылкой. Микрофона в этом состоянии нет: следующая попытка начинается с «Ещё раз».
+    // своя реплика; строка судьи — Inter 15/500 чернилами, слева под пузырём, от края ленты (24); под ней
+    // «услышал: …» — ТО, ЧТО СУДИЛ СУДЬЯ (`heard` ответа, наряд CLIENT-CONV-1c §2г); и сразу под ними, в 12, чип
+    // «Скажи, что…» во всю ширину ленты (§7). «Ещё раз» — кнопкой, «Пропустить» — ссылкой. Микрофона в этом
+    // состоянии нет: следующая попытка начинается с «Ещё раз».
     // ЛОВИТ: серую реплику в пузыре и серую строку судьи справа — 35-2 до приёмки снимков; причину отказа,
-    // спрятанную под микрофон; «Ещё раз» ссылкой наравне с «Пропустить».
-    testWidgets('не зачтено — реплика бумагой, строка судьи чернилами слева, «Ещё раз» кнопкой', (tester) async {
-      final probe = CardProbe()..verdict = (_) => rejected;
+    // спрятанную под микрофон; «Ещё раз» ссылкой наравне с «Пропустить»; «услышал» из распознавателя телефона, когда
+    // судья судил другое; чип над микрофоном вместо строки под судьёй.
+    testWidgets('не зачтено — реплика бумагой, строка судьи чернилами слева, чип под ней, «Ещё раз» кнопкой', (tester) async {
+      final probe = CardProbe()
+        ..verdict = (_) => const SessionJudgeOutcome(
+          accepted: false,
+          reasonNative: 'Ты сказал не про время.',
+          attempts: 1,
+          heard: 'It started the cart',
+        );
       await pumpCard(tester, probeEnv(speakAt(2), probe));
       await tester.pump(const Duration(milliseconds: 300));
       await sayDebug(tester, 'It started the car');
@@ -131,11 +140,20 @@ void main() {
       expect(tester.getRect(judge).left, moreOrLessEquals(tester.getRect(find.byType(TalkPartnerBubble)).left, epsilon: 0.5),
           reason: 'слева, от края ленты');
       expect(tester.getRect(judge).top, greaterThanOrEqualTo(tester.getRect(own).bottom), reason: 'под пузырём');
-      // CLIENT-CONV-1b: under the judge's line — what the phone heard; and the chip is up AT ONCE, no five seconds.
+      // Under the judge's line — what the JUDGE judged, not what the phone recognised: a refusal over a misheard word
+      // then reads as one (CONV-2 п. 8).
       final heard = find.byKey(const ValueKey('session-heard-text'));
-      expect(tester.widget<Text>(heard).data, 'услышал: It started the car');
+      expect(tester.widget<Text>(heard).data, 'услышал: It started the cart');
       expect(tester.getRect(heard).top, greaterThanOrEqualTo(tester.getRect(judge).bottom), reason: 'под строкой судьи');
+      // The chip is up AT ONCE, no five seconds — in the ribbon, 12 under «услышал», the ribbon's width.
+      await tester.pump(const Duration(milliseconds: 400));
+      final chip = find.byKey(const ValueKey('talk-hint-chip'));
       expect(find.text('Скажи, что началось три дня назад'), findsOneWidget, reason: 'чип сразу после промаха');
+      expect(tester.getRect(chip).top - tester.getRect(heard).bottom, moreOrLessEquals(12, epsilon: 0.5), reason: 'в 12 под «услышал»');
+      expect(tester.getRect(chip).left, moreOrLessEquals(tester.getRect(judge).left, epsilon: 0.5), reason: 'во всю ширину ленты');
+      expect(tester.getRect(chip).right, moreOrLessEquals(tester.getRect(judge).right, epsilon: 0.5));
+      expect(tester.getRect(chip).bottom, lessThan(tester.getRect(find.byKey(const ValueKey('exit-skip'))).top),
+          reason: 'в ленте, над ссылкой «Пропустить», а не в доке');
       expect(find.byKey(const ValueKey('talk-mic')), findsNothing);
       expect(dockEnabled(tester, 'Ещё раз'), isTrue);
 
@@ -167,6 +185,8 @@ void main() {
       await tester.pump();
       expect(probe.hinted, [false]);
       expect(find.byKey(const ValueKey('talk-hint-chip')), findsNothing);
+      // A verdict with no `heard` (a server before CONV-2) — «услышал» prints what the phone recognised.
+      expect(tester.widget<Text>(find.byKey(const ValueKey('session-heard-text'))).data, 'услышал: It started the car');
       await settleCard(tester);
     });
 
@@ -219,17 +239,53 @@ void main() {
   });
 
   group('35-3 speak_echo', () {
-    // Since CONV-2 (21.09) the echo is dealt on the LEARNER'S own line and `partner_line` carries that same line for
-    // builds up to 17 (DECISIONS 366–378); the fixtures were regenerated with it. The rules below hold for any line, so
-    // the line is read off the card, not written into the test.
+    // Since CONV-2 (21.09) the echo is dealt on the LEARNER'S own line (`own_line`); `partner_line` carries that same
+    // line only for builds up to 17 (DECISIONS 366–378), and this build reads `own_line` alone (CLIENT-CONV-1c §2в).
+    // The rules below hold for any line, so the line is read off the card, not written into the test.
     SpeakEchoPayload echoOf() => speakAt(7).payload as SpeakEchoPayload;
+
+    // RULE (CLIENT-CONV-1c §2в, §9е): the echo shows and sounds the learner's own line with its translation, and
+    // `partner_line` is not read — a payload without it is a whole card, and a payload whose `partner_line` says
+    // something else changes nothing on the screen.
+    // CATCHES: a card that still reads the deprecated field (it would sound and open the partner's line, or fail to
+    // parse once the server drops it).
+    testWidgets('the echo reads `own_line` — `partner_line` absent or different changes nothing', (tester) async {
+      final own = echoOf().ownLine;
+      final without = fixtureCardEdited('day-doctor', 'speak_echo', (p) => p.remove('partner_line'));
+      final other = fixtureCardEdited('day-doctor', 'speak_echo', (p) {
+        p['partner_line'] = {
+          'ref': 'x3',
+          'audio': {'ref': 'x3', 'url': 'http://localhost/api/v1/plans/audio/ulid-0007', 'duration_ms': 2100, 'voice': 'partner'},
+          'text_native': 'Где болит?',
+          'text_target': 'Where does it hurt?',
+        };
+      });
+      for (final card in [without, other]) {
+        expect((card.payload as SpeakEchoPayload).ownLine.textTarget, own.textTarget);
+        final probe = CardProbe();
+        final voice = QuietVoice();
+        await pumpCard(tester, probeEnv(card, probe, voice: voice));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
+        expect(voice.played, ['${own.audio!.ref}@1.0'], reason: 'the learner\'s own file sounds');
+        await tester.pump(const Duration(milliseconds: 3000));
+        await tester.pump();
+        await sayDebug(tester, own.textTarget.replaceAll(RegExp(r'[,.?!]'), ''));
+        await tester.pump(const Duration(milliseconds: 250));
+        expect(tester.widget<SessionMarkedText>(find.byKey(const ValueKey('echo-text'))).text, own.textTarget);
+        expect(find.text(own.textNative), findsOneWidget, reason: 'the own line\'s translation');
+        expect(find.text('Where does it hurt?'), findsNothing);
+        expect(find.text('Где болит?'), findsNothing);
+        await settleCard(tester);
+      }
+    });
 
     // CATCHES: the text shown before the answer, a microphone that records during the pause, a pass that leaves before
     // the revealed line is read.
     testWidgets('the line sounds, the pause ring holds the microphone, then the answer — the line opens, matched words in sage', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
-      final line = echoOf().partnerLine;
+      final line = echoOf().ownLine;
       await pumpCard(tester, probeEnv(speakAt(7), probe, voice: voice));
       expect(find.text('Повтори через паузу'), findsOneWidget);
       expect(find.text('текст закрыт'), findsOneWidget);
@@ -275,7 +331,7 @@ void main() {
       final echo = CardProbe();
       await pumpCard(tester, probeEnv(speakAt(7), echo));
       await tester.pump(const Duration(milliseconds: 3400));
-      await sayDebug(tester, echoOf().partnerLine.textTarget.replaceAll(RegExp(r'[,.?!]'), ''));
+      await sayDebug(tester, echoOf().ownLine.textTarget.replaceAll(RegExp(r'[,.?!]'), ''));
       expect(results(echo), [SessionResult.passed]);
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();

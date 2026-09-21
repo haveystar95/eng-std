@@ -21,10 +21,11 @@ import 'package:eng_std/theme/theme.dart';
 import '../../../support/session_harness.dart' show SilentRecognizer, enterHeard;
 import '../../../support/talk_harness.dart';
 
-/// THE TALK WITH THE AGENT ON THE REAL SCREEN (наряд CLIENT-CONV-1a, кадры 37-6…37-12).
+/// THE TALK WITH THE AGENT ON THE REAL SCREEN (наряды CLIENT-CONV-1a, CLIENT-CONV-1c; кадры 37-6…37-12, SESSION-DES-4).
 ///
 /// Every document here is a snapshot of the live server — a talk that was actually had on
-/// `wordtrainer_e2e_test`, with its rescue, its hint and its summary.
+/// `wordtrainer_e2e_test`, with its rescue, its hint and its summary: the talk before CONV-2 ([talkFixture]) and the
+/// talk of CONV-2's contract ([talkV2]) — targets, the title, «Sorry?», the intention as a clause.
 DioException _problem(int code, String problem) => DioException(
   requestOptions: RequestOptions(path: '/x'),
   type: DioExceptionType.badResponse,
@@ -46,6 +47,8 @@ DioException _offline() => DioException(requestOptions: RequestOptions(path: '/x
 void main() {
   final open = talkFixture('conversation-day-open');
   final ended = talkFixture('conversation-day-ended');
+  final openV2 = talkV2('talk_day_open_v2');
+  final endedV2 = talkV2('talk_day_ended_v2');
 
   /// The phrases of the day behind the server's `phrases_used` — the sage underline needs their text.
   const phrases = {'p1': 'My son has a fever.', 'p2': 'He has had it for three days.'};
@@ -123,27 +126,34 @@ void main() {
       await settleTalk(tester);
     });
 
-    // RULE (правка прохода 21.09, наряд CLIENT-CONV-1b): THE ROLE'S TEXT IS OPEN WITH ITS VOICE — the words stand from
-    // the first sound, «прослушать» 28 in the top right corner of the light container (12 from the top, 14 from the
-    // edge, as 37-8 draws an open line), and there is no «текст» to tap. «Прервано» stands over the words of a line cut
-    // off (37-9). Under «Без подсказок» the lines stay CLOSED, as before: the wave alone while the role speaks, then
-    // «прослушать» 28 alone (12 + 28 + 12), and nothing that opens them.
-    // CATCHES: a line that waits for a tap to be read (the pass of 21.09), a «текст» chip left in the container, and
-    // the text opened under «Без подсказок».
-    testWidgets('текст роли открыт по умолчанию, закрыт в «Без подсказок»', (tester) async {
+    // RULE (наряд CLIENT-CONV-1c §5, SESSION-DES-4 «Волна»): THE ROLE'S TEXT IS OPEN WITH ITS VOICE — the plate rises
+    // with the move's answer and its words stand from that moment, «прослушать» 28 in the top right corner (12 from the
+    // top, 14 from the edge), and WHILE THE LINE SOUNDS a brass wave runs along the plate's bottom edge, 10 under the
+    // translation; the line said, the wave goes and «прослушать» stays. The circle itself never turns into a wave, and
+    // there is no «текст» to tap. «Прервано» stands over the words of a line cut off (37-9). Under «Без подсказок» the
+    // lines stay CLOSED until the summary: «прослушать» 28 alone (12 + 28 + 12), the same edge wave under it while the
+    // line sounds, and nothing that opens them.
+    // CATCHES: the wave inside the circle in place of the edge wave (the frame before SESSION-DES-4), a wave that stays
+    // after the line, a line that waits for a tap to be read, a «текст» chip, and the text opened under «Без подсказок».
+    testWidgets('текст роли открыт с голосом, волна по нижней кромке, пока реплика звучит', (tester) async {
       Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
       Rect plate(int index) => tester.getRect(inTurn(index, find.byType(SessionBubble)));
       Rect circle(int index) => tester.getRect(inTurn(index, find.byKey(const ValueKey('talk-listen')))).deflate(8);
+      const last = 'How long has he been sick?';
 
-      final probe = TalkProbe()..documents.add(open);
-      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+      final probe = TalkProbe()..documents.add(openV2);
+      final stand = await pumpTalk(tester, probe);
 
-      // The role is speaking — and its words are already on screen, the corner circle holding the wave.
+      // The role is speaking — its words are on screen, and the wave runs along the plate's edge, under the words.
       expect(stand.talk.phase, TalkPhase.agentSpeaking);
       expect(find.text('слушай'), findsOneWidget, reason: '«слушай» over the dimmed button while the role speaks');
-      expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsOneWidget);
-      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsNothing, reason: 'no wave-only plate: the text is open');
-      expect(tester.widget<SessionListenButton>(inTurn(5, find.byType(SessionListenButton))).playing, isTrue);
+      expect(find.text(last), findsOneWidget);
+      final wave = inTurn(5, find.byKey(const ValueKey('talk-line-wave')));
+      expect(wave, findsOneWidget, reason: 'the edge wave while the line sounds');
+      expect(tester.getRect(wave).top - tester.getRect(inTurn(5, find.text('Как долго он болеет?'))).bottom, moreOrLessEquals(10, epsilon: 0.5));
+      expect(plate(5).bottom - tester.getRect(wave).bottom, moreOrLessEquals(12, epsilon: 0.5), reason: 'on the bottom edge');
+      expect(tester.widget<SessionListenButton>(inTurn(5, find.byType(SessionListenButton))).playing, isFalse,
+          reason: 'the circle stays «прослушать»');
       for (final index in [1, 5]) {
         final p = plate(index);
         final c = circle(index);
@@ -151,32 +161,45 @@ void main() {
         expect(p.right - c.right, moreOrLessEquals(14, epsilon: 0.5), reason: 'turn $index: 14 from the right edge');
         expect(c.top - p.top, moreOrLessEquals(12, epsilon: 0.5), reason: 'turn $index: 12 from the top');
       }
+      expect(inTurn(1, find.byKey(const ValueKey('talk-line-wave'))), findsNothing, reason: 'only the line that sounds');
       expect(find.text('текст'), findsNothing, reason: 'there is nothing to open');
       expect(find.byType(SessionTextExit), findsNothing);
 
+      // Said: the wave goes, «прослушать» stays.
+      await finishLine(tester, stand);
+      expect(wave, findsNothing);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-listen'))), findsOneWidget);
+      expect(find.text(last), findsOneWidget);
+      await settleTalk(tester);
+
       // Cut off: «прервано» over the open words, inside the container.
+      final cutProbe = TalkProbe()..documents.add(openV2);
+      await pumpTalk(tester, cutProbe);
       await tester.tap(find.byKey(const ValueKey('talk-mic')));
       await tester.pump();
       await tester.pump();
       final mark = tester.getRect(inTurn(5, find.byKey(const ValueKey('talk-interrupted'))));
       expect(mark.top, greaterThanOrEqualTo(plate(5).top));
-      expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsOneWidget);
+      expect(find.text(last), findsOneWidget);
       await settleTalk(tester);
 
-      // «Без подсказок»: closed — the wave alone while the role speaks, then the circle alone.
-      final blind = talkFixtureEdited('conversation-day-open', (json) {
+      // «Без подсказок»: closed — the circle alone, the edge wave under it while the line sounds.
+      final blind = talkV2('talk_day_open_v2', (json) {
         (json['hints'] as Map<String, dynamic>)
           ..['enabled'] = false
           ..['native'] = null;
       });
       final blindProbe = TalkProbe()..documents.add(blind);
-      final blindStand = await pumpTalk(tester, blindProbe, hints: false, phraseTexts: phrases);
-      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsOneWidget, reason: 'the role speaks — the wave alone');
-      expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsNothing);
+      final blindStand = await pumpTalk(tester, blindProbe, hints: false);
+      expect(find.text(last), findsNothing);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-listen'))), findsOneWidget, reason: '«прослушать» alone');
+      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsOneWidget, reason: 'the edge wave while it sounds');
       final closed = plate(1);
       expect(closed.height, moreOrLessEquals(52, epsilon: 0.5), reason: '12 + 28 + 12, as in the frame');
       expect(circle(1).left - closed.left, moreOrLessEquals(14, epsilon: 0.5));
       await finishLine(tester, blindStand);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsNothing);
+      expect(plate(5).height, moreOrLessEquals(52, epsilon: 0.5));
       expect(find.text('текст'), findsNothing, reason: 'no way to open a line under «Без подсказок»');
       await settleTalk(tester);
     });
@@ -269,31 +292,73 @@ void main() {
       await settleTalk(tester);
     });
 
-    // ПРАВИЛО: `phrases_used` называет фразу ССЫЛКОЙ, без текста и без границ. Текста фразы у дня
-    // нет — подчерка нет вовсе: клиент не гадает, что именно услышал сервер (отчёт §5).
-    testWidgets('фраза, текста которой у дня нет, не подчёркивается', (tester) async {
+    // ПРАВИЛО: сервер до CONV-2 называл фразу только ССЫЛКОЙ. Текста фразы нет ни в ответе, ни у дня — подчерка нет
+    // вовсе: клиент не гадает, что именно услышал сервер.
+    testWidgets('фраза без текста — ни в ответе, ни у дня — не подчёркивается', (tester) async {
       final probe = TalkProbe()..documents.add(open);
       await pumpTalk(tester, probe);
       expect(tester.widget<TalkSageUnderline>(find.byType(TalkSageUnderline)).marks, isEmpty);
       await settleTalk(tester);
     });
 
-    // ПРАВИЛО (кадр 37-7, «после „Не понял"»): переспрос виден в ленте — пометкой на стороне ученика.
-    // Тёмный пузырь — только сказанное, а слов у переспроса сервер не пишет (`text_target` пуст),
-    // поэтому «Sorry?» канвы телефон не выдумывает.
-    // ЛОВИТ: две одинаковые реплики роли подряд без единого знака между ними — так лента выглядела в
-    // живом прогоне; и пустой тёмный пузырь на месте переспроса.
-    testWidgets('переспрос — пометка в ленте, не тёмный пузырь', (tester) async {
+    // ПРАВИЛО (CONV-2 п. 10): `phrases_used` несёт текст фразы — подчерк встаёт по нему, и дню не нужно знать эту
+    // фразу (у репетиции фразы чужих сцен).
+    // ЛОВИТ: подчерк только по фразам дня — сказанное из другой сцены без линии шалфея.
+    testWidgets('подчерк по тексту фразы из ответа сервера, без словаря дня', (tester) async {
+      final probe = TalkProbe()..documents.add(openV2);
+      await pumpTalk(tester, probe);
+      final line = tester.widget<TalkSageUnderline>(
+        find.descendant(of: find.byKey(const ValueKey('turn-2')), matching: find.byType(TalkSageUnderline)),
+      );
+      expect(line.text, 'My son has a fever.');
+      expect([for (final m in line.marks) line.text.substring(m.start, m.end)], ['My', 'son', 'has', 'a', 'fever']);
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (кадр 37-7 «после „Не понял"», CONV-2 п. 4а, наряд CLIENT-CONV-1c §2б): ход `rescue` несёт слова — «Sorry?»
+    // на языке разговора — и стоит своим тёмным пузырём между двумя репликами роли: без перевода под ним и без
+    // подчерка в нём. Пометки «переспросил» больше нет.
+    // ЛОВИТ: пометку «переспросил» на месте пузыря (сборка 18) и перевод или шалфей в пузыре переспроса.
+    testWidgets('переспрос — свой тёмный пузырь «Sorry?», без перевода; пометки нет', (tester) async {
+      final probe = TalkProbe()..documents.add(openV2);
+      await pumpTalk(tester, probe);
+
+      // Журнал: 1 роль · 2 сказал · 3 роль · 4 переспрос · 5 роль говорит иначе.
+      final rescue = find.byKey(const ValueKey('turn-4'));
+      expect(tester.widget<TalkOwnBubble>(rescue).text, 'Sorry?');
+      expect(tester.widget<TalkOwnBubble>(rescue).marks, isEmpty, reason: 'в переспросе нет фраз плана');
+      expect(find.descendant(of: rescue, matching: find.byType(Text)), findsOneWidget, reason: 'только «Sorry?», перевода нет');
+      expect(find.text('переспросил'), findsNothing);
+      final bubble = tester.getRect(rescue);
+      expect(tester.getRect(find.byKey(const ValueKey('turn-3'))).bottom, lessThanOrEqualTo(bubble.top));
+      expect(tester.getRect(find.byKey(const ValueKey('turn-5'))).top, greaterThanOrEqualTo(bubble.bottom), reason: 'между двумя репликами роли');
+      final plate = tester.widget<SessionBubble>(find.descendant(of: rescue, matching: find.byType(SessionBubble)));
+      expect(plate.own, isTrue, reason: 'тёмный пузырь ученика');
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО: переспрос сервера до CONV-2 — без слов (`text_target` пуст): на его месте нет ни пузыря, ни пометки;
+    // и пока «Не понял» в полёте, телефон не пишет «Sorry?» за сервер.
+    // ЛОВИТ: пустой тёмный пузырь и выдуманное телефоном «Sorry?».
+    testWidgets('переспрос без слов — ничего на его месте; в полёте — ничего до ответа', (tester) async {
       final probe = TalkProbe()..documents.add(open);
       await pumpTalk(tester, probe, phraseTexts: phrases);
-
-      // Журнал: 1 роль · 2 переспрос · 3 роль повторяет · 4 сказал · 5 роль.
-      expect(find.byType(TalkRescueMark), findsOneWidget);
-      expect(find.text('переспросил'), findsOneWidget);
+      expect(find.byKey(const ValueKey('turn-2')), findsNothing, reason: 'ход без слов не рисуется');
       expect(find.byType(TalkOwnBubble), findsOneWidget, reason: 'тёмный пузырь — только у сказанного (ход 4)');
-      final mark = tester.getTopLeft(find.byKey(const ValueKey('turn-2'))).dy;
-      expect(tester.getTopLeft(find.byKey(const ValueKey('turn-1'))).dy, lessThan(mark));
-      expect(tester.getTopLeft(find.byKey(const ValueKey('turn-3'))).dy, greaterThan(mark), reason: 'пометка стоит между двумя репликами роли');
+      await settleTalk(tester);
+
+      final hold = Completer<void>();
+      final flight = TalkProbe()
+        ..documents.addAll([openV2, openV2])
+        ..holdMove = hold;
+      final stand = await pumpTalk(tester, flight);
+      await finishLine(tester, stand);
+      await tester.tap(find.byKey(const ValueKey('talk-rescue')));
+      await tester.pump();
+      expect(stand.talk.phase, TalkPhase.sending);
+      expect(find.byKey(const ValueKey('talk-pending')), findsNothing, reason: 'слова переспроса — сервера');
+      expect(find.byKey(const ValueKey('talk-thinking')), findsOneWidget);
+      hold.complete();
       await settleTalk(tester);
     });
   });
@@ -381,11 +446,11 @@ void main() {
 
     // ПРАВИЛО (кадр 37-7): подсказка приходит сама через `hints.delay_ms` молчания — или по нажатию,
     // и тогда кнопка уходит: вместе они не стоят. Префикс «Скажи, что …» печатает клиент, намерение
-    // приходит готовым.
-    // ЛОВИТ: чип и кнопку, стоящие рядом, и склонение намерения на телефоне.
+    // приходит ПРИДАТОЧНЫМ (CONV-2 п. 11) и встаёт в чип как пришло — своей правки у клиента больше нет.
+    // ЛОВИТ: чип и кнопку, стоящие рядом, и правку сервера на телефоне («TalkTexts.clause», снесён).
     testWidgets('чип встаёт по молчанию, и «Подсказать» уходит вместе с ним', (tester) async {
-      final probe = TalkProbe()..documents.add(open);
-      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+      final probe = TalkProbe()..documents.add(openV2);
+      final stand = await pumpTalk(tester, probe);
       await finishLine(tester, stand);
       expect(find.byKey(const ValueKey('talk-hint')), findsOneWidget);
       expect(find.byKey(const ValueKey('talk-hint-chip')), findsNothing);
@@ -393,9 +458,16 @@ void main() {
       await tester.pump(const Duration(seconds: 6));
       expect(find.byKey(const ValueKey('talk-hint-chip')), findsOneWidget);
       expect(find.byKey(const ValueKey('talk-hint')), findsNothing);
-      // Сервер шлёт намерение ЦЕЛЫМ предложением, и в «Скажи, что …» оно встаёт придаточным: строчная
-      // буква, без точки. Живой прогон поймал «Скажи, что У моего сына температура.».
-      expect(find.text('Скажи, что у моего сына температура'), findsOneWidget);
+      expect(find.text('Скажи, что он болеет уже три дня'), findsOneWidget, reason: 'hints.native — как пришло');
+      await settleTalk(tester);
+
+      // An intention the server did not make a clause stays as it came too: the phone no longer edits the server.
+      final sentence = talkV2('talk_day_open_v2', (json) => (json['hints'] as Map<String, dynamic>)['native'] = 'Он болеет уже три дня.');
+      final sentenceStand = await pumpTalk(tester, TalkProbe()..documents.add(sentence));
+      await finishLine(tester, sentenceStand);
+      await tester.tap(find.byKey(const ValueKey('talk-hint')));
+      await tester.pump();
+      expect(find.text('Скажи, что Он болеет уже три дня.'), findsOneWidget);
       await settleTalk(tester);
     });
   });
@@ -607,6 +679,187 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('talk-summary-action')));
       await tester.pump();
       expect(summaries, 1);
+      expect(find.byKey(const ValueKey('talk-strip')), findsNothing, reason: 'a talk without targets has no strip');
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (наряд CLIENT-CONV-1c §4): после конца (37-11) полоска стоит над листом «Разговор окончен» и показывает
+    // итог — «фразы · 3 из 7», тот же счёт, что у итога 37-12; тап по ней — тот же лист фраз.
+    // ЛОВИТ: полоску, пропавшую вместе с доком микрофона, и счёт полоски, расходящийся с итогом.
+    testWidgets('37-11: полоска над листом конца — итог фраз', (tester) async {
+      final probe = TalkProbe()..documents.add(endedV2);
+      final stand = await pumpTalk(tester, probe);
+      await finishLine(tester, stand);
+      expect(stand.talk.phase, TalkPhase.ended);
+      final strip = find.byKey(const ValueKey('talk-strip'));
+      expect(find.descendant(of: strip, matching: find.text('фразы · 3 из 7')), findsOneWidget);
+      expect(endedV2.summary!.phrasesUsed, 3, reason: 'the summary counts the same list');
+      expect(tester.getRect(strip).bottom, lessThanOrEqualTo(tester.getRect(find.text('Разговор окончен')).top), reason: 'над листом');
+      await tester.tap(strip);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('talk-phrase-sheet')), findsOneWidget);
+      await settleTalk(tester);
+    });
+  });
+
+  group('37-6…37-11 · полоска фраз и её лист', () {
+    Future<void> expectStrip(WidgetTester tester, String text, String state) async {
+      final strip = find.byKey(const ValueKey('talk-strip'));
+      expect(strip, findsOneWidget, reason: state);
+      expect(find.descendant(of: strip, matching: find.text(text)), findsOneWidget, reason: state);
+      expect(tester.getSize(strip).height, 44, reason: '$state: a plate 44');
+    }
+
+    // ПРАВИЛО (наряд §4, SESSION-DES-4): полоска «фразы · N из M» — часть дока, над микрофоном во ВСЕХ состояниях ленты:
+    // роль говорит, твоя очередь (покой, чип, запись), ход в полёте, прервал, сбои. N и M — из `targets[]` последнего
+    // ответа: N — сколько `said`, M — сколько целей. Между полоской и тем, что под ней, — 14.
+    // ЛОВИТ: полоску, пропадающую в каком-то из состояний, и счёт, посчитанный на телефоне.
+    testWidgets('полоска стоит во всех состояниях ленты', (tester) async {
+      final hold = Completer<void>();
+      final probe = TalkProbe()
+        ..documents.addAll([openV2, openV2])
+        ..holdMove = hold;
+      final stand = await pumpTalk(tester, probe, recognizer: ListeningRecognizer());
+      await expectStrip(tester, 'фразы · 1 из 5', 'роль говорит (37-6)');
+      final caption = tester.getRect(find.byKey(const ValueKey('talk-caption')));
+      expect(caption.top - tester.getRect(find.byKey(const ValueKey('talk-strip'))).bottom, moreOrLessEquals(14, epsilon: 0.5));
+
+      await finishLine(tester, stand);
+      await expectStrip(tester, 'фразы · 1 из 5', 'твоя очередь (37-7)');
+      await tester.pump(const Duration(seconds: 6));
+      expect(find.byKey(const ValueKey('talk-hint-chip')), findsOneWidget);
+      await expectStrip(tester, 'фразы · 1 из 5', 'подсказка (37-7)');
+      expect(tester.getRect(find.byKey(const ValueKey('talk-strip'))).bottom, lessThan(tester.getRect(find.byKey(const ValueKey('talk-hint-chip'))).top),
+          reason: 'the strip over the chip');
+
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      expect(stand.mics.single.state, MicState.listening);
+      await expectStrip(tester, 'фразы · 1 из 5', 'слушаю (37-7)');
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      await tester.pump();
+      expect(stand.talk.trouble, TalkTrouble.unheard);
+      await expectStrip(tester, 'фразы · 1 из 5', 'не расслышал (37-10)');
+
+      await tester.tap(find.byKey(const ValueKey('talk-rescue')));
+      await tester.pump();
+      expect(stand.talk.phase, TalkPhase.sending);
+      await expectStrip(tester, 'фразы · 1 из 5', 'ход в полёте (37-8)');
+      hold.complete();
+      await tester.pump();
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('talk-interrupted')), findsOneWidget);
+      await expectStrip(tester, 'фразы · 1 из 5', 'прервал (37-9)');
+      await settleTalk(tester);
+
+      final failing = TalkProbe()
+        ..documents.addAll([openV2, openV2])
+        ..failMove = _offline();
+      final broken = await pumpTalk(tester, failing);
+      await finishLine(tester, broken);
+      await _say(tester);
+      expect(broken.talk.trouble, TalkTrouble.offline);
+      await expectStrip(tester, 'фразы · 1 из 5', 'связь пропала (37-10)');
+      await settleTalk(tester);
+
+      final silent = TalkProbe()
+        ..documents.addAll([openV2, openV2])
+        ..failMove = _problem(503, 'plan_conversation_unavailable');
+      final mute = await pumpTalk(tester, silent);
+      await finishLine(tester, mute);
+      await _say(tester);
+      expect(mute.talk.trouble, TalkTrouble.agentSilent);
+      await expectStrip(tester, 'фразы · 1 из 5', 'роль не отвечает (37-10)');
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (37-8b, SESSION-DES-4 «Зачёт»): ответ хода принёс новую сказанную фразу — полоска уходит в шалфей 15 % и
+    // слева от шеврона встаёт галка шалфеем на 260 мс, потом снова бумага; «2 из 5» — счёт сервера.
+    // ЛОВИТ: вспышку без роста счёта, счёт без вспышки и шалфей, оставшийся навсегда.
+    testWidgets('37-8b: фраза прозвучала — вспышка шалфея 260 мс и галка', (tester) async {
+      final answered = talkV2('talk_day_open_v2', (json) {
+        ((json['targets'] as List<dynamic>)[1] as Map<String, dynamic>)['said'] = true;
+      });
+      final probe = TalkProbe()..documents.addAll([openV2, answered]);
+      final stand = await pumpTalk(tester, probe);
+      await finishLine(tester, stand);
+      BoxDecoration plate() => tester.widget<Container>(find.byKey(const ValueKey('talk-strip'))).decoration! as BoxDecoration;
+      expect(plate().color, AppColors.paper);
+      expect(find.byKey(const ValueKey('talk-strip-check')), findsNothing);
+
+      await _say(tester);
+      expect(find.text('фразы · 2 из 5'), findsOneWidget);
+      expect(plate().color, AppColors.sessionSageWash, reason: 'шалфей 15 %');
+      final check = find.byKey(const ValueKey('talk-strip-check'));
+      expect(check, findsOneWidget);
+      expect(tester.getSize(check), const Size(20, 20));
+      expect(tester.widget<Icon>(find.descendant(of: check, matching: find.byType(Icon))).color, AppColors.verdictKnown);
+      await tester.pump(const Duration(milliseconds: 270));
+      expect(plate().color, AppColors.paper, reason: 'через 260 мс — снова бумага');
+      expect(check, findsNothing);
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (37-8d): тап по полоске — лист снизу над затемнением 40 %: «Фразы дня» и крестик 24, строки фраз в порядке
+    // сервера через 12; сказанная — на шалфее 15 % с галкой 20 справа, несказанная — в контуре 1,5 без заливки; в каждой
+    // фраза Literata 17, перевод 15 второй строкой, «прослушать» 28 — он играет свою фразу. Крестик закрывает лист.
+    // ЛОВИТ: лист с фразами дня вместо целей разговора, галки не по `said` и «прослушать» не той фразы.
+    testWidgets('37-8d: лист фраз — сказанные на шалфее с галкой, несказанные в контуре', (tester) async {
+      final probe = TalkProbe()..documents.add(openV2);
+      final stand = await pumpTalk(tester, probe);
+      await finishLine(tester, stand);
+      await tester.tap(find.byKey(const ValueKey('talk-strip')));
+      await tester.pumpAndSettle();
+
+      final sheet = find.byKey(const ValueKey('talk-phrase-sheet'));
+      expect(find.descendant(of: sheet, matching: find.text('Фразы дня')), findsOneWidget);
+      final tops = <double>[];
+      for (final t in openV2.targets) {
+        final row = find.byKey(ValueKey('talk-phrase-${t.sceneId}-${t.ref}'));
+        expect(row, findsOneWidget, reason: t.ref);
+        final box = tester.widget<Container>(row).decoration! as BoxDecoration;
+        expect(find.descendant(of: row, matching: find.text(t.textTarget)), findsOneWidget);
+        expect(find.descendant(of: row, matching: find.text(t.textNative)), findsOneWidget);
+        expect(tester.widget<Text>(find.descendant(of: row, matching: find.text(t.textTarget))).style, AppTextSession.phrase17);
+        final said = find.descendant(of: row, matching: find.byKey(const ValueKey('talk-phrase-said')));
+        if (t.said) {
+          expect(box.color, AppColors.sessionSageWash, reason: '${t.ref}: шалфей');
+          expect(box.border, isNull);
+          expect(said, findsOneWidget, reason: '${t.ref}: галка');
+        } else {
+          expect(box.color, isNull, reason: '${t.ref}: без заливки');
+          expect((box.border! as Border).top.width, 1.5);
+          expect(said, findsNothing);
+        }
+        tops.add(tester.getRect(row).top);
+      }
+      expect([...tops]..sort(), tops, reason: 'в порядке сервера');
+      final second = tester.getRect(find.byKey(ValueKey('talk-phrase-${openV2.targets[1].sceneId}-p2')));
+      final first = tester.getRect(find.byKey(ValueKey('talk-phrase-${openV2.targets[0].sceneId}-p1')));
+      expect(second.top - first.bottom, moreOrLessEquals(12, epsilon: 0.5), reason: '12 между строками');
+
+      await tester.tap(find.descendant(of: find.byKey(ValueKey('talk-phrase-${openV2.targets[2].sceneId}-p3')), matching: find.byType(SessionListenButton)));
+      await tester.pump();
+      expect(stand.voice.played.last, 'talk-target-${openV2.targets[2].sceneId}-p3', reason: 'своя фраза');
+      stand.voice.finish();
+      await tester.tap(find.byKey(const ValueKey('talk-phrase-sheet-close')));
+      await tester.pumpAndSettle();
+      expect(sheet, findsNothing);
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО: целей у разговора нет (сервер до CONV-2) — полоски нет ни в одном состоянии: клиент не считает фразы сам.
+    // ЛОВИТ: полоску «фразы · 0 из 0» и счёт по фразам дня на телефоне.
+    testWidgets('без targets полоски нет', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+      expect(find.byKey(const ValueKey('talk-strip')), findsNothing);
+      await finishLine(tester, stand);
+      expect(find.byKey(const ValueKey('talk-strip')), findsNothing);
       await settleTalk(tester);
     });
   });
@@ -697,6 +950,67 @@ void main() {
       expect(tops, hasLength(4));
       expect([...tops]..sort(), tops, reason: 'scenes in the talk\'s order, said before not said');
     });
+
+    // ПРАВИЛО (CONV-2 п. 2; наряд CLIENT-CONV-1c §9г): повтор поверх пройденного этапа (`replay: true`) ничего не
+    // возвращает завтра — `returns_tomorrow: false`. У дня это не репетиция: список — по-дневному, а несказанное стоит
+    // под «Не прозвучало», без «вернётся завтра» и без «повтори перед приёмом».
+    // ЛОВИТ: итог повтора дня, нарисованный как итог репетиции («<сцена> · повтори перед приёмом»), и обещание вернуть
+    // завтра то, что сервер не вернёт.
+    testWidgets('повтор дня: несказанное — «Не прозвучало», без «завтра» и без «перед приёмом»', (tester) async {
+      expect(endedV2.replay, isTrue);
+      expect(endedV2.summary!.returnsTomorrow, isFalse);
+      await pumpSummary(tester, endedV2);
+      expect(find.text('Сказал сам 3 реплики'), findsOneWidget, reason: 'день, не «Ты готов к приёму»');
+      expect(find.text('ФРАЗЫ ДНЯ В РАЗГОВОРЕ · 3 ИЗ 7'), findsOneWidget);
+      expect(find.text('НЕ ПРОЗВУЧАЛО'), findsOneWidget);
+      expect(find.textContaining('ЗАВТРА'), findsNothing);
+      expect(find.textContaining('ПЕРЕД ПРИЁМОМ'), findsNothing);
+      final said = tester.getRect(find.byKey(const ValueKey('talk-phrase-01M2H13KSAS23K4YPF1M65SJQD-p6')));
+      final notSaid = tester.getRect(find.byKey(const ValueKey('talk-phrase-01M2H13KSAS23K4YPF1M65SJQD-p3')));
+      expect(said.top, lessThan(notSaid.top), reason: 'сказанное — первым');
+    });
+  });
+
+  group('37-5 → 37-6 · старт', () {
+    // ПРАВИЛО (наряд CLIENT-CONV-1c §5, кадр 37-6): лента открывается на ОТВЕТЕ СЕРВЕРА — первая реплика роли звучит уже
+    // в ней, с живой волной. `open` отвечает, когда реплика сказана, поэтому вход 37-5 и окно дня («Повторить разговор»)
+    // ждут `openAnswered`.
+    // ЛОВИТ: вход со спиннером, под которым роль договаривает первую реплику, — лента открывалась после неё (CONV-1a).
+    test('openAnswered отвечает, пока роль ещё говорит; open — только когда договорила', () async {
+      ConversationController controller(HeldVoice voice) {
+        final talk = ConversationController(
+          backend: FakeTalkBackend(TalkProbe()..documents.add(openV2)),
+          planId: 'ulid-plan',
+          day: 1,
+          voice: voice,
+          hints: true,
+        );
+        addTearDown(talk.dispose);
+        return talk;
+      }
+
+      final voice = HeldVoice();
+      final talk = controller(voice);
+      var answered = false;
+      unawaited(talk.openAnswered().then((_) => answered = true));
+      await pumpEventQueue();
+      expect(answered, isTrue, reason: 'the server has answered');
+      expect(talk.phase, TalkPhase.agentSpeaking);
+      expect(voice.speaking, isTrue, reason: 'the first line is still sounding');
+      voice.finish();
+      await pumpEventQueue();
+      expect(talk.phase, TalkPhase.yourTurn);
+
+      final plainVoice = HeldVoice();
+      final plain = controller(plainVoice);
+      var said = false;
+      unawaited(plain.open().then((_) => said = true));
+      await pumpEventQueue();
+      expect(said, isFalse, reason: '`open` waits for the line — a screen must not');
+      plainVoice.finish();
+      await pumpEventQueue();
+      expect(said, isTrue);
+    });
   });
 
   group('контракт', () {
@@ -719,6 +1033,27 @@ void main() {
       expect(rehearsal.scenes, hasLength(2));
       expect(rehearsal.summary!.returnsTomorrow, isFalse);
       expect(rehearsal.summary!.notSaid, isNotEmpty);
+    });
+
+    // ПРАВИЛО (наряд CLIENT-CONV-1c): поля CONV-2 — ДОБАВОЧНЫЕ. Документ без них — разговор до них, а не сломанный:
+    // целей нет (полоски нет), заголовка нет, `replay` — false, у `phrases_used` нет текста. Цель без своих слов
+    // выпадает из списка, а не рисуется пустой строкой.
+    // ЛОВИТ: разговор, который перестал открываться на сервере до CONV-2, и пустую строку в листе фраз.
+    test('поля CONV-2 — добавочные: без них разговор тот же, цель без слов выпадает', () {
+      expect(open.targets, isEmpty);
+      expect(open.titleNative, isNull);
+      expect(open.replay, isFalse);
+      expect(open.turns[3].phrasesUsed.single.textTarget, isNull);
+
+      expect(openV2.titleNative, 'Поговори с врачом');
+      expect([for (final t in openV2.targets) (t.ref, t.said)], [('p1', true), ('p2', false), ('p3', false), ('p4', false), ('p5', false)]);
+      expect(openV2.targetsSaid, 1);
+      expect(openV2.turns[1].phrasesUsed.single.textTarget, 'My son has a fever.');
+
+      final broken = talkV2('talk_day_open_v2', (json) {
+        ((json['targets'] as List<dynamic>)[2] as Map<String, dynamic>).remove('text_target');
+      });
+      expect([for (final t in broken.targets) t.ref], ['p1', 'p2', 'p4', 'p5']);
     });
   });
 }

@@ -480,11 +480,13 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
           const SizedBox(height: 14),
           if (_checking) ..._checkDock(l) else ...[
             if (_ask && _reply) ...[_playingLine(l), const SizedBox(height: 14)],
+            // An ask with a check holds its answer for the choice: while its own line sounds, before the check comes up,
+            // «Дальше» would leave the card with the answer unsent — and the stage would deal the card again.
             SessionDockButton(
               label: l.planSessionNext,
-              enabled: _chip != null,
+              enabled: _chip != null && _held == null,
               busy: env.advancing,
-              onTap: _chip == null ? null : () => unawaited(env.next()),
+              onTap: _chip == null || _held != null ? null : () => unawaited(env.next()),
             ),
           ],
         ],

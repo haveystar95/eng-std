@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/api_client.dart';
+import '../../../data/plan/conversation/conversation_models.dart' show TalkTarget;
 import '../../../data/plan/day_window.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/plan_store.dart';
@@ -154,9 +155,6 @@ class SessionController extends ChangeNotifier {
   /// A stage's minutes from the latest answer in that stage — the stage summary (30-6).
   final Map<PlanStage, int> _stageMinutes = {};
 
-  /// The day's minutes from the latest answer — the day summary (30-7).
-  int? _answerDayMinutes;
-
   bool _closing = false;
   bool _closeFailed = false;
 
@@ -250,6 +248,12 @@ class SessionController extends ChangeNotifier {
   /// «около N минут» on the talk's entry (37-5) — the server's, for the current row only.
   int? get talkMinutes => _talkRow?.minutesLeft;
 
+  /// The talk row's own words for its entry (37-5; CONV-2 п. 12, BACK-TAILS-2): «Поговори с врачом», how many scenes
+  /// the talk walks, and the phrases it is for — each null / empty when the server did not send it.
+  String? get talkTitle => _talkRow?.talkTitleNative;
+  int? get talkScenesCount => _talkRow?.scenesCount;
+  List<TalkTarget> get talkTargets => _talkRow?.targets ?? const [];
+
   WindowStage? get _talkRow {
     for (final r in _day?.window?.stages ?? const <WindowStage>[]) {
       if (r.stage == PlanStage.conversation) return r;
@@ -267,13 +271,10 @@ class SessionController extends ChangeNotifier {
   /// The last «Close the day» did not get through (no network, a server error) — the button stays.
   bool get closeFailed => _closeFailed;
 
-  /// The day's minutes — the freshest of the server's two numbers: the latest answer's `day.minutes_spent` and the
-  /// day read after the last stage (a judged card's verdict carries no minutes of its own).
-  int get dayMinutes {
-    final read = _day?.day.minutesSpent ?? 0;
-    final answered = _answerDayMinutes ?? 0;
-    return read > answered ? read : answered;
-  }
+  /// «День пройден · N минут» (30-7) — the day's `minutes_spent` AS THE SERVER GIVES IT, from the day read after the
+  /// last stage and after the talk (наряд CLIENT-CONV-1c §9ж). No second number beside it and no «the larger of two»:
+  /// only the server knows which minutes the day counts — the talk's among them (BACK-TAILS-2).
+  int get dayMinutes => _day?.day.minutesSpent ?? 0;
 
   /// Read the day and stand at the entry of the first unfinished stage; every card answered — the day summary. A lesson
   /// still being written — the «building» plate and a poll; a lesson that failed — the plate with «Retry».
@@ -449,7 +450,6 @@ class SessionController extends ChangeNotifier {
         _queue?.apply(answered: outcome.card, requeued: outcome.requeued);
         _outcomes[card.id] = outcome;
         if (outcome.stage != PlanStage.unknown) _stageMinutes[outcome.stage] = outcome.stageMinutesSpent;
-        _answerDayMinutes = outcome.dayMinutesSpent;
       }
       if (failure == OutboxFailure.alreadyAnswered) _resync = true;
       if (failure == OutboxFailure.permanent) debugPrint('[session] answer ${card.id} refused — the server keeps the card open');

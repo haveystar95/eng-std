@@ -9,6 +9,9 @@
 /// чтобы нарисовать выдуманное состояние.
 library;
 
+import 'package:flutter/foundation.dart';
+
+import 'conversation/conversation_models.dart' show TalkTarget;
 import 'plan_models.dart';
 
 /// Одно слово для дня. `locked` на проводе есть, в окне — нет: такой ответ — ошибка контракта.
@@ -118,6 +121,10 @@ class WindowStage {
     this.doneCount,
     this.total,
     this.minutesLeft,
+    this.minutes,
+    this.talkTitleNative,
+    this.scenesCount,
+    this.targets = const [],
   });
 
   final PlanStage stage;
@@ -126,8 +133,34 @@ class WindowStage {
   final int? total;
   final int? minutesLeft;
 
+  /// THE ROW'S PLANNED MINUTES (`minutes`, наряд BACK-TAILS-2; кадры 23-0a, 37-1, 37-2) — every row's own estimate,
+  /// where [minutesLeft] is the current row's remainder. Null — the server did not send it, and no row prints minutes
+  /// it was not given.
+  final int? minutes;
+
+  /// The talk's row only (CONV-2, п. 12): «Поговори с врачом», the entry's title (кадр 37-5) inflected by the server.
+  final String? talkTitleNative;
+
+  /// The talk's row only (CONV-2, п. 12): how many scenes the talk walks — «Разговор целиком · 3 сцены» before it starts.
+  final int? scenesCount;
+
+  /// The talk's row only (наряд CLIENT-CONV-1c, архитектор 22.09 — `targets`, BACK-TAILS-2): the phrases the talk is
+  /// for, «Скажи в разговоре» on the entry 37-5; `said` false before the day's first talk, the last talk's after it.
+  /// Empty — the server sent none, and the entry has no such block.
+  final List<TalkTarget> targets;
+
   /// Полоса ряда 0…1.
   final double share;
+}
+
+/// A SCENE A REVIEW OR THE REHEARSAL IS MADE OF (`window.sources[]`, наряд BACK-TAILS-2; кадры 37-1 «Из каких сцен»,
+/// 37-2 «Из каких дней») — the server's list, in its order. [dayNumber] — the day of the route the scene stands on.
+class WindowSourceRef {
+  const WindowSourceRef({required this.sceneId, required this.titleNative, this.dayNumber});
+
+  final String sceneId;
+  final String titleNative;
+  final int? dayNumber;
 }
 
 /// Счётчики брови вкладки: всего, пройдено, вернётся завтра.
@@ -281,6 +314,8 @@ class DayWindow {
     required this.program,
     this.highlights = const [],
     this.action,
+    this.sources = const [],
+    this.talkAgain = false,
   });
 
   final WindowDay day;
@@ -298,6 +333,14 @@ class DayWindow {
   /// которого он не нёс.
   final List<String> highlights;
   final WindowAction? action;
+
+  /// «Из каких сцен» / «Из каких дней» of the rehearsal and a review (кадры 37-1, 37-2) — the server's list
+  /// (`window.sources[]`, BACK-TAILS-2). Empty — no field or nothing in it, and the list is not drawn: the client does
+  /// not work out where a day comes from.
+  final List<WindowSourceRef> sources;
+
+  /// «Повторить разговор» on a walked day of any kind (`window.talk_again`, BACK-TAILS-2); no field — false.
+  final bool talkAgain;
 
   /// Разбор блока `window`. Нет блока, нет поля, чужое слово — [PlanContractError].
   factory DayWindow.fromJson(Object? json) {
@@ -340,15 +383,30 @@ class DayWindow {
         dialogueSummary: _summary(program, 'dialogue'),
       ),
       action: WindowAction.fromWire(j['allowed_action']),
+      // BACK-TAILS-2's fields are ADDITIVE, like the highlights: a window without them is a window from before them.
+      sources: [
+        for (final s in (j['sources'] as List?) ?? const [])
+          if (s is Map<String, dynamic> && s['scene_id'] is String && s['title_native'] is String)
+            WindowSourceRef(
+              sceneId: s['scene_id'] as String,
+              titleNative: s['title_native'] as String,
+              dayNumber: (s['day_number'] as num?)?.toInt(),
+            ),
+      ],
+      talkAgain: j['talk_again'] == true,
     );
   }
 
   /// A stage this build has never heard of is SKIPPED (наряд CLIENT-CONV-1a): the day's composition
   /// is the server's, and a window that refuses to load over one unknown row would hide the five
-  /// rows it does understand. Everything else about a row stays closed.
+  /// rows it does understand — the row is not drawn, and the debug log names it (наряд CLIENT-CONV-1c).
+  /// Everything else about a row stays closed.
   static WindowStage? _stage(Map<String, dynamic> s) {
     final stage = PlanStage.fromWire(s['stage'] as String?);
-    if (stage == PlanStage.unknown) return null;
+    if (stage == PlanStage.unknown) {
+      debugPrint('[day-window] stage «${s['stage']}» is unknown to this build — its row is not drawn');
+      return null;
+    }
 
     return WindowStage(
       stage: stage,
@@ -356,6 +414,10 @@ class DayWindow {
       doneCount: (s['done_count'] as num?)?.toInt(),
       total: (s['total'] as num?)?.toInt(),
       minutesLeft: (s['minutes_left'] as num?)?.toInt(),
+      minutes: (s['minutes'] as num?)?.toInt(),
+      talkTitleNative: _text(s['talk_title_native']),
+      scenesCount: (s['scenes_count'] as num?)?.toInt(),
+      targets: TalkTarget.listOf(s['targets']),
       share: _share(s['share'], 'stage.share'),
     );
   }

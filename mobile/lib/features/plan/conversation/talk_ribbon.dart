@@ -17,23 +17,26 @@ import '../session/session_mic.dart';
 /// (35-2, «Лента: пузыри и микрофон — компонент „Лента разговора" 37-6…37-8»).
 ///
 /// The partner's text is OPEN from the moment the line sounds, in the talk as in the trainer (правка прохода
-/// 21.09, наряд CLIENT-CONV-1b) — only «Без подсказок» keeps the talk's lines closed. What differs between the two
-/// screens is the caller's to state: the trainer has «Пропустить», the talk «Не понял».
+/// 21.09, наряд CLIENT-CONV-1b; SESSION-DES-4) — only «Без подсказок» keeps the talk's lines closed until the summary.
+/// What differs between the two screens is the caller's to state: the trainer has «Пропустить», the talk «Не понял».
 
 /// The talk's plates on the ribbon — the canvas shadow `0 2px 8px`, ink at 6 % (37-6…37-9, 35-2).
 const List<BoxShadow> kTalkPlateShadow = [BoxShadow(color: AppColors.faintInk, blurRadius: 8, offset: Offset(0, 2))];
 
-/// The wave of a line the role is saying (37-6 «врач говорит»): eighteen bars 3 wide, 3 apart, 24 high.
-const List<double> _speakingBars = [6, 12, 20, 24, 18, 10, 22, 14, 8, 16, 24, 12, 6, 18, 10, 20, 12, 8];
+/// THE WAVE ALONG THE PLATE'S BOTTOM EDGE while the line sounds (37-6 «врач говорит», SESSION-DES-4): eighteen brass
+/// bars 3 wide, 3 apart, standing on one line, 14 at the tallest — 10 under the words.
+const List<double> _edgeBars = [4, 8, 12, 14, 10, 6, 12, 8, 4, 10, 14, 8, 4, 10, 6, 12, 8, 4];
 
-/// THE PARTNER'S LINE (37-6…37-9, 35-2) — a light plate on the left, and everything that belongs to the line
+/// THE PARTNER'S LINE (37-6…37-11, 35-2) — a light plate on the left, and everything that belongs to the line
 /// stands INSIDE it (the architect's revision of 21.09, «по кадру»). Its states:
 ///
-/// - open — the words and their translation, «прослушать» 28 in the top right corner; while the line sounds the
-///   circle holds the wave (37-8, 35-2, and — since the pass of 21.09 — the talk from the first word);
-/// - under «Без подсказок» the talk's lines stay closed: while the role says one the plate holds the wave alone
-///   ([speaking], 37-6 «врач говорит»), afterwards «прослушать» 28 alone (37-8 «в „Без подсказок" остаётся только
-///   „прослушать"»); «прервано» stands over either when the learner cut the line off (37-9).
+/// - open — the words and their translation, «прослушать» 28 in the top right corner;
+/// - under «Без подсказок» the talk's lines stay closed until the summary: «прослушать» 28 alone (37-7 «Примечание ·
+///   без подсказок»);
+/// - either way, WHILE THE LINE SOUNDS a brass wave runs along the plate's bottom edge — from the moment the answer's
+///   plate rises with the role's voice ([speaking]) and on every replay from «прослушать» ([playing]); when the line
+///   ends the wave goes and «прослушать» stays (SESSION-DES-4, «Волна»);
+/// - «прервано» stands over the words when the learner cut the line off (37-9).
 ///
 /// Every circle is 28 on the screen and 44 under the finger: the plate trims its padding by the 8 the touch box adds,
 /// so it keeps the frame's size (12 + 28 + 12) and the circle stands where the frame puts it.
@@ -62,35 +65,36 @@ class TalkPartnerBubble extends StatelessWidget {
   /// The learner cut this line off (кадр 37-9) — it stays in the ribbon with «прервано».
   final bool interrupted;
 
-  /// The role is saying this line now, the first time (кадр 37-6 «врач говорит»): the plate holds the wave alone.
+  /// The role is saying this line now, its first time — the plate rose with the answer, and the wave runs from that
+  /// moment, not from the first byte of a file still on its way (наряд CLIENT-CONV-1c §5).
   final bool speaking;
+
+  /// The line sounds — the wave runs along the plate's bottom edge.
+  bool get _sounding => speaking || playing;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // The circle stays «прослушать» while the line sounds — the wave along the plate's edge says it sounds (37-6).
     final listen = SessionListenButton(
       key: const ValueKey('talk-listen'),
       size: 28,
       brass: true,
       label: l.planWindowListen,
-      playing: playing,
       onTap: onListen,
     );
     final cut = interrupted ? Text(l.planTalkInterrupted, key: const ValueKey('talk-interrupted'), style: AppTextSession.meta) : null;
-    return SessionPartnerRow(
-      bubble: open
-          ? _openPlate(listen, cut)
-          : speaking
-          ? SessionBubble(
-              own: false,
-              shadow: kTalkPlateShadow,
-              child: SessionWave(key: const ValueKey('talk-line-wave'), heights: _speakingBars, playing: playing),
-            )
-          : _closedPlate(l, listen, cut),
-    );
+    return SessionPartnerRow(bubble: open ? _openPlate(listen, cut) : _closedPlate(l, listen, cut));
   }
 
-  /// 37-8, 35-2: the words, and the circle in the top right corner — its touch box stands 8 into the padding.
+  /// The wave along the bottom edge, 10 under what stands above it.
+  Widget get _edgeWave => Padding(
+    padding: const EdgeInsets.only(top: 10),
+    child: SessionWave(key: const ValueKey('talk-line-wave'), heights: _edgeBars, playing: _sounding, bottomAligned: true),
+  );
+
+  /// 37-6…37-11, 35-2: the words, and the circle in the top right corner — its touch box stands 8 into the padding;
+  /// while the line sounds, the wave under the words.
   Widget _openPlate(Widget listen, Widget? cut) => SessionBubble(
     own: false,
     padding: EdgeInsets.zero,
@@ -106,9 +110,10 @@ class TalkPartnerBubble extends StatelessWidget {
               ?cut,
               Text(text, style: SessionBubble.lineStyle(own: false)),
               if (translation case final t? when t.trim().isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(t, style: SessionBubble.translationStyle(own: false)),
               ],
+              if (_sounding) _edgeWave,
             ],
           ),
         ),
@@ -117,25 +122,29 @@ class TalkPartnerBubble extends StatelessWidget {
     ),
   );
 
-  /// «Без подсказок», the line said (37-8, 37-9): «прослушать» 28 alone; «прервано» over it.
+  /// «Без подсказок» (37-7 «Примечание»): «прослушать» 28 alone; «прервано» over it; the wave under it while the line
+  /// sounds.
   Widget _closedPlate(AppLocalizations l, Widget listen, Widget? cut) {
     final row = KeyedSubtree(key: const ValueKey('talk-line-actions'), child: listen);
+    final sounding = _sounding;
     return SessionBubble(
       own: false,
-      padding: EdgeInsets.fromLTRB(6, cut == null ? 4 : 12, 6, 4),
+      padding: EdgeInsets.fromLTRB(6, cut == null ? 4 : 12, 6, sounding ? 12 : 4),
       shadow: kTalkPlateShadow,
-      child: cut == null
-          ? row
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(padding: const EdgeInsets.only(left: 8), child: cut),
-                // The frame sets the row right under «прервано»: the 44 touch box reaches 8 up over its line, and the
-                // plate is measured by the 36 below it.
-                Align(alignment: Alignment.bottomLeft, widthFactor: 1, heightFactor: 36 / 44, child: row),
-              ],
-            ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (cut != null) ...[
+            Padding(padding: const EdgeInsets.only(left: 8), child: cut),
+            // The frame sets the row right under «прервано»: the 44 touch box reaches 8 up over its line, and the
+            // plate is measured by the 36 below it.
+            Align(alignment: Alignment.bottomLeft, widthFactor: 1, heightFactor: 36 / 44, child: row),
+          ] else
+            row,
+          if (sounding) Padding(padding: const EdgeInsets.only(left: 8, right: 8), child: _edgeWave),
+        ],
+      ),
     );
   }
 }
@@ -202,23 +211,6 @@ class TalkOwnBubble extends StatelessWidget {
     bubble: SessionBubble(
       own: true,
       child: child ?? TalkSageUnderline(text: text ?? '', marks: marks, style: SessionBubble.lineStyle(own: true)),
-    ),
-  );
-}
-
-/// «ПЕРЕСПРОСИЛ» — the learner's «Не понял» in the ribbon: a quiet mark on the learner's side, not an
-/// ink bubble. The canvas draws «Sorry?» in an own bubble (37-7 «после „Не понял"»), but the server
-/// writes no words for a rescue and an ink bubble is only ever what the learner said; the mark keeps
-/// the two identical lines of the role from reading as a glitch (отчёт §5).
-class TalkRescueMark extends StatelessWidget {
-  const TalkRescueMark({super.key});
-
-  @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.centerRight,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      child: Text(AppLocalizations.of(context).planTalkRescueMark, style: AppTextSession.meta),
     ),
   );
 }
@@ -326,30 +318,33 @@ class _TalkThinkingState extends State<TalkThinking> with SingleTickerProviderSt
 /// «Тёмный пузырь»). By the frame: paper, corners 16, 10 / 14 inside, 15/20 in ink, and the ribbon's own shadow
 /// `0 2px 8px` at 6 % — not the sheet's (отчёт client-conv-1a §1.7, наряд CLIENT-CONV-1b).
 class TalkHintChip extends StatelessWidget {
-  const TalkHintChip({super.key, required this.text, this.alignEnd = false});
+  const TalkHintChip({super.key, required this.text, this.alignEnd = false, this.stretch = false});
 
   final String text;
 
   /// «Спроси сам» (35-2) stands the plate on the right, where the learner's own line will go.
   final bool alignEnd;
 
+  /// The plate runs the ribbon's width — under the judge's refusal (35-2d), where it is read as the line under it.
+  final bool stretch;
+
   @override
-  Widget build(BuildContext context) => SessionAppear(
-    child: Align(
-      alignment: alignEnd ? Alignment.centerRight : Alignment.center,
-      child: Container(
-        key: const ValueKey('talk-hint-chip'),
-        constraints: const BoxConstraints(maxWidth: kSessionBubbleMax),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.paper,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: kTalkPlateShadow,
-        ),
-        child: Text(text, style: AppTextSession.text15),
+  Widget build(BuildContext context) {
+    final plate = Container(
+      key: const ValueKey('talk-hint-chip'),
+      constraints: stretch ? null : const BoxConstraints(maxWidth: kSessionBubbleMax),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: kTalkPlateShadow,
       ),
-    ),
-  );
+      child: Text(text, style: AppTextSession.text15),
+    );
+    return SessionAppear(
+      child: stretch ? plate : Align(alignment: alignEnd ? Alignment.centerRight : Alignment.center, child: plate),
+    );
+  }
 }
 
 /// What the talk's microphone is doing — the screen's own reading, drawn by [TalkMicButton].
@@ -531,7 +526,7 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) => old.color != color || old.width != width;
 }
 
-/// THE TALK'S DOCK (37-6…37-9): the chip over everything, the caption, the live line, and the row of
+/// THE TALK'S DOCK (37-6…37-10): the phrase strip on top, the chip, the live line, the caption, and the row of
 /// three — the left exit, the microphone 72 in the middle, the right exit.
 ///
 /// The two exits are the caller's: in the talk «Не понял» stands on the left in EVERY state of the
@@ -542,6 +537,7 @@ class TalkDock extends StatelessWidget {
     super.key,
     required this.mic,
     this.debugMic,
+    this.strip,
     this.chip,
     this.caption,
     this.subCaption,
@@ -557,7 +553,11 @@ class TalkDock extends StatelessWidget {
   /// dock, and the simulator has no other way to say anything (наряд SESSION-1b).
   final SessionMic? debugMic;
 
-  /// The hint chip, over everything in the dock.
+  /// «фразы · N из M» (наряд CLIENT-CONV-1c §4) — part of the dock in every state of the ribbon, 14 over what stands
+  /// under it; the ribbon rises by its height.
+  final Widget? strip;
+
+  /// The hint chip, under the strip.
   final Widget? chip;
 
   /// «тап — говорить» / «слушай» / «говори, я слушаю».
@@ -582,6 +582,7 @@ class TalkDock extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (notice case final n?) ...[n, const SizedBox(height: 14)],
+      if (strip case final s?) ...[s, const SizedBox(height: 14)],
       if (chip case final c?) ...[c, const SizedBox(height: 14)],
       if (liveLine case final line?) ...[line, const SizedBox(height: 14)],
       // The frame's order (37-7 «слушаю», 37-10): the caption over the button, the button's 88 box, and what

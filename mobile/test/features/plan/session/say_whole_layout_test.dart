@@ -85,4 +85,32 @@ void main() {
       await settleCard(tester);
     });
   }
+
+  // RULE (наряд CLIENT-CONV-1c §2г, CONV-2 п. 8): «услышал: …» under the refusal of the own word is what the JUDGE
+  // judged — `heard` of its answer; the phone's own recognition stands there only when the answer carries none (the
+  // test above).
+  // CATCHES: the line printing the phone's recognition when the judge read something else — a refusal over a misheard
+  // word that reads as the learner's mistake.
+  testWidgets('32-7: «услышал» under the refusal is the judge\'s `heard`', (tester) async {
+    final probe = CardProbe()
+      ..verdict = (_) => const SessionJudgeOutcome(
+        accepted: false,
+        reasonNative: 'Каркас не прозвучал.',
+        attempts: 1,
+        heard: 'it hurts in hiss elbow',
+      );
+    final card = fixtureCard(day, SessionKind.phraseOtherSlot);
+    await pumpCard(tester, probeEnv(card, probe), size: sizes['844 pt']!);
+    for (final round in (card.payload as PhraseOtherSlotPayload).rounds) {
+      await sayDebug(tester, round.expectedText);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+    }
+    await sayDebug(tester, 'It hurts in his elbow');
+    await tester.pump();
+    expect(probe.judged, ['It hurts in his elbow']);
+    expect(find.text('Каркас не прозвучал.'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const ValueKey('session-heard-text'))).data, 'услышал: it hurts in hiss elbow');
+    await settleCard(tester);
+  });
 }

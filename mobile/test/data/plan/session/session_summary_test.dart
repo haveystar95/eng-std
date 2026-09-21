@@ -11,41 +11,161 @@ import 'package:eng_std/data/plan/session/session_summary.dart';
 import 'package:eng_std/features/plan/session/session_texts.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
-/// THE NUMBERS OF THE SUMMARIES (work order SESSION-1c §3–§5): «understood N of M» (34-8), «said N of M myself» (35-6)
-/// and «comes back tomorrow» of the day (30-7) — read off the server's cards.
+/// THE NUMBERS OF THE SUMMARIES (наряды SESSION-1c, CLIENT-CONV-1c; кадры 30-6, 30-7) — read off the server's cards:
+/// the three lines of a stage summary for every stage with cards (решение архитектора 22.09), and «comes back
+/// tomorrow» of the day.
 void main() {
   late AppLocalizations l;
   setUpAll(() async => l = await AppLocalizations.delegate.load(const Locale('ru')));
 
-  Map<String, dynamic> raw() => jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
-
-  void answer(Map<String, dynamic> json, String stage, int position, String result, {bool returns = false}) {
-    final s = (json['stages'] as List).cast<Map<String, dynamic>>().firstWhere((x) => x['stage'] == stage);
-    final c = (s['cards'] as List).cast<Map<String, dynamic>>().firstWhere((x) => x['position'] == position);
-    c['result'] = result;
-    c['attempts'] = 1;
-    c['returns'] = returns;
+  Map<String, dynamic> raw([String name = 'day-doctor']) {
+    final json = jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+    return (json['data'] as Map<String, dynamic>?) ?? json;
   }
 
-  // CATCHES: the listening count taking walkthroughs as questions, a failed question counted right, the speaking count
-  // missing the judge's `hinted`.
-  test('understood: the listening questions answered right of all; spoke: passed or hinted of all speaking cards', () {
+  List<Map<String, dynamic>> cardsOf(Map<String, dynamic> json, String stage) =>
+      ((json['stages'] as List).cast<Map<String, dynamic>>().firstWhere((x) => x['stage'] == stage)['cards'] as List).cast<Map<String, dynamic>>();
+
+  void answer(
+    Map<String, dynamic> json,
+    String stage,
+    int position,
+    String result, {
+    int attempts = 1,
+    bool returns = false,
+    Map<String, dynamic>? response,
+  }) {
+    final c = cardsOf(json, stage).firstWhere((x) => x['position'] == position);
+    c['result'] = result;
+    c['attempts'] = attempts;
+    c['returns'] = returns;
+    if (response != null) c['response'] = response;
+  }
+
+  /// Every card of [stage] answered `passed` at the first attempt — the rest of a test then spoils what it needs.
+  void passAll(Map<String, dynamic> json, String stage) {
+    for (final c in cardsOf(json, stage)) {
+      answer(json, stage, c['position'] as int, 'passed');
+    }
+  }
+
+  List<String> linesOf(Map<String, dynamic> json, PlanStage stage, {String? role = 'Врач'}) {
+    final queue = SessionQueue(SessionDay.fromJson(json).stages);
+    return [for (final line in SessionTexts.stageLines(l, stage, SessionSummaries.stageTally(queue, stage), role: role)) line.text];
+  }
+
+  // RULE (30-6, решение архитектора 22.09): the title is the stage's own words and the server's minutes of the stage —
+  // «Слова пройдены · 6 минут», «Слушаю и отвечаю — пройдено · 5 минут»; without minutes (a replay sends nothing) the
+  // words alone, never «0 минут».
+  // CATCHES: «Слова пройдены» on a stage that is not words (the fallback of the old 30-6), and «· 0 минут».
+  test('30-6: the title of every stage — its words and the server\'s minutes', () {
+    expect(SessionTexts.passed(l, PlanStage.words, 6), 'Слова пройдены · 6 минут');
+    expect(SessionTexts.passed(l, PlanStage.phrases, 5), 'Фразы пройдены · 5 минут');
+    expect(SessionTexts.passed(l, PlanStage.dialogue, 3), 'Диалог пройден · 3 минуты');
+    expect(SessionTexts.passed(l, PlanStage.listen, 5), 'Слушаю и отвечаю — пройдено · 5 минут');
+    expect(SessionTexts.passed(l, PlanStage.speak, 1), 'Говорю сам — пройдено · 1 минута');
+    expect(SessionTexts.passed(l, PlanStage.recall, 4), 'Вспомнить — пройдено · 4 минуты');
+    expect(SessionTexts.passed(l, PlanStage.repetition, 7), 'Повторение пройдено · 7 минут');
+    expect(SessionTexts.passed(l, PlanStage.speak, null), 'Говорю сам — пройдено');
+  });
+
+  // RULE (30-6, the frame's own three lines): «Диалог» says «N реплик, M с первого раза» — its exchanges, the ones every
+  // card of which passed at the first attempt without a hint; «сказал вслух K своих реплик» — its own lines passed BY
+  // VOICE (a beginner's chip is not said aloud); «дважды переспросил — врач повторил медленнее» — its «Не понял»
+  // exchanges walked, the scene's role in the line. Nothing to say — no line.
+  // CATCHES: a lapse or a hint counted first-time, chips counted as said aloud, the rescue line with no rescue walked.
+  test('30-6 «Диалог»: the frame\'s three lines off the stage\'s cards', () {
     final json = raw();
-    answer(json, 'listen', 2, 'passed');
+    passAll(json, 'dialogue');
+    answer(json, 'dialogue', 2, 'passed', attempts: 2, response: {'mode': 'voice_hint'}); // x1: the second attempt
+    answer(json, 'dialogue', 4, 'passed', response: {'mode': 'chips', 'filler_index': 0}); // x2: a chip, not aloud
+    answer(json, 'dialogue', 6, 'passed', response: {'mode': 'voice_hint'});
+    answer(json, 'dialogue', 8, 'hinted', response: {'mode': 'voice_hint'}); // x4: hinted — aloud, not first-time
+    answer(json, 'dialogue', 11, 'passed', response: {'mode': 'voice_blind'});
+    expect(linesOf(json, PlanStage.dialogue), [
+      '8 реплик, 6 с первого раза',
+      'сказал вслух 6 своих реплик', // four answers by voice and the two «спроси сам»; the chip is not aloud
+      'переспросил — врач повторил медленнее',
+    ]);
+
+    // Two rescues read as the frame reads them; no rescue walked — two lines.
+    final twice = raw();
+    passAll(twice, 'dialogue');
+    cardsOf(twice, 'dialogue').add({...cardsOf(twice, 'dialogue').firstWhere((c) => c['kind'] == 'dialogue_rescue'), 'id': 'ulid-rescue-2', 'position': 14});
+    expect(linesOf(twice, PlanStage.dialogue).last, 'дважды переспросил — врач повторил медленнее');
+    final none = raw();
+    passAll(none, 'dialogue');
+    answer(none, 'dialogue', 10, 'skipped');
+    expect(linesOf(none, PlanStage.dialogue), hasLength(2));
+  });
+
+  // RULE (30-6, решение архитектора 22.09): every other stage — the frame's three slots with the stage's unit: its volume
+  // and first tries, what comes back tomorrow («2 вернутся завтра» / «завтра ничего не вернётся»), its warm line.
+  // Words and phrases count UNITS (a unit is first-time when all of its cards are), «Слушаю и отвечаю» its QUESTIONS,
+  // «Говорю сам» its exchanges.
+  // CATCHES: cards counted as words, a unit with one lapsed card counted first-time, the returns line counting cards,
+  // walkthroughs counted as questions.
+  test('30-6: words, phrases, listen and speak — volume, returns, the warm line', () {
+    final json = raw();
+    for (final stage in ['words', 'phrases', 'listen', 'speak']) {
+      passAll(json, stage);
+    }
+    answer(json, 'words', 3, 'skipped', attempts: 2, returns: true); // v1: its voice card lapsed twice
+    answer(json, 'words', 6, 'passed', returns: true); // the same unit's other card, marked by the server
+    answer(json, 'words', 12, 'failed'); // v3: a choice wrong once
+    answer(json, 'phrases', 18, 'passed', attempts: 2); // p4: the second attempt
     answer(json, 'listen', 3, 'failed');
-    answer(json, 'listen', 6, 'passed');
-    answer(json, 'listen', 1, 'passed');
-    answer(json, 'speak', 1, 'passed');
-    answer(json, 'speak', 2, 'hinted');
-    answer(json, 'speak', 3, 'skipped');
-    final day = SessionDay.fromJson(json);
-    final understood = SessionSummaries.understood(day.stageOf(PlanStage.listen)!.cards);
-    expect(understood, (right: 2, total: 6), reason: '3 listen_question + 2 listen_predict + 1 listen_number');
-    expect(l.planSessionUnderstoodCount(understood.right, understood.total), 'Понял 2 вопроса из 6');
-    final spoke = SessionSummaries.spoke(day.stageOf(PlanStage.speak)!.cards);
-    expect(spoke, (said: 2, total: 8));
-    expect(l.planSessionSpokeCount(spoke.said, spoke.total), 'Сказал сам 2 реплики из 8');
-    expect(l.planSessionSpokeCount(5, 6), 'Сказал сам 5 реплик из 6');
+    answer(json, 'listen', 7, 'failed');
+    answer(json, 'speak', 2, 'hinted', attempts: 1, returns: true);
+    answer(json, 'speak', 5, 'skipped', attempts: 2, returns: true);
+
+    expect(linesOf(json, PlanStage.words), [
+      '8 слов, 6 с первого раза',
+      '1 вернётся завтра',
+      'Эти слова ты теперь узнаёшь — дальше они встретятся во фразах',
+    ]);
+    expect(linesOf(json, PlanStage.phrases), [
+      '6 фраз, 5 с первого раза',
+      'завтра ничего не вернётся',
+      'Фразы собраны и сказаны вслух — в диалоге они пригодятся',
+    ]);
+    expect(linesOf(json, PlanStage.listen), [
+      '6 вопросов, 4 с первого раза',
+      'завтра ничего не вернётся',
+      'Реплики собеседника ты понимаешь на слух',
+    ], reason: '3 listen_question + 2 listen_predict + 1 listen_number — walkthroughs are no questions');
+    expect(linesOf(json, PlanStage.speak), [
+      '7 реплик, 5 с первого раза',
+      '2 вернутся завтра',
+      'Свои реплики ты сказал сам — дальше живой разговор',
+    ], reason: 'x3 carries two cards (the answer and the echo): seven exchanges');
+  });
+
+  // RULE (30-6 «Вспомнить», «Повторение»): the rehearsal's «Вспомнить» says «N реплик из S сцен» — its lines said aloud and
+  // the scenes they come from (the sheet of lines is not a line), and nothing about tomorrow: a reminder returns nothing.
+  // A review's «Повторение» (the stage id BACK-TAILS-2 gives it) counts its CARDS as dealt.
+  // CATCHES: the overview counted as a line, scenes counted twice, a returns line on «Вспомнить».
+  test('30-6: «Вспомнить» — lines and scenes, two lines; «Повторение» — cards', () {
+    final rehearsal = raw('day-rehearsal');
+    passAll(rehearsal, 'recall');
+    expect(linesOf(rehearsal, PlanStage.recall), ['9 реплик из 2 сцен', 'Реплики на месте — дальше разговор целиком']);
+
+    // The review as BACK-TAILS-2 sends it: its cards under `repetition`.
+    final review = raw('day-review');
+    for (final s in (review['stages'] as List).cast<Map<String, dynamic>>()) {
+      if (s['stage'] != 'speak') continue;
+      s['stage'] = 'repetition';
+      for (final c in (s['cards'] as List).cast<Map<String, dynamic>>()) {
+        c['stage'] = 'repetition';
+      }
+    }
+    passAll(review, 'repetition');
+    answer(review, 'repetition', 3, 'hinted');
+    expect(linesOf(review, PlanStage.repetition), [
+      '7 карточек, 6 с первого раза',
+      'завтра ничего не вернётся',
+      'Всё, что возвращалось, сказано ещё раз',
+    ]);
   });
 
   // CATCHES: a unit counted twice (two cards marked), a `day` unit counted, and a sentence with nothing in it.

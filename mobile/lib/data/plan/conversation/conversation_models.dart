@@ -142,16 +142,57 @@ class TalkHints {
   /// How long a silence stands before the chip comes up by itself — 5 000.
   final int delayMs;
 
-  /// The intention for the next move, in the learner's language and WITHOUT a prefix: «Скажи, что …»
-  /// is printed by the client. Null when hints are off, when the move is not the learner's and when
-  /// the talk has ended.
+  /// The intention for the next move, in the learner's language, WITHOUT a prefix and AS A CLAUSE —
+  /// «у моего сына температура» (наряд CONV-2, п. 11): the client prints it as it came inside its own
+  /// «Скажи, что …». Null when hints are off, when the move is not the learner's and when the talk
+  /// has ended.
   final String? native;
 
   Duration get delay => Duration(milliseconds: delayMs);
 }
 
-/// A phrase of the plan the SERVER heard in the learner's line — the sage underline of кадр 37-8.
-typedef TalkPhraseRef = ({String sceneId, String ref});
+/// A phrase of the plan the SERVER heard in the learner's line — the sage underline of кадр 37-8. Since наряд
+/// CONV-2 (п. 10) it carries its own text, so a phrase of another scene of the rehearsal is underlined too; a
+/// server before that sent the ref alone, and then the text is null.
+typedef TalkPhraseRef = ({String sceneId, String ref, String? textTarget, String? textNative});
+
+/// ONE OF THE PHRASES THE TALK IS FOR — «Скажи в разговоре» (кадр 37-5), the ribbon's strip and its sheet (37-6…37-11,
+/// 37-8d; наряды CONV-2 п. 10, CLIENT-CONV-1c). [said] is the SERVER's: it turns true on the move the server heard the
+/// phrase by its own rule, and the phone only counts what came.
+class TalkTarget {
+  const TalkTarget({
+    required this.sceneId,
+    required this.ref,
+    required this.textTarget,
+    required this.textNative,
+    required this.said,
+  });
+
+  final String sceneId;
+  final String ref;
+  final String textTarget;
+  final String textNative;
+  final bool said;
+
+  /// The list as the server sent it, in its order. ADDITIVE: no list — none (a server before CONV-2, or the talk's
+  /// row of a window before BACK-TAILS-2), and an item without its texts is left out rather than guessed.
+  static List<TalkTarget> listOf(Object? raw) => [
+    if (raw is List)
+      for (final t in raw)
+        if (t is Map<String, dynamic> &&
+            t['ref'] is String &&
+            t['text_target'] is String &&
+            (t['text_target'] as String).trim().isNotEmpty &&
+            t['text_native'] is String)
+          TalkTarget(
+            sceneId: (t['scene_id'] as String?) ?? '',
+            ref: t['ref'] as String,
+            textTarget: t['text_target'] as String,
+            textNative: t['text_native'] as String,
+            said: t['said'] == true,
+          ),
+  ];
+}
 
 /// ONE LINE OF THE RIBBON, written once and never changed.
 class TalkTurn {
@@ -172,7 +213,8 @@ class TalkTurn {
   final TalkSpeaker speaker;
   final TalkTurnKind kind;
 
-  /// The role's line, or what the recogniser heard; null on a skip.
+  /// The role's line, what the recogniser heard, or — on a rescue — the words a learner says when they did not catch it
+  /// («Sorry?», from the target language's pack: наряд CONV-2, п. 4а); null on a skip.
   final String? textTarget;
 
   /// The role's line in the learner's language; null on the learner's own lines — an own bubble is
@@ -204,7 +246,12 @@ class TalkTurn {
     phrasesUsed: [
       for (final p in _list(j['phrases_used'], 'turn.phrases_used'))
         if (p is Map<String, dynamic>)
-          (sceneId: _string(p['scene_id'], 'phrase.scene_id'), ref: _string(p['ref'], 'phrase.ref')),
+          (
+            sceneId: _string(p['scene_id'], 'phrase.scene_id'),
+            ref: _string(p['ref'], 'phrase.ref'),
+            textTarget: _text(p['text_target']),
+            textNative: _text(p['text_native']),
+          ),
     ],
   );
 }
@@ -314,6 +361,9 @@ class PlanConversation {
     required this.hints,
     required this.turns,
     this.summary,
+    this.replay = false,
+    this.titleNative,
+    this.targets = const [],
   });
 
   final String id;
@@ -321,6 +371,21 @@ class PlanConversation {
   final int day;
   final TalkType type;
   final TalkState state;
+
+  /// «Ещё раз» over a walked stage (наряд CONV-2, п. 2): an earlier talk of the day walked the sixth stage, this one is
+  /// practice — it walks nothing and gives nothing back tomorrow (`summary.returns_tomorrow` false).
+  final bool replay;
+
+  /// «Поговори с врачом» — the entry's title as the server inflected it (`talk_title_native`, CONV-2 п. 12); null — a
+  /// server before that, and then the screen prints no title of its own.
+  final String? titleNative;
+
+  /// THE PHRASES THE TALK IS FOR (`targets[]`, CONV-2 п. 10), with [TalkTarget.said] recounted by the server on every
+  /// move — the ribbon's strip counts them, its sheet lists them. Empty — the server sent none, and there is no strip.
+  final List<TalkTarget> targets;
+
+  /// «фразы · N из M» — how many of the targets have sounded, by the server's own `said`.
+  int get targetsSaid => targets.where((t) => t.said).length;
 
   /// The role and the scene the talk is in NOW.
   final TalkPartner partner;
@@ -382,6 +447,10 @@ class PlanConversation {
         for (final t in _list(j['turns'], 'conversation.turns')) TalkTurn.fromJson(_map(t, 'conversation.turn')),
       ],
       summary: j['summary'] == null ? null : TalkSummary.fromJson(_map(j['summary'], 'conversation.summary')),
+      // CONV-2's fields are ADDITIVE: a talk without them is a talk from before them, not one that failed to load.
+      replay: j['replay'] == true,
+      titleNative: _text(j['talk_title_native']),
+      targets: TalkTarget.listOf(j['targets']),
     );
   }
 

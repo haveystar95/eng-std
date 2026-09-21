@@ -1,9 +1,15 @@
 /// THE TALK ON THE REAL SCREEN (наряд CLIENT-CONV-1a, кадры 37-5…37-12): a server document → the
 /// real [TalkView] → a person's taps → what the phone asked the server for.
 ///
-/// The documents are SNAPSHOTS OF THE LIVE SERVER (`../backend2/docs/fixtures/conversation-*.json`,
-/// taken off `wordtrainer_e2e_test` with `docs/research/client-conv-1a/tools/dump-talk.php`), not
-/// hand-written JSON: a talk the client can draw is a talk the server actually sends.
+/// The documents are SNAPSHOTS OF THE LIVE SERVER, not hand-written JSON: a talk the client can draw is a talk the
+/// server actually sends. Two generations of them:
+///
+/// - `../backend2/docs/fixtures/conversation-*.json` ([talkFixture]) — the talk before наряд CONV-2, taken off
+///   `wordtrainer_e2e_test` with `docs/research/client-conv-1a/tools/dump-talk.php`: no targets, no title, a rescue
+///   without words, the intention as a sentence. The client still has to draw it — every CONV-2 field is additive;
+/// - `test/fixtures/plan/talk_*_v2.json` ([talkV2]) — the talk since CONV-2 (наряд CLIENT-CONV-1c): the ended one is
+///   the live document of CONV-2's run (`docs/research/conv-2/live/conversation-day-ended-v2.json`), the open one the
+///   same talk cut after the rescue — «Sorry?» in the ribbon, `targets[]` with p1 said, the intention as a clause.
 library;
 
 import 'dart:async';
@@ -38,6 +44,17 @@ PlanConversation talkFixture(String name) => PlanConversation.fromJson(talkFixtu
 PlanConversation talkFixtureEdited(String name, void Function(Map<String, dynamic> json) edit) {
   final json = talkFixtureJson(name);
   edit(json);
+  return PlanConversation.fromJson(json);
+}
+
+/// A talk of the CONV-2 contract — `test/fixtures/plan/[name].json` (`talk_day_open_v2`, `talk_day_ended_v2`).
+Map<String, dynamic> talkV2Json(String name) =>
+    jsonDecode(File('test/fixtures/plan/$name.json').readAsStringSync()) as Map<String, dynamic>;
+
+/// A talk of the CONV-2 contract, with [edit] applied before it is parsed when there is one.
+PlanConversation talkV2(String name, [void Function(Map<String, dynamic> json)? edit]) {
+  final json = talkV2Json(name);
+  edit?.call(json);
   return PlanConversation.fromJson(json);
 }
 

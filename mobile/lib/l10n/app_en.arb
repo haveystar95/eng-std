@@ -2206,12 +2206,6 @@
   "planSessionNoMicAllow": "Allow",
   "planSessionTryAgain": "Try again",
   "planSessionReturnsTomorrow": "Coming back tomorrow",
-  "planSessionDoneWords": "Words done · {minutes}",
-  "planSessionDonePhrases": "Phrases done · {minutes}",
-  "planSessionRestWords": "{n, plural, one{The other word is done.} other{The other {n} words are done.}}",
-  "planSessionAllWords": "{n, plural, one{{n} word done.} other{All {n} words done.}}",
-  "planSessionRestPhrases": "{n, plural, one{The other phrase is done.} other{The other {n} phrases are done.}}",
-  "planSessionAllPhrases": "{n, plural, one{{n} phrase done.} other{All {n} phrases done.}}",
   "planSessionExitTitle": "Leave? Your progress is saved",
   "planSessionExitBody": "The cards you've done in “{stage}” stay done — you'll pick up where you left off.",
   "planSessionExitStay": "Continue",
@@ -2264,13 +2258,7 @@
   "planSessionWaiting": "waiting",
   "planSessionNotThat": "not that — let's try again",
   "planSessionHintAction": "Hint",
-  "planSessionDoneDialogue": "Dialogue done · {minutes}",
-  "planSessionRestExchanges": "The other lines are done.",
-  "planSessionAllExchanges": "All lines are done.",
-  "planSessionUnderstoodCount": "Understood {n} of {m} questions",
-  "planSessionSpokeCount": "Said {n} of {m} lines myself",
   "planSessionDayTotal": "Day total",
-  "planSessionDayDoneAction": "Day done",
   "planSessionDayDoneTitle": "Day done · {minutes}",
   "planSessionCloseDay": "Close the day",
   "planSessionDayReturns": "{cards}: {parts}.",
@@ -2283,7 +2271,6 @@
   "planSessionCloseFailed": "The day didn't close — no connection",
   "planPlateStageTalk": "Talk",
   "planPlateStageRecall": "Recall",
-  "planTalkEntryTitle": "Talk to the person",
   "planTalkEntryMinutes": "{n, plural, one{about {n} minute} other{about {n} minutes}}",
   "@planTalkEntryMinutes": {
     "placeholders": {
@@ -2293,6 +2280,7 @@
     }
   },
   "planTalkEntryWhole": "The whole talk",
+  "planTalkEntryScenes": "{n, plural, one{{n} scene} other{{n} scenes}}",
   "@planTalkEntryScenes": {
     "placeholders": {
       "n": {
@@ -2367,17 +2355,8 @@
   "planSessionChangeable": "this part can change",
   "planSessionInTalk": "In the talk",
   "planSessionOwnWordChip": "your own word",
-  "planTalkRescueMark": "asked again",
   "planTalkNoMic": "Microphone needed — the talk can't go on without it",
   "planSessionDescRecall": "Your own lines from every scene — look, listen and say them aloud",
-  "planSessionDoneRecall": "Recalled · {minutes}",
-  "@planSessionDoneRecall": {
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
   "planSessionRecallTask": "Recall your lines",
   "planSessionRecallLast": "Next — say them aloud",
   "planWindowRehearsalBefore": "before the event",
@@ -2394,14 +2373,6 @@
   "planWindowReviewLead": "You will bring back the phrases of past days and talk them through",
   "planWindowFromScenes": "From these scenes",
   "planWindowFromDays": "From these days",
-  "planWindowSourceLines": "{n, plural, one{{n} line} other{{n} lines}}",
-  "@planWindowSourceLines": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "planSessionTaskWhatSaid": "What were you told?",
   "planSessionHeardLine": "heard: {text}",
   "@planSessionHeardLine": {
@@ -2418,5 +2389,129 @@
         "type": "String"
       }
     }
-  }
+  },
+  "planPlateStageRepetition": "Review",
+  "planSessionPassedWords": "Words done",
+  "planSessionPassedPhrases": "Phrases done",
+  "planSessionPassedDialogue": "Dialogue done",
+  "planSessionPassedListen": "Listen and answer — done",
+  "planSessionPassedSpeak": "Speak myself — done",
+  "planSessionPassedRecall": "Recall — done",
+  "planSessionPassedRepetition": "Review done",
+  "planSessionFirstTryWords": "{n, plural, one{{n} word, {first} at the first try} other{{n} words, {first} at the first try}}",
+  "@planSessionFirstTryWords": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryPhrases": "{n, plural, one{{n} phrase, {first} at the first try} other{{n} phrases, {first} at the first try}}",
+  "@planSessionFirstTryPhrases": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryLines": "{n, plural, one{{n} line, {first} at the first try} other{{n} lines, {first} at the first try}}",
+  "@planSessionFirstTryLines": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryQuestions": "{n, plural, one{{n} question, {first} at the first try} other{{n} questions, {first} at the first try}}",
+  "@planSessionFirstTryQuestions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionFirstTryCards": "{n, plural, one{{n} card, {first} at the first try} other{{n} cards, {first} at the first try}}",
+  "@planSessionFirstTryCards": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} line} other{{n} lines}} from {scenes, plural, one{{scenes} scene} other{{scenes} scenes}}",
+  "@planSessionRecallLinesOfScenes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "scenes": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionStageReturns": "{n, plural, one{{n} comes back tomorrow} other{{n} come back tomorrow}}",
+  "@planSessionStageReturns": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionStageNoReturns": "nothing comes back tomorrow",
+  "planSessionSaidAloud": "{n, plural, one{said {n} line of your own aloud} other{said {n} lines of your own aloud}}",
+  "@planSessionSaidAloud": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "planSessionRescuedSlower": "{n, plural, =1{asked again — the {role} said it slower} =2{asked again twice — the {role} said it slower} other{asked again {n} times — the {role} said it slower}}",
+  "@planSessionRescuedSlower": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "planSessionWarmWords": "You know these words now — next they turn up in phrases",
+  "planSessionWarmPhrases": "The phrases are built and said aloud — they will come in handy in the dialogue",
+  "planSessionWarmListen": "You understand the other side by ear",
+  "planSessionWarmSpeak": "You said your lines yourself — next comes a live talk",
+  "planSessionWarmRecall": "Your lines are in place — next comes the whole talk",
+  "planSessionWarmRepetition": "Everything that came back has been said once more",
+  "planTalkEntrySay": "Say in the talk",
+  "planTalkStrip": "phrases · {said} of {total}",
+  "@planTalkStrip": {
+    "placeholders": {
+      "said": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planTalkSheetTitle": "The day's phrases",
+  "planTalkNotSaid": "Not said",
+  "planWindowTalkAgain": "Replay the talk",
+  "planWindowTalkReplayLimit": "The talk was already replayed today — come back tomorrow"
 }
