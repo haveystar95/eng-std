@@ -503,6 +503,13 @@ cd mobile && flutter test test/features/plan/conversation/talk_shots_test.dart -
 
 Ворота (в конце наряда, после `2e831558`): `flutter analyze` — **чисто**, `flutter test` — **1 605
 passed** (было 1 598 до второго захода; +4 теста живых находок, +3 — чип и минуты).
+
+**Хук ворот два последних коммита не прогнал** (`2e831558`, `2a22db54`): он читает только ПЕРВОЕ
+`git` в строке, а коммит шёл одной строкой `git add … && git commit …` — хук увидел `add` и
+пропустил молча (маркер `.git/claude-gates.pass` остался утренним). Ворота прогнаны руками сразу после:
+backend2 `composer check` — deptrac **0 нарушений**, PHPStan **0 ошибок**, Pest **2 362 passed**
+(18 055 утверждений, 58 с); mobile `flutter analyze` — **чисто**, `flutter test` — **1 605 passed**
+(прогнан до коммита на том же коде). Дыра хука — отдельной задачей: это не клиентский наряд.
 Обе стороны, как просит корневой CLAUDE.md: backend2 `composer arch` — **0 нарушений**, `composer
 stan` — **0 ошибок**, `composer test` — **2 362 passed** (18 056 утверждений, 41,5 с). PHP наряд не
 трогал: единственный его файл на сервере — харнесс `docs/research/client-conv-1a/tools/dump-talk.php`,
