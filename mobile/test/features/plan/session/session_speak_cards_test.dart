@@ -5,6 +5,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
+import 'package:eng_std/features/plan/conversation/talk_ribbon.dart' show TalkPartnerBubble;
+import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionListenButton;
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
 import 'package:eng_std/features/plan/session/session_mic.dart';
 
@@ -55,6 +57,23 @@ void main() {
       expect(find.text('услышал'), findsOneWidget);
       await settleCard(tester);
       expect(probe.nexts, 1, reason: 'зачтено — карточка уходит сама');
+    });
+
+    // ПРАВИЛО (правка архитектора 21.09, «то же в 35-2»): у пузыря собеседника «прослушать» 44 стоит
+    // ПОД пузырём, как в ленте разговора; текст в тренажёре открыт, поэтому «текст» не стоит вовсе.
+    // ЛОВИТ: кружок 28 справа от пузыря — 35-2 до правки.
+    testWidgets('пузырь собеседника — «прослушать» 44 под пузырём, кружка рядом нет', (tester) async {
+      await pumpCard(tester, probeEnv(speakAt(2), CardProbe()));
+      await tester.pump(const Duration(milliseconds: 300));
+      final partner = find.byType(TalkPartnerBubble);
+      final bubble = tester.getRect(find.descendant(of: partner, matching: find.byType(SessionBubble)));
+      final listen = find.descendant(of: partner, matching: find.byKey(const ValueKey('talk-listen')));
+      expect(tester.widget<SessionListenButton>(listen).size, 44);
+      expect(tester.getRect(listen).top, greaterThanOrEqualTo(bubble.bottom), reason: 'под пузырём, а не рядом');
+      expect((tester.getRect(listen).left - bubble.left).abs(), lessThan(1));
+      expect(find.descendant(of: partner, matching: find.byType(SessionListenButton)), findsOneWidget, reason: 'кружка рядом нет');
+      expect(find.byKey(const ValueKey('talk-open-text')), findsNothing, reason: 'текст открыт — «текст» не нужен');
+      await settleCard(tester);
     });
 
     // ПРАВИЛО (кадр 35-2 «сказал · не зачтено»): строка судьи — чернилами ПОД пузырём, «Ещё раз» —

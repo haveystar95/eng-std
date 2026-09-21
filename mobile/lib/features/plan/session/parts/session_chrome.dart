@@ -10,6 +10,7 @@ import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/plan_models.dart';
 import '../../../../data/plan/session/session_queue.dart';
 import '../../../../ui/scene_circle.dart';
+import '../session_texts.dart';
 import 'session_bits.dart';
 
 /// SESSION HEADER (canvas 30-2): cross, stage name, progress bar, on the right in words «N words left», below it
@@ -198,8 +199,9 @@ class SessionCloseButton extends StatelessWidget {
   );
 }
 
-/// SCENE STRIP (canvas 30-2b): scene photo 32 and «Doctor's appointment · Receptionist» (native; the role in the
-/// nominative, as the server gave it). Not tappable — it is a reminder.
+/// SCENE STRIP (canvas 30-2b, 37-x): scene photo 32 and «Приём у врача · врач» (native; the role in the nominative,
+/// as the server gave it, with its first letter lowered — the role CONTINUES the line, it does not start one; headings
+/// that begin with the role keep the server's capital). Not tappable — it is a reminder.
 ///
 /// THE CIRCLE ON THE RIGHT IS GONE (work order FIX-2, item 6). It held the LEARNER'S own avatar, which on the
 /// owner's account is Google's generated one — a red disc with «О» — standing over a strip that is about the SCENE
@@ -215,7 +217,7 @@ class SessionSceneStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final s = scene;
-    final role = s?.partnerRoleNative?.trim() ?? '';
+    final role = SessionTexts.roleInline(s?.partnerRoleNative?.trim() ?? '');
     final title = s?.titleNative.trim() ?? '';
     final line = role.isEmpty ? title : (title.isEmpty ? role : l.planSessionSceneLine(title, role));
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;

@@ -20,11 +20,14 @@ import '../session/session_mic.dart';
 /// in the trainer the partner's text is OPEN from the start, in the talk it is CLOSED and opens on a
 /// tap on «текст»; and the trainer has «Пропустить», while the talk has «Не понял».
 
-/// THE PARTNER'S LINE (37-6, 37-8, 35-2) — a paper bubble on the left with «прослушать» 28 beside it.
+/// THE PARTNER'S LINE (37-6, 37-8, 35-2) — a paper bubble on the left and, UNDER it, one row of two:
+/// «прослушать» 44 and the «текст» chip (the architect's revision of 21.09: no circle beside the
+/// bubble, no bare grey word under it — the pair stands together, as the canvas draws it).
 ///
-/// The text is [open] or closed: closed, the bubble holds a wave instead of words, and «текст» under
-/// it opens them. Under «Без подсказок» the caller passes no [onOpenText] at all — then there is no
-/// way to open the text and no button offering one (кадр 37-7, «примечание · без подсказок»).
+/// The text is [open] or closed: closed, the bubble holds a wave instead of words, and the chip opens
+/// them; open, the chip is gone and «прослушать» stays alone. Under «Без подсказок» the caller passes
+/// no [onOpenText] at all — then there is no way to open the text and no chip offering one (кадр
+/// 37-8, «в „Без подсказок" остаётся только „прослушать"»).
 class TalkPartnerBubble extends StatelessWidget {
   const TalkPartnerBubble({
     super.key,
@@ -56,13 +59,7 @@ class TalkPartnerBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final below = <Widget>[
-      if (interrupted)
-        Text(l.planTalkInterrupted, key: const ValueKey('talk-interrupted'), style: AppTextSession.meta),
-      if (!open && onOpenText != null)
-        SessionTextExit(key: const ValueKey('talk-open-text'), label: l.planTalkOpenText, onTap: onOpenText),
-    ];
-
+    final openText = onOpenText;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -74,16 +71,70 @@ class TalkPartnerBubble extends StatelessWidget {
             translation: open ? translation : null,
             child: open ? null : SessionWave(key: const ValueKey('talk-line-wave'), heights: SessionWave.five, width: 80, playing: playing),
           ),
-          listen: SessionListenButton(size: 28, brass: true, label: l.planWindowListen, playing: playing, onTap: onListen),
         ),
-        if (below.isNotEmpty)
+        // «прервано» sits over the pair, as кадр 37-9 stacks it over «прослушать» and «текст».
+        if (interrupted)
           Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(mainAxisSize: MainAxisSize.min, children: below),
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(l.planTalkInterrupted, key: const ValueKey('talk-interrupted'), style: AppTextSession.meta),
           ),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            key: const ValueKey('talk-line-actions'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SessionListenButton(
+                key: const ValueKey('talk-listen'),
+                size: 44,
+                brass: true,
+                label: l.planWindowListen,
+                playing: playing,
+                onTap: onListen,
+              ),
+              if (!open && openText != null) ...[
+                const SizedBox(width: 10),
+                TalkTextChip(key: const ValueKey('talk-open-text'), label: l.planTalkOpenText, onTap: openText),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }
+}
+
+/// THE «ТЕКСТ» CHIP (37-6, 37-8, 37-9) — an ink outline 1,5 at 22 %, 28 high with corners 14, 13 in the
+/// secondary ink; a 44 touch target around it, like every tap target of the dock.
+class TalkTextChip extends StatelessWidget {
+  const TalkTextChip({super.key, required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        height: 44,
+        child: Center(
+          child: Container(
+            height: 28,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.markerOutline, width: 1.5),
+            ),
+            child: Text(label, style: AppTextSession.meta.copyWith(color: AppColors.secondary)),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// THE LEARNER'S LINE (37-8) — an ink bubble on the right holding ONLY what was recognised: no

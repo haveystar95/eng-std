@@ -78,6 +78,14 @@ abstract final class SessionTexts {
     return l.planSessionDayReturns(l.planCardsCount(r.words + r.phrases + r.exchanges), joined);
   }
 
-  /// The role in the companion line — with a lowercase first letter («receptionist will understand»); no declension.
-  static String roleInline(String role) => role.isEmpty ? role : role[0].toLowerCase() + role.substring(1);
+  /// The role inside a line — the companion line («receptionist will understand») and the scene strip («Приём у
+  /// врача · врач»): the first letter lowered, no declension. An abbreviation keeps its capitals — «ЛОР» stays «ЛОР»,
+  /// not «лОР»: the letter is lowered only when the second one is lower-case already.
+  static String roleInline(String role) {
+    final runes = role.runes.toList();
+    if (runes.length < 2) return role.toLowerCase();
+    final second = String.fromCharCode(runes[1]);
+    if (second.toLowerCase() != second) return role;
+    return String.fromCharCode(runes.first).toLowerCase() + String.fromCharCodes(runes.skip(1));
+  }
 }

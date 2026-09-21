@@ -8,6 +8,9 @@ import 'package:eng_std/data/plan/conversation/conversation_models.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/conversation/conversation_controller.dart';
 import 'package:eng_std/features/plan/conversation/talk_ribbon.dart';
+import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionListenButton;
+import 'package:eng_std/features/plan/session/parts/session_bubbles.dart' show SessionBubble;
+import 'package:eng_std/features/plan/session/parts/session_mic_panel.dart' show SessionTextExit;
 import 'package:eng_std/features/plan/session/session_mic.dart';
 
 import '../../../support/session_harness.dart' show SilentRecognizer, enterHeard;
@@ -31,6 +34,18 @@ Future<void> _say(WidgetTester tester, {String text = 'He has had it for three d
   await tester.pump(const Duration(milliseconds: 1600));
   await tester.pump();
   await tester.pump();
+}
+
+/// The role's line [index] as it stands on the screen: the bubble, «прослушать» and — when it is there —
+/// «текст».
+({Rect bubble, Rect listen, Rect? chip}) _pairOf(WidgetTester tester, int index) {
+  final line = find.byKey(ValueKey('turn-$index'));
+  final chip = find.descendant(of: line, matching: find.byKey(const ValueKey('talk-open-text')));
+  return (
+    bubble: tester.getRect(find.descendant(of: line, matching: find.byType(SessionBubble))),
+    listen: tester.getRect(find.descendant(of: line, matching: find.byKey(const ValueKey('talk-listen')))),
+    chip: chip.evaluate().isEmpty ? null : tester.getRect(chip),
+  );
 }
 
 DioException _offline() => DioException(requestOptions: RequestOptions(path: '/x'), type: DioExceptionType.connectionError);
@@ -112,6 +127,53 @@ void main() {
       expect(stand.mics.single.state, MicState.listening, reason: 'микрофон уже слушает');
       expect(find.byKey(const ValueKey('talk-interrupted')), findsOneWidget);
       expect(probe.moves, isEmpty, reason: 'прерывание — дело телефона');
+      await settleTalk(tester);
+    });
+
+    // ПРАВИЛО (кадр 37-6, правка архитектора 21.09): под пузырём роли — ОДИН ряд из двух:
+    // «прослушать» 44 и чип «текст». Ни кружка рядом с пузырём, ни голого серого слова под ним. Так —
+    // во всех состояниях ленты: реплика звучит, прервана, уже прошла, открыта (тогда «текст» уходит,
+    // «прослушать» остаётся); «прервано» стоит между пузырём и рядом, как в кадре 37-9.
+    // ЛОВИТ: кружок 28 справа от пузыря и серое «текст» отдельной строкой — лента до правки.
+    testWidgets('37-6: «прослушать» 44 и «текст» — одним рядом под пузырём, во всех состояниях ленты', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      final stand = await pumpTalk(tester, probe, phraseTexts: phrases);
+
+      void expectPairUnder(int index, {required bool chip, required String state}) {
+        final line = find.byKey(ValueKey('turn-$index'));
+        final pair = _pairOf(tester, index);
+        final listen = find.descendant(of: line, matching: find.byKey(const ValueKey('talk-listen')));
+        expect(tester.widget<SessionListenButton>(listen).size, 44, reason: '$state: «прослушать» 44');
+        expect(pair.listen.top, greaterThanOrEqualTo(pair.bubble.bottom), reason: '$state: под пузырём, а не рядом');
+        expect((pair.listen.left - pair.bubble.left).abs(), lessThan(1), reason: '$state: ряд начинается у края пузыря');
+        if (chip) {
+          expect(pair.chip, isNotNull, reason: '$state: «текст» стоит');
+          expect((pair.chip!.center.dy - pair.listen.center.dy).abs(), lessThan(1), reason: '$state: один ряд');
+          expect(pair.chip!.left, greaterThanOrEqualTo(pair.listen.right), reason: '$state: «текст» справа от «прослушать»');
+        } else {
+          expect(pair.chip, isNull, reason: '$state: текст открыт — «текст» не нужен');
+        }
+        expect(find.descendant(of: line, matching: find.byType(SessionTextExit)), findsNothing, reason: '$state: серого слова нет');
+        expect(find.descendant(of: line, matching: find.byType(SessionListenButton)), findsOneWidget, reason: '$state: второго кружка рядом с пузырём нет');
+      }
+
+      expect(stand.talk.phase, TalkPhase.agentSpeaking);
+      expectPairUnder(5, chip: true, state: 'звучит');
+      expectPairUnder(1, chip: true, state: 'прошлая реплика');
+
+      await tester.tap(find.byKey(const ValueKey('talk-mic')));
+      await tester.pump();
+      await tester.pump();
+      expectPairUnder(5, chip: true, state: 'прервана');
+      final interrupted = tester.getRect(find.byKey(const ValueKey('talk-interrupted')));
+      final pair = _pairOf(tester, 5);
+      expect(interrupted.top, greaterThanOrEqualTo(pair.bubble.bottom), reason: '«прервано» под пузырём');
+      expect(interrupted.bottom, lessThanOrEqualTo(pair.listen.top), reason: '«прервано» над рядом');
+
+      await tester.tap(find.descendant(of: find.byKey(const ValueKey('turn-5')), matching: find.byKey(const ValueKey('talk-open-text'))));
+      await tester.pump();
+      expect(find.text('I see. How high is his temperature, and does he have a sore throat?'), findsOneWidget);
+      expectPairUnder(5, chip: false, state: 'открыта');
       await settleTalk(tester);
     });
 
