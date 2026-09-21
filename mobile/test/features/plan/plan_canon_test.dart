@@ -115,7 +115,26 @@ void main() {
       expect(find.byType(RouteChildDot), findsNothing);
     });
 
-    // ПРАВИЛО (наряд §1): неизвестное состояние этапа — честная ошибка, а не догадка.
+    // ПРАВИЛО (наряд CLIENT-CONV-1a): шестой этап — такой же узел, как остальные, а этап, которого
+    // эта сборка не знает, ПРОПУСКАЕТСЯ: план, который весь таб не может нарисовать из-за одного
+    // чужого слова, хуже линии на один узел короче.
+    // ЛОВИТ: `PlanContractError` на `conversation` — с включённым рубильником это роняло весь план.
+    test('шестой этап — узел; незнакомый этап пропущен, а не роняет план', () {
+      final day = PlanDayRoute.fromJson({
+        'id': 'd',
+        'number': 1,
+        'slot': {'code': 'today'},
+        'stages': [
+          {'stage': 'words', 'state': 'done'},
+          {'stage': 'conversation', 'state': 'current'},
+          {'stage': 'telepathy', 'state': 'locked'},
+        ],
+      });
+      expect(day.stages.map((s) => s.stage), [PlanStage.words, PlanStage.conversation]);
+    });
+
+    // ПРАВИЛО (наряд §1): неизвестное СОСТОЯНИЕ этапа — честная ошибка, а не догадка: имя этапа
+    // можно пропустить, а его прогресс — нет.
     // ЛОВИТ: `fromWire` с запасным `locked` — узел нарисовал бы неправду о прогрессе.
     test('незнакомое слово состояния этапа — PlanContractError', () {
       expect(

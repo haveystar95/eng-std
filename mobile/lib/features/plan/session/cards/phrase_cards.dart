@@ -222,6 +222,9 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
     return CardLayout(
       bodyGap: 12,
       fadeStop: 0.34,
+      // With «В разговоре» under the sheet the field is taller than the screen, and its last bubble
+      // must not sit under the button: the dock stands below the field, not over it.
+      overlayDock: pair == null,
       task: SessionTask(
         l.planSessionTaskLookListen,
         // THE LINE OF SENSE. Only the one-meaning state has words the client may write: «эту фразу

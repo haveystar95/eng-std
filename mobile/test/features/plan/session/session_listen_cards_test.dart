@@ -213,7 +213,7 @@ void main() {
     // is the answer» is active only then. After the answer every sheet opens both texts and the right one is marked.
     // CATCHES: texts of the options shown before the answer (the exercise becomes reading), «This is the answer»
     // active on a sheet that was never played, and a mark set by the first tap.
-    testWidgets('three sounds without text; the second tap marks a heard one; «This is the answer» sends it', (tester) async {
+    testWidgets('34-5: кнопка активна только после прослушивания выбранного', (tester) async {
       final probe = CardProbe();
       final voice = QuietVoice();
       final card = listenAt(6);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:eng_std/data/plan/plan_models.dart' show PlanLevel;
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/features/plan/session/cards/card_kit.dart' show CardListen;
@@ -315,6 +316,41 @@ void main() {
       expect(voice.fallbacks, [said.textTarget], reason: 'без файла фразу читает телефон');
       await tester.pump(const Duration(seconds: 3));
       expect(voice.played, ['${said.audio!.ref}@1.0'], reason: 'само по себе больше ничего не звучит');
+      await settleCard(tester);
+    });
+
+    // ПРАВИЛО (наряд CLIENT-CONV-1a, кадр 32-4): у вариантов «прослушать» НЕТ — задание здесь стоит
+    // переводом над карточкой, и кружок предлагал послушать ответ до того, как его выбрали.
+    // ЛОВИТ: возврат «прослушать» на варианты «Вставь в окно».
+    testWidgets('32-4: у вариантов нет «прослушать»', (tester) async {
+      final beginner = sessionFixture('day-doctor-beginner');
+      final card = fixtureCard(beginner, SessionKind.phraseSlot);
+      await pumpCard(tester, probeEnv(card, CardProbe(), day: beginner, level: PlanLevel.beginner));
+      expect(find.text('Вставь в окно'), findsOneWidget);
+      final options = (card.payload as PhraseSlotPayload).options;
+      for (final o in options) {
+        expect(find.byKey(ValueKey('option-${o.id}')), findsOneWidget);
+      }
+      expect(find.byType(SessionListenButton), findsNothing, reason: 'звук здесь и есть задание');
+      await settleCard(tester);
+    });
+
+    // ПРАВИЛО (кадр 32-7): «своё слово» — ПОСЛЕДНЯЯ плашка ряда значений, а не пустое место; ряд
+    // показывает, где ты сейчас, во всех кругах. В покое микрофон стоит без кольца.
+    // ЛОВИТ: ряд, кончающийся галками, — последний круг без своего места на экране.
+    testWidgets('32-7: «своё слово» — последняя плашка, микрофон в покое без кольца', (tester) async {
+      final card = fixtureCard(intermediate, SessionKind.phraseOtherSlot);
+      await pumpCard(tester, probeEnv(card, CardProbe(), day: intermediate));
+      expect(find.byKey(const ValueKey('chip-own')), findsOneWidget);
+      expect(chip(tester, 'chip-own').selected, isFalse, reason: 'круг своего слова ещё впереди');
+
+      final rounds = (card.payload as PhraseOtherSlotPayload).rounds;
+      for (final r in rounds) {
+        await sayDebug(tester, r.expectedText);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+      }
+      expect(chip(tester, 'chip-own').selected, isTrue, reason: 'дошли до своего слова — плашка угольная');
       await settleCard(tester);
     });
 
