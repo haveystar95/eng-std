@@ -97,12 +97,13 @@ it('knows the day’s shape before it is opened: five stages not started, the pr
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
     $total = array_sum(array_column($room['stages'], 'total'));
 
-    expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked', 'absent', 'locked'])
-        ->and(array_column($room['stages'], 'done'))->toBe([0, 0, 0, 0, 0, 0, 0])
+    // Eight rows: the five card stages of a scene day, «Вспомнить» and «Повторение» (наряд BACK-TAILS-2 §3) absent, the talk.
+    expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked', 'absent', 'absent', 'locked'])
+        ->and(array_column($room['stages'], 'done'))->toBe([0, 0, 0, 0, 0, 0, 0, 0])
         ->and($total)->toBeGreaterThan(60)
         // D-04: форма дня — это план раздачи, а его карточки носят id, которых нет ни в одной строке: до открытия
         // они не уходят клиенту, иначе на такую карточку можно ответить только 404.
-        ->and(array_column($room['stages'], 'cards'))->toBe([[], [], [], [], [], [], []])
+        ->and(array_column($room['stages'], 'cards'))->toBe([[], [], [], [], [], [], [], []])
         ->and($room['program'])->not->toBeEmpty()
         ->and(array_unique(array_column($room['program'], 'state')))->toBe(['pending'])
         ->and($room['metrics'])->toBeNull()

@@ -8,6 +8,7 @@ use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\NextDayAccess;
 use App\Modules\Plan\Application\Port\PlanCollectionWriter;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
+use App\Modules\Plan\Application\Service\DayMetricsOf;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Application\Service\PlanEventJournal;
 use App\Modules\Plan\Application\Service\PlanNotifier;
@@ -15,13 +16,10 @@ use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Exception\StageIncomplete;
-use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
-use App\Modules\Plan\Domain\Service\ConversationOutcomes;
-use App\Modules\Plan\Domain\Service\DayMetricsCalculator;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
@@ -46,11 +44,10 @@ final readonly class CloseDayHandler
         private PlanAccess $access,
         private PlanRepository $plans,
         private DayCardRepository $cards,
-        private ConversationRepository $conversations,
         private StagePassageRepository $passages,
         private PlanTermRepository $terms,
         private PlanCollectionWriter $collection,
-        private DayMetricsCalculator $metrics,
+        private DayMetricsOf $metrics,
         private LearnerCalendar $calendar,
         private PlanDispatcher $dispatcher,
         private NextDayAccess $nextDay,
@@ -91,11 +88,10 @@ final readonly class CloseDayHandler
                 throw StageIncomplete::stage(Stage::Conversation, 1);
             }
 
-            // The day's minutes include its talks — the one that walked the stage and any replay — counted by the
-            // time they were talked, not by the clock (наряд CONV-2, п. 3): «19 минут» on the summary is how long
-            // the day took, not how long its cards took.
-            $talks = $day->hasConversation() ? $this->conversations->allForDay($day->id()) : [];
-            $metrics = $this->metrics->calculate($cards, ConversationOutcomes::minutesOf($talks));
+            // The day's minutes are its cards' and the talk's that walked the stage, by the time it was talked (наряд
+            // BACK-TAILS-2 §8): «19 минут» on the summary is how long the day took — and a replay after it is an
+            // exercise on top of the day, not a part of it.
+            $metrics = $this->metrics->of($day->id(), $cards);
             $next = $plan->closeDay($command->number, $metrics, $today, $now);
 
             // The day's words and phrases go to the plan's collection — the ordinary mechanism.

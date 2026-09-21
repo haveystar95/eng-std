@@ -307,6 +307,30 @@ it('deals no speak_answer for a rescue, a line on no frame, a frame with no term
         ->toBe(['speak_answer@x2', 'speak_answer@x3', 'speak_answer@x4', 'speak_answer@x5', 'speak_answer@x7', 'speak_answer@x8']);
 });
 
+// Canon (наряд BACK-TAILS-2 §10): «Повтори через паузу» (35-3) and «Повтори свою реплику» (35-4) carry the learner's own
+// line and not one word of the partner's, in any field. CATCHES the temporary `partner_line` of the echo coming back, and
+// a partner's line slipped into either card under any other key.
+it('carries no line of the partner anywhere on the echo and the retell', function () {
+    $scene = s1spScene();
+    $partner = [];
+    foreach ($scene->lesson->exchanges as $exchange) {
+        if ($exchange->partner() !== null) {
+            $partner[] = $exchange->partner()->textTarget;
+            $partner[] = $exchange->partner()->textNative;
+        }
+    }
+    $strings = static function (mixed $value) use (&$strings): array {
+        return is_array($value) ? array_merge(...array_values(array_map($strings, $value)) ?: [[]]) : (is_string($value) ? [$value] : []);
+    };
+
+    $cards = array_values(array_filter((new SpeakStage)->build($scene), static fn ($d): bool => in_array($d->kind, [CardKind::SpeakEcho, CardKind::SpeakRetell], true)));
+    expect($cards)->toHaveCount(2);
+    foreach ($cards as $card) {
+        expect(array_intersect($strings($card->payload), $partner))->toBe([], $card->kind->value)
+            ->and($card->payload)->not->toHaveKey('partner_line');
+    }
+});
+
 it('writes speak_echo and speak_retell with exactly their keys', function () {
     $scene = s1spScene();
     $drafts = (new SpeakStage)->build($scene);
@@ -321,13 +345,13 @@ it('writes speak_echo and speak_retell with exactly their keys', function () {
         'audio' => Audio::of('x3b'),
     ];
 
+    // «Повтори через паузу» carries the learner's own line and nobody else's — the copy under `partner_line` the client
+    // build 1.0.0 (17) played is gone (наряд BACK-TAILS-2 §10).
     expect($drafts[6]->kind)->toBe(CardKind::SpeakEcho)
         ->and($drafts[6]->payload)->toBe([
             'scene_id' => s1spSceneId()->value,
             'exchange' => ['ref' => 'x3', 'step' => 3, 'kind' => 'answer'],
             'own_line' => $ownX3,
-            // The same line under the key the client build 1.0.0 (17) plays — until it reads `own_line` (наряд CONV-2).
-            'partner_line' => ['ref' => 'x3b', 'text_target' => $x3->textTarget, 'text_native' => $x3->textNative, 'audio' => Audio::of('x3b')],
             'expected_text' => $x3->textTarget,
             'speech_mode' => 'repeat',
             'pause_ms' => 3000,

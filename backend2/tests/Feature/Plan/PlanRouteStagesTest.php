@@ -46,7 +46,8 @@ it('puts every day’s stages on the route: the day open today at its first stag
     expect(routeWire($plan['days'][0]))->toBe($six)
         ->and(routeWire($plan['current_day']))->toBe($six)
         ->and(array_column(routeWire($plan['days'][1]), 1))->toBe(['locked', 'locked', 'locked', 'locked', 'locked', 'locked'])
-        ->and(routeWire($plan['days'][2]))->toBe([['words', 'locked'], ['speak', 'locked'], ['conversation', 'locked']])
+        // A review: «Повторение», its own stage — not «Говорю сам» (наряд BACK-TAILS-2 §3).
+        ->and(routeWire($plan['days'][2]))->toBe([['words', 'locked'], ['repetition', 'locked'], ['conversation', 'locked']])
         ->and(routeWire($plan['days'][4]))->toBe([['recall', 'locked'], ['conversation', 'locked']]);
 
     // The day room's own `day` says the same.

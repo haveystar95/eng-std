@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Service;
 
+use App\Modules\Plan\Application\Port\DayBuildLog;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\PhraseSeries;
@@ -50,12 +51,35 @@ final readonly class DayDealer
         private ConversationRepository $conversations,
         private StagePassageRepository $passages,
         private ConversationMaterial $material,
+        private DayBuildLog $log,
     ) {}
 
-    /** @return list<DayCard> */
+    /**
+     * The day, dealt for good — and what the dealing had to give up, written to the day's build log (наряд BACK-TAILS-2
+     * §1): «Фразы» over their ceiling with every rung of the ladder spent is the stop signal. The day is dealt anyway.
+     *
+     * @return list<DayCard>
+     */
     public function deal(Plan $plan, PlanDay $day): array
     {
-        return $this->assemble($plan, $day, withNativeTopUp: true);
+        $cards = $this->assemble($plan, $day, withNativeTopUp: true);
+        $this->signalPhrases($plan, $day);
+
+        return $cards;
+    }
+
+    /** A scene day whose «Фразы» the ladder could not fit under their ceiling says so in the build log. */
+    private function signalPhrases(Plan $plan, PlanDay $day): void
+    {
+        $scene = $day->type() === DayType::Scene ? $plan->sceneOf($day) : null;
+        $material = $scene === null ? null : ($this->material($plan, [$scene->id()])[$scene->id()->value] ?? null);
+        if ($scene === null || $material === null) {
+            return;
+        }
+        $deal = $this->assembler->phrasesDeal($material, $plan->level());
+        if ($deal->overCeiling()) {
+            $this->log->phrasesOverCeiling($plan->id(), $day->id(), $day->number(), $scene->id(), $deal);
+        }
     }
 
     /**
@@ -328,7 +352,11 @@ final readonly class DayDealer
             if ($lesson === null) {
                 continue;
             }
-            $out[$key] = new SceneMaterial($id, $lesson, $terms[$key] ?? [], $target, $native, $scene->unreadableFillers());
+            // The scene's name is the plan's, written into the day from here and from nowhere else (наряд BACK-TAILS-2 §6).
+            $out[$key] = new SceneMaterial(
+                $id, $lesson, $terms[$key] ?? [], $target, $native, $scene->unreadableFillers(),
+                $scene->titleNative(), $scene->titleTarget(),
+            );
         }
 
         return $out;

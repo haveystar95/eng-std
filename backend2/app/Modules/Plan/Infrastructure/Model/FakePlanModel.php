@@ -147,7 +147,7 @@ final class FakePlanModel implements PlanModelPort
             ? ($this->conversation)($request, $this->conversationCalls)
             : self::conversationPayload($request);
 
-        return new ModelReply($payload, 'conversation_agent.v2', self::MODEL, 900, 90, '0.000000', 2, '');
+        return new ModelReply($payload, 'conversation_agent.v2.1', self::MODEL, 900, 90, '0.000000', 2, '');
     }
 
     /** @return array<string, mixed> */
@@ -198,7 +198,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function conversationPromptVersion(): string
     {
-        return 'conversation_agent.v2';
+        return 'conversation_agent.v2.1';
     }
 
     public function lessonPromptVersion(): string

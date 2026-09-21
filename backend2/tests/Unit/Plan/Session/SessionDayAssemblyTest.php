@@ -253,9 +253,10 @@ it('deals the returns once each at the end of their stage: a word as word_choose
         ->and(array_filter($back, static fn (DayCard $c): bool => $c->unitKind() === UnitKind::Day))->toBe([]);
 });
 
-// Canon (разд. 2): «Говорю сам — speak_answer по обменам двух предыдущих сцен, ≤ 10 (seeded)»; the returns at the end.
-// Catches a review over the cap, an exchange dealt both as a return and as a review card, a pick in shuffled order,
-// a review that is not the same twice.
+// Canon (разд. 2): «speak_answer по обменам двух предыдущих сцен, ≤ 10 (seeded)»; the returns at the end — all of it in
+// «Повторение», the review day's own stage `repetition` (наряд BACK-TAILS-2 §3), and nothing in `speak`. Catches a review
+// over the cap, an exchange dealt both as a return and as a review card, a pick in shuffled order, a review that is not
+// the same twice, and a review dealt into «Говорю сам» — the stage a scene day has.
 it('deals a review day of at most ten speak_answer over two scenes in their order, the returned exchange left to its return', function () {
     $a = s1daScene(PlanLevel::Beginner, 1);
     $b = s1daScene(PlanLevel::Beginner, 2);
@@ -270,7 +271,7 @@ it('deals a review day of at most ten speak_answer over two scenes in their orde
         PlanLevel::Beginner, $returned, [], s1daIds(),
     );
     $cards = $review();
-    $speak = s1daIn($cards, Stage::Speak);
+    $speak = s1daIn($cards, Stage::Repetition);
     $today = array_values(array_filter($speak, static fn (DayCard $c): bool => $c->source() === CardSource::Today));
     $order = array_map(static fn (DayCard $c): array => [$c->payload()['scene_id'], (int) substr($c->unitRef(), 1)], $today);
     $sorted = $order;
@@ -286,6 +287,7 @@ it('deals a review day of at most ten speak_answer over two scenes in their orde
         ->and(array_slice($speak, 10)[0]->source())->toBe(CardSource::Returned)
         ->and(array_map(static fn (DayCard $c): int => $c->position(), $speak))->toBe(range(1, 11))
         ->and(count(s1daIn($cards, Stage::Phrases)) + count(s1daIn($cards, Stage::Dialogue)) + count(s1daIn($cards, Stage::Listen)))->toBe(0)
+        ->and(s1daIn($cards, Stage::Speak))->toBe([])
         ->and(s1daSnapshot($review()))->toBe(s1daSnapshot($cards));
 });
 

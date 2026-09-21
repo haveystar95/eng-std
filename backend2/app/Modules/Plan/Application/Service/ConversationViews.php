@@ -52,7 +52,6 @@ final readonly class ConversationViews
             );
         }
 
-        $heard = ConversationOutcomes::heard($talk);
         $hint = $talk->hintNative();
 
         return new ConversationView(
@@ -76,15 +75,30 @@ final readonly class ConversationViews
             turns: array_map(fn (ConversationTurn $turn): ConversationTurnView => self::turn($turn, $material), $talk->turns()),
             summary: $talk->isEnded() ? $this->summary($talk, $material, $replay) : null,
             talkTitleNative: $material->titleNative,
-            targets: array_map(static fn ($target): array => [
-                'scene_id' => $target->sceneId,
-                'ref' => $target->ref,
-                'text_target' => $target->textTarget,
-                'text_native' => $target->textNative,
-                'said' => isset($heard[$target->id()]),
-            ], $material->targets),
+            targets: self::targets($material, $talk),
             replay: $replay,
         );
+    }
+
+    /**
+     * «СКАЖИ В РАЗГОВОРЕ» ON THE WIRE — `{scene_id, ref, text_target, text_native, said}` for every target of the day's
+     * talk (наряд CONV-2, п. 10), `said` by the talk given: the talk's own document and the talk's row of the day window
+     * (`window.stages[].targets`, наряд BACK-TAILS-2 §4) print ONE list — the day's material's, the one `POST
+     * …/conversation` starts the talk with — and no second set exists. No talk yet: nothing is said.
+     *
+     * @return list<array{scene_id: string, ref: string, text_target: string, text_native: string, said: bool}>
+     */
+    public static function targets(ConversationMaterialView $material, ?Conversation $talk): array
+    {
+        $heard = $talk === null ? [] : ConversationOutcomes::heard($talk);
+
+        return array_map(static fn ($target): array => [
+            'scene_id' => $target->sceneId,
+            'ref' => $target->ref,
+            'text_target' => $target->textTarget,
+            'text_native' => $target->textNative,
+            'said' => isset($heard[$target->id()]),
+        ], $material->targets);
     }
 
     /**

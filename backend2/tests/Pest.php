@@ -474,7 +474,7 @@ function planWalkDay(object $ctx, string $token, string $id, int $number, array 
             $queue[] = $outcome['requeued'];
         }
     }
-    foreach (['words', 'phrases', 'dialogue', 'listen', 'speak', 'recall'] as $stage) {
+    foreach (['words', 'phrases', 'dialogue', 'listen', 'speak', 'recall', 'repetition'] as $stage) {
         $ctx->withHeader('Authorization', "Bearer {$token}")
             ->postJson("/api/v1/plans/{$id}/days/{$number}/stages/{$stage}/close")->assertOk();
     }

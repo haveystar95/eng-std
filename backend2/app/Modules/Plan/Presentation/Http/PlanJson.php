@@ -28,6 +28,7 @@ use App\Modules\Plan\Application\Dto\WindowLineView;
 use App\Modules\Plan\Application\Dto\WindowListeningView;
 use App\Modules\Plan\Application\Dto\WindowPairView;
 use App\Modules\Plan\Application\Dto\WindowPhraseView;
+use App\Modules\Plan\Application\Dto\WindowSourceView;
 use App\Modules\Plan\Application\Dto\WindowStageView;
 use App\Modules\Plan\Application\Dto\WindowSummaryView;
 use App\Modules\Plan\Application\Dto\WindowUsageView;
@@ -374,11 +375,23 @@ final class PlanJson
                 'done_count' => $s->doneCount,
                 'total' => $s->total,
                 'minutes_left' => $s->minutesLeft,
+                // Every row, every state (наряд BACK-TAILS-2 §4): what the whole stage is reckoned to take.
+                'minutes' => $s->minutes,
                 'share' => $s->share,
                 // The talk's row only (наряд CONV-2, п. 12): «Поговори с врачом» and the scenes it walks («· 3 сцены»).
                 'talk_title_native' => $s->talkTitleNative,
                 'scenes_count' => $s->scenesCount,
+                // The talk's row only (наряд BACK-TAILS-2 §4): «Скажи в разговоре» — the talk's own `targets[]`.
+                'targets' => $s->targets,
             ], $w->stages),
+            // «Из каких сцен» / «Из каких дней» (наряд BACK-TAILS-2 §4): the scenes the day is made of, route order.
+            'sources' => array_map(static fn (WindowSourceView $s): array => [
+                'scene_id' => $s->sceneId,
+                'title_native' => $s->titleNative,
+                'day_number' => $s->dayNumber,
+            ], $w->sources),
+            // «Повторить разговор» (наряд BACK-TAILS-2 §7).
+            'talk_again' => $w->talkAgain,
             'day_progress' => $w->dayProgress,
             'program' => [
                 'words' => [

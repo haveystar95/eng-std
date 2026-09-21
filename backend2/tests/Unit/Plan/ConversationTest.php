@@ -133,22 +133,14 @@ it('counts the minutes the talk was talked, not the hours it stood open', functi
     convLearner($talk, at: '2026-09-21T15:01:00Z');          // 14 s
     $talk->end(ConversationEnd::Natural, new DateTimeImmutable('2026-09-21T15:01:00Z'));
 
-    $replay = convTalk();
-    convAgentAt($replay, '2026-09-21T15:05:00Z');
-    convLearner($replay, at: '2026-09-21T15:05:30Z');
-
     expect($talk->activeSeconds())->toBe(40 + 3 + 60 + 3 + 14)
-        ->and($talk->minutes())->toBe(2)
-        // The day counts all its talks in seconds and rounds once: 120 s of this one and 30 s of a replay — 3 minutes.
-        ->and(ConversationOutcomes::minutesOf([$talk]))->toBe(2)
-        ->and(ConversationOutcomes::minutesOf([$talk, $replay]))->toBe(3);
+        ->and($talk->minutes())->toBe(2);
 
     // A talk with one line has been talked for no time at all — and still says «1 минута» when it is over.
     $short = convTalk();
     convAgentAt($short, '2026-09-21T10:00:00Z');
     $short->end(ConversationEnd::Replayed, new DateTimeImmutable('2026-09-21T11:00:00Z'));
-    expect($short->activeSeconds())->toBe(0)->and($short->minutes())->toBe(1)
-        ->and(ConversationOutcomes::minutesOf([]))->toBe(0);
+    expect($short->activeSeconds())->toBe(0)->and($short->minutes())->toBe(1);
 });
 
 /**

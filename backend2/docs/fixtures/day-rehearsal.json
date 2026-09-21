@@ -10,16 +10,16 @@
         "title_target": null,
         "teaches_native": null,
         "lesson_status": null,
-        "opens_on": "2026-09-21",
+        "opens_on": "2026-09-22",
         "slot": {
             "code": "today",
-            "date": "2026-09-21",
+            "date": "2026-09-22",
             "label_native": "сегодня"
         },
-        "cards_total": 10,
+        "cards_total": 11,
         "cards_done": 0,
         "minutes_spent": 0,
-        "opened_at": "2026-09-21T18:48:56+00:00",
+        "opened_at": "2026-09-21T21:57:39+00:00",
         "closed_at": null,
         "stages": [
             {
@@ -71,12 +71,12 @@
         },
         {
             "stage": "recall",
-            "total": 10,
+            "total": 11,
             "done": 0,
             "state": "current",
             "cards": [
                 {
-                    "id": "01M32MSGBWT7GWFFAYDRJTVHJW",
+                    "id": "01M32ZK28NAMGX1XHBK67K71WV",
                     "stage": "recall",
                     "position": 1,
                     "kind": "recall_scenes",
@@ -92,226 +92,170 @@
                             {
                                 "lines": [
                                     {
-                                        "key": "It hurts in his",
                                         "ref": "x1b",
-                                        "step": 1,
                                         "audio": {
                                             "ref": "x1b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p1",
                                         "text_native": "У него болит поясница.",
-                                        "text_target": "It hurts in his lower back.",
-                                        "filler_index": 0
+                                        "text_target": "It hurts in his lower back."
                                     },
                                     {
-                                        "key": "It started",
                                         "ref": "x2b",
-                                        "step": 2,
                                         "audio": {
                                             "ref": "x2b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p2",
                                         "text_native": "Началось три дня назад.",
-                                        "text_target": "It started three days ago.",
-                                        "filler_index": 0
+                                        "text_target": "It started three days ago."
                                     },
                                     {
-                                        "key": "The pain is",
                                         "ref": "x3b",
-                                        "step": 3,
                                         "audio": {
                                             "ref": "x3b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p3",
                                         "text_native": "Боль острая, когда он наклоняется.",
-                                        "text_target": "The pain is sharp when he bends.",
-                                        "filler_index": 0
+                                        "text_target": "The pain is sharp when he bends."
                                     },
                                     {
-                                        "key": "He doesn't have a",
                                         "ref": "x4b",
-                                        "step": 4,
                                         "audio": {
                                             "ref": "x4b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p4",
                                         "text_native": "Нет, температуры нет.",
-                                        "text_target": "No, he doesn't have a fever.",
-                                        "filler_index": null
+                                        "text_target": "No, he doesn't have a fever."
                                     },
                                     {
-                                        "key": "He will rest",
                                         "ref": "x5b",
-                                        "step": 5,
                                         "audio": {
                                             "ref": "x5b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p5",
                                         "text_native": "Хорошо, он будет отдыхать дома.",
-                                        "text_target": "Okay, he will rest at home.",
-                                        "filler_index": 0
+                                        "text_target": "Okay, he will rest at home."
                                     },
                                     {
-                                        "key": "Do we need",
                                         "ref": "x7b",
-                                        "step": 7,
                                         "audio": {
                                             "ref": "x7b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p6",
                                         "text_native": "Нам нужно сделать рентген?",
-                                        "text_target": "Do we need an X-ray?",
-                                        "filler_index": 0
+                                        "text_target": "Do we need an X-ray?"
                                     },
                                     {
-                                        "key": "Do we need",
                                         "ref": "x8b",
-                                        "step": 8,
                                         "audio": {
                                             "ref": "x8b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p6",
                                         "text_native": "Нам нужно прийти на повторный приём?",
-                                        "text_target": "Do we need a follow-up appointment?",
-                                        "filler_index": 1
+                                        "text_target": "Do we need a follow-up appointment?"
                                     }
                                 ],
                                 "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
                                 "title_native": "Запись к врачу",
-                                "title_target": "At the doctor's with a child"
+                                "title_target": "Booking"
                             },
                             {
                                 "lines": [
                                     {
-                                        "key": "He has",
                                         "ref": "x1b",
-                                        "step": 1,
                                         "audio": {
                                             "ref": "x1b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p1",
                                         "text_native": "У него температура и болит горло.",
-                                        "text_target": "He has a fever and a sore throat.",
-                                        "filler_index": 0
+                                        "text_target": "He has a fever and a sore throat."
                                     },
                                     {
-                                        "key": "He's been sick",
                                         "ref": "x2b",
-                                        "step": 2,
                                         "audio": {
                                             "ref": "x2b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p2",
                                         "text_native": "Он болеет уже три дня.",
-                                        "text_target": "He's been sick for three days.",
-                                        "filler_index": 0
+                                        "text_target": "He's been sick for three days."
                                     },
                                     {
-                                        "key": "Should I tell you",
                                         "ref": "x3b",
-                                        "step": 3,
                                         "audio": {
                                             "ref": "x3b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p3",
                                         "text_native": "Мне сказать вам его температуру?",
-                                        "text_target": "Should I tell you his temperature?",
-                                        "filler_index": 0
+                                        "text_target": "Should I tell you his temperature?"
                                     },
                                     {
-                                        "key": "I gave him",
                                         "ref": "x4b",
-                                        "step": 4,
                                         "audio": {
                                             "ref": "x4b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p4",
                                         "text_native": "Я дал(а) ему парацетамол.",
-                                        "text_target": "I gave him paracetamol.",
-                                        "filler_index": 0
+                                        "text_target": "I gave him paracetamol."
                                     },
                                     {
-                                        "key": "It looks like",
                                         "ref": "x5b",
-                                        "step": 5,
                                         "audio": {
                                             "ref": "x5b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p5",
                                         "text_native": "Похоже на вирусную инфекцию.",
-                                        "text_target": "It looks like a viral infection.",
-                                        "filler_index": 0
+                                        "text_target": "It looks like a viral infection."
                                     },
                                     {
-                                        "key": "What should I do",
                                         "ref": "x6b",
-                                        "step": 6,
                                         "audio": {
                                             "ref": "x6b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p6",
                                         "text_native": "Что мне делать дома?",
-                                        "text_target": "What should I do at home?",
-                                        "filler_index": 0
+                                        "text_target": "What should I do at home?"
                                     },
                                     {
-                                        "key": "should I watch for",
                                         "ref": "x8b",
-                                        "step": 8,
                                         "audio": {
                                             "ref": "x8b",
                                             "url": null,
                                             "duration_ms": null,
                                             "voice": "learner"
                                         },
-                                        "frame_ref": "p7",
                                         "text_native": "За какими тревожными признаками мне следить?",
-                                        "text_target": "What warning signs should I watch for?",
-                                        "filler_index": 0
+                                        "text_target": "What warning signs should I watch for?"
                                     }
                                 ],
                                 "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
-                                "title_native": "У врача с сыном",
-                                "title_target": "At the doctor's with your son"
+                                "title_native": "Приём у врача",
+                                "title_target": "Doctor visit"
                             }
                         ],
                         "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR"
@@ -326,7 +270,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBWKWF1T5VB7WS87MSX",
+                    "id": "01M32ZK28NF9J4V8Q45W7EWVF2",
                     "stage": "recall",
                     "position": 2,
                     "kind": "speak_retell",
@@ -371,7 +315,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBW19RTNAP9YEFAEXVV",
+                    "id": "01M32ZK28N14CBCCX01MVF207A",
                     "stage": "recall",
                     "position": 3,
                     "kind": "speak_retell",
@@ -416,7 +360,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBW232WZDYWE3BMA29S",
+                    "id": "01M32ZK28NBKF7W3DA4R0455FD",
                     "stage": "recall",
                     "position": 4,
                     "kind": "speak_retell",
@@ -461,7 +405,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBWSP9D7J3NTWF6J83F",
+                    "id": "01M32ZK28NB3YN87QVBK1Y7Y42",
                     "stage": "recall",
                     "position": 5,
                     "kind": "speak_retell",
@@ -506,7 +450,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBWWT5XDHNVP2JMBVZW",
+                    "id": "01M32ZK28NZ1FP9NJHCGYFB204",
                     "stage": "recall",
                     "position": 6,
                     "kind": "speak_retell",
@@ -551,7 +495,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBWF3QKDAY73FTC6756",
+                    "id": "01M32ZK28NNMHVA9S58Y35K3HH",
                     "stage": "recall",
                     "position": 7,
                     "kind": "speak_retell",
@@ -596,7 +540,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBW538KHSHQD5H07PZH",
+                    "id": "01M32ZK28N7TBGXT7F58WGMJBJ",
                     "stage": "recall",
                     "position": 8,
                     "kind": "speak_retell",
@@ -641,54 +585,9 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32MSGBWDY1NTT92CAEF4HTD",
+                    "id": "01M32ZK28N3X6J0WVRGQE93MDG",
                     "stage": "recall",
                     "position": 9,
-                    "kind": "speak_retell",
-                    "unit": {
-                        "kind": "exchange",
-                        "ref": "x4"
-                    },
-                    "source": "returned",
-                    "source_day": 2,
-                    "retry_of": null,
-                    "payload": {
-                        "exchange": {
-                            "ref": "x4",
-                            "kind": "answer",
-                            "step": 4
-                        },
-                        "own_line": {
-                            "key": "I gave him",
-                            "ref": "x4b",
-                            "audio": {
-                                "ref": "x4b",
-                                "url": null,
-                                "duration_ms": null,
-                                "voice": "learner"
-                            },
-                            "frame_ref": "p4",
-                            "text_native": "Я дал(а) ему парацетамол.",
-                            "text_target": "I gave him paracetamol.",
-                            "filler_index": 0
-                        },
-                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
-                        "speech_mode": "repeat",
-                        "expected_text": "I gave him paracetamol."
-                    },
-                    "result": null,
-                    "attempts": 0,
-                    "response": null,
-                    "unit_kind": "exchange",
-                    "unit_ref": "x4",
-                    "source_day_id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
-                    "answered_at": null,
-                    "returns": false
-                },
-                {
-                    "id": "01M32MSGBW55WJRFZKDYRH602P",
-                    "stage": "recall",
-                    "position": 10,
                     "kind": "speak_retell",
                     "unit": {
                         "kind": "exchange",
@@ -729,8 +628,105 @@
                     "source_day_id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
                     "answered_at": null,
                     "returns": false
+                },
+                {
+                    "id": "01M32ZK28N7YH4AQ9GQ634YF36",
+                    "stage": "recall",
+                    "position": 10,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x6"
+                    },
+                    "source": "returned",
+                    "source_day": 2,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x6",
+                            "kind": "ask",
+                            "step": 6
+                        },
+                        "own_line": {
+                            "key": "What should I do",
+                            "ref": "x6b",
+                            "audio": {
+                                "ref": "x6b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p6",
+                            "text_native": "Что мне делать дома?",
+                            "text_target": "What should I do at home?",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "repeat",
+                        "expected_text": "What should I do at home?"
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x6",
+                    "source_day_id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "01M32ZK28NBT2TQ9A66KCP7VS8",
+                    "stage": "recall",
+                    "position": 11,
+                    "kind": "speak_retell",
+                    "unit": {
+                        "kind": "exchange",
+                        "ref": "x8"
+                    },
+                    "source": "returned",
+                    "source_day": 2,
+                    "retry_of": null,
+                    "payload": {
+                        "exchange": {
+                            "ref": "x8",
+                            "kind": "ask",
+                            "step": 8
+                        },
+                        "own_line": {
+                            "key": "should I watch for",
+                            "ref": "x8b",
+                            "audio": {
+                                "ref": "x8b",
+                                "url": null,
+                                "duration_ms": null,
+                                "voice": "learner"
+                            },
+                            "frame_ref": "p7",
+                            "text_native": "За какими тревожными признаками мне следить?",
+                            "text_target": "What warning signs should I watch for?",
+                            "filler_index": 0
+                        },
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "speech_mode": "repeat",
+                        "expected_text": "What warning signs should I watch for?"
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "exchange",
+                    "unit_ref": "x8",
+                    "source_day_id": "01M32KA0YBBNBTB3TH2RVYG3ZB",
+                    "answered_at": null,
+                    "returns": false
                 }
             ]
+        },
+        {
+            "stage": "repetition",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
         },
         {
             "stage": "conversation",
@@ -741,7 +737,7 @@
         }
     ],
     "metrics": {
-        "cards_total": 10,
+        "cards_total": 11,
         "minutes_spent": 0
     },
     "program": [
@@ -789,6 +785,11 @@
             "unit_kind": "exchange",
             "source": "returned",
             "state": "pending"
+        },
+        {
+            "unit_kind": "exchange",
+            "source": "returned",
+            "state": "pending"
         }
     ],
     "window": {
@@ -800,7 +801,7 @@
             "image": null,
             "image_tone": "#E3DCCF",
             "status": "in_progress",
-            "minutes_estimate": 12,
+            "minutes_estimate": 13,
             "minutes_spent": null,
             "goals": []
         },
@@ -809,9 +810,13 @@
                 "stage": "recall",
                 "state": "current",
                 "done_count": 0,
-                "total": 10,
-                "minutes_left": 6,
-                "share": 0.0
+                "total": 11,
+                "minutes_left": 7,
+                "minutes": 7,
+                "share": 0.0,
+                "talk_title_native": null,
+                "scenes_count": null,
+                "targets": null
             },
             {
                 "stage": "conversation",
@@ -819,9 +824,76 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0.0
+                "minutes": 6,
+                "share": 0.0,
+                "talk_title_native": "Поговори с регистратором",
+                "scenes_count": 2,
+                "targets": [
+                    {
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "ref": "p1",
+                        "text_target": "It hurts in his lower back.",
+                        "text_native": "У него болит поясница.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "ref": "p2",
+                        "text_target": "It started three days ago.",
+                        "text_native": "Началось три дня назад.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "ref": "p3",
+                        "text_target": "The pain is sharp when he bends.",
+                        "text_native": "Боль острая, когда он наклоняется.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                        "ref": "p4",
+                        "text_target": "He doesn't have a fever.",
+                        "text_native": "Температуры у него нет.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p1",
+                        "text_target": "He has a fever and a sore throat.",
+                        "text_native": "У него температура и болит горло.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p2",
+                        "text_target": "He's been sick for three days.",
+                        "text_native": "Он болеет уже три дня.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p3",
+                        "text_target": "Should I tell you his temperature?",
+                        "text_native": "Мне сказать вам его температуру?",
+                        "said": false
+                    }
+                ]
             }
         ],
+        "sources": [
+            {
+                "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+                "title_native": "Запись к врачу",
+                "day_number": null
+            },
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "title_native": "Приём у врача",
+                "day_number": 1
+            }
+        ],
+        "talk_again": false,
         "day_progress": 0.0,
         "program": {
             "words": {
@@ -842,7 +914,7 @@
             },
             "dialogue": {
                 "summary": {
-                    "total": 9,
+                    "total": 10,
                     "done": 0,
                     "returns": 0
                 },
@@ -967,23 +1039,6 @@
                         }
                     },
                     {
-                        "step": 4,
-                        "kind": "answer",
-                        "partner": {
-                            "text": "Did you give him any medicine for the fever?",
-                            "translation": "Вы давали ему что-нибудь от температуры?",
-                            "audio_url": null
-                        },
-                        "learner": {
-                            "text": "I gave him paracetamol.",
-                            "translation": "Я дал(а) ему парацетамол.",
-                            "audio_url": null,
-                            "state": "pending",
-                            "phrase_ref": "p4",
-                            "filler": "paracetamol"
-                        }
-                    },
-                    {
                         "step": 5,
                         "kind": "answer",
                         "partner": {
@@ -998,6 +1053,40 @@
                             "state": "pending",
                             "phrase_ref": "p5",
                             "filler": "a viral infection"
+                        }
+                    },
+                    {
+                        "step": 6,
+                        "kind": "ask",
+                        "partner": {
+                            "text": "Give him fluids, let him rest, and check his temperature.",
+                            "translation": "Давайте ему больше жидкости, пусть отдыхает и проверяйте температуру.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "What should I do at home?",
+                            "translation": "Что мне делать дома?",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p6",
+                            "filler": "at home"
+                        }
+                    },
+                    {
+                        "step": 8,
+                        "kind": "ask",
+                        "partner": {
+                            "text": "Come back if he has trouble breathing or can't drink.",
+                            "translation": "Приходите снова, если ему трудно дышать или он не может пить.",
+                            "audio_url": null
+                        },
+                        "learner": {
+                            "text": "What warning signs should I watch for?",
+                            "translation": "За какими тревожными признаками мне следить?",
+                            "audio_url": null,
+                            "state": "pending",
+                            "phrase_ref": "p7",
+                            "filler": "warning signs"
                         }
                     }
                 ]

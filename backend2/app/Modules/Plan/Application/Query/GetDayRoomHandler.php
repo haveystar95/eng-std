@@ -96,7 +96,7 @@ final readonly class GetDayRoomHandler
             // progress. A day not yet opened has nothing to count.
             metrics: $dealt ? new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent) : null,
             program: $this->program($cards),
-            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards, $talkStage, $walked),
+            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards, $talkStage, $walked, $talk),
             speech: $this->packs->for($plan->targetLang()->value)->speech(),
             repeatMisses: $this->config->repeatMisses,
         );

@@ -2347,7 +2347,7 @@ paths:
         - name: stage
           in: path
           required: true
-          schema: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation] }
+          schema: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, repetition, conversation], description: '`repetition` — «Повторение», the review day''s own stage (наряд BACK-TAILS-2 §3)' }
       responses:
         '200': { $ref: '#/components/responses/PlanDayRoom' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -2388,8 +2388,18 @@ paths:
         подсказок» switch of the entry card and is fixed for the talk it starts.
 
 
+        «ПОВТОРИТЬ РАЗГОВОР» (наряд BACK-TAILS-2 §7, `window.talk_again`): once the day's sixth stage is
+        walked, a new talk is a REPLAY (`replay: true`) — on a day being walked and on a PASSED day alike.
+        It changes neither the day's state nor its result: the day stays closed, its minutes and what
+        returns tomorrow stay the talk's that walked the stage; the replay's lines and its bill are
+        written like any talk's. `plan.conversation.replays_per_day` replays per day of the plan per
+        calendar day of the learner (3); past that, 409 `plan_conversation_replay_limit` with
+        `meta.retry_after_utc` — the learner's next midnight, UTC — and nothing is started.
+
+
         The call waits on a model and a voice — it is the slowest call of this API by design (≤ 6 s).
-        409 `plan_day_not_open` when the day is not being walked; 422 `plan_conversation_not_in_day`
+        409 `plan_day_not_open` when the day is neither being walked nor passed with its talk walked;
+        409 `plan_conversation_replay_limit` (above); 422 `plan_conversation_not_in_day`
         when the day has no talk (dealt before наряд CONV-1, or no scene of it has a lesson);
         503 `plan_conversation_unavailable` when the role did not answer — nothing is written and the
         call may be repeated.
@@ -3012,7 +3022,7 @@ components:
       type: object
       required: [stage, state]
       properties:
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation], description: '`recall` — «Вспомнить» of the rehearsal; `conversation` — the talk with the agent, the sixth node (наряд CONV-1). The node of the talk is `done` once the journal of stages says it was walked — a replay («Ещё раз») going on beside it does not turn it back (наряд CONV-2)' }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, repetition, conversation], description: '`recall` — «Вспомнить» of the rehearsal; `repetition` — «Повторение», the review day''s own stage, where its cards used to stand under `speak` (наряд BACK-TAILS-2 §3); `conversation` — the talk with the agent, the sixth node (наряд CONV-1). The node of the talk is `done` once the journal of stages says it was walked — a replay («Ещё раз») going on beside it does not turn it back (наряд CONV-2)' }
         state:
           type: string
           enum: [done, current, locked]
@@ -3185,7 +3195,7 @@ components:
       type: object
       required: [stage, total, done, state, cards]
       properties:
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation], description: 'The talk''s row (`conversation`) has no cards: `total` and `done` are 0, `cards` empty; `done` once the stage is walked (наряд CONV-2)' }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, repetition, conversation], description: 'Every stage of cards in walking order, `absent` where the day has none — `recall` is the rehearsal''s, `repetition` the review''s (наряд BACK-TAILS-2 §3); the talk''s row (`conversation`) has no cards: `total` and `done` are 0, `cards` empty; `done` once the stage is walked (наряд CONV-2)' }
         total: { type: integer }
         done: { type: integer }
         state:
@@ -3222,7 +3232,7 @@ components:
       required: [cards_total, minutes_spent]
       properties:
         cards_total: { type: integer }
-        minutes_spent: { type: integer, description: 'From answer timestamps; pauses over ten minutes not counted' }
+        minutes_spent: { type: integer, description: 'The cards'' minutes, from answer timestamps (pauses over ten minutes not counted), plus `summary.minutes` of the talk that walked the sixth stage — from the moment it walked it; a replay adds nothing (наряд BACK-TAILS-2 §8)' }
 
     PlanWindowSummary:
       type: object
@@ -3246,17 +3256,41 @@ components:
       description: >-
         One stage row of the day window. `done_count`, `total` and `minutes_left` are NOT null on the
         `current` row only — the client prints a number nowhere else. A day not started has every row
-        `locked` (no current row, no number); a passed day has every row `done`.
-      required: [stage, state, done_count, total, minutes_left, share, talk_title_native, scenes_count]
+        `locked` (no current row, no number); a passed day has every row `done`. `minutes` — the
+        stage's planned minutes — is on EVERY row in every state (наряд BACK-TAILS-2 §4).
+      required: [stage, state, done_count, total, minutes_left, minutes, share, talk_title_native, scenes_count, targets]
       properties:
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, conversation], description: 'The stages the day deals, in walking order; the rehearsal has `recall` and `conversation`, a review day its cards and `conversation` (наряд CONV-1). The server sent these two before the enum listed them — CLIENT-CONV-1a §5 п. 7, closed by наряд CONV-2' }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, repetition, conversation], description: 'The stages the day deals, in walking order; the rehearsal has `recall` and `conversation`, a review day `repetition` (its own cards, наряд BACK-TAILS-2 §3; `words` and `phrases` when something comes back to them) and `conversation`' }
         state: { type: string, enum: [done, current, locked] }
         done_count: { type: [integer, 'null'], description: 'Null on the talk''s row always: it has no cards to count' }
         total: { type: [integer, 'null'] }
         minutes_left: { type: [integer, 'null'], description: 'By the pace of the stage (`DayPace`), rounded up; on the talk''s row — the talk''s own budget' }
+        minutes: { type: integer, minimum: 0, description: 'What the WHOLE stage is reckoned to take, in whole minutes, rounded up — «около 4 минут» on the rows of a day not opened yet (кадры 37-1, 37-2). A stage of cards: every card of it by the day''s pace (`plan.pace`; «Скажи целиком» per round, the «Вспомнить» sheet per scene, its lines said aloud per card); the talk''s row: its own budget, `plan.conversation.minutes` — 3 on a scene day, 6 on a review and the rehearsal. 0 where the day has no cards to price yet' }
         share: { type: number, minimum: 0, maximum: 1, description: 'The row''s bar: 1 done, 0 locked, answered/total current' }
         talk_title_native: { type: [string, 'null'], description: 'The talk''s row only (наряд CONV-2, п. 12): the entry title «Поговори с врачом» — the role the talk opens with, in the instrumental, inflected by the server (кадр 37-5); «Поговори с собеседником» when the role cannot be inflected with certainty. Null on every card row' }
         scenes_count: { type: [integer, 'null'], minimum: 0, description: 'The talk''s row only (наряд CONV-2, п. 12): how many scenes the talk walks — 1 on a scene day, all the ready scenes on the rehearsal («Разговор целиком · 3 сцены»), the repeated days'' scenes on a review day. Null on every card row' }
+        targets:
+          type: [array, 'null']
+          maxItems: 7
+          description: >-
+            The talk's row only (наряд BACK-TAILS-2 §4): «Скажи в разговоре» before the talk is started — EXACTLY the
+            list `POST …/days/{number}/conversation` starts the talk with (one selector of the day; no second set),
+            the rehearsal over all its scenes, a review over its own. `said` is where the day's LATEST talk left each
+            phrase (a replay too); false everywhere while the day has no talk yet. Null on every card row.
+          items: { $ref: '#/components/schemas/PlanConversationTarget' }
+
+    PlanConversationTarget:
+      type: object
+      description: >-
+        One phrase of «Скажи в разговоре» — the same shape in the talk's document (`PlanConversation.targets`) and on
+        the day window's talk row (`PlanWindowStage.targets`).
+      required: [scene_id, ref, text_target, text_native, said]
+      properties:
+        scene_id: { type: string }
+        ref: { type: string, description: 'The phrase — `p3`' }
+        text_target: { type: string }
+        text_native: { type: string }
+        said: { type: boolean }
 
     PlanWindowWord:
       type: object
@@ -3392,7 +3426,7 @@ components:
         «Окно дня» (DAY-UI-2, DAY-UI-3, кадры 23-0a…0e): the day's own reading of its cards for the one-screen
         window — what the plate, the compact header, the three programme tabs and the one button
         draw. Everything countable is counted here; the client words it.
-      required: [day, stages, day_progress, program, allowed_action, listening, highlights]
+      required: [day, stages, day_progress, program, allowed_action, listening, highlights, sources, talk_again]
       properties:
         day:
           type: object
@@ -3415,7 +3449,7 @@ components:
                 starts the plan first). `locked` is not a window state: the client refuses to draw it.
                 `building` — the day is next in line and its lesson is not back yet: no `allowed_action`, ask again.
             minutes_estimate: { type: [integer, 'null'], description: 'What the day still asks for — all of it before the start, what is left while walked; null once passed or without cards' }
-            minutes_spent: { type: [integer, 'null'], description: 'A passed day only' }
+            minutes_spent: { type: [integer, 'null'], description: 'A passed day only: the cards and the talk that walked the sixth stage (наряд BACK-TAILS-2 §8)' }
             goals:
               type: array
               items:
@@ -3456,8 +3490,32 @@ components:
           enum: [start, continue, again, null]
           description: >-
             The one button: «Начать» (`POST /start` for an unstarted plan, then `…/open`),
-            «Продолжить» (`…/open`), «Ещё раз» — the day's «Говорю сам» once more over
-            `GET …/cards`, answers not sent (not a retake of the day). Null: no button.
+            «Продолжить» (`…/open`), «Ещё раз» — the day's «Говорю сам» (a review's «Повторение»)
+            once more over `GET …/cards`, answers not sent (not a retake of the day). Null: no button.
+        sources:
+          type: array
+          description: >-
+            «Из каких сцен» / «Из каких дней» (кадры 37-1, 37-2; наряд BACK-TAILS-2 §4) — the scenes the day
+            is made of: the rehearsal — every content scene of the plan (the ones its «Вспомнить» and its talk
+            walk); a review — the scenes of the two scene days it repeats (the ones whose returns it takes); a
+            scene day — its own scene. In the plan's order of scenes — the order «Вспомнить» and the talk walk
+            them in, the order of their days in a plan the generator built. Named as the plan names the scene
+            (§6); the photo is the plan's scene's, by `scene_id` (`Plan.scenes[].image`).
+          items:
+            type: object
+            additionalProperties: false
+            required: [scene_id, title_native, day_number]
+            properties:
+              scene_id: { type: string }
+              title_native: { type: string }
+              day_number: { type: [integer, 'null'], minimum: 1, description: 'The day of the route the scene stands on. Null for a scene with no day of its own — never in a plan the generator built, where every scene has its day; a stand put together by hand has one (the e2e rehearsal''s «Запись к врачу»)' }
+        talk_again:
+          type: boolean
+          description: >-
+            «Повторить разговор» (наряд BACK-TAILS-2 §7): true when the day's sixth stage is walked — by the
+            journal of stages — and the day shows its window, being walked or passed. The replay itself is
+            `POST …/days/{n}/conversation` (`replay: true`), capped per day of the learner (409
+            `plan_conversation_replay_limit`).
         highlights:
           type: array
           description: >-
@@ -3548,7 +3606,7 @@ components:
          response, unit_kind, unit_ref, source_day_id, answered_at, returns]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
-        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall] }
+        stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, repetition], description: 'The stage of cards the card is walked in — a review day''s spoken cards stand in `repetition` (наряд BACK-TAILS-2 §3); the talk has no cards' }
         position: { type: integer, minimum: 1, description: 'Within the stage; a requeued card takes the next position' }
         kind:
           type: string
@@ -4516,19 +4574,13 @@ components:
         Клиент зачитывает сам по покрытию. С наряда CONV-2 (п. 6) — только реплика ученика: «Говорю сам» — часть ученика, и
         реплику собеседника («Please bring a towel, use clean shoes…» — день Дена 21.09) его больше не просят повторить.
         Реплика — следующая свободная (не занятая `speak_answer` и `speak_retell`), а если свободных нет — самая длинная
-        реплика дня, которую не взял `speak_retell`.
-      required: [scene_id, exchange, own_line, partner_line, expected_text, speech_mode, pause_ms]
+        реплика дня, которую не взял `speak_retell`. Чужой реплики на карточке нет ни в каком поле: временная копия под
+        `partner_line` для сборки 1.0.0 (17) снята (наряд BACK-TAILS-2 §10) — звучащая реплика только `own_line`.
+      required: [scene_id, exchange, own_line, expected_text, speech_mode, pause_ms]
       properties:
         scene_id: { type: string, description: 'Сцена карточки' }
         exchange: { $ref: '#/components/schemas/PlanCardExchange' }
         own_line: { $ref: '#/components/schemas/PlanCardOwnLine' }
-        partner_line:
-          allOf: [{ $ref: '#/components/schemas/PlanCardLine' }]
-          deprecated: true
-          description: >-
-            ТА ЖЕ реплика ученика, что `own_line`, — только ради сборки клиента 1.0.0 (17), которая читает звучащую реплику
-            под этим ключом и без него пропустила бы карточку (а пропущенная карточка — этап, который не закрыть). Уходит,
-            как только клиент читает `own_line` (ROADMAP, наряд CONV-2). Реплики собеседника здесь нет.
         expected_text: { type: string, description: 'Что должно прозвучать — своя реплика целиком' }
         speech_mode: { $ref: '#/components/schemas/PlanSpeechMode' }
         pause_ms: { type: integer, description: 'Пауза после звука, прежде чем ждать речь — 3000 мс' }
@@ -4559,7 +4611,10 @@ components:
         «Вспомни свои реплики» (37-3, наряд CONV-1) — единственная карточка этапа «Вспомнить» у дня
         репетиции: лист со СВОИМИ репликами каждой сцены плана, с переводом и звуком. Ничего не
         проверяет и ничего не выбирает — это напоминание перед разговором; итог — `passed` по
-        «Дальше» (или `skipped`). Сцены листаются по порядку плана.
+        «Дальше» (или `skipped`). Сцены листаются по порядку плана. С наряда BACK-TAILS-2 (§§5–6):
+        реплика листа — только `{ref, text_target, text_native, audio}` ученика, в порядке визита, и
+        реплики собеседника не едут ни в каком поле; имя сцены — имя из плана (то же, что у маршрута,
+        окна и разговора), не заголовок урока. Фото сцены — `Plan.scenes[].image` по `scene_id`.
       required: [scene_id, scenes]
       properties:
         scene_id: { type: string, description: 'Первая сцена листа — ключ есть у любого payload' }
@@ -4568,20 +4623,24 @@ components:
           description: 'Сцены плана по порядку; на каждой — свои реплики ученика'
           items:
             type: object
+            additionalProperties: false
             required: [scene_id, title_target, title_native, lines]
             properties:
               scene_id: { type: string }
-              title_target: { type: string }
-              title_native: { type: string }
+              title_target: { type: string, description: 'Имя сцены в плане, на языке цели (`Plan.scenes[].title_target`)' }
+              title_native: { type: string, description: 'Имя сцены в плане (`Plan.scenes[].title_native`)' }
               lines:
                 type: array
+                description: 'Свои реплики ученика в порядке визита'
                 items:
-                  allOf:
-                    - $ref: '#/components/schemas/PlanCardOwnLine'
-                    - type: object
-                      required: [step]
-                      properties:
-                        step: { type: integer, minimum: 1, description: 'Шаг визита, на котором реплика звучит' }
+                  type: object
+                  additionalProperties: false
+                  required: [ref, text_target, text_native, audio]
+                  properties:
+                    ref: { type: string, description: '`x3b` — реплика ученика обмена 3' }
+                    text_target: { type: string }
+                    text_native: { type: string }
+                    audio: { $ref: '#/components/schemas/PlanCardAudio' }
 
     PlanConversation:
       type: object
@@ -4648,18 +4707,11 @@ components:
           description: >-
             «Скажи в разговоре» (наряд CONV-2, п. 10): the four to seven phrases of the plan the talk is FOR, over its
             checkpoints in order — inside a scene as its visit says them, over several scenes shared out scene after
-            scene. `said` turns true the move the SERVER hears the phrase (its own rule, `free`), so the entry lists
-            them and the ribbon's strip ticks them off; the summary counts the same list.
+            scene. `said` turns true the move the SERVER hears the phrase (its rule of phrase use, наряд BACK-TAILS-2
+            §2), so the entry lists them and the ribbon's strip ticks them off; the summary counts the same list. The
+            day window's talk row prints the same list (`PlanWindowStage.targets`).
           maxItems: 7
-          items:
-            type: object
-            required: [scene_id, ref, text_target, text_native, said]
-            properties:
-              scene_id: { type: string }
-              ref: { type: string, description: 'The phrase — `p3`' }
-              text_target: { type: string }
-              text_native: { type: string }
-              said: { type: boolean }
+          items: { $ref: '#/components/schemas/PlanConversationTarget' }
         hints:
           type: object
           required: [enabled, delay_ms, native]
@@ -4855,13 +4907,13 @@ components:
           properties:
             cards_total: { type: integer }
             cards_done: { type: integer }
-            minutes_spent: { type: integer, description: 'From answer timestamps; pauses over ten minutes not counted' }
+            minutes_spent: { type: integer, description: 'The cards'' minutes from answer timestamps (pauses over ten minutes not counted) plus the talk that walked the sixth stage, once it has (наряд BACK-TAILS-2 §8)' }
         stage:
           type: object
           description: This card's stage, counted the same way
           required: [stage, minutes_spent]
           properties:
-            stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall] }
+            stage: { type: string, enum: [words, phrases, dialogue, listen, speak, recall, repetition] }
             minutes_spent: { type: integer }
 
     PlanJudgeOutcome:
@@ -4882,7 +4934,11 @@ components:
 
     Problem:
       type: object
-      description: RFC 7807 with a stable machine `code`.
+      description: >-
+        RFC 7807 with a stable machine `code`. The plan's codes and their `meta` are listed in
+        `docs/plan-api.md` («Коды 409»); one of them names a moment the client may retry at —
+        `plan_conversation_replay_limit` (наряд BACK-TAILS-2 §7): `meta {day, replays_per_day,
+        retry_after_utc}`, the last the learner's next midnight in UTC (`2026-09-22T21:00:00Z`).
       properties:
         type: { type: string, format: uri }
         title: { type: string }

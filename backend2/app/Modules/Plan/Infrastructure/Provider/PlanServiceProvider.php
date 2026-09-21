@@ -12,6 +12,7 @@ use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\ConversationAudioStore;
+use App\Modules\Plan\Application\Port\DayBuildLog;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\LineAudioStore;
@@ -50,12 +51,14 @@ use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationTurnSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerCalendar;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerGender;
+use App\Modules\Plan\Infrastructure\Adapter\LogDayBuildLog;
 use App\Modules\Plan\Infrastructure\Adapter\PexelsPlanImageFinder;
 use App\Modules\Plan\Infrastructure\Adapter\QueuedPlanDispatcher;
 use App\Modules\Plan\Infrastructure\Adapter\RedisSlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyNativeDistractorSource;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyPlanCollectionWriter;
+use App\Modules\Plan\Infrastructure\Console\PlanReconcileScenesCommand;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentCheckCounters;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentConversationRepository;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentStagePassageRepository;
@@ -108,6 +111,8 @@ final class PlanServiceProvider extends ServiceProvider
         $this->app->bind(StagePassageRepository::class, EloquentStagePassageRepository::class);
         $this->app->bind(PlanTermRepository::class, EloquentPlanTermRepository::class);
         $this->app->bind(CheckCounters::class, EloquentCheckCounters::class);
+        // What a dealing had to give up — the stop signal of «Фразы» (наряд BACK-TAILS-2 §1) — goes to the application log.
+        $this->app->bind(DayBuildLog::class, LogDayBuildLog::class);
         $this->app->bind(NativeDistractorSource::class, VocabularyNativeDistractorSource::class);
         $this->app->bind(PlanAccountEraser::class, EloquentPlanAccountEraser::class);
         $this->app->bind(PlanDispatcher::class, QueuedPlanDispatcher::class);
@@ -202,6 +207,7 @@ final class PlanServiceProvider extends ServiceProvider
                 costCapUsd: (float) config('plan.conversation.cost_cap_usd', ConversationRules::COST_CAP_USD),
                 hintDelayMs: (int) config('plan.conversation.hint_delay_ms', ConversationRules::HINT_DELAY_MS),
                 enabled: (bool) config('plan.conversation.enabled', ConversationRules::ENABLED),
+                replaysPerDay: max(0, (int) config('plan.conversation.replays_per_day', ConversationRules::REPLAYS_PER_DAY)),
             );
         });
 
@@ -314,6 +320,10 @@ final class PlanServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../Migration');
+
+        // One scene, one name (наряд BACK-TAILS-2 §6): the dealt «Вспомнить» sheets named by their plan — dry-run unless
+        // `--apply`. Registered with the module, beside the migration it follows.
+        $this->commands([PlanReconcileScenesCommand::class]);
 
         $routes = __DIR__.'/../../Presentation/Http/routes.php';
         if (is_file($routes)) {

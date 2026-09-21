@@ -119,8 +119,9 @@ it('holds day 1 of the clean doctor lesson byte for byte, every card of the regi
     // Диалог is 13 since наряд BACK-TAILS-1 §1.5: an ask deals one card, not two. «Фразы» differs by level since the
     // ceiling decision of 20.09: «Скажи целиком» is a series of rounds, the beginner's is two rounds and leaves the
     // stage room for two THIRD recognitions under its 690 s, the intermediate's three fill it and give up round three.
-    // Seven rows since наряд CONV-1: «Вспомнить» is the rehearsal's (absent here) and the talk has no cards at all.
-    expect(array_map(static fn (array $s): int => count($s['cards']), $room['stages']))->toBe([24, $phrases, 13, 9, 8, 0, 0])
+    // Eight rows since наряд BACK-TAILS-2 §3: «Вспомнить» is the rehearsal's and «Повторение» a review day's (both absent
+    // here), and the talk has no cards at all.
+    expect(array_map(static fn (array $s): int => count($s['cards']), $room['stages']))->toBe([24, $phrases, 13, 9, 8, 0, 0, 0])
         ->and(array_diff(array_unique(array_column($cards, 'kind')), array_map(static fn (CardKind $k): string => $k->value, CardKind::dealt())))->toBe([])
         ->and($sounds)->not->toBeEmpty()
         ->and(array_filter($sounds, static fn (array $s): bool => ! is_string($s['url']) || ! is_int($s['duration_ms'])))->toBe([]);

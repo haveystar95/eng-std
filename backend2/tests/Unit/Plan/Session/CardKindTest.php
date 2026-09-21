@@ -56,8 +56,23 @@ it('moves only speak_retell to «Вспомнить», and only on the rehearsal
     }
 
     expect(CardKind::SpeakRetell->stage(DayType::Rehearsal))->toBe(Stage::Recall)
-        ->and(CardKind::SpeakRetell->stage(DayType::Scene))->toBe(Stage::Speak)
-        ->and(CardKind::SpeakRetell->stage(DayType::Review))->toBe(Stage::Speak);
+        ->and(CardKind::SpeakRetell->stage(DayType::Scene))->toBe(Stage::Speak);
+});
+
+// Canon (наряд BACK-TAILS-2 §3): «день повторения отдаёт ряд своих карточек с id repetition, не speak». CATCHES a review
+// card read as «Говорю сам», and a kind of another stage pulled into the repetition.
+it('moves the kinds of «Говорю сам» to «Повторение» on a review day, and nothing else', function () {
+    foreach (CardKind::cases() as $kind) {
+        $moved = $kind->stage(DayType::Review) !== $kind->stage();
+        expect($moved)->toBe(in_array($kind, [CardKind::SpeakAnswer, CardKind::SpeakEcho, CardKind::SpeakRetell], true), $kind->value);
+    }
+
+    expect(CardKind::SpeakAnswer->stage(DayType::Review))->toBe(Stage::Repetition)
+        ->and(CardKind::SpeakRetell->stage(DayType::Review))->toBe(Stage::Repetition)
+        ->and(CardKind::SpeakAnswer->stage(DayType::Scene))->toBe(Stage::Speak)
+        ->and(CardKind::WordChoose->stage(DayType::Review))->toBe(Stage::Words)
+        ->and(array_map(static fn (Stage $s): string => $s->value, Stage::ordered()))
+        ->toBe(['words', 'phrases', 'dialogue', 'listen', 'speak', 'recall', 'repetition', 'conversation']);
 });
 
 // Catches a kind added to two lists (a choice that is also spoken) or to none (a kind nobody can answer).

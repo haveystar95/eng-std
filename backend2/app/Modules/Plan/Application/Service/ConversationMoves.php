@@ -9,13 +9,18 @@ use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
 use App\Modules\Plan\Application\Dto\ConversationMaterialView;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\TurnSpeaker;
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Exception\ConversationUnavailable;
+use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\ConversationRules;
+use App\Modules\Plan\Domain\Service\PhraseUse;
 use App\Modules\Plan\Domain\Service\RoleLines;
 use App\Modules\Plan\Domain\ValueObject\ConversationEnd;
+use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\ConversationTurnId;
 use App\Modules\Plan\Domain\ValueObject\TurnAudio;
 use App\Modules\Plan\Domain\ValueObject\TurnCost;
@@ -36,13 +41,19 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * a farewell in the role's own words and the talk ends `limit`. A learner is never left mid-sentence
  * because a number was reached.
  *
- * THE ANSWER IS CHECKED BEFORE IT IS SAID (наряд CONV-2, пп. 1 и 4б): a reply that says a line of the
- * learner, or a rescue that says the rescued line again ({@see RoleLines}), is not voiced — the move is
- * asked for once more with the reason (`REDO`), and counted. Once, because the learner is waiting. When
- * the second answer says a learner line too — or does not come — the sentence that says it is cut out
- * if the rest of the answer stands on its own (`…_cut`), and otherwise the answer is said as it is
- * (`…_kept`): the guard never makes a move worse than no guard, and never turns a reply into «Врач не
- * отвечает».
+ * THE ANSWER IS CHECKED BEFORE IT IS SAID (наряд CONV-2, пп. 1 и 4б; наряд BACK-TAILS-2 §9): a reply that says a
+ * line of the learner, one that says the learner's last move back, or a rescue that says the rescued line again
+ * ({@see RoleLines}), is not voiced — the move is asked for once more with the reason (`REDO`), and counted. Once,
+ * because the learner is waiting. When the second answer does it too — or does not come — the sentence that does it is
+ * cut out if the rest of the answer stands on its own (`…_cut`). Otherwise a learner line is said as it came (`…_kept`)
+ * — the guard never makes a move worse than no guard, and never turns a reply into «Врач не отвечает» — and an echo
+ * with nothing of the role's own around it gives way to the pack's neutral line (`…_neutral`): the learner's words said
+ * back are no move of the role at all.
+ *
+ * WHICH TARGETS THE MOVE SAID is decided here too, once the role has answered it (наряд BACK-TAILS-2 §2,
+ * {@see PhraseUse}): the code's rule over every target not said yet, and the role's own `phrases_used` as its second
+ * support. The move is completed with them before it is written, and before the next intention is chosen — a phrase
+ * just said is not offered again.
  */
 final readonly class ConversationMoves
 {
@@ -52,6 +63,8 @@ final readonly class ConversationMoves
         private ConversationRules $rules,
         private CheckCounters $counters,
         private Clock $clock,
+        private LanguagePacks $packs,
+        private PhraseUse $phrases = new PhraseUse,
     ) {}
 
     /** The line that opens the talk — the role speaks first, before the learner has said anything. */
@@ -72,8 +85,15 @@ final readonly class ConversationMoves
         // Was the move BEFORE this one already off the scene? Then this one makes two in a row.
         $pushedAgain = $talk->offTopicStreak() > 0;
 
+        $target = $this->packs->for($plan->targetLang()->value);
         $request = $this->agent->request($plan, $talk, $material, $turn, $heard, $turnsLeft);
-        $reply = $this->checked($request, $this->agent->ask($request), $talk, $material, $turn);
+        $reply = $this->checked(
+            $request, $this->agent->ask($request), $talk, $material, $turn, $heard,
+            $target, $this->packs->for($plan->nativeLang()->value),
+        );
+        if ($turn === 'said') {
+            $talk->creditMove($this->phrases->heardIn($heard, self::unsaid($talk, $material), $reply->phrasesUsed, $target));
+        }
 
         $turnId = ConversationTurnId::generate();
         // The line is said in the voice of the scene it is said IN — so the role's voice changes with
@@ -141,8 +161,11 @@ final readonly class ConversationMoves
         Conversation $talk,
         ConversationMaterialView $material,
         string $turn,
+        string $heard,
+        LanguagePack $target,
+        LanguagePack $native,
     ): ConversationAgentReply {
-        $fault = $this->fault($reply, $talk, $material, $turn);
+        $fault = $this->fault($reply, $talk, $material, $turn, $heard, $target);
         if ($fault === null) {
             return $reply;
         }
@@ -154,7 +177,7 @@ final readonly class ConversationMoves
         } catch (ConversationUnavailable) {
             $answer = $reply;
         }
-        if ($answer !== $reply && $this->fault($answer, $talk, $material, $turn) === null) {
+        if ($answer !== $reply && $this->fault($answer, $talk, $material, $turn, $heard, $target) === null) {
             return $answer;
         }
         if ($fault['reason'] === RoleLines::REDO_LEARNER_LINE) {
@@ -165,28 +188,58 @@ final readonly class ConversationMoves
                 return $answer->saying($cut['target'], $cut['native']);
             }
         }
+        if ($fault['reason'] === RoleLines::REDO_LEARNER_ECHO && RoleLines::echoIn($answer->replyTarget, $heard, $target, $this->phrases) !== null) {
+            $cut = RoleLines::withoutEcho($answer->replyTarget, $answer->replyNative, $heard, $target, $this->phrases);
+            if ($cut !== null) {
+                $this->counters->recordCodes($version, [RoleLines::CODE_LEARNER_ECHO_CUT]);
+
+                return $answer->saying($cut['target'], $cut['native']);
+            }
+            [$neutral, $translation] = [$target->neutralReply(), $native->neutralReply()];
+            if ($neutral !== null && $translation !== null) {
+                $this->counters->recordCodes($version, [RoleLines::CODE_LEARNER_ECHO_NEUTRAL]);
+
+                return $answer->saying($neutral, $translation);
+            }
+        }
         $this->counters->recordCodes($version, [$fault['kept']]);
 
         return $answer;
     }
 
     /**
-     * What is wrong with an answer, if anything: a line of the learner said as the role's own (every move), or, on a
-     * rescue, the rescued line said again.
+     * What is wrong with an answer, if anything: a line of the learner said as the role's own (every move), the learner's
+     * last move said back (a move the learner said something on), or, on a rescue, the rescued line said again.
      *
-     * @return array{reason: 'learner_line'|'same_words', line: string|null, code: string, kept: string}|null
+     * @return array{reason: 'learner_line'|'learner_echo'|'same_words', line: string|null, code: string, kept: string}|null
      */
-    private function fault(ConversationAgentReply $reply, Conversation $talk, ConversationMaterialView $material, string $turn): ?array
+    private function fault(ConversationAgentReply $reply, Conversation $talk, ConversationMaterialView $material, string $turn, string $heard, LanguagePack $target): ?array
     {
         $line = RoleLines::learnerLineIn($reply->replyTarget, $material->learnerLines(), self::saidSoFar($talk));
         if ($line !== null) {
             return ['reason' => RoleLines::REDO_LEARNER_LINE, 'line' => $line, 'code' => RoleLines::CODE_LEARNER_LINE, 'kept' => RoleLines::CODE_LEARNER_LINE_KEPT];
+        }
+        if ($turn === 'said' && RoleLines::echoIn($reply->replyTarget, $heard, $target, $this->phrases) !== null) {
+            return ['reason' => RoleLines::REDO_LEARNER_ECHO, 'line' => null, 'code' => RoleLines::CODE_LEARNER_ECHO, 'kept' => RoleLines::CODE_LEARNER_ECHO_KEPT];
         }
         if ($turn === 'rescue' && RoleLines::repeats($reply->replyTarget, $talk->lineBeforeLastMove())) {
             return ['reason' => RoleLines::REDO_SAME_WORDS, 'line' => null, 'code' => RoleLines::CODE_SAME_WORDS, 'kept' => RoleLines::CODE_SAME_WORDS_KEPT];
         }
 
         return null;
+    }
+
+    /**
+     * The talk's targets not said so far — the only ones a move is read for (наряд BACK-TAILS-2 §2, п. д): what is said
+     * stays said, and every target counts, whichever scene the move stands in.
+     *
+     * @return list<ConversationPhrase>
+     */
+    private static function unsaid(Conversation $talk, ConversationMaterialView $material): array
+    {
+        $heard = ConversationOutcomes::heard($talk);
+
+        return array_values(array_filter($material->targets, static fn (ConversationPhrase $p): bool => ! isset($heard[$p->id()])));
     }
 
     /**

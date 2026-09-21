@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Dto\JudgeOutcome;
+use App\Modules\Plan\Application\Service\DayMetricsOf;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Application\Service\SlotJudge;
 use App\Modules\Plan\Domain\Entity\DayCard;
@@ -15,7 +16,6 @@ use App\Modules\Plan\Domain\Exception\CardNotJudged;
 use App\Modules\Plan\Domain\Exception\PlanDayNotOpen;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
-use App\Modules\Plan\Domain\Service\DayMetricsCalculator;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
@@ -42,7 +42,7 @@ final readonly class JudgeCardHandler
         private PlanAccess $access,
         private DayCardRepository $cards,
         private PlanRepository $plans,
-        private DayMetricsCalculator $metrics,
+        private DayMetricsOf $metrics,
         private SlotJudge $judge,
         private Clock $clock,
         private TransactionManager $tx,
@@ -72,7 +72,7 @@ final readonly class JudgeCardHandler
             $card = $this->cardOf($day, $command->cardId, forUpdate: true);
             $card->judge($verdict->accepted, $hinted, $verdict->response($command->heard, $hinted), $now);
             $this->cards->save($card);
-            $this->plans->saveDayMetrics($day->id(), $this->metrics->calculate($this->cards->forDay($day->id())));
+            $this->plans->saveDayMetrics($day->id(), $this->metrics->of($day->id(), $this->cards->forDay($day->id())));
 
             return $card;
         });

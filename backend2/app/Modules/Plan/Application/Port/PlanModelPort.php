@@ -41,7 +41,8 @@ interface PlanModelPort
     public function judgeSlot(SlotJudgeRequest $request): ModelReply;
 
     /**
-     * ONE MOVE OF THE CONVERSATION AGENT (`conversation_agent.v2`, наряд CONV-1; v2 — наряд CONV-2): the role's reply in
+     * ONE MOVE OF THE CONVERSATION AGENT (`conversation_agent.v2.1`, наряд CONV-1; v2 — наряд CONV-2; v2.1 — наряд
+     * BACK-TAILS-2 §9): the role's reply in
      * both languages, what it judged about the learner's move, the checkpoint it closed, the hint to
      * offer next and whether the talk is over. Synchronous, inside the learner's request, ONE attempt
      * — a retry would only lengthen a wait the learner is sitting through; a silence throws.

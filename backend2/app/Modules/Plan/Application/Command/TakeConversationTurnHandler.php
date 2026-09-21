@@ -15,7 +15,6 @@ use App\Modules\Plan\Domain\Exception\ConversationEnded;
 use App\Modules\Plan\Domain\Exception\ConversationNotFound;
 use App\Modules\Plan\Domain\Exception\ConversationNotYourTurn;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
-use App\Modules\Plan\Domain\Service\SpokenPhrases;
 use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\ConversationTurnId;
 use App\Modules\Plan\Domain\ValueObject\TurnKind;
@@ -27,11 +26,11 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * ONE MOVE OF THE TALK (наряд CONV-1, п. 3): the learner's line, the role's answer to it, and what
  * the server itself decided about both.
  *
- * WHAT IS THE SERVER'S AND WHAT IS THE MODEL'S. The phrases of the plan that sounded are matched
- * HERE, by the product's one rule of spoken grading ({@see SpokenPhrases}, mode `free`) — the model
- * is asked for its opinion by the schema and the answer is kept, but the count in the summary is
- * the code's. «Понял ли вопрос» is the model's, because that is a judgement about meaning and only
- * the role was asked it.
+ * WHAT IS THE SERVER'S AND WHAT IS THE MODEL'S. Which of the talk's targets the move said is the
+ * server's rule ({@see \App\Modules\Plan\Domain\Service\PhraseUse}, наряд BACK-TAILS-2 §2), applied
+ * once the role has answered — the role's own `phrases_used` is the rule's second support and never
+ * counts alone ({@see ConversationMoves}). «Понял ли вопрос» is the model's, because that is a judgement
+ * about meaning and only the role was asked it.
  *
  * THE ORDER, and why it is this one: the move is checked, the model and the voice are called with
  * nothing locked, and only then is the row locked, re-checked and written (the pattern
@@ -56,7 +55,6 @@ final readonly class TakeConversationTurnHandler
         private ConversationMoves $moves,
         private ConversationViews $views,
         private LanguagePacks $packs,
-        private SpokenPhrases $spoken,
         private Clock $clock,
         private TransactionManager $tx,
     ) {}
@@ -80,7 +78,6 @@ final readonly class TakeConversationTurnHandler
 
         $heard = trim($command->heard);
         $pack = $this->packs->for($plan->targetLang()->value);
-        $phrases = $command->kind === TurnKind::Said ? $this->spoken->heardIn($heard, $material->phrases, $pack->speech()) : [];
 
         $before = count($talk->turns());
         $talk->recordLearnerTurn(ConversationTurn::learner(
@@ -93,7 +90,8 @@ final readonly class TakeConversationTurnHandler
                 TurnKind::Rescue => $pack->rescueLine(),
                 default => null,
             },
-            phrasesUsed: $phrases,
+            // The targets this move said are credited once the role has answered it (наряд BACK-TAILS-2 §2).
+            phrasesUsed: [],
             now: $this->clock->now(),
         ));
 

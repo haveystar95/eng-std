@@ -149,4 +149,8 @@ return [
     // «НЕ ПОНЯЛ» НА ЯЗЫКЕ ЦЕЛИ (наряд CONV-2, п. 4а) — what a rescue move of the talk says in the learner's own bubble
     // (кадр 37-7, en «Sorry?»).
     'rescue_line' => 'Простите?',
+
+    // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9) — the same line as every pack's, in this language: said by the role
+    // in a talk held in Russian, or the translation of the target's line for a Russian learner (en «I see. Please go on.»).
+    'neutral_reply' => 'Понятно. Продолжайте, пожалуйста.',
 ];

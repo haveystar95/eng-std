@@ -41,8 +41,11 @@ final class PlanPromptFiles
     /** The slot judge of the day's spoken cards (наряд SESSION-1a, разд. 4; v3 — наряд CONV-2, пп. 7–8: two modes). */
     public const SLOT_JUDGE_FILE = 'slot_judge.v3.md';
 
-    /** The role the learner talks to in the sixth stage of a day (наряд CONV-1; v2 — наряд CONV-2: two sides, rescue, REDO). */
-    public const CONVERSATION_FILE = 'conversation_agent.v2.md';
+    /**
+     * The role the learner talks to in the sixth stage of a day (наряд CONV-1; v2 — наряд CONV-2: two sides, rescue, REDO;
+     * v2.1 — наряд BACK-TAILS-2 §9: one rule more, ECHO, the rest byte for byte).
+     */
+    public const CONVERSATION_FILE = 'conversation_agent.v2.1.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
@@ -268,11 +271,14 @@ final class PlanPromptFiles
         ];
         // The refused answer itself is NOT quoted for a learner line: a mini model handed its own text back copies it —
         // the live replay of the owner's talks (report §1) got the same answer twice when it was quoted. It is named for
-        // a rescue, where «the same words» is exactly what is wrong.
+        // a rescue, where «the same words» is exactly what is wrong. An echo quotes nothing: what was said back is HEARD,
+        // which the message already carries (наряд BACK-TAILS-2 §9).
         if ($request->redo !== null) {
-            $tail[] = $request->redo['line'] !== null
-                ? 'REDO: learner_line — do not say «'.self::oneLine($request->redo['line']).'»: it is a LEARNER line, the learner says it, not you. Answer this move again as YOUR_ROLE'
-                : 'REDO: same_words — do not say «'.self::oneLine($request->redo['said']).'» again: say its meaning in other, simpler, shorter words';
+            $tail[] = match ($request->redo['reason']) {
+                'learner_line' => 'REDO: learner_line — do not say «'.self::oneLine((string) $request->redo['line']).'»: it is a LEARNER line, the learner says it, not you. Answer this move again as YOUR_ROLE',
+                'learner_echo' => 'REDO: learner_echo — do not repeat the learner\'s words, answer them: you said HEARD back as your own line. Answer this move again as YOUR_ROLE',
+                'same_words' => 'REDO: same_words — do not say «'.self::oneLine($request->redo['said']).'» again: say its meaning in other, simpler, shorter words',
+            };
         }
 
         return implode("\n", [...$lines, ...$tail]);

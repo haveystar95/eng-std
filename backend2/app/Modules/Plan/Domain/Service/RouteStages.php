@@ -20,7 +20,7 @@ use App\Modules\Plan\Domain\ValueObject\TalkStage;
  *
  * A day not dealt yet has no cards to count. Its stages come from what it WILL deal: the outline
  * the dealer can draw for it when its material is written, otherwise what its type deals by the
- * canon (`docs/plan-v2.md` §6 — a scene day five card stages, a review words and speak, the
+ * canon (`docs/plan-v2.md` §6 — a scene day five card stages, a review words and «Повторение», the
  * rehearsal «Вспомнить»). Nothing of such a day is walked: it is all `locked`, except that the day
  * the learner may start today has its first stage `current`.
  *

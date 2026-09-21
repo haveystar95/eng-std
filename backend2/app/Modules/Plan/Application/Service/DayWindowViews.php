@@ -15,6 +15,7 @@ use App\Modules\Plan\Application\Dto\WindowListeningView;
 use App\Modules\Plan\Application\Dto\WindowPairView;
 use App\Modules\Plan\Application\Dto\WindowPhraseView;
 use App\Modules\Plan\Application\Dto\WindowProgramView;
+use App\Modules\Plan\Application\Dto\WindowSourceView;
 use App\Modules\Plan\Application\Dto\WindowStageView;
 use App\Modules\Plan\Application\Dto\WindowSummaryView;
 use App\Modules\Plan\Application\Dto\WindowUsageView;
@@ -47,6 +48,7 @@ use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\UnitStates;
 use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
+use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\ProgramSummary;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
@@ -88,6 +90,7 @@ final readonly class DayWindowViews
      * @param  list<DayCard>  $cards
      * @param  TalkStage|null  $talkStage  where the day's sixth stage stands (наряд CONV-2, п. 2) — null: nothing of it yet
      * @param  Conversation|null  $walked  the talk that walked the stage — the day's result, what «Что было хорошо» reads
+     * @param  Conversation|null  $latest  the day's latest talk, its lines in hand — what the talk row's `targets` tick
      */
     public function of(
         Plan $plan,
@@ -98,6 +101,7 @@ final readonly class DayWindowViews
         array $cards,
         ?TalkStage $talkStage = null,
         ?Conversation $walked = null,
+        ?Conversation $latest = null,
     ): DayWindowView {
         $status = WindowStatus::of($effective, $plan->status(), $day->number(), $building);
         $talks = DayStages::walksConversation($day, $this->rules->enabled);
@@ -168,7 +172,10 @@ final readonly class DayWindowViews
                 ),
             ),
             stages: array_map(static fn (WindowStage $s): WindowStageView => new WindowStageView(
-                $s->stage->value, $s->state->value, $s->doneCount, $s->total, $s->minutesLeft, $s->share, $s->talkTitle, $s->scenes,
+                $s->stage->value, $s->state->value, $s->doneCount, $s->total, $s->minutesLeft, $s->share, $s->talkTitle, $s->scenes, $s->minutes,
+                // The talk's row carries the targets of its talk (наряд BACK-TAILS-2 §4, по вопросу клиента 1c): the very
+                // list `POST …/conversation` starts the talk with — one selector of the day — ticked by the day's latest talk.
+                $s->stage === Stage::Conversation && $material !== null ? ConversationViews::targets($material, $latest) : null,
             ), $stages),
             dayProgress: DayWindowStages::progress($stages),
             program: new WindowProgramView(
@@ -183,6 +190,44 @@ final readonly class DayWindowViews
             highlights: $status === WindowStatus::Passed || DayWindowStages::allWalked($stages)
                 ? DayHighlights::of($cards, $this->outcome($walked, $material), new NativeStrings($plan->nativeLang()->value))
                 : [],
+            sources: self::sources($plan, $day),
+            // «Повторить разговор» (наряд BACK-TAILS-2 §7): the day's talk is walked — by the journal of stages — and the
+            // day shows its window, being walked or passed. The replay itself is `POST …/conversation`.
+            talkAgain: $talks && $talkStage === TalkStage::Passed && in_array($status, [WindowStatus::InProgress, WindowStatus::Passed], true),
+        );
+    }
+
+    /**
+     * THE SCENES A DAY IS MADE OF (наряд BACK-TAILS-2 §4, кадры 37-1, 37-2): the rehearsal — every content scene of the
+     * plan; a review — the scenes of the two scene days it repeats, the ones whose returns it takes; a scene day — its own
+     * scene. Each named as the plan names it and with the day it stands on, in the plan's order of scenes — the order the
+     * rehearsal's «Вспомнить» and its talk walk them in, and in a plan the generator built the order of their days.
+     *
+     * A scene with no day of its own — never in a plan the generator built, where every scene has its day, but a stand
+     * put together by hand has one — is still a scene the rehearsal is made of: it is named in its place, with no day.
+     *
+     * @return list<WindowSourceView>
+     */
+    private static function sources(Plan $plan, PlanDay $day): array
+    {
+        $dayOf = [];
+        foreach ($plan->days() as $sceneDay) {
+            $id = $sceneDay->type() === DayType::Scene ? $sceneDay->sceneId() : null;
+            if ($id !== null) {
+                $dayOf[$id->value] = min($dayOf[$id->value] ?? PHP_INT_MAX, $sceneDay->number());
+            }
+        }
+        $scenes = match ($day->type()) {
+            DayType::Scene => [$plan->sceneOf($day)],
+            DayType::Review => array_map(static fn (PlanDay $d): ?PlanScene => $plan->sceneOf($d), $plan->sceneDaysBefore($day->number(), 2)),
+            DayType::Rehearsal => $plan->scenes(),
+        };
+        $scenes = array_values(array_filter($scenes, static fn (?PlanScene $s): bool => $s !== null));
+        usort($scenes, static fn (PlanScene $a, PlanScene $b): int => $a->order() <=> $b->order());
+
+        return array_map(
+            static fn (PlanScene $s): WindowSourceView => new WindowSourceView($s->id()->value, $s->titleNative(), $dayOf[$s->id()->value] ?? null),
+            $scenes,
         );
     }
 
@@ -523,11 +568,16 @@ final readonly class DayWindowViews
         return new WindowSummaryView($summary->total, $summary->done, $summary->returns);
     }
 
-    /** @param list<DayCard> $cards */
+    /**
+     * Does the day have lines to say again — «Говорю сам» of a scene day, or «Повторение» of a review day, which is
+     * the same cards under its own name since наряд BACK-TAILS-2 §3: `again` stays what it was for both.
+     *
+     * @param  list<DayCard>  $cards
+     */
     private static function hasSpeak(array $cards): bool
     {
         foreach ($cards as $card) {
-            if ($card->stage() === Stage::Speak) {
+            if (in_array($card->stage(), [Stage::Speak, Stage::Repetition], true)) {
                 return true;
             }
         }

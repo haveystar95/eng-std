@@ -173,9 +173,9 @@ it('asks the role to repeat itself without spending a move of the scene', functi
 });
 
 /**
- * Canon (п. 4): «фразы плана — SpeechMatch, режим free». The COUNT is the code's: the model's own `phrases_used` is
- * stored but never scored. Catches a summary that trusts the model — the day's frame is heard because the frame's own
- * words were said, not because the agent felt generous.
+ * Canon (наряд BACK-TAILS-2 §2, п. г): the COUNT is the code's — the model's own `phrases_used` is only the rule's second
+ * support, for a target the move holds half the key words of, and never counts alone. Catches a summary that trusts the
+ * model — a role naming every phrase on every move credits only what was actually said.
  */
 it('counts the phrases of the plan by the server\'s own rule, not by the model\'s answer', function () {
     [$token, $id] = convDay($this);
@@ -510,7 +510,7 @@ function convDayId(string $planId, int $number = 1): string
 /** @return int the hits of one check of the role's prompt, as the admin panel reads them */
 function convHits(string $code): int
 {
-    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v2')
+    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v2.1')
         ->where('check_name', $code)->where('action', 'counted')->value('hits');
 }
 
@@ -772,4 +772,143 @@ it('writes the passages of talks that ended before the journal of stages, once, 
         ->and(DB::table('plan_stage_passages')->where('day_id', convDayId($id))->count())->toBe(1);
 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk();
+});
+
+/** @return list<string> the refs of the talk's targets said so far */
+function convSaid(array $talk): array
+{
+    return array_values(array_column(array_filter($talk['targets'], static fn (array $t): bool => $t['said']), 'ref'));
+}
+
+/**
+ * Canon (наряд BACK-TAILS-2 §2, пп. в–г): the move is read by the code's rule first; the role's own `phrases_used` counts
+ * only for a target the move holds half the key words of. «It hurts in his lower back.» has five key words (it, hurts,
+ * his, lower, back): «his back hurts» holds three — not the phrase by the rule, the phrase by the rule and the role's
+ * word together. CATCHES the role's opinion ignored, the role trusted alone, and a phrase ticked on the move after.
+ */
+it('credits a target the role named only when the move holds half of its key words', function () {
+    convAgentSays(static function (ConversationAgentRequest $request): array {
+        $payload = FakePlanModel::conversationPayload($request);
+        // The role «hears» the first scene's p1 on every move, whatever was said.
+        $payload['phrases_used'] = array_values(array_filter($request->phraseIds(), static fn (string $id): bool => str_ends_with($id, ':p1')));
+
+        return $payload;
+    });
+    [$token, $id] = convDay($this);
+    $talk = convStart($this, $token, $id);
+
+    // Nothing of p1 in the move: the role's word alone credits nothing.
+    $nothing = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
+    expect(convSaid($nothing))->toBe([])->and($nothing['turns'][1]['phrases_used'])->toBe([]);
+
+    // Three of five: the role's word is the second support, and the move carries it.
+    $half = convTurn($this, $token, $id, $talk['id'], 'said', 'his back hurts');
+    expect(convSaid($half))->toBe(['p1'])
+        ->and(array_column($half['turns'][3]['phrases_used'], 'ref'))->toBe(['p1'])
+        // …on the learner's own line, never on the role's.
+        ->and($half['turns'][4]['phrases_used'])->toBe([]);
+});
+
+/**
+ * Canon (§2, п. д): «засчитанное не снимается; на каждом ходу проверяются только несказанные; проверять по всем targets, не
+ * только по фразе сцены хода». A rehearsal over two scenes asks for p1…p4 of the first and p1…p3 of the second (the fake's
+ * second lesson marks its frames «-2»): a move made while the talk stands in the FIRST scene that says the second scene's
+ * p3 ticks it there. CATCHES a target unticked by a later move, a phrase credited twice, and a move read only for the scene
+ * it stands in.
+ */
+it('keeps a said target said, credits it once, and reads a move for the targets of every scene', function () {
+    [$token, $id] = convDay($this, days: 3);
+    planWalkDay($this, $token, $id, 1);
+    planShiftDay($id);
+    planWalkDay($this, $token, $id, 2);
+    planShiftDay($id);
+    planOpenDay($this, $token, $id, 3);
+
+    $talk = convStart($this, $token, $id, 3);
+    [$first, $second] = array_column($talk['scenes'], 'scene_id');
+    $name = static fn (array $t): string => ($t['scene_id'] === $first ? 's1:' : 's2:').$t['ref'];
+    $ticked = static fn (array $t): array => array_values(array_map($name, array_filter($t['targets'], static fn (array $x): bool => $x['said'])));
+    $secondP3 = array_values(array_filter($talk['targets'], static fn (array $t): bool => $t['scene_id'] === $second && $t['ref'] === 'p3'))[0]['text_target'];
+    expect(array_map($name, $talk['targets']))->toBe(['s1:p1', 's1:p2', 's1:p3', 's1:p4', 's2:p1', 's2:p2', 's2:p3'])
+        ->and(array_column($talk['scenes'], 'state'))->toBe(['current', 'locked']);
+
+    $sharp = convTurn($this, $token, $id, $talk['id'], 'said', 'The pain is sharp when he bends.');
+    expect($ticked($sharp))->toBe(['s1:p3'])
+        ->and(array_map($name, $sharp['turns'][1]['phrases_used']))->toBe(['s1:p3']);
+
+    // In the first scene still, the second scene's phrase: ticked where it belongs — and the first scene's, said already,
+    // is not credited to this line a second time.
+    $other = convTurn($this, $token, $id, $talk['id'], 'said', 'The pain is sharp when he bends, '.$secondP3);
+    expect($other['scenes'][0]['state'])->toBe('current')
+        ->and($ticked($other))->toBe(['s1:p3', 's2:p3'])
+        ->and(array_map($name, $other['turns'][3]['phrases_used']))->toBe(['s2:p3']);
+
+    // A move that says none of them takes nothing back.
+    $nothing = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
+    expect($ticked($nothing))->toBe(['s1:p3', 's2:p3'])
+        ->and($nothing['turns'][5]['phrases_used'])->toBe([]);
+});
+
+/**
+ * Canon (наряд BACK-TAILS-2 §9): «вторая сверка — ответ роли против heard последнего хода; эхо → один перезапрос с
+ * указанием „не повторяй слова ученика — ответь на них"». CATCHES an echo reaching the ribbon, a retry without its
+ * reason, a second retry, and an echo not counted.
+ */
+it('asks the role again when it says the learner\'s last move back, once, with the reason', function () {
+    $fake = convAgentSays(static function (ConversationAgentRequest $request): array {
+        $payload = FakePlanModel::conversationPayload($request);
+        if ($request->turn === 'said') {
+            // «My back hurts a lot today» said back from the other side — until the server says why it was refused.
+            $payload['reply_target'] = $request->redo === null ? 'Your back hurts a lot today. When did it start?' : 'I see. When did it start?';
+            $payload['reply_native'] = $request->redo === null ? 'У вас сегодня сильно болит спина. Когда это началось?' : 'Понятно. Когда это началось?';
+        }
+
+        return $payload;
+    });
+    [$token, $id] = convDay($this);
+    $talk = convStart($this, $token, $id);
+
+    $after = convTurn($this, $token, $id, $talk['id'], 'said', 'My back hurts a lot today');
+
+    expect($after['turns'][2]['text_target'])->toBe('I see. When did it start?')
+        ->and($fake->conversationCalls)->toBe(3)
+        ->and($fake->conversationRequests[2]->redo)->toBe(['reason' => 'learner_echo', 'said' => 'Your back hurts a lot today. When did it start?', 'line' => null])
+        ->and(convHits('conversation.learner_echo'))->toBe(1)
+        ->and(convHits('conversation.learner_echo_cut'))->toBe(0)
+        ->and(convHits('conversation.learner_line'))->toBe(0);
+});
+
+/**
+ * Canon (§9): «если и второй ответ — эхо, вырез предложения-эха; если после выреза ответа не остаётся — короткий
+ * нейтральный ход роли из пакета». CATCHES the echo said because the second answer copied the first, a cut that leaves the
+ * translation saying what the line no longer says, and a move left empty — or «Врач не отвечает» — when all of it was echo.
+ */
+it('cuts the echo out when the second answer says it too, and says the pack\'s neutral line when nothing is left', function () {
+    convAgentSays(static function (ConversationAgentRequest $request): array {
+        $payload = FakePlanModel::conversationPayload($request);
+        if ($request->turn === 'said' && $request->heard === 'My back hurts a lot today') {
+            $payload['reply_target'] = 'Your back hurts a lot today. When did it start?';
+            $payload['reply_native'] = 'У вас сегодня сильно болит спина. Когда это началось?';
+        }
+        if ($request->turn === 'said' && $request->heard === 'It is sharp when he bends') {
+            $payload['reply_target'] = 'It is sharp when he bends.';
+            $payload['reply_native'] = 'Боль острая, когда он наклоняется.';
+        }
+
+        return $payload;
+    });
+    [$token, $id] = convDay($this);
+    $talk = convStart($this, $token, $id);
+
+    $cut = convTurn($this, $token, $id, $talk['id'], 'said', 'My back hurts a lot today');
+    expect($cut['turns'][2]['text_target'])->toBe('When did it start?')
+        ->and($cut['turns'][2]['text_native'])->toBe('Когда это началось?')
+        ->and(convHits('conversation.learner_echo_cut'))->toBe(1);
+
+    $neutral = convTurn($this, $token, $id, $talk['id'], 'said', 'It is sharp when he bends');
+    expect($neutral['turns'][4]['text_target'])->toBe('I see. Please go on.')
+        ->and($neutral['turns'][4]['text_native'])->toBe('Понятно. Продолжайте, пожалуйста.')
+        ->and(convHits('conversation.learner_echo_neutral'))->toBe(1)
+        ->and(convHits('conversation.learner_echo'))->toBe(2)
+        ->and($neutral['state'])->toBe('your_turn');
 });

@@ -97,8 +97,8 @@ carries until it is read), `PartnerLines` (the pace line of `listen_pace` and th
 stands — from card tallies, the dealer's outline or the day type, plus the talk's own node, which has no cards — `TalkStage`: ahead / open / passed, read off the journal of walked stages, CONV-2),
 `DayStages` (the six stages a day walks, by type, by what the day was dealt with and — for a day not dealt yet —
 by the rollout switch), `ConversationRules` (turns, minutes, the money cap and the rollout switch of a talk, from
-`plan.conversation`), `ConversationOutcomes` + `SpokenPhrases` (the talk's
-summary read off its journal, and which phrases of the plan the SERVER heard — `SpeechMatch`, mode `free`), `ConversationTargets` (CONV-2: the up to seven phrases a talk is FOR, over its checkpoints in order — one list for the entry card, the ribbon's strip and the summary), `RoleLines` (CONV-2: the role's reply that says a learner line, or a rescue that says the rescued line again — the guards `ConversationMoves` asks once more on), `IntentClause` (the hint as the clause after «Скажи, что …»), `InstrumentalRole` (the role in the instrumental for «Поговори с врачом», ru/uk, null where the ending hangs on stress),
+`plan.conversation`; since BACK-TAILS-2 also the replays a day allows a calendar day), `ConversationOutcomes` + `PhraseUse` (the talk's
+summary read off its journal, and which of its targets the SERVER credits — BACK-TAILS-2 §2: a target's key words by their bases, in any order, one forgiven from four, the role's `phrases_used` a second support only; the share of a line the move had already said, which the echo guard reads — §9), `ConversationTargets` (CONV-2: the up to seven phrases a talk is FOR, over its checkpoints in order — one list for the entry card, the ribbon's strip, the summary and — BACK-TAILS-2 §4 — the talk's row of the day window), `RoleLines` (CONV-2: the role's reply that says a learner line, or a rescue that says the rescued line again; BACK-TAILS-2: a sentence that says the learner's last move back — the guards `ConversationMoves` asks once more on, cuts, and replaces with the pack's neutral line), `IntentClause` (the hint as the clause after «Скажи, что …»), `InstrumentalRole` (the role in the instrumental for «Поговори с врачом», ru/uk, null where the ending hangs on stress),
 `DayHighlights` («Что было хорошо», кадр 37-13), `BlueprintChecker` (the plan
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
 card's address, `LessonCodes`), `Check/Language` — the rules' languages: `LanguagePack` (one language's words, marks
@@ -178,7 +178,7 @@ reads plan tables.
 
 | Port | Implementations |
 |---|---|
-| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v2` since CONV-2, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
+| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v2.1` since BACK-TAILS-2, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `NextDayAccess` | `EveryNextDayAllowed` — may the learner have the next day; asked by `CloseDayHandler` before the next day's lesson is queued (GEN-3 §11). Always yes until PAY-1, whose paywall is this one method |
@@ -188,7 +188,7 @@ reads plan tables.
 | `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
 | `LineSpeaker` | `GenerationLineSpeaker` — every line on its own vendor call in the voice the pack gives its role and gender (`SpeechSynthesizerPort::speakLines`), the account's balance for the fuse; off when `SPEECH_ENABLED=false` |
 | `LineAudioStore` | `EloquentLineAudioStore` (private disk `plan.audio_disk`; `withoutDuration` / `read` / `setDuration` are what `plan:audio-durations` backfills `duration_ms` through) |
-| `ConversationRepository` (Domain) | `EloquentConversationRepository` — the talk's row written whole, its lines only ever INSERTed (no update, no delete anywhere in the class), and `lockState()` for the re-check a write does after the model has answered; `findById`, `allForDay` (a day's talks — the minutes of the day) and `walkedWithoutPassage` (the talks that ended of their own on days with no passage — what `plan:reconcile-talks` writes) |
+| `ConversationRepository` (Domain) | `EloquentConversationRepository` — the talk's row written whole, its lines only ever INSERTed (no update, no delete anywhere in the class), and `lockState()` for the re-check a write does after the model has answered; `findById`, `latestForDay` (by `started_at`, a tie of one second broken by the ULID — the talk the window's targets tick), `replaysSince` (the talks begun on a walked day since a moment, the one that walked it aside — the replay cap, BACK-TAILS-2 §7) and `walkedWithoutPassage` (the talks that ended of their own on days with no passage — what `plan:reconcile-talks` writes). A day's minutes read only the talk that walked its stage (`Application/Service/DayMetricsOf`) |
 | `StagePassageRepository` (Domain) | `EloquentStagePassageRepository` — `plan_stage_passages`, INSERT … ON CONFLICT DO NOTHING (`insertOrIgnore`) and SELECTs; no UPDATE/DELETE. Written by ONE writer, `Application/Service/ConversationPassing::mark()`, inside the transaction that saves the talk (CONV-2, DECISIONS п. 367) |
 | `TurnSpeaker` | `GenerationTurnSpeaker` (the pack's voice for one line of a talk, over `LineSpeaker`; the vendor's refusals are swallowed HERE, with the log line — a line without sound is still a line) |
 | `ConversationAudioStore` | `DiskConversationAudioStore` (`plan-audio/conversations/<talk>/<turn>.mp3` on `plan.audio_disk`; served by the same `GET /plans/audio/{id}` — a turn's line is NOT a `plan_line_audios` row: that table is the SCENE's bill) |
@@ -208,7 +208,7 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v2`; `lesson_day.v4.6`
+  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v2.1`; `lesson_day.v4.6`
   and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
@@ -231,12 +231,19 @@ reads plan tables.
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
-  conversation's guards count there too, under `conversation_agent.v2` (`conversation.learner_line`, `…_cut`, `…_kept`,
-  `conversation.rescue_same_words`, `…_kept` — CONV-2).
+  conversation's guards count there too, under `conversation_agent.v2.1` (`conversation.learner_line`, `…_cut`, `…_kept`,
+  `conversation.rescue_same_words`, `…_kept` — CONV-2; `conversation.learner_echo`, `…_cut`, `…_neutral`, `…_kept` —
+  BACK-TAILS-2 §9).
+- The day's build log (BACK-TAILS-2 §1, port `DayBuildLog`, adapter `LogDayBuildLog`): a scene day whose «Фразы» the
+  ladder could not fit under their ceiling writes `plan.phrases_over_ceiling` (warning) with the rungs and the frames —
+  the stop signal, not a failure; the day is dealt anyway.
 - QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN), `plan:repair-card`
   (P2R by hand — Presentation/Console).
 - Ops: `plan:reconcile-talks {--dry}` (CONV-2) — writes the sixth-stage passage of every day whose talk ended of its own
   before `plan_stage_passages` existed (the first such talk of the day); idempotent, prints «было / стало». Backup first.
+- Ops: `plan:reconcile-scenes {--apply}` (BACK-TAILS-2 §6) — renames the scenes of the «Вспомнить» sheets dealt before the
+  sheet took the PLAN's name for a scene; dry by default (prints «план · день · сцена: было → стало»), `--apply` writes the
+  names and nothing else; idempotent. Backup first.
 - Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search
   ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed and the words repeating a picture of their day), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a

@@ -19,6 +19,7 @@ use App\Modules\Plan\Domain\ValueObject\TurnCost;
 use App\Modules\Plan\Domain\ValueObject\TurnKind;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
+use DateTimeZone;
 
 /**
  * The talks and their lines. The row of the talk is written whole every time (its state, its money,
@@ -45,11 +46,16 @@ final class EloquentConversationRepository implements ConversationRepository
         return $row === null ? null : $this->toDomain($row, $this->turnsOf($row->id));
     }
 
-    public function allForDay(PlanDayId $dayId): array
+    public function replaysSince(PlanDayId $dayId, ConversationId $walked, DateTimeImmutable $walkedAt, DateTimeImmutable $since): int
     {
-        $rows = ConversationModel::query()->where('day_id', $dayId->value)->orderBy('started_at')->get();
+        // The moment is written with its offset: a bare «Y-m-d H:i:s» would be read in the session's zone.
+        $from = max($walkedAt, $since)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:sP');
 
-        return array_values($rows->map(fn (ConversationModel $row): Conversation => $this->toDomain($row, $this->turnsOf($row->id)))->all());
+        return ConversationModel::query()
+            ->where('day_id', $dayId->value)
+            ->where('started_at', '>=', $from)
+            ->where('id', '<>', $walked->value)
+            ->count();
     }
 
     public function walkedWithoutPassage(): array
@@ -81,9 +87,12 @@ final class EloquentConversationRepository implements ConversationRepository
 
     public function latestForDay(PlanDayId $dayId): ?Conversation
     {
+        // `started_at` keeps whole seconds: two talks of one second are told apart by their ids, which are ULIDs —
+        // ordered by the millisecond they were made in.
         $row = ConversationModel::query()
             ->where('day_id', $dayId->value)
             ->orderByDesc('started_at')
+            ->orderByDesc('id')
             ->first();
 
         return $row === null ? null : $this->toDomain($row, $this->turnsOf($row->id));
@@ -95,7 +104,7 @@ final class EloquentConversationRepository implements ConversationRepository
             return [];
         }
         $ids = array_map(static fn (PlanDayId $id): string => $id->value, $dayIds);
-        $rows = ConversationModel::query()->whereIn('day_id', $ids)->orderBy('started_at')->get();
+        $rows = ConversationModel::query()->whereIn('day_id', $ids)->orderBy('started_at')->orderBy('id')->get();
 
         $out = [];
         foreach ($rows as $row) {

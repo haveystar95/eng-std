@@ -19,7 +19,8 @@ use App\Modules\Plan\Domain\ValueObject\Stage;
  *
  * - scene day: слова → фразы → диалог → слушаю и отвечаю → говорю сам → РАЗГОВОР;
  * - rehearsal: вспомнить → разговор (кадр 37-1);
- * - review: the repetition it already dealt → разговор (кадр 37-2).
+ * - review: повторение (`repetition`, наряд BACK-TAILS-2 §3; words and phrases only when something comes back to them)
+ *   → разговор (кадр 37-2).
  *
  * The talk's own row is added where the rows are built — {@see RouteStages::of()} for the route and
  * {@see DayWindowStages::of()} for the window — because only there is its journal at hand. What
@@ -37,7 +38,7 @@ final class DayStages
     {
         return match ($type) {
             DayType::Scene => [Stage::Words, Stage::Phrases, Stage::Dialogue, Stage::Listen, Stage::Speak],
-            DayType::Review => [Stage::Words, Stage::Speak],
+            DayType::Review => [Stage::Words, Stage::Repetition],
             DayType::Rehearsal => [Stage::Recall],
         };
     }

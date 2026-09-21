@@ -13,6 +13,9 @@ namespace App\Modules\Plan\Domain\ValueObject;
  * The TALK's row carries two more things, in every state (наряд CONV-2, п. 12): the title of its entry
  * — «Поговори с врачом», inflected by the server (кадр 37-5) — and how many scenes the talk walks
  * («Разговор целиком · 3 сцены» on the rehearsal). Card rows have neither.
+ *
+ * EVERY row carries its PLANNED minutes (`minutes`, наряд BACK-TAILS-2 §4) in every state — «около 4 минут» on the rows
+ * of a day not opened yet (кадры 37-1, 37-2): what the whole stage is reckoned to take, not what is left of it.
  */
 final readonly class WindowStage
 {
@@ -25,6 +28,7 @@ final readonly class WindowStage
         public float $share,
         public ?string $talkTitle = null,
         public ?int $scenes = null,
+        public int $minutes = 0,
     ) {}
 
     public static function done(Stage $stage): self
@@ -65,6 +69,12 @@ final readonly class WindowStage
     /** The talk's row with its entry title and the number of scenes it walks (наряд CONV-2, п. 12). */
     public function withTalk(?string $title, int $scenes): self
     {
-        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $title, max(0, $scenes));
+        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $title, max(0, $scenes), $this->minutes);
+    }
+
+    /** The row with the minutes its whole stage is reckoned to take (наряд BACK-TAILS-2 §4). */
+    public function planned(int $minutes): self
+    {
+        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $this->talkTitle, $this->scenes, max(0, $minutes));
     }
 }

@@ -69,7 +69,11 @@ final class DayWindowStages
                 )))),
             };
             $currentFound = $currentFound || $row->state === StageState::Current;
-            $out[] = $row;
+            // What the whole stage takes by the day's pace, whatever is walked of it (наряд BACK-TAILS-2 §4).
+            $out[] = $row->planned(DayPace::minutes($pace->secondsOf(array_filter(
+                $cards,
+                static fn (DayCard $c): bool => $c->stage() === $stage,
+            ))));
         }
 
         if (! $hasConversation) {
@@ -85,6 +89,8 @@ final class DayWindowStages
             $currentFound => WindowStage::locked(Stage::Conversation),
             default => WindowStage::talking(Stage::Conversation, $conversationMinutes),
         };
+        // The talk's planned minutes are its own budget (`plan.conversation.minutes`), in every state of its row.
+        $row = $row->planned($conversationMinutes);
         $out[] = $talkRow === null ? $row : $row->withTalk($talkRow['title'], $talkRow['scenes']);
 
         return $out;

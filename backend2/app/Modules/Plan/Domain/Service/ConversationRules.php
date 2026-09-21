@@ -45,6 +45,13 @@ final readonly class ConversationRules
     public const ENABLED = true;
 
     /**
+     * HOW MANY TIMES A WALKED TALK MAY BE HELD AGAIN in one calendar day of the learner (наряд BACK-TAILS-2 §7) —
+     * «Повторить разговор» of a passed day, each replay a model and a voice paid for. Past it the replay waits for the
+     * learner's next midnight (409 `plan_conversation_replay_limit`).
+     */
+    public const REPLAYS_PER_DAY = 3;
+
+    /**
      * @param  array<string, int>  $turns  by {@see ConversationType} value
      * @param  array<string, int>  $minutes  by {@see ConversationType} value
      */
@@ -54,6 +61,7 @@ final readonly class ConversationRules
         public float $costCapUsd = self::COST_CAP_USD,
         public int $hintDelayMs = self::HINT_DELAY_MS,
         public bool $enabled = self::ENABLED,
+        public int $replaysPerDay = self::REPLAYS_PER_DAY,
     ) {}
 
     public function turnsFor(ConversationType $type): int

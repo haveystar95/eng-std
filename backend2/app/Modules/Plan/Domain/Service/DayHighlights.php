@@ -57,10 +57,10 @@ final class DayHighlights
         return array_slice($out, 0, self::MAX);
     }
 
-    /** A card the learner SAID: the three kinds of «Говорю сам» and the rehearsal's «Вспомнить». */
+    /** A card the learner SAID: the three kinds of «Говорю сам», the rehearsal's «Вспомнить», the review's «Повторение». */
     private static function isSpoken(DayCard $card): bool
     {
-        return in_array($card->stage(), [Stage::Speak, Stage::Recall], true)
+        return in_array($card->stage(), Stage::spoken(), true)
             && ($card->kind()->isSpoken() || $card->kind()->isJudged());
     }
 }

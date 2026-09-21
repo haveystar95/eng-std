@@ -16,6 +16,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\TurnKind;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
+use LogicException;
 
 /**
  * THE TALK WITH THE AGENT (наряд CONV-1) — a journal with a state machine around it.
@@ -43,6 +44,12 @@ final class Conversation
 {
     /** The most one gap between two lines counts for in the talk's minutes (наряд CONV-2, п. 3). */
     public const MAX_GAP_SECONDS = 60;
+
+    /**
+     * The learner's move recorded by THIS process and not answered yet — the one line of the journal that has not been
+     * written and may still be completed ({@see creditMove()}). A talk read from storage never has one.
+     */
+    private bool $moveInHand = false;
 
     /**
      * @param  list<string>  $sceneIds  the checkpoints, in the order the talk walks them
@@ -136,6 +143,30 @@ final class Conversation
         }
         $this->turns[] = $turn;
         $this->state = ConversationState::AgentTurn;
+        $this->moveInHand = true;
+    }
+
+    /**
+     * WHICH TARGETS THE MOVE SAID IS KNOWN ONCE THE ROLE HAS ANSWERED IT (наряд BACK-TAILS-2 §2): the code's rule reads the
+     * move, and the role's own `phrases_used` is its second support ({@see \App\Modules\Plan\Domain\Service\PhraseUse}). So
+     * the learner's move is completed with them between the answer and the write — it is still in hand, not written, and
+     * nothing that has been stored is changed. A line is still written once and complete.
+     *
+     * @param  list<string>  $phraseIds  scene-qualified ids ({@see \App\Modules\Plan\Domain\ValueObject\ConversationPhrase::id()})
+     */
+    public function creditMove(array $phraseIds): void
+    {
+        $last = $this->lastTurn();
+        if (! $this->moveInHand || $last === null || $last->kind === TurnKind::Agent) {
+            throw new LogicException('Only the learner\'s move in hand, not yet answered, can be credited with phrases.');
+        }
+        if ($phraseIds === []) {
+            return;
+        }
+        $this->turns = [...array_slice($this->turns, 0, -1), ConversationTurn::learner(
+            $last->id, $last->conversationId, $last->index, $last->kind, $last->textTarget,
+            array_values(array_unique([...$last->phrasesUsed, ...$phraseIds])), $last->createdAt,
+        )];
     }
 
     /** The role's line. It always leaves the move with the learner — unless the talk is closed after it. */
@@ -147,6 +178,7 @@ final class Conversation
             $this->markCheckpoint($turn->checkpointDone);
         }
         $this->state = ConversationState::YourTurn;
+        $this->moveInHand = false;
     }
 
     public function end(ConversationEnd $reason, DateTimeImmutable $now): void

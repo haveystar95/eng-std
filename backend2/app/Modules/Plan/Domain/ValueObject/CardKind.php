@@ -66,15 +66,20 @@ enum CardKind: string
     public const SPOKEN_LAPSE_ATTEMPTS = 2;
 
     /**
-     * The stage this kind is walked in. ONE kind reads its stage off the DAY as well as off itself:
-     * «Повтори свою реплику» (`speak_retell`) stands in «Говорю сам» on a scene day and in
-     * «Вспомнить» on the rehearsal (наряд CONV-1) — the same trainer, the same screen (кадр 35-4),
-     * two different places in two different days. Everything else has one stage and one only.
+     * The stage this kind is walked in. The kinds of «Говорю сам» read their stage off the DAY as well as off
+     * themselves: «Повтори свою реплику» (`speak_retell`) stands in «Говорю сам» on a scene day and in «Вспомнить» on
+     * the rehearsal (наряд CONV-1) — the same trainer, the same screen (кадр 35-4), two different places in two
+     * different days — and on a review day every one of them stands in «Повторение» (наряд BACK-TAILS-2 §3): the day
+     * has no «Говорю сам», and its own cards and what comes back to it said aloud are its repetition. Everything else
+     * has one stage and one only.
      */
     public function stage(?DayType $day = null): Stage
     {
         if ($day === DayType::Rehearsal && $this === self::SpeakRetell) {
             return Stage::Recall;
+        }
+        if ($day === DayType::Review && in_array($this, [self::SpeakAnswer, self::SpeakEcho, self::SpeakRetell], true)) {
+            return Stage::Repetition;
         }
 
         return match ($this) {

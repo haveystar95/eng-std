@@ -133,7 +133,8 @@ return [
         'speak_echo' => 25,
         'speak_retell' => 30,
         // «Вспомни свои реплики» (кадр 37-3, наряд CONV-1): the plan's own lines read through once,
-        // scene by scene — a minute of reading and listening, not a trainer.
+        // scene by scene — a minute of reading and listening A SCENE, not a trainer: the sheet is priced per scene it
+        // shows (наряд BACK-TAILS-2 §4, like «Скажи целиком» per round).
         'recall_scenes' => 60,
     ],
 
@@ -141,9 +142,11 @@ return [
      * HOW LONG «ФРАЗЫ» MAY TAKE before the stage starts cutting itself (решение архитектора 20.09, доработка наряда
      * FIX-2). The day's own ceiling — 32 minutes — is unchanged; this is the stage's, by {@see \App\Modules\Plan\Domain\Service\DayPace}.
      *
-     * Over it the stage is cut in ONE order: the third recognition, then the third value round of «Скажи целиком»,
-     * then the own-word round — off the frames the dialogue says least first. The trainer itself is never removed,
-     * and a stage that will not fit even then is dealt anyway: the excess is a signal in the build log, not a
+     * Over it the stage is cut in ONE order, a rung at a time until it fits (наряд BACK-TAILS-2 §1): the third
+     * recognition, then the third value round of «Скажи целиком», then the second recognition — the rounds and the
+     * recognition off the frames the dialogue says least first. The floor is one recognition, two value rounds and the
+     * learner's own word; the own-word round and the trainer itself are never removed. A stage that will not fit even
+     * then is dealt anyway: the excess is a warning in the day's build log (`plan.phrases_over_ceiling`), not a
      * refusal to build the day (`Domain/Assembly/PhrasesStage`).
      */
     'phrases_budget' => (int) env('PLAN_PHRASES_BUDGET', 690),
@@ -215,6 +218,10 @@ return [
             'review' => (int) env('PLAN_CONVERSATION_MINUTES_REVIEW', 6),
         ],
         'cost_cap_usd' => (float) env('PLAN_CONVERSATION_COST_CAP_USD', 0.08),
+        // «Повторить разговор» (наряд BACK-TAILS-2 §7): how many replays of a walked talk one day of the plan takes in one
+        // calendar day of the learner — each is a model and a voice bought. Past it: 409 `plan_conversation_replay_limit`
+        // with `retry_after_utc`, the learner's next midnight.
+        'replays_per_day' => (int) env('PLAN_CONVERSATION_REPLAYS_PER_DAY', 3),
         'hint_delay_ms' => (int) env('PLAN_CONVERSATION_HINT_DELAY_MS', 5000),
         'model' => env('PLAN_CONVERSATION_MODEL', 'gpt-5.4-mini'),
         'timeout' => (int) env('PLAN_CONVERSATION_TIMEOUT', 20),

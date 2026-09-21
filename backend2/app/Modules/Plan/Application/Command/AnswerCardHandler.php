@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Dto\AnswerOutcome;
 use App\Modules\Plan\Application\Service\DayDealer;
+use App\Modules\Plan\Application\Service\DayMetricsOf;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Exception\CardNotFound;
@@ -45,6 +46,7 @@ final readonly class AnswerCardHandler
         private DayDealer $dealer,
         private PlanRepository $plans,
         private DayMetricsCalculator $metrics,
+        private DayMetricsOf $dayMetrics,
         private Clock $clock,
         private TransactionManager $tx,
     ) {}
@@ -86,7 +88,9 @@ final readonly class AnswerCardHandler
                 $dealt[] = $retry;
             }
 
-            $metrics = $this->metrics->calculate($dealt);
+            // The day's minutes carry its walked talk too (наряд BACK-TAILS-2 §8) — a card answered after the talk
+            // does not take the talk's minutes back off the day.
+            $metrics = $this->dayMetrics->of($day->id(), $dealt);
             $this->plans->saveDayMetrics($day->id(), $metrics);
             $stage = array_values(array_filter($dealt, static fn (DayCard $c): bool => $c->stage() === $card->stage()));
 

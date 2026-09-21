@@ -75,11 +75,9 @@ final class SpeakCards
      *
      * It used to echo the PARTNER's line: on the owner's gym day (21.09) the stage of «Говорю сам» asked him to say
      * «Please bring a towel, use clean shoes, and return the locker key after training» — the receptionist's words,
-     * which nobody would ever say in his place. «Говорю сам» is the learner's part and nothing else.
-     *
-     * `partner_line` carries THE SAME LINE for one reason: the client build on the phone (1.0.0 (17)) reads the line
-     * it plays under that key and would skip a card without it — and a skipped card is a stage that never closes. It
-     * goes as soon as the client reads `own_line` (ROADMAP, наряд CONV-2).
+     * which nobody would ever say in his place. «Говорю сам» is the learner's part and nothing else — so the card
+     * carries no line of anybody else's at all: the copy of the line under `partner_line`, kept for the client build
+     * 1.0.0 (17), is gone with the build that reads `own_line` (наряд BACK-TAILS-2 §10).
      *
      * Null when the exchange has no learner line: there is nothing to echo.
      *
@@ -96,12 +94,6 @@ final class SpeakCards
             'scene_id' => $scene->sceneId->value,
             'exchange' => CardObjects::exchange($exchange),
             'own_line' => $ownLine,
-            'partner_line' => [
-                'ref' => $ownLine['ref'],
-                'text_target' => $ownLine['text_target'],
-                'text_native' => $ownLine['text_native'],
-                'audio' => $ownLine['audio'],
-            ],
             'expected_text' => $ownLine['text_target'],
             'speech_mode' => SpeechMode::Repeat->value,
             'pause_ms' => self::PAUSE_MS,

@@ -13,17 +13,17 @@
         "opens_on": null,
         "slot": {
             "code": "today",
-            "date": "2026-09-21",
+            "date": "2026-09-22",
             "label_native": "сегодня"
         },
         "cards_total": 7,
         "cards_done": 0,
         "minutes_spent": 0,
-        "opened_at": "2026-09-21T18:26:04+00:00",
+        "opened_at": "2026-09-21T21:51:59+00:00",
         "closed_at": null,
         "stages": [
             {
-                "stage": "speak",
+                "stage": "repetition",
                 "state": "current"
             },
             {
@@ -64,13 +64,27 @@
         },
         {
             "stage": "speak",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "recall",
+            "total": 0,
+            "done": 0,
+            "state": "absent",
+            "cards": []
+        },
+        {
+            "stage": "repetition",
             "total": 7,
             "done": 0,
             "state": "current",
             "cards": [
                 {
-                    "id": "01M32KFKYBTZVRCH88NSPGC5JD",
-                    "stage": "speak",
+                    "id": "01M32Z8P6WY2NZWEHYW698YQTQ",
+                    "stage": "repetition",
                     "position": 1,
                     "kind": "speak_answer",
                     "unit": {
@@ -182,8 +196,8 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32KFKYBP2S23KZ6JYQ2ZWFH",
-                    "stage": "speak",
+                    "id": "01M32Z8P6WRZ5MCZNVTQTFG1E0",
+                    "stage": "repetition",
                     "position": 2,
                     "kind": "speak_answer",
                     "unit": {
@@ -295,8 +309,8 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32KFKYBRG3XPJW6CV3KT2QS",
-                    "stage": "speak",
+                    "id": "01M32Z8P6WCGRCS4GTZM9TTHPM",
+                    "stage": "repetition",
                     "position": 3,
                     "kind": "speak_answer",
                     "unit": {
@@ -398,8 +412,8 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32KFKYBS38GZF4S45AAMNWR",
-                    "stage": "speak",
+                    "id": "01M32Z8P6WEEFM4Z1KVECPWSDD",
+                    "stage": "repetition",
                     "position": 4,
                     "kind": "speak_answer",
                     "unit": {
@@ -511,8 +525,8 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32KFKYB1MHAJQKW2EB0Y902",
-                    "stage": "speak",
+                    "id": "01M32Z8P6WF744R70HSTAM3E1R",
+                    "stage": "repetition",
                     "position": 5,
                     "kind": "speak_answer",
                     "unit": {
@@ -624,8 +638,8 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32KFKYBAWXCBA0CC27WCTFN",
-                    "stage": "speak",
+                    "id": "01M32Z8P6WTSEM45555FS76DVJ",
+                    "stage": "repetition",
                     "position": 6,
                     "kind": "speak_answer",
                     "unit": {
@@ -727,8 +741,8 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32KFKYBGSJTZ0Z4E5NB41WV",
-                    "stage": "speak",
+                    "id": "01M32Z8P6WY8YP4D308504KYWR",
+                    "stage": "repetition",
                     "position": 7,
                     "kind": "speak_answer",
                     "unit": {
@@ -832,13 +846,6 @@
             ]
         },
         {
-            "stage": "recall",
-            "total": 0,
-            "done": 0,
-            "state": "absent",
-            "cards": []
-        },
-        {
             "stage": "conversation",
             "total": 0,
             "done": 0,
@@ -902,12 +909,16 @@
         },
         "stages": [
             {
-                "stage": "speak",
+                "stage": "repetition",
                 "state": "current",
                 "done_count": 0,
                 "total": 7,
                 "minutes_left": 5,
-                "share": 0.0
+                "minutes": 5,
+                "share": 0.0,
+                "talk_title_native": null,
+                "scenes_count": null,
+                "targets": null
             },
             {
                 "stage": "conversation",
@@ -915,9 +926,71 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "share": 0.0
+                "minutes": 6,
+                "share": 0.0,
+                "talk_title_native": "Поговори с врачом",
+                "scenes_count": 1,
+                "targets": [
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p1",
+                        "text_target": "He has a fever and a sore throat.",
+                        "text_native": "У него температура и болит горло.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p2",
+                        "text_target": "He's been sick for three days.",
+                        "text_native": "Он болеет уже три дня.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p3",
+                        "text_target": "Should I tell you his temperature?",
+                        "text_native": "Мне сказать вам его температуру?",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p4",
+                        "text_target": "I gave him paracetamol.",
+                        "text_native": "Я дал(а) ему парацетамол.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p5",
+                        "text_target": "It looks like a viral infection.",
+                        "text_native": "Похоже на вирусную инфекцию.",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p6",
+                        "text_target": "What should I do at home?",
+                        "text_native": "Что мне делать дома?",
+                        "said": false
+                    },
+                    {
+                        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                        "ref": "p7",
+                        "text_target": "What warning signs should I watch for?",
+                        "text_native": "За какими тревожными признаками мне следить?",
+                        "said": false
+                    }
+                ]
             }
         ],
+        "sources": [
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "title_native": "Приём у врача",
+                "day_number": 1
+            }
+        ],
+        "talk_again": false,
         "day_progress": 0.0,
         "program": {
             "words": {

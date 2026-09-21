@@ -23,10 +23,14 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
  * card would leave a trimmed card costing exactly what it cost before, and the ladder would cut
  * seconds that never moved. So its table value is the price of ONE round, and {@see seconds()}
  * reads the count off the payload.
+ *
+ * ONE KIND IS PRICED PER SCENE: the sheet of «Вспомнить» (`recall_scenes`) is a page per scene of the plan, its lines
+ * read through and heard — «a minute of reading and listening» is a minute a SCENE, and a rehearsal over three scenes
+ * reads three of them (наряд BACK-TAILS-2 §4: the recall row's own estimate, scenes × their lines, by the price list).
  */
 final readonly class DayPace
 {
-    /** @var array<string, int> seconds per card, by kind — the 28 dealt kinds; `phrase_other_slot` is per ROUND */
+    /** @var array<string, int> seconds per card, by kind — the 28 dealt kinds; `phrase_other_slot` is per ROUND, `recall_scenes` per SCENE */
     public const DEFAULTS = [
         'word_intro' => 8,
         'word_repeat' => 12,
@@ -64,8 +68,8 @@ final readonly class DayPace
     public function __construct(private array $secondsByKind = self::DEFAULTS) {}
 
     /**
-     * What one card costs. `$payload` is read only by the kind that is priced per round; every other kind ignores it,
-     * so a caller that does not have the payload may leave it out.
+     * What one card costs. `$payload` is read only by the two kinds priced per part — per round, per scene; every other
+     * kind ignores it, so a caller that does not have the payload may leave it out.
      *
      * @param  array<string, mixed>  $payload
      */
@@ -73,7 +77,21 @@ final readonly class DayPace
     {
         $each = max(0, (int) ($this->secondsByKind[$kind->value] ?? 0));
 
-        return $kind === CardKind::PhraseOtherSlot ? $each * self::rounds($payload) : $each;
+        return match ($kind) {
+            CardKind::PhraseOtherSlot => $each * self::rounds($payload),
+            CardKind::RecallScenes => $each * self::scenes($payload),
+            default => $each,
+        };
+    }
+
+    /**
+     * How many scenes a «Вспомнить» sheet has. A payload that names none is priced as one scene rather than as nothing.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public static function scenes(array $payload): int
+    {
+        return max(1, is_array($payload['scenes'] ?? null) ? count($payload['scenes']) : 0);
     }
 
     /**

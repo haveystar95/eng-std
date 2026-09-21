@@ -23,6 +23,11 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  *
  * A language with no pack is `LanguagePack::none()`: every key is absent, and a card whose rule needs one is simply
  * not dealt — the assembler never borrows another language's words.
+ *
+ * THE SCENE'S NAME IS THE PLAN'S (наряд BACK-TAILS-2 §6): `titleNative` / `titleTarget` are the plan's scene — what the
+ * route, the window, the talk and every card call it. The lesson writes a title of its own (`topic.title_*`, the model's
+ * name for the visit — «У врача с сыном» for the plan's «Приём у врача») and it stays in the lesson's document, read by
+ * no card and no screen: one scene, one name.
  */
 final readonly class SceneMaterial
 {
@@ -35,6 +40,8 @@ final readonly class SceneMaterial
     /**
      * @param  list<PlanTerm>  $terms
      * @param  list<string>  $unreadable  the addresses (`p3.f2`) of the scene's `filler.native_seam` findings
+     * @param  string  $titleNative  the plan's name of the scene, in the learner's language
+     * @param  string  $titleTarget  …and in the language of the plan
      */
     public function __construct(
         public PlanSceneId $sceneId,
@@ -43,6 +50,8 @@ final readonly class SceneMaterial
         public LanguagePack $target,
         public LanguagePack $native,
         array $unreadable = [],
+        public string $titleNative = '',
+        public string $titleTarget = '',
     ) {
         $byRef = [];
         foreach ($terms as $term) {

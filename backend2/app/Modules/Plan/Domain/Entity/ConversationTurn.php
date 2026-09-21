@@ -18,9 +18,9 @@ use DateTimeImmutable;
  * Both speakers keep their lines in the same list, in the order they were said, because that is
  * what the ribbon (кадры 37-6…37-12) draws and what the next model call is shown.
  *
- * EACH LINE HOLDS WHAT ITS AUTHOR SAID. The learner's line holds the phrases of the plan the SERVER
- * matched in it ({@see \App\Modules\Plan\Domain\Service\SpokenPhrases} — the code's verdict, not
- * the model's). The role's reply holds what the ROLE judged about the move it answers — «понял ли он
+ * EACH LINE HOLDS WHAT ITS AUTHOR SAID. The learner's line holds the targets of the talk the SERVER
+ * heard in it ({@see \App\Modules\Plan\Domain\Service\PhraseUse} — the code's rule first, the model's
+ * word only as its second support). The role's reply holds what the ROLE judged about the move it answers — «понял ли он
  * вопрос», «увело ли в сторону» — because the role is who judged it, and the checkpoint it closed.
  * The hint is written on the line that OFFERS it: it is the intention the learner is shown for
  * their next move. A rescue and a skip are judged by nobody.
@@ -81,7 +81,7 @@ final readonly class ConversationTurn
      * The learner's move. `said` carries what the recogniser heard; `rescue` and `skip` carry
      * nothing to judge — and nothing is judged on them ({@see TurnKind::isJudged()}).
      *
-     * @param  list<string>  $phrasesUsed  what the SERVER matched by {@see \App\Modules\Shared\Domain\Service\SpeechMatch}, never the model's opinion
+     * @param  list<string>  $phrasesUsed  what the SERVER heard by {@see \App\Modules\Plan\Domain\Service\PhraseUse} — the model's opinion alone never
      */
     public static function learner(
         ConversationTurnId $id,

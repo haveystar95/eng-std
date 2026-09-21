@@ -99,9 +99,10 @@ it('draws the talk as the last node and never as a second current one', function
         )))->toBe([['words', 'done'], ['speak', 'done'], ['conversation', 'current']]);
 });
 
-it('a review day not dealt yet has words and speak', function () {
+// Canon (наряд BACK-TAILS-2 §3): the review day's own stage is «Повторение», `repetition` — never «Говорю сам».
+it('a review day not dealt yet has words and its repetition', function () {
     expect(routeStagesOf(RouteStages::of(DayType::Review, [], closed: false, availableToday: false)))
-        ->toBe([['words', 'locked'], ['speak', 'locked']]);
+        ->toBe([['words', 'locked'], ['repetition', 'locked']]);
 });
 
 it('a locked day has no current stage', function () {

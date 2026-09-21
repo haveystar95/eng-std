@@ -142,10 +142,11 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
     // Opening day 1 asks the model for nothing (наряд GEN-3 §11): day 2's lesson is asked for when day 1 closes.
     expect(planRead($this, $token, $id)['days'][1]['lesson_status'])->toBe('pending');
 
-    // The room: the card stages, the first one current — «Вспомнить» is the rehearsal's and absent here — and the
-    // talk last (наряд CONV-1).
+    // The room: the card stages, the first one current — «Вспомнить» is the rehearsal's and «Повторение» the review's
+    // (наряд BACK-TAILS-2 §3), both absent here — and the talk last (наряд CONV-1).
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
-    expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked', 'absent', 'locked'])
+    expect(array_column($room['stages'], 'state'))->toBe(['current', 'locked', 'locked', 'locked', 'locked', 'absent', 'absent', 'locked'])
+        ->and(array_column($room['stages'], 'stage'))->toBe(['words', 'phrases', 'dialogue', 'listen', 'speak', 'recall', 'repetition', 'conversation'])
         ->and($room['window']['day']['goals'])->toHaveCount(3)
         ->and($room['program'])->not->toBeEmpty()
         // The old day room's own keys went with it (DAY-UI-2): the goals live in the window now. `speech` — the
@@ -253,7 +254,7 @@ it('walks a three-day plan through to the rehearsal, which says every scene alou
         ->and(count(array_unique(array_column(array_column($rehearsal['cards'][0]['payload']['scenes'], 'scene_id'), 0))))->toBeLessThanOrEqual(2);
 
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/3")->assertOk()->json('data');
-    expect(array_column($room['stages'], 'state'))->toBe(['absent', 'absent', 'absent', 'absent', 'absent', 'current', 'locked'])
+    expect(array_column($room['stages'], 'state'))->toBe(['absent', 'absent', 'absent', 'absent', 'absent', 'current', 'absent', 'locked'])
         ->and($room['window']['program']['words']['items'])->toBe([])
         ->and($room['stages'][5]['cards'])->toHaveCount(count($rehearsal['cards']));
 

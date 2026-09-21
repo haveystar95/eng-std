@@ -204,4 +204,64 @@ return [
     // кадр 37-7 draws «Sorry?» there, and a rescue used to come with no words at all. One short line a learner says
     // when they did not catch the partner; the role hears it in HISTORY too.
     'rescue_line' => 'Sorry?',
+
+    // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9): what the role says when its answer, asked for twice, was nothing
+    // but the learner's own words said back — one short line that keeps the scene going and says nothing of its own.
+    // Every pack writes the same line in its own language: the target's is said, the learner's is its translation.
+    'neutral_reply' => 'I see. Please go on.',
+
+    // THE FORMS OF ONE WORD (наряд BACK-TAILS-2 §2): «did the learner use the phrase» is read off the phrase's KEY WORDS,
+    // and a word said in another form is the same word — «works» for «work», «bought» for «buy». A word's bases are the
+    // word itself, its line in `irregular_forms`, and what every rule of `inflection_rules` that matches it leaves
+    // (a regular ending taken off: -s, -es, -ed, -ing, a possessive «'s», which the canonical form spells «s»); two
+    // words are one when their bases meet. Written in the canonical form of the comparison: lower case, no apostrophe.
+    // A language without `irregular_forms` compares its words exactly, after the canonical form.
+    'irregular_forms' => [
+        'am' => 'be', 'is' => 'be', 'are' => 'be', 'was' => 'be', 'were' => 'be', 'been' => 'be', 'being' => 'be',
+        'has' => 'have', 'had' => 'have', 'having' => 'have',
+        'does' => 'do', 'did' => 'do', 'done' => 'do', 'doing' => 'do',
+        'goes' => 'go', 'went' => 'go', 'gone' => 'go',
+        'got' => 'get', 'gotten' => 'get',
+        'made' => 'make', 'took' => 'take', 'taken' => 'take', 'gave' => 'give', 'given' => 'give', 'came' => 'come',
+        'saw' => 'see', 'seen' => 'see', 'knew' => 'know', 'known' => 'know', 'thought' => 'think', 'told' => 'tell',
+        'said' => 'say', 'says' => 'say', 'found' => 'find', 'felt' => 'feel', 'left' => 'leave', 'brought' => 'bring',
+        'bought' => 'buy', 'paid' => 'pay', 'kept' => 'keep', 'began' => 'begin', 'begun' => 'begin', 'wrote' => 'write',
+        'written' => 'write', 'ate' => 'eat', 'eaten' => 'eat', 'drank' => 'drink', 'drunk' => 'drink', 'slept' => 'sleep',
+        'spoke' => 'speak', 'spoken' => 'speak', 'broke' => 'break', 'broken' => 'break', 'lost' => 'lose', 'met' => 'meet',
+        'sat' => 'sit', 'stood' => 'stand', 'ran' => 'run', 'sent' => 'send', 'spent' => 'spend', 'wore' => 'wear',
+        'worn' => 'wear', 'chose' => 'choose', 'chosen' => 'choose', 'forgot' => 'forget', 'forgotten' => 'forget',
+        'understood' => 'understand', 'held' => 'hold', 'fell' => 'fall', 'fallen' => 'fall', 'fed' => 'feed',
+        'bled' => 'bleed', 'caught' => 'catch', 'taught' => 'teach', 'sold' => 'sell', 'drove' => 'drive',
+        'driven' => 'drive', 'rode' => 'ride', 'ridden' => 'ride', 'flew' => 'fly', 'flown' => 'fly', 'grew' => 'grow',
+        'grown' => 'grow', 'threw' => 'throw', 'thrown' => 'throw', 'shown' => 'show', 'woke' => 'wake', 'woken' => 'wake',
+        'meant' => 'mean', 'heard' => 'hear',
+        'children' => 'child', 'men' => 'man', 'women' => 'woman', 'people' => 'person', 'feet' => 'foot',
+        'teeth' => 'tooth', 'mice' => 'mouse', 'knives' => 'knife', 'wives' => 'wife', 'lives' => 'life',
+        'halves' => 'half', 'shelves' => 'shelf',
+        // A pronoun's object form is the same pronoun: «you told me» says back «I told you».
+        'me' => 'i', 'him' => 'he', 'us' => 'we', 'them' => 'they',
+    ],
+
+    // The regular endings, each a pattern and the base it leaves — every rule that matches gives one base, so «used»
+    // is both «us» and «use», and «stopped» is «stopp», «stope» and «stop»: a wrong base meets nothing, the right one
+    // meets its word. Longer endings and the spellings they change (tries → try, running → run) come first.
+    'inflection_rules' => [
+        ['/^(.{2,})ies$/u', '$1y'],
+        ['/^(.{2,})ied$/u', '$1y'],
+        ['/^(.{2,}?)([bdfgklmnprstvz])\2(?:ed|ing)$/u', '$1$2'],
+        ['/^(.{2,})ing$/u', '$1'],
+        ['/^(.{2,})ing$/u', '$1e'],
+        ['/^(.{2,})ed$/u', '$1'],
+        ['/^(.{2,})ed$/u', '$1e'],
+        ['/^(.{2,})es$/u', '$1'],
+        ['/^(.{2,})s$/u', '$1'],
+    ],
+
+    // THE FIRST AND THE SECOND PERSON, SWAPPED (наряд BACK-TAILS-2 §9): what the learner said about themselves, said back
+    // by the role, turns «I» into «you» — «My son has a fever» comes back «Your son has a fever». The role's echo of the
+    // learner's move is looked for in the move as said and in the move with these words swapped.
+    'person_swap' => [
+        'i' => 'you', 'me' => 'you', 'my' => 'your', 'mine' => 'yours', 'am' => 'are',
+        'you' => 'i', 'your' => 'my', 'yours' => 'mine', 'are' => 'am',
+    ],
 ];

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Dto;
 
 /**
- * WHAT THE ROLE IS TOLD BEFORE ONE MOVE (`conversation_agent.v2`, наряд CONV-1, п. 4; наряд CONV-2, пп. 1, 4).
+ * WHAT THE ROLE IS TOLD BEFORE ONE MOVE (`conversation_agent.v2.1`, наряд CONV-1, п. 4; наряд CONV-2, пп. 1, 4; наряд
+ * BACK-TAILS-2 §9).
  *
  * Everything that changes from call to call — and NOTHING else: the prompt file itself is the
  * system message, byte for byte the same every time, so the vendor's prompt cache holds it
@@ -47,9 +48,10 @@ final readonly class ConversationAgentRequest
         /**
          * THE SECOND TRY OF THE SAME MOVE (наряд CONV-2): the first answer was refused by the server's guards
          * ({@see \App\Modules\Plan\Domain\Service\RoleLines}) — `learner_line` when it said a line of the learner (quoted
-         * in `line`), `same_words` when a rescue said the rescued line again. Null on every first try.
+         * in `line`), `learner_echo` when it said the learner's last move back (наряд BACK-TAILS-2 §9), `same_words` when
+         * a rescue said the rescued line again. Null on every first try.
          *
-         * @var array{reason: 'learner_line'|'same_words', said: string, line: string|null}|null
+         * @var array{reason: 'learner_line'|'learner_echo'|'same_words', said: string, line: string|null}|null
          */
         public ?array $redo = null,
     ) {}
@@ -57,7 +59,7 @@ final readonly class ConversationAgentRequest
     /**
      * The same move asked again, with the reason the first answer was refused.
      *
-     * @param  'learner_line'|'same_words'  $reason
+     * @param  'learner_line'|'learner_echo'|'same_words'  $reason
      */
     public function redo(string $reason, string $said, ?string $line): self
     {

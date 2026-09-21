@@ -101,6 +101,18 @@ final readonly class LanguagePack
         return is_string($value) && trim($value) !== '' ? trim($value) : null;
     }
 
+    /**
+     * THE ROLE'S NEUTRAL MOVE IN THIS LANGUAGE (наряд BACK-TAILS-2 §9) — «I see. Please go on.»: what the role says when
+     * its answer was nothing but the learner's words said back. Every pack writes the same line, so the target's is said
+     * and the learner's is its translation. Null for a language nobody has written it for.
+     */
+    public function neutralReply(): ?string
+    {
+        $value = $this->data['neutral_reply'] ?? null;
+
+        return is_string($value) && trim($value) !== '' ? trim($value) : null;
+    }
+
     /** Is the word one of the list under `$key` (lower-cased, a typographic apostrophe read as a plain one)? */
     public function listed(string $key, string $word): bool
     {

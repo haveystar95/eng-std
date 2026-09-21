@@ -14,10 +14,16 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
  * and no expected text.
  *
  * Every line is the one the server assembles from its frame and filler ({@see CardObjects::ownLine()}),
- * so the sheet says exactly what «Говорю сам» and the day window say.
+ * so the sheet says exactly what «Говорю сам» and the day window say — and a line of the sheet is
+ * `{ref, text_target, text_native, audio}` and nothing more (наряд BACK-TAILS-2 §5): the learner's own
+ * words, in the order of the visit; no line of the partner's rides here in any field. A scene is named by
+ * the PLAN (§6), the name the route and the talk give it — never by the lesson's own title for it.
  */
 final class RecallCards
 {
+    /** What one line of the sheet says: the learner's line, its translation and its voice. */
+    private const LINE = ['ref', 'text_target', 'text_native', 'audio'];
+
     /**
      * @param  list<SceneMaterial>  $scenes
      * @return array<string, mixed>
@@ -35,13 +41,13 @@ final class RecallCards
                 $seen[$exchange->step] = true;
                 $line = CardObjects::ownLine($scene, $exchange);
                 if ($line !== null) {
-                    $lines[] = ['step' => $exchange->step, ...$line];
+                    $lines[] = array_intersect_key($line, array_flip(self::LINE));
                 }
             }
             $out[] = [
                 'scene_id' => $scene->sceneId->value,
-                'title_target' => $scene->lesson->titleTarget,
-                'title_native' => $scene->lesson->titleNative,
+                'title_target' => $scene->titleTarget,
+                'title_native' => $scene->titleNative,
                 'lines' => $lines,
             ];
         }

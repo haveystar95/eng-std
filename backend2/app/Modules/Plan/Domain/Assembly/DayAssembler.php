@@ -60,6 +60,16 @@ final class DayAssembler
     }
 
     /**
+     * «Фразы» of a scene day as {@see sceneDay()} deals them, with what the ladder did to fit them under their ceiling
+     * (наряд BACK-TAILS-2 §1) — what the day's build log reads when the ladder runs out of rungs. Deterministic: the
+     * same scene and level are the same stage the day was dealt with.
+     */
+    public function phrasesDeal(SceneMaterial $scene, PlanLevel $level): PhrasesDeal
+    {
+        return $this->phrases->deal($scene, $level);
+    }
+
+    /**
      * The exchanges of the two previous scene days said aloud, and their returns at the end of their stages — an
      * exchange already returned is not dealt twice.
      *

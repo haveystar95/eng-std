@@ -8,6 +8,7 @@ use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\ValueObject\ConversationId;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use DateTimeImmutable;
 
 /**
  * THE TALKS OF A PLAN. The journal of lines is APPEND-ONLY and the implementation is what keeps it
@@ -26,11 +27,11 @@ interface ConversationRepository
     public function findById(ConversationId $id): ?Conversation;
 
     /**
-     * Every talk of the day with its lines, oldest first — what the day's minutes are counted from (наряд CONV-2, п. 3).
-     *
-     * @return list<Conversation>
+     * HOW MANY REPLAYS OF THE DAY'S TALK WERE STARTED SINCE A MOMENT (наряд BACK-TAILS-2 §7): the talks of the day other
+     * than the one that walked its sixth stage, begun at or after it was walked and at or after `$since` — the cap on
+     * «Повторить разговор» counts them per calendar day of the learner. One count, over the (day, start) index.
      */
-    public function allForDay(PlanDayId $dayId): array;
+    public function replaysSince(PlanDayId $dayId, ConversationId $walked, DateTimeImmutable $walkedAt, DateTimeImmutable $since): int;
 
     /**
      * The talks that came to an end of their own on a day whose sixth stage the journal of stages does not have —
