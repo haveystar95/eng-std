@@ -1,0 +1,614 @@
+#### база wordtrainer_bt2_e2e_test (копия e2e после миграции ветки) — day_cards 20 206, conversations 3
+SET
+SET
+Pager usage is off.
+== Q1 (new) ConversationRepository::replaysSince — StartConversationHandler, the cap of §7
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.038..0.039 rows=1 loops=1)
+   Buffers: shared hit=5
+   InitPlan 1
+     ->  Limit (actual time=0.017..0.017 rows=1 loops=1)
+           Buffers: shared hit=4
+           ->  Sort (actual time=0.016..0.016 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: top-N heapsort  Memory: 25kB
+                 Buffers: shared hit=4
+                 ->  Seq Scan on conversations conversations_1 (actual time=0.001..0.002 rows=3 loops=1)
+                       Buffers: shared hit=1
+   ->  Seq Scan on conversations (actual time=0.036..0.036 rows=1 loops=1)
+         Filter: ((started_at >= '2026-09-21 00:00:00+00'::timestamp with time zone) AND (id <> '00000000000000000000000000'::bpchar) AND (day_id = (InitPlan 1).col1))
+         Rows Removed by Filter: 2
+         Buffers: shared hit=5
+ Planning:
+   Buffers: shared hit=138
+ Planning Time: 0.617 ms
+ Execution Time: 0.074 ms
+(19 rows)
+
+SET
+                                                                     QUERY PLAN                                                                     
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.050..0.050 rows=1 loops=1)
+   Buffers: shared hit=4
+   InitPlan 1
+     ->  Limit (actual time=0.036..0.037 rows=1 loops=1)
+           Buffers: shared hit=2
+           ->  Sort (actual time=0.036..0.036 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: top-N heapsort  Memory: 25kB
+                 Buffers: shared hit=2
+                 ->  Index Only Scan using conversations_day_started_idx on conversations conversations_1 (actual time=0.032..0.033 rows=3 loops=1)
+                       Heap Fetches: 3
+                       Buffers: shared hit=2
+   ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.048..0.048 rows=1 loops=1)
+         Index Cond: ((day_id = (InitPlan 1).col1) AND (started_at >= '2026-09-21 00:00:00+00'::timestamp with time zone))
+         Filter: (id <> '00000000000000000000000000'::bpchar)
+         Buffers: shared hit=4
+ Planning Time: 0.044 ms
+ Execution Time: 0.068 ms
+(18 rows)
+
+RESET
+== Q2 (changed: + id DESC) ConversationRepository::latestForDay — the room, the talk row's targets
+                                               QUERY PLAN                                                
+---------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.021..0.021 rows=1 loops=1)
+   Buffers: shared hit=5
+   InitPlan 1
+     ->  Limit (actual time=0.005..0.006 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Sort (actual time=0.005..0.005 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: top-N heapsort  Memory: 25kB
+                 Buffers: shared hit=1
+                 ->  Seq Scan on conversations conversations_1 (actual time=0.001..0.002 rows=3 loops=1)
+                       Buffers: shared hit=1
+   ->  Sort (actual time=0.020..0.020 rows=1 loops=1)
+         Sort Key: conversations.started_at DESC, conversations.id DESC
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=5
+         ->  Seq Scan on conversations (actual time=0.011..0.012 rows=1 loops=1)
+               Filter: (day_id = (InitPlan 1).col1)
+               Rows Removed by Filter: 2
+               Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=30
+ Planning Time: 0.102 ms
+ Execution Time: 0.031 ms
+(23 rows)
+
+SET
+                                                                     QUERY PLAN                                                                     
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.097..0.097 rows=1 loops=1)
+   Buffers: shared hit=7
+   InitPlan 1
+     ->  Limit (actual time=0.049..0.049 rows=1 loops=1)
+           Buffers: shared hit=2
+           ->  Sort (actual time=0.049..0.049 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: top-N heapsort  Memory: 25kB
+                 Buffers: shared hit=2
+                 ->  Index Only Scan using conversations_day_started_idx on conversations conversations_1 (actual time=0.038..0.042 rows=3 loops=1)
+                       Heap Fetches: 3
+                       Buffers: shared hit=2
+   ->  Incremental Sort (actual time=0.096..0.096 rows=1 loops=1)
+         Sort Key: conversations.started_at DESC, conversations.id DESC
+         Presorted Key: conversations.started_at
+         Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+         Buffers: shared hit=7
+         ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.069..0.069 rows=1 loops=1)
+               Index Cond: (day_id = (InitPlan 1).col1)
+               Buffers: shared hit=4
+ Planning Time: 0.067 ms
+ Execution Time: 0.110 ms
+(22 rows)
+
+RESET
+== Q3 (changed: + id) ConversationRepository::latestForDays — the plan's route (the app passes the plan's day ids as literals)
+                                                   QUERY PLAN                                                    
+-----------------------------------------------------------------------------------------------------------------
+ Sort (actual time=0.078..0.079 rows=1 loops=1)
+   Sort Key: conversations.started_at, conversations.id
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=5
+   InitPlan 2
+     ->  Bitmap Heap Scan on plan_days (actual time=0.059..0.060 rows=1 loops=1)
+           Recheck Cond: (plan_id = (InitPlan 1).col1)
+           Heap Blocks: exact=1
+           Buffers: shared hit=4
+           InitPlan 1
+             ->  Limit (actual time=0.005..0.005 rows=1 loops=1)
+                   Buffers: shared hit=1
+                   ->  Sort (actual time=0.004..0.004 rows=1 loops=1)
+                         Sort Key: conversations_1.started_at DESC
+                         Sort Method: top-N heapsort  Memory: 25kB
+                         Buffers: shared hit=1
+                         ->  Seq Scan on conversations conversations_1 (actual time=0.001..0.002 rows=3 loops=1)
+                               Buffers: shared hit=1
+           ->  Bitmap Index Scan on plan_days_number_uidx (actual time=0.042..0.042 rows=1 loops=1)
+                 Index Cond: (plan_id = (InitPlan 1).col1)
+                 Buffers: shared hit=3
+   ->  Seq Scan on conversations (actual time=0.074..0.074 rows=1 loops=1)
+         Filter: (day_id = ANY ((InitPlan 2).col1))
+         Rows Removed by Filter: 2
+         Buffers: shared hit=5
+ Planning:
+   Buffers: shared hit=109
+ Planning Time: 0.507 ms
+ Execution Time: 0.092 ms
+(29 rows)
+
+SET
+                                                   QUERY PLAN                                                    
+-----------------------------------------------------------------------------------------------------------------
+ Sort (actual time=0.039..0.040 rows=1 loops=1)
+   Sort Key: conversations.started_at, conversations.id
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=6
+   InitPlan 2
+     ->  Bitmap Heap Scan on plan_days (actual time=0.028..0.029 rows=1 loops=1)
+           Recheck Cond: (plan_id = (InitPlan 1).col1)
+           Heap Blocks: exact=1
+           Buffers: shared hit=4
+           InitPlan 1
+             ->  Limit (actual time=0.008..0.008 rows=1 loops=1)
+                   Buffers: shared hit=1
+                   ->  Sort (actual time=0.008..0.008 rows=1 loops=1)
+                         Sort Key: conversations_1.started_at DESC
+                         Sort Method: top-N heapsort  Memory: 25kB
+                         Buffers: shared hit=1
+                         ->  Seq Scan on conversations conversations_1 (actual time=0.005..0.006 rows=3 loops=1)
+                               Buffers: shared hit=1
+           ->  Bitmap Index Scan on plan_days_number_uidx (actual time=0.015..0.015 rows=1 loops=1)
+                 Index Cond: (plan_id = (InitPlan 1).col1)
+                 Buffers: shared hit=3
+   ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.036..0.036 rows=1 loops=1)
+         Index Cond: (day_id = ANY ((InitPlan 2).col1))
+         Buffers: shared hit=6
+ Planning Time: 0.069 ms
+ Execution Time: 0.050 ms
+(26 rows)
+
+RESET
+== Q4 (new, now on every answer) StagePassageRepository::of + ConversationRepository::findById — DayMetricsOf, §8
+                                                  QUERY PLAN                                                   
+---------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.020..0.020 rows=1 loops=1)
+   Buffers: shared hit=2
+   InitPlan 1
+     ->  Limit (actual time=0.001..0.001 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Seq Scan on plan_stage_passages plan_stage_passages_1 (actual time=0.001..0.001 rows=1 loops=1)
+                 Buffers: shared hit=1
+   ->  Seq Scan on plan_stage_passages (actual time=0.019..0.019 rows=1 loops=1)
+         Filter: ((day_id = (InitPlan 1).col1) AND ((stage)::text = 'conversation'::text))
+         Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=53
+ Planning Time: 0.272 ms
+ Execution Time: 0.026 ms
+(14 rows)
+
+                                       QUERY PLAN                                        
+-----------------------------------------------------------------------------------------
+ Limit (actual time=0.008..0.009 rows=1 loops=1)
+   Buffers: shared hit=2
+   InitPlan 1
+     ->  Limit (actual time=0.002..0.002 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Seq Scan on plan_stage_passages (actual time=0.002..0.002 rows=1 loops=1)
+                 Buffers: shared hit=1
+   ->  Seq Scan on conversations (actual time=0.008..0.008 rows=1 loops=1)
+         Filter: (id = (InitPlan 1).col1)
+         Buffers: shared hit=2
+ Planning Time: 0.045 ms
+ Execution Time: 0.015 ms
+(12 rows)
+
+SET
+                                                                          QUERY PLAN                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.047..0.047 rows=1 loops=1)
+   Buffers: shared hit=4
+   InitPlan 1
+     ->  Limit (actual time=0.024..0.024 rows=1 loops=1)
+           Buffers: shared hit=2
+           ->  Index Only Scan using plan_stage_passages_day_stage_uidx on plan_stage_passages plan_stage_passages_1 (actual time=0.024..0.024 rows=1 loops=1)
+                 Heap Fetches: 1
+                 Buffers: shared hit=2
+   ->  Index Scan using plan_stage_passages_day_stage_uidx on plan_stage_passages (actual time=0.047..0.047 rows=1 loops=1)
+         Index Cond: ((day_id = (InitPlan 1).col1) AND ((stage)::text = 'conversation'::text))
+         Buffers: shared hit=4
+ Planning Time: 0.029 ms
+ Execution Time: 0.053 ms
+(13 rows)
+
+                                              QUERY PLAN                                              
+------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.018..0.018 rows=1 loops=1)
+   Buffers: shared hit=3
+   InitPlan 1
+     ->  Limit (actual time=0.003..0.003 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Seq Scan on plan_stage_passages (actual time=0.003..0.003 rows=1 loops=1)
+                 Buffers: shared hit=1
+   ->  Index Scan using conversations_pkey on conversations (actual time=0.017..0.017 rows=1 loops=1)
+         Index Cond: (id = (InitPlan 1).col1)
+         Buffers: shared hit=3
+ Planning Time: 0.046 ms
+ Execution Time: 0.024 ms
+(12 rows)
+
+RESET
+== Q5 (new) plan:reconcile-scenes — the sheets of «Вспомнить», a console command run by hand
+                                   QUERY PLAN                                    
+---------------------------------------------------------------------------------
+ Sort (actual time=7.754..7.756 rows=1 loops=1)
+   Sort Key: d.plan_id, d.number, c.id
+   Sort Method: quicksort  Memory: 26kB
+   Buffers: shared hit=659
+   ->  Nested Loop (actual time=7.708..7.738 rows=1 loops=1)
+         Join Filter: (d.id = c.day_id)
+         Rows Removed by Join Filter: 320
+         Buffers: shared hit=656
+         ->  Seq Scan on day_cards c (actual time=7.556..7.584 rows=1 loops=1)
+               Filter: ((kind)::text = 'recall_scenes'::text)
+               Rows Removed by Filter: 20205
+               Buffers: shared hit=648
+         ->  Seq Scan on plan_days d (actual time=0.022..0.124 rows=321 loops=1)
+               Buffers: shared hit=8
+ Planning:
+   Buffers: shared hit=153
+ Planning Time: 0.759 ms
+ Execution Time: 7.770 ms
+(18 rows)
+
+                                            QUERY PLAN                                             
+---------------------------------------------------------------------------------------------------
+ Hash Semi Join (actual time=0.034..0.209 rows=3 loops=1)
+   Hash Cond: (plan_scenes.id = plan_scenes_1.id)
+   Buffers: shared hit=18
+   ->  Seq Scan on plan_scenes (actual time=0.023..0.175 rows=220 loops=1)
+         Buffers: shared hit=16
+   ->  Hash (actual time=0.007..0.007 rows=3 loops=1)
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=2
+         ->  Limit (actual time=0.003..0.003 rows=3 loops=1)
+               Buffers: shared hit=2
+               ->  Seq Scan on plan_scenes plan_scenes_1 (actual time=0.002..0.002 rows=3 loops=1)
+                     Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=83
+ Planning Time: 0.444 ms
+ Execution Time: 0.219 ms
+(16 rows)
+
+                           QUERY PLAN                            
+-----------------------------------------------------------------
+ Update on day_cards
+   ->  Index Scan using day_cards_pkey on day_cards
+         Index Cond: (id = '00000000000000000000000000'::bpchar)
+(3 rows)
+
+== Q6 (new) the migration 2026_09_22_100000 — one UPDATE, once (EXPLAIN only, nothing run)
+                         QUERY PLAN                          
+-------------------------------------------------------------
+ Update on day_cards
+   ->  Hash Join
+         Hash Cond: (day_cards.day_id = plan_days.id)
+         ->  Seq Scan on day_cards
+               Filter: ((stage)::text = 'speak'::text)
+         ->  Hash
+               ->  Seq Scan on plan_days
+                     Filter: ((type)::text = 'review'::text)
+(8 rows)
+
+
+#### база wordtrainer (бой, сессия READ ONLY, миграция ветки НЕ применена — Q6 показывает план до неё) — day_cards 921, conversations 2
+SET
+SET
+Pager usage is off.
+== Q1 (new) ConversationRepository::replaysSince — StartConversationHandler, the cap of §7
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.069..0.070 rows=1 loops=1)
+   Buffers: shared hit=6
+   InitPlan 1
+     ->  Limit (actual time=0.038..0.038 rows=1 loops=1)
+           Buffers: shared hit=4
+           ->  Sort (actual time=0.037..0.037 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: quicksort  Memory: 25kB
+                 Buffers: shared hit=4
+                 ->  Seq Scan on conversations conversations_1 (actual time=0.023..0.023 rows=2 loops=1)
+                       Buffers: shared hit=1
+   ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.067..0.067 rows=1 loops=1)
+         Index Cond: ((day_id = (InitPlan 1).col1) AND (started_at >= '2026-09-21 00:00:00+00'::timestamp with time zone))
+         Filter: (id <> '00000000000000000000000000'::bpchar)
+         Buffers: shared hit=6
+ Planning:
+   Buffers: shared hit=178
+ Planning Time: 0.684 ms
+ Execution Time: 0.104 ms
+(19 rows)
+
+SET
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.022..0.023 rows=1 loops=1)
+   Buffers: shared hit=4
+   InitPlan 1
+     ->  Limit (actual time=0.016..0.016 rows=1 loops=1)
+           Buffers: shared hit=2
+           ->  Sort (actual time=0.016..0.016 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: quicksort  Memory: 25kB
+                 Buffers: shared hit=2
+                 ->  Bitmap Heap Scan on conversations conversations_1 (actual time=0.008..0.009 rows=2 loops=1)
+                       Heap Blocks: exact=1
+                       Buffers: shared hit=2
+                       ->  Bitmap Index Scan on conversations_day_started_idx (actual time=0.003..0.003 rows=2 loops=1)
+                             Buffers: shared hit=1
+   ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.021..0.021 rows=1 loops=1)
+         Index Cond: ((day_id = (InitPlan 1).col1) AND (started_at >= '2026-09-21 00:00:00+00'::timestamp with time zone))
+         Filter: (id <> '00000000000000000000000000'::bpchar)
+         Buffers: shared hit=4
+ Planning Time: 0.052 ms
+ Execution Time: 0.060 ms
+(20 rows)
+
+RESET
+== Q2 (changed: + id DESC) ConversationRepository::latestForDay — the room, the talk row's targets
+                                                      QUERY PLAN                                                       
+-----------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.046..0.047 rows=1 loops=1)
+   Buffers: shared hit=9
+   InitPlan 1
+     ->  Limit (actual time=0.008..0.008 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Sort (actual time=0.007..0.007 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: quicksort  Memory: 25kB
+                 Buffers: shared hit=1
+                 ->  Seq Scan on conversations conversations_1 (actual time=0.004..0.005 rows=2 loops=1)
+                       Buffers: shared hit=1
+   ->  Incremental Sort (actual time=0.046..0.046 rows=1 loops=1)
+         Sort Key: conversations.started_at DESC, conversations.id DESC
+         Presorted Key: conversations.started_at
+         Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+         Buffers: shared hit=9
+         ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.011..0.011 rows=1 loops=1)
+               Index Cond: (day_id = (InitPlan 1).col1)
+               Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=4
+ Planning Time: 0.117 ms
+ Execution Time: 0.068 ms
+(23 rows)
+
+SET
+                                                       QUERY PLAN                                                       
+------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.028..0.029 rows=1 loops=1)
+   Buffers: shared hit=4
+   InitPlan 1
+     ->  Limit (actual time=0.016..0.016 rows=1 loops=1)
+           Buffers: shared hit=2
+           ->  Sort (actual time=0.015..0.016 rows=1 loops=1)
+                 Sort Key: conversations_1.started_at DESC
+                 Sort Method: quicksort  Memory: 25kB
+                 Buffers: shared hit=2
+                 ->  Bitmap Heap Scan on conversations conversations_1 (actual time=0.005..0.005 rows=2 loops=1)
+                       Heap Blocks: exact=1
+                       Buffers: shared hit=2
+                       ->  Bitmap Index Scan on conversations_day_started_idx (actual time=0.002..0.002 rows=2 loops=1)
+                             Buffers: shared hit=1
+   ->  Incremental Sort (actual time=0.028..0.028 rows=1 loops=1)
+         Sort Key: conversations.started_at DESC, conversations.id DESC
+         Presorted Key: conversations.started_at
+         Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+         Buffers: shared hit=4
+         ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.026..0.026 rows=1 loops=1)
+               Index Cond: (day_id = (InitPlan 1).col1)
+               Buffers: shared hit=4
+ Planning Time: 0.037 ms
+ Execution Time: 0.037 ms
+(24 rows)
+
+RESET
+== Q3 (changed: + id) ConversationRepository::latestForDays — the plan's route (the app passes the plan's day ids as literals)
+                                                   QUERY PLAN                                                    
+-----------------------------------------------------------------------------------------------------------------
+ Sort (actual time=0.039..0.040 rows=1 loops=1)
+   Sort Key: conversations.started_at, conversations.id
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=3
+   InitPlan 2
+     ->  Seq Scan on plan_days (actual time=0.019..0.021 rows=3 loops=1)
+           Filter: (plan_id = (InitPlan 1).col1)
+           Rows Removed by Filter: 25
+           Buffers: shared hit=2
+           InitPlan 1
+             ->  Limit (actual time=0.004..0.005 rows=1 loops=1)
+                   Buffers: shared hit=1
+                   ->  Sort (actual time=0.004..0.004 rows=1 loops=1)
+                         Sort Key: conversations_1.started_at DESC
+                         Sort Method: quicksort  Memory: 25kB
+                         Buffers: shared hit=1
+                         ->  Seq Scan on conversations conversations_1 (actual time=0.002..0.002 rows=2 loops=1)
+                               Buffers: shared hit=1
+   ->  Seq Scan on conversations (actual time=0.036..0.036 rows=1 loops=1)
+         Filter: (day_id = ANY ((InitPlan 2).col1))
+         Rows Removed by Filter: 1
+         Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=87
+ Planning Time: 0.295 ms
+ Execution Time: 0.050 ms
+(26 rows)
+
+SET
+                                                   QUERY PLAN                                                    
+-----------------------------------------------------------------------------------------------------------------
+ Sort (actual time=0.054..0.055 rows=1 loops=1)
+   Sort Key: conversations.started_at, conversations.id
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=5
+   InitPlan 2
+     ->  Index Scan using plan_days_number_uidx on plan_days (actual time=0.034..0.035 rows=3 loops=1)
+           Index Cond: (plan_id = (InitPlan 1).col1)
+           Buffers: shared hit=3
+           InitPlan 1
+             ->  Limit (actual time=0.006..0.006 rows=1 loops=1)
+                   Buffers: shared hit=1
+                   ->  Sort (actual time=0.005..0.006 rows=1 loops=1)
+                         Sort Key: conversations_1.started_at DESC
+                         Sort Method: quicksort  Memory: 25kB
+                         Buffers: shared hit=1
+                         ->  Seq Scan on conversations conversations_1 (actual time=0.003..0.004 rows=2 loops=1)
+                               Buffers: shared hit=1
+   ->  Bitmap Heap Scan on conversations (actual time=0.050..0.050 rows=1 loops=1)
+         Recheck Cond: (day_id = ANY ((InitPlan 2).col1))
+         Heap Blocks: exact=1
+         Buffers: shared hit=5
+         ->  Bitmap Index Scan on conversations_day_started_idx (actual time=0.041..0.041 rows=1 loops=1)
+               Index Cond: (day_id = ANY ((InitPlan 2).col1))
+               Buffers: shared hit=4
+ Planning Time: 0.059 ms
+ Execution Time: 0.064 ms
+(26 rows)
+
+RESET
+== Q4 (new, now on every answer) StagePassageRepository::of + ConversationRepository::findById — DayMetricsOf, §8
+                                                         QUERY PLAN                                                         
+----------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.025..0.026 rows=1 loops=1)
+   Buffers: shared hit=3
+   InitPlan 1
+     ->  Limit (actual time=0.008..0.009 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Seq Scan on plan_stage_passages plan_stage_passages_1 (actual time=0.008..0.008 rows=1 loops=1)
+                 Buffers: shared hit=1
+   ->  Index Scan using plan_stage_passages_day_stage_uidx on plan_stage_passages (actual time=0.025..0.025 rows=1 loops=1)
+         Index Cond: ((day_id = (InitPlan 1).col1) AND ((stage)::text = 'conversation'::text))
+         Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=55
+ Planning Time: 0.223 ms
+ Execution Time: 0.034 ms
+(14 rows)
+
+                                              QUERY PLAN                                              
+------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.034..0.034 rows=1 loops=1)
+   Buffers: shared hit=3
+   InitPlan 1
+     ->  Limit (actual time=0.005..0.005 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Seq Scan on plan_stage_passages (actual time=0.005..0.005 rows=1 loops=1)
+                 Buffers: shared hit=1
+   ->  Index Scan using conversations_pkey on conversations (actual time=0.034..0.034 rows=1 loops=1)
+         Index Cond: (id = (InitPlan 1).col1)
+         Buffers: shared hit=3
+ Planning Time: 0.049 ms
+ Execution Time: 0.042 ms
+(12 rows)
+
+SET
+                                                                          QUERY PLAN                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.015..0.016 rows=1 loops=1)
+   Buffers: shared hit=4
+   InitPlan 1
+     ->  Limit (actual time=0.012..0.012 rows=1 loops=1)
+           Buffers: shared hit=2
+           ->  Index Only Scan using plan_stage_passages_day_stage_uidx on plan_stage_passages plan_stage_passages_1 (actual time=0.012..0.012 rows=1 loops=1)
+                 Heap Fetches: 1
+                 Buffers: shared hit=2
+   ->  Index Scan using plan_stage_passages_day_stage_uidx on plan_stage_passages (actual time=0.015..0.015 rows=1 loops=1)
+         Index Cond: ((day_id = (InitPlan 1).col1) AND ((stage)::text = 'conversation'::text))
+         Buffers: shared hit=4
+ Planning Time: 0.036 ms
+ Execution Time: 0.023 ms
+(13 rows)
+
+                                              QUERY PLAN                                              
+------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.009..0.010 rows=1 loops=1)
+   Buffers: shared hit=3
+   InitPlan 1
+     ->  Limit (actual time=0.004..0.004 rows=1 loops=1)
+           Buffers: shared hit=1
+           ->  Seq Scan on plan_stage_passages (actual time=0.004..0.004 rows=1 loops=1)
+                 Buffers: shared hit=1
+   ->  Index Scan using conversations_pkey on conversations (actual time=0.009..0.009 rows=1 loops=1)
+         Index Cond: (id = (InitPlan 1).col1)
+         Buffers: shared hit=3
+ Planning Time: 0.054 ms
+ Execution Time: 0.017 ms
+(12 rows)
+
+RESET
+== Q5 (new) plan:reconcile-scenes — the sheets of «Вспомнить», a console command run by hand
+                                   QUERY PLAN                                   
+--------------------------------------------------------------------------------
+ Sort (actual time=1.201..1.202 rows=1 loops=1)
+   Sort Key: d.plan_id, d.number, c.id
+   Sort Method: quicksort  Memory: 26kB
+   Buffers: shared hit=163
+   ->  Nested Loop (actual time=1.046..1.190 rows=1 loops=1)
+         Join Filter: (d.id = c.day_id)
+         Rows Removed by Join Filter: 25
+         Buffers: shared hit=160
+         ->  Seq Scan on day_cards c (actual time=1.037..1.181 rows=1 loops=1)
+               Filter: ((kind)::text = 'recall_scenes'::text)
+               Rows Removed by Filter: 920
+               Buffers: shared hit=159
+         ->  Seq Scan on plan_days d (actual time=0.004..0.006 rows=26 loops=1)
+               Buffers: shared hit=1
+ Planning:
+   Buffers: shared hit=168
+ Planning Time: 0.593 ms
+ Execution Time: 1.211 ms
+(18 rows)
+
+                                            QUERY PLAN                                             
+---------------------------------------------------------------------------------------------------
+ Hash Semi Join (actual time=0.031..0.093 rows=3 loops=1)
+   Hash Cond: (plan_scenes.id = plan_scenes_1.id)
+   Buffers: shared hit=14
+   ->  Seq Scan on plan_scenes (actual time=0.012..0.070 rows=19 loops=1)
+         Buffers: shared hit=10
+   ->  Hash (actual time=0.015..0.016 rows=3 loops=1)
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=4
+         ->  Limit (actual time=0.001..0.014 rows=3 loops=1)
+               Buffers: shared hit=4
+               ->  Seq Scan on plan_scenes plan_scenes_1 (actual time=0.001..0.013 rows=3 loops=1)
+                     Buffers: shared hit=4
+ Planning:
+   Buffers: shared hit=85
+ Planning Time: 0.326 ms
+ Execution Time: 0.104 ms
+(16 rows)
+
+                           QUERY PLAN                            
+-----------------------------------------------------------------
+ Update on day_cards
+   ->  Index Scan using day_cards_pkey on day_cards
+         Index Cond: (id = '00000000000000000000000000'::bpchar)
+(3 rows)
+
+== Q6 (new) the migration 2026_09_22_100000 — one UPDATE, once (EXPLAIN only, nothing run)
+                                       QUERY PLAN                                        
+-----------------------------------------------------------------------------------------
+ Update on day_cards
+   ->  Nested Loop
+         ->  Seq Scan on plan_days
+               Filter: ((type)::text = 'review'::text)
+         ->  Index Scan using day_cards_position_uidx on day_cards
+               Index Cond: ((day_id = plan_days.id) AND ((stage)::text = 'speak'::text))
+(6 rows)
+

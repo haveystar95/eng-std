@@ -1,0 +1,286 @@
+{
+    "id": "01M32Z9PSGE90CR0VX4VS2QDH9",
+    "plan_id": "01M2QRH5MYEFZ1DEQ78RH54P6X",
+    "day": 2,
+    "type": "review",
+    "state": "ended",
+    "replay": false,
+    "talk_title_native": "Поговори с врачом",
+    "partner": {
+        "role_native": "Врач",
+        "role_target": "Doctor"
+    },
+    "scene": {
+        "title_native": "Приём у врача",
+        "title_target": "Doctor visit"
+    },
+    "scenes": [
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "title_native": "Приём у врача",
+            "title_target": "Doctor visit",
+            "role_native": "Врач",
+            "role_target": "Doctor",
+            "lines": 7,
+            "state": "done"
+        }
+    ],
+    "minutes_estimate": 6,
+    "turns_left": 0,
+    "targets": [
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "ref": "p1",
+            "text_target": "He has a fever and a sore throat.",
+            "text_native": "У него температура и болит горло.",
+            "said": true
+        },
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "ref": "p2",
+            "text_target": "He's been sick for three days.",
+            "text_native": "Он болеет уже три дня.",
+            "said": true
+        },
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "ref": "p3",
+            "text_target": "Should I tell you his temperature?",
+            "text_native": "Мне сказать вам его температуру?",
+            "said": false
+        },
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "ref": "p4",
+            "text_target": "I gave him paracetamol.",
+            "text_native": "Я дал(а) ему парацетамол.",
+            "said": true
+        },
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "ref": "p5",
+            "text_target": "It looks like a viral infection.",
+            "text_native": "Похоже на вирусную инфекцию.",
+            "said": false
+        },
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "ref": "p6",
+            "text_target": "What should I do at home?",
+            "text_native": "Что мне делать дома?",
+            "said": false
+        },
+        {
+            "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+            "ref": "p7",
+            "text_target": "What warning signs should I watch for?",
+            "text_native": "За какими тревожными признаками мне следить?",
+            "said": false
+        }
+    ],
+    "hints": {
+        "enabled": true,
+        "delay_ms": 5000,
+        "native": null
+    },
+    "turns": [
+        {
+            "index": 1,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "Hello. What seems to be the problem with your son today?",
+            "text_native": "Здравствуйте. Что сегодня случилось с вашим сыном?",
+            "audio": null,
+            "understood": null,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-21T21:52:36+00:00"
+        },
+        {
+            "index": 2,
+            "speaker": "learner",
+            "kind": "said",
+            "text_target": "Hello doctor. My son is sick, he has a sore throat and a fever.",
+            "text_native": null,
+            "audio": null,
+            "understood": null,
+            "phrases_used": [
+                {
+                    "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                    "ref": "p1",
+                    "text_target": "He has a fever and a sore throat.",
+                    "text_native": "У него температура и болит горло."
+                }
+            ],
+            "off_topic": null,
+            "created_at": "2026-09-21T21:52:36+00:00"
+        },
+        {
+            "index": 3,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "How long has he had these symptoms?",
+            "text_native": "Как долго у него эти симптомы?",
+            "audio": null,
+            "understood": true,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-21T21:52:38+00:00"
+        },
+        {
+            "index": 4,
+            "speaker": "learner",
+            "kind": "said",
+            "text_target": "It started three days ago, so he has been sick for three days.",
+            "text_native": null,
+            "audio": null,
+            "understood": null,
+            "phrases_used": [
+                {
+                    "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                    "ref": "p2",
+                    "text_target": "He's been sick for three days.",
+                    "text_native": "Он болеет уже три дня."
+                }
+            ],
+            "off_topic": null,
+            "created_at": "2026-09-21T21:52:50+00:00"
+        },
+        {
+            "index": 5,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "Thank you. Did you give him any medicine for the fever?",
+            "text_native": "Спасибо. Вы давали ему лекарство от температуры?",
+            "audio": null,
+            "understood": true,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-21T21:52:51+00:00"
+        },
+        {
+            "index": 6,
+            "speaker": "learner",
+            "kind": "said",
+            "text_target": "Yes. Last night I gave him some paracetamol.",
+            "text_native": null,
+            "audio": null,
+            "understood": null,
+            "phrases_used": [
+                {
+                    "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                    "ref": "p4",
+                    "text_target": "I gave him paracetamol.",
+                    "text_native": "Я дал(а) ему парацетамол."
+                }
+            ],
+            "off_topic": null,
+            "created_at": "2026-09-21T21:52:51+00:00"
+        },
+        {
+            "index": 7,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "Thank you.",
+            "text_native": "Спасибо.",
+            "audio": null,
+            "understood": true,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-21T21:52:54+00:00"
+        },
+        {
+            "index": 8,
+            "speaker": "learner",
+            "kind": "said",
+            "text_target": "What should we do at home now?",
+            "text_native": null,
+            "audio": null,
+            "understood": null,
+            "phrases_used": [],
+            "off_topic": null,
+            "created_at": "2026-09-21T21:52:54+00:00"
+        },
+        {
+            "index": 9,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "Give him fluids, let him rest, and check his temperature.",
+            "text_native": "Давайте ему пить, пусть он отдыхает, и проверяйте его температуру.",
+            "audio": null,
+            "understood": true,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-21T21:52:56+00:00"
+        }
+    ],
+    "summary": {
+        "said_count": 4,
+        "phrases_used": 3,
+        "phrases_total": 7,
+        "phrases": [
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "ref": "p1",
+                "text_target": "He has a fever and a sore throat.",
+                "text_native": "У него температура и болит горло.",
+                "audio_url": null,
+                "used": true
+            },
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "ref": "p2",
+                "text_target": "He's been sick for three days.",
+                "text_native": "Он болеет уже три дня.",
+                "audio_url": null,
+                "used": true
+            },
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "ref": "p3",
+                "text_target": "Should I tell you his temperature?",
+                "text_native": "Мне сказать вам его температуру?",
+                "audio_url": null,
+                "used": false
+            },
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "ref": "p4",
+                "text_target": "I gave him paracetamol.",
+                "text_native": "Я дал(а) ему парацетамол.",
+                "audio_url": null,
+                "used": true
+            },
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "ref": "p5",
+                "text_target": "It looks like a viral infection.",
+                "text_native": "Похоже на вирусную инфекцию.",
+                "audio_url": null,
+                "used": false
+            },
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "ref": "p6",
+                "text_target": "What should I do at home?",
+                "text_native": "Что мне делать дома?",
+                "audio_url": null,
+                "used": false
+            },
+            {
+                "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                "ref": "p7",
+                "text_target": "What warning signs should I watch for?",
+                "text_native": "За какими тревожными признаками мне следить?",
+                "audio_url": null,
+                "used": false
+            }
+        ],
+        "understood_all": true,
+        "not_understood": 0,
+        "rescues": 0,
+        "ended_reason": "natural",
+        "minutes": 1,
+        "returns_tomorrow": true
+    }
+}

@@ -1,0 +1,4 @@
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 · сцена 01M2QRHF9M86KAM8JW8XYRAWDR: «Запись к врачу» → «Запись к врачу» · «At the doctor's with a child» → «Booking»
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 · сцена 01M2QRHF9M69AMBE2XGD18KQ8P: «У врача с сыном» → «Приём у врача» · «At the doctor's with your son» → «Doctor visit»
+карточек «Вспомнить» с именем сцены не из плана: было 1 / стало 0
+исправлено карточек: 1

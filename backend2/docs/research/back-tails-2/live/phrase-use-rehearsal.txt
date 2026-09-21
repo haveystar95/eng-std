@@ -1,0 +1,23 @@
+разговор 01M32DKPMFR6QDX7S2YC5FNR8E · план 01M2TSRM3DJPGCR5VQNBE8N3S7 · день 3 · rehearsal · целей 7 · ходов ученика 9 · база wordtrainer
+ходы ученика:
+   2 «Hello yes this flight showrooms» · роль назвала: p1 · сервер тогда записал: —
+   4 «It is two room flat» · роль назвала: p1 · сервер тогда записал: p1
+   6 «The rent is $800 per month» · роль назвала: — · сервер тогда записал: —
+   8 «No parking is not included» · роль назвала: — · сервер тогда записал: p3
+  10 «Yes dogs allowed but it will cost double deposit» · роль назвала: p6, p4 · сервер тогда записал: —
+  12 «Deposit is one month rent» · роль назвала: p6 · сервер тогда записал: —
+  14 «No Friday evening I am busy» · роль назвала: — · сервер тогда записал: —
+  16 «Yes» · роль назвала: p1 · сервер тогда записал: —
+  18 «There are Kitchen but it's studio» · роль назвала: p1 · сервер тогда записал: —
+
+| цель | ключ (старое правило) | где услышано | было | стало | почему «стало» |
+|---|---|---|---|---|---|
+| s1:p1 «Is this flat two rooms?» | Is two rooms | «It is two room flat» | said | said | по правилу: ключевых слов 3 из 4 |
+| s1:p2 «What is the rent?» | What is | — | — | — | — |
+| s1:p3 «Is parking included?» | Is included | «No parking is not included» | said | said | по правилу: ключевых слов 2 из 2 |
+| s1:p4 «Are dogs allowed?» | Are allowed | «Yes dogs allowed but it will cost double deposit» | — | said | по правилу: ключевых слов 2 из 2 |
+| s2:p1 «Can I see the kitchen?» | Can I see | — | — | — | роль назвала, но ключевых слов 0 из 3, 1 из 3 (< ½) |
+| s2:p2 «That sounds in good condition.» | That sounds in condition | — | — | — | — |
+| s2:p3 «How does the heating work?» | How does work | — | — | — | — |
+
+было 2 из 7 · стало 3 из 7

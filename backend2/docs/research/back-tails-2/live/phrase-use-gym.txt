@@ -1,0 +1,18 @@
+разговор 01M32FJ5FQNRNSQH6PNC7DP5E0 · план 01M32DX8QCABM348XP45Z1ZD4M · день 1 · day · целей 7 · ходов ученика 4 · база wordtrainer
+ходы ученика:
+   2 «Hello I need daily training» · роль назвала: — · сервер тогда записал: —
+   4 «No I want to buy monthly membership» · роль назвала: p2, p3 · сервер тогда записал: —
+   6 «Yes it is my first visit» · роль назвала: p3 · сервер тогда записал: —
+   8 «Weekdays works for me» · роль назвала: p4 · сервер тогда записал: —
+
+| цель | ключ (старое правило) | где услышано | было | стало | почему «стало» |
+|---|---|---|---|---|---|
+| p1 «Do you have a day pass?» | Do you have | — | — | — | — |
+| p2 «What monthly memberships do you have?» | What do you have | «No I want to buy monthly membership» | — | said | слово роли + 2 из 4 ключевых (≥ ½) |
+| p3 «This is my first visit.» | This is | «Yes it is my first visit» | — | said | по правилу: ключевых слов 3 из 4 |
+| p4 «That works for me on weekdays.» | That works for me on | «Weekdays works for me» | — | said | по правилу: ключевых слов 3 из 4 |
+| p5 «Where are the changing rooms?» | Where are | — | — | — | — |
+| p6 «I'll return the locker key.» | I'll return | — | — | — | — |
+| p7 «Can I pay by card?» | Can I pay | — | — | — | — |
+
+было 0 из 7 · стало 3 из 7
