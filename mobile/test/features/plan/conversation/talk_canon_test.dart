@@ -18,6 +18,7 @@ import 'package:eng_std/features/plan/session/session_mic.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart' show SilentRecognizer, enterHeard;
 import '../../../support/talk_harness.dart';
 
@@ -131,10 +132,12 @@ void main() {
     // top, 14 from the edge), and WHILE THE LINE SOUNDS a brass wave runs along the plate's bottom edge, 10 under the
     // translation; the line said, the wave goes and «прослушать» stays. The circle itself never turns into a wave, and
     // there is no «текст» to tap. «Прервано» stands over the words of a line cut off (37-9). Under «Без подсказок» the
-    // lines stay CLOSED until the summary: «прослушать» 28 alone (12 + 28 + 12), the same edge wave under it while the
-    // line sounds, and nothing that opens them.
+    // lines stay CLOSED until the learner opens one (наряд CLIENT-CONV-1c §5, приёмка 22.09): the pair «прослушать» 28
+    // and the «текст» chip in one row (12 + 28 + 12), the same edge wave under them while the line sounds; a tap on
+    // «текст» opens THAT line — its words, «прослушать» alone in the corner — and the others stay closed.
     // CATCHES: the wave inside the circle in place of the edge wave (the frame before SESSION-DES-4), a wave that stays
-    // after the line, a line that waits for a tap to be read, a «текст» chip, and the text opened under «Без подсказок».
+    // after the line, a line that waits for a tap to be read, a «текст» chip on an open line, a closed line with no
+    // way to open it (harness 08 before the acceptance), and a tap that opens every line.
     testWidgets('текст роли открыт с голосом, волна по нижней кромке, пока реплика звучит', (tester) async {
       Finder inTurn(int index, Finder f) => find.descendant(of: find.byKey(ValueKey('turn-$index')), matching: f);
       Rect plate(int index) => tester.getRect(inTurn(index, find.byType(SessionBubble)));
@@ -183,7 +186,7 @@ void main() {
       expect(find.text(last), findsOneWidget);
       await settleTalk(tester);
 
-      // «Без подсказок»: closed — the circle alone, the edge wave under it while the line sounds.
+      // «Без подсказок»: closed — «прослушать» and «текст» in one row, the edge wave under them while the line sounds.
       final blind = talkV2('talk_day_open_v2', (json) {
         (json['hints'] as Map<String, dynamic>)
           ..['enabled'] = false
@@ -192,15 +195,26 @@ void main() {
       final blindProbe = TalkProbe()..documents.add(blind);
       final blindStand = await pumpTalk(tester, blindProbe, hints: false);
       expect(find.text(last), findsNothing);
-      expect(inTurn(5, find.byKey(const ValueKey('talk-listen'))), findsOneWidget, reason: '«прослушать» alone');
+      expect(inTurn(5, find.byKey(const ValueKey('talk-listen'))), findsOneWidget);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsOneWidget, reason: 'the pair: «прослушать» + «текст»');
       expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsOneWidget, reason: 'the edge wave while it sounds');
       final closed = plate(1);
       expect(closed.height, moreOrLessEquals(52, epsilon: 0.5), reason: '12 + 28 + 12, as in the frame');
       expect(circle(1).left - closed.left, moreOrLessEquals(14, epsilon: 0.5));
+      final chip = tester.getRect(inTurn(1, find.byKey(const ValueKey('talk-open-text'))));
+      expect(chip.left, greaterThan(circle(1).right), reason: 'the chip right of the circle');
+      expect(chip.center.dy, moreOrLessEquals(circle(1).center.dy, epsilon: 0.5), reason: 'in one row');
       await finishLine(tester, blindStand);
       expect(inTurn(5, find.byKey(const ValueKey('talk-line-wave'))), findsNothing);
       expect(plate(5).height, moreOrLessEquals(52, epsilon: 0.5));
-      expect(find.text('текст'), findsNothing, reason: 'no way to open a line under «Без подсказок»');
+
+      // A tap on «текст» opens THIS line: its words, «прослушать» alone in the corner; the other lines stay closed.
+      await tester.tap(inTurn(5, find.byKey(const ValueKey('talk-open-text'))));
+      await tester.pump();
+      expect(find.text(last), findsOneWidget);
+      expect(inTurn(5, find.byKey(const ValueKey('talk-open-text'))), findsNothing, reason: 'open — «прослушать» alone');
+      expect(inTurn(5, find.byKey(const ValueKey('talk-listen'))), findsOneWidget);
+      expect(inTurn(1, find.byKey(const ValueKey('talk-open-text'))), findsOneWidget, reason: 'the other lines stay closed');
       await settleTalk(tester);
     });
 
@@ -419,10 +433,10 @@ void main() {
   });
 
   group('37-7 · «Без подсказок»', () {
-    // ПРАВИЛО (кадр 37-7, примечание): в «Без подсказок» НЕТ НИ ЧИПА, НИ КНОПКИ «Подсказать», а
-    // тексты реплик роли закрыты до итога — открывать их нечем.
-    // ЛОВИТ: чип, встающий по таймеру независимо от режима, и кнопку «текст», оставленную на пузыре.
-    testWidgets('в «Без подсказок» нет ни чипа, ни кнопки, тексты закрыты', (tester) async {
+    // ПРАВИЛО (кадр 37-7, примечание; наряд CLIENT-CONV-1c §5, приёмка 22.09): в «Без подсказок» НЕТ НИ ЧИПА подсказки,
+    // НИ КНОПКИ «Подсказать», а тексты реплик роли закрыты до тапа: у каждой — пара «прослушать» + «текст».
+    // ЛОВИТ: чип подсказки, встающий по таймеру независимо от режима, и закрытую реплику без «текст» (харнесс 08).
+    testWidgets('в «Без подсказок» нет ни чипа, ни кнопки, тексты закрыты до «текст»', (tester) async {
       final blind = talkFixtureEdited('conversation-day-open', (json) {
         (json['hints'] as Map<String, dynamic>)
           ..['enabled'] = false
@@ -436,10 +450,11 @@ void main() {
 
       expect(find.byKey(const ValueKey('talk-hint-chip')), findsNothing);
       expect(find.byKey(const ValueKey('talk-hint')), findsNothing);
-      expect(find.byKey(const ValueKey('talk-open-text')), findsNothing, reason: 'тексты закрыты до итога');
-      final plate = tester.getRect(find.descendant(of: find.byKey(const ValueKey('turn-5')), matching: find.byType(SessionBubble)));
-      expect(plate.width, moreOrLessEquals(56, epsilon: 0.5), reason: 'в контейнере один кружок: 14 + 28 + 14');
-      expect(find.text('Hello. What brings you in today?'), findsNothing);
+      final turn = find.byKey(const ValueKey('turn-5'));
+      expect(find.descendant(of: turn, matching: find.byKey(const ValueKey('talk-listen'))), findsOneWidget);
+      expect(find.descendant(of: turn, matching: find.byKey(const ValueKey('talk-open-text'))), findsOneWidget,
+          reason: 'закрытая реплика — «прослушать» и «текст»');
+      expect(find.text('Hello. What brings you in today?'), findsNothing, reason: 'тексты закрыты до тапа');
       expect(find.byKey(const ValueKey('talk-rescue')), findsOneWidget, reason: 'переспрос — не подсказка');
       await settleTalk(tester);
     });
@@ -692,7 +707,7 @@ void main() {
       await finishLine(tester, stand);
       expect(stand.talk.phase, TalkPhase.ended);
       final strip = find.byKey(const ValueKey('talk-strip'));
-      expect(find.descendant(of: strip, matching: find.text('фразы · 3 из 7')), findsOneWidget);
+      expect(find.descendant(of: strip, matching: find.text(nb('фразы · 3 из 7'))), findsOneWidget);
       expect(endedV2.summary!.phrasesUsed, 3, reason: 'the summary counts the same list');
       expect(tester.getRect(strip).bottom, lessThanOrEqualTo(tester.getRect(find.text('Разговор окончен')).top), reason: 'над листом');
       await tester.tap(strip);
@@ -706,7 +721,7 @@ void main() {
     Future<void> expectStrip(WidgetTester tester, String text, String state) async {
       final strip = find.byKey(const ValueKey('talk-strip'));
       expect(strip, findsOneWidget, reason: state);
-      expect(find.descendant(of: strip, matching: find.text(text)), findsOneWidget, reason: state);
+      expect(find.descendant(of: strip, matching: find.text(nb(text))), findsOneWidget, reason: state);
       expect(tester.getSize(strip).height, 44, reason: '$state: a plate 44');
     }
 
@@ -792,7 +807,7 @@ void main() {
       expect(find.byKey(const ValueKey('talk-strip-check')), findsNothing);
 
       await _say(tester);
-      expect(find.text('фразы · 2 из 5'), findsOneWidget);
+      expect(find.text(nb('фразы · 2 из 5')), findsOneWidget);
       expect(plate().color, AppColors.sessionSageWash, reason: 'шалфей 15 %');
       final check = find.byKey(const ValueKey('talk-strip-check'));
       expect(check, findsOneWidget);
@@ -960,8 +975,8 @@ void main() {
       expect(endedV2.replay, isTrue);
       expect(endedV2.summary!.returnsTomorrow, isFalse);
       await pumpSummary(tester, endedV2);
-      expect(find.text('Сказал сам 3 реплики'), findsOneWidget, reason: 'день, не «Ты готов к приёму»');
-      expect(find.text('ФРАЗЫ ДНЯ В РАЗГОВОРЕ · 3 ИЗ 7'), findsOneWidget);
+      expect(find.text(nb('Сказал сам 3 реплики')), findsOneWidget, reason: 'день, не «Ты готов к приёму»');
+      expect(find.text(nb('ФРАЗЫ ДНЯ В РАЗГОВОРЕ · 3 ИЗ 7')), findsOneWidget);
       expect(find.text('НЕ ПРОЗВУЧАЛО'), findsOneWidget);
       expect(find.textContaining('ЗАВТРА'), findsNothing);
       expect(find.textContaining('ПЕРЕД ПРИЁМОМ'), findsNothing);
@@ -1050,7 +1065,7 @@ void main() {
       final stand = await pumpTalk(tester, probe);
       await finishLine(tester, stand);
       expect(tester.widget<TalkOwnBubble>(find.byKey(const ValueKey('turn-2'))).text, 'Sorry?');
-      expect(find.text('фразы · 2 из 7'), findsOneWidget);
+      expect(find.text(nb('фразы · 2 из 7')), findsOneWidget);
       expect(tester.widget<TalkOwnBubble>(find.byKey(const ValueKey('turn-4'))).marks, isNotEmpty);
       await settleTalk(tester);
     });

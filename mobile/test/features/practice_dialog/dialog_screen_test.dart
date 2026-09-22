@@ -9,6 +9,8 @@ import 'package:eng_std/features/practice_dialog/dialog_screen.dart';
 import 'package:eng_std/features/practice_dialog/realtime_channel.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// Widget test: the conversation screen renders the coverage bar + transcript feed from the scripted
 /// channel, then reaches the finale with the right word count. Device-batched, so this pins layout.
 ///
@@ -63,7 +65,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Разговор окончен'), findsOneWidget);
-    expect(find.text('Слов прозвучало: 3 из 3'), findsOneWidget);
+    expect(find.text(nb('Слов прозвучало: 3 из 3')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // Unmount to cancel the countdown/animation timers.

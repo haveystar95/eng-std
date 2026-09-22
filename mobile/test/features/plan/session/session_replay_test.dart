@@ -45,7 +45,6 @@ void main() {
         status: s == PlanStage.speak
             ? StageRowStatus.current
             : (s == PlanStage.words ? StageRowStatus.done : StageRowStatus.ahead),
-        started: false,
         replay: replay && s == PlanStage.speak,
       ),
   ];
@@ -58,10 +57,14 @@ void main() {
     expect(find.text('не начат'), findsNothing);
   });
 
-  testWidgets('обычный вход с неотвеченными карточками по-прежнему «не начат»', (tester) async {
+  // ПРАВИЛО (приёмка CLIENT-CONV-1c 22.09): состояние ряда входа — из state сервера, как в окне дня: текущий этап —
+  // «идёт», сколько бы его карточек ни было отвечено; «не начат» — слово дня в окне, а не ряда входа.
+  // ЛОВИТ: «Вспомнить · не начат» на входе, когда окно в ту же минуту пишет «идёт» (живой прогон второго захода).
+  testWidgets('обычный вход — текущий этап «идёт», как в окне', (tester) async {
     await tester.pumpWidget(host(rows(replay: false)));
     await tester.pump();
-    expect(find.text('не начат'), findsOneWidget);
+    expect(find.text('идёт'), findsOneWidget);
+    expect(find.text('не начат'), findsNothing);
     expect(find.text('повтор'), findsNothing);
   });
 }

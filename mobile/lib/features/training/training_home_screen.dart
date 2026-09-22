@@ -856,12 +856,12 @@ class _DoneCard extends StatelessWidget {
             // «14 из 14 слов · 52 карточки · 2 мин» — every number wears its unit, and the units go
             // in the order of what the learner did: words are the work, cards are how many times
             // they were asked, minutes are what it cost.
-            [
+            dotJoin([
               l.homeDoneOfWords(planned, answered),
               if (cards > 0) l.homeDoneCards(cards),
               if (today != null && today!.seconds > 0)
                 l.homeDoneMinutes(max(1, (today!.seconds / 60).round())),
-            ].join(' · '),
+            ]),
             style: AppText.translation.copyWith(
               fontSize: 13.5,
               color: AppColors.secondary,

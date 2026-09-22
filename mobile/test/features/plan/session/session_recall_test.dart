@@ -21,6 +21,7 @@ import 'package:eng_std/features/plan/session/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/plan_goldens.dart' show planFrom;
 import '../../../support/session_harness.dart';
 
@@ -134,7 +135,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Вспомни свои реплики'), findsOneWidget);
-      expect(find.text('≈ 7 мин'), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
+      expect(find.text(nb('≈ 7 мин')), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
       expect(_beads(), findsNothing);
       expect(find.textContaining('Запись к врачу'), findsOneWidget);
 
@@ -148,7 +149,7 @@ void main() {
       }
       expect(backend.answered, [overview.id]);
       expect(find.text('Повтори свою реплику'), findsOneWidget);
-      expect(find.text('ещё 10 реплик'), findsOneWidget);
+      expect(find.text(nb('ещё 10 реплик')), findsOneWidget);
       expect(_beads(), findsNWidgets(10));
       expect(find.textContaining('Запись к врачу'), findsOneWidget, reason: 'the first retell is the first scene\'s');
       await tester.pump(const Duration(seconds: 2));

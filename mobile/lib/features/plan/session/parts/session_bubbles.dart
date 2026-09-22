@@ -334,6 +334,10 @@ typedef TextMark = ({int start, int end, MarkLook look});
 
 /// A LINE WITH MARKED PIECES — each marked range stands in its own rounded box (radius 6), the rest of the line
 /// flows around it; ranges outside the text are ignored.
+///
+/// A PUNCTUATION MARK RIDES WITH ITS PLATE (приёмка CLIENT-CONV-1c 22.09): the «?» right after a marked word stands in
+/// the same placeholder, against the plate's edge, and an opening «(» or «„» right before one — otherwise the line may
+/// break at the plate's edge and the mark goes down alone («appointment / ?»).
 class SessionMarkedText extends StatelessWidget {
   const SessionMarkedText({
     super.key,
@@ -362,27 +366,193 @@ class SessionMarkedText extends StatelessWidget {
     var at = 0;
     for (final m in valid) {
       if (m.start < at) continue;
-      if (m.start > at) spans.add(TextSpan(text: text.substring(at, m.start), style: style));
+      var lead = '';
+      if (m.start > at) {
+        var before = text.substring(at, m.start);
+        lead = _openingMark.firstMatch(before)?.group(0) ?? '';
+        before = before.substring(0, before.length - lead.length);
+        if (before.isNotEmpty) spans.add(TextSpan(text: before, style: style));
+      }
+      final tail = _closingMark.firstMatch(text.substring(m.end))?.group(0) ?? '';
+      final plate = Container(
+        key: ValueKey('mark-${m.look.name}-${m.start}'),
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: BoxDecoration(
+          color: m.look == MarkLook.sage ? AppColors.sessionSageWash : AppColors.sessionWindowFill,
+          borderRadius: BorderRadius.circular(6),
+          border: m.look == MarkLook.brass ? Border.all(color: AppColors.brassInk, width: 1.5) : null,
+        ),
+        child: Text(
+          text.substring(m.start, m.end),
+          style: onInk && m.look == MarkLook.sage ? style.copyWith(color: AppColors.sessionSageOnInk) : style,
+        ),
+      );
       spans.add(WidgetSpan(
         alignment: PlaceholderAlignment.baseline,
         baseline: TextBaseline.alphabetic,
-        child: Container(
-          key: ValueKey('mark-${m.look.name}-${m.start}'),
-          padding: const EdgeInsets.symmetric(horizontal: 3),
-          decoration: BoxDecoration(
-            color: m.look == MarkLook.sage ? AppColors.sessionSageWash : AppColors.sessionWindowFill,
-            borderRadius: BorderRadius.circular(6),
-            border: m.look == MarkLook.brass ? Border.all(color: AppColors.brassInk, width: 1.5) : null,
-          ),
-          child: Text(
-            text.substring(m.start, m.end),
-            style: onInk && m.look == MarkLook.sage ? style.copyWith(color: AppColors.sessionSageOnInk) : style,
-          ),
-        ),
+        child: lead.isEmpty && tail.isEmpty
+            ? plate
+            : _MarkUnit(
+                key: ValueKey('mark-unit-${m.start}'),
+                hasLead: lead.isNotEmpty,
+                children: [
+                  if (lead.isNotEmpty) Text(lead, style: style),
+                  plate,
+                  if (tail.isNotEmpty) Text(tail, style: style),
+                ],
+              ),
       ));
-      at = m.end;
+      at = m.end + tail.length;
     }
     if (at < text.length) spans.add(TextSpan(text: text.substring(at), style: style));
     return Text.rich(TextSpan(children: spans), textAlign: textAlign);
   }
+
+  // No apostrophe: «doctor's» is one word, and a plate on «doctor» keeps its «'s» in the text.
+  static final RegExp _closingMark = RegExp(r'^[.,!?;:…)»”"]+');
+  static final RegExp _openingMark = RegExp(r'[(«„“"]+$');
+}
+
+/// A PLATE WITH ITS PUNCTUATION in one placeholder — an opening mark, the plate, a closing mark, on one baseline. The
+/// marks keep their width and the plate takes what is left of the line, wrapping inside its box when it is longer, so
+/// the unit never outgrows the line (a row would overflow it). The opening mark stands on the plate's first line, the
+/// closing one on its last.
+class _MarkUnit extends MultiChildRenderObjectWidget {
+  const _MarkUnit({super.key, required this.hasLead, required super.children});
+
+  /// The first child is an opening mark; otherwise the plate comes first.
+  final bool hasLead;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderMarkUnit(hasLead: hasLead);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderMarkUnit renderObject) => renderObject.hasLead = hasLead;
+}
+
+class _MarkUnitParentData extends ContainerBoxParentData<RenderBox> {}
+
+typedef _UnitLayout = ({Size size, double baseline, Offset? lead, Offset plate, Offset? tail});
+
+class _RenderMarkUnit extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _MarkUnitParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _MarkUnitParentData> {
+  _RenderMarkUnit({required this._hasLead});
+
+  static const _loose = BoxConstraints();
+  static const _alphabetic = TextBaseline.alphabetic;
+
+  bool _hasLead;
+  set hasLead(bool value) {
+    if (value == _hasLead) return;
+    _hasLead = value;
+    markNeedsLayout();
+  }
+
+  double _baseline = 0;
+
+  RenderBox? get _lead => _hasLead ? firstChild : null;
+  RenderBox get _plate => _hasLead ? childAfter(firstChild!)! : firstChild!;
+  RenderBox? get _tail => childAfter(_plate);
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _MarkUnitParentData) child.parentData = _MarkUnitParentData();
+  }
+
+  /// One pass for both the real and the dry layout: [measure] sizes a child under constraints (laying it out, or not),
+  /// [baselineOf] reads its first baseline under the same constraints.
+  _UnitLayout _solve(
+    BoxConstraints constraints, {
+    required Size Function(RenderBox child, BoxConstraints constraints) measure,
+    required double Function(RenderBox child, BoxConstraints constraints) baselineOf,
+  }) {
+    final lead = _lead, plate = _plate, tail = _tail;
+    final leadSize = lead == null ? Size.zero : measure(lead, _loose);
+    final tailSize = tail == null ? Size.zero : measure(tail, _loose);
+    final room = constraints.maxWidth.isFinite
+        ? math.max(0.0, constraints.maxWidth - leadSize.width - tailSize.width)
+        : double.infinity;
+    final plateConstraints = BoxConstraints(maxWidth: room);
+    final plateSize = measure(plate, plateConstraints);
+    final plateFirst = baselineOf(plate, plateConstraints);
+    // The plate's lines stand at one pitch: its last baseline is the first one moved down by what the wrap added.
+    final plateLast = plateFirst + plateSize.height - plate.getDryLayout(_loose).height;
+    final leadBase = lead == null ? 0.0 : baselineOf(lead, _loose);
+    final tailBase = tail == null ? 0.0 : baselineOf(tail, _loose);
+    final top = math.max(leadBase, plateFirst);
+    final leadY = top - leadBase, plateY = top - plateFirst;
+    final tailY = plateY + plateLast - tailBase;
+    final height = math.max(plateY + plateSize.height, math.max(leadY + leadSize.height, tailY + tailSize.height));
+
+    return (
+      size: constraints.constrain(Size(leadSize.width + plateSize.width + tailSize.width, height)),
+      baseline: top,
+      lead: lead == null ? null : Offset(0, leadY),
+      plate: Offset(leadSize.width, plateY),
+      tail: tail == null ? null : Offset(leadSize.width + plateSize.width, tailY),
+    );
+  }
+
+  _UnitLayout _dry(BoxConstraints constraints) => _solve(
+    constraints,
+    measure: (child, c) => child.getDryLayout(c),
+    baselineOf: (child, c) => child.getDryBaseline(c, _alphabetic) ?? child.getDryLayout(c).height,
+  );
+
+  @override
+  void performLayout() {
+    final solved = _solve(
+      constraints,
+      measure: (child, c) {
+        child.layout(c, parentUsesSize: true);
+        return child.size;
+      },
+      baselineOf: (child, _) => child.getDistanceToBaseline(_alphabetic, onlyReal: true) ?? child.size.height,
+    );
+    size = solved.size;
+    _baseline = solved.baseline;
+    for (final (child, at) in [(_lead, solved.lead), (_plate, solved.plate), (_tail, solved.tail)]) {
+      if (child != null && at != null) (child.parentData! as _MarkUnitParentData).offset = at;
+    }
+  }
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) => _dry(constraints).size;
+
+  @override
+  double? computeDryBaseline(covariant BoxConstraints constraints, TextBaseline baseline) => _dry(constraints).baseline;
+
+  @override
+  double? computeDistanceToActualBaseline(TextBaseline baseline) => _baseline;
+
+  double get _marksWidth =>
+      (_lead?.getMaxIntrinsicWidth(double.infinity) ?? 0) + (_tail?.getMaxIntrinsicWidth(double.infinity) ?? 0);
+
+  @override
+  double computeMinIntrinsicWidth(double height) => _marksWidth + _plate.getMinIntrinsicWidth(double.infinity);
+
+  @override
+  double computeMaxIntrinsicWidth(double height) => _marksWidth + _plate.getMaxIntrinsicWidth(double.infinity);
+
+  @override
+  double computeMinIntrinsicHeight(double width) {
+    final room = width.isFinite ? math.max(0.0, width - _marksWidth) : double.infinity;
+    return [
+      _plate.getMinIntrinsicHeight(room),
+      ?_lead?.getMinIntrinsicHeight(double.infinity),
+      ?_tail?.getMinIntrinsicHeight(double.infinity),
+    ].reduce(math.max);
+  }
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => computeMinIntrinsicHeight(width);
+
+  @override
+  void paint(PaintingContext context, Offset offset) => defaultPaint(context, offset);
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      defaultHitTestChildren(result, position: position);
 }

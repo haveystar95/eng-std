@@ -8,6 +8,8 @@ import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/word_status.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../support/nbsp.dart';
+
 /// Ч.4 — ONE STATUS VOCABULARY, kept by a source guard.
 ///
 /// There used to be four vocabularies for one set of facts, and none of them was wrong on its own
@@ -76,20 +78,20 @@ void main() {
     });
 
     test('the ladder is stated as «Ступень X из 5», with the rung named', () {
-      expect(ladderPositionLabel(ru, LearningLadder.stepIntro), 'Ступень 1 из 5: знакомство');
+      expect(ladderPositionLabel(ru, LearningLadder.stepIntro), nb('Ступень 1 из 5: знакомство'));
       // Both recognition steps are ONE rung to a learner — the count is about how far the word has
       // come, and the direction a recognition was asked in is not that.
       expect(
         ladderPositionLabel(ru, LearningLadder.stepRecognitionForward),
-        'Ступень 2 из 5: узнавание',
+        nb('Ступень 2 из 5: узнавание'),
       );
       expect(
         ladderPositionLabel(ru, LearningLadder.stepRecognitionReverse),
-        'Ступень 2 из 5: узнавание',
+        nb('Ступень 2 из 5: узнавание'),
       );
-      expect(ladderPositionLabel(ru, LearningLadder.stepAssembly), 'Ступень 3 из 5: сборка');
-      expect(ladderPositionLabel(ru, LearningLadder.stepTyping), 'Ступень 4 из 5: написание');
-      expect(ladderPositionLabel(ru, LearningLadder.stepDictation), 'Ступень 5 из 5: диктант');
+      expect(ladderPositionLabel(ru, LearningLadder.stepAssembly), nb('Ступень 3 из 5: сборка'));
+      expect(ladderPositionLabel(ru, LearningLadder.stepTyping), nb('Ступень 4 из 5: написание'));
+      expect(ladderPositionLabel(ru, LearningLadder.stepDictation), nb('Ступень 5 из 5: диктант'));
     });
 
     test('a word off the ladder has a status and no position', () {

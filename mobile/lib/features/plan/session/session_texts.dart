@@ -63,7 +63,7 @@ abstract final class SessionTexts {
       PlanStage.repetition => l.planSessionPassedRepetition,
       PlanStage.words || PlanStage.conversation || PlanStage.unknown => l.planSessionPassedWords,
     };
-    return minutes == null ? title : l.planWindowJoin(title, l.planMinutesCount(minutes));
+    return minutes == null ? title : l.planDot(title, l.planMinutesCount(minutes));
   }
 
   /// THE THREE LINES OF A STAGE SUMMARY (30-6) — the frame's three slots, [StageLine.soft] on the third as the frame

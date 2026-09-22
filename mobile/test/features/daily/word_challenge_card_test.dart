@@ -6,6 +6,8 @@ import 'package:eng_std/features/daily/word_challenge.dart';
 import 'package:eng_std/features/daily/word_challenge_card.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// КАДР 19-4 — the four states of the challenge, asserted by what each one says.
 ///
 /// The frame's own rule for the pair «верно» / «неверно» is that they differ by ONE line: no red, no
@@ -65,7 +67,7 @@ void main() {
       expect(find.text('неохотный'), findsOneWidget);
       expect(find.text('надёжный'), findsOneWidget);
       expect(find.text('заметный'), findsOneWidget);
-      expect(find.text('угадано 6 подряд'), findsOneWidget);
+      expect(find.text(nb('угадано 6 подряд')), findsOneWidget);
       // Nothing is revealed while the question stands.
       expect(find.textContaining('Он неохотно уходил'), findsNothing);
     });
@@ -91,7 +93,7 @@ void main() {
       expect(find.text('Знаешь!'), findsOneWidget);
       expect(find.text('reluctant — неохотный'), findsOneWidget);
       expect(find.text('He was reluctant to leave — Он неохотно уходил'), findsOneWidget);
-      expect(find.text('угадано 7 подряд'), findsOneWidget);
+      expect(find.text(nb('угадано 7 подряд')), findsOneWidget);
       expect(find.text('Учить'), findsOneWidget);
       expect(find.text('Завтра новое'), findsOneWidget);
       // The options are gone — the card is an answer now, not a question.

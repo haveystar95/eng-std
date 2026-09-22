@@ -14,6 +14,8 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../support/nbsp.dart';
+
 /// The word card — кадры 06 (главный экран), 07 (сохранено), 09 (из папки).
 ///
 /// One layout, three switches: the photo, the ladder strip, and the pair of actions at the bottom.
@@ -465,7 +467,7 @@ void main() {
       await _pump(tester, subject: fromFolder(), mode: WordCardMode.folder);
 
       expect(find.text('ПРОГРЕСС СЛОВА'), findsOneWidget);
-      expect(find.text('2 из 5'), findsOneWidget);
+      expect(find.text(nb('2 из 5')), findsOneWidget);
       expect(find.byType(LadderTrack), findsOneWidget);
       // The current rung is captioned in ink; the rest stay quiet.
       expect(find.text('узнавание'), findsOneWidget);

@@ -9,6 +9,8 @@ import 'package:eng_std/features/practice_dialog/dialog_models.dart';
 import 'package:eng_std/features/practice_dialog/dialog_providers.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// Widget test: the collection-screen entry adapts to the last-dialog result — «Пройти ещё раз» +
 /// a result row when one exists, the plain «Разговор · 3 мин» otherwise, and nothing for free tier.
 void main() {
@@ -54,8 +56,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Пройти ещё раз'), findsOneWidget);
-    expect(find.textContaining('слов: 3 из 5'), findsOneWidget);
-    expect(find.text('Разговор · 3 мин'), findsNothing);
+    expect(find.textContaining(nb('слов: 3 из 5')), findsOneWidget);
+    expect(find.text(nb('Разговор · 3 мин')), findsNothing);
   });
 
   testWidgets('without a result: the plain «Разговор · 3 мин» and no result row', (tester) async {
@@ -63,7 +65,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('Разговор · 3 мин'), findsOneWidget);
+    expect(find.text(nb('Разговор · 3 мин')), findsOneWidget);
     expect(find.text('Пройти ещё раз'), findsNothing);
     expect(find.textContaining('слов:'), findsNothing);
   });
@@ -73,7 +75,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('Разговор · 3 мин'), findsNothing);
+    expect(find.text(nb('Разговор · 3 мин')), findsNothing);
     expect(find.text('Пройти ещё раз'), findsNothing);
   });
 }

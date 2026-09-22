@@ -8,6 +8,7 @@ import 'package:eng_std/features/plan/day/window/window_stage_row.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../support/day_window_harness.dart';
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 import '../../support/server_fixtures.dart';
 
@@ -50,7 +51,7 @@ void main() {
       tester.widgetList<WindowStageRow>(find.byType(WindowStageRow)).firstWhere((r) => r.stage.stage == stage);
   Finder inRow(PlanStage stage, String text) => find.descendant(
     of: find.byWidgetPredicate((w) => w is WindowStageRow && w.stage.stage == stage),
-    matching: find.text(text),
+    matching: find.text(nb(text)),
   );
 
   /// The reply as the window of a day NOT STARTED gets it: no card dealt yet.
@@ -161,7 +162,7 @@ void main() {
       final json = notDealt(dayJson('day-review'));
       final estimate = windowDay(json)['minutes_estimate'] as int;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
-      expect(textOf(tester, 'window-system-status'), 'не начат · около $estimate минут');
+      expect(textOf(tester, 'window-system-status'), nb('не начат · около $estimate минут'));
       expect(find.text('День 1 · Приём у врача'), findsOneWidget);
     });
 
@@ -171,7 +172,7 @@ void main() {
         ..['status'] = 'passed'
         ..['minutes_spent'] = 9;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(passed), plan: plan);
-      expect(textOf(tester, 'window-system-status'), 'пройден · 9 минут');
+      expect(textOf(tester, 'window-system-status'), nb('пройден · 9 минут'));
     });
 
     testWidgets('пройден без минут от сервера — одно слово', (tester) async {
@@ -235,7 +236,7 @@ void main() {
       final json = notStarted(dayJson('day-rehearsal'));
       final estimate = windowDay(json)['minutes_estimate'] as int;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
-      expect(textOf(tester, 'window-system-status'), 'перед событием · в четверг · не начат · около $estimate минут');
+      expect(textOf(tester, 'window-system-status'), nb('перед событием · в четверг · не начат · около $estimate минут'));
       for (final s in [booking, visit]) {
         expect(find.byKey(ValueKey('window-source-${s.id}')), findsOneWidget);
       }
@@ -271,7 +272,7 @@ void main() {
         ..['minutes_spent'] = 21;
       (json['day'] as Map<String, dynamic>)['slot'] = {'code': 'tomorrow', 'date': '2026-09-22', 'label_native': 'завтра'};
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
-      expect(textOf(tester, 'window-system-status'), 'перед событием · завтра · пройден · 21 минута');
+      expect(textOf(tester, 'window-system-status'), nb('перед событием · завтра · пройден · 21 минута'));
     });
   });
 }

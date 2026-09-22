@@ -27,6 +27,8 @@ import 'package:eng_std/features/plan/conversation/talk_entry.dart';
 import 'package:eng_std/features/plan/conversation/talk_screen.dart';
 import 'package:eng_std/features/plan/conversation/talk_summary.dart';
 import 'package:eng_std/features/plan/day/day_window_screen.dart';
+import 'package:eng_std/features/plan/plan_providers.dart';
+import 'package:eng_std/features/plan/plan_tab_screen.dart';
 import 'package:eng_std/features/plan/session/cards/card_host.dart';
 import 'package:eng_std/features/plan/session/cards/card_kit.dart';
 import 'package:eng_std/features/plan/session/session_controller.dart';
@@ -36,7 +38,8 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/day_window_harness.dart' show RecordingLines, kWindowInsets;
-import '../../../support/plan_goldens.dart' show planFixture, planFrom, setUpPlanGoldens;
+import '../../../support/nbsp.dart';
+import '../../../support/plan_goldens.dart' show planFixture, planFrom, planGoldenApp, setUpPlanGoldens;
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 import '../../../support/talk_harness.dart';
@@ -216,8 +219,9 @@ void main() {
     }
   }
 
-  /// The real session screen of the doctor's day over [raw], at its first unfinished stage's entry.
-  Future<void> pumpSessionShot(WidgetTester tester, Map<String, dynamic> raw) async {
+  /// The real session screen of day [number] over [raw], at its first unfinished stage's entry; [stageMinutes] — the
+  /// stage's minutes as the server's answer reply carries them.
+  Future<void> pumpSessionShot(WidgetTester tester, Map<String, dynamic> raw, {int number = 1, int stageMinutes = 6}) async {
     phone(tester);
     muteSound(tester);
     await tester.pumpWidget(
@@ -243,7 +247,7 @@ void main() {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: const [Locale('ru'), Locale('en')],
             builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: true), child: child!),
-            home: SessionScreen(plan: plan, number: 1, backend: _Backend(raw, plan)),
+            home: SessionScreen(plan: plan, number: number, backend: _Backend(raw, plan, stageMinutes: stageMinutes)),
           ),
         ),
       ),
@@ -394,6 +398,21 @@ void main() {
     await settleTalk(tester);
   });
 
+  testWidgets('08b 37-7 «Без подсказок» — чип «текст» открыл текст этой реплики', (tester) async {
+    final blind = talkV2('talk_day_open_v2', (json) {
+      json['turns'] = (json['turns'] as List).take(3).toList();
+      (json['hints'] as Map<String, dynamic>)
+        ..['enabled'] = false
+        ..['native'] = null;
+    });
+    await pumpTalkShot(tester, blind, hints: false);
+    await tester.tap(find.byKey(const ValueKey('talk-open-text')).last);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('talk-open-text')), findsOneWidget, reason: 'the first question keeps its chip');
+    await shoot(tester, '08b-37-7-no-hints-text-opened');
+    await settleTalk(tester);
+  });
+
   testWidgets('09 37-8 врач думает', (tester) async {
     final hold = Completer<void>();
     await pumpTalkShot(tester, beforeRescue, hold: hold);
@@ -406,7 +425,7 @@ void main() {
   testWidgets('10 37-8b ответ врача — пузырь с волной, полоска «2 из 5» вспыхнула', (tester) async {
     final stand = await pumpTalkShot(tester, openV2, next: afterMove);
     await sayInTalk(tester, 'He has had it for three days.');
-    expect(find.text('фразы · 2 из 5'), findsOneWidget);
+    expect(find.text(nb('фразы · 2 из 5')), findsOneWidget);
     expect(find.byKey(const ValueKey('talk-strip-check')), findsOneWidget, reason: 'the flash is on');
     await shoot(tester, '10-37-8b-answer-strip-flash', settle: false);
     stand.voice.finish();
@@ -688,16 +707,95 @@ void main() {
     await pumpWindowShot(tester, PlanDayRoom.fromJson(dayJson('day-doctor')), of: planFrom('plan_window'));
     await shoot(tester, '30-23-0a-in-progress-row-minutes');
   });
+
+  // ── третий заход (приёмка снимков 22.09): число со словом, вход этапа по state сервера, подсказка таба ─────────
+  testWidgets('31 30-6 двузначные минуты — «Слушаю и отвечаю — пройдено · 13 минут» не рвётся', (tester) async {
+    // The longest title of 30-6; the stage's minutes are the server's answer reply (`stage.minutes_spent`).
+    final json = atLastCard('listen', const ['words', 'phrases', 'dialogue'], (json) {});
+    await pumpSessionShot(tester, json, stageMinutes: 13);
+    await finishStage(tester);
+    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, nb('Слушаю и отвечаю — пройдено · 13 минут'));
+    await shoot(tester, '31-30-6-listen-two-digit-minutes');
+  });
+
+  testWidgets('32 30-1 вход «Вспомнить» — ряд «идёт» по state сервера, не по счёту карточек', (tester) async {
+    // day-rehearsal.json: «Вспомнить» is `current` while none of its eleven cards is answered yet.
+    await pumpSessionShot(tester, dayJson('day-rehearsal'), number: 3);
+    final row = find.ancestor(of: find.text('идёт'), matching: find.byType(Row)).first;
+    expect(find.descendant(of: row, matching: find.text('Вспомнить')), findsOneWidget);
+    expect(find.text('не начат'), findsNothing);
+    await shoot(tester, '32-30-1-recall-entry-in-progress');
+  });
+
+  testWidgets('33 21-2c таб «План» на дне повторения — «Начни с этапа «Повторение»»', (tester) async {
+    // plan_rehearsal.json: day 2 (the review) is today; its room is day-review.json, whose first row is «Повторение».
+    tester.view
+      ..devicePixelRatio = 2
+      ..physicalSize = frame * 2;
+    addTearDown(tester.view.reset);
+    muteSound(tester);
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: shotKey,
+        child: planGoldenApp(
+          ProviderScope(
+            overrides: [
+              planTabProvider.overrideWith(
+                () => _StubTab(PlanTabState(plan: plan, room: PlanDayRoom.fromJson(dayJson('day-review')), finished: const [])),
+              ),
+            ],
+            child: const Scaffold(extendBody: true, backgroundColor: AppColors.ground, body: PlanTabScreen()),
+          ),
+          hints: const PlanHints(tabShown: false, closeShown: false, howShown: false),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Начни с этапа «Повторение». Остальные откроются по порядку'), findsOneWidget);
+    await shoot(tester, '33-21-2c-review-day-first-stage-hint');
+  });
+}
+
+class _StubTab extends PlanTabController {
+  _StubTab(this._state);
+
+  final PlanTabState _state;
+
+  @override
+  Future<PlanTabState> build() async => _state;
+
+  @override
+  Future<void> refresh({bool silent = true}) async {}
 }
 
 class _Backend implements SessionBackend {
-  _Backend(this.raw, this._plan);
+  _Backend(this.raw, this._plan, {this.stageMinutes = 6});
 
   final Map<String, dynamic> raw;
   final Plan _plan;
+  final int stageMinutes;
 
   @override
-  Future<SessionDay> day(String planId, int number) async => SessionDay.fromJson(raw);
+  Future<SessionDay> day(String planId, int number) async => SessionDay.fromJson(_served());
+
+  /// The window's rows as the server derives them from the answers (BACK-TAILS-2): a stage with every card answered —
+  /// `done`, the first one short of that — `current`, the rest — `locked`. The session re-reads the day after each
+  /// stage, and without this the shots' stand would keep answering the state it was loaded with.
+  Map<String, dynamic> _served() {
+    final cards = {
+      for (final s in (raw['stages'] as List).cast<Map<String, dynamic>>())
+        s['stage'] as String: (s['cards'] as List).cast<Map<String, dynamic>>(),
+    };
+    var current = false;
+    for (final row in ((raw['window'] as Map<String, dynamic>)['stages'] as List).cast<Map<String, dynamic>>()) {
+      final own = cards[row['stage']] ?? const <Map<String, dynamic>>[];
+      final done = own.isNotEmpty && own.every((c) => c['result'] != null);
+      row['state'] = done ? 'done' : (current ? 'locked' : 'current');
+      if (!done) current = true;
+    }
+    return raw;
+  }
 
   @override
   Future<void> open(String planId, int number) async {}
@@ -721,7 +819,7 @@ class _Backend implements SessionBackend {
       'requeued': null,
       'unit': {'kind': card['unit']['kind'], 'ref': card['unit']['ref'], 'returns_tomorrow': false, 'returns_day': null},
       'day': {'cards_total': 78, 'cards_done': 40, 'minutes_spent': 14},
-      'stage': {'stage': card['stage'], 'minutes_spent': 6},
+      'stage': {'stage': card['stage'], 'minutes_spent': stageMinutes},
     });
   }
 

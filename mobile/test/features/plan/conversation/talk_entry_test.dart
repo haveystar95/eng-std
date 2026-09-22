@@ -5,11 +5,12 @@ import 'package:eng_std/data/plan/conversation/conversation_models.dart';
 import 'package:eng_std/data/plan/day_window.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/features/plan/conversation/talk_entry.dart';
-import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionSheet;
+import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionDock, SessionSheet;
 import 'package:eng_std/features/plan/session/parts/session_chrome.dart' show SessionSceneStrip;
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart' show sessionFixture;
@@ -73,20 +74,67 @@ void main() {
       .widget<Container>(find.descendant(of: find.byKey(const ValueKey('talk-entry-photo')), matching: find.byType(Container)).first)
       .decoration! as BoxDecoration;
 
-  // ПРАВИЛО (кадр 37-5, SESSION-DES-4): между полосой сцены и бровью — полоса фото сцены, 64 в высоту (была 170, пока
-  // на входе не встали фразы); переключатель «Без подсказок» и кнопка — у низа экрана, без пустоты между ними.
-  // ЛОВИТ: фото 170, выталкивающее «Скажи в разговоре» и переключатель под кнопку.
-  testWidgets('37-5: полоса фото 64 между полосой сцены и бровью', (tester) async {
-    await pumpEntry(tester, day.scene, targets: targets);
-    final photo = tester.getRect(find.byKey(const ValueKey('talk-entry-photo')));
-    expect(photo.height, 64);
-    expect(photo.top, greaterThanOrEqualTo(tester.getRect(find.byType(SessionSceneStrip)).bottom), reason: 'под полосой');
-    final title = day.scene!.titleNative.toUpperCase();
-    expect(photo.bottom, lessThanOrEqualTo(tester.getRect(find.textContaining(title)).top), reason: 'над бровью');
-    expect(photoBox(tester).image, isNotNull, reason: 'фото сцены');
-    final toggle = find.ancestor(of: find.byKey(const ValueKey('talk-entry-no-hints')), matching: find.byType(SessionSheet));
-    final gap = tester.getRect(find.byKey(const ValueKey('talk-entry-start'))).top - tester.getRect(toggle).bottom;
-    expect(gap, lessThanOrEqualTo(40), reason: 'переключатель над кнопкой, как в кадре');
+  Finder toggleOf() => find.ancestor(of: find.byKey(const ValueKey('talk-entry-no-hints')), matching: find.byType(SessionSheet));
+
+  /// The entry's own scroll — the outer one, not the phrases' window.
+  ScrollPosition entryScroll(WidgetTester tester) => tester
+      .state<ScrollableState>(find.descendant(of: find.byType(TalkEntryView), matching: find.byType(Scrollable)).first)
+      .position;
+
+  // ПРАВИЛО (кадр 37-5, SESSION-DES-4; приёмка снимков 22.09): на 390 × 844 всё помещается — переключатель «Без
+  // подсказок» целиком над доком, без прокрутки, и в окне «Скажи в разговоре» две фразы и третья, подрезанная кромкой.
+  // Меры — кадра; чего экрану не хватает, отдаёт полоса фото: кадровые 64, когда места хватает, уже — когда нет, и ни
+  // одной, если уже 24 (заголовок в две строки на 390). Полоса стоит между полосой сцены и бровью.
+  // ЛОВИТ: переключатель под доком (заголовок в две строки на 390 — харнесс 01, 02), фото, съевшее третью фразу, и
+  // полосу-щель.
+  testWidgets('37-5: на 844 всё над доком без прокрутки — место отдаёт полоса фото', (tester) async {
+    for (final (title, rehearsal) in [
+      ('Поговори с врачом', false),
+      ('Поговори с регистратором', false),
+      ('Поговори с регистратором', true),
+    ]) {
+      await pumpEntry(tester, day.scene, title: title, targets: targets, rehearsal: rehearsal, scenesCount: rehearsal ? 2 : null);
+      final dock = tester.getRect(find.byType(SessionDock));
+      expect(tester.getRect(toggleOf()).bottom, lessThanOrEqualTo(dock.top), reason: '$title: переключатель над доком');
+      expect(entryScroll(tester).maxScrollExtent, 0, reason: '$title: без прокрутки');
+
+      final window = tester.getRect(find.byKey(const ValueKey('talk-entry-targets')));
+      final third = tester.getRect(find.byKey(ValueKey('talk-entry-target-${targets[2].sceneId}-${targets[2].ref}')));
+      expect(third.top + 23, lessThanOrEqualTo(window.bottom), reason: '$title: третья фраза видна своей строкой');
+      expect(third.bottom, greaterThan(window.bottom), reason: '$title: и подрезана кромкой');
+
+      final photo = find.byKey(const ValueKey('talk-entry-photo'));
+      final band = tester.getSize(photo).height;
+      expect(band == 0 || (band >= 24 && band <= 64), isTrue, reason: '$title: полоса $band — от 24 до 64 или её нет');
+      if (band > 0) {
+        final rect = tester.getRect(photo);
+        expect(rect.top, greaterThanOrEqualTo(tester.getRect(find.byType(SessionSceneStrip)).bottom), reason: 'под полосой сцены');
+        expect(photoBox(tester).image, isNotNull, reason: 'фото сцены');
+      }
+    }
+
+    // A title of one line leaves the band on screen; a title of two takes it (390 wide).
+    await pumpEntry(tester, day.scene, title: 'Поговори с врачом', targets: targets);
+    expect(tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height, greaterThanOrEqualTo(24));
+    await pumpEntry(tester, day.scene, title: 'Поговори с регистратором', targets: targets);
+    expect(tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height, 0);
+
+    // Nothing to fit — the frame's 64.
+    await pumpEntry(tester, day.scene);
+    expect(tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height, 64);
+  });
+
+  // ПРАВИЛО: экрану, где и одной подрезанной фразы не поместить (крупный шрифт), остаётся прокрутка — ничего не
+  // уходит под док безвозвратно.
+  // ЛОВИТ: раскладку, которая режет переключатель вместо прокрутки.
+  testWidgets('37-5: крупный шрифт — экран прокручивается к переключателю', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.6;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await pumpEntry(tester, day.scene, title: 'Поговори с регистратором', targets: targets);
+    expect(entryScroll(tester).maxScrollExtent, greaterThan(0));
+    await tester.scrollUntilVisible(find.byKey(const ValueKey('talk-entry-no-hints')), 200,
+        scrollable: find.descendant(of: find.byType(TalkEntryView), matching: find.byType(Scrollable)).first);
+    expect(tester.getRect(toggleOf()).bottom, lessThanOrEqualTo(tester.getRect(find.byType(SessionDock)).top));
   });
 
   // ПРАВИЛО (наряд CLIENT-CONV-1c §2а, CONV-2 п. 12): заголовок входа — строка сервера `talk_title_native` («Поговори
@@ -108,26 +156,32 @@ void main() {
   // ЛОВИТ: число сцен, посчитанное на телефоне, и бровь без числа при числе сервера.
   testWidgets('37-5 репетиция: «Разговор целиком · 3 сцены» — число сервера', (tester) async {
     await pumpEntry(tester, day.scene, rehearsal: true, scenesCount: 3, minutes: 6);
-    expect(find.text('РАЗГОВОР ЦЕЛИКОМ · 3 СЦЕНЫ'), findsOneWidget);
+    expect(find.text(nb('РАЗГОВОР ЦЕЛИКОМ · 3 СЦЕНЫ')), findsOneWidget);
     await pumpEntry(tester, day.scene, rehearsal: true, scenesCount: 5, minutes: 6);
-    expect(find.text('РАЗГОВОР ЦЕЛИКОМ · 5 СЦЕН'), findsOneWidget);
+    expect(find.text(nb('РАЗГОВОР ЦЕЛИКОМ · 5 СЦЕН')), findsOneWidget);
     await pumpEntry(tester, day.scene, rehearsal: true, minutes: 6);
     expect(find.text('РАЗГОВОР ЦЕЛИКОМ'), findsOneWidget);
   });
 
-  // ПРАВИЛО (кадр 37-5 «Скажи в разговоре», SESSION-DES-4; архитектор 22.09 — `targets` ряда разговора окна): между
-  // правилами и «Без подсказок» — бровь «Скажи в разговоре» через 24 и под ней, через 14, фразы разговора в порядке
-  // сервера: фраза Literata 17/23 чернилами, перевод 15/20 серым второй строкой через 2, между фразами 10. Список —
-  // окно 116 со своей прокруткой, нижний край тает на 28: нижняя фраза подрезана кромкой, а переключатель и кнопка
-  // стоят на своих местах. Без фраз — блока нет.
-  // ЛОВИТ: фразы дня вместо целей разговора, чужой порядок, список во весь рост, вытолкнувший переключатель под
-  // кнопку, и пустую бровь без фраз.
-  testWidgets('37-5: «Скажи в разговоре» — фразы сервера в окне 116 с тающим краем', (tester) async {
+  // ПРАВИЛО (кадр 37-5 «Скажи в разговоре», SESSION-DES-4; архитектор 22.09 — `targets` ряда разговора окна; приёмка
+  // снимков 22.09 — «третья фраза видна подрезанной кромкой»): между правилами и «Без подсказок» — бровь «Скажи в
+  // разговоре» через 24 и под ней, через 14, фразы разговора в порядке сервера: фраза Literata 17/23 чернилами, перевод
+  // 15/20 серым второй строкой через 2, между фразами 10. Список — окно со своей прокруткой: две фразы и третья, край
+  // режет её перевод, нижний край тает на 28 — своя строка третьей фразы читается. Список из двух фраз стоит целиком,
+  // без тающего края. Без фраз — блока нет.
+  // ЛОВИТ: «две фразы и пустота» (край в зазоре между фразами, затухание съело третью), фразы дня вместо целей
+  // разговора, чужой порядок, список во весь рост, вытолкнувший переключатель под кнопку, и пустую бровь без фраз.
+  testWidgets('37-5: «Скажи в разговоре» — две фразы и третья под кромкой, край тает', (tester) async {
     await pumpEntry(tester, day.scene, targets: targets);
     final brow = find.text('СКАЖИ В РАЗГОВОРЕ');
     expect(brow, findsOneWidget);
     final window = find.byKey(const ValueKey('talk-entry-targets'));
-    expect(tester.getSize(window).height, 116);
+    final third = tester.getRect(find.byKey(ValueKey('talk-entry-target-${targets[2].sceneId}-${targets[2].ref}')));
+    final thirdLine = tester.getRect(find.text(targets[2].textTarget));
+    final thirdNative = tester.getRect(find.text(targets[2].textNative));
+    expect(thirdLine.bottom, lessThanOrEqualTo(tester.getRect(window).bottom), reason: 'своя строка третьей фразы — в окне');
+    expect(tester.getRect(window).bottom, moreOrLessEquals(thirdNative.top + 10, epsilon: 1), reason: 'край — в её переводе');
+    expect(third.bottom, greaterThan(tester.getRect(window).bottom));
     expect(tester.getRect(window).top - tester.getRect(brow).bottom, moreOrLessEquals(14, epsilon: 1));
     final rules = tester.getRect(find.byKey(const ValueKey('talk-entry-rule-counts')));
     expect(tester.getRect(brow).top - rules.bottom, moreOrLessEquals(24, epsilon: 1), reason: 'под правилами через 24');
@@ -160,6 +214,13 @@ void main() {
     expect(last.bottom, lessThanOrEqualTo(tester.getRect(window).bottom), reason: 'последняя фраза доступна прокруткой');
     expect(tester.getRect(toggle).top - tester.getRect(window).bottom, moreOrLessEquals(24, epsilon: 1), reason: 'экран не уехал');
 
+    // Two phrases stand whole: nothing past the edge, no fade.
+    await pumpEntry(tester, day.scene, targets: targets.take(2).toList());
+    final pair = find.byKey(const ValueKey('talk-entry-targets'));
+    final lastOfTwo = tester.getRect(find.byKey(ValueKey('talk-entry-target-${targets[1].sceneId}-${targets[1].ref}')));
+    expect(lastOfTwo.bottom, moreOrLessEquals(tester.getRect(pair).bottom, epsilon: 0.5), reason: 'две фразы — целиком');
+    expect(find.descendant(of: pair, matching: find.byType(DecoratedBox)), findsNothing, reason: 'без тающего края');
+
     await pumpEntry(tester, day.scene);
     expect(find.text('СКАЖИ В РАЗГОВОРЕ'), findsNothing, reason: 'нет фраз — нет блока');
     expect(find.byKey(const ValueKey('talk-entry-targets')), findsNothing);
@@ -170,7 +231,7 @@ void main() {
   testWidgets('37-5: «около N минут» — родительный падеж', (tester) async {
     for (final (minutes, text) in [(1, 'около 1 минуты'), (3, 'около 3 минут'), (6, 'около 6 минут'), (21, 'около 21 минуты')]) {
       await pumpEntry(tester, day.scene, minutes: minutes);
-      expect(tester.widget<Text>(find.byKey(const ValueKey('talk-entry-minutes'))).data, text);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('talk-entry-minutes'))).data, nb(text));
     }
   });
 

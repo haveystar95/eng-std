@@ -3,6 +3,19 @@ import 'package:eng_std/ui/ui.dart';
 
 import '../../data/plan/plan_models.dart';
 
+/// «a · b» — the plan's join through a dot. A second part that starts with a number keeps that number with the dot
+/// (`planWindowJoinNumber`, a no-break space: «пройдено · 3 минуты» never breaks into «пройдено · / 3 минуты»; приёмка
+/// CLIENT-CONV-1c 22.09); any other second part — the plain join, which may break after the dot.
+extension PlanDot on AppLocalizations {
+  String planDot(String first, String second) {
+    // Through a named receiver, as every screen reads its strings (`l.planWindowJoin`) — the glossary guard looks for that.
+    final l = this;
+    return _leadingDigit.hasMatch(second) ? l.planWindowJoinNumber(first, second) : l.planWindowJoin(first, second);
+  }
+}
+
+final RegExp _leadingDigit = RegExp(r'^\d');
+
 /// Имя этапа — одно на плиту, кабинет, узел маршрута и вход в этап: «Слова», «Фразы», «Диалог»,
 /// «Слушаю и отвечаю», «Говорю сам», «Разговор» (наряд CONV-1 — шестой этап; у репетиции вместо
 /// первых пяти «Вспомнить», у повторения — «Повторение», и тот же «Разговор»).

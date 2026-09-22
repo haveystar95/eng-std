@@ -8,6 +8,7 @@ import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
 import 'package:eng_std/features/plan/session/parts/session_choice.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart';
 
 /// LISTEN AND ANSWER (work order SESSION-1c §3, canvas series 34): each kind from a fixture card — the player's order
@@ -27,7 +28,7 @@ void main() {
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(listenAt(1), probe, voice: voice, day: day));
       expect(find.text('Послушай разговор'), findsOneWidget);
-      expect(find.text('8 обменов'), findsOneWidget);
+      expect(find.text(nb('8 обменов')), findsOneWidget);
       expect(find.text('0:40'), findsOneWidget, reason: 'the whole length — total_ms 40 810');
       for (var i = 0; i < 8; i++) {
         expect(find.byKey(ValueKey('player-mark-$i')), findsOneWidget);
@@ -353,7 +354,7 @@ void main() {
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(listenAt(8), probe, voice: voice));
       expect(find.text('А теперь в обычном темпе'), findsOneWidget);
-      expect(find.text('МЕДЛЕННО · 0.75×'), findsOneWidget);
+      expect(find.text(nb('МЕДЛЕННО · 0.75×')), findsOneWidget);
       expect(find.text('Is the pain sharp, or more of a dull ache?'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();

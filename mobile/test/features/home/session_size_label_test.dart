@@ -11,6 +11,8 @@ import 'package:eng_std/features/home/home_cta.dart';
 import 'package:eng_std/features/training/training_home_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// Ч.3 — «честная кнопка сессии».
 ///
 /// A button that promises WORDS while the session counts CARDS reads as broken halfway through: the
@@ -23,20 +25,20 @@ void main() {
     setUp(() async => l = await AppLocalizations.delegate.load(const Locale('ru')));
 
     test('names both units', () {
-      expect(sessionSizeLabel(l, words: 5, cards: 15), '5 слов · ~15 карточек');
+      expect(sessionSizeLabel(l, words: 5, cards: 15), nb('5 слов · ~15 карточек'));
     });
 
     test('the tilde is on the CARDS and not on the words', () {
       // The word count is exact — those are the words the session draws from. The composition can
       // still shift by the time it is dealt, so only the card count is approximate.
       final label = sessionSizeLabel(l, words: 1, cards: 3);
-      expect(label.startsWith('1 слово ·'), isTrue);
+      expect(label.startsWith(nb('1 слово ·')), isTrue);
       expect(label.contains('~3'), isTrue);
     });
 
     test('says nothing about cards when there is nothing to say', () {
       // A screen that has not learned the card count yet must not print «~0 карточек».
-      expect(sessionSizeLabel(l, words: 4, cards: 0), '4 слова');
+      expect(sessionSizeLabel(l, words: 4, cards: 0), nb('4 слова'));
     });
   });
 

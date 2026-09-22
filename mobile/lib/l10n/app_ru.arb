@@ -1,6 +1,6 @@
 {
   "@@locale": "ru",
-  "triageCounter": "{current} из {total}",
+  "triageCounter": "{current} из {total}",
   "@triageCounter": {
     "description": "Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).",
     "placeholders": {
@@ -60,7 +60,7 @@
   "@triageMoreLaterTitle": {
     "description": "Пустое состояние: страница пуста, но на сервере ещё есть."
   },
-  "triageMoreLaterBody": "Ещё {count} после синхронизации — зайдите снова, когда будет сеть.",
+  "triageMoreLaterBody": "Ещё {count} после синхронизации — зайдите снова, когда будет сеть.",
   "@triageMoreLaterBody": {
     "description": "Пояснение к «На сейчас всё».",
     "placeholders": {
@@ -93,7 +93,7 @@
   "@triageTallyUnsure": {
     "description": "Итог сессии: лейбл счётчика «Не уверен»."
   },
-  "triageRemainingAfterSync": "{count, plural, one{Ещё {count} слово после синхронизации} few{Ещё {count} слова после синхронизации} many{Ещё {count} слов после синхронизации} other{Ещё {count} слов после синхронизации}}",
+  "triageRemainingAfterSync": "{count, plural, one{Ещё {count} слово после синхронизации} few{Ещё {count} слова после синхронизации} many{Ещё {count} слов после синхронизации} other{Ещё {count} слов после синхронизации}}",
   "@triageRemainingAfterSync": {
     "description": "Итог сессии: сколько терминов ещё придёт после синхронизации (ICU plural).",
     "placeholders": {
@@ -127,7 +127,7 @@
   "@homeGenerateChipInterview": {
     "description": "Чип-пример темы."
   },
-  "homeCollectionProgress": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
+  "homeCollectionProgress": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
   "@homeCollectionProgress": {
     "description": "Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural). Предлог «из» требует родительного падежа, поэтому формы здесь НЕ счётные: 1 → «из 1 слова», 2 → «из 2 слов», 5 → «из 5 слов» (QA-OBS-5).",
     "placeholders": {
@@ -151,7 +151,7 @@
   "@homeSessionTitle": {
     "description": "Заголовок экрана сессии, запущенной с главной (повторение / свободная тренировка)."
   },
-  "collectionWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "collectionWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@collectionWordsCount": {
     "description": "Количество слов в коллекции, «24 слова» (ICU plural).",
     "placeholders": {
@@ -160,7 +160,7 @@
       }
     }
   },
-  "collectionDueSuffix": "{count} к повторению сегодня",
+  "collectionDueSuffix": "{count} к повторению сегодня",
   "@collectionDueSuffix": {
     "description": "Хвост подзаголовка коллекции про due-слова.",
     "placeholders": {
@@ -436,7 +436,7 @@
   "@commonCloseMenu": {
     "description": "A11y-лейбл затемнения плавающего меню."
   },
-  "approxWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "approxWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@approxWords": {
     "description": "Размер набора, «15 слов» (ICU plural). «Примерно» убрано: генерация режется до запрошенного size (GenerationPipeline), недобор подписан отдельным бейджем (QA-OBS-9 / правка 1.7).",
     "placeholders": {
@@ -477,7 +477,7 @@
   "@collectionsNewCollection": {
     "description": "A11y-лейбл кнопки «+» создания коллекции (кадр 2.5)."
   },
-  "collectionsTileMastered": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} · освоено {mastered}",
+  "collectionsTileMastered": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} · освоено {mastered}",
   "@collectionsTileMastered": {
     "description": "Подзаголовок плитки коллекции, «24 слова · освоено 18» (ICU plural).",
     "placeholders": {
@@ -493,7 +493,7 @@
   "@generationGeneratingTitle": {
     "description": "Заголовок карточки идущей генерации (кадр 2.5)."
   },
-  "generationGeneratingMeta": "{topic} · {levels} · {size}",
+  "generationGeneratingMeta": "{topic} · {levels} · {size}",
   "@generationGeneratingMeta": {
     "description": "Мета-строка генерации: тема · уровни · размер («Аренда жилья · A2–B1 · ≈15 слов»).",
     "placeholders": {
@@ -508,7 +508,7 @@
       }
     }
   },
-  "generationGeneratingNote": "Подбираем слова и фотографии · обычно 20–30 секунд",
+  "generationGeneratingNote": "Подбираем слова и фотографии · обычно 20–30 секунд",
   "@generationGeneratingNote": {
     "description": "Пояснение под индикатором идущей генерации (кадр 2.5)."
   },
@@ -588,7 +588,7 @@
       }
     }
   },
-  "generationUnderBadge": "{delivered} из {requested}",
+  "generationUnderBadge": "{delivered} из {requested}",
   "@generationUnderBadge": {
     "description": "Контурный бейдж недобора, «13 из 15» (кадр 2.5).",
     "placeholders": {
@@ -668,7 +668,7 @@
   "@generateLanguageDefault": {
     "description": "Пометка «по умолчанию» у языка из профиля (кадр 6b)."
   },
-  "generateQuotaRemaining": "{count, plural, one{Осталось {count} генерация сегодня} few{Осталось {count} генерации сегодня} many{Осталось {count} генераций сегодня} other{Осталось {count} генераций сегодня}}",
+  "generateQuotaRemaining": "{count, plural, one{Осталось {count} генерация сегодня} few{Осталось {count} генерации сегодня} many{Осталось {count} генераций сегодня} other{Осталось {count} генераций сегодня}}",
   "@generateQuotaRemaining": {
     "description": "Строка оставшейся квоты генераций (кадр 6a, ICU plural).",
     "placeholders": {
@@ -690,7 +690,7 @@
   "@generateSubmit": {
     "description": "Кнопка запуска генерации (кадр 2.4)."
   },
-  "generatePremiumUpsell": "Нужно больше? Premium — до 20 в день",
+  "generatePremiumUpsell": "Нужно больше? Premium — до 20 в день",
   "@generatePremiumUpsell": {
     "description": "Строка перехода на Premium под неактивной кнопкой (кадр 15c)."
   },
@@ -698,7 +698,7 @@
   "@generateManual": {
     "description": "Ссылка на ручное создание коллекции (кадр 6b)."
   },
-  "generateVoiceListening": "Слушаю · {time}",
+  "generateVoiceListening": "Слушаю · {time}",
   "@generateVoiceListening": {
     "description": "Индикатор идущей записи с таймером (кадр 6c).",
     "placeholders": {
@@ -800,7 +800,7 @@
   "@searchBuildNote": {
     "description": "Строка под чек-листом сборки (кадр 05)."
   },
-  "searchLimitUsed": "{used} из {cap} на сегодня",
+  "searchLimitUsed": "{used} из {cap} на сегодня",
   "@searchLimitUsed": {
     "description": "Подпись рядом с пятью точками лимита (кадр 08).",
     "placeholders": {
@@ -954,7 +954,7 @@
   "@wordCardProgressLabel": {
     "description": "Лейбл лестницы на карточке, открытой из папки (кадр 09)."
   },
-  "wordCardProgressCount": "{step} из {total}",
+  "wordCardProgressCount": "{step} из {total}",
   "@wordCardProgressCount": {
     "description": "Счётчик ступени рядом с лейблом лестницы (кадр 09).",
     "placeholders": {
@@ -995,7 +995,7 @@
   "@progressTitle": {
     "description": "Заголовок экрана прогресса (кадр 2.6)."
   },
-  "progressStreakDays": "{count, plural, one{{count} день подряд} few{{count} дня подряд} many{{count} дней подряд} other{{count} дня подряд}}",
+  "progressStreakDays": "{count, plural, one{{count} день подряд} few{{count} дня подряд} many{{count} дней подряд} other{{count} дня подряд}}",
   "@progressStreakDays": {
     "description": "Крупная антиква-строка стрика на экране прогресса.",
     "placeholders": {
@@ -1004,7 +1004,7 @@
       }
     }
   },
-  "progressBestResult": "{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}",
+  "progressBestResult": "{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}",
   "@progressBestResult": {
     "description": "Строка «Лучший результат» под стриком.",
     "placeholders": {
@@ -1066,7 +1066,7 @@
       }
     }
   },
-  "progressAllWords": "{count, plural, one{Все {count} слово} few{Все {count} слова} many{Все {count} слов} other{Все {count} слов}}",
+  "progressAllWords": "{count, plural, one{Все {count} слово} few{Все {count} слова} many{Все {count} слов} other{Все {count} слов}}",
   "@progressAllWords": {
     "description": "Лейбл глобальной полосы плотности.",
     "placeholders": {
@@ -1164,7 +1164,7 @@
   "@onbGoalSubtitle": {
     "description": "Онбординг, шаг 3 — подзаголовок."
   },
-  "onbGoalMinutes": "≈ {count} минут в день",
+  "onbGoalMinutes": "≈ {count} минут в день",
   "@onbGoalMinutes": {
     "description": "Онбординг, шаг 3 — оценка времени.",
     "placeholders": {
@@ -1281,7 +1281,7 @@
   "@profileFreeTier": {
     "description": "Строка подписки: бесплатный тариф."
   },
-  "profileFreeTierHint": "3 генерации в день",
+  "profileFreeTierHint": "3 генерации в день",
   "@profileFreeTierHint": {
     "description": "Подпись бесплатного тарифа."
   },
@@ -1297,7 +1297,7 @@
   "@profileDeleteAccount": {
     "description": "Строка профиля: удалить аккаунт."
   },
-  "profileGoalValue": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
+  "profileGoalValue": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
   "@profileGoalValue": {
     "description": "Значение дневной цели, «N слов».",
     "placeholders": {
@@ -1358,7 +1358,7 @@
       }
     }
   },
-  "deleteAccountWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
+  "deleteAccountWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
   "@deleteAccountWords": {
     "description": "Часть «N слов» в подтверждении удаления.",
     "placeholders": {
@@ -1367,7 +1367,7 @@
       }
     }
   },
-  "deleteAccountStreak": "{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}",
+  "deleteAccountStreak": "{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}",
   "@deleteAccountStreak": {
     "description": "Часть «N дней стрика» в подтверждении удаления.",
     "placeholders": {
@@ -1725,7 +1725,7 @@
   "@statusPaused": {
     "description": "СЛОВАРЬ СТАТУСОВ: слово убрано из очереди — пауза, не удаление: ступень и дата возврата сохранены."
   },
-  "statusLadderStep": "Ступень {step} из {total}: {rung}",
+  "statusLadderStep": "Ступень {step} из {total}: {rung}",
   "@statusLadderStep": {
     "description": "СЛОВАРЬ СТАТУСОВ: где слово внутри очереди. Ступеней пять — два узнавания (прямое и обратное) читаются как одна, потому что счёт идёт про пройденный путь, а не про направление вопроса.",
     "placeholders": {
@@ -1740,7 +1740,7 @@
       }
     }
   },
-  "statusCountToSort": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
+  "statusCountToSort": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
   "@statusCountToSort": {
     "description": "«Разобрать N слов» — единственная форма, в которой разбор называется в интерфейсе. Слова «триаж»/«стряж» в UI не живут.",
     "placeholders": {
@@ -1801,7 +1801,7 @@
   "@sessionDueTomorrow": {
     "description": "Относительный срок — завтра (итог/фидбек)."
   },
-  "sessionDueInDays": "{days, plural, one{через {days} день} few{через {days} дня} many{через {days} дней} other{через {days} дней}}",
+  "sessionDueInDays": "{days, plural, one{через {days} день} few{через {days} дня} many{через {days} дней} other{через {days} дней}}",
   "@sessionDueInDays": {
     "description": "Относительный срок ≥2 дней (кадр 12e, «через 2 дня»). Вызывается только для days≥2.",
     "placeholders": {
@@ -1871,7 +1871,7 @@
   "@sessionGoalClosed": {
     "description": "Лейбл блока дневной цели в итоге, когда цель закрыта (кадр 12e)."
   },
-  "sessionStreak": "{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}",
+  "sessionStreak": "{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}",
   "@sessionStreak": {
     "description": "Строка стрика в блоке дневной цели (кадр 12e).",
     "placeholders": {
@@ -2027,7 +2027,7 @@
   "@authErrorAppleToken": {
     "description": "Ошибка входа: нет identity-токена от Apple."
   },
-  "practiceDialogEntry": "Разговор · 3 мин",
+  "practiceDialogEntry": "Разговор · 3 мин",
   "@practiceDialogEntry": {
     "description": "Кнопка входа в голосовой разговор на экране коллекции (только Premium)."
   },
@@ -2104,7 +2104,7 @@
   "@practiceDialogFinaleTitle": {
     "description": "Заголовок карточки итога разговора (антиква)."
   },
-  "practiceDialogFinaleWords": "Слов прозвучало: {used} из {total}",
+  "practiceDialogFinaleWords": "Слов прозвучало: {used} из {total}",
   "@practiceDialogFinaleWords": {
     "description": "Итог разговора: сколько target-слов прозвучало.",
     "placeholders": {
@@ -2153,7 +2153,7 @@
   "@practiceDialogRepeat": {
     "description": "Кнопка запуска разговора, когда у коллекции уже есть результат прошлого."
   },
-  "practiceDialogResultWords": "слов: {used} из {total}",
+  "practiceDialogResultWords": "слов: {used} из {total}",
   "@practiceDialogResultWords": {
     "description": "Строка результата последнего разговора на экране коллекции.",
     "placeholders": {
@@ -2177,7 +2177,7 @@
   "@storeSectionOther": {
     "description": "Заголовок секции стора для наборов без темы."
   },
-  "storeWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "storeWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@storeWordsCount": {
     "description": "Размер набора в сторе, «16 слов».",
     "placeholders": {
@@ -2198,7 +2198,7 @@
   "@storeAvailableWithPremium": {
     "description": "Кнопка премиум-набора в сторе — ведёт на пейволл (кадр 15d)."
   },
-  "storeAllSetsUnlock": "Открываются все {count} наборов сразу",
+  "storeAllSetsUnlock": "Открываются все {count} наборов сразу",
   "@storeAllSetsUnlock": {
     "description": "Подпись под кнопкой премиум-набора: подписка открывает все наборы сразу (кадр 15d).",
     "placeholders": {
@@ -2211,7 +2211,7 @@
   "@storeInsideLabel": {
     "description": "Заголовок списка терминов в превью-шите набора (кадр 8c)."
   },
-  "storeMoreWords": "и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "storeMoreWords": "и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@storeMoreWords": {
     "description": "Строка под превью-списком: сколько слов ещё в наборе (кадр 8c).",
     "placeholders": {
@@ -2252,7 +2252,7 @@
   "@paywallTitleGeneric": {
     "description": "Заголовок пейволла при входе из профиля."
   },
-  "paywallTitleStore": "{title} и ещё {count} наборов",
+  "paywallTitleStore": "{title} и ещё {count} наборов",
   "@paywallTitleStore": {
     "description": "Заголовок пейволла при входе из премиум-набора: имя набора + остальные (кадр 14b).",
     "placeholders": {
@@ -2276,7 +2276,7 @@
   "@paywallSubtitleGeneric": {
     "description": "Строка ценности пейволла для входа из профиля."
   },
-  "paywallBenefitGenerations": "До 20 генераций в день",
+  "paywallBenefitGenerations": "До 20 генераций в день",
   "@paywallBenefitGenerations": {
     "description": "Пункт Premium: лимит генераций (кадр 14a)."
   },
@@ -2308,7 +2308,7 @@
   "@paywallPriceMonth": {
     "description": "Плейсхолдер месячной цены (реальная приходит из StoreKit, кадр 4ж)."
   },
-  "paywallYearPerMonth": "$2.50 в месяц",
+  "paywallYearPerMonth": "$2.50 в месяц",
   "@paywallYearPerMonth": {
     "description": "Подстрока годовой карточки: цена за месяц (плейсхолдер, кадр 4ж)."
   },
@@ -2324,7 +2324,7 @@
   "@paywallContinue": {
     "description": "Главная кнопка пейволла (кадр 14a)."
   },
-  "paywallLegalYear": "Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
+  "paywallLegalYear": "Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
   "@paywallLegalYear": {
     "description": "Юридическая строка авто-продления для годового периода (кадр 14a).",
     "placeholders": {
@@ -2333,7 +2333,7 @@
       }
     }
   },
-  "paywallLegalMonth": "Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
+  "paywallLegalMonth": "Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
   "@paywallLegalMonth": {
     "description": "Юридическая строка авто-продления для месячного периода (кадр 14b).",
     "placeholders": {
@@ -2366,7 +2366,7 @@
   "@profileTryPremium": {
     "description": "Строка профиля (free): переход на пейволл (кадр 15a)."
   },
-  "profileFreeTierReset": "3 генерации в день · сбрасываются в {time}",
+  "profileFreeTierReset": "3 генерации в день · сбрасываются в {time}",
   "@profileFreeTierReset": {
     "description": "Подпись бесплатного тарифа с временем сброса (кадр 15a).",
     "placeholders": {
@@ -2497,7 +2497,7 @@
   "@myWordsTitle": {
     "description": "Экран пула: все слова, которые пользователь взял в изучение."
   },
-  "myWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "myWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@myWordsCount": {
     "description": "Подпись под заголовком «Мои слова»: размер пула (ICU plural).",
     "placeholders": {
@@ -2571,7 +2571,7 @@
   "@challengeLabel": {
     "description": "Лейбл карточки слова-вызова (кадр 19-4), брасовая мишень слева от него."
   },
-  "challengeStreak": "{count, plural, one{угадано {count} подряд} few{угадано {count} подряд} many{угадано {count} подряд} other{угадано {count} подряд}}",
+  "challengeStreak": "{count, plural, one{угадано {count} подряд} few{угадано {count} подряд} many{угадано {count} подряд} other{угадано {count} подряд}}",
   "@challengeStreak": {
     "description": "Счётчик серии справа в шапке карточки (кадр 19-4). При нуле не рисуется — «угадано 0 подряд» не предложение.",
     "placeholders": {
@@ -2665,7 +2665,7 @@
   "@homeSessionRowTriage": {
     "description": "Подпись прейскурантной строки состава (кадр 19-1) — свайп-проход по неразобранным словам коллекций."
   },
-  "homeSessionCardWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "homeSessionCardWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@homeSessionCardWords": {
     "description": "Размер сессии на тёмной карточке, «32 слова» (ICU plural).",
     "placeholders": {
@@ -2674,7 +2674,7 @@
       }
     }
   },
-  "homeSessionCardMinutes": "{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}",
+  "homeSessionCardMinutes": "{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}",
   "@homeSessionCardMinutes": {
     "description": "Оценка времени сессии, «≈ 9 минут» (ICU plural).",
     "placeholders": {
@@ -2683,7 +2683,7 @@
       }
     }
   },
-  "sessionSizeCards": "~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
+  "sessionSizeCards": "~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
   "@sessionSizeCards": {
     "description": "Вторая половина честной подписи сессии: сколько КАРТОЧЕК получится из обещанных слов. Тильда неспроста — состав дня может дойти до тренажёра слегка другим. Склеивается со счётом слов через « · » (см. sessionSizeLabel), одной строкой на главной и на кнопках коллекции (Ч.3).",
     "placeholders": {
@@ -2692,7 +2692,7 @@
       }
     }
   },
-  "homeSessionPartRepeat": "{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}",
+  "homeSessionPartRepeat": "{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}",
   "@homeSessionPartRepeat": {
     "description": "Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.",
     "placeholders": {
@@ -2701,7 +2701,7 @@
       }
     }
   },
-  "homeSessionPartNew": "{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}",
+  "homeSessionPartNew": "{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}",
   "@homeSessionPartNew": {
     "description": "Состав сессии: новые слова (ICU plural).",
     "placeholders": {
@@ -2710,7 +2710,7 @@
       }
     }
   },
-  "homeSessionPartTriage": "{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}",
+  "homeSessionPartTriage": "{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}",
   "@homeSessionPartTriage": {
     "description": "Состав сессии: свайпы разбора.",
     "placeholders": {
@@ -2723,7 +2723,7 @@
   "@homeSessionStart": {
     "description": "Кнопка тёмной карточки дня (кадр 17a)."
   },
-  "homeInWorkTitle": "{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}",
+  "homeInWorkTitle": "{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}",
   "@homeInWorkTitle": {
     "description": "Заголовок блока «В работе» — размер пула (ICU plural).",
     "placeholders": {
@@ -2732,7 +2732,7 @@
       }
     }
   },
-  "homeInWorkWaiting": "{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}",
+  "homeInWorkWaiting": "{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}",
   "@homeInWorkWaiting": {
     "description": "Сколько слов пула ещё ни разу не показывали (ICU plural).",
     "placeholders": {
@@ -2741,7 +2741,7 @@
       }
     }
   },
-  "homeInWorkPace": "{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}",
+  "homeInWorkPace": "{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}",
   "@homeInWorkPace": {
     "description": "Когда очередь дойдёт до последнего ждущего слова (ICU plural по дням).",
     "placeholders": {
@@ -2753,7 +2753,7 @@
       }
     }
   },
-  "homeInWorkQueueStands": "{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}",
+  "homeInWorkQueueStands": "{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}",
   "@homeInWorkQueueStands": {
     "description": "Строка «В работе» в состоянии Б (кадр 17d): квота дня цела, очередь стоит.",
     "placeholders": {
@@ -2770,7 +2770,7 @@
   "@homeEdgeTomorrow": {
     "description": "Дата выпадения слова: завтра."
   },
-  "homeEdgeInDays": "{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}",
+  "homeEdgeInDays": "{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}",
   "@homeEdgeInDays": {
     "description": "Дата выпадения слова, «через 2 дня» (ICU plural).",
     "placeholders": {
@@ -2783,7 +2783,7 @@
   "@homeHardestTitle": {
     "description": "Заголовок вечерней секции ошибок сессии (кадр 17b)."
   },
-  "homeHardestErrors": "{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}",
+  "homeHardestErrors": "{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}",
   "@homeHardestErrors": {
     "description": "Сколько раз слово ответили неверно в последней сессии (ICU plural).",
     "placeholders": {
@@ -2792,7 +2792,7 @@
       }
     }
   },
-  "homeSectionCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "homeSectionCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@homeSectionCount": {
     "description": "Счётчик справа от заголовка секции, «2 слова» (ICU plural).",
     "placeholders": {
@@ -2805,7 +2805,7 @@
   "@homeDoneTitle": {
     "description": "Заголовок вечерней карточки (кадр 17b)."
   },
-  "homeDoneOfWords": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
+  "homeDoneOfWords": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
   "@homeDoneOfWords": {
     "description": "Итог дня в СЛОВАХ (кадр 19-2). Единица обязательна: «52 из 52» без неё — счёт карточек в форме счёта слов, и 52 не было числом слов ни у кого. Карточки и минуты идут подписью следом.",
     "placeholders": {
@@ -2817,7 +2817,7 @@
       }
     }
   },
-  "homeDoneCards": "{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
+  "homeDoneCards": "{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
   "@homeDoneCards": {
     "description": "Вторая единица итога дня (кадр 19-2) — сколько карточек стоили эти слова.",
     "placeholders": {
@@ -2826,7 +2826,7 @@
       }
     }
   },
-  "homeDoneMinutes": "{count, plural, one{{count} мин} few{{count} мин} many{{count} мин} other{{count} мин}}",
+  "homeDoneMinutes": "{count, plural, one{{count} мин} few{{count} мин} many{{count} мин} other{{count} мин}}",
   "@homeDoneMinutes": {
     "description": "Третья единица итога дня (кадр 19-2). Сокращённо: это хвост строки, а не самостоятельное утверждение.",
     "placeholders": {
@@ -2835,7 +2835,7 @@
       }
     }
   },
-  "homeChainProgress": "{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}",
+  "homeChainProgress": "{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}",
   "@homeChainProgress": {
     "description": "Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.",
     "placeholders": {
@@ -2847,7 +2847,7 @@
       }
     }
   },
-  "homeDoneOf": "{done} из {total}",
+  "homeDoneOf": "{done} из {total}",
   "@homeDoneOf": {
     "description": "Прогресс дня: отвеченные карточки из запланированных, «32 из 32».",
     "placeholders": {
@@ -2859,7 +2859,7 @@
       }
     }
   },
-  "homeDoneDuration": "{minutes} мин {seconds} с",
+  "homeDoneDuration": "{minutes} мин {seconds} с",
   "@homeDoneDuration": {
     "description": "Сколько заняла сессия, «6 мин 40 с».",
     "placeholders": {
@@ -2871,7 +2871,7 @@
       }
     }
   },
-  "homeDoneDurationSeconds": "{count, plural, one{{count} секунда} few{{count} секунды} many{{count} секунд} other{{count} секунды}}",
+  "homeDoneDurationSeconds": "{count, plural, one{{count} секунда} few{{count} секунды} many{{count} секунд} other{{count} секунды}}",
   "@homeDoneDurationSeconds": {
     "description": "Длительность сессии короче минуты (ICU plural).",
     "placeholders": {
@@ -2892,7 +2892,7 @@
   "@homeIdleQueueStalled": {
     "description": "Пояснение под «Всё повторено» (кадр 17d)."
   },
-  "homeNextReviewLine": "{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}",
+  "homeNextReviewLine": "{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}",
   "@homeNextReviewLine": {
     "description": "Когда и сколько ждёт следующий повтор (ICU plural).",
     "placeholders": {
@@ -2908,7 +2908,7 @@
   "@homeWhenTomorrow": {
     "description": "Подстановка «когда» для следующего повтора — завтра."
   },
-  "homeExtraFromCollection": "{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}",
+  "homeExtraFromCollection": "{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}",
   "@homeExtraFromCollection": {
     "description": "Предложение добрать слова из недоразобранной коллекции (кадр 17b).",
     "placeholders": {
@@ -2920,7 +2920,7 @@
       }
     }
   },
-  "homeExtraNew": "{count, plural, one{Можно взять {count} слово, которое уже ждёт очереди.} few{Можно взять {count} слова, которые уже ждут очереди.} many{Можно взять {count} слов, которые уже ждут очереди.} other{Можно взять {count} слова, которые уже ждут очереди.}}",
+  "homeExtraNew": "{count, plural, one{Можно взять {count} слово, которое уже ждёт очереди.} few{Можно взять {count} слова, которые уже ждут очереди.} many{Можно взять {count} слов, которые уже ждут очереди.} other{Можно взять {count} слова, которые уже ждут очереди.}}",
   "@homeExtraNew": {
     "description": "Предложение на закрытом дне (кадр 19-2): слова, УЖЕ взятые в очередь, которые сегодняшняя квота ещё позволяет раздать. Идут прежде свайп-прохода — эти уже выбраны, а разбор это предложение выбрать ещё.",
     "placeholders": {
@@ -2929,7 +2929,7 @@
       }
     }
   },
-  "homeExtraButton": "{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}",
+  "homeExtraButton": "{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}",
   "@homeExtraButton": {
     "description": "Кнопка «Ещё N слов» на вечерней карточке (кадр 17b).",
     "placeholders": {
@@ -2942,7 +2942,7 @@
   "@homeContinueLabel": {
     "description": "Лейбл карточки брошенной коллекции (кадр 17a)."
   },
-  "homeContinueAbandoned": "{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}",
+  "homeContinueAbandoned": "{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}",
   "@homeContinueAbandoned": {
     "description": "Давность последнего касания коллекции (ICU plural).",
     "placeholders": {
@@ -2955,7 +2955,7 @@
   "@homeGenerateRow": {
     "description": "Строка входа в генерацию на главной (кадр 17a)."
   },
-  "homeStoreLink": "{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}",
+  "homeStoreLink": "{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}",
   "@homeStoreLink": {
     "description": "Тихая строка входа в магазин под генерацией (ICU plural).",
     "placeholders": {
@@ -2976,7 +2976,7 @@
   "@homeStatInWork": {
     "description": "Подпись третьего числа плиты статистики (кадр 19-1) — размер пула."
   },
-  "homeTomorrowRow": "{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}",
+  "homeTomorrowRow": "{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}",
   "@homeTomorrowRow": {
     "description": "Строка «завтра» (кадры 19-1, 19-2), тап ведёт в «Мои слова». Заменила список «На грани забывания»: три слова с датами отвечали на вопрос, которого никто не задавал, а «сколько будет завтра» — на тот, который задают. Нуля не бывает: при нуле строки нет.",
     "placeholders": {
@@ -2985,7 +2985,7 @@
       }
     }
   },
-  "homeAwardPromoted": "{count, plural, one{+{count} слово продвинулось} few{+{count} слова продвинулись} many{+{count} слов продвинулись} other{+{count} слова продвинулись}}",
+  "homeAwardPromoted": "{count, plural, one{+{count} слово продвинулось} few{+{count} слова продвинулись} many{+{count} слов продвинулись} other{+{count} слова продвинулись}}",
   "@homeAwardPromoted": {
     "description": "Первая половина строки-награды (кадр 19-2). Со знаком плюс: это прибавление, а не счёт.",
     "placeholders": {
@@ -3027,7 +3027,7 @@
       }
     }
   },
-  "homeFirstDayPromise": "5 минут в день — 20 слов в неделю",
+  "homeFirstDayPromise": "5 минут в день — 20 слов в неделю",
   "@homeFirstDayPromise": {
     "description": "Строка-обещание в подвале первого дня (кадр 19-3). Единственная цифра на экране, где статистики ещё нет."
   },
@@ -3043,7 +3043,7 @@
   "@homeFirstDayTitle": {
     "description": "Приветствие первого дня (кадр 17c)."
   },
-  "homeFirstDayReadyTitle": "{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}",
+  "homeFirstDayReadyTitle": "{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}",
   "@homeFirstDayReadyTitle": {
     "description": "Первая карточка первого дня (ICU plural).",
     "placeholders": {
@@ -3064,7 +3064,7 @@
   "@homeFirstDayOwnHint": {
     "description": "Подпись карточки генерации (кадр 17c)."
   },
-  "homeSortOffer": "{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}",
+  "homeSortOffer": "{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}",
   "@homeSortOffer": {
     "description": "Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).",
     "placeholders": {
@@ -3076,7 +3076,7 @@
       }
     }
   },
-  "homeTriageAction": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
+  "homeTriageAction": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
   "@homeTriageAction": {
     "description": "Кнопка свайп-прохода в состоянии Б (кадр 17d).",
     "placeholders": {
@@ -3139,7 +3139,7 @@
       }
     }
   },
-  "homePlanCardBadge": "План · день {index} из {total}",
+  "homePlanCardBadge": "План · день {index} из {total}",
   "@homePlanCardBadge": {
     "description": "Латунная метка карточки плана на главной (кадр 08).",
     "placeholders": {
@@ -3151,7 +3151,7 @@
       }
     }
   },
-  "homePlanCardEventIn": "{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}",
+  "homePlanCardEventIn": "{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}",
   "@homePlanCardEventIn": {
     "description": "Правая метка карточки плана на главной.",
     "placeholders": {
@@ -3196,7 +3196,7 @@
   "@devVoicesSystemNote": {
     "description": "Подпись под системным голосом: он не файл, а живой синтез."
   },
-  "devVoicesPrice": "≈ {price} за план",
+  "devVoicesPrice": "≈ {price} за план",
   "@devVoicesPrice": {
     "description": "Цена озвучки всего плана этим голосом.",
     "placeholders": {
@@ -3217,7 +3217,7 @@
   "@devVoicesFavourite": {
     "description": "Метка у голоса, который предложен как фаворит. Решение — за владельцем."
   },
-  "devVoiceTrouble": "Озвучка: {silent} реплик системным голосом, {failed} не скачалось",
+  "devVoiceTrouble": "Озвучка: {silent} реплик системным голосом, {failed} не скачалось",
   "@devVoiceTrouble": {
     "description": "Дев-бейдж сломанной трубы озвучки (наряд TTS-1). Показывается только при DEV_MENU: тихий фолбэк на системный голос при живом audio_url — дефект, и в дев-сборке он должен быть виден.",
     "placeholders": {
@@ -3233,7 +3233,7 @@
   "@devQaClockTitle": {
     "description": "Дев-меню (DAY-FIX-2, Ч.7): сдвиг «сегодня» плана на QA-аккаунте за dev-дверью."
   },
-  "devQaClockShift": "{days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}}",
+  "devQaClockShift": "{days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}}",
   "@devQaClockShift": {
     "description": "Текущий сдвиг под заголовком строки.",
     "placeholders": {
@@ -3242,7 +3242,7 @@
       }
     }
   },
-  "devQaClockPlus": "+1 день",
+  "devQaClockPlus": "+1 день",
   "@devQaClockPlus": {
     "description": "Кнопка сдвига «сегодня» плана на день вперёд."
   },
@@ -3258,7 +3258,7 @@
   "@planEmptyTitle": {
     "description": "Заголовок витрины, Literata 30 — обещание результата, а не вопрос (кадр 21-1, plan.empty.title)."
   },
-  "planEmptySub": "сцена в день · 20 минут · репетиция вслух",
+  "planEmptySub": "сцена в день · 20 минут · репетиция вслух",
   "@planEmptySub": {
     "description": "Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub)."
   },
@@ -3442,7 +3442,7 @@
       }
     }
   },
-  "planExampleMore": "{n, plural, one{ещё {n} день} few{ещё {n} дня} many{ещё {n} дней} other{ещё {n} дня}}",
+  "planExampleMore": "{n, plural, one{ещё {n} день} few{ещё {n} дня} many{ещё {n} дней} other{ещё {n} дня}}",
   "@planExampleMore": {
     "description": "Витрина 21-1: подвал примера, когда в плане больше трёх дней («ещё 2 дня»).",
     "placeholders": {
@@ -3472,7 +3472,7 @@
       }
     }
   },
-  "planHeaderBrow": "План · день {n} из {total}",
+  "planHeaderBrow": "План · день {n} из {total}",
   "@planHeaderBrow": {
     "description": "Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).",
     "placeholders": {
@@ -3493,7 +3493,7 @@
       }
     }
   },
-  "planCardsCount": "{n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}}",
+  "planCardsCount": "{n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}}",
   "@planCardsCount": {
     "description": "Счётные формы карточек: 1 карточка / 2 карточки / 5 карточек (plan.plate.meta, plan.closed.meta, plan.closed.return).",
     "placeholders": {
@@ -3502,7 +3502,7 @@
       }
     }
   },
-  "planMinutesCount": "{n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}}",
+  "planMinutesCount": "{n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}}",
   "@planMinutesCount": {
     "description": "Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta); окно дня — «≈ 20 минут» не начатого, «19 минут» пройденного (23-0a, 23-0c).",
     "placeholders": {
@@ -3543,7 +3543,7 @@
   "@planPlateStateAhead": {
     "description": "Плита дня (21-2) и окно дня (23-0a, 23-0b): состояние этапа, до которого ещё не дошли."
   },
-  "planNewWordsCount": "{n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}}",
+  "planNewWordsCount": "{n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}}",
   "@planNewWordsCount": {
     "description": "Формы «1 новое слово / 2 новых слова / 5 новых слов» (plan.plate.stage.sub.start).",
     "placeholders": {
@@ -3552,7 +3552,7 @@
       }
     }
   },
-  "planPlateStageSubStart": "начни отсюда · {words}",
+  "planPlateStageSubStart": "начни отсюда · {words}",
   "@planPlateStageSubStart": {
     "description": "Плита дня, вторая строка текущего этапа (plan.plate.stage.sub.start); words — planNewWordsCount.",
     "placeholders": {
@@ -3561,7 +3561,7 @@
       }
     }
   },
-  "planPlateStageSubUnfinished": "не закончен · {cards}",
+  "planPlateStageSubUnfinished": "не закончен · {cards}",
   "@planPlateStageSubUnfinished": {
     "description": "Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору).",
     "placeholders": {
@@ -3617,7 +3617,7 @@
   "@planPlateCtaContinue": {
     "description": "Плита дня, кнопка (plan.plate.cta.continue); окно дня — одна кнопка внизу у идущего дня (allowed_action = continue, 23-0b)."
   },
-  "planClosedTitle": "День {n} закрыт",
+  "planClosedTitle": "День {n} закрыт",
   "@planClosedTitle": {
     "description": "Кадр 21-4 (plan.closed.title).",
     "placeholders": {
@@ -3626,7 +3626,7 @@
       }
     }
   },
-  "planClosedCount": "{cards} · {minutes}",
+  "planClosedCount": "{cards} · {minutes}",
   "@planClosedCount": {
     "description": "Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count).",
     "placeholders": {
@@ -3638,7 +3638,7 @@
       }
     }
   },
-  "planClosedNextTomorrow": "День {n} откроется завтра, {date}",
+  "planClosedNextTomorrow": "День {n} откроется завтра, {date}",
   "@planClosedNextTomorrow": {
     "description": "Первая строка подвала закрытого дня (кадр 21-4, plan.closed.next.tomorrow).",
     "placeholders": {
@@ -3650,7 +3650,7 @@
       }
     }
   },
-  "planClosedNextOn": "День {n} откроется {date}",
+  "planClosedNextOn": "День {n} откроется {date}",
   "@planClosedNextOn": {
     "description": "Подвал закрытого дня, когда следующий день не «завтра» (кадр 21-4, plan.closed.next.on).",
     "placeholders": {
@@ -3662,7 +3662,7 @@
       }
     }
   },
-  "planClosedReturn": "{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}",
+  "planClosedReturn": "{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}",
   "@planClosedReturn": {
     "description": "Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).",
     "placeholders": {
@@ -3723,7 +3723,7 @@
   "@planRouteMetaPassed": {
     "description": "Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed)."
   },
-  "planMinutesShort": "{n} мин",
+  "planMinutesShort": "{n} мин",
   "@planMinutesShort": {
     "description": "Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes); окно дня — «≈ 12 мин» идущего дня, текущего этапа и компактной шапки (23-0b).",
     "placeholders": {
@@ -3757,7 +3757,7 @@
   "@planDoneTitle": {
     "description": "Кадр 21-7 (plan.done.title)."
   },
-  "planDaysCount": "{n, plural, one{{n} день} few{{n} дня} many{{n} дней} other{{n} дня}}",
+  "planDaysCount": "{n, plural, one{{n} день} few{{n} дня} many{{n} дней} other{{n} дня}}",
   "@planDaysCount": {
     "description": "Счётные формы дней: 1 день / 2 дня / 5 дней (plan.done.meta, plan.overdue.meta, entry.preview.sub).",
     "placeholders": {
@@ -3858,7 +3858,7 @@
   "@planNewTitle": {
     "description": "Кадр 21-11 (plan.new.title)."
   },
-  "planNewBody": "Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение",
+  "planNewBody": "Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение",
   "@planNewBody": {
     "description": "Кадр 21-11 (plan.new.body); name — сервер.",
     "placeholders": {
@@ -3918,7 +3918,7 @@
   "@planOverdueFinish": {
     "description": "Кадр 21-14 (plan.overdue.finish)."
   },
-  "planOverdueContinue": "Дозаниматься · {days}",
+  "planOverdueContinue": "Дозаниматься · {days}",
   "@planOverdueContinue": {
     "description": "Второй выход прошедшего события — вернуться к текущему дню (кадр 21-14, plan.overdue.continue).",
     "placeholders": {
@@ -3927,11 +3927,16 @@
       }
     }
   },
-  "planHintFirstStart": "Начни с этапа «Слова». Остальные откроются по порядку",
+  "planHintFirstStart": "Начни с этапа «{stage}». Остальные откроются по порядку",
   "@planHintFirstStart": {
-    "description": "Кадр 21-2c (plan.hint.first.start)."
+    "description": "Кадр 21-2c (plan.hint.first.start). stage — имя первого ряда плиты дня из stages[] сервера: «Слова» у дня-сцены, «Повторение» у повторения, «Вспомнить» у репетиции (приёмка CLIENT-CONV-1c 22.09).",
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
   },
-  "planHintFirstRoute": "День {n} открыт. Следующий откроется, когда пройдёшь этот",
+  "planHintFirstRoute": "День {n} открыт. Следующий откроется, когда пройдёшь этот",
   "@planHintFirstRoute": {
     "description": "Подсказка первого плана под заголовком маршрута, один раз (кадр 21-2c, plan.hint.first.route).",
     "placeholders": {
@@ -3940,7 +3945,7 @@
       }
     }
   },
-  "planRebuiltTitle": "Маршрут пересобран: было {from} дней, стало {to}",
+  "planRebuiltTitle": "Маршрут пересобран: было {from} дней, стало {to}",
   "@planRebuiltTitle": {
     "description": "Плашка пересборки над плитой — состояние плана, не сообщение (кадр 21-13, plan.rebuilt.title).",
     "placeholders": {
@@ -4093,7 +4098,7 @@
   "@planEntryDaysTitle": {
     "description": "Вопрос шага длины плана (кадр 22-3a, entry.days.title)."
   },
-  "planEntryDaysScenes": "{n, plural, one{{n} ситуация} few{{n} ситуации} many{{n} ситуаций} other{{n} ситуации}}",
+  "planEntryDaysScenes": "{n, plural, one{{n} ситуация} few{{n} ситуации} many{{n} ситуаций} other{{n} ситуации}}",
   "@planEntryDaysScenes": {
     "description": "Состав длины плана — ситуации (кадр 22-3a, entry.days.scenes).",
     "placeholders": {
@@ -4102,7 +4107,7 @@
       }
     }
   },
-  "planEntryDaysReviews": "{n, plural, one{{n} повторение} few{{n} повторения} many{{n} повторений} other{{n} повторения}}",
+  "planEntryDaysReviews": "{n, plural, one{{n} повторение} few{{n} повторения} many{{n} повторений} other{{n} повторения}}",
   "@planEntryDaysReviews": {
     "description": "Состав длины плана — дни повторения (кадр 22-3a, entry.days.reviews).",
     "placeholders": {
@@ -4123,7 +4128,7 @@
   "@planEntryDateLabel": {
     "description": "Метка зоны выбора даты (кадр 22-3b, entry.date.label)."
   },
-  "planEntryDateIn": "{weekday} · {n, plural, one{через {n} день} few{через {n} дня} many{через {n} дней} other{через {n} дня}}",
+  "planEntryDateIn": "{weekday} · {n, plural, one{через {n} день} few{через {n} дня} many{через {n} дней} other{через {n} дня}}",
   "@planEntryDateIn": {
     "description": "Подпись ближней даты: день недели и сколько до неё (кадр 22-3b, entry.date.in).",
     "placeholders": {
@@ -4172,7 +4177,7 @@
   "@planEntryPreviewLoadingTitle": {
     "description": "Заголовок превью во время сборки (кадр 22-4a, entry.preview.loading.title)."
   },
-  "planEntryPreviewAbout": "Около 10 секунд",
+  "planEntryPreviewAbout": "Около 10 секунд",
   "@planEntryPreviewAbout": {
     "description": "Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about)."
   },
@@ -4265,7 +4270,7 @@
       }
     }
   },
-  "planNotifyDayReadyTitle": "День {n} собран",
+  "planNotifyDayReadyTitle": "День {n} собран",
   "@planNotifyDayReadyTitle": {
     "description": "Уведомление «день собран» (кадр 22-6 — эталон вида); без push — баннер в приложении при возврате.",
     "placeholders": {
@@ -4283,7 +4288,7 @@
       }
     }
   },
-  "planNotifyReminderTitle": "День {n} ждёт",
+  "planNotifyReminderTitle": "День {n} ждёт",
   "@planNotifyReminderTitle": {
     "description": "Ежедневное напоминание в час обычного захода (локальное уведомление, не чаще раза в сутки).",
     "placeholders": {
@@ -4318,7 +4323,7 @@
   "@planNotifyEventTodayBody": {
     "description": "Тело уведомления в день события."
   },
-  "planNotifySkippedTitle": "День {n} ждёт со вчера",
+  "planNotifySkippedTitle": "День {n} ждёт со вчера",
   "@planNotifySkippedTitle": {
     "description": "Локальное уведомление «дни пропущены»: наутро после даты дня, который не пройден.",
     "placeholders": {
@@ -4355,7 +4360,7 @@
   "@planWindowStateInProgress": {
     "description": "Окно дня, плита (23-0b): слово состояния дня под названием — «идёт · ≈ 12 мин»."
   },
-  "planWindowApprox": "≈ {minutes}",
+  "planWindowApprox": "≈ {minutes}",
   "@planWindowApprox": {
     "description": "Окно дня: оценка минут сервера (minutes_estimate, minutes_left) — «≈ 20 минут» на плите не начатого дня, «≈ 12 мин» у идущего, у текущего этапа и в компактной шапке; minutes — planMinutesCount или planMinutesShort.",
     "placeholders": {
@@ -4365,6 +4370,18 @@
     }
   },
   "planWindowJoin": "{first} · {second}",
+  "planWindowJoinNumber": "{first} · {second}",
+  "@planWindowJoinNumber": {
+    "description": "Та же склейка через точку, когда вторая часть начинается с числа («пройдено · 3 минуты», «СЛОВА · 8», «Разговор целиком · 2 сцены»): неразрывный пробел держит число при точке (приёмка CLIENT-CONV-1c 22.09). Выбирает её код — planDot.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
   "@planWindowJoin": {
     "description": "Окно дня: две части строки через точку — «не начат · ≈ 20 минут», «идёт · ≈ 8 мин» у текущего этапа, «СЛОВА · 8 · 5 ПРОЙДЕНО» в брови вкладки.",
     "placeholders": {
@@ -4388,7 +4405,7 @@
       }
     }
   },
-  "planWindowPassedLine": "День пройден · {minutes}",
+  "planWindowPassedLine": "День пройден · {minutes}",
   "@planWindowPassedLine": {
     "description": "Окно дня, плита пройденного дня (23-0c): строка итога вместо цифр — «День пройден · 19 минут»; minutes — planMinutesCount(minutes_spent).",
     "placeholders": {
@@ -4397,7 +4414,7 @@
       }
     }
   },
-  "planWindowBrowDone": "{n} пройдено",
+  "planWindowBrowDone": "{n} пройдено",
   "@planWindowBrowDone": {
     "description": "Окно дня, бровь вкладки (23-0b…0d): часть «5 пройдено» — summary.done сервера; при нуле части нет.",
     "placeholders": {
@@ -4406,7 +4423,7 @@
       }
     }
   },
-  "planWindowBrowReturns": "{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}",
+  "planWindowBrowReturns": "{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}",
   "@planWindowBrowReturns": {
     "description": "Окно дня, бровь вкладки (23-0c, 23-0d): часть «2 вернутся завтра» — summary.returns сервера; при нуле части нет.",
     "placeholders": {
@@ -4501,7 +4518,7 @@
   "@profileSessionSoundsHint": {
     "description": "Подпись выключателя «Звуки в сессии»: главные события, которые звучат; карточки знакомства молчат."
   },
-  "dayCards": "{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}",
+  "dayCards": "{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}",
   "@dayCards": {
     "placeholders": {
       "n": {
@@ -4509,7 +4526,7 @@
       }
     }
   },
-  "dayMinutes": "{n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}",
+  "dayMinutes": "{n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}",
   "@dayMinutes": {
     "placeholders": {
       "n": {
@@ -4525,7 +4542,7 @@
   "@planSessionStateAhead": {
     "description": "Сессия, вход в этап (30-1) и «Нужен микрофон» (30-3): статус этапа, до которого ещё не дошли."
   },
-  "planSessionApproxMinutes": "≈ {n} мин",
+  "planSessionApproxMinutes": "≈ {n} мин",
   "@planSessionApproxMinutes": {
     "description": "Сессия, вход в этап (30-1) и «Дальше» итога этапа (30-6): минуты этапа из окна дня (stage.minutes_left).",
     "placeholders": {
@@ -4534,7 +4551,7 @@
       }
     }
   },
-  "planSessionDescWords": "{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух",
+  "planSessionDescWords": "{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух",
   "@planSessionDescWords": {
     "description": "Сессия, вход в этап «Слова» (30-1): описание под названием; число — единицы этапа.",
     "placeholders": {
@@ -4543,7 +4560,7 @@
       }
     }
   },
-  "planSessionDescPhrases": "{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся",
+  "planSessionDescPhrases": "{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся",
   "@planSessionDescPhrases": {
     "description": "Сессия, вход в этап «Фразы» (30-1): описание под названием; число — каркасы этапа.",
     "placeholders": {
@@ -4585,7 +4602,7 @@
       }
     }
   },
-  "planSessionLeftWords": "{n, plural, one{ещё {n} слово} few{ещё {n} слова} many{ещё {n} слов} other{ещё {n} слова}}",
+  "planSessionLeftWords": "{n, plural, one{ещё {n} слово} few{ещё {n} слова} many{ещё {n} слов} other{ещё {n} слова}}",
   "@planSessionLeftWords": {
     "description": "Сессия, шапка (30-2): справа словами — сколько единиц этапа ещё не закрыто.",
     "placeholders": {
@@ -4594,7 +4611,7 @@
       }
     }
   },
-  "planSessionLeftPhrases": "{n, plural, one{ещё {n} фраза} few{ещё {n} фразы} many{ещё {n} фраз} other{ещё {n} фразы}}",
+  "planSessionLeftPhrases": "{n, plural, one{ещё {n} фраза} few{ещё {n} фразы} many{ещё {n} фраз} other{ещё {n} фразы}}",
   "@planSessionLeftPhrases": {
     "description": "Сессия, шапка (30-2) этапа «Фразы»: сколько каркасов ещё не закрыто.",
     "placeholders": {
@@ -4826,7 +4843,7 @@
   "@planSessionLoadFailed": {
     "description": "Сессия: вход, когда сервер не ответил."
   },
-  "planSessionLeftExchanges": "{n, plural, one{ещё {n} реплика} few{ещё {n} реплики} many{ещё {n} реплик} other{ещё {n} реплики}}",
+  "planSessionLeftExchanges": "{n, plural, one{ещё {n} реплика} few{ещё {n} реплики} many{ещё {n} реплик} other{ещё {n} реплики}}",
   "@planSessionLeftExchanges": {
     "description": "Сессия, шапка (30-2) этапов «Диалог» и «Говорю сам»: сколько обменов ещё не закрыто.",
     "placeholders": {
@@ -4835,7 +4852,7 @@
       }
     }
   },
-  "planSessionLeftQuestions": "{n, plural, one{ещё {n} вопрос} few{ещё {n} вопроса} many{ещё {n} вопросов} other{ещё {n} вопроса}}",
+  "planSessionLeftQuestions": "{n, plural, one{ещё {n} вопрос} few{ещё {n} вопроса} many{ещё {n} вопросов} other{ещё {n} вопроса}}",
   "@planSessionLeftQuestions": {
     "description": "Сессия, шапка (30-2) этапа «Слушаю и отвечаю» на вопросе: сколько вопросов слушания ещё без ответа, текущий тоже (34-2, 34-5).",
     "placeholders": {
@@ -4900,7 +4917,7 @@
   "@planSessionReplay": {
     "description": "Сессия: проиграть ещё раз — весь визит (34-1), реплику в темпе (34-6), реплику после зачёта (35-3, 35-4)."
   },
-  "planSessionExchangesCount": "{n, plural, one{{n} обмен} few{{n} обмена} many{{n} обменов} other{{n} обмена}}",
+  "planSessionExchangesCount": "{n, plural, one{{n} обмен} few{{n} обмена} many{{n} обменов} other{{n} обмена}}",
   "@planSessionExchangesCount": {
     "description": "Сессия, 34-1: сколько обменов в визите — справа под полосой плеера.",
     "placeholders": {
@@ -4967,7 +4984,7 @@
   "@planSessionTaskNormalPace": {
     "description": "Сессия, строка задания 34-6."
   },
-  "planSessionBrowSlowRate": "Медленно · {rate}×",
+  "planSessionBrowSlowRate": "Медленно · {rate}×",
   "@planSessionBrowSlowRate": {
     "description": "Сессия, 34-6: бровь листа на медленном темпе, rate — темп из карточки («0.75»).",
     "placeholders": {
@@ -5049,7 +5066,7 @@
   "@planSessionDayTotal": {
     "description": "Итог этапа (30-6, наряд CLIENT-CONV-1c): плашка «Дальше», когда следующего этапа нет, — итог дня, минуты дня справа."
   },
-  "planSessionDayDoneTitle": "День пройден · {minutes}",
+  "planSessionDayDoneTitle": "День пройден · {minutes}",
   "@planSessionDayDoneTitle": {
     "description": "Сессия, итог дня (30-7); minutes — planMinutesCount.",
     "placeholders": {
@@ -5074,7 +5091,7 @@
       }
     }
   },
-  "planSessionReturnWords": "{n, plural, one{{n} слово} few{{n} слова} many{{n} слов} other{{n} слова}}",
+  "planSessionReturnWords": "{n, plural, one{{n} слово} few{{n} слова} many{{n} слов} other{{n} слова}}",
   "@planSessionReturnWords": {
     "description": "Сессия, 30-7: слова, которые вернутся завтра.",
     "placeholders": {
@@ -5083,7 +5100,7 @@
       }
     }
   },
-  "planSessionReturnPhrases": "{n, plural, one{{n} фраза} few{{n} фразы} many{{n} фраз} other{{n} фразы}}",
+  "planSessionReturnPhrases": "{n, plural, one{{n} фраза} few{{n} фразы} many{{n} фраз} other{{n} фразы}}",
   "@planSessionReturnPhrases": {
     "description": "Сессия, 30-7: фразы, которые вернутся завтра.",
     "placeholders": {
@@ -5092,7 +5109,7 @@
       }
     }
   },
-  "planSessionReturnExchanges": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}",
+  "planSessionReturnExchanges": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}",
   "@planSessionReturnExchanges": {
     "description": "Сессия, 30-7: реплики (обмены), которые вернутся завтра.",
     "placeholders": {
@@ -5143,7 +5160,7 @@
   "@planPlateStageRecall": {
     "description": "Имя этапа репетиции (кадры 37-1, 37-3): свои реплики плана, прочитанные и сказанные вслух."
   },
-  "planTalkEntryMinutes": "{n, plural, one{около {n} минуты} few{около {n} минут} many{около {n} минут} other{около {n} минуты}}",
+  "planTalkEntryMinutes": "{n, plural, one{около {n} минуты} few{около {n} минут} many{около {n} минут} other{около {n} минуты}}",
   "@planTalkEntryMinutes": {
     "description": "Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут». После «около» — родительный падеж, поэтому своя форма, а не planMinutesCount (живой прогон поймал «около 3 минуты»).",
     "placeholders": {
@@ -5156,7 +5173,7 @@
   "@planTalkEntryWhole": {
     "description": "Вход в разговор репетиции (37-5): бровь вместо названия сцены — разговор идёт по всем сценам плана."
   },
-  "planTalkEntryScenes": "{n, plural, one{{n} сцена} few{{n} сцены} many{{n} сцен} other{{n} сцены}}",
+  "planTalkEntryScenes": "{n, plural, one{{n} сцена} few{{n} сцены} many{{n} сцен} other{{n} сцены}}",
   "@planTalkEntryScenes": {
     "description": "Вход в разговор репетиции (37-5): сколько сцен в разговоре — вторая часть брови «Разговор целиком · 3 сцены».",
     "placeholders": {
@@ -5194,6 +5211,10 @@
       }
     }
   },
+  "planTalkOpenText": "текст",
+  "@planTalkOpenText": {
+    "description": "Экран разговора в «Без подсказок» (наряд CLIENT-CONV-1c §5, приёмка 22.09): чип рядом с «прослушать» у закрытой реплики собеседника — тап открывает текст этой реплики."
+  },
   "planTalkInterrupted": "прервано",
   "@planTalkInterrupted": {
     "description": "Экран разговора (37-9): пометка у реплики собеседника, которую прервали тапом по микрофону."
@@ -5230,7 +5251,7 @@
   "@planTalkSummaryAction": {
     "description": "Конец разговора (37-11): кнопка листа — ведёт на итог 37-12."
   },
-  "planTalkSaidLines": "{n, plural, one{Сказал сам {n} реплику} few{Сказал сам {n} реплики} many{Сказал сам {n} реплик} other{Сказал сам {n} реплики}}",
+  "planTalkSaidLines": "{n, plural, one{Сказал сам {n} реплику} few{Сказал сам {n} реплики} many{Сказал сам {n} реплик} other{Сказал сам {n} реплики}}",
   "@planTalkSaidLines": {
     "description": "Итог разговора (37-12): счёт сервера said_count.",
     "placeholders": {
@@ -5252,7 +5273,7 @@
       }
     }
   },
-  "planTalkRescues": "{n, plural, one{переспросил {n} раз} few{переспросил {n} раза} many{переспросил {n} раз} other{переспросил {n} раза}}",
+  "planTalkRescues": "{n, plural, one{переспросил {n} раз} few{переспросил {n} раза} many{переспросил {n} раз} other{переспросил {n} раза}}",
   "@planTalkRescues": {
     "description": "Итог разговора (37-12): вторая часть строки понимания, всегда нейтральная.",
     "placeholders": {
@@ -5261,7 +5282,7 @@
       }
     }
   },
-  "planTalkPhrasesOf": "Фразы дня в разговоре · {used} из {total}",
+  "planTalkPhrasesOf": "Фразы дня в разговоре · {used} из {total}",
   "@planTalkPhrasesOf": {
     "description": "Итог разговора (37-12): бровь списка фраз — счёт сервера.",
     "placeholders": {
@@ -5412,7 +5433,7 @@
   "@planSessionPassedRepetition": {
     "description": "Итог этапа (30-6, день повторения): заголовок «Повторение» — к нему через « · » минуты этапа (решение архитектора 22.09)."
   },
-  "planSessionFirstTryWords": "{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}",
+  "planSessionFirstTryWords": "{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}",
   "@planSessionFirstTryWords": {
     "description": "Итог этапа «Слова» (30-6), первая строка: сколько слов в этапе и сколько из них зачтено с первой попытки без подсказки — по карточкам сервера.",
     "placeholders": {
@@ -5424,7 +5445,7 @@
       }
     }
   },
-  "planSessionFirstTryPhrases": "{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}",
+  "planSessionFirstTryPhrases": "{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}",
   "@planSessionFirstTryPhrases": {
     "description": "Итог этапа «Фразы» (30-6), первая строка: фразы этапа и зачтённые с первой попытки без подсказки.",
     "placeholders": {
@@ -5436,7 +5457,7 @@
       }
     }
   },
-  "planSessionFirstTryLines": "{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}",
+  "planSessionFirstTryLines": "{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}",
   "@planSessionFirstTryLines": {
     "description": "Итог этапа «Диалог» и «Говорю сам» (30-6, кадр «8 реплик, 6 с первого раза»), первая строка: реплики этапа и зачтённые с первой попытки без подсказки.",
     "placeholders": {
@@ -5448,7 +5469,7 @@
       }
     }
   },
-  "planSessionFirstTryQuestions": "{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}",
+  "planSessionFirstTryQuestions": "{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}",
   "@planSessionFirstTryQuestions": {
     "description": "Итог этапа «Слушаю и отвечаю» (30-6), первая строка: вопросы слушания и отвеченные верно с первого раза.",
     "placeholders": {
@@ -5460,7 +5481,7 @@
       }
     }
   },
-  "planSessionFirstTryCards": "{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}",
+  "planSessionFirstTryCards": "{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}",
   "@planSessionFirstTryCards": {
     "description": "Итог этапа «Повторение» (30-6), первая строка: карточки этапа и зачтённые с первой попытки без подсказки.",
     "placeholders": {
@@ -5472,7 +5493,7 @@
       }
     }
   },
-  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}",
+  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}",
   "@planSessionRecallLinesOfScenes": {
     "description": "Итог этапа «Вспомнить» (30-6), первая строка: «6 реплик из 2 сцен» — свои реплики, сказанные вслух, и из скольких сцен.",
     "placeholders": {
@@ -5484,7 +5505,7 @@
       }
     }
   },
-  "planSessionStageReturns": "{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}",
+  "planSessionStageReturns": "{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}",
   "@planSessionStageReturns": {
     "description": "Итог этапа (30-6), вторая строка: сколько единиц этапа вернётся завтра — по возвратам сервера.",
     "placeholders": {
@@ -5497,7 +5518,7 @@
   "@planSessionStageNoReturns": {
     "description": "Итог этапа (30-6), вторая строка, когда у этапа возвратов нет."
   },
-  "planSessionSaidAloud": "{n, plural, one{сказал вслух {n} свою реплику} few{сказал вслух {n} свои реплики} many{сказал вслух {n} своих реплик} other{сказал вслух {n} своей реплики}}",
+  "planSessionSaidAloud": "{n, plural, one{сказал вслух {n} свою реплику} few{сказал вслух {n} свои реплики} many{сказал вслух {n} своих реплик} other{сказал вслух {n} своей реплики}}",
   "@planSessionSaidAloud": {
     "description": "Итог этапа «Диалог» (30-6, кадр «сказал вслух 5 своих реплик»), вторая строка: свои реплики диалога, зачтённые голосом.",
     "placeholders": {
@@ -5506,7 +5527,7 @@
       }
     }
   },
-  "planSessionRescuedSlower": "{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}",
+  "planSessionRescuedSlower": "{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}",
   "@planSessionRescuedSlower": {
     "description": "Итог этапа «Диалог» (30-6, кадр «дважды переспросил — врач повторил медленнее»), третья строка: пройденные обмены «Не понял» диалога; role — роль собеседника сцены строчной.",
     "placeholders": {
@@ -5546,7 +5567,7 @@
   "@planTalkEntrySay": {
     "description": "Вход в разговор (37-5, SESSION-DES-4): бровь списка фраз, ради которых разговор (targets ряда разговора окна)."
   },
-  "planTalkStrip": "фразы · {said} из {total}",
+  "planTalkStrip": "фразы · {said} из {total}",
   "@planTalkStrip": {
     "description": "Лента разговора (37-6…37-11): полоска над микрофоном — сколько фраз разговора уже прозвучало (targets[].said сервера). Единственный счётчик ленты, назван нарядом.",
     "placeholders": {

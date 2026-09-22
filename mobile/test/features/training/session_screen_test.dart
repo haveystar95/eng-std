@@ -10,6 +10,8 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// Render smoke test — the exercise session is device-batched, so this catches layout throws and
 /// confirms the header + a multiple_choice card build from an overridden session. Answering (which
 /// fires TTS + records) is exercised on-device, not here.
@@ -51,7 +53,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Знакомство'), findsOneWidget); // off the ladder → the phase names it
-    expect(find.text('1 из 1'), findsOneWidget);
+    expect(find.text(nb('1 из 1')), findsOneWidget);
     expect(find.text('посадочный талон'), findsOneWidget);
     expect(find.text('boarding pass'), findsOneWidget);
     expect(find.text('baggage claim'), findsOneWidget);

@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "triageCounter": "{current} of {total}",
+  "triageCounter": "{current} of {total}",
   "triageSwipeHint": "Swipe or tap the buttons · tap to flip",
   "triageVerdictUnknown": "Don't know",
   "triageVerdictUnsure": "Not sure",
@@ -13,25 +13,25 @@
   "triageAllDoneTitle": "All sorted",
   "triageAllDoneBody": "No new words left to sort in this set.",
   "triageMoreLaterTitle": "That's all for now",
-  "triageMoreLaterBody": "{count} more after syncing — come back when you're online.",
+  "triageMoreLaterBody": "{count} more after syncing — come back when you're online.",
   "triageDone": "Done",
   "triageSummaryBatchTitle": "Batch sorted",
   "triageSummaryDoneTitle": "Sorting complete",
   "triageTallyKnown": "Know",
   "triageTallyLearning": "Learning",
   "triageTallyUnsure": "Not sure",
-  "triageRemainingAfterSync": "{count, plural, one{{count} more after syncing} other{{count} more after syncing}}",
+  "triageRemainingAfterSync": "{count, plural, one{{count} more after syncing} other{{count} more after syncing}}",
   "triageLoadError": "Couldn't load: {error}",
   "homeGeneratePlaceholder": "e.g. a visit to the doctor",
   "homeGenerateChipDoctor": "At the doctor",
   "homeGenerateChipRent": "Renting",
   "homeGenerateChipInterview": "Job interview",
-  "homeCollectionProgress": "{total, plural, one{{done} of {total} word} other{{done} of {total} words}}",
+  "homeCollectionProgress": "{total, plural, one{{done} of {total} word} other{{done} of {total} words}}",
   "tabHome": "Today",
   "tabCollections": "Collections",
   "homeSessionTitle": "Session",
-  "collectionWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
-  "collectionDueSuffix": "{count} due today",
+  "collectionWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
+  "collectionDueSuffix": "{count} due today",
   "collectionDensityMastered": "Mastered {count}",
   "collectionDensityInWork": "In progress {count}",
   "collectionDensityToSort": "To sort {count}",
@@ -97,7 +97,7 @@
   "collectionDeleteMessage": "The collection goes; the words stay in training. A word leaves training only from its own card.",
   "commonCancel": "Cancel",
   "commonCloseMenu": "Close menu",
-  "approxWords": "{count, plural, one{{count} word} other{{count} words}}",
+  "approxWords": "{count, plural, one{{count} word} other{{count} words}}",
   "collectionsTitle": "Collections",
   "collectionsEmptyTitle": "No collections yet",
   "collectionsEmptyBody": "Describe a situation — AI will build your first set.",
@@ -106,10 +106,10 @@
   "collectionsCreateGenerate": "Generate",
   "collectionsCreateGenerateHint": "AI builds a set from a situation you describe",
   "collectionsNewCollection": "New collection",
-  "collectionsTileMastered": "{count, plural, one{{count} word} other{{count} words}} · {mastered} mastered",
+  "collectionsTileMastered": "{count, plural, one{{count} word} other{{count} words}} · {mastered} mastered",
   "generationGeneratingTitle": "Building the collection…",
-  "generationGeneratingMeta": "{topic} · {levels} · {size}",
-  "generationGeneratingNote": "Picking words and photos · usually 20–30 seconds",
+  "generationGeneratingMeta": "{topic} · {levels} · {size}",
+  "generationGeneratingNote": "Picking words and photos · usually 20–30 seconds",
   "generationQueuedNote": "We'll send it as soon as you're online",
   "generationFailedTitle": "Didn't work out",
   "generationFailedBody": "The service didn't answer “{topic}”. No generation was spent.",
@@ -122,7 +122,7 @@
   "generateEnqueueFailed": "Could not queue the generation: {error}",
   "generationReadyLabel": "Ready",
   "generationReadyLoading": "Ready — loading “{topic}”…",
-  "generationUnderBadge": "{delivered} of {requested}",
+  "generationUnderBadge": "{delivered} of {requested}",
   "generationReadyUnder": "Ready · fewer than asked",
   "generateScreenTitle": "New collection",
   "generateSituationLabel": "Describe the situation",
@@ -140,12 +140,12 @@
   "generateLevelMulti": "several allowed",
   "generateLanguageLabel": "Language to learn",
   "generateLanguageDefault": "default",
-  "generateQuotaRemaining": "{count, plural, one{{count} generation left today} other{{count} generations left today}}",
+  "generateQuotaRemaining": "{count, plural, one{{count} generation left today} other{{count} generations left today}}",
   "generateQuotaExhausted": "Out of generations for today · resets at {time}",
   "generateSubmit": "Generate",
-  "generatePremiumUpsell": "Need more? Premium — up to 20 a day",
+  "generatePremiumUpsell": "Need more? Premium — up to 20 a day",
   "generateManual": "Build a collection manually",
-  "generateVoiceListening": "Listening · {time}",
+  "generateVoiceListening": "Listening · {time}",
   "generateVoiceStop": "Stop",
   "generateVoiceHelper": "Text appears in the field as it's recognised — after you stop you can edit it by hand.",
   "generateVoiceRecordingNote": "Speak — the keyboard returns when you stop",
@@ -175,7 +175,7 @@
   "searchBuildMeaning": "meaning",
   "searchBuildExample": "example",
   "searchBuildNote": "A couple of seconds. You can close this — the card will be in search.",
-  "searchLimitUsed": "{used} of {cap} today",
+  "searchLimitUsed": "{used} of {cap} today",
   "@searchLimitUsed": {
     "placeholders": {
       "used": {
@@ -264,7 +264,7 @@
   },
   "wordCardAddToAnother": "Add to another collection",
   "wordCardProgressLabel": "Word progress",
-  "wordCardProgressCount": "{step} of {total}",
+  "wordCardProgressCount": "{step} of {total}",
   "@wordCardProgressCount": {
     "placeholders": {
       "step": {
@@ -289,7 +289,7 @@
   "wordCardNoPhoto": "No photo",
   "progressTitle": "Progress",
   "progressStreakDays": "{count, plural, one{{count}-day streak} other{{count}-day streak}}",
-  "progressBestResult": "{count, plural, one{Best result — {count} day} other{Best result — {count} days}}",
+  "progressBestResult": "{count, plural, one{Best result — {count} day} other{Best result — {count} days}}",
   "progressDayMon": "Mon",
   "progressDayTue": "Tue",
   "progressDayWed": "Wed",
@@ -302,7 +302,7 @@
   "progressToday": "Reviews today",
   "progressActivityMonth": "Activity this month",
   "progressMonth": "{month, select, 1{January} 2{February} 3{March} 4{April} 5{May} 6{June} 7{July} 8{August} 9{September} 10{October} 11{November} 12{December} other{}}",
-  "progressAllWords": "{count, plural, one{All {count} word} other{All {count} words}}",
+  "progressAllWords": "{count, plural, one{All {count} word} other{All {count} words}}",
   "homeLimitReachedTitle": "Daily new-word limit reached",
   "homeLimitReachedHint": "New words resume tomorrow. For now, free-practice any collection.",
   "homeOfflineBanner": "No connection. Reviews work as usual — we'll sync when you're back online.",
@@ -324,7 +324,7 @@
   "onbLevelExample": "At {level}, collections include words like “wire transfer” and “make ends meet”.",
   "onbGoalTitle": "How many words a day?",
   "onbGoalSubtitle": "The goal only affects reminders and progress.",
-  "onbGoalMinutes": "≈ {count} min a day",
+  "onbGoalMinutes": "≈ {count} min a day",
   "onbGoalRecommended": "recommended",
   "onbFooterNote": "All of this lives in your profile — level, goal and language aren't locked behind onboarding.",
   "onbNext": "Next",
@@ -352,11 +352,11 @@
   "profileRemindersHint": "One a day, when there's something to review",
   "profileRowReminderTime": "Time",
   "profileFreeTier": "Free tier",
-  "profileFreeTierHint": "3 generations a day",
+  "profileFreeTierHint": "3 generations a day",
   "profileSoon": "Soon",
   "profileSignOut": "Sign out",
   "profileDeleteAccount": "Delete account",
-  "profileGoalValue": "{count, plural, one{{count} word} other{{count} words}}",
+  "profileGoalValue": "{count, plural, one{{count} word} other{{count} words}}",
   "uiLangSystem": "System",
   "uiLangRussian": "Русский",
   "uiLangEnglish": "English",
@@ -368,7 +368,7 @@
   "commonSave": "Save",
   "deleteAccountTitle": "Delete account?",
   "deleteAccountBody": "All data and progress will be erased permanently: {words}, {streak} and all collections.",
-  "deleteAccountWords": "{count, plural, one{{count} word} other{{count} words}}",
+  "deleteAccountWords": "{count, plural, one{{count} word} other{{count} words}}",
   "deleteAccountStreak": "{count, plural, one{{count}-day streak} other{{count}-day streak}}",
   "deleteAccountConfirm": "Delete",
   "sessionPhaseIntro": "Getting to know",
@@ -405,7 +405,7 @@
   "sessionClozeInsert": "Insert the word",
   "sessionChipReturnHint": "Tap a word in the line to send it back",
   "sessionHintFirstLetter": "Hint: first letter",
-  "sessionSizeCards": "~{count, plural, one{{count} card} other{{count} cards}}",
+  "sessionSizeCards": "~{count, plural, one{{count} card} other{{count} cards}}",
   "@sessionSizeCards": {
     "placeholders": {
       "count": {
@@ -469,7 +469,7 @@
   "statusInWork": "In progress",
   "statusMastered": "Mastered",
   "statusPaused": "Paused",
-  "statusLadderStep": "Step {step} of {total}: {rung}",
+  "statusLadderStep": "Step {step} of {total}: {rung}",
   "@statusLadderStep": {
     "placeholders": {
       "step": {
@@ -483,7 +483,7 @@
       }
     }
   },
-  "statusCountToSort": "{count, plural, one{Sort {count} word} other{Sort {count} words}}",
+  "statusCountToSort": "{count, plural, one{Sort {count} word} other{Sort {count} words}}",
   "@statusCountToSort": {
     "placeholders": {
       "count": {
@@ -502,7 +502,7 @@
   "sessionFeedbackWrongAbove": "Not quite — the correct answer is marked above",
   "sessionDueToday": "today",
   "sessionDueTomorrow": "tomorrow",
-  "sessionDueInDays": "{days, plural, one{in {days} day} other{in {days} days}}",
+  "sessionDueInDays": "{days, plural, one{in {days} day} other{in {days} days}}",
   "sessionSeeAgain": "See it again {when}",
   "sessionSummaryTitle": "Session complete",
   "sessionStatReviewed": "{count, plural, one{Reviewed} other{Reviewed}}",
@@ -512,7 +512,7 @@
   "sessionPracticeAgain": "Again",
   "sessionDailyGoal": "Daily goal",
   "sessionGoalClosed": "Daily goal reached",
-  "sessionStreak": "{days, plural, one{Streak — {days} day} other{Streak — {days} days}}",
+  "sessionStreak": "{days, plural, one{Streak — {days} day} other{Streak — {days} days}}",
   "sessionSessionWords": "This session's words",
   "sessionStrugglingTitle": "Struggling: {term}",
   "sessionStrugglingBody": "This one's tricky. Try a different example — sometimes it's the context, not the word.",
@@ -578,7 +578,7 @@
   "authErrorLoginFailed": "Couldn't sign in. Please try again.",
   "authErrorApple": "Sign in with Apple isn't available yet.",
   "authErrorAppleToken": "Couldn't get an Apple token.",
-  "practiceDialogEntry": "Conversation · 3 min",
+  "practiceDialogEntry": "Conversation · 3 min",
   "practiceDialogEntrySubtitle": "Voice practice with AI",
   "practiceDialogOfflineHint": "Needs internet",
   "practiceDialogPrestartTitle": "Talk with the AI",
@@ -594,7 +594,7 @@
   "practiceDialogExitConfirm": "End",
   "practiceDialogExitCancel": "Keep going",
   "practiceDialogFinaleTitle": "Conversation over",
-  "practiceDialogFinaleWords": "Words used: {used} of {total}",
+  "practiceDialogFinaleWords": "Words used: {used} of {total}",
   "practiceDialogFinaleDone": "Done",
   "practiceDialogErrorSubscription": "Conversations are a Premium feature.",
   "practiceDialogErrorRateLimited": "No conversations left today. More after {time}.",
@@ -603,17 +603,17 @@
   "practiceDialogErrorGeneric": "Couldn't start the conversation. Please try again.",
   "practiceDialogClose": "Close",
   "practiceDialogRepeat": "Practice again",
-  "practiceDialogResultWords": "words: {used} of {total}",
+  "practiceDialogResultWords": "words: {used} of {total}",
   "storeSegmentMine": "Mine",
   "storeSegmentReady": "Ready-made",
   "storeSectionOther": "Other",
-  "storeWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
+  "storeWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
   "storeInLibrary": "In library",
   "storeAddToMine": "Add to mine",
   "storeAvailableWithPremium": "Available with Premium",
-  "storeAllSetsUnlock": "Unlocks all {count} sets at once",
+  "storeAllSetsUnlock": "Unlocks all {count} sets at once",
   "storeInsideLabel": "What's inside",
-  "storeMoreWords": "and {count, plural, one{{count} more word} other{{count} more words}}",
+  "storeMoreWords": "and {count, plural, one{{count} more word} other{{count} more words}}",
   "storeLangPairSheetTitle": "Language pair",
   "storeEmptyTitle": "Sets are coming soon",
   "storeEmptyBody": "Ready-made collections by situation will appear here shortly.",
@@ -622,11 +622,11 @@
   "paywallClose": "Close",
   "paywallTitleQuota": "More collections in one evening",
   "paywallTitleGeneric": "Premium, no limits",
-  "paywallTitleStore": "{title} and {count} more sets",
+  "paywallTitleStore": "{title} and {count} more sets",
   "paywallSubtitleQuota": "Premium raises the daily limit to twenty generations.",
   "paywallSubtitleStore": "Premium collections are curated and all unlock at once — we don't sell them one by one.",
   "paywallSubtitleGeneric": "One plan unlocks everything that makes learning faster.",
-  "paywallBenefitGenerations": "Up to 20 generations a day",
+  "paywallBenefitGenerations": "Up to 20 generations a day",
   "paywallBenefitStore": "Every premium collection in the store",
   "paywallBenefitModes": "Future training modes",
   "paywallFreeForever": "Reviews, sorting and offline — always free.",
@@ -638,15 +638,15 @@
   "paywallPerMonth": "per month",
   "paywallDiscountBadge": "−50%",
   "paywallContinue": "Continue",
-  "paywallLegalYear": "Subscription renews automatically. {price} per year is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.",
-  "paywallLegalMonth": "Subscription renews automatically. {price} per month is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.",
+  "paywallLegalYear": "Subscription renews automatically. {price} per year is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.",
+  "paywallLegalMonth": "Subscription renews automatically. {price} per month is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.",
   "paywallRestore": "Restore purchases",
   "paywallTerms": "Terms",
   "paywallPrivacy": "Privacy",
   "paywallDevPurchased": "Premium activated (dev mode)",
   "paywallNeedsRealPremium": "Needs real Premium (StoreKit is a separate block)",
   "profileTryPremium": "Try Premium",
-  "profileFreeTierReset": "3 generations a day · resets at {time}",
+  "profileFreeTierReset": "3 generations a day · resets at {time}",
   "profilePremiumActive": "Premium",
   "profilePremiumBadge": "active",
   "profilePremiumHint": "Subscription active",
@@ -682,7 +682,7 @@
   "poolUnenrollMessage": "The word stops coming up in your sessions. Its progress and history are kept — you can bring it back at any time.",
   "poolUnenrollConfirm": "Stop",
   "myWordsTitle": "My words",
-  "myWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
+  "myWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
   "myWordsSearchHint": "Search your words",
   "myWordsFilterAll": "All",
   "myWordsFilterNew": "New",
@@ -709,7 +709,7 @@
     "description": "Title of the day's dark card (frame 17a)."
   },
   "challengeLabel": "Word challenge",
-  "challengeStreak": "{count, plural, one{{count} in a row} other{{count} in a row}}",
+  "challengeStreak": "{count, plural, one{{count} in a row} other{{count} in a row}}",
   "challengeStreakReset": "streak reset",
   "challengePraise": "You know it!",
   "challengeAnswer": "{term} — {translation}",
@@ -724,7 +724,7 @@
   "homeSessionRowRepeat": "To review",
   "homeSessionRowNew": "New",
   "homeSessionRowTriage": "To sort",
-  "homeSessionCardWords": "{count, plural, one{{count} word} other{{count} words}}",
+  "homeSessionCardWords": "{count, plural, one{{count} word} other{{count} words}}",
   "@homeSessionCardWords": {
     "description": "Session size on the dark card (ICU plural).",
     "placeholders": {
@@ -733,7 +733,7 @@
       }
     }
   },
-  "homeSessionCardMinutes": "{count, plural, one{≈ {count} minute} other{≈ {count} minutes}}",
+  "homeSessionCardMinutes": "{count, plural, one{≈ {count} minute} other{≈ {count} minutes}}",
   "@homeSessionCardMinutes": {
     "description": "Estimated session length (ICU plural).",
     "placeholders": {
@@ -742,7 +742,7 @@
       }
     }
   },
-  "homeSessionPartRepeat": "{count, plural, one{{count} to review} other{{count} to review}}",
+  "homeSessionPartRepeat": "{count, plural, one{{count} to review} other{{count} to review}}",
   "@homeSessionPartRepeat": {
     "description": "Session composition: repeats.",
     "placeholders": {
@@ -751,7 +751,7 @@
       }
     }
   },
-  "homeSessionPartNew": "{count, plural, one{{count} new} other{{count} new}}",
+  "homeSessionPartNew": "{count, plural, one{{count} new} other{{count} new}}",
   "@homeSessionPartNew": {
     "description": "Session composition: first meetings.",
     "placeholders": {
@@ -760,7 +760,7 @@
       }
     }
   },
-  "homeSessionPartTriage": "{count, plural, one{{count} to sort} other{{count} to sort}}",
+  "homeSessionPartTriage": "{count, plural, one{{count} to sort} other{{count} to sort}}",
   "@homeSessionPartTriage": {
     "description": "Session composition: triage swipes.",
     "placeholders": {
@@ -773,7 +773,7 @@
   "@homeSessionStart": {
     "description": "Button on the day's dark card (frame 17a)."
   },
-  "homeInWorkTitle": "{count, plural, one{In progress — {count} word} other{In progress — {count} words}}",
+  "homeInWorkTitle": "{count, plural, one{In progress — {count} word} other{In progress — {count} words}}",
   "@homeInWorkTitle": {
     "description": "«In progress» heading — the pool's size (ICU plural).",
     "placeholders": {
@@ -782,7 +782,7 @@
       }
     }
   },
-  "homeInWorkWaiting": "{count, plural, one{{count} waiting in line} other{{count} waiting in line}}",
+  "homeInWorkWaiting": "{count, plural, one{{count} waiting in line} other{{count} waiting in line}}",
   "@homeInWorkWaiting": {
     "description": "Pool words never shown yet (ICU plural).",
     "placeholders": {
@@ -791,7 +791,7 @@
       }
     }
   },
-  "homeInWorkPace": "{days, plural, one{at {perDay} new a day the queue clears in ~{days} day} other{at {perDay} new a day the queue clears in ~{days} days}}",
+  "homeInWorkPace": "{days, plural, one{at {perDay} new a day the queue clears in ~{days} day} other{at {perDay} new a day the queue clears in ~{days} days}}",
   "@homeInWorkPace": {
     "description": "When the queue reaches the last waiting word (ICU plural on days).",
     "placeholders": {
@@ -803,7 +803,7 @@
       }
     }
   },
-  "homeInWorkQueueStands": "{count, plural, one{take {count} now and the queue moves today} other{take {count} now and the queue moves today}}",
+  "homeInWorkQueueStands": "{count, plural, one{take {count} now and the queue moves today} other{take {count} now and the queue moves today}}",
   "@homeInWorkQueueStands": {
     "description": "«In progress» line in state B (frame 17d): the day's quota is untouched.",
     "placeholders": {
@@ -820,7 +820,7 @@
   "@homeEdgeTomorrow": {
     "description": "A word's due day: tomorrow."
   },
-  "homeEdgeInDays": "{count, plural, one{in {count} day} other{in {count} days}}",
+  "homeEdgeInDays": "{count, plural, one{in {count} day} other{in {count} days}}",
   "@homeEdgeInDays": {
     "description": "A word's due day (ICU plural).",
     "placeholders": {
@@ -833,7 +833,7 @@
   "@homeHardestTitle": {
     "description": "Heading of the evening mistakes section (frame 17b)."
   },
-  "homeHardestErrors": "{count, plural, one{{count} mistake} other{{count} mistakes}}",
+  "homeHardestErrors": "{count, plural, one{{count} mistake} other{{count} mistakes}}",
   "@homeHardestErrors": {
     "description": "How often a word was missed in the last session (ICU plural).",
     "placeholders": {
@@ -842,7 +842,7 @@
       }
     }
   },
-  "homeSectionCount": "{count, plural, one{{count} word} other{{count} words}}",
+  "homeSectionCount": "{count, plural, one{{count} word} other{{count} words}}",
   "@homeSectionCount": {
     "description": "Counter beside a section heading (ICU plural).",
     "placeholders": {
@@ -855,11 +855,11 @@
   "@homeDoneTitle": {
     "description": "Title of the evening card (frame 17b)."
   },
-  "homeDoneOfWords": "{total, plural, one{{done} of {total} word} other{{done} of {total} words}}",
-  "homeDoneCards": "{count, plural, one{{count} card} other{{count} cards}}",
-  "homeDoneMinutes": "{count, plural, one{{count} min} other{{count} min}}",
-  "homeChainProgress": "{total, plural, one{card {position} of {total}} other{card {position} of {total}}}",
-  "homeDoneOf": "{done} of {total}",
+  "homeDoneOfWords": "{total, plural, one{{done} of {total} word} other{{done} of {total} words}}",
+  "homeDoneCards": "{count, plural, one{{count} card} other{{count} cards}}",
+  "homeDoneMinutes": "{count, plural, one{{count} min} other{{count} min}}",
+  "homeChainProgress": "{total, plural, one{card {position} of {total}} other{card {position} of {total}}}",
+  "homeDoneOf": "{done} of {total}",
   "@homeDoneOf": {
     "description": "The day's progress: answered cards out of planned.",
     "placeholders": {
@@ -871,7 +871,7 @@
       }
     }
   },
-  "homeDoneDuration": "{minutes} min {seconds} s",
+  "homeDoneDuration": "{minutes} min {seconds} s",
   "@homeDoneDuration": {
     "description": "How long the session took.",
     "placeholders": {
@@ -883,7 +883,7 @@
       }
     }
   },
-  "homeDoneDurationSeconds": "{count, plural, one{{count} second} other{{count} seconds}}",
+  "homeDoneDurationSeconds": "{count, plural, one{{count} second} other{{count} seconds}}",
   "@homeDoneDurationSeconds": {
     "description": "A session shorter than a minute (ICU plural).",
     "placeholders": {
@@ -904,7 +904,7 @@
   "@homeIdleQueueStalled": {
     "description": "Note under «All reviewed» (frame 17d)."
   },
-  "homeNextReviewLine": "{count, plural, one{Next review {when}, {count} word.} other{Next review {when}, {count} words.}}",
+  "homeNextReviewLine": "{count, plural, one{Next review {when}, {count} word.} other{Next review {when}, {count} words.}}",
   "@homeNextReviewLine": {
     "description": "When the next repeats fall and how many (ICU plural).",
     "placeholders": {
@@ -920,7 +920,7 @@
   "@homeWhenTomorrow": {
     "description": "The «when» substitution for the next review — tomorrow."
   },
-  "homeExtraFromCollection": "{count, plural, one{You can add {count} more word from “{title}”.} other{You can add {count} more words from “{title}”.}}",
+  "homeExtraFromCollection": "{count, plural, one{You can add {count} more word from “{title}”.} other{You can add {count} more words from “{title}”.}}",
   "@homeExtraFromCollection": {
     "description": "Offer to top up from an unfinished collection (frame 17b).",
     "placeholders": {
@@ -932,8 +932,8 @@
       }
     }
   },
-  "homeExtraNew": "{count, plural, one{You can take {count} word already waiting in the queue.} other{You can take {count} words already waiting in the queue.}}",
-  "homeExtraButton": "{count, plural, one{{count} more word} other{{count} more words}}",
+  "homeExtraNew": "{count, plural, one{You can take {count} word already waiting in the queue.} other{You can take {count} words already waiting in the queue.}}",
+  "homeExtraButton": "{count, plural, one{{count} more word} other{{count} more words}}",
   "@homeExtraButton": {
     "description": "«N more words» button on the evening card (frame 17b).",
     "placeholders": {
@@ -946,7 +946,7 @@
   "@homeContinueLabel": {
     "description": "Label of the abandoned-collection card (frame 17a)."
   },
-  "homeContinueAbandoned": "{count, plural, one{left {count} day ago} other{left {count} days ago}}",
+  "homeContinueAbandoned": "{count, plural, one{left {count} day ago} other{left {count} days ago}}",
   "@homeContinueAbandoned": {
     "description": "How long ago the collection was last touched (ICU plural).",
     "placeholders": {
@@ -959,7 +959,7 @@
   "@homeGenerateRow": {
     "description": "Entry row into generation on the home screen (frame 17a)."
   },
-  "homeStoreLink": "{count, plural, one{or take one of {count} ready-made} other{or take one of {count} ready-made}}",
+  "homeStoreLink": "{count, plural, one{or take one of {count} ready-made} other{or take one of {count} ready-made}}",
   "@homeStoreLink": {
     "description": "Quiet store entry line under generation (ICU plural).",
     "placeholders": {
@@ -971,21 +971,21 @@
   "homeStatLearned": "Learned",
   "homeStatWeek": "This week",
   "homeStatInWork": "In progress",
-  "homeTomorrowRow": "{count, plural, one{{count} word comes back tomorrow} other{{count} words come back tomorrow}}",
-  "homeAwardPromoted": "{count, plural, one{+{count} word moved up} other{+{count} words moved up}}",
+  "homeTomorrowRow": "{count, plural, one{{count} word comes back tomorrow} other{{count} words come back tomorrow}}",
+  "homeAwardPromoted": "{count, plural, one{+{count} word moved up} other{+{count} words moved up}}",
   "homeAwardExample": "{term} reached “{rung}”",
   "homeGenerateCardTitle": "Generate a set",
   "homeGenerateCardHint": "Describe the situation — we’ll build a set for it",
   "homeStoreShowcaseTitle": "Ready-made sets",
   "homeStoreShowcaseAll": "all {count}",
-  "homeFirstDayPromise": "5 minutes a day — 20 words a week",
+  "homeFirstDayPromise": "5 minutes a day — 20 words a week",
   "homeGenerateChipVet": "At the vet",
   "homeGenerateChipMoving": "Moving abroad",
   "homeFirstDayTitle": "Let's start with a first set",
   "@homeFirstDayTitle": {
     "description": "First-day greeting (frame 17c)."
   },
-  "homeFirstDayReadyTitle": "{count, plural, one{Take a ready-made set ({count} topic)} other{Take a ready-made set ({count} topics)}}",
+  "homeFirstDayReadyTitle": "{count, plural, one{Take a ready-made set ({count} topic)} other{Take a ready-made set ({count} topics)}}",
   "@homeFirstDayReadyTitle": {
     "description": "First card of the first day (ICU plural).",
     "placeholders": {
@@ -1006,7 +1006,7 @@
   "@homeFirstDayOwnHint": {
     "description": "Caption of the generation card (frame 17c)."
   },
-  "homeSortOffer": "{count, plural, one{You can sort {count} more word from “{title}”} other{You can sort {count} more words from “{title}”}}",
+  "homeSortOffer": "{count, plural, one{You can sort {count} more word from “{title}”} other{You can sort {count} more words from “{title}”}}",
   "@homeSortOffer": {
     "description": "The swipe-pass offer once the day is closed (frames 17b/17d).",
     "placeholders": {
@@ -1018,7 +1018,7 @@
       }
     }
   },
-  "homeTriageAction": "{count, plural, one{Sort {count} word} other{Sort {count} words}}",
+  "homeTriageAction": "{count, plural, one{Sort {count} word} other{Sort {count} words}}",
   "@homeTriageAction": {
     "description": "The swipe-pass button in state B (frame 17d).",
     "placeholders": {
@@ -1048,7 +1048,7 @@
   "searchOpen": "Search",
   "commonBack": "Back",
   "sessionSayIntent": "Say: {intent}",
-  "homePlanCardBadge": "Plan · day {index} of {total}",
+  "homePlanCardBadge": "Plan · day {index} of {total}",
   "@homePlanCardBadge": {
     "placeholders": {
       "index": {
@@ -1059,7 +1059,7 @@
       }
     }
   },
-  "homePlanCardEventIn": "{days, plural, one{Event in {days} day} other{Event in {days} days}}",
+  "homePlanCardEventIn": "{days, plural, one{Event in {days} day} other{Event in {days} days}}",
   "@homePlanCardEventIn": {
     "placeholders": {
       "days": {
@@ -1076,16 +1076,16 @@
   "devVoicesLead": "The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.",
   "devVoicesSystem": "The phone's own voice",
   "devVoicesSystemNote": "Spoken live, at the line tempo. The voice is whichever one iOS Settings has; an enhanced voice is downloaded there.",
-  "devVoicesPrice": "≈ {price} per plan",
+  "devVoicesPrice": "≈ {price} per plan",
   "devVoicesPlayAll": "All five",
   "devVoicesStop": "Stop",
   "devVoicesFavourite": "This session's favourite",
-  "devVoiceTrouble": "Voice: {silent} lines fell back to the system voice, {failed} downloads failed",
+  "devVoiceTrouble": "Voice: {silent} lines fell back to the system voice, {failed} downloads failed",
   "devQaClockTitle": "QA · the plan's “today”",
   "@devQaClockTitle": {
     "description": "Дев-меню (DAY-FIX-2, Ч.7): сдвиг «сегодня» плана на QA-аккаунте за dev-дверью."
   },
-  "devQaClockShift": "{days, plural, =0{no shift} one{shifted by {days} day} other{shifted by {days} days}}",
+  "devQaClockShift": "{days, plural, =0{no shift} one{shifted by {days} day} other{shifted by {days} days}}",
   "@devQaClockShift": {
     "description": "Текущий сдвиг под заголовком строки.",
     "placeholders": {
@@ -1094,7 +1094,7 @@
       }
     }
   },
-  "devQaClockPlus": "+1 day",
+  "devQaClockPlus": "+1 day",
   "@devQaClockPlus": {
     "description": "Кнопка сдвига «сегодня» плана на день вперёд."
   },
@@ -1108,7 +1108,7 @@
   "@planEmptyTitle": {
     "description": "Заголовок витрины, Literata 30 — обещание результата, а не вопрос (кадр 21-1, plan.empty.title)."
   },
-  "planEmptySub": "a scene a day · 20 minutes · a rehearsal out loud",
+  "planEmptySub": "a scene a day · 20 minutes · a rehearsal out loud",
   "@planEmptySub": {
     "description": "Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub)."
   },
@@ -1292,7 +1292,7 @@
       }
     }
   },
-  "planExampleMore": "{n, plural, one{{n} more day} other{{n} more days}}",
+  "planExampleMore": "{n, plural, one{{n} more day} other{{n} more days}}",
   "@planExampleMore": {
     "description": "Витрина 21-1: подвал примера, когда в плане больше трёх дней («ещё 2 дня»).",
     "placeholders": {
@@ -1317,7 +1317,7 @@
       }
     }
   },
-  "planHeaderBrow": "Plan · day {n} of {total}",
+  "planHeaderBrow": "Plan · day {n} of {total}",
   "@planHeaderBrow": {
     "description": "Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).",
     "placeholders": {
@@ -1337,7 +1337,7 @@
       }
     }
   },
-  "planCardsCount": "{n, plural, one{{n} card} other{{n} cards}}",
+  "planCardsCount": "{n, plural, one{{n} card} other{{n} cards}}",
   "@planCardsCount": {
     "placeholders": {
       "n": {
@@ -1345,7 +1345,7 @@
       }
     }
   },
-  "planMinutesCount": "{n, plural, one{{n} minute} other{{n} minutes}}",
+  "planMinutesCount": "{n, plural, one{{n} minute} other{{n} minutes}}",
   "@planMinutesCount": {
     "placeholders": {
       "n": {
@@ -1375,7 +1375,7 @@
   "@planPlateStateAhead": {
     "description": "Плита дня (21-2): состояние этапа, до которого ещё не дошли."
   },
-  "planNewWordsCount": "{n, plural, one{{n} new word} other{{n} new words}}",
+  "planNewWordsCount": "{n, plural, one{{n} new word} other{{n} new words}}",
   "@planNewWordsCount": {
     "placeholders": {
       "n": {
@@ -1383,7 +1383,7 @@
       }
     }
   },
-  "planPlateStageSubStart": "start here · {words}",
+  "planPlateStageSubStart": "start here · {words}",
   "@planPlateStageSubStart": {
     "placeholders": {
       "words": {
@@ -1391,7 +1391,7 @@
       }
     }
   },
-  "planPlateStageSubUnfinished": "unfinished · {cards}",
+  "planPlateStageSubUnfinished": "unfinished · {cards}",
   "@planPlateStageSubUnfinished": {
     "placeholders": {
       "cards": {
@@ -1419,7 +1419,7 @@
   "@planPlateFailedTitle": {
     "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title)."
   },
-  "planPlateFailedSub": "The network dropped. The route is intact — only day {n} is missing",
+  "planPlateFailedSub": "The network dropped. The route is intact — only day {n} is missing",
   "@planPlateFailedSub": {
     "description": "Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).",
     "placeholders": {
@@ -1434,7 +1434,7 @@
   },
   "planPlateCtaContinue": "Continue",
   "@planPlateCtaContinue": {},
-  "planClosedTitle": "Day {n} closed",
+  "planClosedTitle": "Day {n} closed",
   "@planClosedTitle": {
     "placeholders": {
       "n": {
@@ -1442,7 +1442,7 @@
       }
     }
   },
-  "planClosedCount": "{cards} · {minutes}",
+  "planClosedCount": "{cards} · {minutes}",
   "@planClosedCount": {
     "description": "Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count).",
     "placeholders": {
@@ -1454,7 +1454,7 @@
       }
     }
   },
-  "planClosedNextTomorrow": "Day {n} opens tomorrow, {date}",
+  "planClosedNextTomorrow": "Day {n} opens tomorrow, {date}",
   "@planClosedNextTomorrow": {
     "description": "Первая строка подвала закрытого дня (кадр 21-4, plan.closed.next.tomorrow).",
     "placeholders": {
@@ -1466,7 +1466,7 @@
       }
     }
   },
-  "planClosedNextOn": "Day {n} opens {date}",
+  "planClosedNextOn": "Day {n} opens {date}",
   "@planClosedNextOn": {
     "description": "Подвал закрытого дня, когда следующий день не «завтра» (кадр 21-4, plan.closed.next.on).",
     "placeholders": {
@@ -1478,7 +1478,7 @@
       }
     }
   },
-  "planClosedReturn": "{k, plural, one{{k} card returns on day {n} →} other{{k} cards return on day {n} →}}",
+  "planClosedReturn": "{k, plural, one{{k} card returns on day {n} →} other{{k} cards return on day {n} →}}",
   "@planClosedReturn": {
     "description": "Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).",
     "placeholders": {
@@ -1533,7 +1533,7 @@
   "@planRouteMetaPassed": {
     "description": "Мета-строка пройденного дня маршрута (кадр 21-2b, plan.route.meta.passed)."
   },
-  "planMinutesShort": "{n} min",
+  "planMinutesShort": "{n} min",
   "@planMinutesShort": {
     "description": "Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes).",
     "placeholders": {
@@ -1565,7 +1565,7 @@
   },
   "planDoneTitle": "Plan completed",
   "@planDoneTitle": {},
-  "planDaysCount": "{n, plural, one{{n} day} other{{n} days}}",
+  "planDaysCount": "{n, plural, one{{n} day} other{{n} days}}",
   "@planDaysCount": {
     "placeholders": {
       "n": {
@@ -1633,7 +1633,7 @@
   "@planDateRemove": {},
   "planNewTitle": "Start a different plan?",
   "@planNewTitle": {},
-  "planNewBody": "This plan will end on day {n} of {total}. Everything already in progress stays in the collection “{name}” and keeps coming back for review",
+  "planNewBody": "This plan will end on day {n} of {total}. Everything already in progress stays in the collection “{name}” and keeps coming back for review",
   "@planNewBody": {
     "placeholders": {
       "n": {
@@ -1678,7 +1678,7 @@
   },
   "planOverdueFinish": "Finish the plan",
   "@planOverdueFinish": {},
-  "planOverdueContinue": "Keep going · {days}",
+  "planOverdueContinue": "Keep going · {days}",
   "@planOverdueContinue": {
     "description": "Второй выход прошедшего события — вернуться к текущему дню (кадр 21-14, plan.overdue.continue).",
     "placeholders": {
@@ -1687,9 +1687,15 @@
       }
     }
   },
-  "planHintFirstStart": "Start with the “Words” stage. The rest open in order",
-  "@planHintFirstStart": {},
-  "planHintFirstRoute": "Day {n} is open. The next one opens once you finish this one",
+  "planHintFirstStart": "Start with the “{stage}” stage. The rest open in order",
+  "@planHintFirstStart": {
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "planHintFirstRoute": "Day {n} is open. The next one opens once you finish this one",
   "@planHintFirstRoute": {
     "description": "Подсказка первого плана под заголовком маршрута, один раз (кадр 21-2c, plan.hint.first.route).",
     "placeholders": {
@@ -1698,7 +1704,7 @@
       }
     }
   },
-  "planRebuiltTitle": "The route was rebuilt: {from} days became {to}",
+  "planRebuiltTitle": "The route was rebuilt: {from} days became {to}",
   "@planRebuiltTitle": {
     "description": "Плашка пересборки над плитой — состояние плана, не сообщение (кадр 21-13, plan.rebuilt.title).",
     "placeholders": {
@@ -1826,7 +1832,7 @@
   "@planEntryDaysTitle": {
     "description": "Вопрос шага длины плана (кадр 22-3a, entry.days.title)."
   },
-  "planEntryDaysScenes": "{n, plural, one{{n} situation} other{{n} situations}}",
+  "planEntryDaysScenes": "{n, plural, one{{n} situation} other{{n} situations}}",
   "@planEntryDaysScenes": {
     "description": "Состав длины плана — ситуации (кадр 22-3a, entry.days.scenes).",
     "placeholders": {
@@ -1835,7 +1841,7 @@
       }
     }
   },
-  "planEntryDaysReviews": "{n, plural, one{{n} review} other{{n} reviews}}",
+  "planEntryDaysReviews": "{n, plural, one{{n} review} other{{n} reviews}}",
   "@planEntryDaysReviews": {
     "description": "Состав длины плана — дни повторения (кадр 22-3a, entry.days.reviews).",
     "placeholders": {
@@ -1856,7 +1862,7 @@
   "@planEntryDateLabel": {
     "description": "Метка зоны выбора даты (кадр 22-3b, entry.date.label)."
   },
-  "planEntryDateIn": "{weekday} · {n, plural, one{in {n} day} other{in {n} days}}",
+  "planEntryDateIn": "{weekday} · {n, plural, one{in {n} day} other{in {n} days}}",
   "@planEntryDateIn": {
     "description": "Подпись ближней даты: день недели и сколько до неё (кадр 22-3b, entry.date.in).",
     "placeholders": {
@@ -1905,7 +1911,7 @@
   "@planEntryPreviewLoadingTitle": {
     "description": "Заголовок превью во время сборки (кадр 22-4a, entry.preview.loading.title)."
   },
-  "planEntryPreviewAbout": "About 10 seconds",
+  "planEntryPreviewAbout": "About 10 seconds",
   "@planEntryPreviewAbout": {
     "description": "Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about)."
   },
@@ -1994,7 +2000,7 @@
       }
     }
   },
-  "planNotifyDayReadyTitle": "Day {n} is ready",
+  "planNotifyDayReadyTitle": "Day {n} is ready",
   "@planNotifyDayReadyTitle": {
     "description": "Уведомление «день собран» (кадр 22-6 — эталон вида); без push — баннер в приложении при возврате.",
     "placeholders": {
@@ -2012,7 +2018,7 @@
       }
     }
   },
-  "planNotifyReminderTitle": "Day {n} is waiting",
+  "planNotifyReminderTitle": "Day {n} is waiting",
   "@planNotifyReminderTitle": {
     "description": "Ежедневное напоминание в час обычного захода (локальное уведомление, не чаще раза в сутки).",
     "placeholders": {
@@ -2047,7 +2053,7 @@
   "@planNotifyEventTodayBody": {
     "description": "Тело уведомления в день события."
   },
-  "planNotifySkippedTitle": "Day {n} has been waiting since yesterday",
+  "planNotifySkippedTitle": "Day {n} has been waiting since yesterday",
   "@planNotifySkippedTitle": {
     "description": "Локальное уведомление «дни пропущены»: наутро после даты дня, который не пройден.",
     "placeholders": {
@@ -2073,7 +2079,7 @@
   "planWindowBack": "Back",
   "planWindowStateNotStarted": "not started",
   "planWindowStateInProgress": "in progress",
-  "planWindowApprox": "≈ {minutes}",
+  "planWindowApprox": "≈ {minutes}",
   "@planWindowApprox": {
     "placeholders": {
       "minutes": {
@@ -2082,6 +2088,7 @@
     }
   },
   "planWindowJoin": "{first} · {second}",
+  "planWindowJoinNumber": "{first} · {second}",
   "@planWindowJoin": {
     "placeholders": {
       "first": {
@@ -2103,7 +2110,7 @@
       }
     }
   },
-  "planWindowPassedLine": "Day passed · {minutes}",
+  "planWindowPassedLine": "Day passed · {minutes}",
   "@planWindowPassedLine": {
     "placeholders": {
       "minutes": {
@@ -2111,7 +2118,7 @@
       }
     }
   },
-  "planWindowBrowDone": "{n} passed",
+  "planWindowBrowDone": "{n} passed",
   "@planWindowBrowDone": {
     "placeholders": {
       "n": {
@@ -2119,7 +2126,7 @@
       }
     }
   },
-  "planWindowBrowReturns": "{n, plural, one{{n} returns tomorrow} other{{n} return tomorrow}}",
+  "planWindowBrowReturns": "{n, plural, one{{n} returns tomorrow} other{{n} return tomorrow}}",
   "@planWindowBrowReturns": {
     "placeholders": {
       "n": {
@@ -2146,13 +2153,13 @@
   "@profileRowSessionSounds": {},
   "profileSessionSoundsHint": "Correct · miss · recording · stage done",
   "@profileSessionSoundsHint": {},
-  "dayCards": "{n, plural, one{{n} card} other{{n} cards}}",
-  "dayMinutes": "{n, plural, one{{n} minute} other{{n} minutes}}",
+  "dayCards": "{n, plural, one{{n} card} other{{n} cards}}",
+  "dayMinutes": "{n, plural, one{{n} minute} other{{n} minutes}}",
   "planSessionStateDone": "done",
   "planSessionStateAhead": "ahead",
-  "planSessionApproxMinutes": "≈ {n} min",
-  "planSessionDescWords": "{n, plural, one{{n} word of the day} other{{n} words of the day}} — look, listen and say them aloud",
-  "planSessionDescPhrases": "{n, plural, one{{n} phrase of the day} other{{n} phrases of the day}} — one slot changes, the phrase stays",
+  "planSessionApproxMinutes": "≈ {n} min",
+  "planSessionDescWords": "{n, plural, one{{n} word of the day} other{{n} words of the day}} — look, listen and say them aloud",
+  "planSessionDescPhrases": "{n, plural, one{{n} phrase of the day} other{{n} phrases of the day}} — one slot changes, the phrase stays",
   "planSessionDescDialogue": "The conversation step by step: understand the line and answer with the day's phrases",
   "planSessionDescListen": "The whole conversation by ear, then questions about it",
   "planSessionDescSpeak": "They ask — answer about yourself, in your own words. You know the frames; the slot is yours",
@@ -2160,8 +2167,8 @@
   "planSessionNoHintsSub": "Dialogue and “Speak myself” go straight to voice",
   "planSessionStart": "Start",
   "planSessionBuild": "build {version}",
-  "planSessionLeftWords": "{n, plural, one{{n} word left} other{{n} words left}}",
-  "planSessionLeftPhrases": "{n, plural, one{{n} phrase left} other{{n} phrases left}}",
+  "planSessionLeftWords": "{n, plural, one{{n} word left} other{{n} words left}}",
+  "planSessionLeftPhrases": "{n, plural, one{{n} phrase left} other{{n} phrases left}}",
   "planSessionSceneLine": "{scene} · {role}",
   "planSessionClose": "Close",
   "planSessionTaskRememberWord": "Remember the word",
@@ -2212,8 +2219,8 @@
   "planSessionExitLeave": "Leave",
   "planSessionOffline": "no connection — the answer will be sent once you're back online",
   "planSessionLoadFailed": "The day didn't load",
-  "planSessionLeftExchanges": "{n, plural, one{{n} line left} other{{n} lines left}}",
-  "planSessionLeftQuestions": "{n, plural, one{{n} question left} other{{n} questions left}}",
+  "planSessionLeftExchanges": "{n, plural, one{{n} line left} other{{n} lines left}}",
+  "planSessionLeftQuestions": "{n, plural, one{{n} question left} other{{n} questions left}}",
   "planSessionLastQuestion": "last question",
   "planSessionWholeTalk": "the whole conversation",
   "planSessionReviewLabel": "review",
@@ -2228,7 +2235,7 @@
   "planSessionByPartsAction": "In parts",
   "planSessionContinue": "Continue",
   "planSessionReplay": "Once more",
-  "planSessionExchangesCount": "{n, plural, one{{n} exchange} other{{n} exchanges}}",
+  "planSessionExchangesCount": "{n, plural, one{{n} exchange} other{{n} exchanges}}",
   "planSessionPlayerPaused": "paused · exchange {n}",
   "planSessionPause": "Pause",
   "planSessionPlayerRoles": "{role} and you",
@@ -2241,7 +2248,7 @@
   "planSessionTaskListenChoose": "Listen and choose the answer",
   "planSessionThisIsAnswer": "This is the answer",
   "planSessionTaskNormalPace": "Now at normal speed",
-  "planSessionBrowSlowRate": "Slow · {rate}×",
+  "planSessionBrowSlowRate": "Slow · {rate}×",
   "planSessionBrowNormalPace": "Normal speed",
   "planSessionTextOpen": "text shown",
   "planSessionTextClosed": "text hidden",
@@ -2259,19 +2266,19 @@
   "planSessionNotThat": "not that — let's try again",
   "planSessionHintAction": "Hint",
   "planSessionDayTotal": "Day total",
-  "planSessionDayDoneTitle": "Day done · {minutes}",
+  "planSessionDayDoneTitle": "Day done · {minutes}",
   "planSessionCloseDay": "Close the day",
   "planSessionDayReturns": "{cards}: {parts}.",
-  "planSessionReturnWords": "{n, plural, one{{n} word} other{{n} words}}",
-  "planSessionReturnPhrases": "{n, plural, one{{n} phrase} other{{n} phrases}}",
-  "planSessionReturnExchanges": "{n, plural, one{{n} line} other{{n} lines}}",
+  "planSessionReturnWords": "{n, plural, one{{n} word} other{{n} words}}",
+  "planSessionReturnPhrases": "{n, plural, one{{n} phrase} other{{n} phrases}}",
+  "planSessionReturnExchanges": "{n, plural, one{{n} line} other{{n} lines}}",
   "planSessionAnd": "{a} and {b}",
   "planSessionNextDayBuilding": "Day {n} — building",
   "planSessionNextDayReady": "Day {n} — ready",
   "planSessionCloseFailed": "The day didn't close — no connection",
   "planPlateStageTalk": "Talk",
   "planPlateStageRecall": "Recall",
-  "planTalkEntryMinutes": "{n, plural, one{about {n} minute} other{about {n} minutes}}",
+  "planTalkEntryMinutes": "{n, plural, one{about {n} minute} other{about {n} minutes}}",
   "@planTalkEntryMinutes": {
     "placeholders": {
       "minutes": {
@@ -2280,7 +2287,7 @@
     }
   },
   "planTalkEntryWhole": "The whole talk",
-  "planTalkEntryScenes": "{n, plural, one{{n} scene} other{{n} scenes}}",
+  "planTalkEntryScenes": "{n, plural, one{{n} scene} other{{n} scenes}}",
   "@planTalkEntryScenes": {
     "placeholders": {
       "n": {
@@ -2301,6 +2308,7 @@
       }
     }
   },
+  "planTalkOpenText": "text",
   "planTalkInterrupted": "cut short",
   "planTalkSilenceEnds": "silence ends it",
   "planTalkUnheard": "didn't catch that — say it again",
@@ -2310,7 +2318,7 @@
   "planTalkNotInDay": "This day has no talk",
   "planTalkEnded": "Talk over",
   "planTalkSummaryAction": "Summary",
-  "planTalkSaidLines": "{n, plural, one{You said {n} line yourself} other{You said {n} lines yourself}}",
+  "planTalkSaidLines": "{n, plural, one{You said {n} line yourself} other{You said {n} lines yourself}}",
   "@planTalkSaidLines": {
     "placeholders": {
       "n": {
@@ -2327,7 +2335,7 @@
       }
     }
   },
-  "planTalkRescues": "{n, plural, one{asked again {n} time} other{asked again {n} times}}",
+  "planTalkRescues": "{n, plural, one{asked again {n} time} other{asked again {n} times}}",
   "@planTalkRescues": {
     "placeholders": {
       "n": {
@@ -2335,7 +2343,7 @@
       }
     }
   },
-  "planTalkPhrasesOf": "The day's phrases in the talk · {used} of {total}",
+  "planTalkPhrasesOf": "The day's phrases in the talk · {used} of {total}",
   "@planTalkPhrasesOf": {
     "placeholders": {
       "used": {
@@ -2398,7 +2406,7 @@
   "planSessionPassedSpeak": "Speak myself — done",
   "planSessionPassedRecall": "Recall — done",
   "planSessionPassedRepetition": "Review done",
-  "planSessionFirstTryWords": "{n, plural, one{{n} word, {first} at the first try} other{{n} words, {first} at the first try}}",
+  "planSessionFirstTryWords": "{n, plural, one{{n} word, {first} at the first try} other{{n} words, {first} at the first try}}",
   "@planSessionFirstTryWords": {
     "placeholders": {
       "n": {
@@ -2409,7 +2417,7 @@
       }
     }
   },
-  "planSessionFirstTryPhrases": "{n, plural, one{{n} phrase, {first} at the first try} other{{n} phrases, {first} at the first try}}",
+  "planSessionFirstTryPhrases": "{n, plural, one{{n} phrase, {first} at the first try} other{{n} phrases, {first} at the first try}}",
   "@planSessionFirstTryPhrases": {
     "placeholders": {
       "n": {
@@ -2420,7 +2428,7 @@
       }
     }
   },
-  "planSessionFirstTryLines": "{n, plural, one{{n} line, {first} at the first try} other{{n} lines, {first} at the first try}}",
+  "planSessionFirstTryLines": "{n, plural, one{{n} line, {first} at the first try} other{{n} lines, {first} at the first try}}",
   "@planSessionFirstTryLines": {
     "placeholders": {
       "n": {
@@ -2431,7 +2439,7 @@
       }
     }
   },
-  "planSessionFirstTryQuestions": "{n, plural, one{{n} question, {first} at the first try} other{{n} questions, {first} at the first try}}",
+  "planSessionFirstTryQuestions": "{n, plural, one{{n} question, {first} at the first try} other{{n} questions, {first} at the first try}}",
   "@planSessionFirstTryQuestions": {
     "placeholders": {
       "n": {
@@ -2442,7 +2450,7 @@
       }
     }
   },
-  "planSessionFirstTryCards": "{n, plural, one{{n} card, {first} at the first try} other{{n} cards, {first} at the first try}}",
+  "planSessionFirstTryCards": "{n, plural, one{{n} card, {first} at the first try} other{{n} cards, {first} at the first try}}",
   "@planSessionFirstTryCards": {
     "placeholders": {
       "n": {
@@ -2453,7 +2461,7 @@
       }
     }
   },
-  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} line} other{{n} lines}} from {scenes, plural, one{{scenes} scene} other{{scenes} scenes}}",
+  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} line} other{{n} lines}} from {scenes, plural, one{{scenes} scene} other{{scenes} scenes}}",
   "@planSessionRecallLinesOfScenes": {
     "placeholders": {
       "n": {
@@ -2464,7 +2472,7 @@
       }
     }
   },
-  "planSessionStageReturns": "{n, plural, one{{n} comes back tomorrow} other{{n} come back tomorrow}}",
+  "planSessionStageReturns": "{n, plural, one{{n} comes back tomorrow} other{{n} come back tomorrow}}",
   "@planSessionStageReturns": {
     "placeholders": {
       "n": {
@@ -2473,7 +2481,7 @@
     }
   },
   "planSessionStageNoReturns": "nothing comes back tomorrow",
-  "planSessionSaidAloud": "{n, plural, one{said {n} line of your own aloud} other{said {n} lines of your own aloud}}",
+  "planSessionSaidAloud": "{n, plural, one{said {n} line of your own aloud} other{said {n} lines of your own aloud}}",
   "@planSessionSaidAloud": {
     "placeholders": {
       "n": {
@@ -2481,7 +2489,7 @@
       }
     }
   },
-  "planSessionRescuedSlower": "{n, plural, =1{asked again — the {role} said it slower} =2{asked again twice — the {role} said it slower} other{asked again {n} times — the {role} said it slower}}",
+  "planSessionRescuedSlower": "{n, plural, =1{asked again — the {role} said it slower} =2{asked again twice — the {role} said it slower} other{asked again {n} times — the {role} said it slower}}",
   "@planSessionRescuedSlower": {
     "placeholders": {
       "n": {
@@ -2499,7 +2507,7 @@
   "planSessionWarmRecall": "Your lines are in place — next comes the whole talk",
   "planSessionWarmRepetition": "Everything that came back has been said once more",
   "planTalkEntrySay": "Say in the talk",
-  "planTalkStrip": "phrases · {said} of {total}",
+  "planTalkStrip": "phrases · {said} of {total}",
   "@planTalkStrip": {
     "placeholders": {
       "said": {

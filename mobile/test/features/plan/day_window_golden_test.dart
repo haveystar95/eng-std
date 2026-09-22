@@ -17,6 +17,7 @@ import 'package:eng_std/features/plan/day/window/window_words.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../support/day_window_harness.dart';
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 import '../../support/server_fixtures.dart';
 
@@ -97,7 +98,7 @@ void main() {
 
     expect(counts, findsNothing, reason: 'у не начатого дня цифр «N / M» нет');
     expect(find.descendant(of: find.byType(WindowStageRow), matching: find.text('впереди')), findsNWidgets(5));
-    expect(find.text('СЛОВА · 8'), findsOneWidget);
+    expect(find.text(nb('СЛОВА · 8')), findsOneWidget);
     expectPlateCeiling(tester);
     await expectDarkFromTop(tester);
     expectOneButton(tester, 'Начать');
@@ -114,7 +115,7 @@ void main() {
       find.descendant(of: find.widgetWithText(WindowStageRow, 'Слушаю и отвечаю'), matching: find.text('6 / 16')),
       findsOneWidget,
     );
-    expect(find.text('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА'), findsOneWidget);
+    expect(find.text(nb('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
     expect(find.descendant(of: find.byType(WindowPill), matching: find.textContaining(RegExp(r'\d'))), findsNothing);
     expectPlateCeiling(tester);
     expectOneButton(tester, 'Продолжить');
@@ -128,8 +129,8 @@ void main() {
 
     expect(counts, findsNothing, reason: 'текущего ряда нет — цифр нет совсем');
     expect(find.descendant(of: find.byType(WindowStageRow), matching: find.text('пройдено')), findsNWidgets(5));
-    expect(find.textContaining('День пройден · '), findsOneWidget);
-    expect(find.text('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА'), findsOneWidget);
+    expect(find.textContaining('День пройден ·'), findsOneWidget);
+    expect(find.text(nb('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
     final brass = find.descendant(
       of: find.byType(WindowWordCard),
       matching: find.byWidgetPredicate((w) => w is WindowUnitMarker && w.state == WindowUnitState.returnsTomorrow),

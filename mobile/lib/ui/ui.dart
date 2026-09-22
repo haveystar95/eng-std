@@ -14,6 +14,7 @@ export 'chip.dart';
 export 'cloze_sentence.dart';
 export 'choice_card.dart';
 export 'day_plate.dart';
+export 'dot_join.dart';
 export 'dotted_border_box.dart';
 export 'floating_context_menu.dart';
 export 'floating_tab_bar.dart';

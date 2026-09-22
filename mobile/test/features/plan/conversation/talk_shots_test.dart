@@ -309,7 +309,6 @@ void main() {
                 (
                   stage: s,
                   status: s == PlanStage.words ? StageRowStatus.current : StageRowStatus.ahead,
-                  started: false,
                   replay: false,
                 ),
             ],

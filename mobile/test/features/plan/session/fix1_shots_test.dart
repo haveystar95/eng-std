@@ -165,7 +165,6 @@ void main() {
               (
                 stage: s,
                 status: s == PlanStage.speak ? StageRowStatus.current : StageRowStatus.done,
-                started: false,
                 replay: s == PlanStage.speak,
               ),
           ],

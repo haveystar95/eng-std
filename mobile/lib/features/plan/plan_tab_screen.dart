@@ -22,6 +22,7 @@ import 'route/plan_route.dart';
 import 'route/route_examples.dart';
 import 'plan_rules.dart';
 import 'plan_sheets.dart';
+import 'plan_stage_text.dart';
 import 'plan_tab_parts.dart';
 
 /// ТАБ «ПЛАН» — кадры 21-1 … 21-14 и 22-5a/b/c (наряд PLAN-UI).
@@ -187,6 +188,9 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
     final showTabHints = firstPlan && focus != null && !focus.isClosed && !focus.lessonBuilding && !overdue && !showsDone;
     final showCloseHint = !widget.readOnly && hints != null && !hints.closeShown && !_acted && s.showsClosedDay;
     final dayLabel = focus?.number ?? p.daysTotal;
+    // «Начни с этапа …» names the plate's own first row — «Слова» on a scene day, «Повторение» on a review, «Вспомнить» on
+    // the rehearsal (приёмка CLIENT-CONV-1c 22.09); a day with no rows yet has no hint.
+    final firstStage = _firstStage(s.room, focus);
 
     return _Page(
       bottomInset: widget.bottomInset,
@@ -233,9 +237,9 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
             onOpen: () => _openDay(focus),
             onRetryLesson: () => _retryLesson(focus),
           ),
-        if (showTabHints) ...[
+        if (showTabHints && firstStage != null) ...[
           const SizedBox(height: 14),
-          PlanHintLine(text: l.planHintFirstStart, visible: true),
+          PlanHintLine(text: l.planHintFirstStart(planStageName(l, firstStage)), visible: true),
         ],
         if (showCloseHint) ...[
           const SizedBox(height: 14),
@@ -273,6 +277,16 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
   }
 
   String? _prefetched;
+
+  /// The first row the day's plate draws — the room's stages as the plate reads them (absent and unknown ones skipped),
+  /// else the route's while the room is on its way; null — the day has no rows yet.
+  static PlanStage? _firstStage(PlanDayRoom? room, PlanDayRoute? day) {
+    for (final s in room?.stages ?? const <PlanStageProgress>[]) {
+      if (s.state != PlanStageState.absent && s.stage != PlanStage.unknown) return s.stage;
+    }
+    final route = day?.stages ?? const <PlanRouteStage>[];
+    return route.isEmpty ? null : route.first.stage;
+  }
 
   /// Фото дней, до которых маршрут дошёл, и трёх следующих — заранее, одним заходом общего
   /// загрузчика (§3 наряда PLAN-UI-3). Второй раз тот же набор не просится.

@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String triageCounter(int current, int total) {
-    return '$current of $total';
+    return '$current of $total';
   }
 
   @override
@@ -51,7 +51,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String triageMoreLaterBody(int count) {
-    return '$count more after syncing — come back when you\'re online.';
+    return '$count more after syncing — come back when you\'re online.';
   }
 
   @override
@@ -77,8 +77,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count more after syncing',
-      one: '$count more after syncing',
+      other: '$count more after syncing',
+      one: '$count more after syncing',
     );
     return '$_temp0';
   }
@@ -105,8 +105,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
-      other: '$done of $total words',
-      one: '$done of $total word',
+      other: '$done of $total words',
+      one: '$done of $total word',
     );
     return '$_temp0';
   }
@@ -125,15 +125,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
 
   @override
   String collectionDueSuffix(int count) {
-    return '$count due today';
+    return '$count due today';
   }
 
   @override
@@ -321,8 +321,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -356,10 +356,10 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
-    return '$_temp0 · $mastered mastered';
+    return '$_temp0 · $mastered mastered';
   }
 
   @override
@@ -367,11 +367,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String generationGeneratingMeta(String topic, String levels, String size) {
-    return '$topic · $levels · $size';
+    return '$topic · $levels · $size';
   }
 
   @override
-  String get generationGeneratingNote => 'Picking words and photos · usually 20–30 seconds';
+  String get generationGeneratingNote => 'Picking words and photos · usually 20–30 seconds';
 
   @override
   String get generationQueuedNote => 'We\'ll send it as soon as you\'re online';
@@ -421,7 +421,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String generationUnderBadge(int delivered, int requested) {
-    return '$delivered of $requested';
+    return '$delivered of $requested';
   }
 
   @override
@@ -481,8 +481,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count generations left today',
-      one: '$count generation left today',
+      other: '$count generations left today',
+      one: '$count generation left today',
     );
     return '$_temp0';
   }
@@ -496,14 +496,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generateSubmit => 'Generate';
 
   @override
-  String get generatePremiumUpsell => 'Need more? Premium — up to 20 a day';
+  String get generatePremiumUpsell => 'Need more? Premium — up to 20 a day';
 
   @override
   String get generateManual => 'Build a collection manually';
 
   @override
   String generateVoiceListening(String time) {
-    return 'Listening · $time';
+    return 'Listening · $time';
   }
 
   @override
@@ -579,7 +579,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String searchLimitUsed(int used, int cap) {
-    return '$used of $cap today';
+    return '$used of $cap today';
   }
 
   @override
@@ -677,7 +677,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String wordCardProgressCount(int step, int total) {
-    return '$step of $total';
+    return '$step of $total';
   }
 
   @override
@@ -716,8 +716,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Best result — $count days',
-      one: 'Best result — $count day',
+      other: 'Best result — $count days',
+      one: 'Best result — $count day',
     );
     return '$_temp0';
   }
@@ -780,8 +780,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'All $count words',
-      one: 'All $count word',
+      other: 'All $count words',
+      one: 'All $count word',
     );
     return '$_temp0';
   }
@@ -857,7 +857,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String onbGoalMinutes(int count) {
-    return '≈ $count min a day';
+    return '≈ $count min a day';
   }
 
   @override
@@ -943,7 +943,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileFreeTier => 'Free tier';
 
   @override
-  String get profileFreeTierHint => '3 generations a day';
+  String get profileFreeTierHint => '3 generations a day';
 
   @override
   String get profileSoon => 'Soon';
@@ -959,8 +959,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -1006,8 +1006,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -1274,7 +1274,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String statusLadderStep(int step, int total, String rung) {
-    return 'Step $step of $total: $rung';
+    return 'Step $step of $total: $rung';
   }
 
   @override
@@ -1282,8 +1282,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Sort $count words',
-      one: 'Sort $count word',
+      other: 'Sort $count words',
+      one: 'Sort $count word',
     );
     return '$_temp0';
   }
@@ -1332,8 +1332,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'in $days days',
-      one: 'in $days day',
+      other: 'in $days days',
+      one: 'in $days day',
     );
     return '$_temp0';
   }
@@ -1399,8 +1399,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'Streak — $days days',
-      one: 'Streak — $days day',
+      other: 'Streak — $days days',
+      one: 'Streak — $days day',
     );
     return '$_temp0';
   }
@@ -1512,7 +1512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorAppleToken => 'Couldn\'t get an Apple token.';
 
   @override
-  String get practiceDialogEntry => 'Conversation · 3 min';
+  String get practiceDialogEntry => 'Conversation · 3 min';
 
   @override
   String get practiceDialogEntrySubtitle => 'Voice practice with AI';
@@ -1565,7 +1565,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String practiceDialogFinaleWords(int used, int total) {
-    return 'Words used: $used of $total';
+    return 'Words used: $used of $total';
   }
 
   @override
@@ -1597,7 +1597,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String practiceDialogResultWords(int used, int total) {
-    return 'words: $used of $total';
+    return 'words: $used of $total';
   }
 
   @override
@@ -1614,8 +1614,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -1631,7 +1631,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String storeAllSetsUnlock(int count) {
-    return 'Unlocks all $count sets at once';
+    return 'Unlocks all $count sets at once';
   }
 
   @override
@@ -1642,8 +1642,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count more words',
-      one: '$count more word',
+      other: '$count more words',
+      one: '$count more word',
     );
     return 'and $_temp0';
   }
@@ -1674,7 +1674,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String paywallTitleStore(String title, int count) {
-    return '$title and $count more sets';
+    return '$title and $count more sets';
   }
 
   @override
@@ -1688,7 +1688,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallSubtitleGeneric => 'One plan unlocks everything that makes learning faster.';
 
   @override
-  String get paywallBenefitGenerations => 'Up to 20 generations a day';
+  String get paywallBenefitGenerations => 'Up to 20 generations a day';
 
   @override
   String get paywallBenefitStore => 'Every premium collection in the store';
@@ -1725,12 +1725,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String paywallLegalYear(String price) {
-    return 'Subscription renews automatically. $price per year is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.';
+    return 'Subscription renews automatically. $price per year is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.';
   }
 
   @override
   String paywallLegalMonth(String price) {
-    return 'Subscription renews automatically. $price per month is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.';
+    return 'Subscription renews automatically. $price per month is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.';
   }
 
   @override
@@ -1753,7 +1753,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String profileFreeTierReset(String time) {
-    return '3 generations a day · resets at $time';
+    return '3 generations a day · resets at $time';
   }
 
   @override
@@ -1850,8 +1850,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -1909,8 +1909,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count in a row',
-      one: '$count in a row',
+      other: '$count in a row',
+      one: '$count in a row',
     );
     return '$_temp0';
   }
@@ -1971,8 +1971,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -1982,8 +1982,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '≈ $count minutes',
-      one: '≈ $count minute',
+      other: '≈ $count minutes',
+      one: '≈ $count minute',
     );
     return '$_temp0';
   }
@@ -1993,8 +1993,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count cards',
-      one: '$count card',
+      other: '$count cards',
+      one: '$count card',
     );
     return '~$_temp0';
   }
@@ -2004,8 +2004,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count to review',
-      one: '$count to review',
+      other: '$count to review',
+      one: '$count to review',
     );
     return '$_temp0';
   }
@@ -2015,8 +2015,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count new',
-      one: '$count new',
+      other: '$count new',
+      one: '$count new',
     );
     return '$_temp0';
   }
@@ -2026,8 +2026,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count to sort',
-      one: '$count to sort',
+      other: '$count to sort',
+      one: '$count to sort',
     );
     return '$_temp0';
   }
@@ -2040,8 +2040,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'In progress — $count words',
-      one: 'In progress — $count word',
+      other: 'In progress — $count words',
+      one: 'In progress — $count word',
     );
     return '$_temp0';
   }
@@ -2051,8 +2051,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count waiting in line',
-      one: '$count waiting in line',
+      other: '$count waiting in line',
+      one: '$count waiting in line',
     );
     return '$_temp0';
   }
@@ -2062,8 +2062,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'at $perDay new a day the queue clears in ~$days days',
-      one: 'at $perDay new a day the queue clears in ~$days day',
+      other: 'at $perDay new a day the queue clears in ~$days days',
+      one: 'at $perDay new a day the queue clears in ~$days day',
     );
     return '$_temp0';
   }
@@ -2073,8 +2073,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'take $count now and the queue moves today',
-      one: 'take $count now and the queue moves today',
+      other: 'take $count now and the queue moves today',
+      one: 'take $count now and the queue moves today',
     );
     return '$_temp0';
   }
@@ -2090,8 +2090,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'in $count days',
-      one: 'in $count day',
+      other: 'in $count days',
+      one: 'in $count day',
     );
     return '$_temp0';
   }
@@ -2104,8 +2104,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count mistakes',
-      one: '$count mistake',
+      other: '$count mistakes',
+      one: '$count mistake',
     );
     return '$_temp0';
   }
@@ -2115,8 +2115,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words',
-      one: '$count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -2129,8 +2129,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
-      other: '$done of $total words',
-      one: '$done of $total word',
+      other: '$done of $total words',
+      one: '$done of $total word',
     );
     return '$_temp0';
   }
@@ -2140,8 +2140,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count cards',
-      one: '$count card',
+      other: '$count cards',
+      one: '$count card',
     );
     return '$_temp0';
   }
@@ -2151,8 +2151,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count min',
-      one: '$count min',
+      other: '$count min',
+      one: '$count min',
     );
     return '$_temp0';
   }
@@ -2162,20 +2162,20 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
-      other: 'card $position of $total',
-      one: 'card $position of $total',
+      other: 'card $position of $total',
+      one: 'card $position of $total',
     );
     return '$_temp0';
   }
 
   @override
   String homeDoneOf(int done, int total) {
-    return '$done of $total';
+    return '$done of $total';
   }
 
   @override
   String homeDoneDuration(int minutes, int seconds) {
-    return '$minutes min $seconds s';
+    return '$minutes min $seconds s';
   }
 
   @override
@@ -2183,8 +2183,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count seconds',
-      one: '$count second',
+      other: '$count seconds',
+      one: '$count second',
     );
     return '$_temp0';
   }
@@ -2203,8 +2203,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Next review $when, $count words.',
-      one: 'Next review $when, $count word.',
+      other: 'Next review $when, $count words.',
+      one: 'Next review $when, $count word.',
     );
     return '$_temp0';
   }
@@ -2217,8 +2217,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'You can add $count more words from “$title”.',
-      one: 'You can add $count more word from “$title”.',
+      other: 'You can add $count more words from “$title”.',
+      one: 'You can add $count more word from “$title”.',
     );
     return '$_temp0';
   }
@@ -2228,8 +2228,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'You can take $count words already waiting in the queue.',
-      one: 'You can take $count word already waiting in the queue.',
+      other: 'You can take $count words already waiting in the queue.',
+      one: 'You can take $count word already waiting in the queue.',
     );
     return '$_temp0';
   }
@@ -2239,8 +2239,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count more words',
-      one: '$count more word',
+      other: '$count more words',
+      one: '$count more word',
     );
     return '$_temp0';
   }
@@ -2253,8 +2253,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'left $count days ago',
-      one: 'left $count day ago',
+      other: 'left $count days ago',
+      one: 'left $count day ago',
     );
     return '$_temp0';
   }
@@ -2267,8 +2267,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'or take one of $count ready-made',
-      one: 'or take one of $count ready-made',
+      other: 'or take one of $count ready-made',
+      one: 'or take one of $count ready-made',
     );
     return '$_temp0';
   }
@@ -2287,8 +2287,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count words come back tomorrow',
-      one: '$count word comes back tomorrow',
+      other: '$count words come back tomorrow',
+      one: '$count word comes back tomorrow',
     );
     return '$_temp0';
   }
@@ -2298,8 +2298,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '+$count words moved up',
-      one: '+$count word moved up',
+      other: '+$count words moved up',
+      one: '+$count word moved up',
     );
     return '$_temp0';
   }
@@ -2324,7 +2324,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeFirstDayPromise => '5 minutes a day — 20 words a week';
+  String get homeFirstDayPromise => '5 minutes a day — 20 words a week';
 
   @override
   String get homeGenerateChipVet => 'At the vet';
@@ -2340,8 +2340,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Take a ready-made set ($count topics)',
-      one: 'Take a ready-made set ($count topic)',
+      other: 'Take a ready-made set ($count topics)',
+      one: 'Take a ready-made set ($count topic)',
     );
     return '$_temp0';
   }
@@ -2361,8 +2361,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'You can sort $count more words from “$title”',
-      one: 'You can sort $count more word from “$title”',
+      other: 'You can sort $count more words from “$title”',
+      one: 'You can sort $count more word from “$title”',
     );
     return '$_temp0';
   }
@@ -2372,8 +2372,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Sort $count words',
-      one: 'Sort $count word',
+      other: 'Sort $count words',
+      one: 'Sort $count word',
     );
     return '$_temp0';
   }
@@ -2419,7 +2419,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String homePlanCardBadge(int index, int total) {
-    return 'Plan · day $index of $total';
+    return 'Plan · day $index of $total';
   }
 
   @override
@@ -2427,8 +2427,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'Event in $days days',
-      one: 'Event in $days day',
+      other: 'Event in $days days',
+      one: 'Event in $days day',
     );
     return '$_temp0';
   }
@@ -2465,7 +2465,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String devVoicesPrice(String price) {
-    return '≈ $price per plan';
+    return '≈ $price per plan';
   }
 
   @override
@@ -2479,7 +2479,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String devVoiceTrouble(int silent, int failed) {
-    return 'Voice: $silent lines fell back to the system voice, $failed downloads failed';
+    return 'Voice: $silent lines fell back to the system voice, $failed downloads failed';
   }
 
   @override
@@ -2490,15 +2490,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'shifted by $days days',
-      one: 'shifted by $days day',
+      other: 'shifted by $days days',
+      one: 'shifted by $days day',
       zero: 'no shift',
     );
     return '$_temp0';
   }
 
   @override
-  String get devQaClockPlus => '+1 day';
+  String get devQaClockPlus => '+1 day';
 
   @override
   String get devQaClockReset => 'Reset';
@@ -2510,7 +2510,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEmptyTitle => 'The conversation you are getting ready for';
 
   @override
-  String get planEmptySub => 'a scene a day · 20 minutes · a rehearsal out loud';
+  String get planEmptySub => 'a scene a day · 20 minutes · a rehearsal out loud';
 
   @override
   String get planRuleSituation => 'One situation a day. Days open one at a time';
@@ -2649,8 +2649,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n more days',
-      one: '$n more day',
+      other: '$n more days',
+      one: '$n more day',
     );
     return '$_temp0';
   }
@@ -2671,7 +2671,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planHeaderBrow(int n, int total) {
-    return 'Plan · day $n of $total';
+    return 'Plan · day $n of $total';
   }
 
   @override
@@ -2681,7 +2681,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planCardsCount(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
     return '$_temp0';
   }
 
@@ -2690,8 +2690,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n minutes',
-      one: '$n minute',
+      other: '$n minutes',
+      one: '$n minute',
     );
     return '$_temp0';
   }
@@ -2725,20 +2725,20 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n new words',
-      one: '$n new word',
+      other: '$n new words',
+      one: '$n new word',
     );
     return '$_temp0';
   }
 
   @override
   String planPlateStageSubStart(String words) {
-    return 'start here · $words';
+    return 'start here · $words';
   }
 
   @override
   String planPlateStageSubUnfinished(String cards) {
-    return 'unfinished · $cards';
+    return 'unfinished · $cards';
   }
 
   @override
@@ -2762,7 +2762,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planPlateFailedSub(int n) {
-    return 'The network dropped. The route is intact — only day $n is missing';
+    return 'The network dropped. The route is intact — only day $n is missing';
   }
 
   @override
@@ -2773,22 +2773,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planClosedTitle(int n) {
-    return 'Day $n closed';
+    return 'Day $n closed';
   }
 
   @override
   String planClosedCount(String cards, String minutes) {
-    return '$cards · $minutes';
+    return '$cards · $minutes';
   }
 
   @override
   String planClosedNextTomorrow(int n, String date) {
-    return 'Day $n opens tomorrow, $date';
+    return 'Day $n opens tomorrow, $date';
   }
 
   @override
   String planClosedNextOn(int n, String date) {
-    return 'Day $n opens $date';
+    return 'Day $n opens $date';
   }
 
   @override
@@ -2796,8 +2796,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       k,
       locale: localeName,
-      other: '$k cards return on day $n →',
-      one: '$k card returns on day $n →',
+      other: '$k cards return on day $n →',
+      one: '$k card returns on day $n →',
     );
     return '$_temp0';
   }
@@ -2831,7 +2831,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planMinutesShort(int n) {
-    return '$n min';
+    return '$n min';
   }
 
   @override
@@ -2853,7 +2853,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planDaysCount(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n days', one: '$n day');
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n days', one: '$n day');
     return '$_temp0';
   }
 
@@ -2921,7 +2921,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planNewBody(int n, int total, String name) {
-    return 'This plan will end on day $n of $total. Everything already in progress stays in the collection “$name” and keeps coming back for review';
+    return 'This plan will end on day $n of $total. Everything already in progress stays in the collection “$name” and keeps coming back for review';
   }
 
   @override
@@ -2954,20 +2954,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planOverdueContinue(String days) {
-    return 'Keep going · $days';
+    return 'Keep going · $days';
   }
 
   @override
-  String get planHintFirstStart => 'Start with the “Words” stage. The rest open in order';
+  String planHintFirstStart(String stage) {
+    return 'Start with the “$stage” stage. The rest open in order';
+  }
 
   @override
   String planHintFirstRoute(int n) {
-    return 'Day $n is open. The next one opens once you finish this one';
+    return 'Day $n is open. The next one opens once you finish this one';
   }
 
   @override
   String planRebuiltTitle(int from, int to) {
-    return 'The route was rebuilt: $from days became $to';
+    return 'The route was rebuilt: $from days became $to';
   }
 
   @override
@@ -3077,8 +3079,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n situations',
-      one: '$n situation',
+      other: '$n situations',
+      one: '$n situation',
     );
     return '$_temp0';
   }
@@ -3088,8 +3090,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n reviews',
-      one: '$n review',
+      other: '$n reviews',
+      one: '$n review',
     );
     return '$_temp0';
   }
@@ -3108,8 +3110,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'in $n days',
-      one: 'in $n day',
+      other: 'in $n days',
+      one: 'in $n day',
     );
     return '$weekday · $_temp0';
   }
@@ -3141,7 +3143,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryPreviewLoadingTitle => 'Building your plan';
 
   @override
-  String get planEntryPreviewAbout => 'About 10 seconds';
+  String get planEntryPreviewAbout => 'About 10 seconds';
 
   @override
   String get planEntryPreviewLine1 => 'Picking situations for your conversation';
@@ -3204,7 +3206,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planNotifyDayReadyTitle(int n) {
-    return 'Day $n is ready';
+    return 'Day $n is ready';
   }
 
   @override
@@ -3214,7 +3216,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planNotifyReminderTitle(int n) {
-    return 'Day $n is waiting';
+    return 'Day $n is waiting';
   }
 
   @override
@@ -3235,7 +3237,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planNotifySkippedTitle(int n) {
-    return 'Day $n has been waiting since yesterday';
+    return 'Day $n has been waiting since yesterday';
   }
 
   @override
@@ -3261,12 +3263,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planWindowApprox(String minutes) {
-    return '≈ $minutes';
+    return '≈ $minutes';
   }
 
   @override
   String planWindowJoin(String first, String second) {
     return '$first · $second';
+  }
+
+  @override
+  String planWindowJoinNumber(String first, String second) {
+    return '$first · $second';
   }
 
   @override
@@ -3276,12 +3283,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planWindowPassedLine(String minutes) {
-    return 'Day passed · $minutes';
+    return 'Day passed · $minutes';
   }
 
   @override
   String planWindowBrowDone(int n) {
-    return '$n passed';
+    return '$n passed';
   }
 
   @override
@@ -3289,8 +3296,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n return tomorrow',
-      one: '$n returns tomorrow',
+      other: '$n return tomorrow',
+      one: '$n returns tomorrow',
     );
     return '$_temp0';
   }
@@ -3350,7 +3357,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dayCards(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
     return '$_temp0';
   }
 
@@ -3359,8 +3366,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n minutes',
-      one: '$n minute',
+      other: '$n minutes',
+      one: '$n minute',
     );
     return '$_temp0';
   }
@@ -3373,7 +3380,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planSessionApproxMinutes(int n) {
-    return '≈ $n min';
+    return '≈ $n min';
   }
 
   @override
@@ -3381,8 +3388,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n words of the day',
-      one: '$n word of the day',
+      other: '$n words of the day',
+      one: '$n word of the day',
     );
     return '$_temp0 — look, listen and say them aloud';
   }
@@ -3392,8 +3399,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n phrases of the day',
-      one: '$n phrase of the day',
+      other: '$n phrases of the day',
+      one: '$n phrase of the day',
     );
     return '$_temp0 — one slot changes, the phrase stays';
   }
@@ -3428,8 +3435,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n words left',
-      one: '$n word left',
+      other: '$n words left',
+      one: '$n word left',
     );
     return '$_temp0';
   }
@@ -3439,8 +3446,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n phrases left',
-      one: '$n phrase left',
+      other: '$n phrases left',
+      one: '$n phrase left',
     );
     return '$_temp0';
   }
@@ -3610,8 +3617,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n lines left',
-      one: '$n line left',
+      other: '$n lines left',
+      one: '$n line left',
     );
     return '$_temp0';
   }
@@ -3621,8 +3628,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n questions left',
-      one: '$n question left',
+      other: '$n questions left',
+      one: '$n question left',
     );
     return '$_temp0';
   }
@@ -3674,8 +3681,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n exchanges',
-      one: '$n exchange',
+      other: '$n exchanges',
+      one: '$n exchange',
     );
     return '$_temp0';
   }
@@ -3722,7 +3729,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planSessionBrowSlowRate(String rate) {
-    return 'Slow · $rate×';
+    return 'Slow · $rate×';
   }
 
   @override
@@ -3780,7 +3787,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planSessionDayDoneTitle(String minutes) {
-    return 'Day done · $minutes';
+    return 'Day done · $minutes';
   }
 
   @override
@@ -3793,7 +3800,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planSessionReturnWords(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n words', one: '$n word');
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n words', one: '$n word');
     return '$_temp0';
   }
 
@@ -3802,15 +3809,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n phrases',
-      one: '$n phrase',
+      other: '$n phrases',
+      one: '$n phrase',
     );
     return '$_temp0';
   }
 
   @override
   String planSessionReturnExchanges(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n lines', one: '$n line');
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n lines', one: '$n line');
     return '$_temp0';
   }
 
@@ -3843,8 +3850,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'about $n minutes',
-      one: 'about $n minute',
+      other: 'about $n minutes',
+      one: 'about $n minute',
     );
     return '$_temp0';
   }
@@ -3857,8 +3864,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n scenes',
-      one: '$n scene',
+      other: '$n scenes',
+      one: '$n scene',
     );
     return '$_temp0';
   }
@@ -3884,6 +3891,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String planTalkHintChip(String intent) {
     return 'Say that $intent';
   }
+
+  @override
+  String get planTalkOpenText => 'text';
 
   @override
   String get planTalkInterrupted => 'cut short';
@@ -3917,8 +3927,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'You said $n lines yourself',
-      one: 'You said $n line yourself',
+      other: 'You said $n lines yourself',
+      one: 'You said $n line yourself',
     );
     return '$_temp0';
   }
@@ -3942,15 +3952,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'asked again $n times',
-      one: 'asked again $n time',
+      other: 'asked again $n times',
+      one: 'asked again $n time',
     );
     return '$_temp0';
   }
 
   @override
   String planTalkPhrasesOf(int used, int total) {
-    return 'The day\'s phrases in the talk · $used of $total';
+    return 'The day\'s phrases in the talk · $used of $total';
   }
 
   @override
@@ -4069,8 +4079,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n words, $first at the first try',
-      one: '$n word, $first at the first try',
+      other: '$n words, $first at the first try',
+      one: '$n word, $first at the first try',
     );
     return '$_temp0';
   }
@@ -4080,8 +4090,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n phrases, $first at the first try',
-      one: '$n phrase, $first at the first try',
+      other: '$n phrases, $first at the first try',
+      one: '$n phrase, $first at the first try',
     );
     return '$_temp0';
   }
@@ -4091,8 +4101,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n lines, $first at the first try',
-      one: '$n line, $first at the first try',
+      other: '$n lines, $first at the first try',
+      one: '$n line, $first at the first try',
     );
     return '$_temp0';
   }
@@ -4102,8 +4112,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n questions, $first at the first try',
-      one: '$n question, $first at the first try',
+      other: '$n questions, $first at the first try',
+      one: '$n question, $first at the first try',
     );
     return '$_temp0';
   }
@@ -4113,20 +4123,20 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n cards, $first at the first try',
-      one: '$n card, $first at the first try',
+      other: '$n cards, $first at the first try',
+      one: '$n card, $first at the first try',
     );
     return '$_temp0';
   }
 
   @override
   String planSessionRecallLinesOfScenes(int n, int scenes) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n lines', one: '$n line');
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n lines', one: '$n line');
     String _temp1 = intl.Intl.pluralLogic(
       scenes,
       locale: localeName,
-      other: '$scenes scenes',
-      one: '$scenes scene',
+      other: '$scenes scenes',
+      one: '$scenes scene',
     );
     return '$_temp0 from $_temp1';
   }
@@ -4136,8 +4146,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n come back tomorrow',
-      one: '$n comes back tomorrow',
+      other: '$n come back tomorrow',
+      one: '$n comes back tomorrow',
     );
     return '$_temp0';
   }
@@ -4150,8 +4160,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'said $n lines of your own aloud',
-      one: 'said $n line of your own aloud',
+      other: 'said $n lines of your own aloud',
+      one: 'said $n line of your own aloud',
     );
     return '$_temp0';
   }
@@ -4161,7 +4171,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'asked again $n times — the $role said it slower',
+      other: 'asked again $n times — the $role said it slower',
       two: 'asked again twice — the $role said it slower',
       one: 'asked again — the $role said it slower',
     );
@@ -4192,7 +4202,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planTalkStrip(int said, int total) {
-    return 'phrases · $said of $total';
+    return 'phrases · $said of $total';
   }
 
   @override

@@ -96,7 +96,7 @@ abstract class AppLocalizations {
   /// Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).
   ///
   /// In ru, this message translates to:
-  /// **'{current} из {total}'**
+  /// **'{current} из {total}'**
   String triageCounter(int current, int total);
 
   /// Обучающая подсказка на лице первых карточек первой сессии (кадр 2.2 / 3a).
@@ -174,7 +174,7 @@ abstract class AppLocalizations {
   /// Пояснение к «На сейчас всё».
   ///
   /// In ru, this message translates to:
-  /// **'Ещё {count} после синхронизации — зайдите снова, когда будет сеть.'**
+  /// **'Ещё {count} после синхронизации — зайдите снова, когда будет сеть.'**
   String triageMoreLaterBody(int count);
 
   /// Кнопка выхода из триажа.
@@ -216,7 +216,7 @@ abstract class AppLocalizations {
   /// Итог сессии: сколько терминов ещё придёт после синхронизации (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Ещё {count} слово после синхронизации} few{Ещё {count} слова после синхронизации} many{Ещё {count} слов после синхронизации} other{Ещё {count} слов после синхронизации}}'**
+  /// **'{count, plural, one{Ещё {count} слово после синхронизации} few{Ещё {count} слова после синхронизации} many{Ещё {count} слов после синхронизации} other{Ещё {count} слов после синхронизации}}'**
   String triageRemainingAfterSync(int count);
 
   /// Ошибка загрузки колоды триажа.
@@ -252,7 +252,7 @@ abstract class AppLocalizations {
   /// Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural). Предлог «из» требует родительного падежа, поэтому формы здесь НЕ счётные: 1 → «из 1 слова», 2 → «из 2 слов», 5 → «из 5 слов» (QA-OBS-5).
   ///
   /// In ru, this message translates to:
-  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
+  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
   String homeCollectionProgress(int done, int total);
 
   /// Таб-бар: главная.
@@ -276,13 +276,13 @@ abstract class AppLocalizations {
   /// Количество слов в коллекции, «24 слова» (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String collectionWordsCount(int count);
 
   /// Хвост подзаголовка коллекции про due-слова.
   ///
   /// In ru, this message translates to:
-  /// **'{count} к повторению сегодня'**
+  /// **'{count} к повторению сегодня'**
   String collectionDueSuffix(int count);
 
   /// Легенда плотности, СЛОВАРЬ СТАТУСОВ (Ч.4): слово прошло все ступени. Было «Подтверждено».
@@ -594,7 +594,7 @@ abstract class AppLocalizations {
   /// Размер набора, «15 слов» (ICU plural). «Примерно» убрано: генерация режется до запрошенного size (GenerationPipeline), недобор подписан отдельным бейджем (QA-OBS-9 / правка 1.7).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String approxWords(int count);
 
   /// Заголовок экрана вкладки коллекций (кадр 2.5).
@@ -648,7 +648,7 @@ abstract class AppLocalizations {
   /// Подзаголовок плитки коллекции, «24 слова · освоено 18» (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} · освоено {mastered}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} · освоено {mastered}'**
   String collectionsTileMastered(int count, int mastered);
 
   /// Заголовок карточки идущей генерации (кадр 2.5).
@@ -660,13 +660,13 @@ abstract class AppLocalizations {
   /// Мета-строка генерации: тема · уровни · размер («Аренда жилья · A2–B1 · ≈15 слов»).
   ///
   /// In ru, this message translates to:
-  /// **'{topic} · {levels} · {size}'**
+  /// **'{topic} · {levels} · {size}'**
   String generationGeneratingMeta(String topic, String levels, String size);
 
   /// Пояснение под индикатором идущей генерации (кадр 2.5).
   ///
   /// In ru, this message translates to:
-  /// **'Подбираем слова и фотографии · обычно 20–30 секунд'**
+  /// **'Подбираем слова и фотографии · обычно 20–30 секунд'**
   String get generationGeneratingNote;
 
   /// Пояснение под карточкой генерации, ожидающей сеть (офлайн-очередь).
@@ -744,7 +744,7 @@ abstract class AppLocalizations {
   /// Контурный бейдж недобора, «13 из 15» (кадр 2.5).
   ///
   /// In ru, this message translates to:
-  /// **'{delivered} из {requested}'**
+  /// **'{delivered} из {requested}'**
   String generationUnderBadge(int delivered, int requested);
 
   /// Строка состояния готовой коллекции с недобором (кадр 2.5).
@@ -852,7 +852,7 @@ abstract class AppLocalizations {
   /// Строка оставшейся квоты генераций (кадр 6a, ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Осталось {count} генерация сегодня} few{Осталось {count} генерации сегодня} many{Осталось {count} генераций сегодня} other{Осталось {count} генераций сегодня}}'**
+  /// **'{count, plural, one{Осталось {count} генерация сегодня} few{Осталось {count} генерации сегодня} many{Осталось {count} генераций сегодня} other{Осталось {count} генераций сегодня}}'**
   String generateQuotaRemaining(int count);
 
   /// Строка исчерпанной квоты с локальным временем сброса (кадр 6b).
@@ -870,7 +870,7 @@ abstract class AppLocalizations {
   /// Строка перехода на Premium под неактивной кнопкой (кадр 15c).
   ///
   /// In ru, this message translates to:
-  /// **'Нужно больше? Premium — до 20 в день'**
+  /// **'Нужно больше? Premium — до 20 в день'**
   String get generatePremiumUpsell;
 
   /// Ссылка на ручное создание коллекции (кадр 6b).
@@ -882,7 +882,7 @@ abstract class AppLocalizations {
   /// Индикатор идущей записи с таймером (кадр 6c).
   ///
   /// In ru, this message translates to:
-  /// **'Слушаю · {time}'**
+  /// **'Слушаю · {time}'**
   String generateVoiceListening(String time);
 
   /// Кнопка остановки голосового ввода (кадр 6c).
@@ -1020,7 +1020,7 @@ abstract class AppLocalizations {
   /// Подпись рядом с пятью точками лимита (кадр 08).
   ///
   /// In ru, this message translates to:
-  /// **'{used} из {cap} на сегодня'**
+  /// **'{used} из {cap} на сегодня'**
   String searchLimitUsed(int used, int cap);
 
   /// Заголовок плашки исчерпанного дневного лимита (кадр 08).
@@ -1182,7 +1182,7 @@ abstract class AppLocalizations {
   /// Счётчик ступени рядом с лейблом лестницы (кадр 09).
   ///
   /// In ru, this message translates to:
-  /// **'{step} из {total}'**
+  /// **'{step} из {total}'**
   String wordCardProgressCount(int step, int total);
 
   /// Атрибуция фотографа поверх фото-героя (лицензия Pexels).
@@ -1224,13 +1224,13 @@ abstract class AppLocalizations {
   /// Крупная антиква-строка стрика на экране прогресса.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} день подряд} few{{count} дня подряд} many{{count} дней подряд} other{{count} дня подряд}}'**
+  /// **'{count, plural, one{{count} день подряд} few{{count} дня подряд} many{{count} дней подряд} other{{count} дня подряд}}'**
   String progressStreakDays(int count);
 
   /// Строка «Лучший результат» под стриком.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}'**
+  /// **'{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}'**
   String progressBestResult(int count);
 
   /// Календарь-неделя: понедельник.
@@ -1308,7 +1308,7 @@ abstract class AppLocalizations {
   /// Лейбл глобальной полосы плотности.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Все {count} слово} few{Все {count} слова} many{Все {count} слов} other{Все {count} слов}}'**
+  /// **'{count, plural, one{Все {count} слово} few{Все {count} слова} many{Все {count} слов} other{Все {count} слов}}'**
   String progressAllWords(int count);
 
   /// Неактивная карточка на главном, когда дневная квота новых слов исчерпана (F13).
@@ -1440,7 +1440,7 @@ abstract class AppLocalizations {
   /// Онбординг, шаг 3 — оценка времени.
   ///
   /// In ru, this message translates to:
-  /// **'≈ {count} минут в день'**
+  /// **'≈ {count} минут в день'**
   String onbGoalMinutes(int count);
 
   /// Метка рекомендованной дневной цели.
@@ -1608,7 +1608,7 @@ abstract class AppLocalizations {
   /// Подпись бесплатного тарифа.
   ///
   /// In ru, this message translates to:
-  /// **'3 генерации в день'**
+  /// **'3 генерации в день'**
   String get profileFreeTierHint;
 
   /// Метка «скоро» у подписки.
@@ -1632,7 +1632,7 @@ abstract class AppLocalizations {
   /// Значение дневной цели, «N слов».
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}'**
   String profileGoalValue(int count);
 
   /// Язык интерфейса: системный.
@@ -1704,13 +1704,13 @@ abstract class AppLocalizations {
   /// Часть «N слов» в подтверждении удаления.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}'**
   String deleteAccountWords(int count);
 
   /// Часть «N дней стрика» в подтверждении удаления.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}'**
+  /// **'{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}'**
   String deleteAccountStreak(int count);
 
   /// Кнопка подтверждения удаления аккаунта.
@@ -2166,13 +2166,13 @@ abstract class AppLocalizations {
   /// СЛОВАРЬ СТАТУСОВ: где слово внутри очереди. Ступеней пять — два узнавания (прямое и обратное) читаются как одна, потому что счёт идёт про пройденный путь, а не про направление вопроса.
   ///
   /// In ru, this message translates to:
-  /// **'Ступень {step} из {total}: {rung}'**
+  /// **'Ступень {step} из {total}: {rung}'**
   String statusLadderStep(int step, int total, String rung);
 
   /// «Разобрать N слов» — единственная форма, в которой разбор называется в интерфейсе. Слова «триаж»/«стряж» в UI не живут.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
+  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
   String statusCountToSort(int count);
 
   /// Заголовок шита-легенды, который открывается тапом по пяти точкам в «Моих словах» (Ч.4).
@@ -2256,7 +2256,7 @@ abstract class AppLocalizations {
   /// Относительный срок ≥2 дней (кадр 12e, «через 2 дня»). Вызывается только для days≥2.
   ///
   /// In ru, this message translates to:
-  /// **'{days, plural, one{через {days} день} few{через {days} дня} many{через {days} дней} other{через {days} дней}}'**
+  /// **'{days, plural, one{через {days} день} few{через {days} дня} many{через {days} дней} other{через {days} дней}}'**
   String sessionDueInDays(int days);
 
   /// Строка фидбека с реальным серверным сроком показа (кадр 12d); {when} — относительный срок.
@@ -2316,7 +2316,7 @@ abstract class AppLocalizations {
   /// Строка стрика в блоке дневной цели (кадр 12e).
   ///
   /// In ru, this message translates to:
-  /// **'{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}'**
+  /// **'{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}'**
   String sessionStreak(int days);
 
   /// Лейбл списка слов в итоге (кадр 12e).
@@ -2520,7 +2520,7 @@ abstract class AppLocalizations {
   /// Кнопка входа в голосовой разговор на экране коллекции (только Premium).
   ///
   /// In ru, this message translates to:
-  /// **'Разговор · 3 мин'**
+  /// **'Разговор · 3 мин'**
   String get practiceDialogEntry;
 
   /// Подстрока кнопки разговора.
@@ -2616,7 +2616,7 @@ abstract class AppLocalizations {
   /// Итог разговора: сколько target-слов прозвучало.
   ///
   /// In ru, this message translates to:
-  /// **'Слов прозвучало: {used} из {total}'**
+  /// **'Слов прозвучало: {used} из {total}'**
   String practiceDialogFinaleWords(int used, int total);
 
   /// Кнопка закрытия итога разговора.
@@ -2670,7 +2670,7 @@ abstract class AppLocalizations {
   /// Строка результата последнего разговора на экране коллекции.
   ///
   /// In ru, this message translates to:
-  /// **'слов: {used} из {total}'**
+  /// **'слов: {used} из {total}'**
   String practiceDialogResultWords(int used, int total);
 
   /// Сегмент таба «Коллекции»: свои коллекции (кадр 2.8).
@@ -2694,7 +2694,7 @@ abstract class AppLocalizations {
   /// Размер набора в сторе, «16 слов».
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String storeWordsCount(int count);
 
   /// Бейдж на карточке стора: набор уже добавлен (кадр 2.8).
@@ -2718,7 +2718,7 @@ abstract class AppLocalizations {
   /// Подпись под кнопкой премиум-набора: подписка открывает все наборы сразу (кадр 15d).
   ///
   /// In ru, this message translates to:
-  /// **'Открываются все {count} наборов сразу'**
+  /// **'Открываются все {count} наборов сразу'**
   String storeAllSetsUnlock(int count);
 
   /// Заголовок списка терминов в превью-шите набора (кадр 8c).
@@ -2730,7 +2730,7 @@ abstract class AppLocalizations {
   /// Строка под превью-списком: сколько слов ещё в наборе (кадр 8c).
   ///
   /// In ru, this message translates to:
-  /// **'и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String storeMoreWords(int count);
 
   /// Заголовок шита выбора языковой пары стора (кадр 2.8).
@@ -2784,7 +2784,7 @@ abstract class AppLocalizations {
   /// Заголовок пейволла при входе из премиум-набора: имя набора + остальные (кадр 14b).
   ///
   /// In ru, this message translates to:
-  /// **'{title} и ещё {count} наборов'**
+  /// **'{title} и ещё {count} наборов'**
   String paywallTitleStore(String title, int count);
 
   /// Строка ценности пейволла для входа из квоты (кадр 14a).
@@ -2808,7 +2808,7 @@ abstract class AppLocalizations {
   /// Пункт Premium: лимит генераций (кадр 14a).
   ///
   /// In ru, this message translates to:
-  /// **'До 20 генераций в день'**
+  /// **'До 20 генераций в день'**
   String get paywallBenefitGenerations;
 
   /// Пункт Premium: премиум-наборы стора (кадр 14a).
@@ -2856,7 +2856,7 @@ abstract class AppLocalizations {
   /// Подстрока годовой карточки: цена за месяц (плейсхолдер, кадр 4ж).
   ///
   /// In ru, this message translates to:
-  /// **'\$2.50 в месяц'**
+  /// **'\$2.50 в месяц'**
   String get paywallYearPerMonth;
 
   /// Подстрока месячной карточки (кадр 4ж).
@@ -2880,13 +2880,13 @@ abstract class AppLocalizations {
   /// Юридическая строка авто-продления для годового периода (кадр 14a).
   ///
   /// In ru, this message translates to:
-  /// **'Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
+  /// **'Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
   String paywallLegalYear(String price);
 
   /// Юридическая строка авто-продления для месячного периода (кадр 14b).
   ///
   /// In ru, this message translates to:
-  /// **'Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
+  /// **'Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
   String paywallLegalMonth(String price);
 
   /// Ссылка восстановления покупок на пейволле (кадр 14a).
@@ -2928,7 +2928,7 @@ abstract class AppLocalizations {
   /// Подпись бесплатного тарифа с временем сброса (кадр 15a).
   ///
   /// In ru, this message translates to:
-  /// **'3 генерации в день · сбрасываются в {time}'**
+  /// **'3 генерации в день · сбрасываются в {time}'**
   String profileFreeTierReset(String time);
 
   /// Строка профиля (premium): название тарифа (кадр 15b).
@@ -3102,7 +3102,7 @@ abstract class AppLocalizations {
   /// Подпись под заголовком «Мои слова»: размер пула (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String myWordsCount(int count);
 
   /// Плейсхолдер поля поиска на экране «Мои слова».
@@ -3198,7 +3198,7 @@ abstract class AppLocalizations {
   /// Счётчик серии справа в шапке карточки (кадр 19-4). При нуле не рисуется — «угадано 0 подряд» не предложение.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{угадано {count} подряд} few{угадано {count} подряд} many{угадано {count} подряд} other{угадано {count} подряд}}'**
+  /// **'{count, plural, one{угадано {count} подряд} few{угадано {count} подряд} many{угадано {count} подряд} other{угадано {count} подряд}}'**
   String challengeStreak(int count);
 
   /// То же место после неверного ответа (кадр 19-4в). Без красного и без слова «неверно».
@@ -3288,37 +3288,37 @@ abstract class AppLocalizations {
   /// Размер сессии на тёмной карточке, «32 слова» (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String homeSessionCardWords(int count);
 
   /// Оценка времени сессии, «≈ 9 минут» (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}'**
+  /// **'{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}'**
   String homeSessionCardMinutes(int count);
 
   /// Вторая половина честной подписи сессии: сколько КАРТОЧЕК получится из обещанных слов. Тильда неспроста — состав дня может дойти до тренажёра слегка другим. Склеивается со счётом слов через « · » (см. sessionSizeLabel), одной строкой на главной и на кнопках коллекции (Ч.3).
   ///
   /// In ru, this message translates to:
-  /// **'~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
+  /// **'~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
   String sessionSizeCards(int count);
 
   /// Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}'**
+  /// **'{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}'**
   String homeSessionPartRepeat(int count);
 
   /// Состав сессии: новые слова (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}'**
+  /// **'{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}'**
   String homeSessionPartNew(int count);
 
   /// Состав сессии: свайпы разбора.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}'**
+  /// **'{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}'**
   String homeSessionPartTriage(int count);
 
   /// Кнопка тёмной карточки дня (кадр 17a).
@@ -3330,25 +3330,25 @@ abstract class AppLocalizations {
   /// Заголовок блока «В работе» — размер пула (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}'**
+  /// **'{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}'**
   String homeInWorkTitle(int count);
 
   /// Сколько слов пула ещё ни разу не показывали (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}'**
+  /// **'{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}'**
   String homeInWorkWaiting(int count);
 
   /// Когда очередь дойдёт до последнего ждущего слова (ICU plural по дням).
   ///
   /// In ru, this message translates to:
-  /// **'{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}'**
+  /// **'{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}'**
   String homeInWorkPace(int perDay, int days);
 
   /// Строка «В работе» в состоянии Б (кадр 17d): квота дня цела, очередь стоит.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}'**
+  /// **'{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}'**
   String homeInWorkQueueStands(int count);
 
   /// Заголовок секции слов с ближайшей датой повтора (кадр 17a).
@@ -3366,7 +3366,7 @@ abstract class AppLocalizations {
   /// Дата выпадения слова, «через 2 дня» (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}'**
+  /// **'{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}'**
   String homeEdgeInDays(int count);
 
   /// Заголовок вечерней секции ошибок сессии (кадр 17b).
@@ -3378,13 +3378,13 @@ abstract class AppLocalizations {
   /// Сколько раз слово ответили неверно в последней сессии (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}'**
+  /// **'{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}'**
   String homeHardestErrors(int count);
 
   /// Счётчик справа от заголовка секции, «2 слова» (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String homeSectionCount(int count);
 
   /// Заголовок вечерней карточки (кадр 17b).
@@ -3396,43 +3396,43 @@ abstract class AppLocalizations {
   /// Итог дня в СЛОВАХ (кадр 19-2). Единица обязательна: «52 из 52» без неё — счёт карточек в форме счёта слов, и 52 не было числом слов ни у кого. Карточки и минуты идут подписью следом.
   ///
   /// In ru, this message translates to:
-  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
+  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
   String homeDoneOfWords(int done, int total);
 
   /// Вторая единица итога дня (кадр 19-2) — сколько карточек стоили эти слова.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
+  /// **'{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
   String homeDoneCards(int count);
 
   /// Третья единица итога дня (кадр 19-2). Сокращённо: это хвост строки, а не самостоятельное утверждение.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} мин} few{{count} мин} many{{count} мин} other{{count} мин}}'**
+  /// **'{count, plural, one{{count} мин} few{{count} мин} many{{count} мин} other{{count} мин}}'**
   String homeDoneMinutes(int count);
 
   /// Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.
   ///
   /// In ru, this message translates to:
-  /// **'{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}'**
+  /// **'{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}'**
   String homeChainProgress(int position, int total);
 
   /// Прогресс дня: отвеченные карточки из запланированных, «32 из 32».
   ///
   /// In ru, this message translates to:
-  /// **'{done} из {total}'**
+  /// **'{done} из {total}'**
   String homeDoneOf(int done, int total);
 
   /// Сколько заняла сессия, «6 мин 40 с».
   ///
   /// In ru, this message translates to:
-  /// **'{minutes} мин {seconds} с'**
+  /// **'{minutes} мин {seconds} с'**
   String homeDoneDuration(int minutes, int seconds);
 
   /// Длительность сессии короче минуты (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} секунда} few{{count} секунды} many{{count} секунд} other{{count} секунды}}'**
+  /// **'{count, plural, one{{count} секунда} few{{count} секунды} many{{count} секунд} other{{count} секунды}}'**
   String homeDoneDurationSeconds(int count);
 
   /// Заголовок состояния Б: сессии нет, расписание впереди (кадр 17d).
@@ -3456,7 +3456,7 @@ abstract class AppLocalizations {
   /// Когда и сколько ждёт следующий повтор (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}'**
+  /// **'{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}'**
   String homeNextReviewLine(String when, int count);
 
   /// Подстановка «когда» для следующего повтора — завтра.
@@ -3468,19 +3468,19 @@ abstract class AppLocalizations {
   /// Предложение добрать слова из недоразобранной коллекции (кадр 17b).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}'**
+  /// **'{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}'**
   String homeExtraFromCollection(int count, String title);
 
   /// Предложение на закрытом дне (кадр 19-2): слова, УЖЕ взятые в очередь, которые сегодняшняя квота ещё позволяет раздать. Идут прежде свайп-прохода — эти уже выбраны, а разбор это предложение выбрать ещё.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Можно взять {count} слово, которое уже ждёт очереди.} few{Можно взять {count} слова, которые уже ждут очереди.} many{Можно взять {count} слов, которые уже ждут очереди.} other{Можно взять {count} слова, которые уже ждут очереди.}}'**
+  /// **'{count, plural, one{Можно взять {count} слово, которое уже ждёт очереди.} few{Можно взять {count} слова, которые уже ждут очереди.} many{Можно взять {count} слов, которые уже ждут очереди.} other{Можно взять {count} слова, которые уже ждут очереди.}}'**
   String homeExtraNew(int count);
 
   /// Кнопка «Ещё N слов» на вечерней карточке (кадр 17b).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}'**
+  /// **'{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}'**
   String homeExtraButton(int count);
 
   /// Лейбл карточки брошенной коллекции (кадр 17a).
@@ -3492,7 +3492,7 @@ abstract class AppLocalizations {
   /// Давность последнего касания коллекции (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}'**
+  /// **'{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}'**
   String homeContinueAbandoned(int count);
 
   /// Строка входа в генерацию на главной (кадр 17a).
@@ -3504,7 +3504,7 @@ abstract class AppLocalizations {
   /// Тихая строка входа в магазин под генерацией (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}'**
+  /// **'{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}'**
   String homeStoreLink(int count);
 
   /// Подпись первого числа плиты статистики (кадр 19-1). Значение приходит из /stats.learned.
@@ -3528,13 +3528,13 @@ abstract class AppLocalizations {
   /// Строка «завтра» (кадры 19-1, 19-2), тап ведёт в «Мои слова». Заменила список «На грани забывания»: три слова с датами отвечали на вопрос, которого никто не задавал, а «сколько будет завтра» — на тот, который задают. Нуля не бывает: при нуле строки нет.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}'**
+  /// **'{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}'**
   String homeTomorrowRow(int count);
 
   /// Первая половина строки-награды (кадр 19-2). Со знаком плюс: это прибавление, а не счёт.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{+{count} слово продвинулось} few{+{count} слова продвинулись} many{+{count} слов продвинулись} other{+{count} слова продвинулись}}'**
+  /// **'{count, plural, one{+{count} слово продвинулось} few{+{count} слова продвинулись} many{+{count} слов продвинулись} other{+{count} слова продвинулись}}'**
   String homeAwardPromoted(int count);
 
   /// Вторая половина строки-награды (кадр 19-2): слово, дошедшее дальше всех, и имя его новой ступени — из тех же ladderStep*, что и карточка слова.
@@ -3570,7 +3570,7 @@ abstract class AppLocalizations {
   /// Строка-обещание в подвале первого дня (кадр 19-3). Единственная цифра на экране, где статистики ещё нет.
   ///
   /// In ru, this message translates to:
-  /// **'5 минут в день — 20 слов в неделю'**
+  /// **'5 минут в день — 20 слов в неделю'**
   String get homeFirstDayPromise;
 
   /// Чип-пример темы под карточкой генерации первого дня (кадр 19-3).
@@ -3594,7 +3594,7 @@ abstract class AppLocalizations {
   /// Первая карточка первого дня (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}'**
+  /// **'{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}'**
   String homeFirstDayReadyTitle(int count);
 
   /// Подпись карточки готовых наборов (кадр 17c).
@@ -3618,13 +3618,13 @@ abstract class AppLocalizations {
   /// Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}'**
+  /// **'{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}'**
   String homeSortOffer(int count, String title);
 
   /// Кнопка свайп-прохода в состоянии Б (кадр 17d).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
+  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
   String homeTriageAction(int count);
 
   /// Заголовок вместо «Всё повторено», когда в работе ещё ничего нет.
@@ -3696,13 +3696,13 @@ abstract class AppLocalizations {
   /// Латунная метка карточки плана на главной (кадр 08).
   ///
   /// In ru, this message translates to:
-  /// **'План · день {index} из {total}'**
+  /// **'План · день {index} из {total}'**
   String homePlanCardBadge(int index, int total);
 
   /// Правая метка карточки плана на главной.
   ///
   /// In ru, this message translates to:
-  /// **'{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}'**
+  /// **'{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}'**
   String homePlanCardEventIn(int days);
 
   /// Правая метка карточки плана на главной.
@@ -3762,7 +3762,7 @@ abstract class AppLocalizations {
   /// Цена озвучки всего плана этим голосом.
   ///
   /// In ru, this message translates to:
-  /// **'≈ {price} за план'**
+  /// **'≈ {price} за план'**
   String devVoicesPrice(String price);
 
   /// Кнопка «проиграть все пять реплик подряд».
@@ -3786,7 +3786,7 @@ abstract class AppLocalizations {
   /// Дев-бейдж сломанной трубы озвучки (наряд TTS-1). Показывается только при DEV_MENU: тихий фолбэк на системный голос при живом audio_url — дефект, и в дев-сборке он должен быть виден.
   ///
   /// In ru, this message translates to:
-  /// **'Озвучка: {silent} реплик системным голосом, {failed} не скачалось'**
+  /// **'Озвучка: {silent} реплик системным голосом, {failed} не скачалось'**
   String devVoiceTrouble(int silent, int failed);
 
   /// Дев-меню (DAY-FIX-2, Ч.7): сдвиг «сегодня» плана на QA-аккаунте за dev-дверью.
@@ -3798,13 +3798,13 @@ abstract class AppLocalizations {
   /// Текущий сдвиг под заголовком строки.
   ///
   /// In ru, this message translates to:
-  /// **'{days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}}'**
+  /// **'{days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}}'**
   String devQaClockShift(int days);
 
   /// Кнопка сдвига «сегодня» плана на день вперёд.
   ///
   /// In ru, this message translates to:
-  /// **'+1 день'**
+  /// **'+1 день'**
   String get devQaClockPlus;
 
   /// Кнопка сброса сдвига «сегодня» плана.
@@ -3828,7 +3828,7 @@ abstract class AppLocalizations {
   /// Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub).
   ///
   /// In ru, this message translates to:
-  /// **'сцена в день · 20 минут · репетиция вслух'**
+  /// **'сцена в день · 20 минут · репетиция вслух'**
   String get planEmptySub;
 
   /// Первое правило плана — витрина 21-1 и лист 21-8 (plan.rule.situation).
@@ -4092,7 +4092,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1: подвал примера, когда в плане больше трёх дней («ещё 2 дня»).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{ещё {n} день} few{ещё {n} дня} many{ещё {n} дней} other{ещё {n} дня}}'**
+  /// **'{n, plural, one{ещё {n} день} few{ещё {n} дня} many{ещё {n} дней} other{ещё {n} дня}}'**
   String planExampleMore(int n);
 
   /// Витрина 21-1: подвал примера, где показаны все дни плана (3 дня).
@@ -4122,7 +4122,7 @@ abstract class AppLocalizations {
   /// Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).
   ///
   /// In ru, this message translates to:
-  /// **'План · день {n} из {total}'**
+  /// **'План · день {n} из {total}'**
   String planHeaderBrow(int n, int total);
 
   /// Плита дня, лейбл латунью (plan.plate.label); окно дня — бровь «ДЕНЬ 2» светлой латунью на плите (23-0a…0c).
@@ -4134,13 +4134,13 @@ abstract class AppLocalizations {
   /// Счётные формы карточек: 1 карточка / 2 карточки / 5 карточек (plan.plate.meta, plan.closed.meta, plan.closed.return).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}}'**
+  /// **'{n, plural, one{{n} карточка} few{{n} карточки} many{{n} карточек} other{{n} карточки}}'**
   String planCardsCount(int n);
 
   /// Счётные формы минут: 1 минута / 2 минуты / 5 минут (plan.plate.meta, plan.closed.meta); окно дня — «≈ 20 минут» не начатого, «19 минут» пройденного (23-0a, 23-0c).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}}'**
+  /// **'{n, plural, one{{n} минута} few{{n} минуты} many{{n} минут} other{{n} минуты}}'**
   String planMinutesCount(int n);
 
   /// Плита дня, этап (plan.plate.stage.words); окно дня — ряд этапа на плите и вкладка «Слова» с бровью (23-0a…0d).
@@ -4194,19 +4194,19 @@ abstract class AppLocalizations {
   /// Формы «1 новое слово / 2 новых слова / 5 новых слов» (plan.plate.stage.sub.start).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}}'**
+  /// **'{n, plural, one{{n} новое слово} few{{n} новых слова} many{{n} новых слов} other{{n} новых слова}}'**
   String planNewWordsCount(int n);
 
   /// Плита дня, вторая строка текущего этапа (plan.plate.stage.sub.start); words — planNewWordsCount.
   ///
   /// In ru, this message translates to:
-  /// **'начни отсюда · {words}'**
+  /// **'начни отсюда · {words}'**
   String planPlateStageSubStart(String words);
 
   /// Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору).
   ///
   /// In ru, this message translates to:
-  /// **'не закончен · {cards}'**
+  /// **'не закончен · {cards}'**
   String planPlateStageSubUnfinished(String cards);
 
   /// Плита дня, кнопка (plan.plate.cta.start); окно дня — одна кнопка внизу у не начатого дня (allowed_action = start, 23-0a).
@@ -4260,31 +4260,31 @@ abstract class AppLocalizations {
   /// Кадр 21-4 (plan.closed.title).
   ///
   /// In ru, this message translates to:
-  /// **'День {n} закрыт'**
+  /// **'День {n} закрыт'**
   String planClosedTitle(int n);
 
   /// Счёт закрытого дня в шапке плиты: «75 карточек · 19 минут» (кадр 21-4, plan.closed.count).
   ///
   /// In ru, this message translates to:
-  /// **'{cards} · {minutes}'**
+  /// **'{cards} · {minutes}'**
   String planClosedCount(String cards, String minutes);
 
   /// Первая строка подвала закрытого дня (кадр 21-4, plan.closed.next.tomorrow).
   ///
   /// In ru, this message translates to:
-  /// **'День {n} откроется завтра, {date}'**
+  /// **'День {n} откроется завтра, {date}'**
   String planClosedNextTomorrow(int n, String date);
 
   /// Подвал закрытого дня, когда следующий день не «завтра» (кадр 21-4, plan.closed.next.on).
   ///
   /// In ru, this message translates to:
-  /// **'День {n} откроется {date}'**
+  /// **'День {n} откроется {date}'**
   String planClosedNextOn(int n, String date);
 
   /// Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).
   ///
   /// In ru, this message translates to:
-  /// **'{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}'**
+  /// **'{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}'**
   String planClosedReturn(int n, int k);
 
   /// Строка маршрута (plan.route.day.repeat.sub).
@@ -4332,7 +4332,7 @@ abstract class AppLocalizations {
   /// Минуты в мета-строке маршрута, сокращённо (кадр 21-2b, plan.route.meta.minutes); окно дня — «≈ 12 мин» идущего дня, текущего этапа и компактной шапки (23-0b).
   ///
   /// In ru, this message translates to:
-  /// **'{n} мин'**
+  /// **'{n} мин'**
   String planMinutesShort(int n);
 
   /// Мета-строка ПЕРВОГО запертого дня маршрута (кадр 21-2b, plan.route.meta.opens.after).
@@ -4368,7 +4368,7 @@ abstract class AppLocalizations {
   /// Счётные формы дней: 1 день / 2 дня / 5 дней (plan.done.meta, plan.overdue.meta, entry.preview.sub).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} день} few{{n} дня} many{{n} дней} other{{n} дня}}'**
+  /// **'{n, plural, one{{n} день} few{{n} дня} many{{n} дней} other{{n} дня}}'**
   String planDaysCount(int n);
 
   /// Кадр 21-7 (plan.done.meta): «7 дней». Части «фраз и слов в работе» в контракте нет — не рисуются (вопрос архитектору).
@@ -4482,7 +4482,7 @@ abstract class AppLocalizations {
   /// Кадр 21-11 (plan.new.body); name — сервер.
   ///
   /// In ru, this message translates to:
-  /// **'Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение'**
+  /// **'Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение'**
   String planNewBody(int n, int total, String name);
 
   /// Кадр 21-11 (plan.new.cta).
@@ -4536,25 +4536,25 @@ abstract class AppLocalizations {
   /// Второй выход прошедшего события — вернуться к текущему дню (кадр 21-14, plan.overdue.continue).
   ///
   /// In ru, this message translates to:
-  /// **'Дозаниматься · {days}'**
+  /// **'Дозаниматься · {days}'**
   String planOverdueContinue(String days);
 
-  /// Кадр 21-2c (plan.hint.first.start).
+  /// Кадр 21-2c (plan.hint.first.start). stage — имя первого ряда плиты дня из stages[] сервера: «Слова» у дня-сцены, «Повторение» у повторения, «Вспомнить» у репетиции (приёмка CLIENT-CONV-1c 22.09).
   ///
   /// In ru, this message translates to:
-  /// **'Начни с этапа «Слова». Остальные откроются по порядку'**
-  String get planHintFirstStart;
+  /// **'Начни с этапа «{stage}». Остальные откроются по порядку'**
+  String planHintFirstStart(String stage);
 
   /// Подсказка первого плана под заголовком маршрута, один раз (кадр 21-2c, plan.hint.first.route).
   ///
   /// In ru, this message translates to:
-  /// **'День {n} открыт. Следующий откроется, когда пройдёшь этот'**
+  /// **'День {n} открыт. Следующий откроется, когда пройдёшь этот'**
   String planHintFirstRoute(int n);
 
   /// Плашка пересборки над плитой — состояние плана, не сообщение (кадр 21-13, plan.rebuilt.title).
   ///
   /// In ru, this message translates to:
-  /// **'Маршрут пересобран: было {from} дней, стало {to}'**
+  /// **'Маршрут пересобран: было {from} дней, стало {to}'**
   String planRebuiltTitle(int from, int to);
 
   /// Кадр 21-4c (plan.hint.first.return).
@@ -4752,13 +4752,13 @@ abstract class AppLocalizations {
   /// Состав длины плана — ситуации (кадр 22-3a, entry.days.scenes).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} ситуация} few{{n} ситуации} many{{n} ситуаций} other{{n} ситуации}}'**
+  /// **'{n, plural, one{{n} ситуация} few{{n} ситуации} many{{n} ситуаций} other{{n} ситуации}}'**
   String planEntryDaysScenes(int n);
 
   /// Состав длины плана — дни повторения (кадр 22-3a, entry.days.reviews).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} повторение} few{{n} повторения} many{{n} повторений} other{{n} повторения}}'**
+  /// **'{n, plural, one{{n} повторение} few{{n} повторения} many{{n} повторений} other{{n} повторения}}'**
   String planEntryDaysReviews(int n);
 
   /// Состав длины плана — репетиция, она есть всегда (кадр 22-3a, entry.days.rehearsal).
@@ -4782,7 +4782,7 @@ abstract class AppLocalizations {
   /// Подпись ближней даты: день недели и сколько до неё (кадр 22-3b, entry.date.in).
   ///
   /// In ru, this message translates to:
-  /// **'{weekday} · {n, plural, one{через {n} день} few{через {n} дня} many{через {n} дней} other{через {n} дня}}'**
+  /// **'{weekday} · {n, plural, one{через {n} день} few{через {n} дня} many{через {n} дней} other{через {n} дня}}'**
   String planEntryDateIn(String weekday, int n);
 
   /// Равноправный вариант выбора даты (кадр 22-3b, entry.date.unknown).
@@ -4836,7 +4836,7 @@ abstract class AppLocalizations {
   /// Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about).
   ///
   /// In ru, this message translates to:
-  /// **'Около 10 секунд'**
+  /// **'Около 10 секунд'**
   String get planEntryPreviewAbout;
 
   /// Прелоадер 22-4a и 22-5a: первая строка статуса по кругу (om-pre-line1).
@@ -4944,7 +4944,7 @@ abstract class AppLocalizations {
   /// Уведомление «день собран» (кадр 22-6 — эталон вида); без push — баннер в приложении при возврате.
   ///
   /// In ru, this message translates to:
-  /// **'День {n} собран'**
+  /// **'День {n} собран'**
   String planNotifyDayReadyTitle(int n);
 
   /// Тело уведомления «день собран».
@@ -4956,7 +4956,7 @@ abstract class AppLocalizations {
   /// Ежедневное напоминание в час обычного захода (локальное уведомление, не чаще раза в сутки).
   ///
   /// In ru, this message translates to:
-  /// **'День {n} ждёт'**
+  /// **'День {n} ждёт'**
   String planNotifyReminderTitle(int n);
 
   /// Тело ежедневного напоминания.
@@ -4986,7 +4986,7 @@ abstract class AppLocalizations {
   /// Локальное уведомление «дни пропущены»: наутро после даты дня, который не пройден.
   ///
   /// In ru, this message translates to:
-  /// **'День {n} ждёт со вчера'**
+  /// **'День {n} ждёт со вчера'**
   String planNotifySkippedTitle(int n);
 
   /// Тело уведомления «дни пропущены» — говорит, что сделала система, без укора.
@@ -5034,7 +5034,7 @@ abstract class AppLocalizations {
   /// Окно дня: оценка минут сервера (minutes_estimate, minutes_left) — «≈ 20 минут» на плите не начатого дня, «≈ 12 мин» у идущего, у текущего этапа и в компактной шапке; minutes — planMinutesCount или planMinutesShort.
   ///
   /// In ru, this message translates to:
-  /// **'≈ {minutes}'**
+  /// **'≈ {minutes}'**
   String planWindowApprox(String minutes);
 
   /// Окно дня: две части строки через точку — «не начат · ≈ 20 минут», «идёт · ≈ 8 мин» у текущего этапа, «СЛОВА · 8 · 5 ПРОЙДЕНО» в брови вкладки.
@@ -5042,6 +5042,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{first} · {second}'**
   String planWindowJoin(String first, String second);
+
+  /// Та же склейка через точку, когда вторая часть начинается с числа («пройдено · 3 минуты», «СЛОВА · 8», «Разговор целиком · 2 сцены»): неразрывный пробел держит число при точке (приёмка CLIENT-CONV-1c 22.09). Выбирает её код — planDot.
+  ///
+  /// In ru, this message translates to:
+  /// **'{first} · {second}'**
+  String planWindowJoinNumber(String first, String second);
 
   /// Окно дня, плита (23-0b): цифра ТОЛЬКО у текущего этапа — «6 / 16»; у остальных рядов цифры нет (done_count и total сервера — null).
   ///
@@ -5052,19 +5058,19 @@ abstract class AppLocalizations {
   /// Окно дня, плита пройденного дня (23-0c): строка итога вместо цифр — «День пройден · 19 минут»; minutes — planMinutesCount(minutes_spent).
   ///
   /// In ru, this message translates to:
-  /// **'День пройден · {minutes}'**
+  /// **'День пройден · {minutes}'**
   String planWindowPassedLine(String minutes);
 
   /// Окно дня, бровь вкладки (23-0b…0d): часть «5 пройдено» — summary.done сервера; при нуле части нет.
   ///
   /// In ru, this message translates to:
-  /// **'{n} пройдено'**
+  /// **'{n} пройдено'**
   String planWindowBrowDone(int n);
 
   /// Окно дня, бровь вкладки (23-0c, 23-0d): часть «2 вернутся завтра» — summary.returns сервера; при нуле части нет.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}'**
+  /// **'{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}'**
   String planWindowBrowReturns(int n);
 
   /// Окно дня, кнопка пройденного дня (23-0c, allowed_action = again): «Говорю сам» ещё раз по карточкам дня, без записи ответов — не пересдача дня.
@@ -5160,13 +5166,13 @@ abstract class AppLocalizations {
   /// No description provided for @dayCards.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}'**
+  /// **'{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}'**
   String dayCards(int n);
 
   /// No description provided for @dayMinutes.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}'**
+  /// **'{n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}'**
   String dayMinutes(int n);
 
   /// Сессия, вход в этап (30-1): статус этапа в списке пяти — все карточки отвечены.
@@ -5184,19 +5190,19 @@ abstract class AppLocalizations {
   /// Сессия, вход в этап (30-1) и «Дальше» итога этапа (30-6): минуты этапа из окна дня (stage.minutes_left).
   ///
   /// In ru, this message translates to:
-  /// **'≈ {n} мин'**
+  /// **'≈ {n} мин'**
   String planSessionApproxMinutes(int n);
 
   /// Сессия, вход в этап «Слова» (30-1): описание под названием; число — единицы этапа.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух'**
+  /// **'{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух'**
   String planSessionDescWords(int n);
 
   /// Сессия, вход в этап «Фразы» (30-1): описание под названием; число — каркасы этапа.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся'**
+  /// **'{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся'**
   String planSessionDescPhrases(int n);
 
   /// Сессия, вход в этап «Диалог» (30-1): описание.
@@ -5244,13 +5250,13 @@ abstract class AppLocalizations {
   /// Сессия, шапка (30-2): справа словами — сколько единиц этапа ещё не закрыто.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{ещё {n} слово} few{ещё {n} слова} many{ещё {n} слов} other{ещё {n} слова}}'**
+  /// **'{n, plural, one{ещё {n} слово} few{ещё {n} слова} many{ещё {n} слов} other{ещё {n} слова}}'**
   String planSessionLeftWords(int n);
 
   /// Сессия, шапка (30-2) этапа «Фразы»: сколько каркасов ещё не закрыто.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{ещё {n} фраза} few{ещё {n} фразы} many{ещё {n} фраз} other{ещё {n} фразы}}'**
+  /// **'{n, plural, one{ещё {n} фраза} few{ещё {n} фразы} many{ещё {n} фраз} other{ещё {n} фразы}}'**
   String planSessionLeftPhrases(int n);
 
   /// Сессия, полоса сцены (30-2b): название сцены и роль собеседника в именительном, как отдал сервер.
@@ -5556,13 +5562,13 @@ abstract class AppLocalizations {
   /// Сессия, шапка (30-2) этапов «Диалог» и «Говорю сам»: сколько обменов ещё не закрыто.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{ещё {n} реплика} few{ещё {n} реплики} many{ещё {n} реплик} other{ещё {n} реплики}}'**
+  /// **'{n, plural, one{ещё {n} реплика} few{ещё {n} реплики} many{ещё {n} реплик} other{ещё {n} реплики}}'**
   String planSessionLeftExchanges(int n);
 
   /// Сессия, шапка (30-2) этапа «Слушаю и отвечаю» на вопросе: сколько вопросов слушания ещё без ответа, текущий тоже (34-2, 34-5).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{ещё {n} вопрос} few{ещё {n} вопроса} many{ещё {n} вопросов} other{ещё {n} вопроса}}'**
+  /// **'{n, plural, one{ещё {n} вопрос} few{ещё {n} вопроса} many{ещё {n} вопросов} other{ещё {n} вопроса}}'**
   String planSessionLeftQuestions(int n);
 
   /// Сессия, шапка этапа «Слушаю и отвечаю»: вопрос слушания — последний (34-7).
@@ -5652,7 +5658,7 @@ abstract class AppLocalizations {
   /// Сессия, 34-1: сколько обменов в визите — справа под полосой плеера.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} обмен} few{{n} обмена} many{{n} обменов} other{{n} обмена}}'**
+  /// **'{n, plural, one{{n} обмен} few{{n} обмена} many{{n} обменов} other{{n} обмена}}'**
   String planSessionExchangesCount(int n);
 
   /// Сессия, 34-1: плеер стоит на паузе «по частям» после обмена N.
@@ -5730,7 +5736,7 @@ abstract class AppLocalizations {
   /// Сессия, 34-6: бровь листа на медленном темпе, rate — темп из карточки («0.75»).
   ///
   /// In ru, this message translates to:
-  /// **'Медленно · {rate}×'**
+  /// **'Медленно · {rate}×'**
   String planSessionBrowSlowRate(String rate);
 
   /// Сессия, 34-6: бровь листа на обычном темпе.
@@ -5838,7 +5844,7 @@ abstract class AppLocalizations {
   /// Сессия, итог дня (30-7); minutes — planMinutesCount.
   ///
   /// In ru, this message translates to:
-  /// **'День пройден · {minutes}'**
+  /// **'День пройден · {minutes}'**
   String planSessionDayDoneTitle(String minutes);
 
   /// Сессия, 30-7: кнопка — POST …/days/{n}/close и назад в окно дня.
@@ -5856,19 +5862,19 @@ abstract class AppLocalizations {
   /// Сессия, 30-7: слова, которые вернутся завтра.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово} few{{n} слова} many{{n} слов} other{{n} слова}}'**
+  /// **'{n, plural, one{{n} слово} few{{n} слова} many{{n} слов} other{{n} слова}}'**
   String planSessionReturnWords(int n);
 
   /// Сессия, 30-7: фразы, которые вернутся завтра.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза} few{{n} фразы} many{{n} фраз} other{{n} фразы}}'**
+  /// **'{n, plural, one{{n} фраза} few{{n} фразы} many{{n} фраз} other{{n} фразы}}'**
   String planSessionReturnPhrases(int n);
 
   /// Сессия, 30-7: реплики (обмены), которые вернутся завтра.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}'**
+  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}}'**
   String planSessionReturnExchanges(int n);
 
   /// Сессия, 30-7: последняя пара перечисления.
@@ -5910,7 +5916,7 @@ abstract class AppLocalizations {
   /// Вход в разговор (37-5): оценка сервера minutes_estimate — «около 3 минут». После «около» — родительный падеж, поэтому своя форма, а не planMinutesCount (живой прогон поймал «около 3 минуты»).
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{около {n} минуты} few{около {n} минут} many{около {n} минут} other{около {n} минуты}}'**
+  /// **'{n, plural, one{около {n} минуты} few{около {n} минут} many{около {n} минут} other{около {n} минуты}}'**
   String planTalkEntryMinutes(int n);
 
   /// Вход в разговор репетиции (37-5): бровь вместо названия сцены — разговор идёт по всем сценам плана.
@@ -5922,7 +5928,7 @@ abstract class AppLocalizations {
   /// Вход в разговор репетиции (37-5): сколько сцен в разговоре — вторая часть брови «Разговор целиком · 3 сцены».
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} сцена} few{{n} сцены} many{{n} сцен} other{{n} сцены}}'**
+  /// **'{n, plural, one{{n} сцена} few{{n} сцены} many{{n} сцен} other{{n} сцены}}'**
   String planTalkEntryScenes(int n);
 
   /// Вход в разговор (37-5): первая строка правил. Роль без склонения — «собеседник».
@@ -5960,6 +5966,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Скажи, что {intent}'**
   String planTalkHintChip(String intent);
+
+  /// Экран разговора в «Без подсказок» (наряд CLIENT-CONV-1c §5, приёмка 22.09): чип рядом с «прослушать» у закрытой реплики собеседника — тап открывает текст этой реплики.
+  ///
+  /// In ru, this message translates to:
+  /// **'текст'**
+  String get planTalkOpenText;
 
   /// Экран разговора (37-9): пометка у реплики собеседника, которую прервали тапом по микрофону.
   ///
@@ -6018,7 +6030,7 @@ abstract class AppLocalizations {
   /// Итог разговора (37-12): счёт сервера said_count.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{Сказал сам {n} реплику} few{Сказал сам {n} реплики} many{Сказал сам {n} реплик} other{Сказал сам {n} реплики}}'**
+  /// **'{n, plural, one{Сказал сам {n} реплику} few{Сказал сам {n} реплики} many{Сказал сам {n} реплик} other{Сказал сам {n} реплики}}'**
   String planTalkSaidLines(int n);
 
   /// Итог разговора (37-12): understood_all = true.
@@ -6036,13 +6048,13 @@ abstract class AppLocalizations {
   /// Итог разговора (37-12): вторая часть строки понимания, всегда нейтральная.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{переспросил {n} раз} few{переспросил {n} раза} many{переспросил {n} раз} other{переспросил {n} раза}}'**
+  /// **'{n, plural, one{переспросил {n} раз} few{переспросил {n} раза} many{переспросил {n} раз} other{переспросил {n} раза}}'**
   String planTalkRescues(int n);
 
   /// Итог разговора (37-12): бровь списка фраз — счёт сервера.
   ///
   /// In ru, this message translates to:
-  /// **'Фразы дня в разговоре · {used} из {total}'**
+  /// **'Фразы дня в разговоре · {used} из {total}'**
   String planTalkPhrasesOf(int used, int total);
 
   /// Итог разговора (37-12): группа несказанного у дня и повторения (returns_tomorrow = true).
@@ -6234,43 +6246,43 @@ abstract class AppLocalizations {
   /// Итог этапа «Слова» (30-6), первая строка: сколько слов в этапе и сколько из них зачтено с первой попытки без подсказки — по карточкам сервера.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}'**
   String planSessionFirstTryWords(int n, int first);
 
   /// Итог этапа «Фразы» (30-6), первая строка: фразы этапа и зачтённые с первой попытки без подсказки.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}'**
   String planSessionFirstTryPhrases(int n, int first);
 
   /// Итог этапа «Диалог» и «Говорю сам» (30-6, кадр «8 реплик, 6 с первого раза»), первая строка: реплики этапа и зачтённые с первой попытки без подсказки.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}'**
   String planSessionFirstTryLines(int n, int first);
 
   /// Итог этапа «Слушаю и отвечаю» (30-6), первая строка: вопросы слушания и отвеченные верно с первого раза.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}'**
   String planSessionFirstTryQuestions(int n, int first);
 
   /// Итог этапа «Повторение» (30-6), первая строка: карточки этапа и зачтённые с первой попытки без подсказки.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}'**
   String planSessionFirstTryCards(int n, int first);
 
   /// Итог этапа «Вспомнить» (30-6), первая строка: «6 реплик из 2 сцен» — свои реплики, сказанные вслух, и из скольких сцен.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}'**
+  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}'**
   String planSessionRecallLinesOfScenes(int n, int scenes);
 
   /// Итог этапа (30-6), вторая строка: сколько единиц этапа вернётся завтра — по возвратам сервера.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}'**
+  /// **'{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}'**
   String planSessionStageReturns(int n);
 
   /// Итог этапа (30-6), вторая строка, когда у этапа возвратов нет.
@@ -6282,13 +6294,13 @@ abstract class AppLocalizations {
   /// Итог этапа «Диалог» (30-6, кадр «сказал вслух 5 своих реплик»), вторая строка: свои реплики диалога, зачтённые голосом.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{сказал вслух {n} свою реплику} few{сказал вслух {n} свои реплики} many{сказал вслух {n} своих реплик} other{сказал вслух {n} своей реплики}}'**
+  /// **'{n, plural, one{сказал вслух {n} свою реплику} few{сказал вслух {n} свои реплики} many{сказал вслух {n} своих реплик} other{сказал вслух {n} своей реплики}}'**
   String planSessionSaidAloud(int n);
 
   /// Итог этапа «Диалог» (30-6, кадр «дважды переспросил — врач повторил медленнее»), третья строка: пройденные обмены «Не понял» диалога; role — роль собеседника сцены строчной.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}'**
+  /// **'{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}'**
   String planSessionRescuedSlower(int n, String role);
 
   /// Итог этапа «Слова» (30-6), третья строка — тёплая, одна на этап (решение архитектора 22.09).
@@ -6336,7 +6348,7 @@ abstract class AppLocalizations {
   /// Лента разговора (37-6…37-11): полоска над микрофоном — сколько фраз разговора уже прозвучало (targets[].said сервера). Единственный счётчик ленты, назван нарядом.
   ///
   /// In ru, this message translates to:
-  /// **'фразы · {said} из {total}'**
+  /// **'фразы · {said} из {total}'**
   String planTalkStrip(int said, int total);
 
   /// Лист фраз (37-8d): заголовок — открывается тапом по полоске ленты.

@@ -8,6 +8,7 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../../data/plan/conversation/conversation_models.dart';
 import '../../../data/plan/plan_models.dart';
+import '../plan_stage_text.dart' show PlanDot;
 import '../session/parts/session_bits.dart';
 import '../session/parts/session_chrome.dart';
 import '../session/parts/session_mic_panel.dart' show SessionTextExit;
@@ -63,7 +64,7 @@ class TalkSummaryView extends StatelessWidget {
     final s = _summary;
     final rehearsal = talk.type == TalkType.rehearsal;
     final understood = s.understoodAll ? l.planTalkUnderstoodAll : l.planTalkUnderstoodExcept(s.notUnderstood);
-    final understoodLine = s.rescues > 0 ? l.planWindowJoin(understood, l.planTalkRescues(s.rescues)) : understood;
+    final understoodLine = s.rescues > 0 ? l.planDot(understood, l.planTalkRescues(s.rescues)) : understood;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

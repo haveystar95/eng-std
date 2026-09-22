@@ -12,6 +12,8 @@ import 'package:eng_std/data/review_sync.dart';
 import 'package:eng_std/features/training/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// Leaving a card must silence it (QA-21).
 ///
 /// The verdict's auto-pronounce is fired on a timer AFTER the feedback settles, so a «Дальше»
@@ -130,7 +132,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(ttsCalls, contains('stop'));
-    expect(find.text('2 из 2'), findsOneWidget, reason: 'and it still advanced');
+    expect(find.text(nb('2 из 2')), findsOneWidget, reason: 'and it still advanced');
 
     await close(tester);
   });

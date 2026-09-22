@@ -11,6 +11,8 @@ import 'package:eng_std/data/review_sync.dart';
 import 'package:eng_std/features/training/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// Records what the screen would have uploaded, without a queue, a keychain or a network — the
 /// rung it echoes back is half of what QA-9 is about, so the test needs to see it.
 class _RecordingReviewSync extends ReviewSync {
@@ -146,7 +148,7 @@ void main() {
 
     // Card 3 of 3 was LAID OUT as rung 2. It must be dealt as rung 1: the term back as the prompt,
     // the translations back as the options — and not the reverse card's English ones.
-    expect(find.text('3 из 3'), findsOneWidget);
+    expect(find.text(nb('3 из 3')), findsOneWidget);
     expect(find.text(term), findsOneWidget);
     expect(find.text('Где я могу найти корм для собак?'), findsOneWidget);
     expect(find.text('canned food'), findsNothing, reason: 'the reverse card was not dealt');
@@ -166,7 +168,7 @@ void main() {
     await answer(tester, 'grain-free');
 
     // The reverse card, as planned: the translation asks and the English options answer.
-    expect(find.text('3 из 3'), findsOneWidget);
+    expect(find.text(nb('3 из 3')), findsOneWidget);
     expect(find.text('grain-free'), findsOneWidget, reason: 'a reverse-card option');
     expect(sync.uploaded.first, (termId: termId, ladderStep: 1));
     expect(tester.takeException(), isNull);

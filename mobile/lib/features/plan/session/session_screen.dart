@@ -12,7 +12,7 @@ import 'package:eng_std/ui/day_plate.dart';
 
 import '../../../data/app_version.dart';
 import '../../../data/languages.dart' show sttLocaleFor;
-import '../../../data/plan/day_window.dart' show WindowPhrase;
+import '../../../data/plan/day_window.dart' show WindowPhrase, WindowStageState;
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/dialogue_feed.dart';
 import '../../../data/plan/session/session_models.dart';
@@ -293,21 +293,30 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     );
   }
 
-  /// THE DAY'S ROWS ON 30-1 — exactly the stages the SERVER dealt, in its order (наряд
-  /// CLIENT-CONV-1a): six on a day with a talk, five on one dealt without it. The talk is «пройден»
-  /// when its own row says so — it has no cards to count.
+  /// THE DAY'S ROWS ON 30-1 — exactly the stages the SERVER dealt, in its order (наряд CLIENT-CONV-1a): six on a day
+  /// with a talk, five on one dealt without it — each in the SERVER's state, the day window's `stages[].state`
+  /// (приёмка CLIENT-CONV-1c 22.09: «состояние ряда — из state сервера, не из счёта карточек»), so the entry and the
+  /// window say the same word. The stage replayed from the day summary is the current one (the server has it done).
+  /// Only a day whose window did not parse falls back to what its cards say.
   List<StageRow> _rows({required PlanStage current}) {
     final q = _session.queue;
+    StageRowStatus fromCards(PlanStage s) => s == current
+        ? StageRowStatus.current
+        : (s == PlanStage.conversation ? _session.talkDone : q?.isDone(s) ?? false)
+        ? StageRowStatus.done
+        : StageRowStatus.ahead;
     return [
       for (final s in _session.dayStages)
         (
           stage: s,
-          status: s == current
+          status: widget.replay && s == current
               ? StageRowStatus.current
-              : (s == PlanStage.conversation ? _session.talkDone : q?.isDone(s) ?? false)
-              ? StageRowStatus.done
-              : StageRowStatus.ahead,
-          started: q != null && q.cardsOf(s).any((c) => c.isAnswered),
+              : switch (_session.serverStateOf(s)) {
+                  WindowStageState.done => StageRowStatus.done,
+                  WindowStageState.current => StageRowStatus.current,
+                  WindowStageState.locked => StageRowStatus.ahead,
+                  null => fromCards(s),
+                },
           replay: widget.replay && s == current,
         ),
     ];

@@ -9,6 +9,8 @@ import 'package:eng_std/features/training/training_home_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/data/locale_controller.dart';
 
+import '../../support/nbsp.dart';
+
 /// THE EMPTY RULE, as a guard: a block with no data is not in the tree.
 ///
 /// Not «drawn as 0», not «drawn greyed out» — absent. The rule is easy to state and easy to lose:
@@ -182,7 +184,7 @@ void main() {
 
       expect(find.byKey(HomeBlockKeys.session), findsOneWidget);
       expect(find.byKey(HomeBlockKeys.tomorrow), findsNothing);
-      expect(find.textContaining('0 слов'), findsNothing);
+      expect(find.textContaining(nb('0 слов')), findsNothing);
     });
 
     testWidgets('a number nobody has yet is one plate fewer, never a zero', (tester) async {
@@ -217,7 +219,7 @@ void main() {
       expect(find.text('12'), findsNWidgets(2));
       expect(find.text('Новых'), findsNothing);
       expect(find.text('Разобрать'), findsNothing);
-      expect(find.textContaining('0 новых'), findsNothing);
+      expect(find.textContaining(nb('0 новых')), findsNothing);
     });
 
     testWidgets('«Разобрать» is a row of the composition — but not part of the headline', (
@@ -282,8 +284,8 @@ void main() {
       expect(find.byKey(HomeBlockKeys.session), findsNothing);
 
       // WORDS lead and carry their unit; cards and minutes follow. «32 из 32» bare is the bug.
-      expect(find.textContaining('32 из 32 слов'), findsOneWidget);
-      expect(find.text('32 из 32'), findsNothing);
+      expect(find.textContaining(nb('32 из 32 слов')), findsOneWidget);
+      expect(find.text(nb('32 из 32')), findsNothing);
       // The reward names the rung in the interface's own words — the server sent the number 4.
       expect(find.textContaining('reluctant'), findsOneWidget);
       expect(find.textContaining('написание'), findsOneWidget);
@@ -304,7 +306,7 @@ void main() {
 
       expect(find.byKey(HomeBlockKeys.done), findsOneWidget);
       expect(find.textContaining('уже ждёт очереди'), findsOneWidget);
-      expect(find.text('Ещё 1 слово'), findsOneWidget);
+      expect(find.text(nb('Ещё 1 слово')), findsOneWidget);
     });
 
     testWidgets('with nothing queued the evening still offers the swipe pass', (tester) async {
@@ -318,7 +320,7 @@ void main() {
       );
 
       expect(find.textContaining('Ветклиника'), findsOneWidget);
-      expect(find.text('Ещё 12 слов'), findsOneWidget);
+      expect(find.text(nb('Ещё 12 слов')), findsOneWidget);
     });
 
     testWidgets('a day that promoted nothing has no reward line', (tester) async {
@@ -446,7 +448,7 @@ void main() {
       expect(find.byKey(HomeBlockKeys.storeShowcase), findsOneWidget);
       expect(find.text('Аэропорт'), findsOneWidget);
       // «16 слов · A2» — the level only where the deck has one.
-      expect(find.textContaining('16 слов · A2'), findsWidgets);
+      expect(find.textContaining(nb('16 слов · A2')), findsWidgets);
     });
 
     testWidgets('a deck with no level prints its size and stops there', (tester) async {
@@ -460,9 +462,9 @@ void main() {
         ),
       );
 
-      expect(find.text('16 слов'), findsOneWidget);
+      expect(find.text(nb('16 слов')), findsOneWidget);
       // …and no «16 слов · » — the level is the only thing that would follow it.
-      expect(find.textContaining('16 слов ·'), findsNothing);
+      expect(find.textContaining(nb('16 слов ·')), findsNothing);
     });
   });
 
@@ -519,8 +521,8 @@ void main() {
       );
 
       // The bug from the phone, in one line: the number was cards and the shape was words.
-      expect(find.text('52 из 52'), findsNothing);
-      expect(find.text('14 из 14 слов · 52 карточки · 2 мин'), findsOneWidget);
+      expect(find.text(nb('52 из 52')), findsNothing);
+      expect(find.text(nb('14 из 14 слов · 52 карточки · 2 мин')), findsOneWidget);
     });
 
     for (final state in [HomeStateKind.plan, HomeStateKind.done, HomeStateKind.idle]) {
@@ -551,7 +553,7 @@ void main() {
         plan(session_: session(repeat: 1, cards: 2, chainTotal: 3, minutes: 1)),
       );
 
-      expect(find.textContaining('карточка 2 из 3'), findsOneWidget);
+      expect(find.textContaining(nb('карточка 2 из 3')), findsOneWidget);
     });
 
     testWidgets('the offer on a closed day carries it too', (tester) async {
@@ -564,7 +566,7 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('карточка 1 из 3'), findsOneWidget);
+      expect(find.textContaining(nb('карточка 1 из 3')), findsOneWidget);
     });
 
     testWidgets('a lone graduated repeat has no chain to report', (tester) async {

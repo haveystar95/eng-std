@@ -38,7 +38,7 @@ abstract final class WindowTexts {
       WindowDayStatus.inProgress => (l.planWindowStateInProgress, null),
       WindowDayStatus.passed => (l.planSessionStateDone, day.minutesSpent == null ? null : l.planMinutesCount(day.minutesSpent!)),
     };
-    String line(List<String> parts) => parts.reduce((a, b) => l.planWindowJoin(a, b));
+    String line(List<String> parts) => parts.reduce((a, b) => l.planDot(a, b));
 
     return switch (day.type) {
       PlanDayType.rehearsal => (
@@ -82,7 +82,7 @@ abstract final class WindowTexts {
       _ => (l.planWindowStateInProgress, _approx(l, day.minutesEstimate, long: false)),
     };
 
-    return minutes == null ? word : l.planWindowJoin(word, minutes);
+    return minutes == null ? word : l.planDot(word, minutes);
   }
 
   /// Минуты компактной шапки: «≈ 20 мин» до конца дня, «19 минут» у пройденного.
@@ -100,7 +100,7 @@ abstract final class WindowTexts {
       WindowStageState.done => l.planPlateStateDone,
       WindowStageState.current => switch (minutes(stage.minutesLeft)) {
         null => l.planPlateStateCurrent,
-        final m => l.planWindowJoin(l.planPlateStateCurrent, m),
+        final m => l.planDot(l.planPlateStateCurrent, m),
       },
       WindowStageState.locked => minutes(stage.minutes) ?? l.planPlateStateAhead,
     };
@@ -123,9 +123,9 @@ abstract final class WindowTexts {
   static String brow(AppLocalizations l, WindowTab tab, WindowSummary summary) {
     var line = tab == WindowTab.dialogue || summary.total == 0
         ? tabName(l, tab)
-        : l.planWindowJoin(tabName(l, tab), '${summary.total}');
-    if (summary.done > 0) line = l.planWindowJoin(line, l.planWindowBrowDone(summary.done));
-    if (summary.returns > 0) line = l.planWindowJoin(line, l.planWindowBrowReturns(summary.returns));
+        : l.planDot(tabName(l, tab), '${summary.total}');
+    if (summary.done > 0) line = l.planDot(line, l.planWindowBrowDone(summary.done));
+    if (summary.returns > 0) line = l.planDot(line, l.planWindowBrowReturns(summary.returns));
 
     return line;
   }
@@ -147,7 +147,7 @@ abstract final class WindowTexts {
   static String sheetState(AppLocalizations l, WindowWord word) => switch (word.state) {
     WindowUnitState.pending => l.planWindowSheetNotStarted,
     WindowUnitState.done => l.planPlateStateDone,
-    WindowUnitState.returnsTomorrow => l.planWindowJoin(
+    WindowUnitState.returnsTomorrow => l.planDot(
       l.planPlateStateDone,
       word.returnsDay == null ? l.planWindowSheetReturnsTomorrow : l.planWindowSheetReturnsOn(word.returnsDay!),
     ),

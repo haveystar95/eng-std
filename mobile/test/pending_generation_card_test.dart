@@ -9,6 +9,8 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/collections/pending_generation_card.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import 'support/nbsp.dart';
+
 PendingGeneration _row({
   required String status,
   String? collectionId,
@@ -126,6 +128,6 @@ void main() {
     );
     expect(find.text('Готово'), findsOneWidget);
     expect(find.text('В банке'), findsOneWidget);
-    expect(find.text('12 из 15'), findsOneWidget);
+    expect(find.text(nb('12 из 15')), findsOneWidget);
   });
 }

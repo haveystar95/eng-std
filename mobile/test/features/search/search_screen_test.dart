@@ -17,6 +17,8 @@ import 'package:eng_std/features/search/search_states.dart';
 import 'package:eng_std/features/word_card/word_card_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// The six faces of the search screen (кадры 01–05, 08), plus the one rule that outranks all of
 /// them: typing is free and may run on a debounce, the model costs money and runs ONLY on a tap.
 class _SpyApi implements ApiClient {
@@ -401,7 +403,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AiLimitCard), findsOneWidget);
-      expect(find.text('5 из 5 на сегодня'), findsOneWidget);
+      expect(find.text(nb('5 из 5 на сегодня')), findsOneWidget);
       expect(find.text('Сборки с моделью вернутся в полночь'), findsOneWidget);
       // The free half of the answer is unaffected by the cap, so it stays: withholding it would
       // punish the learner for the app's own accounting.

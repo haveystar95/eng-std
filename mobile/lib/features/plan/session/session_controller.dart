@@ -254,6 +254,15 @@ class SessionController extends ChangeNotifier {
   int? get talkScenesCount => _talkRow?.scenesCount;
   List<TalkTarget> get talkTargets => _talkRow?.targets ?? const [];
 
+  /// Where the SERVER says [stage] stands — its row in the day window (`window.stages[].state`); null — the window did
+  /// not parse or has no such row.
+  WindowStageState? serverStateOf(PlanStage stage) {
+    for (final r in _day?.window?.stages ?? const <WindowStage>[]) {
+      if (r.stage == stage) return r.state;
+    }
+    return null;
+  }
+
   WindowStage? get _talkRow {
     for (final r in _day?.window?.stages ?? const <WindowStage>[]) {
       if (r.stage == PlanStage.conversation) return r;

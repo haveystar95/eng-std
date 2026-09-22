@@ -20,6 +20,7 @@ import 'package:eng_std/features/plan/session/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart';
 
 /// THE DAY SUMMARY AND «CLOSE THE DAY» ON THE REAL SCREEN (work order SESSION-1c §5, canvas 30-7): a day with every
@@ -178,13 +179,13 @@ void main() {
     final backend = _Backend(_day(returns: {'words': {3}, 'phrases': {2}, 'dialogue': {1}}));
     await _open(tester, backend);
 
-    expect(find.text('День пройден · 19 минут'), findsOneWidget);
+    expect(find.text(nb('День пройден · 19 минут')), findsOneWidget);
     expect(find.byKey(const ValueKey('day-summary-plate')), findsOneWidget);
     for (final stage in ['Слова', 'Фразы', 'Диалог', 'Слушаю и отвечаю', 'Говорю сам', 'Разговор']) {
       expect(find.descendant(of: find.byKey(const ValueKey('day-summary-plate')), matching: find.text(stage)), findsOneWidget, reason: stage);
     }
     expect(find.text('ВЕРНЁТСЯ ЗАВТРА'), findsOneWidget);
-    expect(find.text('3 карточки: 1 слово, 1 фраза и 1 реплика.'), findsOneWidget);
+    expect(find.text(nb('3 карточки: 1 слово, 1 фраза и 1 реплика.')), findsOneWidget);
     expect(find.text('День 2 — собираю'), findsOneWidget);
     expect(sounds, contains('day_done'));
 
@@ -205,7 +206,7 @@ void main() {
     final backend = _Backend(_day(talk: false));
     await _open(tester, backend);
 
-    expect(find.text('День пройден · 19 минут'), findsOneWidget);
+    expect(find.text(nb('День пройден · 19 минут')), findsOneWidget);
     expect(find.descendant(of: find.byKey(const ValueKey('day-summary-plate')), matching: find.text('Разговор')), findsNothing);
     expect(find.text('ЧТО БЫЛО ХОРОШО'), findsNothing, reason: 'the server sent no lines');
 

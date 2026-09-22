@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/dot_join.dart';
 
 import '../../../data/api_client.dart';
 import '../../../data/image_loader.dart';
@@ -476,7 +477,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       parts.add(event.isEmpty ? when : '${event.toLowerCase()} $when');
     }
 
-    return parts.join(' · ');
+    return dotJoin(parts);
   }
 
 }

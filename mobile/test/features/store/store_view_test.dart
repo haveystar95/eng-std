@@ -13,6 +13,8 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/mini_flag.dart';
 import 'package:eng_std/ui/pair_badge.dart';
 
+import '../../support/nbsp.dart';
+
 /// A3.9 store surface (кадр 2.8): list renders by topic sections, premium sets carry the lock badge,
 /// and tapping a premium set routes through the preview to the paywall.
 /// The flag INSIDE a CARD's pair badge. The filter row above the grid draws the same badge (Ч.5а —
@@ -130,8 +132,8 @@ void main() {
     expect(find.text('Cafe'), findsOneWidget);
     expect(find.text('Job interview'), findsOneWidget);
     // «N слов · CEFR» line (кадр 2.8).
-    expect(find.text('16 слов · A2'), findsOneWidget);
-    expect(find.text('22 слова · B1–B2'), findsOneWidget);
+    expect(find.text(nb('16 слов · A2')), findsOneWidget);
+    expect(find.text(nb('22 слова · B1–B2')), findsOneWidget);
   });
 
   testWidgets('premium set shows the lock badge; free set does not', (tester) async {

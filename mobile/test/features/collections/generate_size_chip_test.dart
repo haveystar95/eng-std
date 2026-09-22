@@ -8,6 +8,8 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/collections/generate_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// The size chips hold a TRANSLATED hint inside a third of the screen width, and the English one
 /// («approximately 15 words») ran straight over the ink fill of the selected chip on the phone.
 /// The rule: whatever the locale, the hint stays inside its own chip and on one line.
@@ -46,7 +48,7 @@ void main() {
     await tester.pump();
 
     for (final hint in hints) {
-      final text = find.text(hint);
+      final text = find.text(nb(hint));
       expect(text, findsOneWidget, reason: 'the hint is on screen at all');
       final chip = find.ancestor(of: text, matching: find.byType(Material)).first;
       expect(

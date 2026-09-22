@@ -169,7 +169,7 @@ class _PlanRouteState extends State<PlanRoute> {
         if (explain) parts.add(planLockReason(l, day, previous));
     }
 
-    return parts.isEmpty ? null : parts.join(' · ');
+    return parts.isEmpty ? null : dotJoin(parts);
   }
 }
 

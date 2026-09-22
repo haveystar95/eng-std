@@ -23,6 +23,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../support/day_window_harness.dart';
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 
 /// КАНОН ОКНА ДНЯ (наряды DAY-UI-2 §5, DAY-UI-3 §6) — правила наряда и канвы серии 23, а не снимок кода.
@@ -130,7 +131,7 @@ void main() {
         }),
       );
 
-      expect(find.text('СЛОВА · 8 · 3 ПРОЙДЕНО · 1 ВЕРНЁТСЯ ЗАВТРА'), findsOneWidget);
+      expect(find.text(nb('СЛОВА · 8 · 3 ПРОЙДЕНО · 1 ВЕРНЁТСЯ ЗАВТРА')), findsOneWidget);
       expect(find.descendant(of: find.byType(WindowPill), matching: find.textContaining(RegExp(r'\d'))), findsNothing);
     });
 
@@ -138,7 +139,7 @@ void main() {
     testWidgets('нулевые части не пишутся', (tester) async {
       await pumpDayWindow(tester, windowRoom('not_started'));
 
-      expect(find.text('СЛОВА · 8'), findsOneWidget);
+      expect(find.text(nb('СЛОВА · 8')), findsOneWidget);
     });
 
     // ПРАВИЛО (наряд DAY-UI-2 §1): «нет поля — честная ошибка».

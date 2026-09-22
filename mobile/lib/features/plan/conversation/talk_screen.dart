@@ -70,6 +70,10 @@ class TalkView extends StatefulWidget {
 class _TalkViewState extends State<TalkView> {
   late final SessionMic _mic;
 
+  /// The role's lines the learner opened with «текст» under «Без подсказок» — by talk and turn, since a replay numbers its
+  /// turns from one again.
+  final Set<String> _opened = {};
+
   ConversationController get _talk => widget.controller;
 
   @override
@@ -267,15 +271,18 @@ class _TalkViewState extends State<TalkView> {
       return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text, marks: _marksOf(turn));
     }
     // THE ROLE'S TEXT IS OPEN WITH ITS VOICE (правка прохода 21.09, наряд CLIENT-CONV-1b): the words stand from the
-    // first sound, «прослушать» in the corner, no «текст» to tap. Under «Без подсказок» they stay closed, as before —
-    // the texts wait for the summary.
+    // first sound, «прослушать» in the corner, no «текст» to tap. Under «Без подсказок» each line stays closed until the
+    // learner taps its «текст» (наряд CLIENT-CONV-1c §5, приёмка 22.09) — then that line alone opens.
+    final line = '${talk.id}:${turn.index}';
+    final open = talk.hints.enabled || _opened.contains(line);
     return ValueListenableBuilder<Object?>(
       key: ValueKey('turn-${turn.index}'),
       valueListenable: widget.voice.playing,
       builder: (_, playing, _) => TalkPartnerBubble(
         text: turn.textTarget ?? '',
         translation: turn.textNative,
-        open: talk.hints.enabled,
+        open: open,
+        onOpenText: open ? null : () => setState(() => _opened.add(line)),
         playing: playing == 'talk-${turn.index}',
         interrupted: _talk.interruptedAt(turn.index),
         speaking: _talk.sounding(turn.index),

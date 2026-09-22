@@ -11,6 +11,8 @@ import 'package:eng_std/features/progress/progress_providers.dart';
 import 'package:eng_std/features/progress/progress_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
+
 /// Render smoke test — the screen is device-batched, so this catches layout throws (e.g. the
 /// activity-bar Expanded/Align class of bug) and confirms the local stats surface.
 void main() {
@@ -58,8 +60,8 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Прогресс'), findsOneWidget);
-    expect(find.text('12 дней подряд'), findsOneWidget);
-    expect(find.text('Лучший результат — 19 дней'), findsOneWidget);
+    expect(find.text(nb('12 дней подряд')), findsOneWidget);
+    expect(find.text(nb('Лучший результат — 19 дней')), findsOneWidget);
     expect(find.text('82'), findsOneWidget); // «Выучено всего» = mastered
     expect(find.text('12'), findsNWidgets(2)); // «За неделю» + «Повторений сегодня», both local
     // The status vocabulary, the same three words the collection screen uses (Ч.4).

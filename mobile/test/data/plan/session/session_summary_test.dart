@@ -8,6 +8,7 @@ import 'package:eng_std/data/plan/session/session_summary.dart';
 import 'package:eng_std/features/plan/session/session_texts.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/server_fixtures.dart';
 
 /// THE NUMBERS OF THE SUMMARIES (наряды SESSION-1c, CLIENT-CONV-1c; кадры 30-6, 30-7) — read off the server's cards:
@@ -58,13 +59,13 @@ void main() {
   // words alone, never «0 минут».
   // CATCHES: «Слова пройдены» on a stage that is not words (the fallback of the old 30-6), and «· 0 минут».
   test('30-6: the title of every stage — its words and the server\'s minutes', () {
-    expect(SessionTexts.passed(l, PlanStage.words, 6), 'Слова пройдены · 6 минут');
-    expect(SessionTexts.passed(l, PlanStage.phrases, 5), 'Фразы пройдены · 5 минут');
-    expect(SessionTexts.passed(l, PlanStage.dialogue, 3), 'Диалог пройден · 3 минуты');
-    expect(SessionTexts.passed(l, PlanStage.listen, 5), 'Слушаю и отвечаю — пройдено · 5 минут');
-    expect(SessionTexts.passed(l, PlanStage.speak, 1), 'Говорю сам — пройдено · 1 минута');
-    expect(SessionTexts.passed(l, PlanStage.recall, 4), 'Вспомнить — пройдено · 4 минуты');
-    expect(SessionTexts.passed(l, PlanStage.repetition, 7), 'Повторение пройдено · 7 минут');
+    expect(SessionTexts.passed(l, PlanStage.words, 6), nb('Слова пройдены · 6 минут'));
+    expect(SessionTexts.passed(l, PlanStage.phrases, 5), nb('Фразы пройдены · 5 минут'));
+    expect(SessionTexts.passed(l, PlanStage.dialogue, 3), nb('Диалог пройден · 3 минуты'));
+    expect(SessionTexts.passed(l, PlanStage.listen, 5), nb('Слушаю и отвечаю — пройдено · 5 минут'));
+    expect(SessionTexts.passed(l, PlanStage.speak, 1), nb('Говорю сам — пройдено · 1 минута'));
+    expect(SessionTexts.passed(l, PlanStage.recall, 4), nb('Вспомнить — пройдено · 4 минуты'));
+    expect(SessionTexts.passed(l, PlanStage.repetition, 7), nb('Повторение пройдено · 7 минут'));
     expect(SessionTexts.passed(l, PlanStage.speak, null), 'Говорю сам — пройдено');
   });
 
@@ -81,11 +82,11 @@ void main() {
     answer(json, 'dialogue', 6, 'passed', response: {'mode': 'voice_hint'});
     answer(json, 'dialogue', 8, 'hinted', response: {'mode': 'voice_hint'}); // x4: hinted — aloud, not first-time
     answer(json, 'dialogue', 11, 'passed', response: {'mode': 'voice_blind'});
-    expect(linesOf(json, PlanStage.dialogue), [
+    expect(linesOf(json, PlanStage.dialogue), nbAll([
       '8 реплик, 6 с первого раза',
       'сказал вслух 6 своих реплик', // four answers by voice and the two «спроси сам»; the chip is not aloud
       'переспросил — врач повторил медленнее',
-    ]);
+    ]));
 
     // Two rescues read as the frame reads them; no rescue walked — two lines.
     final twice = raw();
@@ -118,26 +119,26 @@ void main() {
     answer(json, 'speak', 2, 'hinted', attempts: 1, returns: true);
     answer(json, 'speak', 5, 'skipped', attempts: 2, returns: true);
 
-    expect(linesOf(json, PlanStage.words), [
+    expect(linesOf(json, PlanStage.words), nbAll([
       '8 слов, 6 с первого раза',
       '1 вернётся завтра',
       'Эти слова ты теперь узнаёшь — дальше они встретятся во фразах',
-    ]);
-    expect(linesOf(json, PlanStage.phrases), [
+    ]));
+    expect(linesOf(json, PlanStage.phrases), nbAll([
       '6 фраз, 5 с первого раза',
       'завтра ничего не вернётся',
       'Фразы собраны и сказаны вслух — в диалоге они пригодятся',
-    ]);
-    expect(linesOf(json, PlanStage.listen), [
+    ]));
+    expect(linesOf(json, PlanStage.listen), nbAll([
       '6 вопросов, 4 с первого раза',
       'завтра ничего не вернётся',
       'Реплики собеседника ты понимаешь на слух',
-    ], reason: '3 listen_question + 2 listen_predict + 1 listen_number — walkthroughs are no questions');
-    expect(linesOf(json, PlanStage.speak), [
+    ]), reason: '3 listen_question + 2 listen_predict + 1 listen_number — walkthroughs are no questions');
+    expect(linesOf(json, PlanStage.speak), nbAll([
       '7 реплик, 5 с первого раза',
       '2 вернутся завтра',
       'Свои реплики ты сказал сам — дальше живой разговор',
-    ], reason: 'x3 carries two cards (the answer and the echo): seven exchanges');
+    ]), reason: 'x3 carries two cards (the answer and the echo): seven exchanges');
   });
 
   // RULE (30-6 «Вспомнить», «Повторение»): the rehearsal's «Вспомнить» says «N реплик из S сцен» — its lines said aloud and
@@ -147,17 +148,17 @@ void main() {
   test('30-6: «Вспомнить» — lines and scenes, two lines; «Повторение» — cards', () {
     final rehearsal = raw('day-rehearsal');
     passAll(rehearsal, 'recall');
-    expect(linesOf(rehearsal, PlanStage.recall), ['10 реплик из 2 сцен', 'Реплики на месте — дальше разговор целиком']);
+    expect(linesOf(rehearsal, PlanStage.recall), nbAll(['10 реплик из 2 сцен', 'Реплики на месте — дальше разговор целиком']));
 
     // The review as the server deals it: its cards under `repetition` (BACK-TAILS-2 §3).
     final review = raw('day-review');
     passAll(review, 'repetition');
     answer(review, 'repetition', 3, 'hinted');
-    expect(linesOf(review, PlanStage.repetition), [
+    expect(linesOf(review, PlanStage.repetition), nbAll([
       '7 карточек, 6 с первого раза',
       'завтра ничего не вернётся',
       'Всё, что возвращалось, сказано ещё раз',
-    ]);
+    ]));
   });
 
   // CATCHES: a unit counted twice (two cards marked), a `day` unit counted, and a sentence with nothing in it.
@@ -172,8 +173,8 @@ void main() {
     final words = day.stageOf(PlanStage.words)!.cards;
     final sameUnit = words.firstWhere((c) => c.position == 3).unit.ref == words.firstWhere((c) => c.position == 5).unit.ref;
     expect(returns, (words: sameUnit ? 1 : 2, phrases: 1, exchanges: 1));
-    expect(SessionTexts.dayReturns(l, (words: 2, phrases: 2, exchanges: 1)), '5 карточек: 2 слова, 2 фразы и 1 реплика.');
-    expect(SessionTexts.dayReturns(l, (words: 1, phrases: 0, exchanges: 0)), '1 карточка: 1 слово.');
+    expect(SessionTexts.dayReturns(l, (words: 2, phrases: 2, exchanges: 1)), nb('5 карточек: 2 слова, 2 фразы и 1 реплика.'));
+    expect(SessionTexts.dayReturns(l, (words: 1, phrases: 0, exchanges: 0)), nb('1 карточка: 1 слово.'));
     expect(SessionTexts.dayReturns(l, (words: 0, phrases: 0, exchanges: 0)), isNull);
     expect(SessionSummaries.dayReturns(SessionQueue(SessionDay.fromJson(raw()).stages)), (words: 0, phrases: 0, exchanges: 0));
   });
