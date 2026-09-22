@@ -56,17 +56,18 @@ void main() {
 
   // RULE (30-6, решение архитектора 22.09): the title is the stage's own words and the server's minutes of the stage —
   // «Слова пройдены · 6 минут», «Слушаю и отвечаю — пройдено · 5 минут»; without minutes (a replay sends nothing) the
-  // words alone, never «0 минут».
+  // words alone, never «0 минут». The tail «пройдено · N минут» holds together and the dash stays with the name
+  // (приёмка 22.09, третий заход) — `nbPassed`.
   // CATCHES: «Слова пройдены» on a stage that is not words (the fallback of the old 30-6), and «· 0 минут».
   test('30-6: the title of every stage — its words and the server\'s minutes', () {
-    expect(SessionTexts.passed(l, PlanStage.words, 6), nb('Слова пройдены · 6 минут'));
-    expect(SessionTexts.passed(l, PlanStage.phrases, 5), nb('Фразы пройдены · 5 минут'));
-    expect(SessionTexts.passed(l, PlanStage.dialogue, 3), nb('Диалог пройден · 3 минуты'));
-    expect(SessionTexts.passed(l, PlanStage.listen, 5), nb('Слушаю и отвечаю — пройдено · 5 минут'));
-    expect(SessionTexts.passed(l, PlanStage.speak, 1), nb('Говорю сам — пройдено · 1 минута'));
-    expect(SessionTexts.passed(l, PlanStage.recall, 4), nb('Вспомнить — пройдено · 4 минуты'));
-    expect(SessionTexts.passed(l, PlanStage.repetition, 7), nb('Повторение пройдено · 7 минут'));
-    expect(SessionTexts.passed(l, PlanStage.speak, null), 'Говорю сам — пройдено');
+    expect(SessionTexts.passed(l, PlanStage.words, 6), nbPassed('Слова пройдены · 6 минут'));
+    expect(SessionTexts.passed(l, PlanStage.phrases, 5), nbPassed('Фразы пройдены · 5 минут'));
+    expect(SessionTexts.passed(l, PlanStage.dialogue, 3), nbPassed('Диалог пройден · 3 минуты'));
+    expect(SessionTexts.passed(l, PlanStage.listen, 5), nbPassed('Слушаю и отвечаю — пройдено · 5 минут'));
+    expect(SessionTexts.passed(l, PlanStage.speak, 1), nbPassed('Говорю сам — пройдено · 1 минута'));
+    expect(SessionTexts.passed(l, PlanStage.recall, 4), nbPassed('Вспомнить — пройдено · 4 минуты'));
+    expect(SessionTexts.passed(l, PlanStage.repetition, 7), nbPassed('Повторение пройдено · 7 минут'));
+    expect(SessionTexts.passed(l, PlanStage.speak, null), nbPassed('Говорю сам — пройдено'));
   });
 
   // RULE (30-6, the frame's own three lines): «Диалог» says «N реплик, M с первого раза» — its exchanges, the ones every

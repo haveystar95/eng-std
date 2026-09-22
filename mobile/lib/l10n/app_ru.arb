@@ -5417,21 +5417,33 @@
   "@planSessionPassedDialogue": {
     "description": "Итог этапа (30-6, кадр SESSION-DES-4 «Диалог пройден · 3 минуты»): заголовок «Диалог» — к нему через « · » минуты этапа."
   },
-  "planSessionPassedListen": "Слушаю и отвечаю — пройдено",
+  "planSessionPassedListen": "Слушаю и отвечаю — пройдено",
   "@planSessionPassedListen": {
     "description": "Итог этапа (30-6): заголовок «Слушаю и отвечаю» — к нему через « · » минуты этапа (решение архитектора 22.09)."
   },
-  "planSessionPassedSpeak": "Говорю сам — пройдено",
+  "planSessionPassedSpeak": "Говорю сам — пройдено",
   "@planSessionPassedSpeak": {
     "description": "Итог этапа (30-6): заголовок «Говорю сам» — к нему через « · » минуты этапа (решение архитектора 22.09)."
   },
-  "planSessionPassedRecall": "Вспомнить — пройдено",
+  "planSessionPassedRecall": "Вспомнить — пройдено",
   "@planSessionPassedRecall": {
     "description": "Итог этапа (30-6, день репетиции): заголовок «Вспомнить» — к нему через « · » минуты этапа (решение архитектора 22.09)."
   },
   "planSessionPassedRepetition": "Повторение пройдено",
   "@planSessionPassedRepetition": {
     "description": "Итог этапа (30-6, день повторения): заголовок «Повторение» — к нему через « · » минуты этапа (решение архитектора 22.09)."
+  },
+  "planSessionPassedMinutes": "{title} · {minutes}",
+  "@planSessionPassedMinutes": {
+    "description": "Итог этапа (30-6): заголовок этапа и его минуты сервера — «Говорю сам — пройдено · 6 минут». Хвост «пройдено · N минут» неразрывен целиком: неразрывные пробелы вокруг «·», внутри «N минут» — planMinutesCount, а перед тире — сами заголовки; строка переносится только после тире (приёмка CLIENT-CONV-1c 22.09, третий заход).",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
   },
   "planSessionFirstTryWords": "{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}",
   "@planSessionFirstTryWords": {

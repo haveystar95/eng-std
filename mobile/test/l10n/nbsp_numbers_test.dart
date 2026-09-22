@@ -56,16 +56,28 @@ void main() {
       expect(_arb(file)['planWindowJoinNumber'], '{first} ·$nbsp{second}');
       expect(_arb(file)['planWindowJoin'], '{first} · {second}');
     });
+
+    // ПРАВИЛО (30-6, приёмка 22.09, третий заход): хвост заголовка итога этапа «пройдено · N минут» неразрывен целиком —
+    // неразрывные пробелы вокруг «·», — а тире держится при имени этапа: строка переносится только после тире.
+    // ЛОВИТ: «Говорю сам — пройдено / · 6 минут» (кадр 21 третьего захода) и тире в начале строки.
+    test('$file: 30-6 — «·» склеена с обеих сторон, тире — с именем этапа', () {
+      final arb = _arb(file);
+      expect(arb['planSessionPassedMinutes'], '{title}$nbsp·$nbsp{minutes}');
+      for (final key in arb.keys.where((k) => k.startsWith('planSessionPassed') && k != 'planSessionPassedMinutes')) {
+        final title = arb[key] as String;
+        expect(title.contains(' —'), isFalse, reason: '$key: «$title» — тире после обычного пробела');
+      }
+    });
   }
 
   // ПРАВИЛО: склейку «a · b» код собирает одним хелпером `planDot`: число во второй части держится при точке, слово —
   // нет; тот же вид даёт тестам `nb()`.
-  // ЛОВИТ: «пройдено · / 3 минуты» в заголовке 30-6 (live/27, 34) и «идёт · около» с точкой, приклеенной к слову.
-  test('planDot: «пройдено · 3 минуты» — число при точке, «идёт · около 5 минут» — точка отдельно', () {
+  // ЛОВИТ: «пройден · / 9 минут» в строке состояния дня (37-1, 37-2) и «идёт · около» с точкой, приклеенной к слову.
+  test('planDot: «пройден · 9 минут» — число при точке, «идёт · около 5 минут» — точка отдельно', () {
     final l = lookupAppLocalizations(const Locale('ru'));
-    final done = l.planDot('Вспомнить — пройдено', l.planMinutesCount(3));
-    expect(done, 'Вспомнить — пройдено ·${nbsp}3$nbspминуты');
-    expect(done, nb('Вспомнить — пройдено · 3 минуты'));
+    final done = l.planDot('пройден', l.planMinutesCount(9));
+    expect(done, 'пройден ·${nbsp}9$nbspминут');
+    expect(done, nb('пройден · 9 минут'));
     final going = l.planDot('идёт', l.planTalkEntryMinutes(5));
     expect(going, 'идёт · около 5$nbspминут');
     expect(going, nb('идёт · около 5 минут'));

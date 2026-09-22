@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -332,9 +330,9 @@ class _TargetsCut {
 ///
 /// The frame's column only fits the frame's own words: a title of two lines («Поговори с регистратором» on a 390 screen)
 /// or a third phrase that shows its cut take the room it does not have. What the screen lacks, THE PHOTO BAND GIVES —
-/// the element the frame already cut from 170 to 64 «чтобы блок встал без наложения»: it narrows from [photoMax] to
-/// [photoMin] and goes altogether below that. The window keeps its two phrases and the cut third while it can, else
-/// cuts the second; a screen that cannot hold even that scrolls.
+/// the element the frame already cut from 170 to 64 «чтобы блок встал без наложения»: it stands whole, [photo] high, or
+/// not at all — never a narrowed strip (приёмка CLIENT-CONV-1c 22.09, третий заход). The window keeps its two phrases
+/// and the cut third while it can, else cuts the second; a screen that cannot hold even that scrolls.
 class _EntryFit extends MultiChildRenderObjectWidget {
   const _EntryFit({required this.viewport, required this.window, required super.children});
 
@@ -364,8 +362,7 @@ class _RenderEntryFit extends RenderBox
   static const double sayGap = 14;
   static const double toggleGap = 24;
   static const double air = 8;
-  static const double photoMax = 64;
-  static const double photoMin = 24;
+  static const double photo = 64;
 
   double _viewport;
   set viewport(double value) {
@@ -431,11 +428,8 @@ class _RenderEntryFit extends RenderBox
     size = constraints.constrain(Size(width, y));
   }
 
-  /// The photo band on what is left: the frame's 64 at most, nothing under [photoMin] (its own 20 under it counts).
-  static double _band(double room) {
-    final band = room - photoGap;
-    return band < photoMin ? 0 : math.min(photoMax, band);
-  }
+  /// The photo band on what is left: the frame's 64 whole when it fits with its own 20 under it, else none.
+  static double _band(double room) => room - photoGap >= photo ? photo : 0;
 
   @override
   void paint(PaintingContext context, Offset offset) => defaultPaint(context, offset);
@@ -445,10 +439,10 @@ class _RenderEntryFit extends RenderBox
       defaultHitTestChildren(result, position: position);
 }
 
-/// THE SCENE'S PHOTO BAND (кадр 37-5, SESSION-DES-4) — between the strip and the eyebrow, corners 12, as high as the
-/// entry's budget lets it be ([_EntryFit]: the frame's 64 at most — it was 170 before the phrases came onto the screen),
-/// the photo covering the band on the scene's tone while it comes in. A scene without a photo keeps the band's shape as
-/// a paper plate.
+/// THE SCENE'S PHOTO BAND (кадр 37-5, SESSION-DES-4) — between the strip and the eyebrow, corners 12, 64 high when the
+/// entry's budget holds it and absent when not ([_EntryFit]; it was 170 before the phrases came onto the screen), the
+/// photo covering the band on the scene's tone while it comes in. A scene without a photo keeps the band's shape as a
+/// paper plate.
 class _ScenePhoto extends StatelessWidget {
   const _ScenePhoto({required this.scene});
 

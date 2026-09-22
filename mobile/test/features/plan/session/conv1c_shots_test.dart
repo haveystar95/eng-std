@@ -151,16 +151,16 @@ void main() {
     file.writeAsBytesSync(bytes!.buffer.asUint8List());
   }
 
-  void phone(WidgetTester tester) {
+  void phone(WidgetTester tester, {Size size = frame}) {
     tester.view
       ..devicePixelRatio = 2
-      ..physicalSize = frame * 2
+      ..physicalSize = size * 2
       ..padding = const FakeViewPadding(top: 52 * 2);
     addTearDown(tester.view.reset);
   }
 
-  Future<void> pumpShot(WidgetTester tester, Widget home) async {
-    phone(tester);
+  Future<void> pumpShot(WidgetTester tester, Widget home, {Size size = frame}) async {
+    phone(tester, size: size);
     muteSound(tester);
     await tester.pumpWidget(
       RepaintBoundary(
@@ -310,10 +310,11 @@ void main() {
   }
 
   // ── 37-5 · вход в разговор с блоком фраз ──────────────────────────────────────────────────────
-  testWidgets('01 37-5 вход в разговор дня — «Скажи в разговоре»', (tester) async {
-    // The talk row of day-doctor.json as the server sends it: its title, minutes, scenes and six phrases.
+  /// The day's talk entry — the talk row of day-doctor.json as the server sends it: its title, minutes, scenes and six
+  /// phrases — on a phone [size].
+  Future<void> pumpDayEntry(WidgetTester tester, {Size size = frame}) {
     final row = talkRow('day-doctor');
-    await pumpShot(
+    return pumpShot(
       tester,
       TalkEntryView(
         scene: doctor.scene,
@@ -327,8 +328,29 @@ void main() {
         onStart: () {},
         onBack: () {},
       ),
+      size: size,
     );
+  }
+
+  double photoBand(WidgetTester tester) => tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height;
+
+  testWidgets('01 37-5 вход в разговор дня — «Скажи в разговоре»', (tester) async {
+    await pumpDayEntry(tester);
     await shoot(tester, '01-37-5-entry-day');
+  });
+
+  // The photo band stands 64 whole or not at all (приёмка 22.09, третий заход): under a title of two lines and the cut
+  // third phrase it needs 84 of air (64 and its 20) — the 390 phone has it from 909 high, not yet at 874.
+  testWidgets('01b 37-5 вход дня на 390 × 874 — полосе фото ещё мало места', (tester) async {
+    await pumpDayEntry(tester, size: const Size(390, 874));
+    expect(photoBand(tester), 0);
+    await shoot(tester, '01b-37-5-entry-day-874');
+  });
+
+  testWidgets('01c 37-5 вход дня на 390 × 909 — полоса фото 64 целиком', (tester) async {
+    await pumpDayEntry(tester, size: const Size(390, 909));
+    expect(photoBand(tester), 64);
+    await shoot(tester, '01c-37-5-entry-day-909');
   });
 
   testWidgets('02 37-5b репетиция — «Разговор целиком · 2 сцены», «Скажи в разговоре»', (tester) async {
@@ -615,7 +637,7 @@ void main() {
     });
     await pumpSessionShot(tester, json);
     await finishStage(tester);
-    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, startsWith('Говорю сам — пройдено'));
+    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, nbPassed('Говорю сам — пройдено · 6 минут'));
     await shoot(tester, '21-30-6-speak');
   });
 
@@ -714,7 +736,7 @@ void main() {
     final json = atLastCard('listen', const ['words', 'phrases', 'dialogue'], (json) {});
     await pumpSessionShot(tester, json, stageMinutes: 13);
     await finishStage(tester);
-    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, nb('Слушаю и отвечаю — пройдено · 13 минут'));
+    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, nbPassed('Слушаю и отвечаю — пройдено · 13 минут'));
     await shoot(tester, '31-30-6-listen-two-digit-minutes');
   });
 

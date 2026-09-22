@@ -52,7 +52,9 @@ abstract final class SessionTexts {
 
   /// THE TITLE OF A STAGE SUMMARY (30-6, решение архитектора 22.09) — «Слова пройдены · 6 минут», «Слушаю и отвечаю —
   /// пройдено · 5 минут»: the stage's own words, then the stage's minutes as the server counted them. No minutes from the
-  /// server (a replay sends nothing) — the words alone, never «0 минут».
+  /// server (a replay sends nothing) — the words alone, never «0 минут». The tail «пройдено · N минут» never breaks and the
+  /// dash stays with the stage's name, so a title too long for one line breaks only after its dash — «Говорю сам — /
+  /// пройдено · 6 минут» (приёмка CLIENT-CONV-1c 22.09, третий заход): the no-break spaces live in the strings.
   static String passed(AppLocalizations l, PlanStage s, int? minutes) {
     final title = switch (s) {
       PlanStage.phrases => l.planSessionPassedPhrases,
@@ -63,7 +65,7 @@ abstract final class SessionTexts {
       PlanStage.repetition => l.planSessionPassedRepetition,
       PlanStage.words || PlanStage.conversation || PlanStage.unknown => l.planSessionPassedWords,
     };
-    return minutes == null ? title : l.planDot(title, l.planMinutesCount(minutes));
+    return minutes == null ? title : l.planSessionPassedMinutes(title, l.planMinutesCount(minutes));
   }
 
   /// THE THREE LINES OF A STAGE SUMMARY (30-6) — the frame's three slots, [StageLine.soft] on the third as the frame

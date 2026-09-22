@@ -12,3 +12,8 @@ String nb(String text) => text
 
 /// [nb] over a list of lines.
 List<String> nbAll(List<String> texts) => [for (final t in texts) nb(t)];
+
+/// A STAGE SUMMARY'S TITLE (30-6) as the app draws it: [nb], and the dash kept with the stage's name, and the dot kept
+/// with the word before it too — «Говорю сам — / пройдено · 6 минут» breaks only after the dash (приёмка
+/// CLIENT-CONV-1c 22.09, третий заход; `planSessionPassedMinutes` and the `planSessionPassed*` titles).
+String nbPassed(String text) => nb(text).replaceAll(' —', '$nbsp—').replaceAll(' ·$nbsp', '$nbsp·$nbsp');

@@ -4248,16 +4248,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planSessionPassedDialogue => 'Диалог пройден';
 
   @override
-  String get planSessionPassedListen => 'Слушаю и отвечаю — пройдено';
+  String get planSessionPassedListen => 'Слушаю и отвечаю — пройдено';
 
   @override
-  String get planSessionPassedSpeak => 'Говорю сам — пройдено';
+  String get planSessionPassedSpeak => 'Говорю сам — пройдено';
 
   @override
-  String get planSessionPassedRecall => 'Вспомнить — пройдено';
+  String get planSessionPassedRecall => 'Вспомнить — пройдено';
 
   @override
   String get planSessionPassedRepetition => 'Повторение пройдено';
+
+  @override
+  String planSessionPassedMinutes(String title, String minutes) {
+    return '$title · $minutes';
+  }
 
   @override
   String planSessionFirstTryWords(int n, int first) {

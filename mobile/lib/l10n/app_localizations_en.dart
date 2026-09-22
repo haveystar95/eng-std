@@ -4063,16 +4063,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionPassedDialogue => 'Dialogue done';
 
   @override
-  String get planSessionPassedListen => 'Listen and answer — done';
+  String get planSessionPassedListen => 'Listen and answer — done';
 
   @override
-  String get planSessionPassedSpeak => 'Speak myself — done';
+  String get planSessionPassedSpeak => 'Speak myself — done';
 
   @override
-  String get planSessionPassedRecall => 'Recall — done';
+  String get planSessionPassedRecall => 'Recall — done';
 
   @override
   String get planSessionPassedRepetition => 'Review done';
+
+  @override
+  String planSessionPassedMinutes(String title, String minutes) {
+    return '$title · $minutes';
+  }
 
   @override
   String planSessionFirstTryWords(int n, int first) {

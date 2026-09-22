@@ -2402,10 +2402,11 @@
   "planSessionPassedWords": "Words done",
   "planSessionPassedPhrases": "Phrases done",
   "planSessionPassedDialogue": "Dialogue done",
-  "planSessionPassedListen": "Listen and answer — done",
-  "planSessionPassedSpeak": "Speak myself — done",
-  "planSessionPassedRecall": "Recall — done",
+  "planSessionPassedListen": "Listen and answer — done",
+  "planSessionPassedSpeak": "Speak myself — done",
+  "planSessionPassedRecall": "Recall — done",
   "planSessionPassedRepetition": "Review done",
+  "planSessionPassedMinutes": "{title} · {minutes}",
   "planSessionFirstTryWords": "{n, plural, one{{n} word, {first} at the first try} other{{n} words, {first} at the first try}}",
   "@planSessionFirstTryWords": {
     "placeholders": {

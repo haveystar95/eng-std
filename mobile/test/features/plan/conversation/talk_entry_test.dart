@@ -35,8 +35,9 @@ void main() {
     bool rehearsal = false,
     int? scenesCount,
     int minutes = 3,
+    double height = 844,
   }) async {
-    tester.view.physicalSize = const Size(390, 844) * 2;
+    tester.view.physicalSize = Size(390, height) * 2;
     tester.view.devicePixelRatio = 2;
     // The frame's phone has a 52 status bar over the screen, as a real one does.
     tester.view.padding = const FakeViewPadding(top: 52 * 2);
@@ -81,12 +82,12 @@ void main() {
       .state<ScrollableState>(find.descendant(of: find.byType(TalkEntryView), matching: find.byType(Scrollable)).first)
       .position;
 
-  // ПРАВИЛО (кадр 37-5, SESSION-DES-4; приёмка снимков 22.09): на 390 × 844 всё помещается — переключатель «Без
-  // подсказок» целиком над доком, без прокрутки, и в окне «Скажи в разговоре» две фразы и третья, подрезанная кромкой.
-  // Меры — кадра; чего экрану не хватает, отдаёт полоса фото: кадровые 64, когда места хватает, уже — когда нет, и ни
-  // одной, если уже 24 (заголовок в две строки на 390). Полоса стоит между полосой сцены и бровью.
+  // ПРАВИЛО (кадр 37-5, SESSION-DES-4; приёмка снимков 22.09, второй и третий заходы): на 390 × 844 всё помещается —
+  // переключатель «Без подсказок» целиком над доком, без прокрутки, и в окне «Скажи в разговоре» две фразы и третья,
+  // подрезанная кромкой. Меры — кадра; чего экрану не хватает, отдаёт полоса фото: она стоит кадровыми 64 целиком, когда
+  // место есть, и её нет совсем, когда нет, — никогда не сжимается. Полоса стоит между полосой сцены и бровью.
   // ЛОВИТ: переключатель под доком (заголовок в две строки на 390 — харнесс 01, 02), фото, съевшее третью фразу, и
-  // полосу-щель.
+  // полосу-щель уже 64.
   testWidgets('37-5: на 844 всё над доком без прокрутки — место отдаёт полоса фото', (tester) async {
     for (final (title, rehearsal) in [
       ('Поговори с врачом', false),
@@ -105,7 +106,7 @@ void main() {
 
       final photo = find.byKey(const ValueKey('talk-entry-photo'));
       final band = tester.getSize(photo).height;
-      expect(band == 0 || (band >= 24 && band <= 64), isTrue, reason: '$title: полоса $band — от 24 до 64 или её нет');
+      expect(band == 0 || band == 64, isTrue, reason: '$title: полоса $band — 64 целиком или её нет');
       if (band > 0) {
         final rect = tester.getRect(photo);
         expect(rect.top, greaterThanOrEqualTo(tester.getRect(find.byType(SessionSceneStrip)).bottom), reason: 'под полосой сцены');
@@ -113,15 +114,27 @@ void main() {
       }
     }
 
-    // A title of one line leaves the band on screen; a title of two takes it (390 wide).
-    await pumpEntry(tester, day.scene, title: 'Поговори с врачом', targets: targets);
-    expect(tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height, greaterThanOrEqualTo(24));
-    await pumpEntry(tester, day.scene, title: 'Поговори с регистратором', targets: targets);
-    expect(tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height, 0);
-
     // Nothing to fit — the frame's 64.
     await pumpEntry(tester, day.scene);
     expect(tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height, 64);
+  });
+
+  // ПРАВИЛО (приёмка 22.09, третий заход): полоса фото — 64 целиком или её нет, на любой высоте экрана; вернулась —
+  // значит, всё по-прежнему над доком без прокрутки.
+  // ЛОВИТ: полосу 24…63, которой уступка места съела низ фото.
+  testWidgets('37-5: полоса фото — 64 или нет, на любой высоте', (tester) async {
+    for (final title in ['Поговори с врачом', 'Поговори с регистратором']) {
+      final seen = <double>{};
+      for (var height = 844.0; height <= 960; height += 4) {
+        await pumpEntry(tester, day.scene, title: title, targets: targets, height: height);
+        final band = tester.getSize(find.byKey(const ValueKey('talk-entry-photo'))).height;
+        seen.add(band);
+        expect(band == 0 || band == 64, isTrue, reason: '$title на $height: полоса $band');
+        expect(tester.getRect(toggleOf()).bottom, lessThanOrEqualTo(tester.getRect(find.byType(SessionDock)).top), reason: '$title на $height');
+        expect(entryScroll(tester).maxScrollExtent, 0, reason: '$title на $height: без прокрутки');
+      }
+      expect(seen, {0.0, 64.0}, reason: '$title: на 844 полосы нет, на высоком экране она встаёт целиком');
+    }
   });
 
   // ПРАВИЛО: экрану, где и одной подрезанной фразы не поместить (крупный шрифт), остаётся прокрутка — ничего не

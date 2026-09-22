@@ -317,7 +317,7 @@ class SessionStageSummary extends StatelessWidget {
                     children: [
                       const Align(alignment: Alignment.centerLeft, child: _PassedRing()),
                       const SizedBox(height: 14),
-                      Text(title, key: const ValueKey('stage-summary-title'), style: AppTextSession.stageTitle),
+                      SessionStageTitle(title: title),
                       const SizedBox(height: 14),
                       SessionStageDots(rows: rows),
                     ],
@@ -379,6 +379,47 @@ class SessionStageSummary extends StatelessWidget {
 }
 
 /// THE STAGE IS CLOSED (30-6): a sage ring 32 — a line 1.5 — with a sage check 16 inside.
+/// THE STAGE SUMMARY'S TITLE (30-6) in Literata 26. The no-break spaces of its strings keep the tail «пройдено · N минут»
+/// on one line and the dash with the stage's name, so a title too long for one line breaks only after the dash —
+/// «Говорю сам — / пройдено · 6 минут» (приёмка CLIENT-CONV-1c 22.09, третий заход). A screen narrower than the tail
+/// itself (320 wide: «пройдены · 44 минуты» is 293 of its 272) would have the text engine split a word of it; there
+/// the dot gives way instead — the line may break before «·», and the number still keeps the dot and its word.
+class SessionStageTitle extends StatelessWidget {
+  const SessionStageTitle({super.key, required this.title});
+
+  final String title;
+
+  static final String _heldDot = '${String.fromCharCode(0xA0)}·';
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final scaler = MediaQuery.textScalerOf(context);
+      final fits = !title.contains(_heldDot) || _widestHeld(scaler) <= box.maxWidth;
+      return Text(
+        fits ? title : title.replaceAll(_heldDot, ' ·'),
+        key: const ValueKey('stage-summary-title'),
+        style: AppTextSession.stageTitle,
+      );
+    },
+  );
+
+  /// The widest run of the title that holds the dot — no line may break inside it.
+  double _widestHeld(TextScaler scaler) {
+    var widest = 0.0;
+    for (final run in title.split(' ').where((r) => r.contains(_heldDot))) {
+      final painter = TextPainter(
+        text: TextSpan(text: run, style: AppTextSession.stageTitle),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout();
+      if (painter.width > widest) widest = painter.width;
+      painter.dispose();
+    }
+    return widest;
+  }
+}
+
 class _PassedRing extends StatelessWidget {
   const _PassedRing();
 

@@ -36,6 +36,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/day_window_harness.dart' show RecordingLines, kWindowInsets;
+import '../../../support/nbsp.dart';
 import '../../../support/plan_goldens.dart' show planFrom, setUpPlanGoldens;
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
@@ -376,7 +377,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
     }
     // Since CLIENT-CONV-1c the stage summary is one component for every stage (30-6, решение архитектора 22.09).
-    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, startsWith('Вспомнить — пройдено'));
+    expect(tester.widget<Text>(find.byKey(const ValueKey('stage-summary-title'))).data, startsWith(nbPassed('Вспомнить — пройдено')));
     await shoot(tester, '12-37-4-recall-summary');
   });
 
