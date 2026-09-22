@@ -1,0 +1,399 @@
+{
+    "day_1": {
+        "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+        "seconds": 740,
+        "budget": 690,
+        "over_ceiling": true,
+        "rungs": [
+            {
+                "rung": 0,
+                "seconds": 820,
+                "cards": 29
+            },
+            {
+                "rung": 1,
+                "seconds": 820,
+                "cards": 29
+            },
+            {
+                "rung": 2,
+                "seconds": 740,
+                "cards": 22
+            }
+        ],
+        "frames": {
+            "p1": {
+                "recognitions": 1,
+                "rounds": 3,
+                "own": true
+            },
+            "p2": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p3": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p4": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p5": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p6": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p7": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            }
+        },
+        "say_whole": [
+            {
+                "unit_ref": "p1",
+                "rounds": [
+                    {
+                        "expected_text": "Do you have a day pass?",
+                        "task_native": "У вас есть дневной пропуск?"
+                    },
+                    {
+                        "expected_text": "Do you have a weekly pass?",
+                        "task_native": "У вас есть недельный пропуск?"
+                    },
+                    {
+                        "expected_text": "Do you have towel rental?",
+                        "task_native": "У вас есть аренда полотенца?"
+                    }
+                ],
+                "chips": [
+                    "a day pass — У вас есть дневной пропуск?",
+                    "a weekly pass — У вас есть недельный пропуск?",
+                    "towel rental — У вас есть аренда полотенца?"
+                ]
+            },
+            {
+                "unit_ref": "p2",
+                "rounds": [
+                    {
+                        "expected_text": "What monthly memberships do you have?",
+                        "task_native": "Какие у вас есть месячные абонементы?"
+                    },
+                    {
+                        "expected_text": "What payment options do you have?",
+                        "task_native": "Какие способы оплаты у вас есть?"
+                    }
+                ],
+                "chips": [
+                    "monthly memberships — Какие у вас есть месячные абонементы?",
+                    "payment options — Какие способы оплаты у вас есть?"
+                ]
+            },
+            {
+                "unit_ref": "p3",
+                "rounds": [
+                    {
+                        "expected_text": "This is my first visit.",
+                        "task_native": "Это мой первый визит."
+                    },
+                    {
+                        "expected_text": "This is my trial day.",
+                        "task_native": "Это мой пробный день."
+                    }
+                ],
+                "chips": [
+                    "my first visit — Это мой первый визит.",
+                    "my trial day — Это мой пробный день."
+                ]
+            },
+            {
+                "unit_ref": "p4",
+                "rounds": [
+                    {
+                        "expected_text": "That works for me on weekdays.",
+                        "task_native": "Мне это подходит по будням."
+                    },
+                    {
+                        "expected_text": "That works for me on weekends.",
+                        "task_native": "Мне это подходит по выходным."
+                    }
+                ],
+                "chips": [
+                    "weekdays — Мне это подходит по будням.",
+                    "weekends — Мне это подходит по выходным."
+                ]
+            },
+            {
+                "unit_ref": "p5",
+                "rounds": [
+                    {
+                        "expected_text": "Where are the changing rooms?",
+                        "task_native": "Где раздевалки?"
+                    },
+                    {
+                        "expected_text": "Where are the showers?",
+                        "task_native": "Где душевые?"
+                    }
+                ],
+                "chips": [
+                    "the changing rooms — Где раздевалки?",
+                    "the showers — Где душевые?"
+                ]
+            },
+            {
+                "unit_ref": "p6",
+                "rounds": [
+                    {
+                        "expected_text": "I'll return the locker key.",
+                        "task_native": "Я верну ключ от шкафчика."
+                    },
+                    {
+                        "expected_text": "I'll return the access card.",
+                        "task_native": "Я верну карту доступа."
+                    }
+                ],
+                "chips": [
+                    "the locker key — Я верну ключ от шкафчика.",
+                    "the access card — Я верну карту доступа."
+                ]
+            },
+            {
+                "unit_ref": "p7",
+                "rounds": [
+                    {
+                        "expected_text": "Can I pay by card?",
+                        "task_native": "Я могу оплатить картой?"
+                    },
+                    {
+                        "expected_text": "Can I pay in cash?",
+                        "task_native": "Я могу оплатить наличными?"
+                    }
+                ],
+                "chips": [
+                    "by card — Я могу оплатить картой?",
+                    "in cash — Я могу оплатить наличными?"
+                ]
+            }
+        ]
+    },
+    "day_2": {
+        "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+        "seconds": 860,
+        "budget": 690,
+        "over_ceiling": true,
+        "rungs": [
+            {
+                "rung": 0,
+                "seconds": 940,
+                "cards": 28
+            },
+            {
+                "rung": 1,
+                "seconds": 940,
+                "cards": 28
+            },
+            {
+                "rung": 2,
+                "seconds": 860,
+                "cards": 22
+            }
+        ],
+        "frames": {
+            "p1": {
+                "recognitions": 1,
+                "rounds": 3,
+                "own": true
+            },
+            "p2": {
+                "recognitions": 1,
+                "rounds": 3,
+                "own": true
+            },
+            "p3": {
+                "recognitions": 1,
+                "rounds": 3,
+                "own": true
+            },
+            "p4": {
+                "recognitions": 1,
+                "rounds": 3,
+                "own": true
+            },
+            "p5": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p6": {
+                "recognitions": 1,
+                "rounds": 3,
+                "own": true
+            },
+            "p7": {
+                "recognitions": 1,
+                "rounds": 3,
+                "own": true
+            }
+        },
+        "say_whole": [
+            {
+                "unit_ref": "p1",
+                "rounds": [
+                    {
+                        "expected_text": "I'm working on general fitness.",
+                        "task_native": "Я работаю над общей формой."
+                    },
+                    {
+                        "expected_text": "I'm working on strength.",
+                        "task_native": "Я работаю над силой."
+                    },
+                    {
+                        "expected_text": "I'm working on weight loss.",
+                        "task_native": "Я работаю над снижением веса."
+                    }
+                ],
+                "chips": [
+                    "general fitness — Я работаю над общей формой.",
+                    "strength — Я работаю над силой.",
+                    "weight loss — Я работаю над снижением веса."
+                ]
+            },
+            {
+                "unit_ref": "p2",
+                "rounds": [
+                    {
+                        "expected_text": "I have about a year of experience.",
+                        "task_native": "У меня около года опыта."
+                    },
+                    {
+                        "expected_text": "I have six months of experience.",
+                        "task_native": "У меня шесть месяцев опыта."
+                    },
+                    {
+                        "expected_text": "I have a few years of experience.",
+                        "task_native": "У меня несколько лет опыта."
+                    }
+                ],
+                "chips": [
+                    "about a year — У меня около года опыта.",
+                    "six months — У меня шесть месяцев опыта.",
+                    "a few years — У меня несколько лет опыта."
+                ]
+            },
+            {
+                "unit_ref": "p3",
+                "rounds": [
+                    {
+                        "expected_text": "I have some shoulder pain.",
+                        "task_native": "У меня немного болит плечо."
+                    },
+                    {
+                        "expected_text": "I have some knee pain.",
+                        "task_native": "У меня есть боль в колене."
+                    },
+                    {
+                        "expected_text": "I have some lower back pain.",
+                        "task_native": "У меня есть боль в пояснице."
+                    }
+                ],
+                "chips": [
+                    "shoulder pain — У меня немного болит плечо.",
+                    "knee pain — У меня есть боль в колене.",
+                    "lower back pain — У меня есть боль в пояснице."
+                ]
+            },
+            {
+                "unit_ref": "p4",
+                "rounds": [
+                    {
+                        "expected_text": "How do I use this machine?",
+                        "task_native": "Как пользоваться этим тренажёром?"
+                    },
+                    {
+                        "expected_text": "How do I use the cable machine?",
+                        "task_native": "Как пользоваться блочным тренажёром?"
+                    },
+                    {
+                        "expected_text": "How do I use the rowing machine?",
+                        "task_native": "Как пользоваться гребным тренажёром?"
+                    }
+                ],
+                "chips": [
+                    "this machine — Как пользоваться этим тренажёром?",
+                    "the cable machine — Как пользоваться блочным тренажёром?",
+                    "the rowing machine — Как пользоваться гребным тренажёром?"
+                ]
+            },
+            {
+                "unit_ref": "p5",
+                "rounds": [
+                    {
+                        "expected_text": "How heavy should the weight be?",
+                        "task_native": "Насколько тяжёлым должен быть вес?"
+                    },
+                    {
+                        "expected_text": "How heavy should the dumbbell be?",
+                        "task_native": "Гантель"
+                    }
+                ],
+                "chips": [
+                    "the weight — Насколько тяжёлым должен быть вес?",
+                    "the dumbbell — Гантель"
+                ]
+            },
+            {
+                "unit_ref": "p6",
+                "rounds": [
+                    {
+                        "expected_text": "I'll rest for forty-five seconds.",
+                        "task_native": "Я буду отдыхать сорок пять секунд."
+                    },
+                    {
+                        "expected_text": "I'll rest for thirty seconds.",
+                        "task_native": "Я буду отдыхать тридцать секунд."
+                    },
+                    {
+                        "expected_text": "I'll rest for one minute.",
+                        "task_native": "Я буду отдыхать минуту."
+                    }
+                ],
+                "chips": [
+                    "forty-five seconds — Я буду отдыхать сорок пять секунд.",
+                    "thirty seconds — Я буду отдыхать тридцать секунд.",
+                    "one minute — Я буду отдыхать минуту."
+                ]
+            },
+            {
+                "unit_ref": "p7",
+                "rounds": [
+                    {
+                        "expected_text": "Should I keep my shoulders down?",
+                        "task_native": "Мне держать плечи опущенными?"
+                    },
+                    {
+                        "expected_text": "Should I keep my elbows down?",
+                        "task_native": "Мне держать локти опущенными?"
+                    },
+                    {
+                        "expected_text": "Should I keep my chest down?",
+                        "task_native": "Мне держать грудь опущенными?"
+                    }
+                ],
+                "chips": [
+                    "my shoulders — Мне держать плечи опущенными?",
+                    "my elbows — Мне держать локти опущенными?",
+                    "my chest — Мне держать грудь опущенными?"
+                ]
+            }
+        ]
+    }
+}

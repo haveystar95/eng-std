@@ -1,0 +1,66 @@
+{
+    "day_1": {
+        "words": {
+            "cards": 24,
+            "fact_seconds": 102,
+            "old_seconds": 260,
+            "new_seconds": 180
+        },
+        "phrases": {
+            "cards": 30,
+            "fact_seconds": 595,
+            "old_seconds": 698,
+            "new_seconds": 665
+        },
+        "dialogue": {
+            "cards": 11,
+            "fact_seconds": 257,
+            "old_seconds": 330,
+            "new_seconds": 200
+        },
+        "listen": {
+            "cards": 12,
+            "fact_seconds": 213,
+            "old_seconds": 288,
+            "new_seconds": 205
+        },
+        "speak": {
+            "cards": 8,
+            "fact_seconds": 438,
+            "old_seconds": 265,
+            "new_seconds": 235
+        }
+    },
+    "day_2": {
+        "words": {
+            "cards": 24,
+            "fact_seconds": 90,
+            "old_seconds": 260,
+            "new_seconds": 180
+        },
+        "phrases": {
+            "cards": 23,
+            "fact_seconds": 518,
+            "old_seconds": 788,
+            "new_seconds": 785
+        },
+        "dialogue": {
+            "cards": 12,
+            "fact_seconds": 173,
+            "old_seconds": 330,
+            "new_seconds": 205
+        },
+        "listen": {
+            "cards": 11,
+            "fact_seconds": 123,
+            "old_seconds": 273,
+            "new_seconds": 190
+        },
+        "speak": {
+            "cards": 15,
+            "fact_seconds": 184,
+            "old_seconds": 475,
+            "new_seconds": 340
+        }
+    }
+}

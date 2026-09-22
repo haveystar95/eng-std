@@ -1,0 +1,407 @@
+[
+ {
+  "name": "1.1 голос ученика не из профиля",
+  "rule": "§1: голос ученика — пол профиля",
+  "defect": "ученик всегда мужской",
+  "file": "app/Modules/Plan/Application/Service/VoiceCasts.php",
+  "find": "return $this->learners->of($user) ?? VoiceCast::DEFAULT_LEARNER;",
+  "replace": "return VoiceCast::DEFAULT_LEARNER;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/PlanDayWindowTest.php",
+    "filter": "casts a scene"
+   }
+  ]
+ },
+ {
+  "name": "1.2 revoice покупает без --apply",
+  "rule": "§1: dry-run по умолчанию",
+  "defect": "флаг --apply не читается",
+  "file": "app/Modules/Plan/Infrastructure/Console/PlanRevoiceLearnerCommand.php",
+  "find": "if (! $apply || $total['learner'] + $total['partner'] === 0) {",
+  "replace": "if ($total['learner'] + $total['partner'] === 0) {",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/PlanDayWindowTest.php",
+    "filter": "names what the learner"
+   }
+  ]
+ },
+ {
+  "name": "1.3 строки про ученицу — в мужском",
+  "rule": "§1: родовые строки ученика по профилю",
+  "defect": "женская форма не читается",
+  "file": "app/Modules/Plan/Domain/Service/NativeStrings.php",
+  "find": "return $this->learner === VoiceGender::Female ? (self::FEMININE[$this->table()][$key] ?? $line) : $line;",
+  "replace": "return $line;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/LearnerGenderStringsTest.php"
+   }
+  ]
+ },
+ {
+  "name": "2.1 прейскурант плана не читается",
+  "rule": "§2: у плана — снимок plan.pace",
+  "defect": "минуты по конфигу, не по плану",
+  "file": "app/Modules/Plan/Application/Service/PlanPaces.php",
+  "find": "return new DayPace([...$this->config->pace, ...($plan->pace() ?? [])]);",
+  "replace": "return new DayPace($this->config->pace);",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/PlanPaceTest.php",
+    "filter": "gives a new plan"
+   }
+  ]
+ },
+ {
+  "name": "2.2 repace пишет каждый раз",
+  "rule": "§2: plan:repace идемпотентна",
+  "defect": "план с нынешним списком пишется снова",
+  "file": "app/Modules/Plan/Domain/Entity/Plan.php",
+  "find": "if ($had === $pace) {\n            return false;",
+  "replace": "if (false) {\n            return false;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/PlanPaceTest.php",
+    "filter": "once"
+   }
+  ]
+ },
+ {
+  "name": "2.3 старые планы без старого списка",
+  "rule": "§2: план, сделанный раньше, держит свой прейскурант до repace",
+  "defect": "миграция не заполняет снимок",
+  "file": "app/Modules/Plan/Infrastructure/Migration/2026_09_23_100000_add_pace_to_plans.php",
+  "find": "DB::update('UPDATE plans SET pace = CAST(? AS jsonb) WHERE pace IS NULL', [json_encode(self::PACE_BEFORE_FIX_3, JSON_THROW_ON_ERROR)]);",
+  "replace": "",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/PlanPaceTest.php",
+    "filter": "made before"
+   }
+  ]
+ },
+ {
+  "name": "2.4 пауза снова десять минут",
+  "rule": "§2: PAUSE_SECONDS 600 → 120",
+  "defect": "пауза 600 с",
+  "file": "app/Modules/Plan/Domain/Service/DayMetricsCalculator.php",
+  "find": "public const PAUSE_SECONDS = 120;",
+  "replace": "public const PAUSE_SECONDS = 600;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionDayAssemblyTest.php",
+    "filter": "pauses over two minutes"
+   }
+  ]
+ },
+ {
+  "name": "3.1 круг режется до одного",
+  "rule": "§3: значений ≥ 2 → кругов ≥ 2",
+  "defect": "минимум кругов — 1",
+  "file": "app/Modules/Plan/Domain/Assembly/PhraseCards.php",
+  "find": "public const MIN_ROUNDS = 2;",
+  "replace": "public const MIN_ROUNDS = 1;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SessionSeamFillersTest.php",
+    "filter": "two rounds all the same"
+   }
+  ]
+ },
+ {
+  "name": "3.2 вторые узнавания не снимаются",
+  "rule": "§3: ступень 2 — вторые узнавания",
+  "defect": "ступень 2 ничего не снимает",
+  "file": "app/Modules/Plan/Domain/Assembly/PhrasesStage.php",
+  "find": "$recognitions[$ref] = array_slice($recognitions[$ref], 0, self::RECOGNITIONS_FLOOR);",
+  "replace": "$recognitions[$ref] = $recognitions[$ref];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/PhrasesStageTest.php",
+    "filter": "a rung at a time"
+   }
+  ]
+ },
+ {
+  "name": "4.1 «and» не соединяет",
+  "rule": "§4: составные складываются, «one hundred and twenty» = 120",
+  "defect": "связка не читается",
+  "file": "app/Modules/Shared/Domain/Service/SpokenNumbers.php",
+  "find": "if (isset($isJoiner[$words[$i]]) && self::isScale($last)) {",
+  "replace": "if (false) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Shared/SpeechMatchTest.php",
+    "filter": "joins a hundred"
+   }
+  ]
+ },
+ {
+  "name": "4.2 «ten five» складывается",
+  "rule": "§4: не подходит — два числа",
+  "defect": "порог 20 → 10",
+  "file": "app/Modules/Shared/Domain/Service/SpokenNumbers.php",
+  "find": "} elseif (! self::isScale($value) && $last >= 20 && $value > 0 && $value < self::place($last)) {",
+  "replace": "} elseif (! self::isScale($value) && $last >= 10 && $value > 0 && $value < self::place($last)) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Shared/SpeechMatchTest.php",
+    "filter": "folds a number in the middle"
+   }
+  ]
+ },
+ {
+  "name": "5.1 длина варианта не проверяется",
+  "rule": "§5: options.form_mismatch — длина 0,5–2×",
+  "defect": "границы длины сняты",
+  "file": "app/Modules/Plan/Domain/Check/Lesson/CheckRules.php",
+  "find": "public const OPTION_LENGTH = [0.5, 2.0];",
+  "replace": "public const OPTION_LENGTH = [0.0, 100.0];",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/LessonValidatorTest.php",
+    "filter": "counts the one rule a lesson breaks"
+   }
+  ]
+ },
+ {
+  "name": "6.1 вопрос без своего первого слова",
+  "rule": "§6: вопрос — только со своим первым словом",
+  "defect": "проверка открывающего слова снята",
+  "file": "app/Modules/Plan/Domain/Service/PhraseUse.php",
+  "find": "if (! $this->opensAsItAsks($heard, $target, $pack)) {",
+  "replace": "if (false) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/PhraseUseTest.php",
+    "filter": "credits a question only"
+   }
+  ]
+ },
+ {
+  "name": "6.2 значение за концом предложения",
+  "rule": "§6: окно — своё значение в том же предложении",
+  "defect": "граница предложения снята",
+  "file": "app/Modules/Plan/Domain/Service/PhraseUse.php",
+  "find": "if ($start > 0 && $start < $end) {",
+  "replace": "if (false) {",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/PhraseUseTest.php",
+    "filter": "own value out of the window"
+   }
+  ]
+ },
+ {
+  "name": "6.3 «my» заполняет окно",
+  "rule": "§6: «висячее» слово окна не заполняет",
+  "defect": "dangling_words не читаются",
+  "file": "app/Modules/Plan/Domain/Service/PhraseUse.php",
+  "find": "$empty = array_fill_keys([...$pack->speech()->unstressed, ...($pack->has('dangling_words') ? $pack->words('dangling_words') : [])], true);",
+  "replace": "$empty = array_fill_keys($pack->speech()->unstressed, true);",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/PhraseUseTest.php",
+    "filter": "own value out of the window"
+   }
+  ]
+ },
+ {
+  "name": "7.1 ходов не цели + 2",
+  "rule": "§7: turn_limit = целей + 2",
+  "defect": "ходов всегда 4",
+  "file": "app/Modules/Plan/Domain/Service/ConversationRules.php",
+  "find": "return max(1, $targets) + self::SPARE_TURNS;",
+  "replace": "return 4;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "a move per target"
+   }
+  ]
+ },
+ {
+  "name": "7.2 минуты не останавливают",
+  "rule": "§7: минуты — жёсткий стоп",
+  "defect": "кап по времени снят",
+  "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+  "find": "$capped = $talk->overCap($this->rules->costCapUsd) || $talk->activeSeconds() >= $this->rules->secondsFor($talk->type());",
+  "replace": "$capped = $talk->overCap($this->rules->costCapUsd);",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "a move per target"
+   }
+  ]
+ },
+ {
+  "name": "7.3 своя реплика дважды",
+  "rule": "§7 (живой прогон): роль не повторяет свою реплику",
+  "defect": "страж own_line снят",
+  "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+  "find": "$own = $turn === 'rescue' ? null : RoleLines::ownLineIn($reply->replyTarget, self::roleSoFar($talk));",
+  "replace": "$own = null;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "naming the line"
+   }
+  ]
+ },
+ {
+  "name": "7.4 ранний конец принят",
+  "rule": "§7: «цели покрыты» концом не является",
+  "defect": "страж early_end снят",
+  "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+  "find": "if ($reply->end === ConversationAgentReply::END_NATURAL && $turnsLeft > 0) {",
+  "replace": "if (false) {",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "closes the talk with moves left"
+   }
+  ]
+ },
+ {
+  "name": "7.5 обрывок — «не понял»",
+  "rule": "§7: обрывок ≠ «не понял»",
+  "defect": "суждение с обрывка не снимается",
+  "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+  "find": "if ($turn === 'said' && $reply->understood === false && $this->phrases->breaksOff($heard, $material->targets, $target)) {",
+  "replace": "if (false) {",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "broke off"
+   }
+  ]
+ },
+ {
+  "name": "7.6 подсказка теряет ждущую дверь",
+  "rule": "§7: подсказка = цель, отвечающая на последний вопрос роли",
+  "defect": "реплика без двери не держит прежнюю",
+  "file": "app/Modules/Plan/Domain/Service/ConversationLead.php",
+  "find": "$door = $opens ?? self::lastDoor($talk);",
+  "replace": "$door = $opens;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "takes the door the role names"
+   }
+  ]
+ },
+ {
+  "name": "7.7 репетиция ведёт назад",
+  "rule": "§7: LEAD_TO — сначала сцена, где разговор, и следующие",
+  "defect": "порядок сцен не учитывается",
+  "file": "app/Modules/Plan/Domain/Service/ConversationLead.php",
+  "find": "$ahead = array_values(array_filter($targets, static fn (ConversationPhrase $t): bool => ! isset($behind[$t->sceneId])));",
+  "replace": "$ahead = $targets;",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "leads a rehearsal"
+   }
+  ]
+ },
+ {
+  "name": "7.8 обмен сказанной цели не DONE",
+  "rule": "§7 (живой прогон): роль знает, что уже случилось",
+  "defect": "DONE не ставится",
+  "file": "app/Modules/Plan/Application/Service/ConversationAgent.php",
+  "find": "'done' => isset($line['phrase_ref']) && isset($said[$checkpoint->sceneId.':'.$line['phrase_ref']]),",
+  "replace": "'done' => false,",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "marks the exchange"
+   }
+  ]
+ },
+ {
+  "name": "7.9 сказанное этим ходом — не SAID для ответа",
+  "rule": "§7: цель хода по правилу кода известна роли",
+  "defect": "saidNow пуст",
+  "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+  "find": "$saidNow = $turn === 'said' ? $this->phrases->heardIn($heard, self::unsaid($talk, $material), [], $target) : [];",
+  "replace": "$saidNow = [];",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "marks the exchange"
+   }
+  ]
+ },
+ {
+  "name": "8.1 «Ещё раз» у этапа карточек не всегда",
+  "rule": "§8: stages[].again — у этапов карточек всегда true",
+  "defect": "again у карточек false",
+  "file": "app/Modules/Plan/Domain/Service/DayWindowStages.php",
+  "find": "->walkable(true, StageSummaries::of($stage, $ofStage));",
+  "replace": "->walkable(false, StageSummaries::of($stage, $ofStage));",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/StageSummaryTest.php",
+    "filter": "walked again"
+   }
+  ]
+ },
+ {
+  "name": "9.1 returns — не вернувшееся",
+  "rule": "§9: summary.returns = число вернувшихся",
+  "defect": "returns всегда 0",
+  "file": "app/Modules/Plan/Application/Service/DayWindowViews.php",
+  "find": "$summary = ProgramSummary::of($states, $returned);",
+  "replace": "$summary = ProgramSummary::of($states, 0);",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/GymDaysTest.php",
+    "filter": "seven that came back"
+   }
+  ]
+ },
+ {
+  "name": "10.1 «с первого раза» считает вторую попытку",
+  "rule": "§10: first_try — все карточки единицы с первой попытки",
+  "defect": "число попыток не читается",
+  "file": "app/Modules/Plan/Domain/Service/StageSummaries.php",
+  "find": "return $card->result() === CardResult::Passed && $card->attempts() <= 1;",
+  "replace": "return $card->result() === CardResult::Passed;",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/StageSummaryTest.php",
+    "filter": "counts a stage of cards by its units"
+   }
+  ]
+ },
+ {
+  "name": "11.1 эхо — только последний ход",
+  "rule": "§11: эхо-страж по всем ходам",
+  "defect": "страж читает последний ход",
+  "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+  "find": "if (RoleLines::echoIn($reply->replyTarget, self::saidSoFar($talk), $target, $this->phrases) !== null) {\n            return ['reason' => RoleLines::REDO_LEARNER_ECHO",
+  "replace": "if (RoleLines::echoIn($reply->replyTarget, array_slice(self::saidSoFar($talk), -1), $target, $this->phrases) !== null) {\n            return ['reason' => RoleLines::REDO_LEARNER_ECHO",
+  "tests": [
+   {
+    "path": "tests/Feature/Plan/ConversationApiTest.php",
+    "filter": "a move the learner made earlier"
+   }
+  ]
+ },
+ {
+  "name": "11.2 задание 35-2 не придаточным",
+  "rule": "§11: задание 35-2 — придаточным",
+  "defect": "task_clause_native — предложение",
+  "file": "app/Modules/Plan/Domain/Assembly/SpeakCards.php",
+  "find": "'task_clause_native' => IntentClause::of($ownLine['text_native']),",
+  "replace": "'task_clause_native' => $ownLine['text_native'],",
+  "tests": [
+   {
+    "path": "tests/Unit/Plan/Session/SpeakStageTest.php",
+    "filter": "exactly its keys"
+   }
+  ]
+ }
+]

@@ -1,0 +1,101 @@
+SET
+SET
+                                                                  QUERY PLAN                                                                  
+----------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.799..0.800 rows=1 loops=1)
+   Buffers: shared hit=2 read=1 dirtied=1
+   ->  Index Scan using conversations_day_started_idx on conversations (actual time=0.792..0.794 rows=2 loops=1)
+         Index Cond: ((day_id = '01M2H1ABCN5RGETN9MYPBR523R'::bpchar) AND (started_at >= '2026-09-22 00:00:00+00'::timestamp with time zone))
+         Filter: (id <> '01M34WQM6APS2XK0CWY47QQAYF'::bpchar)
+         Rows Removed by Filter: 1
+         Buffers: shared hit=2 read=1 dirtied=1
+ Planning:
+   Buffers: shared hit=140 read=2
+ Planning Time: 2.596 ms
+ Execution Time: 0.916 ms
+(11 rows)
+
+                                      QUERY PLAN                                      
+--------------------------------------------------------------------------------------
+ Limit (actual time=0.056..0.056 rows=1 loops=1)
+   Buffers: shared read=2
+   ->  Index Scan using users_pkey on users (actual time=0.055..0.055 rows=1 loops=1)
+         Index Cond: (id = '01M2H1ABCB2BDE8ZE378867Y2D'::bpchar)
+         Buffers: shared read=2
+ Planning:
+   Buffers: shared hit=77 read=5
+ Planning Time: 1.772 ms
+ Execution Time: 0.077 ms
+(9 rows)
+
+                                              QUERY PLAN                                              
+------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.316..0.316 rows=1 loops=1)
+   Buffers: shared read=2
+   ->  Index Scan using profiles_user_id_unique on profiles (actual time=0.315..0.315 rows=1 loops=1)
+         Index Cond: (user_id = '01M2H1ABCB2BDE8ZE378867Y2D'::bpchar)
+         Buffers: shared read=2
+ Planning:
+   Buffers: shared hit=64 read=2
+ Planning Time: 0.321 ms
+ Execution Time: 0.350 ms
+(9 rows)
+
+                                           QUERY PLAN                                           
+------------------------------------------------------------------------------------------------
+ Index Scan using plan_scenes_pkey on plan_scenes (actual time=0.751..0.753 rows=2 loops=1)
+   Index Cond: (id = ANY ('{01M2QRHF9M69AMBE2XGD18KQ8P,01M2QRHF9M86KAM8JW8XYRAWDR}'::bpchar[]))
+   Buffers: shared hit=1 read=2
+ Planning:
+   Buffers: shared hit=133 read=1
+ Planning Time: 0.501 ms
+ Execution Time: 0.765 ms
+(7 rows)
+
+BEGIN
+                                      QUERY PLAN                                      
+--------------------------------------------------------------------------------------
+ Update on plans (actual time=2.808..2.813 rows=0 loops=1)
+   Buffers: shared hit=37 read=2 dirtied=1
+   ->  Index Scan using plans_pkey on plans (actual time=0.617..0.619 rows=1 loops=1)
+         Index Cond: (id = '01M2H1ABCMNQXQ6YP9C9A3HD6B'::bpchar)
+         Buffers: shared read=2
+ Planning:
+   Buffers: shared hit=56 read=3
+ Planning Time: 1.051 ms
+ Execution Time: 2.925 ms
+(9 rows)
+
+ROLLBACK
+SET
+                             QUERY PLAN                             
+--------------------------------------------------------------------
+ Sort (actual time=3.551..3.555 rows=63 loops=1)
+   Sort Key: created_at
+   Sort Method: quicksort  Memory: 28kB
+   Buffers: shared hit=5 read=20 dirtied=1
+   ->  Seq Scan on plans (actual time=0.026..3.528 rows=63 loops=1)
+         Filter: ((status)::text <> 'deleted'::text)
+         Buffers: shared hit=2 read=20 dirtied=1
+ Planning:
+   Buffers: shared hit=29 read=1
+ Planning Time: 0.224 ms
+ Execution Time: 3.571 ms
+(11 rows)
+
+BEGIN
+                                                QUERY PLAN                                                 
+-----------------------------------------------------------------------------------------------------------
+ Update on day_cards (actual time=129.756..129.756 rows=0 loops=1)
+   Buffers: shared hit=131 read=607 dirtied=1
+   ->  Seq Scan on day_cards (actual time=129.754..129.754 rows=0 loops=1)
+         Filter: (((payload -> 'partner_line'::text) IS NOT NULL) AND ((kind)::text = 'speak_echo'::text))
+         Rows Removed by Filter: 20282
+         Buffers: shared hit=131 read=607 dirtied=1
+ Planning:
+   Buffers: shared hit=90 read=1
+ Planning Time: 1.079 ms
+ Execution Time: 129.779 ms
+(10 rows)
+
+ROLLBACK

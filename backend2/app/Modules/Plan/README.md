@@ -178,11 +178,11 @@ reads plan tables.
 
 | Port | Implementations |
 |---|---|
-| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v2.1` since BACK-TAILS-2, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
+| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v3` since FIX-3, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `NextDayAccess` | `EveryNextDayAllowed` — may the learner have the next day; asked by `CloseDayHandler` before the next day's lesson is queued (GEN-3 §11). Always yes until PAY-1, whose paywall is this one method |
-| `LearnerGender` | `IdentityLearnerGender` (the profile's gender, read when a lesson is written) |
+| `LearnerGender` | `IdentityLearnerGender` (the profile's gender: the learner's voice on every scene — FIX-3 §1, `Application/Service/VoiceCasts` — and the learner's gendered lines of the server; read when a lesson is written too) |
 | `BuildVersion` | `StampedBuildVersion` (`APP_COMMIT` / `storage/app/commit`) |
 | `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `findMany` — a batch, six on the wire, over Generation's `searchMany`; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
 | `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
@@ -196,7 +196,7 @@ reads plan tables.
 | `PlanCollectionWriter` | `VocabularyPlanCollectionWriter` |
 | `NativeDistractorSource` | `VocabularyNativeDistractorSource` (over Vocabulary's `NativeDistractorReader` — catalogue translations for a thin Beginner choice) |
 | `CheckCounters` | `EloquentCheckCounters` |
-| `PlanListReader`, `SceneLocator` (plan of a scene, the owner's scene photo, scenes with photos), repositories | `EloquentPlanRepository` (+ `PlanMapper`), `EloquentDayCardRepository` (+ `stageTallies` — the route's one grouped query), `EloquentPlanTermRepository` |
+| `PlanListReader`, `SceneLocator` (plan of a scene, the owner's scene photo, scenes with photos, `voicesOf` — the partner's gender and the owner of each scene, one query by primary key, for the voices of returned cards), repositories | `EloquentPlanRepository` (+ `PlanMapper`), `EloquentDayCardRepository` (+ `stageTallies` — the route's one grouped query), `EloquentPlanTermRepository` |
 | `PlanEventRepository` (Domain) | `EloquentPlanEventRepository` (INSERT … ON CONFLICT DO NOTHING + SELECT; no UPDATE/DELETE) |
 | `NotificationLog` | `EloquentNotificationLog` (same shape) |
 | `NotifiablePlans` | `EloquentNotifiablePlans` (stored `active` plans, over `plans_one_active_uidx`) |
@@ -208,7 +208,7 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v2.1`; `lesson_day.v4.6`
+  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3`; `lesson_day.v4.6`
   and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
@@ -231,9 +231,10 @@ reads plan tables.
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
-  conversation's guards count there too, under `conversation_agent.v2.1` (`conversation.learner_line`, `…_cut`, `…_kept`,
+  conversation's guards count there too, under `conversation_agent.v3` (`conversation.learner_line`, `…_cut`, `…_kept`,
   `conversation.rescue_same_words`, `…_kept` — CONV-2; `conversation.learner_echo`, `…_cut`, `…_neutral`, `…_kept` —
-  BACK-TAILS-2 §9).
+  BACK-TAILS-2 §9, against every move since FIX-3 §11; `conversation.own_line`, `…_kept` and `conversation.early_end`,
+  `…_kept` — FIX-3 §7).
 - The day's build log (BACK-TAILS-2 §1, port `DayBuildLog`, adapter `LogDayBuildLog`): a scene day whose «Фразы» the
   ladder could not fit under their ceiling writes `plan.phrases_over_ceiling` (warning) with the rungs and the frames —
   the stop signal, not a failure; the day is dealt anyway.
@@ -244,6 +245,14 @@ reads plan tables.
 - Ops: `plan:reconcile-scenes {--apply}` (BACK-TAILS-2 §6) — renames the scenes of the «Вспомнить» sheets dealt before the
   sheet took the PLAN's name for a scene; dry by default (prints «план · день · сцена: было → стало»), `--apply` writes the
   names and nothing else; idempotent. Backup first.
+- Ops: `plan:repace {--all} {--plan=*} {--dry}` (FIX-3 §2) — gives plans the price list of their days the config has
+  now (`plans.pace`, read through `Application/Service/PlanPaces`) and prints the minutes of every day not closed
+  «было → стало», read through the day room; idempotent (a second run writes nothing), `--dry` rolls its writes back. A
+  step of the deploy. Backup first.
+- Ops: `plan:revoice-learner --plan= {--scene=*} {--apply}` (FIX-3 §1) — the learner's lines owed in the learner's own
+  voice (the profile's gender, `VoiceCasts`): per scene the lines, characters, credits and dollars; buys NOTHING without
+  `--apply`, which voices the scenes under the cap and the fuse and drops the old voice's files only once the new ones are
+  there.
 - Ops: `plan:images-backfill {--plan=} {--requery}` — first the photos plans still lack, asked the search
   ladder (prints «было пусто / стало»; `--requery` re-asks the words the bare word photographed and the words repeating a picture of their day), then tones and square copies for scene photos
   stored before PLAN-UI-3; idempotent, re-runnable after a rate limit. The image endpoint heals a
