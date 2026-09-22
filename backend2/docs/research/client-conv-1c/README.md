@@ -145,7 +145,7 @@
   `conversation-rehearsal-ended`; перед коммитом сверены `cmp` — совпадают). Читает их `test/support/server_fixtures.dart`.
   Копии, а не путь к ветке: ветка не влита, у фикстур main старая форма (нет `repetition`, `minutes`, `targets`,
   `sources`, у эха есть `partner_line`), а путь за пределы репозитория ломал бы тесты на любой другой машине. После
-  влития — одна строка: `kServerFixtures` обратно на `../backend2/docs/fixtures`, копии снести.
+  влития — одна строка: `kServerFixtures` обратно на `../backend2/docs/fixtures`, копии снести (сделано `15be7409`).
 - Документы разговора до CONV-2 (три, из main) — `test/fixtures/plan/legacy/`: на них остался канон старой формы
   (клиент разбирает обе).
 - **Свой JSON заменён фикстурами там, где они несут то же:**
@@ -577,9 +577,9 @@ flutter test test/features/plan/session/conv1c_shots_test.dart --dart-define=CON
   них, golden 37-1/37-2 сняты с фикстур (§1 «Второй заход»); живьём на сервере ветки проверены все швы §9: минуты рядов и
   «Из каких сцен/дней», ряд «Повторение», «Повторить разговор» → повтор → 409 и лист, «Вспомнить» только свои реплики,
   эхо без `partner_line`, вход 37-5 с `targets` (§2 «Второй заход»). Имена полей клиента совпали с контрактом ветки, `lib/`
-  не менялся. **Остаётся одно, после влития ветки в main:** `kServerFixtures` в `test/support/server_fixtures.dart` —
-  обратно на `../backend2/docs/fixtures`, копии `test/fixtures/server/` снести. Ветка по-прежнему не влита (решение Дена
-  22.09: влитие = выкат на бой).
+  не менялся. ~~**Остаётся одно, после влития ветки в main:** `kServerFixtures` в `test/support/server_fixtures.dart` —
+  обратно на `../backend2/docs/fixtures`, копии `test/fixtures/server/` снести.~~ **Закрыто `15be7409`** (ветка влита
+  22.09, пункт ниже).
 - **Эхо старой формы на бою** (`wordtrainer`, чтение): 10 карточек `speak_echo`, у всех только `partner_line`, `own_line`
   нет ни у одной (сданы до CONV-2). В двух активных планах они уже отвечены на закрытых днях; 4 неотвеченные — только в
   удалённых планах. Клиент читает эхо только с `own_line` (§2в), карточку без него не рисует — сегодня это не держит ни
@@ -599,9 +599,11 @@ flutter test test/features/plan/session/conv1c_shots_test.dart --dart-define=CON
   рвутся» (третий заход) на них не распространяется; целое решение — неразрывный пробел в этих строках на сервере (§4
   п. 20).
 - **BACK-TAILS-2 влит в main и выкачен на бой 22.09** (`5d8c37cd` … `f5e13e6c`, в том числе бэкфилл `own_line` старого
-  эха — `0f12e54b`, `1b4e61b5`). Хвост клиента из пункта «Ждёт фикстур» теперь можно закрыть: `kServerFixtures` в
-  `test/support/server_fixtures.dart` — обратно на `../backend2/docs/fixtures`, копии `test/fixtures/server/` снести. В
-  этой правке не делалось (не входило в две правки приёмки) — отдельной строкой ROADMAP-хвостов клиента.
+  эха — `0f12e54b`, `1b4e61b5`). ~~Хвост клиента из пункта «Ждёт фикстур» теперь можно закрыть: `kServerFixtures` в
+  `test/support/server_fixtures.dart` — обратно на `../backend2/docs/fixtures`, копии `test/fixtures/server/` снести.~~
+  **Закрыто `15be7409`** (по команде архитектора, последним шагом наряда): `kServerFixtures` читает
+  `../backend2/docs/fixtures`, копии удалены — перед сносом все семь файлов сверены `cmp` с `backend2/docs/fixtures` в
+  `main` (последняя их правка — `5d8c37cd`), побайтно те же; `flutter analyze` — **No issues found**, `flutter test` — **1763 passed**.
 - **Подпись тумблера «Без подсказок» на входе «Вспомнить»** (кадр 32; приёмка третьего захода, хвостом): под тумблером
   стоит `planSessionNoHintsSub` — «Диалог и «Говорю сам» — сразу голосом», одна строка на все входы этапов. У репетиции
   этих этапов нет (её ряды — «Вспомнить» и «Разговор»), и подпись говорит о том, чего в дне нет. Не правилось — решать,
@@ -700,3 +702,7 @@ flutter test test/features/plan/session/conv1c_shots_test.dart --dart-define=CON
 | установка | из `flutter run` по Wi-Fi упала («Could not run build/ios/iphoneos/Runner.app … Error running application on iPhone (Denis) (wireless)», как у (18)) — тот же Runner.app поставлен `xcrun devicectl device install app` |
 | на телефоне | `devicectl device info apps` — **Eng Std 1.0.0 (19)** на iPhone (Denis), iPhone 13 Pro |
 | запуск | не проверен: `devicectl device process launch` — `CoreDevice.ActionError 1` («A required XPC connection to remoteService was unavailable»); «сборка 1.0.0 (19)» — в подвале входа этапа при первом открытии |
+| отчёт сборки | `44ba257e` |
+| закрытие наряда | `15be7409` — фикстуры сервера из `backend2/docs/fixtures`, копии `mobile/test/fixtures/server/` снесены (только тесты, `lib/` и сборка (19) не меняются); ворота: `flutter analyze` — No issues found, `flutter test` — 1763 passed; отчёт — следующим коммитом |
+
+Сборка (19) и обе правки перед ней приняты архитектором 22.09; наряд CLIENT-CONV-1c закрыт.
