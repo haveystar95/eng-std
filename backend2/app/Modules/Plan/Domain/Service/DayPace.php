@@ -13,8 +13,10 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
  * Seconds per card by KIND, not by stage: the stages of the registry mix a ten-second tap with a
  * thirty-second line said aloud, and `listen_dialogue` alone is the whole visit played once — a
  * rate per stage would promise the same minutes for a stage of taps and a stage of speech. The
- * table is the order's starting values, kept in `config/plan.php` (`plan.pace`) and tuned after the
- * phone; a kind the table does not name costs nothing rather than a guess. Minutes round up: a stage
+ * table is kept in `config/plan.php` (`plan.pace`) — measured on the owner's phone (наряд FIX-3 §2: the median seconds
+ * of a kind on the live days × 1.3), and every plan keeps its own copy of it (`plans.pace`,
+ * {@see \App\Modules\Plan\Application\Service\PlanPaces}); a kind the table does not name costs nothing rather
+ * than a guess. Minutes round up: a stage
  * with a card left never says «0».
  *
  * ONE KIND IS PRICED PER ROUND, and the card says how many it has: «Скажи целиком»
@@ -32,36 +34,35 @@ final readonly class DayPace
 {
     /** @var array<string, int> seconds per card, by kind — the 28 dealt kinds; `phrase_other_slot` is per ROUND, `recall_scenes` per SCENE */
     public const DEFAULTS = [
-        'word_intro' => 8,
-        'word_repeat' => 12,
-        'word_choose' => 10,
-        'word_listen' => 10,
-        'word_assemble' => 20,
+        'word_intro' => 5,
+        'word_repeat' => 10,
+        'word_choose' => 5,
+        'word_listen' => 5,
+        'word_assemble' => 10,
         'word_in_line' => 10,
-        'phrase_intro' => 12,
-        'phrase_assemble' => 25,
-        'phrase_choose_back' => 12,
-        'phrase_slot' => 12,
-        'phrase_slot_listen' => 12,
-        'phrase_repeat' => 25,
+        'phrase_intro' => 15,
+        'phrase_assemble' => 20,
+        'phrase_choose_back' => 10,
+        'phrase_slot' => 10,
+        'phrase_slot_listen' => 5,
+        'phrase_repeat' => 20,
         'phrase_other_slot' => 25,
-        'phrase_combine' => 20,
-        'dialogue_partner' => 15,
-        'dialogue_answer' => 30,
-        // The ask says a line AND asks the exchange's check (наряд BACK-TAILS-1 §1.5): the seconds of the two cards
-        // it was made of, 30 + 15.
-        'dialogue_ask' => 45,
-        'dialogue_rescue' => 15,
-        'listen_dialogue' => 110,
-        'listen_question' => 12,
-        'listen_review' => 30,
+        'phrase_combine' => 25,
+        'dialogue_partner' => 20,
+        'dialogue_answer' => 10,
+        // The ask says a line AND asks the exchange's check (наряд BACK-TAILS-1 §1.5) — measured as one card.
+        'dialogue_ask' => 25,
+        'dialogue_rescue' => 10,
+        'listen_dialogue' => 70,
+        'listen_question' => 10,
+        'listen_review' => 10,
         'listen_predict' => 15,
-        'listen_pace' => 25,
-        'listen_number' => 15,
-        'speak_answer' => 35,
-        'speak_echo' => 25,
-        'speak_retell' => 30,
-        'recall_scenes' => 60,
+        'listen_pace' => 15,
+        'listen_number' => 10,
+        'speak_answer' => 25,
+        'speak_echo' => 70,
+        'speak_retell' => 15,
+        'recall_scenes' => 45,
     ];
 
     /** @param array<string, int> $secondsByKind kind value → seconds per card */

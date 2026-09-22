@@ -7,7 +7,8 @@ namespace App\Modules\Plan\Application\Dto;
 /**
  * A word or a chunk card of the window and its sheet (23-0e): its photo when it has one and always the
  * tone its slot is painted with; how it reads in the learner's alphabet, what it means, its voice, the
- * line of the day it is said in, and — when it comes back — the day it comes back on (DAY-UI-3).
+ * line of the day it is said in, and — when it comes back — the day it comes back on (DAY-UI-3). Where it is FROM
+ * (наряд FIX-3 §9): `source` — the day's own, or returned from an earlier day — and the scene it belongs to.
  */
 final readonly class WindowWordView
 {
@@ -28,5 +29,7 @@ final readonly class WindowWordView
         public ?WindowUsageView $usage = null,
         public ?int $returnsDay = null,
         public array $usedIn = [],
+        public string $source = WindowSourceView::OWN,
+        public ?WindowSourceView $scene = null,
     ) {}
 }

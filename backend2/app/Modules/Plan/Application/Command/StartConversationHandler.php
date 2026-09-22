@@ -39,7 +39,7 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * that follows is short.
  *
  * «ПОВТОРИТЬ РАЗГОВОР» (наряд BACK-TAILS-2 §7): once the day's sixth stage is walked, a new talk is a REPLAY — on a day
- * still being walked and on a passed one alike (the window offers it as `talk_again`). A replay changes neither the day's
+ * still being walked and on a passed one alike (the window offers it as the talk row's `again`, наряд FIX-3 §8). A replay changes neither the day's
  * state nor its result: the walked talk stays the day's, the closed day stays closed, and a replay that ends of its own
  * walks nothing ({@see ConversationPassing}). Each replay is a model and a voice paid for, so a day of the plan takes
  * `plan.conversation.replays_per_day` of them per calendar day of the learner — past that, 409
@@ -101,7 +101,8 @@ final readonly class StartConversationHandler
             dayNumber: $day->number(),
             type: $type,
             sceneIds: $material->sceneIds(),
-            turnLimit: $this->rules->turnsFor($type),
+            // One move per target and two more (наряд FIX-3 §7).
+            turnLimit: $this->rules->turnsFor(count($material->targets)),
             hintsEnabled: $command->hints,
             now: $now,
         );

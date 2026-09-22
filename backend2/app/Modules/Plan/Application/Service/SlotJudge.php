@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Dto\SlotJudgeVerdict;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
+use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\SlotJudgeQuota;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
@@ -68,6 +69,7 @@ final readonly class SlotJudge
         private CheckCounters $counters,
         private LanguagePacks $packs,
         private PlanConfig $config,
+        private LearnerGender $learners,
         private SpeechMatch $speech = new SpeechMatch,
     ) {}
 
@@ -76,7 +78,8 @@ final readonly class SlotJudge
         $payload = $card->payload();
         $pack = $this->packs->for($plan->targetLang()->value);
         $target = $pack->speech();
-        $strings = new NativeStrings($plan->nativeLang()->value);
+        // «Не сказал(а) главного» ends as the learner's profile says (наряд FIX-3 §1).
+        $strings = new NativeStrings($plan->nativeLang()->value, $this->learners->of($plan->userId()));
         $frame = is_array($payload['frame'] ?? null) ? $payload['frame'] : [];
         $frameTarget = self::text($frame['frame_target'] ?? null);
         $part = FrameParts::part($frameTarget);

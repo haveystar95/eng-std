@@ -9,7 +9,9 @@ use App\Modules\Plan\Domain\ValueObject\DayMetrics;
 
 /**
  * The numbers of a day, from its cards (`docs/plan-v2.md` §6): cards dealt, cards done and minutes
- * spent (answer timestamps, pauses longer than {@see PAUSE_SECONDS} not counted).
+ * spent (answer timestamps, pauses longer than {@see PAUSE_SECONDS} not counted). Two minutes, not ten (наряд FIX-3
+ * §2): a gap longer than that on the owner's days was the learner away from the card — ten minutes counted a break
+ * between two «Фразы» as work and put 15:42 on a stage of 5:10.
  *
  * Since наряд CONV-1 a day can also spend minutes on something that answers no card — the talk with
  * the agent. Those minutes are handed in rather than found here: the talk keeps its own start and
@@ -17,7 +19,7 @@ use App\Modules\Plan\Domain\ValueObject\DayMetrics;
  */
 final class DayMetricsCalculator
 {
-    public const PAUSE_SECONDS = 600;
+    public const PAUSE_SECONDS = 120;
 
     /**
      * @param  list<DayCard>  $cards

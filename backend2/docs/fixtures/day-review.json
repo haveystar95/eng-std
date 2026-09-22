@@ -19,7 +19,7 @@
         "cards_total": 7,
         "cards_done": 0,
         "minutes_spent": 0,
-        "opened_at": "2026-09-21T21:51:59+00:00",
+        "opened_at": "2026-09-22T16:49:19+00:00",
         "closed_at": null,
         "stages": [
             {
@@ -83,7 +83,7 @@
             "state": "current",
             "cards": [
                 {
-                    "id": "01M32Z8P6WY2NZWEHYW698YQTQ",
+                    "id": "01M350B643FQJB4ZYY1ZW5W1CK",
                     "stage": "repetition",
                     "position": 1,
                     "kind": "speak_answer",
@@ -184,7 +184,8 @@
                             },
                             "text_native": "Что сегодня беспокоит вашего сына?",
                             "text_target": "What seems to be the problem with your son today?"
-                        }
+                        },
+                        "task_clause_native": "у него температура и болит горло"
                     },
                     "result": null,
                     "attempts": 0,
@@ -196,7 +197,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32Z8P6WRZ5MCZNVTQTFG1E0",
+                    "id": "01M350B643Y4557A433K9Q4QE6",
                     "stage": "repetition",
                     "position": 2,
                     "kind": "speak_answer",
@@ -297,7 +298,8 @@
                             },
                             "text_native": "Как долго у него эти симптомы?",
                             "text_target": "How long has he had these symptoms?"
-                        }
+                        },
+                        "task_clause_native": "он болеет уже три дня"
                     },
                     "result": null,
                     "attempts": 0,
@@ -309,7 +311,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32Z8P6WCGRCS4GTZM9TTHPM",
+                    "id": "01M350B643C5W3Q806DA8WRE7Q",
                     "stage": "repetition",
                     "position": 3,
                     "kind": "speak_answer",
@@ -400,7 +402,8 @@
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "speech_mode": "free",
                         "task_native": "Мне сказать вам его температуру?",
-                        "partner_line": null
+                        "partner_line": null,
+                        "task_clause_native": "мне сказать вам его температуру?"
                     },
                     "result": null,
                     "attempts": 0,
@@ -412,7 +415,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32Z8P6WEEFM4Z1KVECPWSDD",
+                    "id": "01M350B643178V0WWCJGJS3X5T",
                     "stage": "repetition",
                     "position": 4,
                     "kind": "speak_answer",
@@ -513,7 +516,8 @@
                             },
                             "text_native": "Вы давали ему что-нибудь от температуры?",
                             "text_target": "Did you give him any medicine for the fever?"
-                        }
+                        },
+                        "task_clause_native": "я дал(а) ему парацетамол"
                     },
                     "result": null,
                     "attempts": 0,
@@ -525,7 +529,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32Z8P6WF744R70HSTAM3E1R",
+                    "id": "01M350B643TXHFC4ZENHNA7BP9",
                     "stage": "repetition",
                     "position": 5,
                     "kind": "speak_answer",
@@ -626,7 +630,8 @@
                             },
                             "text_native": "Горло у него красное. Похоже на вирусную инфекцию.",
                             "text_target": "His throat is red. It looks like a viral infection."
-                        }
+                        },
+                        "task_clause_native": "похоже на вирусную инфекцию"
                     },
                     "result": null,
                     "attempts": 0,
@@ -638,7 +643,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32Z8P6WTSEM45555FS76DVJ",
+                    "id": "01M350B6431QXH2KJ95QDY8YWZ",
                     "stage": "repetition",
                     "position": 6,
                     "kind": "speak_answer",
@@ -729,7 +734,8 @@
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "speech_mode": "free",
                         "task_native": "Что мне делать дома?",
-                        "partner_line": null
+                        "partner_line": null,
+                        "task_clause_native": "что мне делать дома?"
                     },
                     "result": null,
                     "attempts": 0,
@@ -741,7 +747,7 @@
                     "returns": false
                 },
                 {
-                    "id": "01M32Z8P6WY8YP4D308504KYWR",
+                    "id": "01M350B643K07E5ZTY1VZ8C7N0",
                     "stage": "repetition",
                     "position": 7,
                     "kind": "speak_answer",
@@ -832,7 +838,8 @@
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "speech_mode": "free",
                         "task_native": "За какими тревожными признаками мне следить?",
-                        "partner_line": null
+                        "partner_line": null,
+                        "task_clause_native": "за какими тревожными признаками мне следить?"
                     },
                     "result": null,
                     "attempts": 0,
@@ -903,7 +910,7 @@
             "image": null,
             "image_tone": "#E3DCCF",
             "status": "in_progress",
-            "minutes_estimate": 11,
+            "minutes_estimate": 7,
             "minutes_spent": null,
             "goals": []
         },
@@ -913,12 +920,19 @@
                 "state": "current",
                 "done_count": 0,
                 "total": 7,
-                "minutes_left": 5,
-                "minutes": 5,
+                "minutes_left": 3,
+                "minutes": 3,
                 "share": 0.0,
                 "talk_title_native": null,
                 "scenes_count": null,
-                "targets": null
+                "targets": null,
+                "again": true,
+                "summary": {
+                    "done": 0,
+                    "total": 7,
+                    "first_try": 0,
+                    "returns": 0
+                }
             },
             {
                 "stage": "conversation",
@@ -926,7 +940,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "minutes": 6,
+                "minutes": 4,
                 "share": 0.0,
                 "talk_title_native": "Поговори с врачом",
                 "scenes_count": 1,
@@ -934,53 +948,76 @@
                     {
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "ref": "p1",
-                        "text_target": "He has a fever and a sore throat.",
-                        "text_native": "У него температура и болит горло.",
-                        "said": false
+                        "frame_target": "He has ___.",
+                        "frame_native": "У него ___.",
+                        "example_target": "a fever and a sore throat",
+                        "example_native": "температура и болит горло",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "ref": "p2",
-                        "text_target": "He's been sick for three days.",
-                        "text_native": "Он болеет уже три дня.",
-                        "said": false
+                        "frame_target": "He's been sick ___.",
+                        "frame_native": "Он болеет ___.",
+                        "example_target": "for three days",
+                        "example_native": "уже три дня",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "ref": "p3",
-                        "text_target": "Should I tell you his temperature?",
-                        "text_native": "Мне сказать вам его температуру?",
-                        "said": false
+                        "frame_target": "Should I tell you ___?",
+                        "frame_native": "Мне сказать вам ___?",
+                        "example_target": "his temperature",
+                        "example_native": "его температуру",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "ref": "p4",
-                        "text_target": "I gave him paracetamol.",
-                        "text_native": "Я дал(а) ему парацетамол.",
-                        "said": false
+                        "frame_target": "I gave him ___.",
+                        "frame_native": "Я дал(а) ему ___.",
+                        "example_target": "paracetamol",
+                        "example_native": "парацетамол",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "ref": "p5",
-                        "text_target": "It looks like a viral infection.",
-                        "text_native": "Похоже на вирусную инфекцию.",
-                        "said": false
+                        "frame_target": "It looks like ___.",
+                        "frame_native": "Похоже на ___.",
+                        "example_target": "a viral infection",
+                        "example_native": "вирусную инфекцию",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "ref": "p6",
-                        "text_target": "What should I do at home?",
-                        "text_native": "Что мне делать дома?",
-                        "said": false
+                        "frame_target": "What should I do ___?",
+                        "frame_native": "Что мне делать ___?",
+                        "example_target": "at home",
+                        "example_native": "дома",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
                         "ref": "p7",
-                        "text_target": "What warning signs should I watch for?",
-                        "text_native": "За какими тревожными признаками мне следить?",
-                        "said": false
+                        "frame_target": "What ___ should I watch for?",
+                        "frame_native": "За какими ___ мне следить?",
+                        "example_target": "warning signs",
+                        "example_native": "тревожными признаками",
+                        "said": false,
+                        "value_target": null
                     }
-                ]
+                ],
+                "again": false,
+                "summary": null
             }
         ],
         "sources": [
@@ -990,7 +1027,6 @@
                 "day_number": 1
             }
         ],
-        "talk_again": false,
         "day_progress": 0.0,
         "program": {
             "words": {
@@ -1031,6 +1067,12 @@
                             "state": "pending",
                             "phrase_ref": "p1",
                             "filler": "a fever and a sore throat"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                            "title_native": "Приём у врача",
+                            "day_number": 1
                         }
                     },
                     {
@@ -1048,6 +1090,12 @@
                             "state": "pending",
                             "phrase_ref": "p2",
                             "filler": "for three days"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                            "title_native": "Приём у врача",
+                            "day_number": 1
                         }
                     },
                     {
@@ -1065,6 +1113,12 @@
                             "state": "pending",
                             "phrase_ref": "p3",
                             "filler": "his temperature"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                            "title_native": "Приём у врача",
+                            "day_number": 1
                         }
                     },
                     {
@@ -1082,6 +1136,12 @@
                             "state": "pending",
                             "phrase_ref": "p4",
                             "filler": "paracetamol"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                            "title_native": "Приём у врача",
+                            "day_number": 1
                         }
                     },
                     {
@@ -1099,6 +1159,12 @@
                             "state": "pending",
                             "phrase_ref": "p5",
                             "filler": "a viral infection"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                            "title_native": "Приём у врача",
+                            "day_number": 1
                         }
                     },
                     {
@@ -1116,6 +1182,12 @@
                             "state": "pending",
                             "phrase_ref": "p6",
                             "filler": "at home"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                            "title_native": "Приём у врача",
+                            "day_number": 1
                         }
                     },
                     {
@@ -1133,6 +1205,12 @@
                             "state": "pending",
                             "phrase_ref": "p7",
                             "filler": "warning signs"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+                            "title_native": "Приём у врача",
+                            "day_number": 1
                         }
                     }
                 ]
@@ -1241,8 +1319,12 @@
             "eighty": "80",
             "ninety": "90",
             "hundred": "100",
-            "thousand": "1000"
+            "thousand": "1000",
+            "million": "1000000"
         },
+        "number_joiners": [
+            "and"
+        ],
         "repeat_misses": 0
     }
 }

@@ -147,9 +147,10 @@ final class CardObjects
      * left out. Null for a term that carries no frame (a word, a phrase stored before frames) — there is nothing to
      * show.
      *
+     * @param  list<int>  $unhidden  the fillers the seam judge hid that this card shows all the same ({@see fillers()})
      * @return array<string, mixed>|null
      */
-    public static function frame(SceneMaterial $scene, PlanTerm $phrase): ?array
+    public static function frame(SceneMaterial $scene, PlanTerm $phrase, array $unhidden = []): ?array
     {
         $frame = $phrase->frame();
         if ($frame === null) {
@@ -164,7 +165,7 @@ final class CardObjects
             'frame_pronunciation_native' => $frame->pronunciationNative,
             'slot' => $frame->slot === null ? null : [
                 'hint_native' => $frame->slot->hintNative,
-                'fillers' => self::fillers($scene, $phrase),
+                'fillers' => self::fillers($scene, $phrase, $unhidden),
             ],
         ];
     }
@@ -182,11 +183,16 @@ final class CardObjects
      *
      * A filler whose native sentence does not read and which the dialogue does not say ({@see SceneMaterial::hides()},
      * SESSION-1e) is not among them — so no chip, no option, no card of the day shows it; `index` stays its place in
-     * the slot, and the others keep theirs.
+     * the slot, and the others keep theirs. ONE card is the exception, and names the ones it shows all the same
+     * (`$unhidden`, наряд FIX-3 §3): «Скажи целиком» says a window of two values or more with two rounds or more, and a
+     * frame whose other values the judge all hid takes one of them to make the second round («How heavy should ___ be?» on
+     * the owner's gym day: two of three values hidden, one round). Such a filler comes with its VALUE as its `native_line`
+     * («Гантель») — the sentence the judge said does not read is still shown nowhere.
      *
+     * @param  list<int>  $unhidden  the hidden fillers this card shows all the same
      * @return list<array{index: int, target: string, native: string, pronunciation_native: string, in_dialogue: bool, native_line: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}|null}>
      */
-    public static function fillers(SceneMaterial $scene, PlanTerm $phrase): array
+    public static function fillers(SceneMaterial $scene, PlanTerm $phrase, array $unhidden = []): array
     {
         $frame = $phrase->frame();
         if ($frame === null) {
@@ -199,7 +205,8 @@ final class CardObjects
 
         $out = [];
         foreach ($frame->fillers() as $index => $filler) {
-            if ($scene->hides($phrase->ref(), $index)) {
+            $hidden = $scene->hides($phrase->ref(), $index);
+            if ($hidden && ! in_array($index, $unhidden, true)) {
                 continue;
             }
             $out[] = [
@@ -208,10 +215,10 @@ final class CardObjects
                 'native' => $filler->native,
                 'pronunciation_native' => $filler->pronunciationNative,
                 'in_dialogue' => $filler->inDialogue,
-                'native_line' => FrameText::capitalized(
-                    $scene->nativeLineOf($phrase->ref(), $index)
-                    ?? FrameText::nativeSentence($frame->frameNative, $filler->native, $phrase->textNative()),
-                ),
+                'native_line' => FrameText::capitalized($hidden
+                    ? $filler->native
+                    : ($scene->nativeLineOf($phrase->ref(), $index)
+                        ?? FrameText::nativeSentence($frame->frameNative, $filler->native, $phrase->textNative()))),
                 'audio' => isset($voiced[$index]) ? Audio::of($voiced[$index]) : null,
             ];
         }

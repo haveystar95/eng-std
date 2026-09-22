@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Assembly;
 
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
+use App\Modules\Plan\Domain\Service\IntentClause;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\SpeechMode;
 
@@ -41,6 +42,10 @@ final class SpeakCards
      *
      * The key is the frame's own words — the window is the judge's — so the mode is `free`.
      *
+     * THE TASK AS A CLAUSE (`task_clause_native`, наряд FIX-3 §11): the chip «Скажи, что …» prints the learner's line as
+     * the clause of the sentence, and the server makes it one ({@see IntentClause}, the rule the talk's hint is made by) —
+     * the phone builds no clause. `task_native` stays the sentence: «Спроси: «…»» of an ask quotes it whole.
+     *
      * Null when the phrase carries no frame or the exchange no learner line: there is nothing to say.
      *
      * @return array<string, mixed>|null
@@ -60,6 +65,7 @@ final class SpeakCards
             'partner_line' => $exchange->kind === ExchangeKind::Ask ? null : CardObjects::partnerLine($exchange),
             'own_line' => $ownLine,
             'task_native' => $ownLine['text_native'],
+            'task_clause_native' => IntentClause::of($ownLine['text_native']),
             'frame' => $frame,
             'key' => $ownLine['key'],
             'speech_mode' => SpeechMode::Free->value,
@@ -77,7 +83,8 @@ final class SpeakCards
      * «Please bring a towel, use clean shoes, and return the locker key after training» — the receptionist's words,
      * which nobody would ever say in his place. «Говорю сам» is the learner's part and nothing else — so the card
      * carries no line of anybody else's at all: the copy of the line under `partner_line`, kept for the client build
-     * 1.0.0 (17), is gone with the build that reads `own_line` (наряд BACK-TAILS-2 §10).
+     * 1.0.0 (17), is gone with the build that reads `own_line` (наряд BACK-TAILS-2 §10), and off the cards dealt before
+     * it as well (наряд FIX-3 §11).
      *
      * Null when the exchange has no learner line: there is nothing to echo.
      *
@@ -120,6 +127,37 @@ final class SpeakCards
         return [
             'scene_id' => $scene->sceneId->value,
             'exchange' => CardObjects::exchange($exchange),
+            'own_line' => $ownLine,
+            'expected_text' => $ownLine['text_target'],
+            'speech_mode' => SpeechMode::Repeat->value,
+        ];
+    }
+
+    /**
+     * `speak_retell` OF A CONSTRUCTION THE TALK DID NOT HEAR (наряд FIX-3 §6): the frame said with the lesson's own value
+     * — «I have about a year of experience.», the phrase as the day says it ({@see CardObjects::said()}), its sound the
+     * phrase's own file — not the longer line of the visit that stands on it: the talk asked for the construction, and
+     * the construction is what comes back. The same card as {@see retell()} otherwise — `own_line` in the same shape,
+     * named by the phrase (`p3`), the exchange the visit first says it in for its place.
+     *
+     * @return array<string, mixed>
+     */
+    public static function retellFrame(SceneMaterial $scene, PlanTerm $phrase, ?Exchange $exchange): array
+    {
+        $said = CardObjects::said($scene, $phrase);
+        $ownLine = [
+            'ref' => $phrase->ref(),
+            'text_target' => $said['text_target'],
+            'text_native' => $said['text_native'],
+            'frame_ref' => $phrase->ref(),
+            'filler_index' => $said['filler_index'],
+            'key' => $phrase->speakingKey(),
+            'audio' => $said['audio'],
+        ];
+
+        return [
+            'scene_id' => $scene->sceneId->value,
+            'exchange' => $exchange === null ? null : CardObjects::exchange($exchange),
             'own_line' => $ownLine,
             'expected_text' => $ownLine['text_target'],
             'speech_mode' => SpeechMode::Repeat->value,

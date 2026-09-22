@@ -10,16 +10,17 @@ use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
+use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
-use App\Modules\Plan\Domain\Service\FrameParts;
+use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\NativeStrings;
+use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\ConversationCheckpoint;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
-use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 
 /**
  * WHICH SCENES A TALK WALKS AND WHAT IT LISTENS FOR (наряд CONV-1) — the one place that decides it,
@@ -29,11 +30,10 @@ use App\Modules\Plan\Domain\ValueObject\VoiceCast;
  * - the rehearsal: every ready scene of the plan, in the plan's order — «Разговор целиком · 3 сцены»;
  * - a review day: the scenes of the two scene days it repeats.
  *
- * The phrases are the plan's own phrases of those scenes, each with the KEY the server listens for:
- * the frame's words outside its window ({@see FrameParts::part()}) — the same key «Говорю сам» is
- * judged by, so «фраза дня прозвучала» means one thing across the product. Four to seven of them are
- * the talk's targets (наряд CONV-2, п. 10), and its entry title is «Поговори с …» the role it opens
- * with (п. 12).
+ * The phrases are the plan's own phrases of those scenes as CONSTRUCTIONS (наряд FIX-3 §6): the frame with its window
+ * and the value the lesson says it with — the learner came to say the frame with a value of their own, and the talk
+ * ticks it by {@see \App\Modules\Plan\Domain\Service\PhraseUse}. Four to seven of them are the talk's targets (наряд
+ * CONV-2, п. 10), and its entry title is «Поговори с …» the role it opens with (п. 12).
  */
 final readonly class ConversationMaterial
 {
@@ -58,20 +58,23 @@ final readonly class ConversationMaterial
                 aboutNative: $scene->teachesNative(),
                 roleTarget: $scene->partnerRoleTarget(),
                 roleNative: $scene->partnerRoleNative(),
-                partnerGender: VoiceCast::ofScene($scene)->partner,
+                partnerGender: $scene->partnerVoiceGender() ?? PlanScene::DEFAULT_PARTNER_VOICE,
                 keyLines: self::keyLines($scene),
             );
             foreach ($terms[$scene->id()->value] ?? [] as $term) {
                 if ($term->kind() !== TermKind::Phrase) {
                     continue;
                 }
+                $frame = $term->frame();
+                $example = self::example($term);
                 $phrases[] = new ConversationPhrase(
                     sceneId: $scene->id()->value,
                     ref: $term->ref(),
-                    key: self::keyOf($term),
-                    textTarget: $term->textTarget(),
-                    textNative: $term->textNative(),
-                    audioRef: $term->ref(),
+                    frameTarget: $frame->frameTarget ?? $term->textTarget(),
+                    frameNative: $frame->frameNative ?? $term->textNative(),
+                    exampleTarget: $example?->target,
+                    exampleNative: $example?->native,
+                    kind: $frame->kind ?? ExchangeKind::Answer,
                 );
             }
         }
@@ -80,6 +83,7 @@ final readonly class ConversationMaterial
             $checkpoints,
             $phrases,
             (new NativeStrings($plan->nativeLang()->value))->talkTitle($checkpoints[0]->roleNative),
+            $plan->targetLang()->value,
         );
     }
 
@@ -160,12 +164,28 @@ final readonly class ConversationMaterial
         return $exchange->kind !== ExchangeKind::Rescue && $exchange->learner() !== null && $exchange->partner() !== null;
     }
 
-    /** The key the phrase is listened for: the frame's words outside its window, or the phrase itself. */
-    private static function keyOf(PlanTerm $term): string
+    /**
+     * THE LESSON'S VALUE OF A CONSTRUCTION — the filler the phrase itself is said with (its own file, `voicedAs`), grey in
+     * the window on the screen; a frame without a window has none.
+     */
+    private static function example(PlanTerm $term): ?Filler
     {
         $frame = $term->frame();
-        $key = $frame === null ? '' : FrameParts::part($frame->frameTarget);
+        $fillers = $frame?->fillers() ?? [];
+        if ($frame === null || $fillers === [] || ! FrameText::hasSlot($frame->frameTarget)) {
+            return null;
+        }
+        foreach (SpokenLines::fillers($term) as $filler) {
+            if ($filler['voicedAs'] === $term->ref() && isset($fillers[$filler['index']])) {
+                return $fillers[$filler['index']];
+            }
+        }
+        foreach ($fillers as $filler) {
+            if ($filler->inDialogue) {
+                return $filler;
+            }
+        }
 
-        return trim($key) === '' ? $term->textTarget() : $key;
+        return $fillers[array_key_first($fillers)];
     }
 }

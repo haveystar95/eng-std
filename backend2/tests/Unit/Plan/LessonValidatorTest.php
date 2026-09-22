@@ -274,6 +274,23 @@ function lvBreaks(): array
 
         return $p;
     }],
+    // Canon (наряд FIX-3 §5): «варианты одной проверки одной формы с верным — длина каждого в пределах 0,5–2× верного, ни
+    // один не начинается со строчной, ни один не совпадает с куском реплики собеседника на родном».
+    'an option a third as long as the right one' => [LessonCodes::OPTIONS_FORM_MISMATCH, static function (array $p): array {
+        $p['dialogue'][3]['check']['options'][1]['text_native'] = 'Нет';
+
+        return $p;
+    }],
+    'an option that starts lower-case' => [LessonCodes::OPTIONS_FORM_MISMATCH, static function (array $p): array {
+        $p['dialogue'][3]['check']['options'][2]['text_native'] = 'сыпь на коже';
+
+        return $p;
+    }],
+    'an option copied out of the partner\'s line in the learner\'s language' => [LessonCodes::OPTIONS_FORM_MISMATCH, static function (array $p): array {
+        $p['dialogue'][4]['check']['options'][1]['text_native'] = 'Растяжение мышцы';
+
+        return $p;
+    }],
     'two listening questions' => [LessonCodes::LISTENING_COUNT, static function (array $p): array {
         array_pop($p['listening']['questions']);
 
@@ -392,13 +409,13 @@ it('counts the one rule a lesson breaks by its code', function (string $code, Cl
 
 // A code with no row of its own is a code nothing proves it counts. The seam judge's code is a model's, not a rule's
 // (LessonSeamJudge, `LessonObservationTest`). Доработка GEN-2b: no code is about the speaking key any more, the key is the
-// server's. Наряд GEN-3 added seven codes; наряд BACK-TAILS-1 §3.2 one more — fifty-eight in all.
-it('has a broken rule for every one of its fifty-eight codes', function () {
+// server's. Наряд GEN-3 added seven codes; наряд BACK-TAILS-1 §3.2 one more; наряд FIX-3 §5 one more — fifty-nine in all.
+it('has a broken rule for every one of its fifty-nine codes', function () {
     $named = array_map(static fn (array $row): string => $row[0], [...array_values(lvBreaks()), ...array_values(lvStoryBreaks())]);
 
     expect(array_values(array_diff(LessonCodes::validated(), $named)))->toBe([])
-        ->and(count(LessonCodes::all()))->toBe(58)
-        ->and(count(array_unique(LessonCodes::all())))->toBe(58)
+        ->and(count(LessonCodes::all()))->toBe(59)
+        ->and(count(array_unique(LessonCodes::all())))->toBe(59)
         ->and(array_filter(LessonCodes::all(), static fn (string $code): bool => str_starts_with($code, 'key.')))->toBe([])
         ->and(LessonCodes::JUDGED)->toBe([LessonCodes::FILLER_NATIVE_SEAM]);
 });

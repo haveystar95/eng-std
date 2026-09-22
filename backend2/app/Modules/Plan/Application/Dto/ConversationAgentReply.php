@@ -19,7 +19,10 @@ final readonly class ConversationAgentReply
 
     public const END_DECLINED = 'declined';
 
-    /** @param list<string> $phrasesUsed the model's own opinion — kept for the report, never for the score */
+    /**
+     * @param  list<string>  $phrasesUsed  the model's own opinion — the second support of the code's rule, never the first
+     * @param  string|null  $opens  the target the reply opens the door to, as the model named it (наряд FIX-3 §7)
+     */
     public function __construct(
         public string $replyTarget,
         public string $replyNative,
@@ -27,7 +30,7 @@ final readonly class ConversationAgentReply
         public array $phrasesUsed,
         public bool $offTopic,
         public ?string $checkpointDone,
-        public ?string $nextHintNative,
+        public ?string $opens,
         public string $end,
         public TurnCost $cost,
     ) {}
@@ -42,7 +45,16 @@ final readonly class ConversationAgentReply
     {
         return new self(
             $target, $native, $this->understood, $this->phrasesUsed, $this->offTopic,
-            $this->checkpointDone, $this->nextHintNative, $this->end, $this->cost,
+            $this->checkpointDone, $this->opens, $this->end, $this->cost,
+        );
+    }
+
+    /** This answer with no judgement of whether the move was understood — a move that broke off (наряд FIX-3 §7). */
+    public function unjudged(): self
+    {
+        return new self(
+            $this->replyTarget, $this->replyNative, null, $this->phrasesUsed, $this->offTopic,
+            $this->checkpointDone, $this->opens, $this->end, $this->cost,
         );
     }
 
@@ -51,7 +63,7 @@ final readonly class ConversationAgentReply
     {
         return new self(
             $this->replyTarget, $this->replyNative, $this->understood, $this->phrasesUsed, $this->offTopic,
-            $this->checkpointDone, $this->nextHintNative, $this->end, $refused->plusModelCall($this->cost),
+            $this->checkpointDone, $this->opens, $this->end, $refused->plusModelCall($this->cost),
         );
     }
 

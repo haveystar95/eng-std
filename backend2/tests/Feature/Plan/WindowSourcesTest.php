@@ -106,7 +106,7 @@ it('gives every row of the window its planned minutes, in every state, on every 
     }
     $planned = array_map(static fn (int $s): int => (int) ceil($s / 60), $byStage);
 
-    expect(array_column($day1['stages'], 'minutes', 'stage'))->toBe([...$planned, 'conversation' => 3])
+    expect(array_column($day1['stages'], 'minutes', 'stage'))->toBe([...$planned, 'conversation' => 5])
         // A day not opened yet has them on every row — the rows are all «впереди».
         ->and(array_unique(array_column($day1['stages'], 'state')))->toBe(['locked']);
 
@@ -118,10 +118,10 @@ it('gives every row of the window its planned minutes, in every state, on every 
     expect(array_column($walking['stages'], 'state', 'stage')['words'])->toBe('done')
         ->and(array_column($walking['stages'], 'minutes', 'stage'))->toBe(array_column($day1['stages'], 'minutes', 'stage'));
 
-    // The review's and the rehearsal's talk: six minutes each (`plan.conversation.minutes`).
+    // The talk's own minutes by its kind (`plan.conversation.minutes`, наряд FIX-3 §7): a day 5, a review 4, the rehearsal 6.
     $review = wsWindow($this, $token, $id, 3);
     $rehearsal = wsWindow($this, $token, $id, 5);
-    expect(array_column($review['stages'], 'minutes', 'stage')['conversation'])->toBe(6)
+    expect(array_column($review['stages'], 'minutes', 'stage')['conversation'])->toBe(4)
         ->and(array_column($rehearsal['stages'], 'minutes', 'stage')['conversation'])->toBe(6);
 
     // «Вспомнить»: a minute of reading a scene — three scenes, three minutes — and the lines said aloud by their price.

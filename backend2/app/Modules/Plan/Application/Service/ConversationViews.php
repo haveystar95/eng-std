@@ -9,13 +9,18 @@ use App\Modules\Plan\Application\Dto\ConversationSceneView;
 use App\Modules\Plan\Application\Dto\ConversationSummaryView;
 use App\Modules\Plan\Application\Dto\ConversationTurnView;
 use App\Modules\Plan\Application\Dto\ConversationView;
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\IntentClause;
+use App\Modules\Plan\Domain\Service\PhraseUse;
+use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\Stage;
+use App\Modules\Plan\Domain\ValueObject\TurnKind;
 
 /**
  * THE TALK AS ONE DOCUMENT. Every number the frames print is counted here — turns left, minutes,
@@ -27,6 +32,8 @@ final readonly class ConversationViews
     public function __construct(
         private ConversationRules $rules,
         private StagePassageRepository $passages,
+        private LanguagePacks $packs,
+        private PhraseUse $phrases = new PhraseUse,
     ) {}
 
     public function of(Conversation $talk, ConversationMaterialView $material): ConversationView
@@ -72,32 +79,39 @@ final readonly class ConversationViews
             // The part after «Скажи, что …» (наряд CONV-2, п. 11) — read as a clause here, so the lines stored before
             // the rule came out the same way as the new ones.
             hintNative: $hint === null ? null : IntentClause::of($hint),
-            turns: array_map(fn (ConversationTurn $turn): ConversationTurnView => self::turn($turn, $material), $talk->turns()),
+            turns: array_map(static fn (ConversationTurn $turn): ConversationTurnView => self::turn($turn), $talk->turns()),
             summary: $talk->isEnded() ? $this->summary($talk, $material, $replay) : null,
             talkTitleNative: $material->titleNative,
-            targets: self::targets($material, $talk),
+            targets: $this->targets($material, $talk),
             replay: $replay,
         );
     }
 
     /**
-     * «СКАЖИ В РАЗГОВОРЕ» ON THE WIRE — `{scene_id, ref, text_target, text_native, said}` for every target of the day's
-     * talk (наряд CONV-2, п. 10), `said` by the talk given: the talk's own document and the talk's row of the day window
-     * (`window.stages[].targets`, наряд BACK-TAILS-2 §4) print ONE list — the day's material's, the one `POST
-     * …/conversation` starts the talk with — and no second set exists. No talk yet: nothing is said.
+     * «СКАЖИ В РАЗГОВОРЕ» ON THE WIRE — every target of the day's talk as a CONSTRUCTION (наряд FIX-3 §6): `{scene_id,
+     * ref, frame_target, frame_native, example_target, example_native, said, value_target}` — the frame with its window,
+     * the lesson's value (grey in the window on the screen), whether it has been said, and what the learner put in its
+     * window when they said it (null until then; for a frame without a window — null too). `said` and the value by the
+     * talk given: the talk's own document, its summary and the talk's row of the day window (`window.stages[].targets`)
+     * print ONE list — the day's material's, the one `POST …/conversation` starts the talk with. No talk yet: nothing is
+     * said.
      *
-     * @return list<array{scene_id: string, ref: string, text_target: string, text_native: string, said: bool}>
+     * @return list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}>
      */
-    public static function targets(ConversationMaterialView $material, ?Conversation $talk): array
+    public function targets(ConversationMaterialView $material, ?Conversation $talk): array
     {
         $heard = $talk === null ? [] : ConversationOutcomes::heard($talk);
+        $pack = $this->packs->for($material->targetLang);
 
-        return array_map(static fn ($target): array => [
+        return array_map(fn (ConversationPhrase $target): array => [
             'scene_id' => $target->sceneId,
             'ref' => $target->ref,
-            'text_target' => $target->textTarget,
-            'text_native' => $target->textNative,
+            'frame_target' => $target->frameTarget,
+            'frame_native' => $target->frameNative,
+            'example_target' => $target->exampleTarget,
+            'example_native' => $target->exampleNative,
             'said' => isset($heard[$target->id()]),
+            'value_target' => $talk === null || ! isset($heard[$target->id()]) ? null : $this->valueIn($talk, $target, $pack),
         ], $material->targets);
     }
 
@@ -108,25 +122,12 @@ final readonly class ConversationViews
     public function summary(Conversation $talk, ConversationMaterialView $material, bool $replay = false): ConversationSummaryView
     {
         $outcome = ConversationOutcomes::of($talk, $material->targets);
-        $used = array_fill_keys($outcome->phrasesUsed, true);
-
-        $phrases = [];
-        foreach ($material->targets as $phrase) {
-            $phrases[] = [
-                'scene_id' => $phrase->sceneId,
-                'ref' => $phrase->ref,
-                'text_target' => $phrase->textTarget,
-                'text_native' => $phrase->textNative,
-                'audio_id' => null,
-                'used' => isset($used[$phrase->id()]),
-            ];
-        }
 
         return new ConversationSummaryView(
             saidCount: $outcome->saidCount,
             phrasesUsed: $outcome->phrasesUsedCount(),
             phrasesTotal: $outcome->phrasesTotal,
-            phrases: $phrases,
+            phrases: $this->targets($material, $talk),
             understoodAll: $outcome->understoodAll,
             notUnderstood: $outcome->notUnderstood,
             rescues: $outcome->rescues,
@@ -134,6 +135,21 @@ final readonly class ConversationViews
             minutes: $outcome->minutes,
             returnsTomorrow: $talk->type()->returnsTomorrow() && ! $replay,
         );
+    }
+
+    /**
+     * What the learner put in the window of a target they said — read again off the move that said it, by the rule that
+     * heard it ({@see PhraseUse::valueOf()}); the journal keeps the words, not a second copy of them.
+     */
+    private function valueIn(Conversation $talk, ConversationPhrase $target, LanguagePack $pack): ?string
+    {
+        foreach ($talk->turns() as $turn) {
+            if ($turn->kind === TurnKind::Said && in_array($target->id(), $turn->phrasesUsed, true)) {
+                return $this->phrases->valueOf((string) $turn->textTarget, $target, $pack);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -150,19 +166,13 @@ final readonly class ConversationViews
             && $passage->passedAt <= $talk->startedAt();
     }
 
-    private static function turn(ConversationTurn $turn, ConversationMaterialView $material): ConversationTurnView
+    private static function turn(ConversationTurn $turn): ConversationTurnView
     {
         $phrases = [];
         foreach ($turn->phrasesUsed as $id) {
             $parts = explode(':', $id, 2);
             if (count($parts) === 2) {
-                $phrase = $material->phrase($id);
-                $phrases[] = [
-                    'scene_id' => $parts[0],
-                    'ref' => $parts[1],
-                    'text_target' => $phrase?->textTarget,
-                    'text_native' => $phrase?->textNative,
-                ];
+                $phrases[] = ['scene_id' => $parts[0], 'ref' => $parts[1]];
             }
         }
 

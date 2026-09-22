@@ -35,8 +35,9 @@ use App\Modules\Shared\Domain\ValueObject\SpeechPack;
  *
  * Both modes compare {@see words()}: the kernel's canonical form ({@see LexicalNormalizer::canonicalize()} — case,
  * punctuation, English contractions: «I'd» is «I would»), plus two foldings the PACK supplies — an abbreviation to
- * its letters («p.m.» → `pm`, наряд CHECK-1's key read a second time) and a number word to its digits («three» →
- * `3`). On top of that the recogniser's own two habits are forgiven wherever words are counted: a boundary it
+ * its letters («p.m.» → `pm`, наряд CHECK-1's key read a second time) and the words of a number to its digits, the
+ * words of one number read as one — «forty-five» and «forty five» are `45`, «a hundred» is `100` ({@see SpokenNumbers},
+ * наряд FIX-3 §4). On top of that the recogniser's own two habits are forgiven wherever words are counted: a boundary it
  * guessed differently ({@see SpokenWordBoundary}) and a trailing sibilant it did not hear
  * ({@see SpokenSuffixTolerance}).
  *
@@ -233,17 +234,8 @@ final readonly class SpeechMatch
     public function slotWords(string $heard, string $key, SpeechPack $pack): string
     {
         $available = array_count_values($this->words($key, $pack));
-        $surface = preg_split('/\s+/u', trim($heard), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $stream = $this->words(implode(' ', $surface), $pack);
         $out = [];
-        $taken = 0;
-        foreach ($surface as $i => $raw) {
-            $rest = count($this->words(implode(' ', array_slice($surface, $i + 1)), $pack));
-            $tokens = array_slice($stream, $taken, max(0, count($stream) - $rest - $taken));
-            $taken += count($tokens);
-            if ($tokens === []) {
-                continue;
-            }
+        foreach ($this->surfaceWords($heard, $pack) as [$surface, $tokens]) {
             $need = array_count_values($tokens);
             $framed = true;
             foreach ($need as $token => $count) {
@@ -259,18 +251,54 @@ final readonly class SpeechMatch
 
                 continue;
             }
-            $out[] = (string) preg_replace('/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/u', '', $raw);
+            $out[] = $surface;
         }
 
         return implode(' ', $out);
     }
 
     /**
-     * THE COMPARABLE WORDS OF A TEXT: the pack's abbreviations folded to their letters, then the kernel's canonical
-     * form, then the pack's number words written as digits.
+     * EVERY WORD OF A TEXT AS WRITTEN, WITH THE COMPARABLE WORDS IT MAKES ({@see words()}) — so a rule that finds its
+     * words among the comparable ones can hand back what was actually said. The text is folded ONCE, as a whole, and
+     * each written word is credited with the comparable words it contributes to that fold: what the fold of the rest
+     * loses when the word is left out. A word folded alone is a different word («He's» is `hes` on its own and `he has`
+     * in front of «been», the one rule the canonicaliser reads forward), and counting from the end is exact precisely
+     * because that rule looks forward and no other does. A written word that makes no comparable word of its own is part
+     * of the next one's — «forty» of «forty five» goes where `45` goes; marks around a word are not the word.
      *
-     * The abbreviation goes FIRST because its dots would otherwise become word breaks («p.m.» → `p m`); the number
-     * word goes LAST because it is a whole token and there is nothing to find until the tokens exist.
+     * @return list<array{0: string, 1: list<string>}> each written word (or run of words that fold together) and its comparable words
+     */
+    public function surfaceWords(string $text, SpeechPack $pack): array
+    {
+        $surface = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $stream = $this->words(implode(' ', $surface), $pack);
+        $out = [];
+        $taken = 0;
+        $pending = [];
+        foreach ($surface as $i => $raw) {
+            $rest = count($this->words(implode(' ', array_slice($surface, $i + 1)), $pack));
+            $tokens = array_slice($stream, $taken, max(0, count($stream) - $rest - $taken));
+            $taken += count($tokens);
+            $pending[] = (string) preg_replace('/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/u', '', $raw);
+            if ($tokens === []) {
+                continue;
+            }
+            $out[] = [implode(' ', array_filter($pending, static fn (string $w): bool => $w !== '')), $tokens];
+            $pending = [];
+        }
+
+        return $out;
+    }
+
+    /**
+     * THE COMPARABLE WORDS OF A TEXT — the one order of the foldings, the same on the phone: (1) the pack's
+     * abbreviations to their letters, (2) the kernel's canonical form — case, English contractions spelt out («I'll» is
+     * «I will»), every mark but the apostrophe a space (the hyphen too: «forty-five» is «forty five»), (3) the words of a
+     * number to its digits, the words of one number read as one ({@see SpokenNumbers}: «forty five» → `45`, «a hundred»
+     * → `100`, «one minute» → `1 minute`).
+     *
+     * The abbreviation goes FIRST because its dots would otherwise become word breaks («p.m.» → `p m`); the numbers go
+     * LAST because a number is made of whole words, and there is nothing to read until the words exist.
      *
      * @return list<string>
      */
@@ -280,12 +308,8 @@ final readonly class SpeechMatch
         if ($canonical === '') {
             return [];
         }
-        $words = explode(' ', $canonical);
-        if ($pack->numberWords === []) {
-            return $words;
-        }
 
-        return array_map(static fn (string $w): string => $pack->numberWords[$w] ?? $w, $words);
+        return SpokenNumbers::fold(explode(' ', $canonical), $pack->numberWords, $pack->articles, $pack->numberJoiners);
     }
 
     /**

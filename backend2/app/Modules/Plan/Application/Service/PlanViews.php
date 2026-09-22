@@ -13,6 +13,7 @@ use App\Modules\Plan\Application\Dto\RouteStageView;
 use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\VersionsView;
 use App\Modules\Plan\Application\Port\BuildVersion;
+use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\LearnerHabits;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Entity\DayCard;
@@ -54,6 +55,7 @@ final readonly class PlanViews
         private ConversationRepository $conversations,
         private StagePassageRepository $passages,
         private ConversationRules $rules,
+        private LearnerGender $learners,
     ) {}
 
     public function versions(): VersionsView
@@ -63,7 +65,8 @@ final readonly class PlanViews
 
     public function plan(Plan $plan, DateTimeImmutable $today): PlanView
     {
-        $strings = new NativeStrings($plan->nativeLang()->value);
+        // «…скажешь всё это сам» ends as the learner's profile says (наряд FIX-3 §1).
+        $strings = new NativeStrings($plan->nativeLang()->value, $this->learners->of($plan->userId()));
         $titles = $plan->titles();
         $daysLeft = $plan->daysLeftUntilEvent($today);
         $status = $plan->effectiveStatus($today);

@@ -54,7 +54,14 @@ final readonly class DayDealer
         private StagePassageRepository $passages,
         private ConversationMaterial $material,
         private DayBuildLog $log,
+        private PlanPaces $paces,
     ) {}
+
+    /** The assembler, reckoning by the plan's own price list (наряд FIX-3 §2). */
+    private function assembler(Plan $plan): DayAssembler
+    {
+        return $this->assembler->pacedBy($this->paces->for($plan));
+    }
 
     /**
      * The day, dealt for good — and what the dealing had to give up, written to the day's build log (наряд BACK-TAILS-2
@@ -78,7 +85,7 @@ final readonly class DayDealer
         if ($scene === null || $material === null) {
             return;
         }
-        $deal = $this->assembler->phrasesDeal($material, $plan->level());
+        $deal = $this->assembler($plan)->phrasesDeal($material, $plan->level());
         if ($deal->overCeiling()) {
             $this->log->phrasesOverCeiling($plan->id(), $day->id(), $day->number(), $scene->id(), $deal);
         }
@@ -146,7 +153,7 @@ final readonly class DayDealer
             $scene = $this->material($plan, [PlanSceneId::fromString($sceneId)])[$sceneId] ?? null;
         }
 
-        return $this->assembler->again($failed, $scene, $dealt, $plan->level());
+        return $this->assembler($plan)->again($failed, $scene, $dealt, $plan->level());
     }
 
     /** @return list<DayCard> */
@@ -180,7 +187,7 @@ final readonly class DayDealer
         $material = $this->material($plan, [$scene->id(), ...array_map(static fn (ReturnedUnit $u): PlanSceneId => $u->sceneId, $returned)]);
         $today = $material[$scene->id()->value];
 
-        return $this->assembler->sceneDay(
+        return $this->assembler($plan)->sceneDay(
             $day->id(), $today, $material, $plan->level(), $returned,
             $withNativeTopUp ? $this->nativeTopUp($plan, $today) : [], $ids,
         );
@@ -212,7 +219,7 @@ final readonly class DayDealer
         }
         $first = $scenes[0] ?? null;
 
-        return $this->assembler->reviewDay(
+        return $this->assembler($plan)->reviewDay(
             $day->id(), $scenes, $material, $plan->level(), $returned,
             $first === null || ! $withNativeTopUp ? [] : $this->nativeTopUp($plan, $first), $ids,
         );
@@ -238,7 +245,7 @@ final readonly class DayDealer
             static fn (ReturnedUnit $u): bool => isset($material[$u->sceneId->value]),
         ));
 
-        return $this->assembler->rehearsalDay($day->id(), $scenes, $material, $plan->level(), $returned, $ids);
+        return $this->assembler($plan)->rehearsalDay($day->id(), $scenes, $material, $plan->level(), $returned, $ids);
     }
 
     /**

@@ -7,26 +7,43 @@ namespace App\Modules\Plan\Domain\Service;
 use App\Modules\Plan\Domain\ValueObject\ConversationType;
 
 /**
- * THE KNOBS OF THE TALK (наряд CONV-1) — turns, minutes and money, by what kind of talk it is.
+ * THE KNOBS OF THE TALK (наряд CONV-1; наряд FIX-3 §7) — turns, minutes and money.
  *
- * All three are config (`plan.conversation`), not constants, for the same reason the day's pace is:
- * they are tuned after the phone, and a number tuned in code is a number nobody can tune back
- * without a release. The turn limit is what the prompt is told as `TURNS_LEFT` — the role says
- * goodbye on its own when it reaches nought, which is why it is «после N ходов прощается сам» and
- * not «сервер обрывает».
+ * TURNS come from what the talk is FOR: the learner has as many moves as the talk has targets, and {@see SPARE_TURNS}
+ * more — a greeting, a step aside, a question of their own (seven targets — nine moves). The role leads to the targets
+ * one by one; a talk of three or four moves over seven targets asked for all seven and heard one (зал, день 2). The turn
+ * limit is what the prompt is told as `TURNS_LEFT`: the role says goodbye on its own when it reaches nought.
  *
- * The money cap is the plan's protection against a talk that will not end: the learner is never cut
- * off mid-word — the cap makes the NEXT move the role's last (`ended_reason: limit`).
+ * MINUTES are a hard stop, by kind of talk (`plan.conversation.minutes`: day 5, rehearsal 6, review 4 — config, tuned
+ * after the phone): once the talk has taken them, the next move is the role's last, as with the money cap
+ * (`ended_reason: limit`) — the learner is never cut off mid-word. The same minutes are the «около N минут» of the entry
+ * card and the day window.
+ *
+ * The money cap is the plan's protection against a talk that will not end: the cap makes the NEXT move the role's last.
  *
  * `enabled` is not a knob of the talk but the switch that deals it at all — see the constant.
  */
 final readonly class ConversationRules
 {
-    /** Moves of the scene per kind of talk — «day 4, rehearsal 10, review 4». */
-    public const TURNS = ['day' => 4, 'rehearsal' => 10, 'review' => 4];
+    /** The moves a talk has beyond one per target — a greeting, a step aside, a question of the learner's own. */
+    public const SPARE_TURNS = 2;
 
-    /** «Около N минут» on the entry card and in the day window (кадры 37-1, 37-2, 37-5). */
-    public const MINUTES = ['day' => 3, 'rehearsal' => 6, 'review' => 6];
+    /**
+     * THE ROLE DOES NOT CLOSE THE TALK BEFORE ITS MOVES ARE SPENT (наряд FIX-3 §7: «„цели покрыты" концом не является»).
+     * Both day talks of the live run were closed by the role with a move to go, once every target was said, on a line
+     * that was no goodbye. An answer that ends the talk while moves are left is asked for once more with the reason; an
+     * answer that insists — the learner said goodbye — ends it.
+     */
+    public const REDO_EARLY_END = 'early_end';
+
+    /** An answer closed the talk with moves left and was asked for again. */
+    public const CODE_EARLY_END = 'conversation.early_end';
+
+    /** …and the answer asked for again closed it too: the talk ended there. */
+    public const CODE_EARLY_END_KEPT = 'conversation.early_end_kept';
+
+    /** The minutes a talk may take, by kind — the hard stop, and «около N минут» on the entry card and the day window. */
+    public const MINUTES = ['day' => 5, 'rehearsal' => 6, 'review' => 4];
 
     /** What one talk may spend on the model and the voice together, in dollars. */
     public const COST_CAP_USD = 0.08;
@@ -52,11 +69,9 @@ final readonly class ConversationRules
     public const REPLAYS_PER_DAY = 3;
 
     /**
-     * @param  array<string, int>  $turns  by {@see ConversationType} value
      * @param  array<string, int>  $minutes  by {@see ConversationType} value
      */
     public function __construct(
-        private array $turns = self::TURNS,
         private array $minutes = self::MINUTES,
         public float $costCapUsd = self::COST_CAP_USD,
         public int $hintDelayMs = self::HINT_DELAY_MS,
@@ -64,9 +79,10 @@ final readonly class ConversationRules
         public int $replaysPerDay = self::REPLAYS_PER_DAY,
     ) {}
 
-    public function turnsFor(ConversationType $type): int
+    /** The learner's moves in a talk over `$targets` targets — one each, and the spare ones. */
+    public function turnsFor(int $targets): int
     {
-        return max(1, $this->turns[$type->value] ?? self::TURNS[$type->value]);
+        return max(1, $targets) + self::SPARE_TURNS;
     }
 
     public function minutesFor(ConversationType $type): int
@@ -74,7 +90,7 @@ final readonly class ConversationRules
         return max(1, $this->minutes[$type->value] ?? self::MINUTES[$type->value]);
     }
 
-    /** The seconds the talk adds to the day's «≈ N минут» — the stage has no cards to price. */
+    /** The seconds a talk of this kind may take — the day's «≈ N минут» for the stage, and the hard stop of the talk. */
     public function secondsFor(ConversationType $type): int
     {
         return $this->minutesFor($type) * 60;

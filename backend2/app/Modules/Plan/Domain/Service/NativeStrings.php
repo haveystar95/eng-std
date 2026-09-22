@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\ValueObject\DayType;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use DateTimeImmutable;
 
 /**
@@ -125,10 +126,40 @@ final class NativeStrings
         'en' => ['nothing' => "Didn't catch that — say it again", 'main' => 'The main part is missing — {hint}'],
     ];
 
+    /**
+     * THE SAME LINES SAID OF A LEARNER WHO IS A WOMAN (наряд FIX-3 §1): a line about the learner ends as the learner's
+     * gender asks — «Сказала сама», «скажешь всё это сама» — by the profile ({@see $learner}); a profile that says
+     * nothing reads the masculine, the way the lesson writes an unavoidable past form. By the key of the table the line
+     * comes from: `highlight.*`, `promise.*`, `judge.*`. English needs none.
+     *
+     * @var array<string, array<string, string>>
+     */
+    private const FEMININE = [
+        'ru' => [
+            'highlight.said_self' => 'Сказала сама {n} {noun} из {of}',
+            'highlight.phrases_used' => 'В разговоре использовала {n} {noun} из {of}',
+            'highlight.understood_all' => 'Поняла все вопросы',
+            'highlight.understood_except' => 'Поняла вопросы, кроме {n} {noun}',
+            'promise.dated' => '{to} {day} {month} скажешь всё это сама',
+            'promise.undated' => 'Скажешь всё это сама',
+            'judge.main' => 'Не сказала главного — {hint}',
+        ],
+        'uk' => [
+            'highlight.said_self' => 'Сказала сама {n} {noun} із {of}',
+            'highlight.phrases_used' => 'У розмові використала {n} {noun} із {of}',
+            'highlight.understood_all' => 'Зрозуміла усі питання',
+            'highlight.understood_except' => 'Зрозуміла питання, крім {n} {noun}',
+            'promise.dated' => 'До {day} {month} скажеш усе це сама',
+            'promise.undated' => 'Скажеш усе це сама',
+            'judge.main' => 'Не сказала головного — {hint}',
+        ],
+    ];
+
     /** How many scene titles the plan summary names. */
     public const SUMMARY_SCENES = 3;
 
-    public function __construct(private readonly string $lang) {}
+    /** @param  VoiceGender|null  $learner  the learner's gender by their profile — null: not said, the masculine is read */
+    public function __construct(private readonly string $lang, private readonly ?VoiceGender $learner = null) {}
 
     /**
      * «Регистрация на рейс, заселение в отель, ресторан. К 17 сентября скажешь всё это сам» — the
@@ -157,8 +188,8 @@ final class NativeStrings
 
         $promise = self::PROMISE[$this->table()];
         $tail = $eventDate === null
-            ? $promise['undated']
-            : strtr($promise['dated'], [
+            ? $this->gendered('promise.undated', $promise['undated'])
+            : strtr($this->gendered('promise.dated', $promise['dated']), [
                 '{to}' => self::toBefore((int) $eventDate->format('j')),
                 '{day}' => (string) (int) $eventDate->format('j'),
                 '{month}' => self::MONTHS[$this->table()][(int) $eventDate->format('n') - 1],
@@ -228,7 +259,7 @@ final class NativeStrings
      */
     public function highlight(string $key, int $n, string $noun, ?int $of = null): string
     {
-        $template = self::HIGHLIGHTS[$this->table()][$key] ?? self::HIGHLIGHTS['en'][$key] ?? '';
+        $template = $this->gendered("highlight.{$key}", self::HIGHLIGHTS[$this->table()][$key] ?? self::HIGHLIGHTS['en'][$key] ?? '');
         $forms = self::FORMS[$this->table()][$noun] ?? self::FORMS['en'][$noun] ?? ['', '', ''];
 
         return strtr($template, [
@@ -270,7 +301,13 @@ final class NativeStrings
      */
     public function judgeReason(string $key, string $hint = ''): string
     {
-        return strtr(self::JUDGE[$this->table()][$key], ['{hint}' => trim($hint)]);
+        return strtr($this->gendered("judge.{$key}", self::JUDGE[$this->table()][$key]), ['{hint}' => trim($hint)]);
+    }
+
+    /** The line as said of this learner: the feminine one when the profile says so and the language has it. */
+    private function gendered(string $key, string $line): string
+    {
+        return $this->learner === VoiceGender::Female ? (self::FEMININE[$this->table()][$key] ?? $line) : $line;
     }
 
     private function word(string $key): string

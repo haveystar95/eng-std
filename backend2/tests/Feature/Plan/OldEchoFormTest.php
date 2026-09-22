@@ -151,3 +151,38 @@ it('brings an echo dealt before CONV-2 to the form of a fresh deal, passed by it
         ->and(oePayload($today['id']))->toEqual($today['payload'])
         ->and(oePayload($lost['id']))->toEqual($lostForm);
 });
+
+/**
+ * Canon (наряд FIX-3 §11): «partner_line у эха снят везде (после сборки 18), остатки удалить». The cards the migration
+ * above kept `partner_line` on — eleven, the live base and the e2e stand — lose it, and nothing else of them; back, a card
+ * of a day opened before the echo stopped being dealt with it (22.09, 11:13 UTC) gets its exchange's partner line again,
+ * built the way a card builds it — a day opened after that moment never had one and gets none. CATCHES the key left on a
+ * card, another key taken with it, a way back that restores nothing, and one that gives a fresh echo a key it never had.
+ */
+it('takes the last partner_line off the echo cards, and gives it back only to the days dealt with one', function () {
+    $old = oeEchoCard($this);
+    $fresh = oeEchoCard($this);
+    $dayOf = static fn (string $cardId): string => (string) DB::table('day_cards')->where('id', $cardId)->value('day_id');
+    DB::table('plan_days')->where('id', $dayOf($old['id']))->update(['opened_at' => '2026-09-18 15:33:17+00']);
+    $step = (int) $old['payload']['exchange']['step'];
+    $plan = app(App\Modules\Plan\Domain\Repository\PlanRepository::class)->findById(App\Modules\Plan\Domain\ValueObject\PlanId::fromString(
+        (string) DB::table('plan_days')->where('id', $dayOf($old['id']))->value('plan_id'),
+    ));
+    $partner = App\Modules\Plan\Domain\Assembly\CardObjects::partnerLine(
+        $plan?->scene(App\Modules\Plan\Domain\ValueObject\PlanSceneId::fromString($old['payload']['scene_id']))->lesson()?->exchange($step),
+    );
+    expect($partner)->not->toBeNull();
+    // As the live base holds it: today's echo, with the partner's line beside it.
+    oeWrite($old['id'], [...$old['payload'], 'partner_line' => $partner]);
+
+    $migration = require base_path('app/Modules/Plan/Infrastructure/Migration/2026_09_23_100200_drop_partner_line_of_old_echo_cards.php');
+    $migration->up();
+
+    expect(oePayload($old['id']))->toEqual($old['payload'])
+        ->and(oePayload($old['id']))->not->toHaveKey('partner_line')
+        ->and(oePayload($fresh['id']))->toEqual($fresh['payload']);
+
+    $migration->down();
+    expect(oePayload($old['id']))->toEqual([...$old['payload'], 'partner_line' => $partner])
+        ->and(oePayload($fresh['id']))->toEqual($fresh['payload']);
+});

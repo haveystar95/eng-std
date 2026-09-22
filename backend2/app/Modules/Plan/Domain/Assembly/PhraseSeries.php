@@ -48,16 +48,17 @@ final readonly class PhraseSeries
 
     /**
      * The fillers in the order the recognitions take them: the said one, then the rest by index. A frame without a
-     * window has none.
+     * window has none. `$unhidden` — fillers the seam judge hid that are wanted all the same ({@see CardObjects::fillers()}).
      *
+     * @param  list<int>  $unhidden
      * @return list<int>
      */
-    public static function fillers(SceneMaterial $scene, PlanTerm $phrase): array
+    public static function fillers(SceneMaterial $scene, PlanTerm $phrase, array $unhidden = []): array
     {
         if (! PhraseCards::hasSlot($phrase)) {
             return [];
         }
-        $indexes = array_column(CardObjects::fillers($scene, $phrase), 'index');
+        $indexes = array_column(CardObjects::fillers($scene, $phrase, $unhidden), 'index');
         $said = $scene->saidIndex($phrase);
         if (! in_array($said, $indexes, true)) {
             return $indexes;

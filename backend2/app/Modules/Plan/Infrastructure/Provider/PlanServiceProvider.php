@@ -59,6 +59,8 @@ use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyNativeDistractorSource;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyPlanCollectionWriter;
 use App\Modules\Plan\Infrastructure\Console\PlanReconcileScenesCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanRepaceCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanRevoiceLearnerCommand;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentCheckCounters;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentConversationRepository;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentStagePassageRepository;
@@ -187,7 +189,7 @@ final class PlanServiceProvider extends ServiceProvider
             );
         });
 
-        // THE TALK WITH THE AGENT (наряд CONV-1): turns, minutes and the money cap — `plan.conversation`,
+        // THE TALK WITH THE AGENT (наряд CONV-1; FIX-3 §7): minutes and the money cap — `plan.conversation`,
         // tuned in config after the phone, never in code (the rule the day's pace was written under).
         $this->app->singleton(ConversationRules::class, function (): ConversationRules {
             $ints = static function (string $key, array $fallback): array {
@@ -202,7 +204,6 @@ final class PlanServiceProvider extends ServiceProvider
             };
 
             return new ConversationRules(
-                turns: $ints('turns', ConversationRules::TURNS),
                 minutes: $ints('minutes', ConversationRules::MINUTES),
                 costCapUsd: (float) config('plan.conversation.cost_cap_usd', ConversationRules::COST_CAP_USD),
                 hintDelayMs: (int) config('plan.conversation.hint_delay_ms', ConversationRules::HINT_DELAY_MS),
@@ -324,6 +325,9 @@ final class PlanServiceProvider extends ServiceProvider
         // One scene, one name (наряд BACK-TAILS-2 §6): the dealt «Вспомнить» sheets named by their plan — dry-run unless
         // `--apply`. Registered with the module, beside the migration it follows.
         $this->commands([PlanReconcileScenesCommand::class]);
+        // The price list of a plan's days taken again from the config (наряд FIX-3 §2), and the learner's voice bought in the
+        // gender of the profile for a plan voiced before it (§1) — both written beside the rule they serve.
+        $this->commands([PlanRepaceCommand::class, PlanRevoiceLearnerCommand::class]);
 
         $routes = __DIR__.'/../../Presentation/Http/routes.php';
         if (is_file($routes)) {

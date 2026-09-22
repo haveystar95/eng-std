@@ -154,7 +154,8 @@ function s1aVoiceFile(array $day, string $ref, int $durationMs): string
 {
     $partner = VoiceGender::from((string) (DB::table('plan_scenes')->where('id', $day['sceneId'])->value('partner_voice_gender') ?? 'female'));
     $speaker = str_starts_with($ref, 'x') && ! str_ends_with($ref, 'b') ? Speaker::Partner : Speaker::Learner;
-    $gender = $speaker === Speaker::Partner ? $partner : $partner->opposite();
+    // The learner's voice is the learner's own — male while the profile says nothing (наряд FIX-3 §1).
+    $gender = $speaker === Speaker::Partner ? $partner : VoiceGender::Male;
     $id = Ulid::generate();
     DB::table('plan_line_audios')->insert([
         'id' => $id, 'scene_id' => $day['sceneId'], 'user_id' => (string) DB::table('plan_scenes')->where('id', $day['sceneId'])->value('user_id'),
@@ -404,19 +405,20 @@ it('never returns the day’s listening and deals it no copy: a wrong question i
 it('answers with the day’s numbers refolded and the minutes of the card’s own stage', function () {
     $day = s1aDay($this);
     s1aDeal($day, CardKind::ListenQuestion, UnitKind::Day, 'L1', 1, [], new DateTimeImmutable('-2000 seconds'));
-    s1aDeal($day, CardKind::ListenQuestion, UnitKind::Day, 'L2', 2, [], new DateTimeImmutable('-1830 seconds'));
+    s1aDeal($day, CardKind::ListenQuestion, UnitKind::Day, 'L2', 2, [], new DateTimeImmutable('-1900 seconds'));
     s1aDeal($day, CardKind::WordIntro, UnitKind::Word, 'v1', 1, [], new DateTimeImmutable('-40 seconds'));
     $open = s1aDeal($day, CardKind::WordChoose, UnitKind::Word, 'v1', 2, s1aChoice('v1'));
     s1aDeal($day, CardKind::WordRepeat, UnitKind::Word, 'v1', 3);
 
     $reply = s1aAnswer($this, $day, $open->id()->value, 'passed')->assertOk()->json('data');
 
-    // Day: 170 s between the questions, a pause of half an hour not counted, 40 s to the answer → 4 min; words: 40 s → 1.
-    expect($reply['day'])->toBe(['cards_total' => 5, 'cards_done' => 4, 'minutes_spent' => 4])
+    // Day: 100 s between the questions (under the two minutes of a pause, наряд FIX-3 §2), half an hour not counted, 40 s
+    // to the answer → 140 s, 3 min; words: 40 s → 1.
+    expect($reply['day'])->toBe(['cards_total' => 5, 'cards_done' => 4, 'minutes_spent' => 3])
         ->and($reply['stage'])->toBe(['stage' => 'words', 'minutes_spent' => 1])
         ->and($reply['requeued'])->toBeNull()
         ->and((int) DB::table('plan_days')->where('id', $day['dayId'])->value('cards_done'))->toBe(4)
-        ->and((int) DB::table('plan_days')->where('id', $day['dayId'])->value('minutes_spent'))->toBe(4);
+        ->and((int) DB::table('plan_days')->where('id', $day['dayId'])->value('minutes_spent'))->toBe(3);
 });
 
 // Canon (разд. 0, 5): «у каждого звучащего элемента audio {ref, url, duration_ms, voice}; duration_ms — null, если нет».
@@ -511,5 +513,6 @@ it('reads the window’s dialogue off the day’s own lesson and its words off t
         ->and($after['dialogue']['summary'])->toBe(['total' => $learners, 'done' => $learners - 1, 'returns' => 0])
         ->and($after['words']['items'][0]['state'])->toBe('returns_tomorrow')
         ->and($after['words']['items'][0]['returns_day'])->toBe(2)
-        ->and($after['words']['summary'])->toBe(['total' => 1, 'done' => 0, 'returns' => 1]);
+        // The brow counts what came BACK into the day (наряд FIX-3 §9): the word goes back tomorrow — its state says so.
+        ->and($after['words']['summary'])->toBe(['total' => 1, 'done' => 0, 'returns' => 0]);
 });

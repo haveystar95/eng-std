@@ -43,9 +43,10 @@ final class PlanPromptFiles
 
     /**
      * The role the learner talks to in the sixth stage of a day (наряд CONV-1; v2 — наряд CONV-2: two sides, rescue, REDO;
-     * v2.1 — наряд BACK-TAILS-2 §9: one rule more, ECHO, the rest byte for byte).
+     * v2.1 — BACK-TAILS-2 §9: ECHO; v3 — наряд FIX-3 §7: the targets are constructions, the role opens a door to each in
+     * turn, one question a reply, an unfinished line is no misunderstanding, the talk ends on a goodbye or a cap).
      */
-    public const CONVERSATION_FILE = 'conversation_agent.v2.1.md';
+    public const CONVERSATION_FILE = 'conversation_agent.v3.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
@@ -217,8 +218,8 @@ final class PlanPromptFiles
 
     /**
      * One move's data: the languages and the two roles, the scenes to walk with THE LEARNER'S lines
-     * (named as the learner's — the one fact the live talks of 21.09 lost), the phrases of the plan,
-     * everything said so far, and what the learner has just done — the speech last and in a field of
+     * (named as the learner's — the one fact the live talks of 21.09 lost), the talk's targets and the one to lead to
+     * now (наряд FIX-3 §7), everything said so far, and what the learner has just done — the speech last and in a field of
      * its own, named as speech, because it is the only input a stranger writes. A second try of the
      * same move carries REDO after it: why the first answer was refused and what it said.
      */
@@ -231,7 +232,7 @@ final class PlanPromptFiles
             'YOUR_ROLE: '.self::oneLine($request->roleTarget).' / '.self::oneLine($request->roleNative),
             'LEARNER_ROLE: '.self::oneLine($request->learnerRoleTarget).' / '.self::oneLine($request->learnerRoleNative),
             '',
-            'CHECKPOINTS (in order; id · the scene · what it is about · who you are there · the visit as prepared, exchange by exchange — LEARNER lines are the learner\'s to say, never yours; YOU lines show what you say there):',
+            'CHECKPOINTS (in order; id · the scene · what it is about · who you are there · the visit as prepared, exchange by exchange — LEARNER lines are the learner\'s to say, never yours; YOU lines show what you say there; DONE — it has happened in this conversation):',
         ];
         foreach ($request->checkpoints as $checkpoint) {
             $lines[] = '- '.$checkpoint['id'].' · '.self::oneLine($checkpoint['title_native']).' · '.self::oneLine($checkpoint['about_native'])
@@ -243,16 +244,20 @@ final class PlanPromptFiles
                     $partner === '' => '    · LEARNER says: '.$learner,
                     $line['kind'] === 'ask' => '    · LEARNER asks: '.$learner.' → YOU answer: '.$partner,
                     default => '    · YOU: '.$partner.' → LEARNER answers: '.$learner,
-                };
+                }.($line['done'] ? ' · DONE' : '');
             }
         }
         $lines[] = '';
         $lines[] = 'CURRENT_CHECKPOINT: '.($request->currentCheckpoint ?? 'none');
         $lines[] = '';
-        $lines[] = 'PLAN_PHRASES (id · target · native):';
-        foreach ($request->phrases as $phrase) {
-            $lines[] = '- '.$phrase['id'].' · '.self::oneLine($phrase['target']).' · '.self::oneLine($phrase['native']);
+        $lines[] = 'TARGETS (id · the learner ANSWERS or ASKS with it · the construction · example value · native · SAID or not yet):';
+        foreach ($request->targets as $target) {
+            $lines[] = '- '.$target['id'].' · '.($target['kind'] === 'ask' ? 'ASKS' : 'ANSWERS').' · '.self::oneLine($target['frame_target'])
+                .' · e.g. '.self::oneLine($target['example_target'] ?? '—').' · '.self::oneLine($target['frame_native'])
+                .' · '.($target['said'] ? 'SAID' : 'not yet');
         }
+        $lines[] = '';
+        $lines[] = 'LEAD_TO: '.($request->leadTo ?? 'none');
         $lines[] = '';
         $lines[] = 'HISTORY:';
         foreach ($request->history as $turn) {
@@ -271,13 +276,15 @@ final class PlanPromptFiles
         ];
         // The refused answer itself is NOT quoted for a learner line: a mini model handed its own text back copies it —
         // the live replay of the owner's talks (report §1) got the same answer twice when it was quoted. It is named for
-        // a rescue, where «the same words» is exactly what is wrong. An echo quotes nothing: what was said back is HEARD,
-        // which the message already carries (наряд BACK-TAILS-2 §9).
+        // a rescue, where «the same words» is exactly what is wrong. An echo quotes nothing: what was said back is in HEARD
+        // or HISTORY, which the message already carries (наряд BACK-TAILS-2 §9; FIX-3 §11 — any move of the talk).
         if ($request->redo !== null) {
             $tail[] = match ($request->redo['reason']) {
                 'learner_line' => 'REDO: learner_line — do not say «'.self::oneLine((string) $request->redo['line']).'»: it is a LEARNER line, the learner says it, not you. Answer this move again as YOUR_ROLE',
-                'learner_echo' => 'REDO: learner_echo — do not repeat the learner\'s words, answer them: you said HEARD back as your own line. Answer this move again as YOUR_ROLE',
+                'learner_echo' => 'REDO: learner_echo — do not repeat the learner\'s words, answer them: you said something the learner said in this conversation back as your own line. Answer this move again as YOUR_ROLE and go on to LEAD_TO — never with a question the learner has already answered',
                 'same_words' => 'REDO: same_words — do not say «'.self::oneLine($request->redo['said']).'» again: say its meaning in other, simpler, shorter words',
+                'own_line' => 'REDO: own_line — do not say «'.self::oneLine((string) $request->redo['line']).'» again: you have said it already in this conversation. Answer HEARD and go on to LEAD_TO as YOUR_ROLE — never with a question the learner has already answered',
+                'early_end' => 'REDO: early_end — you ended the conversation, but TURNS_LEFT is '.$request->turnsLeft.': it goes on, even when every target is said. Answer HEARD as YOUR_ROLE with end "no" — unless HEARD is the learner saying goodbye',
             };
         }
 

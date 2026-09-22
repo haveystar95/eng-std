@@ -150,20 +150,20 @@ it('catches the learner\'s last move said back — in other forms, any order, or
     $gym = 'That works for me on weekdays. Please note that we open at six and close at ten on weekdays.';
     $back = 'His lower back hurts, and three days ago it started.';
 
-    expect(RoleLines::echoIn($gym, 'Weekdays works for me', $en))->toBe('That works for me on weekdays.')
+    expect(RoleLines::echoIn($gym, ['Weekdays works for me'], $en))->toBe('That works for me on weekdays.')
         // The persons swapped: «my son» said back as «your son» is the move said back, not a question about it.
-        ->and(RoleLines::echoIn('Your son has a fever. How long has he had it?', 'My son has a fever', $en))->toBe('Your son has a fever.')
-        ->and(RoleLines::echoIn('You need a day pass. It is fifteen dollars.', 'I need a day pass', $en))->toBe('You need a day pass.')
+        ->and(RoleLines::echoIn('Your son has a fever. How long has he had it?', ['My son has a fever'], $en))->toBe('Your son has a fever.')
+        ->and(RoleLines::echoIn('You need a day pass. It is fifteen dollars.', ['I need a day pass'], $en))->toBe('You need a day pass.')
         // …which is what the swap is for: as said, «Your son has a fever» holds two of its three key words in the move.
         ->and($words->share('Your son has a fever.', 'My son has a fever', $en))->toBeLessThan(RoleLines::ECHO)
         ->and($words->share('Your son has a fever.', 'My son has a fever', $en, swapPersons: true))->toBe(1.0)
         // A part of a longer move said back is the move said back: the share is the SENTENCE's.
-        ->and(RoleLines::echoIn('It started three days ago. Is the pain sharp, or more of a dull ache?', $back, $en))->toBe('It started three days ago.')
+        ->and(RoleLines::echoIn('It started three days ago. Is the pain sharp, or more of a dull ache?', [$back], $en))->toBe('It started three days ago.')
         ->and($words->share('It started three days ago.', $back, $en))->toBe(1.0)
         // An answer of the role's own that holds less than the measure of the move is the role's.
-        ->and(RoleLines::echoIn('He should drink water and rest at home.', 'My son has a fever', $en))->toBeNull()
-        ->and(RoleLines::echoIn('Great. We open at six and close at ten on weekdays.', 'Weekdays works for me', $en))->toBeNull()
-        ->and(RoleLines::echoIn('Where does it hurt: his upper back or his lower back?', "My son's lower back hurts a lot.", $en))->toBeNull()
+        ->and(RoleLines::echoIn('He should drink water and rest at home.', ['My son has a fever'], $en))->toBeNull()
+        ->and(RoleLines::echoIn('Great. We open at six and close at ten on weekdays.', ['Weekdays works for me'], $en))->toBeNull()
+        ->and(RoleLines::echoIn('Where does it hurt: his upper back or his lower back?', ["My son's lower back hurts a lot."], $en))->toBeNull()
         ->and(RoleLines::ECHO)->toBe(0.7);
 });
 
@@ -175,12 +175,30 @@ it('catches the learner\'s last move said back — in other forms, any order, or
 it('leaves an answer to the learner\'s question and a short line alone, and catches the question asked back', function () {
     $en = lessonPacks()->for('en');
 
-    expect(RoleLines::echoIn('Yes, you can pay by card.', 'Can I pay by card', $en))->toBeNull()
-        ->and(RoleLines::echoIn('Can you pay by card?', 'Can I pay by card', $en))->toBe('Can you pay by card?')
-        ->and(RoleLines::echoIn('I see.', 'I see', $en))->toBeNull()
-        ->and(RoleLines::echoIn('Anything else?', 'Anything else', $en))->toBeNull()
+    expect(RoleLines::echoIn('Yes, you can pay by card.', ['Can I pay by card'], $en))->toBeNull()
+        ->and(RoleLines::echoIn('Can you pay by card?', ['Can I pay by card'], $en))->toBe('Can you pay by card?')
+        ->and(RoleLines::echoIn('I see.', ['I see'], $en))->toBeNull()
+        ->and(RoleLines::echoIn('Anything else?', ['Anything else'], $en))->toBeNull()
         // Nothing heard, nothing said back.
-        ->and(RoleLines::echoIn('Your son has a fever.', '', $en))->toBeNull();
+        ->and(RoleLines::echoIn('Your son has a fever.', [''], $en))->toBeNull();
+});
+
+/**
+ * Canon (наряд FIX-3 §11): «страж эха роли — по всем ходам разговора, не только последнему». The gym replay said the
+ * learner's «Weekdays works for me» back two moves later, after «Can I pay by card» — the last move was not the one said
+ * back. CATCHES a guard that reads the last move alone, and one that lets the question exception of one move cover
+ * another.
+ */
+it('catches a move said back whichever move of the talk it was', function () {
+    $en = lessonPacks()->for('en');
+    $moves = ['Weekdays works for me', 'Can I pay by card'];
+
+    expect(RoleLines::echoIn('Yes, card is fine. And that works for me on weekdays, so see you then.', $moves, $en))->toBeNull()
+        ->and(RoleLines::echoIn('Sure. That works for me on weekdays.', $moves, $en))->toBe('That works for me on weekdays.')
+        // The learner's question answered in its words is still an answer — for the move that asked it.
+        ->and(RoleLines::echoIn('Yes, you can pay by card.', $moves, $en))->toBeNull()
+        ->and(RoleLines::withoutEcho('Sure. That works for me on weekdays.', 'Конечно. Мне подходят будни.', $moves, $en))
+        ->toBe(['target' => 'Sure.', 'native' => 'Конечно.']);
 });
 
 /**
@@ -192,12 +210,29 @@ it('cuts the echo out of the reply and its translation, and gives up when nothin
     $en = lessonPacks()->for('en');
 
     expect(RoleLines::withoutEcho(
-        'Your son has a fever. How long has he had it?', 'У вашего сына температура. Как долго она держится?', 'My son has a fever', $en,
+        'Your son has a fever. How long has he had it?', 'У вашего сына температура. Как долго она держится?', ['My son has a fever'], $en,
     ))->toBe(['target' => 'How long has he had it?', 'native' => 'Как долго она держится?'])
         // All of it the move said back — nothing to say instead: the caller says the pack's neutral line.
-        ->and(RoleLines::withoutEcho('That works for me on weekdays.', 'Мне подходят будни.', 'Weekdays works for me', $en))->toBeNull()
+        ->and(RoleLines::withoutEcho('That works for me on weekdays.', 'Мне подходят будни.', ['Weekdays works for me'], $en))->toBeNull()
         // A translation that does not split the way the reply does is not cut into a lie.
-        ->and(RoleLines::withoutEcho('Your son has a fever. How long?', 'У вашего сына температура, как долго?', 'My son has a fever', $en))->toBeNull()
+        ->and(RoleLines::withoutEcho('Your son has a fever. How long?', 'У вашего сына температура, как долго?', ['My son has a fever'], $en))->toBeNull()
         ->and($en->neutralReply())->toBe('I see. Please go on.')
         ->and(lessonPacks()->for('ru')->neutralReply())->toBe('Понятно. Продолжайте, пожалуйста.');
+});
+
+// Guard 4 (наряд FIX-3 §7, found by its live run): the role does not say its own line again. The two lines of that run
+// that the role said twice, and what it may say twice: a short line, and a line that only shares a subject with an old
+// one. CATCHES a repeat let through because one word changed («Where exactly does it hurt…»), a repeat inside a longer
+// reply missed, and «Thank you.» taken for a repeat.
+it('catches a line the role has already said, said again — whole, with a word changed, or inside a longer reply', function () {
+    $checkIn = ['Good morning. May I see your passport?', 'Thank you. Which bag are you checking in?', 'Please put the suitcase on the scale.', 'Yes, the backpack can go as hand luggage.'];
+    $reception = ['Hello. What seems to be the problem today?', 'Where exactly does it hurt: his upper back or his lower back?'];
+
+    expect(RoleLines::ownLineIn('Please put the suitcase on the scale.', $checkIn))->toBe('Please put the suitcase on the scale.')
+        ->and(RoleLines::ownLineIn('Where does it hurt: his upper back or his lower back?', $reception))->toBe('Where exactly does it hurt: his upper back or his lower back?')
+        ->and(RoleLines::ownLineIn('I see. Please put the suitcase on the scale.', $checkIn))->toBe('Please put the suitcase on the scale.')
+        ->and(RoleLines::ownLineIn('Thank you. Your gate is A12.', $checkIn))->toBeNull()
+        ->and(RoleLines::ownLineIn('Great, the suitcase weighs twenty kilos.', $checkIn))->toBeNull()
+        ->and(RoleLines::ownLineIn('When did the pain in his lower back start?', $reception))->toBeNull()
+        ->and(RoleLines::ownLineIn('Please put the suitcase on the scale.', []))->toBeNull();
 });

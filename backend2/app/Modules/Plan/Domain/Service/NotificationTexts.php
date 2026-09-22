@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\NotificationText;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
  * THE LETTERS' WORDS — ready to print, in the learner's native language, next to {@see NativeStrings}
@@ -49,11 +50,24 @@ final class NotificationTexts
         ],
     ];
 
+    /**
+     * The lines about the learner said of a learner who is a woman (наряд FIX-3 §1) — by the profile; not said reads the
+     * masculine.
+     *
+     * @var array<string, array<string, string>>
+     */
+    private const FEMININE = [
+        'ru' => [
+            'daily_reminder.body' => '«{title}» — начни с того места, где остановилась',
+            'event_today.body' => 'Скажи сама перед разговором — прогони его вслух',
+        ],
+    ];
+
     private readonly NativeStrings $strings;
 
-    public function __construct(private readonly string $lang)
+    public function __construct(private readonly string $lang, private readonly ?VoiceGender $learner = null)
     {
-        $this->strings = new NativeStrings($lang);
+        $this->strings = new NativeStrings($lang, $learner);
     }
 
     /**
@@ -119,8 +133,9 @@ final class NotificationTexts
     private function line(string $key): string
     {
         $table = isset(self::LINES[$this->lang]) ? $this->lang : 'en';
+        $feminine = $this->learner === VoiceGender::Female ? (self::FEMININE[$table][$key] ?? null) : null;
 
-        return self::LINES[$table][$key];
+        return $feminine ?? self::LINES[$table][$key];
     }
 
     /** @param array<string, string> $values */

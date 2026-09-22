@@ -5,21 +5,16 @@ declare(strict_types=1);
 namespace App\Modules\Shared\Domain\ValueObject;
 
 /**
- * WHOSE VOICE A LINE IS READ WITH — the pack has one voice of each (DAY-UI-3).
+ * WHOSE VOICE A LINE IS READ WITH — the pack has a voice of each gender for each role (DAY-UI-3, TTS-2).
  *
- * A scene is two people talking, so it is two voices: the partner's and the learner's, never the
- * same one (owner, DAY-UI-3). The partner's gender comes from the role the lesson imagines
- * (`role_gender`); the learner is the other one.
+ * A scene is two people talking, so it is two voices: the partner's and the learner's, never the same one. The
+ * partner's gender comes from the role the lesson imagines (`role_gender`); the learner's from the learner's own
+ * profile (наряд FIX-3 §1) — two people of one gender are two voices of that gender.
  */
 enum VoiceGender: string
 {
     case Female = 'female';
     case Male = 'male';
-
-    public function opposite(): self
-    {
-        return $this === self::Female ? self::Male : self::Female;
-    }
 
     /** A value off the wire or out of a stored lesson; anything else is «not said». */
     public static function tryFromAny(mixed $value): ?self

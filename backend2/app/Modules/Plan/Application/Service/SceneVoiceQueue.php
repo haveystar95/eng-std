@@ -17,7 +17,6 @@ use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
-use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 
 /**
  * WHAT THE SERVER'S VOICE STILL OWES A SCENE — all of it (DAY-UI-3, TTS-2).
@@ -37,6 +36,7 @@ final readonly class SceneVoiceQueue
         private PlanTermRepository $terms,
         private LineSpeaker $speaker,
         private LineAudioStore $store,
+        private VoiceCasts $casts,
     ) {}
 
     public function owed(PlanSceneId $sceneId): ?SceneVoiceDebt
@@ -49,7 +49,7 @@ final readonly class SceneVoiceQueue
             return null;
         }
         $lang = $plan->targetLang()->value;
-        $cast = VoiceCast::ofScene($scene);
+        $cast = $this->casts->ofScene($scene, $plan->userId());
         $keys = [];
         foreach ([Speaker::Partner, Speaker::Learner] as $speaker) {
             $key = $this->speaker->voiceKeyFor($lang, $speaker, $cast->genderOf($speaker));
@@ -107,7 +107,8 @@ final readonly class SceneVoiceQueue
 
     /**
      * The lines of a scene filed under a voice their speaker no longer has in it — a voice of the pack changed (TTS-2;
-     * the voice is a key of the file, DECISIONS п. 248), so no reader finds them and the speaker's lines are owed anew.
+     * the voice is a key of the file, DECISIONS п. 248), or the learner's profile says another gender than the one the
+     * learner's lines were bought in (наряд FIX-3 §1) — so no reader finds them and the speaker's lines are owed anew.
      * Nothing is unread when the scene cannot say which voice is right: no lesson, speech off, a voice missing from the
      * pack — a switched-off voice must never read as «every file is stale».
      *
@@ -121,7 +122,7 @@ final readonly class SceneVoiceQueue
         if ($plan === null || $scene === null || ! $scene->hasLesson()) {
             return [];
         }
-        $cast = VoiceCast::ofScene($scene);
+        $cast = $this->casts->ofScene($scene, $plan->userId());
         $keys = [];
         foreach ([Speaker::Partner, Speaker::Learner] as $speaker) {
             $key = $this->speaker->voiceKeyFor($plan->targetLang()->value, $speaker, $cast->genderOf($speaker));

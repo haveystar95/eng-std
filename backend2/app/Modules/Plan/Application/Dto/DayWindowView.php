@@ -17,7 +17,6 @@ final readonly class DayWindowView
      * @param  list<string>  $highlights  «Что было хорошо» — two or three lines of a passed day (кадр 37-13,
      *   наряд CONV-1), written by the server and printed by the client; empty until the day is passed
      * @param  list<WindowSourceView>  $sources  the scenes the day is made of, in the order of the route (наряд BACK-TAILS-2 §4)
-     * @param  bool  $talkAgain  «Повторить разговор»: the day's talk is walked and may be held again (наряд BACK-TAILS-2 §7)
      */
     public function __construct(
         public WindowDayView $day,
@@ -28,6 +27,5 @@ final readonly class DayWindowView
         public array $listening = [],
         public array $highlights = [],
         public array $sources = [],
-        public bool $talkAgain = false,
     ) {}
 }

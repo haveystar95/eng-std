@@ -9,7 +9,11 @@ use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
-/** The learner's gender, read through Identity's Application when a lesson is written — never cached across lessons. */
+/**
+ * The learner's gender by their profile, read through Identity's Application (the user by primary key, the profile by its
+ * unique `user_id`) — when a lesson is written, and since наряд FIX-3 §1 for the learner's voice of every scene and the
+ * learner's gendered lines of the server. Never cached: a profile changed is read at the next request.
+ */
 final readonly class IdentityLearnerGender implements LearnerGender
 {
     public function __construct(private UserReader $users) {}

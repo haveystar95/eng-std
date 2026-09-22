@@ -44,7 +44,7 @@ final readonly class SceneAudioIndex
     public function rowOf(string $sceneId, string $ref): ?LineAudioRow
     {
         $speaker = SpokenLines::speakerOf($ref);
-        $gender = ($this->casts[$sceneId] ?? VoiceCast::of(null))->genderOf($speaker);
+        $gender = ($this->casts[$sceneId] ?? VoiceCast::of(null, null))->genderOf($speaker);
         $key = $this->keys[$speaker->value][$gender->value] ?? null;
 
         return $key === null ? null : ($this->rows[$sceneId.':'.$ref.':'.$key] ?? null);

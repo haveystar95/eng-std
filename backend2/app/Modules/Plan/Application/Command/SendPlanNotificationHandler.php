@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Dto\NotificationRecord;
 use App\Modules\Plan\Application\Dto\PushMessage;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\LearnerDevices;
+use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\NotificationLog;
 use App\Modules\Plan\Application\Port\PushSender;
 use App\Modules\Plan\Domain\Entity\Plan;
@@ -43,6 +44,7 @@ final readonly class SendPlanNotificationHandler
         private PushSender $sender,
         private NotificationLog $log,
         private Clock $clock,
+        private LearnerGender $learners,
     ) {}
 
     /** @return DeliveryResult|null the outcome, or null when no letter was due */
@@ -92,7 +94,7 @@ final readonly class SendPlanNotificationHandler
 
     private function text(Plan $plan, SendPlanNotification $command, DateTimeImmutable $today): ?NotificationText
     {
-        $texts = new NotificationTexts($plan->nativeLang()->value);
+        $texts = new NotificationTexts($plan->nativeLang()->value, $this->learners->of($plan->userId()));
 
         return match ($command->kind) {
             NotificationKind::PlanReady => $texts->planReady($this->untilPhrase($plan, $today), $plan->daysTotal(), $this->dayTitle($plan, 1, $texts) ?? ''),

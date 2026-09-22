@@ -16,6 +16,10 @@ namespace App\Modules\Plan\Domain\ValueObject;
  *
  * EVERY row carries its PLANNED minutes (`minutes`, наряд BACK-TAILS-2 §4) in every state — «около 4 минут» on the rows
  * of a day not opened yet (кадры 37-1, 37-2): what the whole stage is reckoned to take, not what is left of it.
+ *
+ * And whether the stage may be walked AGAIN (`again`, наряд FIX-3 §8) — «Ещё раз» of its row: a stage of cards always
+ * may, on a closed day too (the phone walks its cards once more by itself); the talk — once walked, while the day's
+ * replays of the learner's day last. A stage of cards carries its summary as well (`summary`, §10, кадр 30-6).
  */
 final readonly class WindowStage
 {
@@ -29,6 +33,8 @@ final readonly class WindowStage
         public ?string $talkTitle = null,
         public ?int $scenes = null,
         public int $minutes = 0,
+        public bool $again = false,
+        public ?StageSummary $summary = null,
     ) {}
 
     public static function done(Stage $stage): self
@@ -69,12 +75,18 @@ final readonly class WindowStage
     /** The talk's row with its entry title and the number of scenes it walks (наряд CONV-2, п. 12). */
     public function withTalk(?string $title, int $scenes): self
     {
-        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $title, max(0, $scenes), $this->minutes);
+        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $title, max(0, $scenes), $this->minutes, $this->again, $this->summary);
     }
 
     /** The row with the minutes its whole stage is reckoned to take (наряд BACK-TAILS-2 §4). */
     public function planned(int $minutes): self
     {
-        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $this->talkTitle, $this->scenes, max(0, $minutes));
+        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $this->talkTitle, $this->scenes, max(0, $minutes), $this->again, $this->summary);
+    }
+
+    /** The row with whether its stage may be walked again, and — for a stage of cards — its summary (наряд FIX-3 §8, §10). */
+    public function walkable(bool $again, ?StageSummary $summary = null): self
+    {
+        return new self($this->stage, $this->state, $this->doneCount, $this->total, $this->minutesLeft, $this->share, $this->talkTitle, $this->scenes, $this->minutes, $again, $summary);
     }
 }

@@ -80,7 +80,29 @@ final class PlanMapper
             createdAt: self::instant($row->created_at) ?? new DateTimeImmutable,
             scenes: array_values($row->scenes->map(fn (PlanSceneModel $s): PlanScene => $this->scene($s, $planId, $row->target_lang))->all()),
             days: array_values($row->days->map(fn (PlanDayModel $d): PlanDay => $this->day($d, $planId))->all()),
+            pace: self::pace($row->pace),
         );
+    }
+
+    /**
+     * The plan's own price list as stored — seconds per card by kind; anything that is not a whole number of seconds is
+     * not a price and is left out.
+     *
+     * @return array<string, int>|null
+     */
+    private static function pace(mixed $stored): ?array
+    {
+        if (! is_array($stored)) {
+            return null;
+        }
+        $out = [];
+        foreach ($stored as $kind => $seconds) {
+            if (is_string($kind) && is_int($seconds)) {
+                $out[$kind] = $seconds;
+            }
+        }
+
+        return $out;
     }
 
     /** One scene row on its own — what a scene-addressed job reads and writes. */
@@ -190,6 +212,7 @@ final class PlanMapper
             'started_at' => $plan->startedAt()?->format(DATE_ATOM),
             'finished_at' => $plan->finishedAt()?->format(DATE_ATOM),
             'created_at' => $plan->createdAt()->format(DATE_ATOM),
+            'pace' => $plan->pace(),
         ];
     }
 

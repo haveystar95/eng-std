@@ -36,7 +36,6 @@ use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayBudget;
 use App\Modules\Plan\Domain\Service\DayHighlights;
-use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\Service\DayStages;
 use App\Modules\Plan\Domain\Service\NativeStrings;
 use App\Modules\Plan\Domain\ValueObject\ConversationOutcome;
@@ -47,6 +46,7 @@ use App\Modules\Plan\Domain\Service\RouteStages;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\UnitStates;
 use App\Modules\Plan\Domain\Service\WordUsage;
+use App\Modules\Plan\Domain\ValueObject\CardSource;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
@@ -80,10 +80,12 @@ final readonly class DayWindowViews
     public function __construct(
         private PlanTermRepository $terms,
         private SceneVoices $voices,
-        private DayPace $pace,
+        private PlanPaces $paces,
         private DayBudget $budget,
         private ConversationMaterial $material,
         private ConversationRules $rules,
+        private VoiceCasts $voiceCasts,
+        private ConversationViews $talks,
     ) {}
 
     /**
@@ -91,6 +93,7 @@ final readonly class DayWindowViews
      * @param  TalkStage|null  $talkStage  where the day's sixth stage stands (наряд CONV-2, п. 2) — null: nothing of it yet
      * @param  Conversation|null  $walked  the talk that walked the stage — the day's result, what «Что было хорошо» reads
      * @param  Conversation|null  $latest  the day's latest talk, its lines in hand — what the talk row's `targets` tick
+     * @param  bool  $talkAgain  may the walked talk be held again today — the learner's replays of the day not spent (наряд FIX-3 §8)
      */
     public function of(
         Plan $plan,
@@ -102,17 +105,20 @@ final readonly class DayWindowViews
         ?TalkStage $talkStage = null,
         ?Conversation $walked = null,
         ?Conversation $latest = null,
+        bool $talkAgain = false,
     ): DayWindowView {
         $status = WindowStatus::of($effective, $plan->status(), $day->number(), $building);
+        $pace = $this->paces->for($plan);
         $talks = DayStages::walksConversation($day, $this->rules->enabled);
         // One formula for «сколько идёт день»: the cards' minutes plus the talk's own budget, which
         // is not the cards' and never stood under their ceiling ({@see DayBudget}).
         $talkMinutes = $this->budget->talkMinutes($day->type(), $talks);
         $material = $talks ? $this->material->for($plan, $day) : null;
         $stages = DayWindowStages::of(
-            $cards, RouteStages::dealtBy($day->type()), $status, $this->pace,
+            $cards, RouteStages::dealtBy($day->type()), $status, $pace,
             $talks, $talkStage, $talkMinutes,
             $material === null ? null : ['title' => $material->titleNative, 'scenes' => count($material->checkpoints)],
+            $talkAgain,
         );
         $states = UnitStates::of($cards);
         $ownScene = $plan->sceneOf($day);
@@ -130,10 +136,11 @@ final readonly class DayWindowViews
         $sceneIds = array_map('strval', array_keys($sceneIds));
         $casts = [];
         $sceneTones = [];
+        $learner = $this->voiceCasts->learnerOf($plan->userId());
         foreach ($plan->scenes() as $planScene) {
             $sceneTones[$planScene->id()->value] = $planScene->image()?->tone;
             if (in_array($planScene->id()->value, $sceneIds, true)) {
-                $casts[$planScene->id()->value] = VoiceCast::ofScene($planScene);
+                $casts[$planScene->id()->value] = VoiceCast::ofScene($planScene, $learner);
             }
         }
         $audio = $this->voices->index($plan->targetLang()->value, $casts);
@@ -148,9 +155,12 @@ final readonly class DayWindowViews
             }
         }
 
-        [$words, $wordStates] = $this->words($plan, $day, $cards, $states, $sceneTones, $termsByRef, $audio);
-        [$phrases, $phraseStates] = $this->phrases($cards, $states, $termsByRef, $audio);
-        [$dialogue, $lineStates] = $this->dialogue($plan, $cards === [] ? null : $ownScene, $cards, $states, $audio);
+        // Where every item of the tabs is from (наряд FIX-3 §9): the scene it belongs to, named as the plan names it, with
+        // the day of the route it stands on.
+        $scenesOf = self::sceneNames($plan);
+        [$words, $wordStates] = $this->words($plan, $day, $cards, $states, $sceneTones, $termsByRef, $audio, $scenesOf);
+        [$phrases, $phraseStates] = $this->phrases($cards, $states, $termsByRef, $audio, $scenesOf);
+        [$dialogue, $lineStates] = $this->dialogue($plan, $cards === [] ? null : $ownScene, $cards, $states, $audio, $scenesOf);
 
         return new DayWindowView(
             day: new WindowDayView(
@@ -162,7 +172,7 @@ final readonly class DayWindowViews
                 // The talk answers no card, so its minutes are added on top of what the cards cost —
                 // and only while its stage is still ahead (наряд CONV-1; «walked» — наряд CONV-2).
                 minutesEstimate: self::plusTalk(
-                    DayWindowStages::minutesEstimate($cards, $status, $this->pace),
+                    DayWindowStages::minutesEstimate($cards, $status, $pace),
                     $talkStage === TalkStage::Passed ? 0 : $talkMinutes,
                 ),
                 minutesSpent: $status === WindowStatus::Passed ? $day->metrics()->minutesSpent : null,
@@ -171,29 +181,28 @@ final readonly class DayWindowViews
                     $ownScene?->goalsNative() ?? [],
                 ),
             ),
-            stages: array_map(static fn (WindowStage $s): WindowStageView => new WindowStageView(
+            stages: array_map(fn (WindowStage $s): WindowStageView => new WindowStageView(
                 $s->stage->value, $s->state->value, $s->doneCount, $s->total, $s->minutesLeft, $s->share, $s->talkTitle, $s->scenes, $s->minutes,
                 // The talk's row carries the targets of its talk (наряд BACK-TAILS-2 §4, по вопросу клиента 1c): the very
                 // list `POST …/conversation` starts the talk with — one selector of the day — ticked by the day's latest talk.
-                $s->stage === Stage::Conversation && $material !== null ? ConversationViews::targets($material, $latest) : null,
+                $s->stage === Stage::Conversation && $material !== null ? $this->talks->targets($material, $latest) : null,
+                $s->again,
+                $s->summary,
             ), $stages),
             dayProgress: DayWindowStages::progress($stages),
             program: new WindowProgramView(
-                $words, self::summary($wordStates),
-                $phrases, self::summary($phraseStates),
-                $dialogue, self::summary($lineStates),
+                $words, self::summary($wordStates, $words),
+                $phrases, self::summary($phraseStates, $phrases),
+                $dialogue, self::summary($lineStates, $dialogue),
             ),
-            allowedAction: $status->action(self::hasSpeak($cards))?->value,
+            allowedAction: $status->action()?->value,
             listening: self::listening($ownScene?->lesson()),
             // «Что было хорошо» (кадр 30-7) is shown when the last stage is walked, before «Закрыть день» — not only
             // on a day already closed (наряд CONV-2, п. 9): the first pass through a day used to see it empty.
             highlights: $status === WindowStatus::Passed || DayWindowStages::allWalked($stages)
-                ? DayHighlights::of($cards, $this->outcome($walked, $material), new NativeStrings($plan->nativeLang()->value))
+                ? DayHighlights::of($cards, $this->outcome($walked, $material), new NativeStrings($plan->nativeLang()->value, $learner))
                 : [],
             sources: self::sources($plan, $day),
-            // «Повторить разговор» (наряд BACK-TAILS-2 §7): the day's talk is walked — by the journal of stages — and the
-            // day shows its window, being walked or passed. The replay itself is `POST …/conversation`.
-            talkAgain: $talks && $talkStage === TalkStage::Passed && in_array($status, [WindowStatus::InProgress, WindowStatus::Passed], true),
         );
     }
 
@@ -210,13 +219,7 @@ final readonly class DayWindowViews
      */
     private static function sources(Plan $plan, PlanDay $day): array
     {
-        $dayOf = [];
-        foreach ($plan->days() as $sceneDay) {
-            $id = $sceneDay->type() === DayType::Scene ? $sceneDay->sceneId() : null;
-            if ($id !== null) {
-                $dayOf[$id->value] = min($dayOf[$id->value] ?? PHP_INT_MAX, $sceneDay->number());
-            }
-        }
+        $names = self::sceneNames($plan);
         $scenes = match ($day->type()) {
             DayType::Scene => [$plan->sceneOf($day)],
             DayType::Review => array_map(static fn (PlanDay $d): ?PlanScene => $plan->sceneOf($d), $plan->sceneDaysBefore($day->number(), 2)),
@@ -225,10 +228,36 @@ final readonly class DayWindowViews
         $scenes = array_values(array_filter($scenes, static fn (?PlanScene $s): bool => $s !== null));
         usort($scenes, static fn (PlanScene $a, PlanScene $b): int => $a->order() <=> $b->order());
 
-        return array_map(
-            static fn (PlanScene $s): WindowSourceView => new WindowSourceView($s->id()->value, $s->titleNative(), $dayOf[$s->id()->value] ?? null),
-            $scenes,
-        );
+        return array_map(static fn (PlanScene $s): WindowSourceView => $names[$s->id()->value], $scenes);
+    }
+
+    /**
+     * Every scene of the plan as a day names it: its id, its name as the plan gives it, and the first day of the route it
+     * stands on — null for a scene with no day of its own (a stand built by hand).
+     *
+     * @return array<string, WindowSourceView> by scene id
+     */
+    private static function sceneNames(Plan $plan): array
+    {
+        $dayOf = [];
+        foreach ($plan->days() as $sceneDay) {
+            $id = $sceneDay->type() === DayType::Scene ? $sceneDay->sceneId() : null;
+            if ($id !== null) {
+                $dayOf[$id->value] = min($dayOf[$id->value] ?? PHP_INT_MAX, $sceneDay->number());
+            }
+        }
+        $out = [];
+        foreach ($plan->scenes() as $scene) {
+            $out[$scene->id()->value] = new WindowSourceView($scene->id()->value, $scene->titleNative(), $dayOf[$scene->id()->value] ?? null);
+        }
+
+        return $out;
+    }
+
+    /** `own` or `returned` — where a card, and the item of a tab it stands for, is from (наряд FIX-3 §9). */
+    private static function sourceOf(?DayCard $card): string
+    {
+        return $card?->source() === CardSource::Returned ? WindowSourceView::RETURNED : WindowSourceView::OWN;
     }
 
     /** The minutes a day still asks for, with the talk's own on top; null stays null — a passed day asks for none. */
@@ -310,9 +339,10 @@ final readonly class DayWindowViews
      * @param  array<string, UnitState>  $states
      * @param  array<string, string|null>  $sceneTones
      * @param  array<string, array<string, PlanTerm>>  $termsByRef
+     * @param  array<string, WindowSourceView>  $scenesOf
      * @return array{0: list<WindowWordView>, 1: list<UnitState>}
      */
-    private function words(Plan $plan, PlanDay $day, array $cards, array $states, array $sceneTones, array $termsByRef, SceneAudioIndex $audio): array
+    private function words(Plan $plan, PlanDay $day, array $cards, array $states, array $sceneTones, array $termsByRef, SceneAudioIndex $audio, array $scenesOf): array
     {
         $returnsDay = ReturnDay::of($plan, $day);
         $out = [];
@@ -343,6 +373,8 @@ final readonly class DayWindowViews
                 usage: $this->usage($plan, $sceneId, $card->unitRef(), $text, $audio),
                 returnsDay: $state === UnitState::ReturnsTomorrow ? $returnsDay : null,
                 usedIn: $term?->usedIn() ?? [],
+                source: self::sourceOf($card),
+                scene: $scenesOf[$sceneId] ?? null,
             );
             $unitStates[] = $state;
         }
@@ -379,9 +411,10 @@ final readonly class DayWindowViews
      * @param  list<DayCard>  $cards
      * @param  array<string, UnitState>  $states
      * @param  array<string, array<string, PlanTerm>>  $termsByRef
+     * @param  array<string, WindowSourceView>  $scenesOf
      * @return array{0: list<WindowPhraseView>, 1: list<UnitState>}
      */
-    private function phrases(array $cards, array $states, array $termsByRef, SceneAudioIndex $audio): array
+    private function phrases(array $cards, array $states, array $termsByRef, SceneAudioIndex $audio, array $scenesOf): array
     {
         $out = [];
         $unitStates = [];
@@ -404,6 +437,8 @@ final readonly class DayWindowViews
                 pronunciation: $term?->pronunciationNative(),
                 audioId: $audio->idOf($sceneId, $card->unitRef()),
                 frame: self::frame($term, $sceneId, $audio),
+                source: self::sourceOf($card),
+                scene: $scenesOf[$sceneId] ?? null,
             );
             $unitStates[] = $state;
         }
@@ -425,9 +460,10 @@ final readonly class DayWindowViews
      * @param  PlanScene|null  $own  the day's own scene — null for a review or the rehearsal, and for a day with no card
      * @param  list<DayCard>  $cards
      * @param  array<string, UnitState>  $states
+     * @param  array<string, WindowSourceView>  $scenesOf
      * @return array{0: list<WindowPairView>, 1: list<UnitState>}
      */
-    private function dialogue(Plan $plan, ?PlanScene $own, array $cards, array $states, SceneAudioIndex $audio): array
+    private function dialogue(Plan $plan, ?PlanScene $own, array $cards, array $states, SceneAudioIndex $audio, array $scenesOf): array
     {
         $ownId = $own?->id()->value;
         $withCards = [];
@@ -463,7 +499,7 @@ final readonly class DayWindowViews
             $state = isset($withCards[$ownId.':'.$exchange->step])
                 ? ($states[UnitStates::key($ownId, UnitKind::Exchange, SpokenLines::exchangeRef($exchange->step))] ?? UnitState::Pending)
                 : $walked;
-            [$pair, $learnerState] = self::pair($ownId, $exchange->step, $exchange, null, $state, $audio);
+            [$pair, $learnerState] = self::pair($ownId, $exchange->step, $exchange, null, $state, $audio, $scenesOf[$ownId] ?? null);
             $out[] = $pair;
             if ($learnerState !== null) {
                 $unitStates[] = $learnerState;
@@ -473,6 +509,7 @@ final readonly class DayWindowViews
             $state = $states[UnitStates::key($other['scene'], UnitKind::Exchange, SpokenLines::exchangeRef($other['step']))] ?? UnitState::Pending;
             [$pair, $learnerState] = self::pair(
                 $other['scene'], $other['step'], self::exchangeOf($plan, $other['scene'], $other['step']), $other['card'], $state, $audio,
+                $scenesOf[$other['scene']] ?? null,
             );
             $out[] = $pair;
             if ($learnerState !== null) {
@@ -489,7 +526,7 @@ final readonly class DayWindowViews
      *
      * @return array{0: WindowPairView, 1: UnitState|null} the pair, and the state of its learner's line when it has one
      */
-    private static function pair(string $sceneId, int $step, ?Exchange $exchange, ?DayCard $card, UnitState $state, SceneAudioIndex $audio): array
+    private static function pair(string $sceneId, int $step, ?Exchange $exchange, ?DayCard $card, UnitState $state, SceneAudioIndex $audio, ?WindowSourceView $scene): array
     {
         $partner = $exchange !== null ? self::messageLine($exchange->partner()) : self::payloadLine($card?->payload()['partner_line'] ?? null);
         $learner = $exchange !== null ? self::messageLine($exchange->learner()) : self::learnerLineOf($card);
@@ -506,6 +543,8 @@ final readonly class DayWindowViews
                     $said?->phraseId, $said?->filler,
                 ),
                 $exchange?->kind->value,
+                self::sourceOf($card),
+                $scene,
             ),
             $learner === null ? null : $state,
         ];
@@ -560,28 +599,15 @@ final readonly class DayWindowViews
         return $value === '' ? null : [$value, is_string($source['text_native'] ?? null) ? $source['text_native'] : ''];
     }
 
-    /** @param list<UnitState> $states */
-    private static function summary(array $states): WindowSummaryView
+    /**
+     * @param  list<UnitState>  $states
+     * @param  list<WindowWordView|WindowPhraseView|WindowPairView>  $items  the tab's items — how many of them came back
+     */
+    private static function summary(array $states, array $items): WindowSummaryView
     {
-        $summary = ProgramSummary::of($states);
+        $returned = count(array_filter($items, static fn (WindowWordView|WindowPhraseView|WindowPairView $i): bool => $i->source === WindowSourceView::RETURNED));
+        $summary = ProgramSummary::of($states, $returned);
 
         return new WindowSummaryView($summary->total, $summary->done, $summary->returns);
-    }
-
-    /**
-     * Does the day have lines to say again — «Говорю сам» of a scene day, or «Повторение» of a review day, which is
-     * the same cards under its own name since наряд BACK-TAILS-2 §3: `again` stays what it was for both.
-     *
-     * @param  list<DayCard>  $cards
-     */
-    private static function hasSpeak(array $cards): bool
-    {
-        foreach ($cards as $card) {
-            if (in_array($card->stage(), [Stage::Speak, Stage::Repetition], true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

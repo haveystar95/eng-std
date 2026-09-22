@@ -27,31 +27,27 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
  * - SPACING ({@see Spacing::apart()}): between two cards of one frame stand at least two cards of other frames, the
  *   intros open their waves, `phrase_combine` is last.
  *
- * ## THE CEILING AND THE LADDER (решение архитектора 20.09; ступени и пол — наряд BACK-TAILS-2 §1)
+ * ## THE CEILING AND THE LADDER (решение архитектора 20.09; ступени и пол — наряд FIX-3 §3)
  *
  * The stage may take {@see BUDGET} seconds by {@see DayPace} — a knob in `config/plan.php`, tuned after the phone.
- * Over it, the stage is cut in ONE order and no other, a rung at a time, stopping the moment it fits:
+ * Over it, the stage gives up RECOGNITIONS and nothing else, in ONE order, a rung at a time, stopping the moment it fits:
  *
  *   1. the THIRD recognition — it is simply not added, which is the rule that was already there;
- *   2. the THIRD value round of «Скажи целиком» — a frame of three values or more keeps two;
- *   3. the SECOND recognition — a frame keeps its first, which is always one of the three choices (`phrase_slot`,
+ *   2. the SECOND recognition — a frame keeps its first, which is always one of the three choices (`phrase_slot`,
  *      `phrase_choose_back`, `phrase_slot_listen`: the assembly never opens a frame, {@see PhraseSeries::OPENERS});
- *   4. nothing more — the stage is dealt over its ceiling and the excess is the SIGNAL ({@see PhrasesDeal::overCeiling()}).
+ *   3. nothing more — the stage is dealt over its ceiling and the excess is the SIGNAL ({@see PhrasesDeal::overCeiling()}).
  *
- * Rungs 2 and 3 take frames in {@see cutOrder()}: the ones the dialogue says LEAST first (fewer lines on the frame;
- * between two as few — the one said LATER in the visit), which is the mirror of the order the thirds are given in. What
- * is cut first is what the day leans on least.
+ * Rung 2 takes frames in {@see cutOrder()}: the ones the dialogue says LEAST first (fewer lines on the frame; between two
+ * as few — the one said LATER in the visit), which is the mirror of the order the thirds are given in. What is cut first
+ * is what the day leans on least.
  *
- * THE FLOOR is «одно узнавание + ДВА круга + своё» for a frame with two values or more, «одно узнавание + один круг +
- * своё» for a frame of one value (наряд BACK-TAILS-2 §1). Two value rounds are the bottom of the ladder and never a
- * rung of it: on the owner's gym day (21.09, intermediate) a rung that took the second round away left six frames of
- * seven said with one value only — «That works for me on ___» came to «weekdays» and never to «weekends», and a window
- * said with one value is a sentence learned by heart, not a window. With two rounds as the floor the live days went
- * over the day's ceiling instead (наряд CONV-2, «Спорное» п. 2), and the architect's answer was to give up a
- * RECOGNITION rather than a round: the choice cards are the cheap half of the frame, saying it is the point. The
- * own-word round is never cut and the trainer is never removed either. If the stage is still over the ceiling with the
- * ladder spent, the day is dealt anyway and the excess is the signal it was meant to be: a stage that refused to be dealt
- * would be a worse answer than a long one.
+ * THE ROUNDS OF «СКАЖИ ЦЕЛИКОМ» ARE NEVER CUT (наряд FIX-3 §3), and neither is the own-word round: THE FLOOR is «одно
+ * узнавание + все круги + своё». Saying the frame is the point of the stage and the choices are its cheap half — on the
+ * owner's gym day a ladder that took rounds away left six frames of seven said with one value, a window said with one
+ * value is a sentence learned by heart, and the architect's answer was to give up recognitions only. With the day's
+ * prices measured on the phone (наряд FIX-3 §2) the ladder does not reach its rungs on a live day at all. If the stage
+ * is still over the ceiling with the ladder spent, the day is dealt anyway and the excess is the signal it was meant to
+ * be: a stage that refused to be dealt would be a worse answer than a long one.
  */
 final class PhrasesStage
 {
@@ -61,11 +57,8 @@ final class PhrasesStage
     /** The recognitions every frame with a window gets — as many as its fillers, up to this. */
     public const RECOGNITIONS = 2;
 
-    /** What rung 3 of the ladder leaves a frame — its first recognition, never cut (наряд BACK-TAILS-2 §1). */
+    /** What rung 2 of the ladder leaves a frame — its first recognition, never cut (наряд BACK-TAILS-2 §1). */
     public const RECOGNITIONS_FLOOR = 1;
-
-    /** What rung 2 of the ladder caps the value rounds at — and the floor: two rounds are never cut (наряд CONV-2, п. 5). */
-    public const ROUNDS_FLOOR = 2;
 
     private readonly PhraseSeries $series;
 
@@ -75,6 +68,12 @@ final class PhrasesStage
         private readonly int $budget = self::BUDGET,
     ) {
         $this->series = new PhraseSeries($this->cards);
+    }
+
+    /** The same stage reckoned by another price list — the plan's own ({@see DayPace}, наряд FIX-3 §2). */
+    public function pacedBy(DayPace $pace): self
+    {
+        return new self($this->cards, $pace, $this->budget);
     }
 
     /** @return list<CardDraft> */
@@ -88,8 +87,7 @@ final class PhrasesStage
     {
         $phrases = $scene->phrases();
         $recognitions = [];
-        $produce = [];
-        $mostRounds = [];
+        $made = [];
         foreach ($phrases as $phrase) {
             $ref = $phrase->ref();
             $recognitions[$ref] = [];
@@ -99,23 +97,12 @@ final class PhrasesStage
                     $recognitions[$ref][] = $card;
                 }
             }
-            $produce[$ref] = PhraseCards::hasSlot($phrase) ? CardKind::PhraseOtherSlot : CardKind::PhraseRepeat;
-            $mostRounds[$ref] = null;
+            $made[$ref] = $this->production($scene, $phrase, $level);
         }
         $combine = $this->cards->combine($scene);
 
-        /** The production of every frame as the cuts made so far leave it. */
-        $productions = function () use ($scene, $phrases, $produce, $level, &$mostRounds): array {
-            $out = [];
-            foreach ($phrases as $phrase) {
-                $ref = $phrase->ref();
-                $out[$ref] = $this->production($scene, $phrase, $produce[$ref], $level, $mostRounds[$ref]);
-            }
-
-            return $out;
-        };
-        /** What the stage costs with those productions and the recognitions as they stand. */
-        $cost = function (array $made) use ($phrases, $combine, &$recognitions): int {
+        /** What the stage costs with the recognitions as they stand — the productions never change. */
+        $cost = function () use ($phrases, $combine, $made, &$recognitions): int {
             $seconds = $combine === null ? 0 : $this->pace->seconds($combine->kind, $combine->payload);
             foreach ($phrases as $phrase) {
                 $ref = $phrase->ref();
@@ -136,8 +123,7 @@ final class PhrasesStage
             $rungs[] = ['rung' => $rung, 'seconds' => $seconds, 'cards' => $count()];
         };
 
-        $made = $productions();
-        $seconds = $cost($made);
+        $seconds = $cost();
         $mark(PhrasesDeal::BUILT, $seconds);
 
         // Rung 1 — a third recognition to the most said frames while the stage still fits with it.
@@ -157,26 +143,7 @@ final class PhrasesStage
         }
         $mark(PhrasesDeal::THIRD_RECOGNITIONS, $seconds);
 
-        // Rung 2 — the third value round, off the least said frames first. Two rounds are the floor and the own word is
-        // not on the ladder: no frame of two values or more is ever said with fewer than two.
-        foreach ($this->cutOrder($scene) as $phrase) {
-            if ($seconds <= $this->budget) {
-                break;
-            }
-            $ref = $phrase->ref();
-            if ($produce[$ref] !== CardKind::PhraseOtherSlot) {
-                continue;
-            }
-            if (count(PhraseCards::rounds($scene, $phrase, $level)) <= self::ROUNDS_FLOOR) {
-                continue;
-            }
-            $mostRounds[$ref] = self::ROUNDS_FLOOR;
-            $made = $productions();
-            $seconds = $cost($made);
-        }
-        $mark(PhrasesDeal::THIRD_ROUNDS, $seconds);
-
-        // Rung 3 — the second recognition, off the least said frames first. The first stays whatever happens: it is the
+        // Rung 2 — the second recognition, off the least said frames first. The first stays whatever happens: it is the
         // frame's opener, a choice and never the assembly. Past this rung the stage goes over its ceiling — the signal.
         foreach ($this->cutOrder($scene) as $phrase) {
             if ($seconds <= $this->budget) {
@@ -187,7 +154,7 @@ final class PhrasesStage
                 continue;
             }
             $recognitions[$ref] = array_slice($recognitions[$ref], 0, self::RECOGNITIONS_FLOOR);
-            $seconds = $cost($made);
+            $seconds = $cost();
         }
         $mark(PhrasesDeal::SECOND_RECOGNITIONS, $seconds);
 
@@ -248,14 +215,10 @@ final class PhrasesStage
         return $this->series->again($kind, $scene, $phrase, $failed, $used, $level);
     }
 
-    /**
-     * The production of a frame: «Скажи целиком» for a window, else the phrase repeated — and a repeat when it fails.
-     *
-     * @param  int|null  $mostRounds  the value rounds the ladder left it, null for all of them
-     */
-    private function production(SceneMaterial $scene, PlanTerm $phrase, CardKind $kind, PlanLevel $level, ?int $mostRounds = null): CardDraft
+    /** The production of a frame: «Скажи целиком» for a window, else the phrase repeated — and a repeat when it fails. */
+    private function production(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level): CardDraft
     {
-        $draft = $kind === CardKind::PhraseOtherSlot ? $this->cards->sayWhole($scene, $phrase, $level, $mostRounds) : null;
+        $draft = PhraseCards::hasSlot($phrase) ? $this->cards->sayWhole($scene, $phrase, $level) : null;
         if ($draft !== null) {
             return $draft;
         }
@@ -291,9 +254,9 @@ final class PhrasesStage
     }
 
     /**
-     * The order rungs 2 and 3 of the ladder take frames in — the MIRROR of {@see mostSaid()}: the frames the dialogue
-     * says LEAST first (fewer lines on the frame, then the one said LATER in the visit, then the frame's own order
-     * reversed). What the day leans on least loses its third round, and then its second recognition, first.
+     * The order rung 2 of the ladder takes frames in — the MIRROR of {@see mostSaid()}: the frames the dialogue says LEAST
+     * first (fewer lines on the frame, then the one said LATER in the visit, then the frame's own order reversed). What the
+     * day leans on least loses its second recognition first.
      *
      * @return list<PlanTerm>
      */

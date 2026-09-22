@@ -259,9 +259,9 @@ it('offers the next intention only when hints are on and the move is the learner
 it('reads the summary off the journal: said, rescues, understood, and which targets did not sound', function () {
     $talk = convTalk();
     $targets = [
-        new ConversationPhrase('s1', 'p1', 'It hurts in his', 'It hurts in his ___.', 'У него болит ___.'),
-        new ConversationPhrase('s1', 'p2', 'It started', 'It started ___.', 'Началось ___.'),
-        new ConversationPhrase('s2', 'p1', 'Do we need', 'Do we need ___?', 'Нам нужно ___?'),
+        new ConversationPhrase('s1', 'p1', 'It hurts in his ___.', 'У него болит ___.', 'lower back', 'поясница'),
+        new ConversationPhrase('s1', 'p2', 'It started ___.', 'Началось ___.', 'three days ago', 'три дня назад'),
+        new ConversationPhrase('s2', 'p1', 'Do we need ___?', 'Нам нужно ___?', 'an X-ray', 'рентген'),
     ];
 
     convAgent($talk);

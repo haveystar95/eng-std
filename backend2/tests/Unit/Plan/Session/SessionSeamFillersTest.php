@@ -199,12 +199,12 @@ it('shows a hidden filler on no card of the day — no recognition, no productio
     }
 });
 
-// Canon (SESSION-1e, разд. 4): «помечены все несказанные — серия узнаваний короче (одно узнавание на said)». Catches a series
-// that still counts the hidden fillers (two recognitions, one said twice), a production said with a hidden filler, and an
-// intermediate learner asked for «another window» the frame no longer has.
-it('recognises a frame whose other fillers all do not read once — with the said one — and says it as the phrase itself', function () {
-    // Two scenes, both levels: a frame left with ONE value it may show still has a window, so it is said as «Скажи
-     // целиком» — one round on that value and the learner's own after it (наряд FIX-2, п. 5).
+// Canon (SESSION-1e, разд. 4): «помечены все несказанные — серия узнаваний короче (одно узнавание на said)»; and (наряд FIX-3
+// §3): «наполнений ≥ 2 → кругов ≥ 2 (+ своё)» — the owner's «How heavy should ___ be?», three values, one round, because the
+// seam judge had hidden the other two. Catches a series that still counts the hidden fillers (two recognitions, one said
+// twice), a recognition built on a hidden filler, «Скажи целиком» left with one round, a round that shows the sentence the
+// judge said does not read, and more hidden values taken than the second round needs.
+it('recognises a frame whose other fillers all do not read once — with the said one — and says it in two rounds all the same', function () {
     foreach ([S1S_SCENE, '01J8SESS1ESEAMS00000000003'] as $id) {
         $scene = s1sScene(['p1.f2', 'p1.f3'], null, $id);
         $p1 = s1sTerm($scene, 'p1');
@@ -218,21 +218,24 @@ it('recognises a frame whose other fillers all do not read once — with the sai
             $phrases = array_values(array_filter(s1sDay($scene, $level), static fn (DayCard $c): bool => $c->stage() === Stage::Phrases));
             $ofP1 = array_values(array_filter($phrases, static fn (DayCard $c): bool => $c->unitRef() === 'p1' && $c->kind() !== CardKind::PhraseCombine));
             $kinds = array_map(static fn (DayCard $c): CardKind => $c->kind(), $ofP1);
+            $whole = $ofP1[2]->payload();
 
             expect($ofP1)->toHaveCount(3, $label)
                 ->and($kinds[0])->toBe(CardKind::PhraseIntro)
                 ->and(in_array($kinds[1], PhraseSeries::OPENERS, true))->toBeTrue($label)
                 ->and(PhraseSeries::fillerOf($ofP1[1]->kind(), $ofP1[1]->payload()))->toBe(0)
                 ->and($kinds[2])->toBe(CardKind::PhraseOtherSlot, $label)
-                ->and($ofP1[2]->payload()['rounds'])->toBe([
+                // Two rounds: the said value, and the first hidden one — with its VALUE as the line, not «У него болит шея.»
+                // the judge said does not read; the third stays hidden.
+                ->and($whole['rounds'])->toBe([
                     ['filler_index' => 0, 'expected_text' => 'It hurts in his lower back.', 'task_native' => 'У него болит поясница.'],
+                    ['filler_index' => 1, 'expected_text' => 'It hurts in his neck.', 'task_native' => 'Шея'],
                 ])
-                ->and($ofP1[2]->payload()['own_round']['examples'])->toBe(['поясница'])
-                ->and(array_column($ofP1[0]->payload()['frame']['slot']['fillers'], 'index'))->toBe([0])
-                // Five frames kept their series: p1 lost its second recognition and nothing else did. The beginner's
-                // four extra cards are THIRD recognitions — its two-round trainers leave the stage room under its
-                // ceiling, the intermediate's three-round ones do not.
-                ->and($phrases)->toHaveCount($level === PlanLevel::Beginner ? 27 : 23, $label);
+                ->and(array_column($whole['frame']['slot']['fillers'], 'index'))->toBe([0, 1])
+                ->and(array_column($whole['frame']['slot']['fillers'], 'native_line'))->toBe(['У него болит поясница.', 'Шея'])
+                ->and($whole['own_round']['examples'])->toBe(['поясница', 'шея'])
+                // Every other card shows the said value alone, as before.
+                ->and(array_column($ofP1[0]->payload()['frame']['slot']['fillers'], 'index'))->toBe([0]);
         }
     }
 });

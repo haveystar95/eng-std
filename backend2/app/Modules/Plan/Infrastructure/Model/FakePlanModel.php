@@ -147,31 +147,48 @@ final class FakePlanModel implements PlanModelPort
             ? ($this->conversation)($request, $this->conversationCalls)
             : self::conversationPayload($request);
 
-        return new ModelReply($payload, 'conversation_agent.v2.1', self::MODEL, 900, 90, '0.000000', 2, '');
+        return new ModelReply($payload, 'conversation_agent.v3', self::MODEL, 900, 90, '0.000000', 2, '');
     }
+
+    /** @var list<array{0: string, 1: string}> the fake role's lines, one per move, none of them said twice in a talk */
+    private const ROLE_LINES = [
+        ['And what brings you in today?', 'Что вас беспокоит?'],
+        ['I see. How long has this been going on?', 'Понятно. Как давно это продолжается?'],
+        ['Thank you. Is there anything else I should know?', 'Спасибо. Есть ещё что-то, что мне нужно знать?'],
+        ['All right. Does anything make it better or worse?', 'Хорошо. Что-нибудь облегчает или ухудшает это?'],
+        ['Good. Have you taken any medicine for it?', 'Хорошо. Вы принимали какое-нибудь лекарство?'],
+        ['Okay. Let me write that down for the doctor.', 'Хорошо. Я запишу это для врача.'],
+        ['Noted. Do you have any questions for me?', 'Записала. У вас есть вопросы ко мне?'],
+        ['Fine. Please take a seat over there.', 'Хорошо. Присядьте, пожалуйста, вон там.'],
+        ['Right. Tell me how he is sleeping.', 'Ясно. Расскажите, как он спит.'],
+        ['Understood. The doctor will call you soon.', 'Поняла. Врач скоро вас позовёт.'],
+        ['One moment, please. I am checking the schedule.', 'Минутку, пожалуйста. Я смотрю расписание.'],
+    ];
 
     /** @return array<string, mixed> */
     public static function conversationPayload(ConversationAgentRequest $request): array
     {
         $ending = $request->turnsLeft <= 0;
         $checkpoint = $request->turn === 'rescue' ? null : $request->currentCheckpoint;
+        // A role that behaves: a new line every move (RoleLines guard 4) — the n-th of its lines by how many it has said.
+        $line = self::ROLE_LINES[count(array_filter($request->history, static fn (array $h): bool => $h['speaker'] === 'you')) % count(self::ROLE_LINES)];
 
         return [
             'reply_target' => match (true) {
                 $ending => 'Take care. See you next week.',
                 $request->turn === 'rescue' => 'What is wrong today?',
-                default => 'And what brings you in today?',
+                default => $line[0],
             },
             'reply_native' => match (true) {
                 $ending => 'Берегите себя. До встречи на следующей неделе.',
                 $request->turn === 'rescue' => 'Что сегодня не так?',
-                default => 'Что вас беспокоит?',
+                default => $line[1],
             },
             'understood' => $request->turn === 'said' ? true : null,
             'phrases_used' => [],
             'off_topic' => false,
             'checkpoint_done' => $ending ? $checkpoint : null,
-            'next_hint_native' => $ending ? null : 'скажи, что болит',
+            'opens' => $ending ? null : $request->leadTo,
             'end' => $ending ? 'natural' : 'no',
         ];
     }
@@ -198,7 +215,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function conversationPromptVersion(): string
     {
-        return 'conversation_agent.v2.1';
+        return 'conversation_agent.v3';
     }
 
     public function lessonPromptVersion(): string
@@ -342,19 +359,19 @@ final class FakePlanModel implements PlanModelPort
                 $a('Does he have a fever?', 'У него есть температура?'),
                 $b('p4', null, 'No, he doesn\'t have a fever.', 'Нет, температуры нет.', 'ноу хи дазнт хэв э фивер', 'have a fever', ['No fever.']),
             ], $check('What symptom does the doctor ask about?', 'О каком симптоме спрашивает врач?', [
-                ['A high temperature', 'Высокая температура'], ['A cough', 'Кашель'], ['A rash', 'Сыпь'],
+                ['A high temperature', 'Высокая температура'], ['A bad cough', 'Сильный кашель'], ['A skin rash', 'Сыпь на коже'],
             ], 0, 'Врач спрашивает про температуру.')],
             ['answer', 'A', [
                 $a('It looks like a muscle strain, so he should rest and use a heating pad.', 'Похоже на растяжение мышцы, так что ему нужен покой и грелка.'),
                 $b('p5', 'at home', 'Okay, he will rest at home.', 'Хорошо, он будет отдыхать дома.', 'оукей хи уил рэст эт хоум', 'will rest', ['He will rest.']),
             ], $check('What does the doctor think the problem is?', 'Что, по мнению врача, случилось?', [
-                ['A broken bone', 'Перелом'], ['A pulled muscle', 'Растянутая мышца'], ['A bad cold', 'Простуда'],
+                ['A broken bone', 'Перелом кости'], ['A pulled muscle', 'Растянутая мышца'], ['A bad cold', 'Сильная простуда'],
             ], 1, 'Врач говорит, что это растяжение мышцы.')],
             ['rescue', 'B', [
                 $b(null, null, 'Sorry, could you say that more slowly?', 'Простите, можно помедленнее?', 'сори куд ю сэй зэт мор слоули', 'more slowly', ['More slowly, please?']),
                 $a('He should rest and use a heating pad.', 'Ему нужен покой и грелка.'),
             ], $check('What should they use at home?', 'Что нужно использовать дома?', [
-                ['Ice on the neck', 'Лёд на шею'], ['A cream for the knees', 'Мазь для коленей'], ['Something warm on the back', 'Что-то тёплое на спину'],
+                ['Ice on the neck and shoulders', 'Лёд на шею и плечи'], ['A cream for the knees', 'Мазь для коленей'], ['Something warm on the back', 'Что-то тёплое на спину'],
             ], 2, 'Врач советует грелку.')],
             ['ask', 'B', [
                 $b('p6', 'an X-ray', 'Do we need an X-ray?', 'Нам нужно сделать рентген?', 'ду уи нид эн экс-рэй', 'Do we need', ['Is an X-ray needed?']),
@@ -366,7 +383,7 @@ final class FakePlanModel implements PlanModelPort
                 $b('p6', 'a follow-up appointment', 'Do we need a follow-up appointment?', 'Нам нужно прийти на повторный приём?', 'ду уи нид э фоллоу-ап эпойнтмент', 'Do we need', ['Should we come back?']),
                 $a('Only if it still hurts after one week.', 'Только если через неделю ещё будет болеть.'),
             ], $check('When should they come back?', 'Когда нужно прийти снова?', [
-                ['Tomorrow morning', 'Завтра утром'], ['In a year', 'Через год'], ['If the pain does not stop in seven days', 'Если боль не пройдёт через семь дней'],
+                ['Tomorrow morning before lunch', 'Завтра утром до обеда'], ['In a year for a check-up', 'Через год на осмотр'], ['If the pain does not stop in seven days', 'Если боль не пройдёт через семь дней'],
             ], 2, 'Прийти снова, если через неделю ещё болит.')],
         ];
 

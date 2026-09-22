@@ -40,6 +40,7 @@ final class DayWindowStages
      * @param  TalkStage|null  $talk  where the sixth stage stands; null — nothing of it yet
      * @param  int  $conversationMinutes  how long the talk is reckoned to take ({@see DayBudget::talkMinutes()})
      * @param  array{title: string|null, scenes: int}|null  $talkRow  what the talk's row says besides its state: «Поговори с врачом» and how many scenes it walks
+     * @param  bool  $talkAgain  may the walked talk be held again today — the replays of the learner's day not spent (наряд FIX-3 §8)
      * @return list<WindowStage>
      */
     public static function of(
@@ -51,6 +52,7 @@ final class DayWindowStages
         ?TalkStage $talk = null,
         int $conversationMinutes = 0,
         ?array $talkRow = null,
+        bool $talkAgain = false,
     ): array {
         $tallies = RouteStages::tally($cards);
         $out = [];
@@ -69,11 +71,10 @@ final class DayWindowStages
                 )))),
             };
             $currentFound = $currentFound || $row->state === StageState::Current;
-            // What the whole stage takes by the day's pace, whatever is walked of it (наряд BACK-TAILS-2 §4).
-            $out[] = $row->planned(DayPace::minutes($pace->secondsOf(array_filter(
-                $cards,
-                static fn (DayCard $c): bool => $c->stage() === $stage,
-            ))));
+            // What the whole stage takes by the day's pace, whatever is walked of it (наряд BACK-TAILS-2 §4); «Ещё раз» —
+            // a stage of cards may always be walked again, by the phone itself (наряд FIX-3 §8); and its summary (§10).
+            $ofStage = array_values(array_filter($cards, static fn (DayCard $c): bool => $c->stage() === $stage));
+            $out[] = $row->planned(DayPace::minutes($pace->secondsOf($ofStage)))->walkable(true, StageSummaries::of($stage, $ofStage));
         }
 
         if (! $hasConversation) {
@@ -89,8 +90,9 @@ final class DayWindowStages
             $currentFound => WindowStage::locked(Stage::Conversation),
             default => WindowStage::talking(Stage::Conversation, $conversationMinutes),
         };
-        // The talk's planned minutes are its own budget (`plan.conversation.minutes`), in every state of its row.
-        $row = $row->planned($conversationMinutes);
+        // The talk's planned minutes are its own budget (`plan.conversation.minutes`), in every state of its row; «Ещё раз» of
+        // it is a replay — once the stage is walked and while the day's replays last (наряд FIX-3 §8).
+        $row = $row->planned($conversationMinutes)->walkable($talk === TalkStage::Passed && $talkAgain);
         $out[] = $talkRow === null ? $row : $row->withTalk($talkRow['title'], $talkRow['scenes']);
 
         return $out;

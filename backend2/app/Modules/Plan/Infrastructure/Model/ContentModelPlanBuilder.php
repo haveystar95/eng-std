@@ -172,7 +172,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
         $startedAt = hrtime(true);
         try {
             $reply = self::reply(
-                $model->complete($prompt, $this->prompts->conversationUser($request), PlanSchemas::conversationAgent($request->phraseIds())),
+                $model->complete($prompt, $this->prompts->conversationUser($request), PlanSchemas::conversationAgent($request->targetIds())),
                 $prompt->version,
             );
         } catch (Throwable $e) {

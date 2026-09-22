@@ -16,7 +16,7 @@
             "date": "<date>",
             "label_native": "сегодня"
         },
-        "cards_total": 80,
+        "cards_total": 82,
         "cards_done": 0,
         "minutes_spent": 0,
         "opened_at": "<datetime>",
@@ -1391,7 +1391,7 @@
         },
         {
             "stage": "phrases",
-            "total": 26,
+            "total": 28,
             "done": 0,
             "state": "locked",
             "cards": [
@@ -2641,127 +2641,6 @@
                     "id": "ulid-0073",
                     "stage": "phrases",
                     "position": 13,
-                    "kind": "phrase_intro",
-                    "unit": {
-                        "kind": "phrase",
-                        "ref": "p6"
-                    },
-                    "source": "today",
-                    "source_day": null,
-                    "retry_of": null,
-                    "payload": {
-                        "said": {
-                            "audio": {
-                                "ref": "p6",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0074",
-                                "duration_ms": 1400,
-                                "voice": "learner"
-                            },
-                            "text_native": "Нам нужно сделать рентген?",
-                            "text_target": "Do we need an X-ray?",
-                            "filler_index": 0,
-                            "pronunciation_native": "ду уи нид эн экс-рэй"
-                        },
-                        "frame": {
-                            "ref": "p6",
-                            "kind": "ask",
-                            "slot": {
-                                "fillers": [
-                                    {
-                                        "audio": {
-                                            "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
-                                            "duration_ms": 1400,
-                                            "voice": "learner"
-                                        },
-                                        "index": 0,
-                                        "native": "сделать рентген",
-                                        "target": "an X-ray",
-                                        "in_dialogue": true,
-                                        "native_line": "Нам нужно сделать рентген?",
-                                        "pronunciation_native": "эн экс-рэй"
-                                    },
-                                    {
-                                        "audio": {
-                                            "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
-                                            "duration_ms": 2450,
-                                            "voice": "learner"
-                                        },
-                                        "index": 1,
-                                        "native": "прийти на повторный приём",
-                                        "target": "a follow-up appointment",
-                                        "in_dialogue": true,
-                                        "native_line": "Нам нужно прийти на повторный приём?",
-                                        "pronunciation_native": "э фоллоу-ап эпойнтмент"
-                                    },
-                                    {
-                                        "audio": {
-                                            "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
-                                            "duration_ms": 1610,
-                                            "voice": "learner"
-                                        },
-                                        "index": 2,
-                                        "native": "взять справку для школы",
-                                        "target": "a sick note",
-                                        "in_dialogue": false,
-                                        "native_line": "Нам нужно взять справку для школы?",
-                                        "pronunciation_native": "э сик ноут"
-                                    }
-                                ],
-                                "hint_native": "что сделать"
-                            },
-                            "frame_native": "Нам нужно ___?",
-                            "frame_target": "Do we need ___?",
-                            "frame_pronunciation_native": "ду уи нид ___"
-                        },
-                        "usage": {
-                            "line": {
-                                "ref": "x7b",
-                                "audio": {
-                                    "ref": "x7b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
-                                    "duration_ms": 1400,
-                                    "voice": "learner"
-                                },
-                                "text_native": "Нам нужно сделать рентген?",
-                                "text_target": "Do we need an X-ray?"
-                            },
-                            "length": 19,
-                            "offset": 0,
-                            "exchange": {
-                                "ref": "x7",
-                                "kind": "ask",
-                                "step": 7
-                            },
-                            "partner_line": {
-                                "ref": "x7",
-                                "audio": {
-                                    "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
-                                    "duration_ms": 3290,
-                                    "voice": "partner"
-                                },
-                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                                "text_target": "No, an X-ray is not needed for a muscle strain."
-                            }
-                        },
-                        "scene_id": "ulid-0003"
-                    },
-                    "result": null,
-                    "attempts": 0,
-                    "response": null,
-                    "unit_kind": "phrase",
-                    "unit_ref": "p6",
-                    "source_day_id": null,
-                    "answered_at": null,
-                    "returns": false
-                },
-                {
-                    "id": "ulid-0078",
-                    "stage": "phrases",
-                    "position": 14,
                     "kind": "phrase_assemble",
                     "unit": {
                         "kind": "phrase",
@@ -2904,10 +2783,10 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0079",
+                    "id": "ulid-0074",
                     "stage": "phrases",
-                    "position": 15,
-                    "kind": "phrase_other_slot",
+                    "position": 14,
+                    "kind": "phrase_assemble",
                     "unit": {
                         "kind": "phrase",
                         "ref": "p2"
@@ -2916,7 +2795,50 @@
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "key": "It started",
+                        "chips": [
+                            {
+                                "audio": {
+                                    "ref": "p2",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                    "duration_ms": 1820,
+                                    "voice": "learner"
+                                },
+                                "index": 0,
+                                "native": "три дня назад",
+                                "target": "three days ago",
+                                "in_dialogue": true,
+                                "native_line": "Началось три дня назад.",
+                                "pronunciation_native": "сри дэйз эгоу"
+                            },
+                            {
+                                "audio": {
+                                    "ref": "p2.f2",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                    "duration_ms": 1540,
+                                    "voice": "learner"
+                                },
+                                "index": 1,
+                                "native": "вчера вечером",
+                                "target": "last night",
+                                "in_dialogue": false,
+                                "native_line": "Началось вчера вечером.",
+                                "pronunciation_native": "ласт найт"
+                            },
+                            {
+                                "audio": {
+                                    "ref": "p2.f3",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                    "duration_ms": 1680,
+                                    "voice": "learner"
+                                },
+                                "index": 2,
+                                "native": "сегодня утром",
+                                "target": "this morning",
+                                "in_dialogue": false,
+                                "native_line": "Началось сегодня утром.",
+                                "pronunciation_native": "зис морнинг"
+                            }
+                        ],
                         "frame": {
                             "ref": "p2",
                             "kind": "answer",
@@ -2971,41 +2893,22 @@
                             "frame_target": "It started ___.",
                             "frame_pronunciation_native": "ит стартид ___"
                         },
-                        "rounds": [
-                            {
-                                "task_native": "Началось три дня назад.",
-                                "filler_index": 0,
-                                "expected_text": "It started three days ago."
-                            },
-                            {
-                                "task_native": "Началось вчера вечером.",
-                                "filler_index": 1,
-                                "expected_text": "It started last night."
-                            }
+                        "tiles": [
+                            "pain",
+                            "it",
+                            "started",
+                            "the"
                         ],
-                        "scene_id": "ulid-0003",
-                        "own_round": {
-                            "judge": true,
-                            "examples": [
-                                "три дня назад",
-                                "вчера вечером",
-                                "сегодня утром"
+                        "expected": {
+                            "words": [
+                                "it",
+                                "started"
                             ],
-                            "speech_mode": "free",
-                            "task_native": "Началось ___."
+                            "slot_at": 2,
+                            "filler_index": 2
                         },
-                        "speech_mode": "repeat",
-                        "partner_line": {
-                            "ref": "x2",
-                            "audio": {
-                                "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
-                                "duration_ms": 2870,
-                                "voice": "partner"
-                            },
-                            "text_native": "Началось сегодня или раньше на этой неделе?",
-                            "text_target": "Did it start today, or earlier this week?"
-                        }
+                        "scene_id": "ulid-0003",
+                        "target_native": "Началось сегодня утром."
                     },
                     "result": null,
                     "attempts": 0,
@@ -3017,10 +2920,10 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0080",
+                    "id": "ulid-0075",
                     "stage": "phrases",
-                    "position": 16,
-                    "kind": "phrase_slot_listen",
+                    "position": 15,
+                    "kind": "phrase_intro",
                     "unit": {
                         "kind": "phrase",
                         "ref": "p6"
@@ -3029,11 +2932,17 @@
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "audio": {
-                            "ref": "p6",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
-                            "duration_ms": 1400,
-                            "voice": "learner"
+                        "said": {
+                            "audio": {
+                                "ref": "p6",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                "duration_ms": 1400,
+                                "voice": "learner"
+                            },
+                            "text_native": "Нам нужно сделать рентген?",
+                            "text_target": "Do we need an X-ray?",
+                            "filler_index": 0,
+                            "pronunciation_native": "ду уи нид эн экс-рэй"
                         },
                         "frame": {
                             "ref": "p6",
@@ -3043,7 +2952,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -3057,7 +2966,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3071,7 +2980,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -3089,27 +2998,38 @@
                             "frame_target": "Do we need ___?",
                             "frame_pronunciation_native": "ду уи нид ___"
                         },
-                        "correct": "o3",
-                        "options": [
-                            {
-                                "id": "o1",
-                                "text": "a sick note"
+                        "usage": {
+                            "line": {
+                                "ref": "x7b",
+                                "audio": {
+                                    "ref": "x7b",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                    "duration_ms": 1400,
+                                    "voice": "learner"
+                                },
+                                "text_native": "Нам нужно сделать рентген?",
+                                "text_target": "Do we need an X-ray?"
                             },
-                            {
-                                "id": "o2",
-                                "text": "a follow-up appointment"
+                            "length": 19,
+                            "offset": 0,
+                            "exchange": {
+                                "ref": "x7",
+                                "kind": "ask",
+                                "step": 7
                             },
-                            {
-                                "id": "o3",
-                                "text": "an X-ray"
-                            },
-                            {
-                                "id": "o4",
-                                "text": "lower back"
+                            "partner_line": {
+                                "ref": "x7",
+                                "audio": {
+                                    "ref": "x7",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0079",
+                                    "duration_ms": 3290,
+                                    "voice": "partner"
+                                },
+                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
+                                "text_target": "No, an X-ray is not needed for a muscle strain."
                             }
-                        ],
-                        "scene_id": "ulid-0003",
-                        "filler_index": 0
+                        },
+                        "scene_id": "ulid-0003"
                     },
                     "result": null,
                     "attempts": 0,
@@ -3121,9 +3041,9 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0081",
+                    "id": "ulid-0080",
                     "stage": "phrases",
-                    "position": 17,
+                    "position": 16,
                     "kind": "phrase_other_slot",
                     "unit": {
                         "kind": "phrase",
@@ -3234,9 +3154,9 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0082",
+                    "id": "ulid-0081",
                     "stage": "phrases",
-                    "position": 18,
+                    "position": 17,
                     "kind": "phrase_choose_back",
                     "unit": {
                         "kind": "phrase",
@@ -3288,9 +3208,277 @@
                     "returns": false
                 },
                 {
+                    "id": "ulid-0082",
+                    "stage": "phrases",
+                    "position": 18,
+                    "kind": "phrase_slot_listen",
+                    "unit": {
+                        "kind": "phrase",
+                        "ref": "p6"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "audio": {
+                            "ref": "p6",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                            "duration_ms": 1400,
+                            "voice": "learner"
+                        },
+                        "frame": {
+                            "ref": "p6",
+                            "kind": "ask",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p6",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "duration_ms": 1400,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "сделать рентген",
+                                        "target": "an X-ray",
+                                        "in_dialogue": true,
+                                        "native_line": "Нам нужно сделать рентген?",
+                                        "pronunciation_native": "эн экс-рэй"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p6.f2",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                            "duration_ms": 2450,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "прийти на повторный приём",
+                                        "target": "a follow-up appointment",
+                                        "in_dialogue": true,
+                                        "native_line": "Нам нужно прийти на повторный приём?",
+                                        "pronunciation_native": "э фоллоу-ап эпойнтмент"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p6.f3",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
+                                            "duration_ms": 1610,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "взять справку для школы",
+                                        "target": "a sick note",
+                                        "in_dialogue": false,
+                                        "native_line": "Нам нужно взять справку для школы?",
+                                        "pronunciation_native": "э сик ноут"
+                                    }
+                                ],
+                                "hint_native": "что сделать"
+                            },
+                            "frame_native": "Нам нужно ___?",
+                            "frame_target": "Do we need ___?",
+                            "frame_pronunciation_native": "ду уи нид ___"
+                        },
+                        "correct": "o3",
+                        "options": [
+                            {
+                                "id": "o1",
+                                "text": "a sick note"
+                            },
+                            {
+                                "id": "o2",
+                                "text": "a follow-up appointment"
+                            },
+                            {
+                                "id": "o3",
+                                "text": "an X-ray"
+                            },
+                            {
+                                "id": "o4",
+                                "text": "lower back"
+                            }
+                        ],
+                        "scene_id": "ulid-0003",
+                        "filler_index": 0
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "phrase",
+                    "unit_ref": "p6",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
                     "id": "ulid-0083",
                     "stage": "phrases",
                     "position": 19,
+                    "kind": "phrase_repeat",
+                    "unit": {
+                        "kind": "phrase",
+                        "ref": "p4"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "key": "He doesn't have a",
+                        "audio": {
+                            "ref": "p4",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0061",
+                            "duration_ms": 1680,
+                            "voice": "learner"
+                        },
+                        "frame": {
+                            "ref": "p4",
+                            "kind": "answer",
+                            "slot": null,
+                            "frame_native": "Температуры у него нет.",
+                            "frame_target": "He doesn't have a fever.",
+                            "frame_pronunciation_native": "хи дазнт хэв э фивер"
+                        },
+                        "scene_id": "ulid-0003",
+                        "speech_mode": "repeat",
+                        "filler_index": null,
+                        "expected_text": "He doesn't have a fever."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "phrase",
+                    "unit_ref": "p4",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "ulid-0084",
+                    "stage": "phrases",
+                    "position": 20,
+                    "kind": "phrase_slot",
+                    "unit": {
+                        "kind": "phrase",
+                        "ref": "p3"
+                    },
+                    "source": "today",
+                    "source_day": null,
+                    "retry_of": null,
+                    "payload": {
+                        "frame": {
+                            "ref": "p3",
+                            "kind": "answer",
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p3",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "duration_ms": 2240,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "острая",
+                                        "target": "sharp",
+                                        "in_dialogue": true,
+                                        "native_line": "Боль острая, когда он наклоняется.",
+                                        "pronunciation_native": "шарп"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p3.f2",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "duration_ms": 2170,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "ноющая",
+                                        "target": "dull",
+                                        "in_dialogue": false,
+                                        "native_line": "Боль ноющая, когда он наклоняется.",
+                                        "pronunciation_native": "дал"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p3.f3",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "duration_ms": 2450,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "постоянная",
+                                        "target": "constant",
+                                        "in_dialogue": false,
+                                        "native_line": "Боль постоянная, когда он наклоняется.",
+                                        "pronunciation_native": "констант"
+                                    }
+                                ],
+                                "hint_native": "какая боль"
+                            },
+                            "frame_native": "Боль ___, когда он наклоняется.",
+                            "frame_target": "The pain is ___ when he bends.",
+                            "frame_pronunciation_native": "зэ пэйн из ___ уэн хи бэндз"
+                        },
+                        "correct": "o3",
+                        "options": [
+                            {
+                                "id": "o1",
+                                "text": "dull",
+                                "audio": {
+                                    "ref": "p3.f2",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                    "duration_ms": 2170,
+                                    "voice": "learner"
+                                }
+                            },
+                            {
+                                "id": "o2",
+                                "text": "sharp",
+                                "audio": {
+                                    "ref": "p3",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                    "duration_ms": 2240,
+                                    "voice": "learner"
+                                }
+                            },
+                            {
+                                "id": "o3",
+                                "text": "constant",
+                                "audio": {
+                                    "ref": "p3.f3",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                    "duration_ms": 2450,
+                                    "voice": "learner"
+                                }
+                            },
+                            {
+                                "id": "o4",
+                                "text": "at home",
+                                "audio": {
+                                    "ref": "p5",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0068",
+                                    "duration_ms": 1470,
+                                    "voice": "learner"
+                                }
+                            }
+                        ],
+                        "scene_id": "ulid-0003",
+                        "prompt_native": "Боль постоянная, когда он наклоняется."
+                    },
+                    "result": null,
+                    "attempts": 0,
+                    "response": null,
+                    "unit_kind": "phrase",
+                    "unit_ref": "p3",
+                    "source_day_id": null,
+                    "answered_at": null,
+                    "returns": false
+                },
+                {
+                    "id": "ulid-0085",
+                    "stage": "phrases",
+                    "position": 21,
                     "kind": "phrase_assemble",
                     "unit": {
                         "kind": "phrase",
@@ -3304,7 +3492,7 @@
                             {
                                 "audio": {
                                     "ref": "p6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                     "duration_ms": 1400,
                                     "voice": "learner"
                                 },
@@ -3318,7 +3506,7 @@
                             {
                                 "audio": {
                                     "ref": "p6.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 },
@@ -3332,7 +3520,7 @@
                             {
                                 "audio": {
                                     "ref": "p6.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                     "duration_ms": 1610,
                                     "voice": "learner"
                                 },
@@ -3352,7 +3540,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -3366,7 +3554,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3380,7 +3568,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -3427,51 +3615,122 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0084",
+                    "id": "ulid-0086",
                     "stage": "phrases",
-                    "position": 20,
-                    "kind": "phrase_repeat",
+                    "position": 22,
+                    "kind": "phrase_other_slot",
                     "unit": {
                         "kind": "phrase",
-                        "ref": "p4"
+                        "ref": "p2"
                     },
                     "source": "today",
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "key": "He doesn't have a",
-                        "audio": {
-                            "ref": "p4",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0061",
-                            "duration_ms": 1680,
-                            "voice": "learner"
-                        },
+                        "key": "It started",
                         "frame": {
-                            "ref": "p4",
+                            "ref": "p2",
                             "kind": "answer",
-                            "slot": null,
-                            "frame_native": "Температуры у него нет.",
-                            "frame_target": "He doesn't have a fever.",
-                            "frame_pronunciation_native": "хи дазнт хэв э фивер"
+                            "slot": {
+                                "fillers": [
+                                    {
+                                        "audio": {
+                                            "ref": "p2",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "duration_ms": 1820,
+                                            "voice": "learner"
+                                        },
+                                        "index": 0,
+                                        "native": "три дня назад",
+                                        "target": "three days ago",
+                                        "in_dialogue": true,
+                                        "native_line": "Началось три дня назад.",
+                                        "pronunciation_native": "сри дэйз эгоу"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p2.f2",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "duration_ms": 1540,
+                                            "voice": "learner"
+                                        },
+                                        "index": 1,
+                                        "native": "вчера вечером",
+                                        "target": "last night",
+                                        "in_dialogue": false,
+                                        "native_line": "Началось вчера вечером.",
+                                        "pronunciation_native": "ласт найт"
+                                    },
+                                    {
+                                        "audio": {
+                                            "ref": "p2.f3",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                            "duration_ms": 1680,
+                                            "voice": "learner"
+                                        },
+                                        "index": 2,
+                                        "native": "сегодня утром",
+                                        "target": "this morning",
+                                        "in_dialogue": false,
+                                        "native_line": "Началось сегодня утром.",
+                                        "pronunciation_native": "зис морнинг"
+                                    }
+                                ],
+                                "hint_native": "когда"
+                            },
+                            "frame_native": "Началось ___.",
+                            "frame_target": "It started ___.",
+                            "frame_pronunciation_native": "ит стартид ___"
                         },
+                        "rounds": [
+                            {
+                                "task_native": "Началось три дня назад.",
+                                "filler_index": 0,
+                                "expected_text": "It started three days ago."
+                            },
+                            {
+                                "task_native": "Началось вчера вечером.",
+                                "filler_index": 1,
+                                "expected_text": "It started last night."
+                            }
+                        ],
                         "scene_id": "ulid-0003",
+                        "own_round": {
+                            "judge": true,
+                            "examples": [
+                                "три дня назад",
+                                "вчера вечером",
+                                "сегодня утром"
+                            ],
+                            "speech_mode": "free",
+                            "task_native": "Началось ___."
+                        },
                         "speech_mode": "repeat",
-                        "filler_index": null,
-                        "expected_text": "He doesn't have a fever."
+                        "partner_line": {
+                            "ref": "x2",
+                            "audio": {
+                                "ref": "x2",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                "duration_ms": 2870,
+                                "voice": "partner"
+                            },
+                            "text_native": "Началось сегодня или раньше на этой неделе?",
+                            "text_target": "Did it start today, or earlier this week?"
+                        }
                     },
                     "result": null,
                     "attempts": 0,
                     "response": null,
                     "unit_kind": "phrase",
-                    "unit_ref": "p4",
+                    "unit_ref": "p2",
                     "source_day_id": null,
                     "answered_at": null,
                     "returns": false
                 },
                 {
-                    "id": "ulid-0085",
+                    "id": "ulid-0087",
                     "stage": "phrases",
-                    "position": 21,
+                    "position": 23,
                     "kind": "phrase_slot_listen",
                     "unit": {
                         "kind": "phrase",
@@ -3573,9 +3832,9 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0086",
+                    "id": "ulid-0088",
                     "stage": "phrases",
-                    "position": 22,
+                    "position": 24,
                     "kind": "phrase_slot",
                     "unit": {
                         "kind": "phrase",
@@ -3593,7 +3852,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -3607,7 +3866,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3621,7 +3880,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -3646,7 +3905,7 @@
                                 "text": "a sick note",
                                 "audio": {
                                     "ref": "p6.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                     "duration_ms": 1610,
                                     "voice": "learner"
                                 }
@@ -3656,7 +3915,7 @@
                                 "text": "an X-ray",
                                 "audio": {
                                     "ref": "p6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                     "duration_ms": 1400,
                                     "voice": "learner"
                                 }
@@ -3666,7 +3925,7 @@
                                 "text": "a follow-up appointment",
                                 "audio": {
                                     "ref": "p6.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 }
@@ -3695,9 +3954,9 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0087",
+                    "id": "ulid-0089",
                     "stage": "phrases",
-                    "position": 23,
+                    "position": 25,
                     "kind": "phrase_other_slot",
                     "unit": {
                         "kind": "phrase",
@@ -3808,9 +4067,9 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0088",
+                    "id": "ulid-0090",
                     "stage": "phrases",
-                    "position": 24,
+                    "position": 26,
                     "kind": "phrase_other_slot",
                     "unit": {
                         "kind": "phrase",
@@ -3921,9 +4180,9 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0089",
+                    "id": "ulid-0091",
                     "stage": "phrases",
-                    "position": 25,
+                    "position": 27,
                     "kind": "phrase_other_slot",
                     "unit": {
                         "kind": "phrase",
@@ -3942,7 +4201,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -3956,7 +4215,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3970,7 +4229,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -4016,7 +4275,7 @@
                             "ref": "x7",
                             "audio": {
                                 "ref": "x7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0079",
                                 "duration_ms": 3290,
                                 "voice": "partner"
                             },
@@ -4034,9 +4293,9 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0090",
+                    "id": "ulid-0092",
                     "stage": "phrases",
-                    "position": 26,
+                    "position": 28,
                     "kind": "phrase_combine",
                     "unit": {
                         "kind": "phrase",
@@ -4112,7 +4371,7 @@
                                 "said": {
                                     "audio": {
                                         "ref": "p6",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                         "duration_ms": 1400,
                                         "voice": "learner"
                                     },
@@ -4178,7 +4437,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "ulid-0091",
+                    "id": "ulid-0093",
                     "stage": "dialogue",
                     "position": 1,
                     "kind": "dialogue_partner",
@@ -4190,23 +4449,19 @@
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "correct": "o4",
+                        "correct": "o1",
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Колени или ступни"
+                                "text": "Верх или низ спины"
                             },
                             {
                                 "id": "o2",
-                                "text": "Если боль не пройдёт через семь дней"
-                            },
-                            {
-                                "id": "o3",
                                 "text": "Шея или голова"
                             },
                             {
-                                "id": "o4",
-                                "text": "Верх или низ спины"
+                                "id": "o3",
+                                "text": "Колени или ступни"
                             }
                         ],
                         "exchange": {
@@ -4238,7 +4493,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0092",
+                    "id": "ulid-0094",
                     "stage": "dialogue",
                     "position": 2,
                     "kind": "dialogue_answer",
@@ -4395,7 +4650,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0093",
+                    "id": "ulid-0095",
                     "stage": "dialogue",
                     "position": 3,
                     "kind": "dialogue_partner",
@@ -4407,7 +4662,7 @@
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "correct": "o3",
+                        "correct": "o2",
                         "options": [
                             {
                                 "id": "o1",
@@ -4415,15 +4670,11 @@
                             },
                             {
                                 "id": "o2",
-                                "text": "В прошлом месяце или году"
-                            },
-                            {
-                                "id": "o3",
                                 "text": "Сегодня или на днях"
                             },
                             {
-                                "id": "o4",
-                                "text": "Если боль не пройдёт через семь дней"
+                                "id": "o3",
+                                "text": "В прошлом месяце или году"
                             }
                         ],
                         "exchange": {
@@ -4455,7 +4706,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0094",
+                    "id": "ulid-0096",
                     "stage": "dialogue",
                     "position": 4,
                     "kind": "dialogue_answer",
@@ -4612,7 +4863,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0095",
+                    "id": "ulid-0097",
                     "stage": "dialogue",
                     "position": 5,
                     "kind": "dialogue_partner",
@@ -4624,22 +4875,18 @@
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "correct": "o2",
+                        "correct": "o1",
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Сколько она длится"
-                            },
-                            {
-                                "id": "o2",
                                 "text": "Какая это боль"
                             },
                             {
-                                "id": "o3",
-                                "text": "Если боль не пройдёт через семь дней"
+                                "id": "o2",
+                                "text": "Сколько она длится"
                             },
                             {
-                                "id": "o4",
+                                "id": "o3",
                                 "text": "Где она началась"
                             }
                         ],
@@ -4672,7 +4919,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0096",
+                    "id": "ulid-0098",
                     "stage": "dialogue",
                     "position": 6,
                     "kind": "dialogue_answer",
@@ -4829,7 +5076,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0097",
+                    "id": "ulid-0099",
                     "stage": "dialogue",
                     "position": 7,
                     "kind": "dialogue_partner",
@@ -4841,23 +5088,19 @@
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "correct": "o1",
+                        "correct": "o3",
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Высокая температура"
+                                "text": "Сильный кашель"
                             },
                             {
                                 "id": "o2",
-                                "text": "Сыпь"
+                                "text": "Сыпь на коже"
                             },
                             {
                                 "id": "o3",
-                                "text": "Если боль не пройдёт через семь дней"
-                            },
-                            {
-                                "id": "o4",
-                                "text": "Кашель"
+                                "text": "Высокая температура"
                             }
                         ],
                         "exchange": {
@@ -4889,7 +5132,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0098",
+                    "id": "ulid-0100",
                     "stage": "dialogue",
                     "position": 8,
                     "kind": "dialogue_answer",
@@ -4957,7 +5200,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0099",
+                    "id": "ulid-0101",
                     "stage": "dialogue",
                     "position": 9,
                     "kind": "dialogue_partner",
@@ -4969,23 +5212,19 @@
                     "source_day": null,
                     "retry_of": null,
                     "payload": {
-                        "correct": "o4",
+                        "correct": "o1",
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Перелом"
+                                "text": "Растянутая мышца"
                             },
                             {
                                 "id": "o2",
-                                "text": "Простуда"
+                                "text": "Перелом кости"
                             },
                             {
                                 "id": "o3",
-                                "text": "Верх или низ спины"
-                            },
-                            {
-                                "id": "o4",
-                                "text": "Растянутая мышца"
+                                "text": "Сильная простуда"
                             }
                         ],
                         "exchange": {
@@ -5017,7 +5256,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0100",
+                    "id": "ulid-0102",
                     "stage": "dialogue",
                     "position": 10,
                     "kind": "dialogue_rescue",
@@ -5051,7 +5290,7 @@
                             "ref": "x6b",
                             "audio": {
                                 "ref": "x6b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0103",
                                 "duration_ms": 2660,
                                 "voice": "learner"
                             },
@@ -5064,7 +5303,7 @@
                             "ref": "x6",
                             "audio": {
                                 "ref": "x6",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0102",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0104",
                                 "duration_ms": 2590,
                                 "voice": "partner"
                             },
@@ -5082,7 +5321,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0103",
+                    "id": "ulid-0105",
                     "stage": "dialogue",
                     "position": 11,
                     "kind": "dialogue_answer",
@@ -5239,7 +5478,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0104",
+                    "id": "ulid-0106",
                     "stage": "dialogue",
                     "position": 12,
                     "kind": "dialogue_ask",
@@ -5259,7 +5498,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -5273,7 +5512,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -5287,7 +5526,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -5310,7 +5549,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                         "duration_ms": 1400,
                                         "voice": "learner"
                                     },
@@ -5324,7 +5563,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                         "duration_ms": 2450,
                                         "voice": "learner"
                                     },
@@ -5338,7 +5577,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                         "duration_ms": 1610,
                                         "voice": "learner"
                                     },
@@ -5353,23 +5592,19 @@
                             "voice_hint": "Do we need an X-ray?",
                             "voice_blind": "Do we need ___?"
                         },
-                        "correct": "o2",
+                        "correct": "o1",
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Верх или низ спины"
+                                "text": "Это просто растяжение мышцы"
                             },
                             {
                                 "id": "o2",
-                                "text": "Это просто растяжение мышцы"
+                                "text": "Сломана кость"
                             },
                             {
                                 "id": "o3",
                                 "text": "Клиника закрыта"
-                            },
-                            {
-                                "id": "o4",
-                                "text": "Сломана кость"
                             }
                         ],
                         "exchange": {
@@ -5397,7 +5632,7 @@
                             "ref": "x7",
                             "audio": {
                                 "ref": "x7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0079",
                                 "duration_ms": 3290,
                                 "voice": "partner"
                             },
@@ -5416,7 +5651,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0105",
+                    "id": "ulid-0107",
                     "stage": "dialogue",
                     "position": 13,
                     "kind": "dialogue_ask",
@@ -5436,7 +5671,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -5450,7 +5685,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -5464,7 +5699,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -5487,7 +5722,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                         "duration_ms": 1400,
                                         "voice": "learner"
                                     },
@@ -5501,7 +5736,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                         "duration_ms": 2450,
                                         "voice": "learner"
                                     },
@@ -5515,7 +5750,7 @@
                                 {
                                     "audio": {
                                         "ref": "p6.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                         "duration_ms": 1610,
                                         "voice": "learner"
                                     },
@@ -5530,23 +5765,19 @@
                             "voice_hint": "Do we need a follow-up appointment?",
                             "voice_blind": "Do we need ___?"
                         },
-                        "correct": "o1",
+                        "correct": "o2",
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Если боль не пройдёт через семь дней"
+                                "text": "Через год на осмотр"
                             },
                             {
                                 "id": "o2",
-                                "text": "Верх или низ спины"
+                                "text": "Если боль не пройдёт через семь дней"
                             },
                             {
                                 "id": "o3",
-                                "text": "Завтра утром"
-                            },
-                            {
-                                "id": "o4",
-                                "text": "Через год"
+                                "text": "Завтра утром до обеда"
                             }
                         ],
                         "exchange": {
@@ -5574,7 +5805,7 @@
                             "ref": "x8",
                             "audio": {
                                 "ref": "x8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0106",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0108",
                                 "duration_ms": 2660,
                                 "voice": "partner"
                             },
@@ -5601,7 +5832,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "ulid-0107",
+                    "id": "ulid-0109",
                     "stage": "listen",
                     "position": 1,
                     "kind": "listen_dialogue",
@@ -5749,7 +5980,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x6b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0103",
                                     "duration_ms": 2660,
                                     "voice": "learner"
                                 },
@@ -5762,7 +5993,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0102",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0104",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -5788,7 +6019,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0079",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -5814,7 +6045,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x8",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0106",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0108",
                                     "duration_ms": 2660,
                                     "voice": "partner"
                                 },
@@ -5836,7 +6067,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0108",
+                    "id": "ulid-0110",
                     "stage": "listen",
                     "position": 2,
                     "kind": "listen_question",
@@ -5884,7 +6115,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0109",
+                    "id": "ulid-0111",
                     "stage": "listen",
                     "position": 3,
                     "kind": "listen_question",
@@ -5932,7 +6163,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0110",
+                    "id": "ulid-0112",
                     "stage": "listen",
                     "position": 4,
                     "kind": "listen_question",
@@ -5980,7 +6211,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0111",
+                    "id": "ulid-0113",
                     "stage": "listen",
                     "position": 5,
                     "kind": "listen_review",
@@ -6128,7 +6359,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x6b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0103",
                                     "duration_ms": 2660,
                                     "voice": "learner"
                                 },
@@ -6141,7 +6372,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0102",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0104",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -6167,7 +6398,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0079",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -6193,7 +6424,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x8",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0106",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0108",
                                     "duration_ms": 2660,
                                     "voice": "partner"
                                 },
@@ -6238,7 +6469,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0112",
+                    "id": "ulid-0114",
                     "stage": "listen",
                     "position": 6,
                     "kind": "listen_predict",
@@ -6257,7 +6488,7 @@
                                 "ref": "x6",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0102",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0104",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -6269,7 +6500,7 @@
                                 "ref": "x8",
                                 "audio": {
                                     "ref": "x8",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0106",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0108",
                                     "duration_ms": 2660,
                                     "voice": "partner"
                                 },
@@ -6281,7 +6512,7 @@
                                 "ref": "x7",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0079",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -6310,7 +6541,7 @@
                             "ref": "x7",
                             "audio": {
                                 "ref": "x7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0079",
                                 "duration_ms": 3290,
                                 "voice": "partner"
                             },
@@ -6328,7 +6559,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0113",
+                    "id": "ulid-0115",
                     "stage": "listen",
                     "position": 7,
                     "kind": "listen_predict",
@@ -6347,7 +6578,7 @@
                                 "ref": "x7",
                                 "audio": {
                                     "ref": "x7",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0077",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0079",
                                     "duration_ms": 3290,
                                     "voice": "partner"
                                 },
@@ -6359,7 +6590,7 @@
                                 "ref": "x6",
                                 "audio": {
                                     "ref": "x6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0102",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0104",
                                     "duration_ms": 2590,
                                     "voice": "partner"
                                 },
@@ -6371,7 +6602,7 @@
                                 "ref": "x8",
                                 "audio": {
                                     "ref": "x8",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0106",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0108",
                                     "duration_ms": 2660,
                                     "voice": "partner"
                                 },
@@ -6400,7 +6631,7 @@
                             "ref": "x8",
                             "audio": {
                                 "ref": "x8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0106",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0108",
                                 "duration_ms": 2660,
                                 "voice": "partner"
                             },
@@ -6418,7 +6649,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0114",
+                    "id": "ulid-0116",
                     "stage": "listen",
                     "position": 8,
                     "kind": "listen_pace",
@@ -6462,7 +6693,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0115",
+                    "id": "ulid-0117",
                     "stage": "listen",
                     "position": 9,
                     "kind": "listen_number",
@@ -6479,7 +6710,7 @@
                             "role": "partner",
                             "audio": {
                                 "ref": "x8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0106",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0108",
                                 "duration_ms": 2660,
                                 "voice": "partner"
                             },
@@ -6526,7 +6757,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "ulid-0116",
+                    "id": "ulid-0118",
                     "stage": "speak",
                     "position": 1,
                     "kind": "speak_answer",
@@ -6627,7 +6858,8 @@
                             },
                             "text_native": "Где болит: вверху спины или в пояснице?",
                             "text_target": "Where does it hurt: his upper back or his lower back?"
-                        }
+                        },
+                        "task_clause_native": "у него болит поясница"
                     },
                     "result": null,
                     "attempts": 0,
@@ -6639,7 +6871,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0117",
+                    "id": "ulid-0119",
                     "stage": "speak",
                     "position": 2,
                     "kind": "speak_answer",
@@ -6740,7 +6972,8 @@
                             },
                             "text_native": "Началось сегодня или раньше на этой неделе?",
                             "text_target": "Did it start today, or earlier this week?"
-                        }
+                        },
+                        "task_clause_native": "началось три дня назад"
                     },
                     "result": null,
                     "attempts": 0,
@@ -6752,7 +6985,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0118",
+                    "id": "ulid-0120",
                     "stage": "speak",
                     "position": 3,
                     "kind": "speak_answer",
@@ -6853,7 +7086,8 @@
                             },
                             "text_native": "Боль острая или скорее ноющая?",
                             "text_target": "Is the pain sharp, or more of a dull ache?"
-                        }
+                        },
+                        "task_clause_native": "боль острая, когда он наклоняется"
                     },
                     "result": null,
                     "attempts": 0,
@@ -6865,7 +7099,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0119",
+                    "id": "ulid-0121",
                     "stage": "speak",
                     "position": 4,
                     "kind": "speak_answer",
@@ -6920,7 +7154,8 @@
                             },
                             "text_native": "У него есть температура?",
                             "text_target": "Does he have a fever?"
-                        }
+                        },
+                        "task_clause_native": "нет, температуры нет"
                     },
                     "result": null,
                     "attempts": 0,
@@ -6932,7 +7167,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0120",
+                    "id": "ulid-0122",
                     "stage": "speak",
                     "position": 5,
                     "kind": "speak_answer",
@@ -7033,7 +7268,8 @@
                             },
                             "text_native": "Похоже на растяжение мышцы, так что ему нужен покой и грелка.",
                             "text_target": "It looks like a muscle strain, so he should rest and use a heating pad."
-                        }
+                        },
+                        "task_clause_native": "хорошо, он будет отдыхать дома"
                     },
                     "result": null,
                     "attempts": 0,
@@ -7045,7 +7281,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0121",
+                    "id": "ulid-0123",
                     "stage": "speak",
                     "position": 6,
                     "kind": "speak_answer",
@@ -7067,7 +7303,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
                                             "duration_ms": 1400,
                                             "voice": "learner"
                                         },
@@ -7081,7 +7317,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0075",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0077",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -7095,7 +7331,7 @@
                                     {
                                         "audio": {
                                             "ref": "p6.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0076",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0078",
                                             "duration_ms": 1610,
                                             "voice": "learner"
                                         },
@@ -7136,7 +7372,8 @@
                         "scene_id": "ulid-0003",
                         "speech_mode": "free",
                         "task_native": "Нам нужно сделать рентген?",
-                        "partner_line": null
+                        "partner_line": null,
+                        "task_clause_native": "нам нужно сделать рентген?"
                     },
                     "result": null,
                     "attempts": 0,
@@ -7148,7 +7385,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0122",
+                    "id": "ulid-0124",
                     "stage": "speak",
                     "position": 7,
                     "kind": "speak_echo",
@@ -7194,7 +7431,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0123",
+                    "id": "ulid-0125",
                     "stage": "speak",
                     "position": 8,
                     "kind": "speak_retell",
@@ -7263,7 +7500,7 @@
         }
     ],
     "metrics": {
-        "cards_total": 80,
+        "cards_total": 82,
         "minutes_spent": 0
     },
     "program": [
@@ -7394,7 +7631,7 @@
             },
             "image_tone": "#6D80E3",
             "status": "in_progress",
-            "minutes_estimate": 33,
+            "minutes_estimate": 30,
             "minutes_spent": null,
             "goals": [
                 {
@@ -7417,12 +7654,19 @@
                 "state": "current",
                 "done_count": 0,
                 "total": 24,
-                "minutes_left": 5,
-                "minutes": 5,
+                "minutes_left": 3,
+                "minutes": 3,
                 "share": 0.0,
                 "talk_title_native": null,
                 "scenes_count": null,
-                "targets": null
+                "targets": null,
+                "again": true,
+                "summary": {
+                    "done": 0,
+                    "total": 8,
+                    "first_try": 0,
+                    "returns": 0
+                }
             },
             {
                 "stage": "phrases",
@@ -7434,7 +7678,14 @@
                 "share": 0.0,
                 "talk_title_native": null,
                 "scenes_count": null,
-                "targets": null
+                "targets": null,
+                "again": true,
+                "summary": {
+                    "done": 0,
+                    "total": 6,
+                    "first_try": 0,
+                    "returns": 0
+                }
             },
             {
                 "stage": "dialogue",
@@ -7442,11 +7693,18 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "minutes": 6,
+                "minutes": 4,
                 "share": 0.0,
                 "talk_title_native": null,
                 "scenes_count": null,
-                "targets": null
+                "targets": null,
+                "again": true,
+                "summary": {
+                    "done": 0,
+                    "total": 8,
+                    "first_try": 0,
+                    "returns": 0
+                }
             },
             {
                 "stage": "listen",
@@ -7454,11 +7712,18 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "minutes": 5,
+                "minutes": 3,
                 "share": 0.0,
                 "talk_title_native": null,
                 "scenes_count": null,
-                "targets": null
+                "targets": null,
+                "again": true,
+                "summary": {
+                    "done": 0,
+                    "total": 6,
+                    "first_try": 0,
+                    "returns": 0
+                }
             },
             {
                 "stage": "speak",
@@ -7466,11 +7731,18 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "minutes": 5,
+                "minutes": 4,
                 "share": 0.0,
                 "talk_title_native": null,
                 "scenes_count": null,
-                "targets": null
+                "targets": null,
+                "again": true,
+                "summary": {
+                    "done": 0,
+                    "total": 7,
+                    "first_try": 0,
+                    "returns": 0
+                }
             },
             {
                 "stage": "conversation",
@@ -7478,7 +7750,7 @@
                 "done_count": null,
                 "total": null,
                 "minutes_left": null,
-                "minutes": 3,
+                "minutes": 5,
                 "share": 0.0,
                 "talk_title_native": "Поговори с регистратором",
                 "scenes_count": 1,
@@ -7486,46 +7758,66 @@
                     {
                         "scene_id": "ulid-0003",
                         "ref": "p1",
-                        "text_target": "It hurts in his lower back.",
-                        "text_native": "У него болит поясница.",
-                        "said": false
+                        "frame_target": "It hurts in his ___.",
+                        "frame_native": "У него болит ___.",
+                        "example_target": "lower back",
+                        "example_native": "поясница",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "ulid-0003",
                         "ref": "p2",
-                        "text_target": "It started three days ago.",
-                        "text_native": "Началось три дня назад.",
-                        "said": false
+                        "frame_target": "It started ___.",
+                        "frame_native": "Началось ___.",
+                        "example_target": "three days ago",
+                        "example_native": "три дня назад",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "ulid-0003",
                         "ref": "p3",
-                        "text_target": "The pain is sharp when he bends.",
-                        "text_native": "Боль острая, когда он наклоняется.",
-                        "said": false
+                        "frame_target": "The pain is ___ when he bends.",
+                        "frame_native": "Боль ___, когда он наклоняется.",
+                        "example_target": "sharp",
+                        "example_native": "острая",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "ulid-0003",
                         "ref": "p4",
-                        "text_target": "He doesn't have a fever.",
-                        "text_native": "Температуры у него нет.",
-                        "said": false
+                        "frame_target": "He doesn't have a fever.",
+                        "frame_native": "Температуры у него нет.",
+                        "example_target": null,
+                        "example_native": null,
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "ulid-0003",
                         "ref": "p5",
-                        "text_target": "He will rest at home.",
-                        "text_native": "Он будет отдыхать дома.",
-                        "said": false
+                        "frame_target": "He will rest ___.",
+                        "frame_native": "Он будет отдыхать ___.",
+                        "example_target": "at home",
+                        "example_native": "дома",
+                        "said": false,
+                        "value_target": null
                     },
                     {
                         "scene_id": "ulid-0003",
                         "ref": "p6",
-                        "text_target": "Do we need an X-ray?",
-                        "text_native": "Нам нужно сделать рентген?",
-                        "said": false
+                        "frame_target": "Do we need ___?",
+                        "frame_native": "Нам нужно ___?",
+                        "example_target": "an X-ray",
+                        "example_native": "сделать рентген",
+                        "said": false,
+                        "value_target": null
                     }
-                ]
+                ],
+                "again": false,
+                "summary": null
             }
         ],
         "sources": [
@@ -7535,7 +7827,6 @@
                 "day_number": 1
             }
         ],
-        "talk_again": false,
         "day_progress": 0.0,
         "program": {
             "words": {
@@ -7571,7 +7862,13 @@
                         "used_in": [
                             "p1",
                             "A1"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     },
                     {
                         "ref": "v2",
@@ -7599,7 +7896,13 @@
                         "used_in": [
                             "p3",
                             "A3"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     },
                     {
                         "ref": "v3",
@@ -7627,7 +7930,13 @@
                         "used_in": [
                             "p4",
                             "A4"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     },
                     {
                         "ref": "v4",
@@ -7655,7 +7964,13 @@
                         "used_in": [
                             "A5",
                             "A7"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     },
                     {
                         "ref": "v5",
@@ -7683,7 +7998,13 @@
                         "used_in": [
                             "A5",
                             "A6"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     },
                     {
                         "ref": "v6",
@@ -7711,7 +8032,13 @@
                         "used_in": [
                             "p6",
                             "A7"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     },
                     {
                         "ref": "v7",
@@ -7738,7 +8065,13 @@
                         "returns_day": null,
                         "used_in": [
                             "p6"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     },
                     {
                         "ref": "v8",
@@ -7759,7 +8092,13 @@
                         "returns_day": null,
                         "used_in": [
                             "p6"
-                        ]
+                        ],
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
+                        }
                     }
                 ]
             },
@@ -7808,6 +8147,12 @@
                                     }
                                 ]
                             }
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -7848,6 +8193,12 @@
                                     }
                                 ]
                             }
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -7888,6 +8239,12 @@
                                     }
                                 ]
                             }
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -7903,6 +8260,12 @@
                             "pronunciation": "хи дазнт хэв э фивер",
                             "kind": "answer",
                             "slot": null
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -7943,6 +8306,12 @@
                                     }
                                 ]
                             }
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -7950,7 +8319,7 @@
                         "text": "Do we need an X-ray?",
                         "translation": "Нам нужно сделать рентген?",
                         "pronunciation": "ду уи нид эн экс-рэй",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0074",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0076",
                         "state": "pending",
                         "frame": {
                             "target": "Do we need ___?",
@@ -7965,24 +8334,30 @@
                                         "native": "сделать рентген",
                                         "pronunciation": "эн экс-рэй",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0074"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0076"
                                     },
                                     {
                                         "target": "a follow-up appointment",
                                         "native": "прийти на повторный приём",
                                         "pronunciation": "э фоллоу-ап эпойнтмент",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0075"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0077"
                                     },
                                     {
                                         "target": "a sick note",
                                         "native": "взять справку для школы",
                                         "pronunciation": "э сик ноут",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0076"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0078"
                                     }
                                 ]
                             }
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     }
                 ]
@@ -8009,6 +8384,12 @@
                             "state": "pending",
                             "phrase_ref": "p1",
                             "filler": "lower back"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -8026,6 +8407,12 @@
                             "state": "pending",
                             "phrase_ref": "p2",
                             "filler": "three days ago"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -8043,6 +8430,12 @@
                             "state": "pending",
                             "phrase_ref": "p3",
                             "filler": "sharp"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -8060,6 +8453,12 @@
                             "state": "pending",
                             "phrase_ref": "p4",
                             "filler": null
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -8077,6 +8476,12 @@
                             "state": "pending",
                             "phrase_ref": "p5",
                             "filler": "at home"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -8085,15 +8490,21 @@
                         "partner": {
                             "text": "He should rest and use a heating pad.",
                             "translation": "Ему нужен покой и грелка.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0102"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0104"
                         },
                         "learner": {
                             "text": "Sorry, could you say that more slowly?",
                             "translation": "Простите, можно помедленнее?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0101",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0103",
                             "state": "pending",
                             "phrase_ref": null,
                             "filler": null
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -8102,7 +8513,7 @@
                         "partner": {
                             "text": "No, an X-ray is not needed for a muscle strain.",
                             "translation": "Нет, при растяжении мышцы рентген не нужен.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0077"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0079"
                         },
                         "learner": {
                             "text": "Do we need an X-ray?",
@@ -8111,6 +8522,12 @@
                             "state": "pending",
                             "phrase_ref": "p6",
                             "filler": "an X-ray"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     },
                     {
@@ -8119,7 +8536,7 @@
                         "partner": {
                             "text": "Only if it still hurts after one week.",
                             "translation": "Только если через неделю ещё будет болеть.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0106"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0108"
                         },
                         "learner": {
                             "text": "Do we need a follow-up appointment?",
@@ -8128,6 +8545,12 @@
                             "state": "pending",
                             "phrase_ref": "p6",
                             "filler": "a follow-up appointment"
+                        },
+                        "source": "own",
+                        "scene": {
+                            "id": "ulid-0003",
+                            "title_native": "Запись к врачу",
+                            "day_number": 1
                         }
                     }
                 ]
@@ -8291,8 +8714,12 @@
             "eighty": "80",
             "ninety": "90",
             "hundred": "100",
-            "thousand": "1000"
+            "thousand": "1000",
+            "million": "1000000"
         },
+        "number_joiners": [
+            "and"
+        ],
         "repeat_misses": 0
     }
 }

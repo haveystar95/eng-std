@@ -49,6 +49,8 @@ final class Plan
      * @param  list<PlanScene>  $scenes
      * @param  list<PlanDay>  $days
      * @param  list<array{check: string, mode: string, action: string, detail: string}>  $findings
+     * @param  array<string, int>|null  $pace  the price list of the plan's days — seconds per card by kind, a snapshot of
+     *                                         `plan.pace` taken when the plan was made (наряд FIX-3 §2); null — none taken yet
      */
     private function __construct(
         private readonly PlanId $id,
@@ -74,13 +76,16 @@ final class Plan
         private readonly DateTimeImmutable $createdAt,
         private array $scenes,
         private array $days,
+        private ?array $pace = null,
     ) {}
 
     /**
      * A new plan: the days laid out by the calendar (shortened when the event is nearer than the
-     * learner asked for), no scenes yet, and the model about to be asked.
+     * learner asked for), no scenes yet, and the model about to be asked — with the price list of its days as it
+     * stands today (`$pace`, наряд FIX-3 §2).
      *
      * @param  callable(): PlanDayId  $dayIds
+     * @param  array<string, int>|null  $pace
      */
     public static function create(
         PlanId $id,
@@ -94,6 +99,7 @@ final class Plan
         DateTimeImmutable $today,
         DateTimeImmutable $now,
         callable $dayIds,
+        ?array $pace = null,
     ): self {
         PlanCalendar::assertDays($daysRequested);
         $daysTotal = self::fitDays($daysRequested, $eventDate, $today);
@@ -106,7 +112,7 @@ final class Plan
         return new self(
             $id, $userId, trim($goalText), $targetLang, $nativeLang, $level, $daysTotal, $daysRequested,
             $eventDate?->setTime(0, 0), PlanStatus::Building, null, null, null, [], null, null, $now, null, null, null,
-            $now, [], $days,
+            $now, [], $days, $pace,
         );
     }
 
@@ -114,6 +120,7 @@ final class Plan
      * @param  list<PlanScene>  $scenes
      * @param  list<PlanDay>  $days
      * @param  list<array{check: string, mode: string, action: string, detail: string}>  $findings
+     * @param  array<string, int>|null  $pace
      */
     public static function reconstitute(
         PlanId $id,
@@ -139,12 +146,40 @@ final class Plan
         DateTimeImmutable $createdAt,
         array $scenes,
         array $days,
+        ?array $pace = null,
     ): self {
         return new self(
             $id, $userId, $goalText, $targetLang, $nativeLang, $level, $daysTotal, $daysRequested, $eventDate, $status,
             $titles, $coverImage, $planCall, $findings, $unclearReason, $failReason, $buildStartedAt, $collectionId,
-            $startedAt, $finishedAt, $createdAt, $scenes, $days,
+            $startedAt, $finishedAt, $createdAt, $scenes, $days, $pace,
         );
+    }
+
+    /**
+     * THE PRICE LIST OF THE PLAN'S DAYS, TAKEN AGAIN (наряд FIX-3 §2, `plan:repace`): the plan reads its minutes by the
+     * list given. False when it already had exactly that list — the command is run again and changes nothing.
+     *
+     * @param  array<string, int>  $pace
+     */
+    public function repace(array $pace): bool
+    {
+        ksort($pace);
+        $had = $this->pace;
+        if ($had !== null) {
+            ksort($had);
+        }
+        if ($had === $pace) {
+            return false;
+        }
+        $this->pace = $pace;
+
+        return true;
+    }
+
+    /** @return array<string, int>|null the plan's own price list — null until one is taken ({@see repace()}) */
+    public function pace(): ?array
+    {
+        return $this->pace;
     }
 
     // ---- building --------------------------------------------------------------------------

@@ -1,81 +1,102 @@
 {
-    "id": "01M32ZZTPMXMS3NH74MTN6706Z",
-    "plan_id": "01M2H13E1QT6F5D4FKJSEKTAD7",
+    "id": "01M34XJP15Q823PSC7FZ694YC6",
+    "plan_id": "01M2H1ABCMNQXQ6YP9C9A3HD6B",
     "day": 1,
     "type": "day",
     "state": "ended",
-    "replay": false,
-    "talk_title_native": "Поговори с врачом",
+    "replay": true,
+    "talk_title_native": "Поговори с сотрудником стойки",
     "partner": {
-        "role_native": "Врач",
-        "role_target": "Doctor"
+        "role_native": "Сотрудник стойки",
+        "role_target": "Check-in agent"
     },
     "scene": {
-        "title_native": "Приём у врача",
-        "title_target": "Doctor visit"
+        "title_native": "Регистрация",
+        "title_target": "Check-in"
     },
     "scenes": [
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-            "title_native": "Приём у врача",
-            "title_target": "Doctor visit",
-            "role_native": "Врач",
-            "role_target": "Doctor",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+            "title_native": "Регистрация",
+            "title_target": "Check-in",
+            "role_native": "Сотрудник стойки",
+            "role_target": "Check-in agent",
             "lines": 7,
             "state": "done"
         }
     ],
-    "minutes_estimate": 3,
-    "turns_left": 0,
+    "minutes_estimate": 5,
+    "turns_left": 1,
     "targets": [
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
             "ref": "p1",
-            "text_target": "My son has a fever.",
-            "text_native": "У моего сына температура.",
-            "said": true
+            "frame_target": "Here is ___.",
+            "frame_native": "Вот ___.",
+            "example_target": "my passport",
+            "example_native": "мой паспорт",
+            "said": true,
+            "value_target": "my passport"
         },
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
             "ref": "p2",
-            "text_target": "He has had it for three days.",
-            "text_native": "Это у него уже уже три дня.",
-            "said": true
+            "frame_target": "I'm flying to ___.",
+            "frame_native": "Я лечу в ___.",
+            "example_target": "London",
+            "example_native": "Лондон",
+            "said": true,
+            "value_target": "Lisbon"
         },
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
             "ref": "p3",
-            "text_target": "His temperature is 39 degrees.",
-            "text_native": "У него температура 39 градусов.",
-            "said": true
+            "frame_target": "I have ___.",
+            "frame_native": "У меня ___.",
+            "example_target": "one suitcase and one backpack",
+            "example_native": "один чемодан и один рюкзак",
+            "said": true,
+            "value_target": "one big suitcase"
         },
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
             "ref": "p4",
-            "text_target": "He also has a sore throat.",
-            "text_native": "У него ещё болит горло.",
-            "said": true
+            "frame_target": "I'm checking in ___.",
+            "frame_native": "Я сдаю в багаж ___.",
+            "example_target": "the suitcase",
+            "example_native": "чемодан",
+            "said": true,
+            "value_target": "the suitcase only"
         },
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
             "ref": "p5",
-            "text_target": "He should rest at home.",
-            "text_native": "Ему нужно отдыхать дома.",
-            "said": false
+            "frame_target": "Can I take ___ onboard?",
+            "frame_native": "Можно взять ___ в салон?",
+            "example_target": "the backpack",
+            "example_native": "рюкзак",
+            "said": true,
+            "value_target": "my laptop bag"
         },
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
             "ref": "p6",
-            "text_target": "How often should I give the paracetamol?",
-            "text_native": "Как часто мне давать парацетамол?",
-            "said": true
+            "frame_target": "I'd like ___.",
+            "frame_native": "Я бы хотел ___.",
+            "example_target": "a window seat",
+            "example_native": "место у окна",
+            "said": true,
+            "value_target": "an aisle seat"
         },
         {
-            "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+            "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
             "ref": "p7",
-            "text_target": "When should we come back if he gets worse?",
-            "text_native": "Когда нам нужно прийти снова если ему станет хуже?",
-            "said": false
+            "frame_target": "Where is ___?",
+            "frame_native": "Где ___?",
+            "example_target": "the gate",
+            "example_native": "выход на посадку",
+            "said": true,
+            "value_target": "the security check"
         }
     ],
     "hints": {
@@ -88,236 +109,322 @@
             "index": 1,
             "speaker": "partner",
             "kind": "agent",
-            "text_target": "Hello. What seems to be the problem today?",
-            "text_native": "Здравствуйте. Что вас сегодня беспокоит?",
+            "text_target": "Good morning. May I see your passport?",
+            "text_native": "Доброе утро. Можно посмотреть ваш паспорт?",
             "audio": null,
             "understood": null,
             "phrases_used": [],
             "off_topic": false,
-            "created_at": "2026-09-21T22:04:39+00:00"
+            "created_at": "2026-09-22T16:01:00+00:00"
         },
         {
             "index": 2,
             "speaker": "learner",
-            "kind": "rescue",
-            "text_target": "Sorry?",
+            "kind": "said",
+            "text_target": "sure. here is my passport",
             "text_native": null,
             "audio": null,
             "understood": null,
-            "phrases_used": [],
+            "phrases_used": [
+                {
+                    "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+                    "ref": "p1"
+                }
+            ],
             "off_topic": null,
-            "created_at": "2026-09-21T22:04:39+00:00"
+            "created_at": "2026-09-22T16:01:10+00:00"
         },
         {
             "index": 3,
             "speaker": "partner",
             "kind": "agent",
-            "text_target": "Hello. What is wrong today?",
-            "text_native": "Здравствуйте. Что случилось сегодня?",
+            "text_target": "What is your destination today?",
+            "text_native": "Куда вы летите сегодня?",
             "audio": null,
-            "understood": null,
+            "understood": true,
             "phrases_used": [],
             "off_topic": false,
-            "created_at": "2026-09-21T22:04:41+00:00"
+            "created_at": "2026-09-22T16:01:11+00:00"
         },
         {
             "index": 4,
             "speaker": "learner",
             "kind": "said",
-            "text_target": "My son has a fever, and he also has a sore throat.",
+            "text_target": "I'm flying to",
             "text_native": null,
             "audio": null,
             "understood": null,
-            "phrases_used": [
-                {
-                    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                    "ref": "p1",
-                    "text_target": "My son has a fever.",
-                    "text_native": "У моего сына температура."
-                },
-                {
-                    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                    "ref": "p4",
-                    "text_target": "He also has a sore throat.",
-                    "text_native": "У него ещё болит горло."
-                }
-            ],
+            "phrases_used": [],
             "off_topic": null,
-            "created_at": "2026-09-21T22:04:41+00:00"
+            "created_at": "2026-09-22T16:01:21+00:00"
         },
         {
             "index": 5,
             "speaker": "partner",
             "kind": "agent",
-            "text_target": "How long has he had it?",
-            "text_native": "Как давно у него это?",
+            "text_target": "Yes? Go on.",
+            "text_native": "Да? Продолжайте.",
             "audio": null,
-            "understood": true,
+            "understood": false,
             "phrases_used": [],
             "off_topic": false,
-            "created_at": "2026-09-21T22:04:42+00:00"
+            "created_at": "2026-09-22T16:01:22+00:00"
         },
         {
             "index": 6,
             "speaker": "learner",
             "kind": "said",
-            "text_target": "It started three days ago, so he has had it for three days.",
+            "text_target": "sorry. I'm flying to Lisbon",
             "text_native": null,
             "audio": null,
             "understood": null,
             "phrases_used": [
                 {
-                    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                    "ref": "p2",
-                    "text_target": "He has had it for three days.",
-                    "text_native": "Это у него уже уже три дня."
+                    "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+                    "ref": "p2"
                 }
             ],
             "off_topic": null,
-            "created_at": "2026-09-21T22:04:49+00:00"
+            "created_at": "2026-09-22T16:01:32+00:00"
         },
         {
             "index": 7,
             "speaker": "partner",
             "kind": "agent",
-            "text_target": "How long has he had the fever?",
-            "text_native": "Как давно у него температура?",
+            "text_target": "I see. How many bags do you have?",
+            "text_native": "Понятно. Сколько у вас багажа?",
             "audio": null,
             "understood": true,
             "phrases_used": [],
             "off_topic": false,
-            "created_at": "2026-09-21T22:04:50+00:00"
+            "created_at": "2026-09-22T16:01:36+00:00"
         },
         {
             "index": 8,
             "speaker": "learner",
             "kind": "said",
-            "text_target": "His temperature is thirty-nine degrees.",
+            "text_target": "I have one big suitcase. can I take my laptop bag onboard",
             "text_native": null,
             "audio": null,
             "understood": null,
             "phrases_used": [
                 {
-                    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                    "ref": "p3",
-                    "text_target": "His temperature is 39 degrees.",
-                    "text_native": "У него температура 39 градусов."
+                    "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+                    "ref": "p3"
+                },
+                {
+                    "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+                    "ref": "p5"
                 }
             ],
             "off_topic": null,
-            "created_at": "2026-09-21T22:04:50+00:00"
+            "created_at": "2026-09-22T16:01:46+00:00"
         },
         {
             "index": 9,
             "speaker": "partner",
             "kind": "agent",
-            "text_target": "Good. Does he also have a sore throat?",
-            "text_native": "Хорошо. У него ещё болит горло?",
+            "text_target": "Yes, the laptop bag can go as hand luggage.",
+            "text_native": "Да, сумку для ноутбука можно взять в салон как ручную кладь.",
             "audio": null,
             "understood": true,
             "phrases_used": [],
             "off_topic": false,
-            "created_at": "2026-09-21T22:04:51+00:00"
+            "created_at": "2026-09-22T16:01:47+00:00"
         },
         {
             "index": 10,
             "speaker": "learner",
             "kind": "said",
-            "text_target": "How often should I give him the paracetamol?",
+            "text_target": "great. so I'm checking in the suitcase only",
             "text_native": null,
             "audio": null,
             "understood": null,
             "phrases_used": [
                 {
-                    "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
-                    "ref": "p6",
-                    "text_target": "How often should I give the paracetamol?",
-                    "text_native": "Как часто мне давать парацетамол?"
+                    "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+                    "ref": "p4"
                 }
             ],
             "off_topic": null,
-            "created_at": "2026-09-21T22:04:51+00:00"
+            "created_at": "2026-09-22T16:01:57+00:00"
         },
         {
             "index": 11,
             "speaker": "partner",
             "kind": "agent",
-            "text_target": "Give it every six hours if the fever stays high. Goodbye.",
-            "text_native": "Давайте его каждые шесть часов, если температура остаётся высокой. До свидания.",
+            "text_target": "I can do that. Would you like a window seat?",
+            "text_native": "Хорошо. Хотите место у окна?",
             "audio": null,
             "understood": true,
             "phrases_used": [],
             "off_topic": false,
-            "created_at": "2026-09-21T22:04:52+00:00"
+            "created_at": "2026-09-22T16:01:58+00:00"
+        },
+        {
+            "index": 12,
+            "speaker": "learner",
+            "kind": "said",
+            "text_target": "no thanks. I'd like an aisle seat",
+            "text_native": null,
+            "audio": null,
+            "understood": null,
+            "phrases_used": [
+                {
+                    "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+                    "ref": "p6"
+                }
+            ],
+            "off_topic": null,
+            "created_at": "2026-09-22T16:02:08+00:00"
+        },
+        {
+            "index": 13,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "Your seat request is fine. I can give you 14C by the aisle.",
+            "text_native": "Хорошо. Я могу дать вам 14C у прохода.",
+            "audio": null,
+            "understood": true,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-22T16:02:09+00:00"
+        },
+        {
+            "index": 14,
+            "speaker": "learner",
+            "kind": "said",
+            "text_target": "perfect. where is the security check",
+            "text_native": null,
+            "audio": null,
+            "understood": null,
+            "phrases_used": [
+                {
+                    "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
+                    "ref": "p7"
+                }
+            ],
+            "off_topic": null,
+            "created_at": "2026-09-22T16:02:19+00:00"
+        },
+        {
+            "index": 15,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "I’m not sure about security, but your gate is A12, and boarding starts at 9:20.",
+            "text_native": "Я не уверен насчёт контроля, но ваш выход A12, и посадка начинается в 9:20.",
+            "audio": null,
+            "understood": true,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-22T16:02:20+00:00"
+        },
+        {
+            "index": 16,
+            "speaker": "learner",
+            "kind": "said",
+            "text_target": "ok. is the gate far from here",
+            "text_native": null,
+            "audio": null,
+            "understood": null,
+            "phrases_used": [],
+            "off_topic": null,
+            "created_at": "2026-09-22T16:02:30+00:00"
+        },
+        {
+            "index": 17,
+            "speaker": "partner",
+            "kind": "agent",
+            "text_target": "Your gate is A12. It’s not far from here.",
+            "text_native": "Ваш выход A12. Он недалеко отсюда.",
+            "audio": null,
+            "understood": true,
+            "phrases_used": [],
+            "off_topic": false,
+            "created_at": "2026-09-22T16:02:31+00:00"
         }
     ],
     "summary": {
-        "said_count": 4,
-        "phrases_used": 5,
+        "said_count": 8,
+        "phrases_used": 7,
         "phrases_total": 7,
         "phrases": [
             {
-                "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+                "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
                 "ref": "p1",
-                "text_target": "My son has a fever.",
-                "text_native": "У моего сына температура.",
-                "audio_url": null,
-                "used": true
+                "frame_target": "Here is ___.",
+                "frame_native": "Вот ___.",
+                "example_target": "my passport",
+                "example_native": "мой паспорт",
+                "said": true,
+                "value_target": "my passport"
             },
             {
-                "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+                "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
                 "ref": "p2",
-                "text_target": "He has had it for three days.",
-                "text_native": "Это у него уже уже три дня.",
-                "audio_url": null,
-                "used": true
+                "frame_target": "I'm flying to ___.",
+                "frame_native": "Я лечу в ___.",
+                "example_target": "London",
+                "example_native": "Лондон",
+                "said": true,
+                "value_target": "Lisbon"
             },
             {
-                "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+                "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
                 "ref": "p3",
-                "text_target": "His temperature is 39 degrees.",
-                "text_native": "У него температура 39 градусов.",
-                "audio_url": null,
-                "used": true
+                "frame_target": "I have ___.",
+                "frame_native": "У меня ___.",
+                "example_target": "one suitcase and one backpack",
+                "example_native": "один чемодан и один рюкзак",
+                "said": true,
+                "value_target": "one big suitcase"
             },
             {
-                "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+                "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
                 "ref": "p4",
-                "text_target": "He also has a sore throat.",
-                "text_native": "У него ещё болит горло.",
-                "audio_url": null,
-                "used": true
+                "frame_target": "I'm checking in ___.",
+                "frame_native": "Я сдаю в багаж ___.",
+                "example_target": "the suitcase",
+                "example_native": "чемодан",
+                "said": true,
+                "value_target": "the suitcase only"
             },
             {
-                "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+                "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
                 "ref": "p5",
-                "text_target": "He should rest at home.",
-                "text_native": "Ему нужно отдыхать дома.",
-                "audio_url": null,
-                "used": false
+                "frame_target": "Can I take ___ onboard?",
+                "frame_native": "Можно взять ___ в салон?",
+                "example_target": "the backpack",
+                "example_native": "рюкзак",
+                "said": true,
+                "value_target": "my laptop bag"
             },
             {
-                "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+                "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
                 "ref": "p6",
-                "text_target": "How often should I give the paracetamol?",
-                "text_native": "Как часто мне давать парацетамол?",
-                "audio_url": null,
-                "used": true
+                "frame_target": "I'd like ___.",
+                "frame_native": "Я бы хотел ___.",
+                "example_target": "a window seat",
+                "example_native": "место у окна",
+                "said": true,
+                "value_target": "an aisle seat"
             },
             {
-                "scene_id": "01M2H13KSAS23K4YPF1M65SJQD",
+                "scene_id": "01M2H1AFDHTN8M3HRWXS0M3S2A",
                 "ref": "p7",
-                "text_target": "When should we come back if he gets worse?",
-                "text_native": "Когда нам нужно прийти снова если ему станет хуже?",
-                "audio_url": null,
-                "used": false
+                "frame_target": "Where is ___?",
+                "frame_native": "Где ___?",
+                "example_target": "the gate",
+                "example_native": "выход на посадку",
+                "said": true,
+                "value_target": "the security check"
             }
         ],
-        "understood_all": true,
-        "not_understood": 0,
-        "rescues": 1,
+        "understood_all": false,
+        "not_understood": 1,
+        "rescues": 0,
         "ended_reason": "natural",
-        "minutes": 1,
-        "returns_tomorrow": true
+        "minutes": 2,
+        "returns_tomorrow": false
     }
 }

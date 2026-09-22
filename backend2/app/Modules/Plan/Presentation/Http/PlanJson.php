@@ -263,8 +263,9 @@ final class PlanJson
             ], $c->scenes),
             'minutes_estimate' => $c->minutesEstimate,
             'turns_left' => $c->turnsLeft,
-            // «Скажи в разговоре» (37-5) and the strip of the ribbon: the phrases the talk is for, each with whether the
-            // server has heard it yet — the same list the summary counts (наряд CONV-2, п. 10).
+            // «Скажи в разговоре» (37-5) and the plates over the microphone (37-7…37-11): the constructions the talk is
+            // for, each with whether the server has heard it yet and what went into its window — the same list the summary
+            // counts (наряд CONV-2, п. 10; FIX-3 §6).
             'targets' => $c->targets,
             'hints' => ['enabled' => $c->hintsEnabled, 'delay_ms' => $c->hintDelayMs, 'native' => $c->hintNative],
             'turns' => array_map(static fn (ConversationTurnView $t): array => [
@@ -284,28 +285,19 @@ final class PlanJson
                 'off_topic' => $t->offTopic,
                 'created_at' => $t->createdAt,
             ], $c->turns),
-            'summary' => $c->summary === null ? null : self::conversationSummary($c->summary, $audio),
+            'summary' => $c->summary === null ? null : self::conversationSummary($c->summary),
         ];
     }
 
-    /**
-     * @param  callable(?string): ?string  $audio
-     * @return array<string, mixed>
-     */
-    private static function conversationSummary(ConversationSummaryView $s, callable $audio): array
+    /** @return array<string, mixed> */
+    private static function conversationSummary(ConversationSummaryView $s): array
     {
         return [
             'said_count' => $s->saidCount,
             'phrases_used' => $s->phrasesUsed,
             'phrases_total' => $s->phrasesTotal,
-            'phrases' => array_map(static fn (array $p): array => [
-                'scene_id' => $p['scene_id'],
-                'ref' => $p['ref'],
-                'text_target' => $p['text_target'],
-                'text_native' => $p['text_native'],
-                'audio_url' => $audio($p['audio_id']),
-                'used' => $p['used'],
-            ], $s->phrases),
+            // The talk's targets as it left them — the same shape as `targets` (наряд FIX-3 §6).
+            'phrases' => $s->phrases,
             'understood_all' => $s->understoodAll,
             'not_understood' => $s->notUnderstood,
             'rescues' => $s->rescues,
@@ -355,6 +347,8 @@ final class PlanJson
             'audio_url' => $audio($u->audioId),
         ];
         $scene = $w->day->scene;
+        // Where an item of a tab is from (наряд FIX-3 §9): the scene, as the plan names it, and its day.
+        $from = static fn (?WindowSourceView $scene): ?array => $scene === null ? null : ['id' => $scene->sceneId, 'title_native' => $scene->titleNative, 'day_number' => $scene->dayNumber];
 
         return [
             'day' => [
@@ -383,6 +377,15 @@ final class PlanJson
                 'scenes_count' => $s->scenesCount,
                 // The talk's row only (наряд BACK-TAILS-2 §4): «Скажи в разговоре» — the talk's own `targets[]`.
                 'targets' => $s->targets,
+                // «Ещё раз» of the row (наряд FIX-3 §8): a stage of cards always; the talk once walked, while the replays last.
+                'again' => $s->again,
+                // A stage of cards: its summary, кадр 30-6 (§10) — null on the talk's row.
+                'summary' => $s->summary === null ? null : [
+                    'done' => $s->summary->done,
+                    'total' => $s->summary->total,
+                    'first_try' => $s->summary->firstTry,
+                    'returns' => $s->summary->returns,
+                ],
             ], $w->stages),
             // «Из каких сцен» / «Из каких дней» (наряд BACK-TAILS-2 §4): the scenes the day is made of, route order.
             'sources' => array_map(static fn (WindowSourceView $s): array => [
@@ -390,8 +393,6 @@ final class PlanJson
                 'title_native' => $s->titleNative,
                 'day_number' => $s->dayNumber,
             ], $w->sources),
-            // «Повторить разговор» (наряд BACK-TAILS-2 §7).
-            'talk_again' => $w->talkAgain,
             'day_progress' => $w->dayProgress,
             'program' => [
                 'words' => [
@@ -409,6 +410,8 @@ final class PlanJson
                         'state' => $v->state,
                         'returns_day' => $v->returnsDay,
                         'used_in' => $v->usedIn,
+                        'source' => $v->source,
+                        'scene' => $from($v->scene),
                     ], $w->program->words),
                 ],
                 'phrases' => [
@@ -421,6 +424,8 @@ final class PlanJson
                         'audio_url' => $audio($v->audioId),
                         'state' => $v->state,
                         'frame' => $frame($v->frame),
+                        'source' => $v->source,
+                        'scene' => $from($v->scene),
                     ], $w->program->phrases),
                 ],
                 'dialogue' => [
@@ -430,6 +435,8 @@ final class PlanJson
                         'kind' => $v->kind,
                         'partner' => $line($v->partner),
                         'learner' => $line($v->learner),
+                        'source' => $v->source,
+                        'scene' => $from($v->scene),
                     ], $w->program->dialogue),
                 ],
             ],

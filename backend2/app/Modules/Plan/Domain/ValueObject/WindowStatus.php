@@ -36,14 +36,13 @@ enum WindowStatus: string
         };
     }
 
-    /** What the one button does; a passed day with nothing to say aloud has no button. */
-    public function action(bool $hasSpeakStage): ?WindowAction
+    /** What the one button does; a passed day has none — «Ещё раз» is each stage's (наряд FIX-3 §8). */
+    public function action(): ?WindowAction
     {
         return match ($this) {
             self::NotStarted => WindowAction::Start,
             self::InProgress => WindowAction::Continue,
-            self::Passed => $hasSpeakStage ? WindowAction::Again : null,
-            self::Locked, self::Building => null,
+            self::Passed, self::Locked, self::Building => null,
         };
     }
 }

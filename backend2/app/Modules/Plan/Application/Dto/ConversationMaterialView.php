@@ -22,8 +22,9 @@ final readonly class ConversationMaterialView
      * @param  list<ConversationCheckpoint>  $checkpoints
      * @param  list<ConversationPhrase>  $phrases
      * @param  string|null  $titleNative  «Поговори с врачом» — the entry title, by the role the talk opens with (кадр 37-5)
+     * @param  string  $targetLang  the language the talk is held in — what the learner's words are read by
      */
-    public function __construct(public array $checkpoints, public array $phrases, public ?string $titleNative = null)
+    public function __construct(public array $checkpoints, public array $phrases, public ?string $titleNative = null, public string $targetLang = 'en')
     {
         $this->targets = ConversationTargets::of($checkpoints, $phrases);
     }

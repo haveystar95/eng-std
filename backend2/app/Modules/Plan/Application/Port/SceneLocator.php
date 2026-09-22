@@ -9,8 +9,8 @@ use App\Modules\Plan\Application\Dto\SceneImageRef;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /** Scene lookups that need no aggregate: which plan a scene belongs to, and its photo. */
 interface SceneLocator
@@ -39,11 +39,12 @@ interface SceneLocator
     public function missingImageCounts(?PlanId $planId): MissingImageCounts;
 
     /**
-     * The two voices of some scenes — one query by primary key, for a reader that holds cards and no
-     * aggregate (DAY-UI-3). A scene not found is simply absent.
+     * Whose voices some scenes are said in — the partner's stored gender and the learner whose plan it is — one query by
+     * primary key, for a reader that holds cards and no aggregate (DAY-UI-3; наряд FIX-3 §1: the learner's voice is the
+     * learner's own, {@see \App\Modules\Plan\Application\Service\VoiceCasts}). A scene not found is simply absent.
      *
      * @param  list<string>  $sceneIds
-     * @return array<string, VoiceCast>
+     * @return array<string, array{partner: VoiceGender|null, learner: UserId}>
      */
-    public function voiceCastsOf(array $sceneIds): array;
+    public function voicesOf(array $sceneIds): array;
 }

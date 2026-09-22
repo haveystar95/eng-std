@@ -96,58 +96,61 @@ return [
 
     /*
      * THE PACE OF A DAY — seconds per card, by kind (наряд SESSION-1a, разд. 2): what every «≈ N мин» of the
-     * day window is counted from. Initial values from the order — tune them here after the phone, never in
-     * code. A kind missing from the table costs nothing (`Domain/Service/DayPace`).
+     * day window is counted from. MEASURED ON THE PHONE (наряд FIX-3 §2): the median of the seconds a card of the
+     * kind took on every answered day of the live server — the gap from the day's previous answer, gaps over two
+     * minutes left out, the first answer of a day carrying none — times 1.3 and rounded to 5 s; a kind nobody
+     * answered yet takes its old price times the measured kinds' ratio. The first list (the order's guesses) read
+     * the owner's days 2–2.5 times too long. A plan keeps the list it was made with (`plans.pace`) until
+     * `php artisan plan:repace` gives it this one. A kind missing from the table costs nothing (`Domain/Service/DayPace`).
      */
     'pace' => [
-        'word_intro' => 8,
-        'word_repeat' => 12,
-        'word_choose' => 10,
-        'word_listen' => 10,
-        'word_assemble' => 20,
+        'word_intro' => 5,
+        'word_repeat' => 10,
+        'word_choose' => 5,
+        'word_listen' => 5,
+        'word_assemble' => 10,
         'word_in_line' => 10,
-        'phrase_intro' => 12,
-        'phrase_assemble' => 25,
-        'phrase_choose_back' => 12,
-        'phrase_slot' => 12,
-        'phrase_slot_listen' => 12,
-        'phrase_repeat' => 25,
+        'phrase_intro' => 15,
+        'phrase_assemble' => 20,
+        'phrase_choose_back' => 10,
+        'phrase_slot' => 10,
+        'phrase_slot_listen' => 5,
+        'phrase_repeat' => 20,
         // «Скажи целиком» (наряд FIX-2, п. 5) is a SERIES: every value of the window said aloud and the learner's own
         // one after them, all on one card — so this is the price of ONE ROUND and the card's payload says how many
         // it has (`plan.phrases_budget` cuts rounds off it, and a flat per-card price would hide that).
         'phrase_other_slot' => 25,
-        'phrase_combine' => 20,
-        'dialogue_partner' => 15,
-        'dialogue_answer' => 30,
-        // The ask carries the exchange's check too since наряд BACK-TAILS-1 §1.5 — the two cards merged, and so do
-        // their seconds: 30 said aloud + 15 tapped, exactly what `dialogue_ask` and `dialogue_partner` cost apart.
-        'dialogue_ask' => 45,
-        'dialogue_rescue' => 15,
-        'listen_dialogue' => 110,
-        'listen_question' => 12,
-        'listen_review' => 30,
+        'phrase_combine' => 25,
+        'dialogue_partner' => 20,
+        'dialogue_answer' => 10,
+        // The ask carries the exchange's check too since наряд BACK-TAILS-1 §1.5 — measured as the one card it is.
+        'dialogue_ask' => 25,
+        'dialogue_rescue' => 10,
+        'listen_dialogue' => 70,
+        'listen_question' => 10,
+        'listen_review' => 10,
         'listen_predict' => 15,
-        'listen_pace' => 25,
-        'listen_number' => 15,
-        'speak_answer' => 35,
-        'speak_echo' => 25,
-        'speak_retell' => 30,
+        'listen_pace' => 15,
+        'listen_number' => 10,
+        'speak_answer' => 25,
+        'speak_echo' => 70,
+        'speak_retell' => 15,
         // «Вспомни свои реплики» (кадр 37-3, наряд CONV-1): the plan's own lines read through once,
         // scene by scene — a minute of reading and listening A SCENE, not a trainer: the sheet is priced per scene it
         // shows (наряд BACK-TAILS-2 §4, like «Скажи целиком» per round).
-        'recall_scenes' => 60,
+        'recall_scenes' => 45,
     ],
 
     /*
      * HOW LONG «ФРАЗЫ» MAY TAKE before the stage starts cutting itself (решение архитектора 20.09, доработка наряда
      * FIX-2). The day's own ceiling — 32 minutes — is unchanged; this is the stage's, by {@see \App\Modules\Plan\Domain\Service\DayPace}.
      *
-     * Over it the stage is cut in ONE order, a rung at a time until it fits (наряд BACK-TAILS-2 §1): the third
-     * recognition, then the third value round of «Скажи целиком», then the second recognition — the rounds and the
-     * recognition off the frames the dialogue says least first. The floor is one recognition, two value rounds and the
-     * learner's own word; the own-word round and the trainer itself are never removed. A stage that will not fit even
-     * then is dealt anyway: the excess is a warning in the day's build log (`plan.phrases_over_ceiling`), not a
-     * refusal to build the day (`Domain/Assembly/PhrasesStage`).
+     * Over it the stage is cut in ONE order, a rung at a time until it fits (наряд FIX-3 §3): the third recognitions
+     * are not added, then the second recognitions go — off the frames the dialogue says least first. The ROUNDS of
+     * «Скажи целиком» are never cut: the value rounds the level deals and the learner's own word — never fewer than two
+     * value rounds where the frame has two values or more. The floor is one recognition, all the rounds and the own word. A stage
+     * that will not fit even then is dealt anyway: the excess is a warning in the day's build log
+     * (`plan.phrases_over_ceiling`), not a refusal to build the day (`Domain/Assembly/PhrasesStage`).
      */
     'phrases_budget' => (int) env('PLAN_PHRASES_BUDGET', 690),
 
@@ -180,10 +183,11 @@ return [
     /*
      * THE TALK WITH THE AGENT — the sixth stage of a day (наряд CONV-1, `docs/plan-v2.md`).
      *
-     * `turns` is how many moves of the SCENE each kind of talk has: at nought the prompt is told
-     * `TURNS_LEFT: 0` and the role says goodbye itself — nothing cuts a learner off mid-word. A
-     * «Не понял» is not one of these moves (переспросы нейтральны, кадр 37-12); it is paid for out
-     * of the money instead.
+     * The learner's moves are not a knob: a talk has one per target and two more (наряд FIX-3 §7, seven targets —
+     * nine moves); at nought the prompt is told `TURNS_LEFT: 0` and the role says goodbye itself — nothing cuts a
+     * learner off mid-word. A «Не понял» is not one of these moves (переспросы нейтральны, кадр 37-12); it is paid for
+     * out of the money instead. `minutes` is the HARD STOP of each kind of talk (and its «около N минут»): once the talk
+     * has taken them, the next move is the role's last, `ended_reason: limit`.
      *
      * `cost_cap_usd` is what one talk may spend on the model and the voice together. Reaching it
      * makes the NEXT move the role's last (`ended_reason: limit`), it does not end the talk where
@@ -207,15 +211,10 @@ return [
          * horizon`. Как включать и выключать надёжно — отчёт CONV-2 §7.
          */
         'enabled' => (bool) env('PLAN_CONVERSATION_ENABLED', true),
-        'turns' => [
-            'day' => (int) env('PLAN_CONVERSATION_TURNS_DAY', 4),
-            'rehearsal' => (int) env('PLAN_CONVERSATION_TURNS_REHEARSAL', 10),
-            'review' => (int) env('PLAN_CONVERSATION_TURNS_REVIEW', 4),
-        ],
         'minutes' => [
-            'day' => (int) env('PLAN_CONVERSATION_MINUTES_DAY', 3),
+            'day' => (int) env('PLAN_CONVERSATION_MINUTES_DAY', 5),
             'rehearsal' => (int) env('PLAN_CONVERSATION_MINUTES_REHEARSAL', 6),
-            'review' => (int) env('PLAN_CONVERSATION_MINUTES_REVIEW', 6),
+            'review' => (int) env('PLAN_CONVERSATION_MINUTES_REVIEW', 4),
         ],
         'cost_cap_usd' => (float) env('PLAN_CONVERSATION_COST_CAP_USD', 0.08),
         // «Повторить разговор» (наряд BACK-TAILS-2 §7): how many replays of a walked talk one day of the plan takes in one

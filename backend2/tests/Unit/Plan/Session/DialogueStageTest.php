@@ -25,8 +25,8 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
  * «ДИАЛОГ» (наряд SESSION-1a, разд. 1–2; SPEC §4, D-17, D-18): the visit exchange by exchange — an answer is understood
- * then replied to, an ask is said first, a rescue is one card and stands inside the answer it rescues; the fourth option
- * of `dialogue_partner` comes from the farthest exchange and never reads like the three; a voice card carries every mode.
+ * then replied to, an ask is said first, a rescue is one card and stands inside the answer it rescues; the options of a
+ * check are the exchange's own and nothing else (наряд FIX-3 §5); a voice card carries every mode.
  *
  * The fake lesson (8 exchanges): x1–x5 answer (x4 on a frame without a slot), x6 rescue, x7 and x8 ask on one frame.
  */
@@ -165,7 +165,7 @@ it('deals an ask as one card: the learner\'s own line, the partner\'s answer, an
         // The check rides on the ask itself, under the names `dialogue_partner` uses.
         ->and($ask['question_native'])->toBe('Когда нужно прийти снова?')
         ->and(s1dlgCorrectText($ask))->toBe('Если боль не пройдёт через семь дней')
-        ->and(array_column($ask['options'], 'id'))->toBe(['o1', 'o2', 'o3', 'o4'])
+        ->and(array_column($ask['options'], 'id'))->toBe(['o1', 'o2', 'o3'])
         ->and(array_filter($drafts, static fn (CardDraft $d): bool => $d->kind->value === 'dialogue_partner' && $d->unitRef === 'x8'))->toBe([])
         // The voice keys stay: it is still the card the learner says their line on.
         ->and(array_keys($ask))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'frame', 'modes', 'speech_mode', 'question_native', 'options', 'correct']);
@@ -175,8 +175,8 @@ it('deals an ask as one card: the learner\'s own line, the partner\'s answer, an
 // an ask card dealt with a half-built check — a question with nothing to choose between — and an ask card lost
 // altogether because its check could not be built: the learner's own line is what that card is for.
 it('deals the ask without the three check keys when its check cannot be built, and never half of them', function () {
-    // The visit is the two asks alone, and x8's three options read alike — case and spaces aside, one option. The only
-    // other exchange is x7, and its right option is taken as the fourth, so x8 is left with two: the check is built.
+    // x8's three options read alike — case and spaces aside, one option. No other exchange lends it one (наряд FIX-3 §5):
+    // nothing to choose between, nothing to ask — whatever else the visit holds.
     $alike = static fn (Exchange $e): Exchange => $e->withCheck(new ExchangeCheck(
         $e->check->textTarget, $e->check->textNative,
         [new CheckOption('a', 'Через неделю'), new CheckOption('b', 'через неделю'), new CheckOption('c', ' ЧЕРЕЗ НЕДЕЛЮ ')],
@@ -185,9 +185,9 @@ it('deals the ask without the three check keys when its check cannot be built, a
     $two = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => [
         s1dlgStep($x, 7)->withStep(1), $alike(s1dlgStep($x, 8))->withStep(2),
     ]));
-    expect(array_keys(s1dlgCard($two, 'dialogue_ask', 'x2')->payload))->toContain('question_native');
+    expect(array_keys(s1dlgCard($two, 'dialogue_ask', 'x2')->payload))->not->toContain('question_native')
+        ->and(array_keys(s1dlgCard($two, 'dialogue_ask', 'x1')->payload))->toContain('question_native');
 
-    // The ask ALONE: no other exchange to take a fourth option from, and its own three read as one — nothing to ask.
     $alone = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => [$alike(s1dlgStep($x, 8))->withStep(1)]));
     $ask = s1dlgCard($alone, 'dialogue_ask', 'x1')->payload;
 
@@ -283,44 +283,36 @@ it('deals only the partner card for an answer on no frame, and nothing at all fo
     ]);
 });
 
-// D-18, canon 33-1: three options of the exchange's own check + the right option of the farthest exchange's check.
-it('offers the check\'s three options and, fourth, the right option of the farthest exchange — the lower step between two as far', function () {
+// Canon (наряд FIX-3 §5): «заём четвёртого варианта из самого дальнего обмена удалить: варианты — только из проверки
+// своего обмена. Урок отдал три — три; отдал четыре — четыре». The owner's gym day put «К ушам» — the right answer of the
+// last exchange — under «О чём спрашивает тренер?». CATCHES the borrowed fourth coming back, and options of another
+// exchange's check.
+it('offers the options of the exchange\'s own check and nothing else — three when the lesson wrote three, four when four', function () {
     $drafts = (new DialogueStage)->build(s1dlgScene());
     $x1 = s1dlgCard($drafts, 'dialogue_partner', 'x1')->payload;
     $x5 = s1dlgCard($drafts, 'dialogue_partner', 'x5')->payload;
 
     expect($x1['question_native'])->toBe('О каких двух местах спрашивает врач?')
         ->and($x1['partner_line'])->toBe(CardObjects::partnerLine(s1dlgStep(s1dlgScene()->lesson->exchanges, 1)))
-        ->and(array_column($x1['options'], 'id'))->toBe(['o1', 'o2', 'o3', 'o4'])
+        ->and(array_column($x1['options'], 'id'))->toBe(['o1', 'o2', 'o3'])
         ->and(array_map(static fn (array $o): array => array_keys($o), $x1['options']))->each->toBe(['id', 'text'])
-        ->and(s1dlgOptionTexts($x1))->toEqualCanonicalizing(['Верх или низ спины', 'Шея или голова', 'Колени или ступни', 'Если боль не пройдёт через семь дней'])
+        ->and(s1dlgOptionTexts($x1))->toEqualCanonicalizing(['Верх или низ спины', 'Шея или голова', 'Колени или ступни'])
         ->and(s1dlgCorrectText($x1))->toBe('Верх или низ спины')
         ->and(array_filter($x1['options'], static fn (array $o): bool => $o['id'] === $x1['correct']))->toHaveCount(1)
-        // x5: x1 stands four steps away, x8 three — x1's right option.
-        ->and(s1dlgOptionTexts($x5))->toEqualCanonicalizing(['Перелом', 'Растянутая мышца', 'Простуда', 'Верх или низ спины'])
+        ->and(s1dlgOptionTexts($x5))->toEqualCanonicalizing(['Перелом кости', 'Растянутая мышца', 'Сильная простуда'])
         ->and(s1dlgCorrectText($x5))->toBe('Растянутая мышца');
 
-    // Seven exchanges: x1 and x7 both stand three steps from x4 — the lower step wins.
-    $seven = (new DialogueStage)->build(s1dlgScene(static fn (array $x): array => array_slice($x, 0, 7)));
-    expect(s1dlgOptionTexts(s1dlgCard($seven, 'dialogue_partner', 'x4')->payload))
-        ->toEqualCanonicalizing(['Высокая температура', 'Кашель', 'Сыпь', 'Верх или низ спины']);
-});
-
-it('skips a fourth option that reads like one of the three, case and spaces aside, for the next farthest exchange', function () {
-    // x8's right option now reads like x1's wrong «Шея или голова».
-    $scene = s1dlgScene(static fn (array $x): array => array_map(
-        static fn (Exchange $e): Exchange => $e->step !== 8 ? $e : $e->withCheck(new ExchangeCheck(
+    // A check the lesson wrote with four options is asked with four.
+    $four = s1dlgScene(static fn (array $x): array => array_map(
+        static fn (Exchange $e): Exchange => $e->step !== 1 ? $e : $e->withCheck(new ExchangeCheck(
             $e->check->textTarget, $e->check->textNative,
-            [new CheckOption('The neck or the head', '  шея ИЛИ Голова '), new CheckOption('Tomorrow morning', 'Завтра утром')],
-            0, $e->check->explanationNative,
+            [...$e->check->options, new CheckOption('The arm or the hand', 'Рука или кисть')],
+            $e->check->correctOptionIndex, $e->check->explanationNative,
         )),
         $x,
     ));
-    $x1 = s1dlgCard((new DialogueStage)->build($scene), 'dialogue_partner', 'x1')->payload;
-
-    expect($x1['options'])->toHaveCount(4)
-        ->and(s1dlgOptionTexts($x1))->toEqualCanonicalizing(['Верх или низ спины', 'Шея или голова', 'Колени или ступни', 'Это просто растяжение мышцы'])
-        ->and(s1dlgCorrectText($x1))->toBe('Верх или низ спины');
+    expect(s1dlgOptionTexts(s1dlgCard((new DialogueStage)->build($four), 'dialogue_partner', 'x1')->payload))
+        ->toEqualCanonicalizing(['Верх или низ спины', 'Шея или голова', 'Колени или ступни', 'Рука или кисть']);
 });
 
 // Canon 33-2/33-3/33-4: the card does not pick the mode — chips for beginner, the line as a hint, the frame blind.

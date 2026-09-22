@@ -46,8 +46,12 @@ it('gives the partner\'s line the partner\'s voice and everything else the learn
         ->and(SpokenLines::speakerOf('x3b'))->toBe(Speaker::Learner)
         ->and(SpokenLines::speakerOf('p2'))->toBe(Speaker::Learner)
         ->and(SpokenLines::speakerOf('v5'))->toBe(Speaker::Learner)
-        ->and(VoiceCast::of(VoiceGender::Male)->learner())->toBe(VoiceGender::Female)
-        ->and(VoiceCast::of(null)->partner)->toBe(VoiceGender::Female)
+        // Canon (наряд FIX-3 §1): the learner's voice is the learner's gender, whoever the partner is; not said — male.
+        ->and(VoiceCast::of(VoiceGender::Male, VoiceGender::Male)->learner())->toBe(VoiceGender::Male)
+        ->and(VoiceCast::of(VoiceGender::Male, VoiceGender::Female)->learner())->toBe(VoiceGender::Female)
+        ->and(VoiceCast::of(VoiceGender::Female, null)->learner())->toBe(VoiceGender::Male)
+        ->and(VoiceCast::of(VoiceGender::Male, null)->learner())->toBe(VoiceGender::Male)
+        ->and(VoiceCast::of(null, null)->partner)->toBe(VoiceGender::Female)
         ->and(slLesson()->roleGender)->toBe(VoiceGender::Female);
 });
 

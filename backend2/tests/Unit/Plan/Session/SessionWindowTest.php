@@ -79,23 +79,25 @@ it('leaves the day’s listening out of the units — not pending, not walked, n
         ->and($states[UnitStates::key('S1', UnitKind::Word, 'v2')])->toBe(UnitState::ReturnsTomorrow)
         ->and($states[UnitStates::key('S1', UnitKind::Phrase, 'p1')])->toBe(UnitState::Pending)
         ->and($states[UnitStates::key('S1', UnitKind::Exchange, 'x1')])->toBe(UnitState::Done)
-        ->and(ProgramSummary::of(array_values($states)))->toEqual(new ProgramSummary(4, 2, 1))
+        ->and(ProgramSummary::of(array_values($states), 0))->toEqual(new ProgramSummary(4, 2, 0))
         // The listening failed twice returns nothing: its copy is failed, the unit is not marked.
         ->and($cards[6]->result())->toBe(CardResult::Failed)
         ->and($cards[6]->returns())->toBeFalse();
 });
 
-// Catches a brow that counts a returning unit as walked, or a pending one as returning.
-it('summarises a tab by its states: total, walked, coming back', function () {
-    expect(ProgramSummary::of([UnitState::Done, UnitState::Pending, UnitState::ReturnsTomorrow, UnitState::Done, UnitState::ReturnsTomorrow]))
-        ->toEqual(new ProgramSummary(5, 2, 2))
-        ->and(ProgramSummary::of([]))->toEqual(new ProgramSummary(0, 0, 0));
+// Canon (наряд FIX-3 §9): «summary.returns = число возвратов» — the units that came back from earlier days, not the ones
+// that go back tomorrow. Catches a brow that counts a returning unit as walked, and «returns» read off tomorrow.
+it('summarises a tab by its states and its returned units: total, walked, came back', function () {
+    expect(ProgramSummary::of([UnitState::Done, UnitState::Pending, UnitState::ReturnsTomorrow, UnitState::Done, UnitState::ReturnsTomorrow], 1))
+        ->toEqual(new ProgramSummary(5, 2, 1))
+        ->and(ProgramSummary::of([], 0))->toEqual(new ProgramSummary(0, 0, 0));
 });
 
 // Canon (разд. 2): «DayPace — секунды на карточку по ВИДУ». Catches a pace by stage (one rate for a tap and a line said
 // aloud), minutes rounded down, and answered cards still counted as left.
-it('prices what is left by kind: two word intros and an assembly are 8 + 8 + 20 seconds, answered cards cost nothing', function () {
+it('prices what is left by kind: two word intros and an assembly by their own prices, answered cards cost nothing', function () {
     $pace = new DayPace;
+    $p = DayPace::DEFAULTS;
     $words = [
         s1wCard(CardKind::WordIntro, UnitKind::Word, 'v1'),
         s1wCard(CardKind::WordIntro, UnitKind::Word, 'v2'),
@@ -111,14 +113,16 @@ it('prices what is left by kind: two word intros and an assembly are 8 + 8 + 20 
     $rows = DayWindowStages::of([...$words, ...$listen], [], WindowStatus::InProgress, $pace);
     $unanswered = array_filter($words, static fn (DayCard $c): bool => ! $c->isAnswered());
 
-    expect($pace->secondsOf($unanswered))->toBe(8 + 8 + 20)
+    $left = 2 * $p['word_intro'] + $p['word_assemble'];
+    $listening = $p['listen_dialogue'] + 2 * $p['listen_question'] + $p['listen_review'];
+    expect($pace->secondsOf($unanswered))->toBe($left)
         ->and(array_map(static fn (WindowStage $s): string => $s->state->value, $rows))->toBe([StageState::Current->value, StageState::Locked->value])
-        ->and($rows[0]->minutesLeft)->toBe(DayPace::minutes(8 + 8 + 20))
+        ->and($rows[0]->minutesLeft)->toBe(DayPace::minutes($left))
         ->and($rows[0]->doneCount)->toBe(1)
         ->and($rows[0]->total)->toBe(4)
-        // The whole visit played once is 110 seconds on its own: 110 + 12 + 12 + 30 = 164 s → 3 minutes, not a stage rate.
-        ->and(DayWindowStages::minutesEstimate([...$words, ...$listen], WindowStatus::NotStarted, $pace))->toBe(DayPace::minutes(8 + 8 + 20 + 10 + 110 + 12 + 12 + 30))
-        ->and(DayWindowStages::minutesEstimate($listen, WindowStatus::InProgress, $pace))->toBe(3)
+        // The whole visit played once is priced on its own, not by a stage rate.
+        ->and(DayWindowStages::minutesEstimate([...$words, ...$listen], WindowStatus::NotStarted, $pace))->toBe(DayPace::minutes($left + $p['word_choose'] + $listening))
+        ->and(DayWindowStages::minutesEstimate($listen, WindowStatus::InProgress, $pace))->toBe(DayPace::minutes($listening))
         ->and(DayPace::minutes(36))->toBe(1)
         ->and(DayPace::minutes(61))->toBe(2)
         ->and(DayPace::minutes(0))->toBe(0);
@@ -131,7 +135,7 @@ it('takes its seconds from the table it is given, and a kind the table does not 
     expect($pace->seconds(CardKind::WordIntro))->toBe(60)
         ->and($pace->seconds(CardKind::SpeakAnswer))->toBe(45)
         ->and($pace->seconds(CardKind::ListenDialogue))->toBe(0)
-        ->and((new DayPace)->seconds(CardKind::ListenDialogue))->toBe(110)
+        ->and((new DayPace)->seconds(CardKind::ListenDialogue))->toBe(DayPace::DEFAULTS['listen_dialogue'])
         ->and((new DayPace)->seconds(CardKind::ListenPairs))->toBe(0);
 });
 

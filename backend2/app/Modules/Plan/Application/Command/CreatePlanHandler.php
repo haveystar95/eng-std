@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
+use App\Modules\Plan\Application\Service\PlanPaces;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
@@ -23,6 +24,7 @@ final readonly class CreatePlanHandler
         private LearnerCalendar $calendar,
         private PlanDispatcher $dispatcher,
         private Clock $clock,
+        private PlanPaces $paces,
     ) {}
 
     public function __invoke(CreatePlan $command): PlanId
@@ -40,6 +42,8 @@ final readonly class CreatePlanHandler
             today: $this->calendar->todayFor($command->actorId, $now),
             now: $now,
             dayIds: static fn (): PlanDayId => PlanDayId::generate(),
+            // The price list of its days as it stands today (наряд FIX-3 §2).
+            pace: $this->paces->current(),
         );
 
         $this->plans->save($plan);

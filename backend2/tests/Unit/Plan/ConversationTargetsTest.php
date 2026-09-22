@@ -19,7 +19,7 @@ function ctScene(string $id, int $n, array $said): array
 {
     $phrases = [];
     for ($i = 1; $i <= $n; $i++) {
-        $phrases[] = new ConversationPhrase($id, "p{$i}", "key {$i}", "Phrase {$id} {$i}.", "Фраза {$id} {$i}.");
+        $phrases[] = new ConversationPhrase($id, "p{$i}", "Phrase {$id} {$i} ___.", "Фраза {$id} {$i} ___.", "value {$i}", "значение {$i}");
     }
     $lines = array_map(static fn (string $ref): array => ['target' => "Line {$ref}.", 'native' => "Реплика {$ref}.", 'phrase_ref' => $ref], $said);
 

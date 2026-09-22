@@ -48,11 +48,14 @@ final readonly class ConversationTurn
         public ?string $hintNative,
         public TurnCost $cost,
         public DateTimeImmutable $createdAt,
+        public ?string $opensTarget = null,
     ) {}
 
     /**
      * The role's line: the opening one, an answer, the farewell. What the model judged about the
-     * move it answers travels with it — the model is asked once and says both things at once.
+     * move it answers travels with it — the model is asked once and says both things at once — and so does the
+     * target the line OPENS THE DOOR TO (`$opensTarget`, наряд FIX-3 §7): the one the learner could say next in answer
+     * to it, which is how the talk knows which doors it has opened and which target it leads to next.
      *
      * @param  list<string>  $phrasesUsed
      */
@@ -70,10 +73,11 @@ final readonly class ConversationTurn
         ?bool $understood = null,
         array $phrasesUsed = [],
         ?bool $offTopic = null,
+        ?string $opensTarget = null,
     ): self {
         return new self(
             $id, $conversationId, $index, TurnKind::Agent, $textTarget, $textNative, $audio,
-            $understood, $phrasesUsed, $offTopic, $checkpointDone, $hintNative, $cost, $now,
+            $understood, $phrasesUsed, $offTopic, $checkpointDone, $hintNative, $cost, $now, $opensTarget,
         );
     }
 
@@ -114,10 +118,11 @@ final readonly class ConversationTurn
         ?string $hintNative,
         TurnCost $cost,
         DateTimeImmutable $createdAt,
+        ?string $opensTarget = null,
     ): self {
         return new self(
             $id, $conversationId, $index, $kind, $textTarget, $textNative, $audio,
-            $understood, $phrasesUsed, $offTopic, $checkpointDone, $hintNative, $cost, $createdAt,
+            $understood, $phrasesUsed, $offTopic, $checkpointDone, $hintNative, $cost, $createdAt, $opensTarget,
         );
     }
 

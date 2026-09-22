@@ -72,7 +72,7 @@ it('writes the stop signal of «Фразы» to the day\'s build log once, with 
         ->and($log->signals[0]['scene'])->toBe($room->json('data.scene.id'))
         ->and($log->signals[0]['deal']->budget)->toBe(100)
         ->and($log->signals[0]['deal']->seconds)->toBeGreaterThan(100)
-        ->and(array_column($log->signals[0]['deal']->rungs, 'rung'))->toBe([0, 1, 2, 3])
+        ->and(array_column($log->signals[0]['deal']->rungs, 'rung'))->toBe([0, 1, 2])
         // The day is the stage the signal speaks of: every card of it dealt, the floor's shape and nothing less.
         ->and($phrases)->toHaveCount(count($log->signals[0]['deal']->drafts))
         ->and(array_values(array_unique(array_map(static fn (array $f): int => $f['recognitions'], $log->signals[0]['deal']->frames))))->toBe([1]);

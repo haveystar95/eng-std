@@ -267,6 +267,23 @@ final class Conversation
         return $this->turns;
     }
 
+    /**
+     * The targets the role's lines have opened the door to so far (наряд FIX-3 §7), in the order they were opened.
+     *
+     * @return list<string>
+     */
+    public function openedDoors(): array
+    {
+        $out = [];
+        foreach ($this->turns as $turn) {
+            if ($turn->kind === TurnKind::Agent && $turn->opensTarget !== null) {
+                $out[] = $turn->opensTarget;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
     public function lastTurn(): ?ConversationTurn
     {
         return $this->turns === [] ? null : $this->turns[count($this->turns) - 1];

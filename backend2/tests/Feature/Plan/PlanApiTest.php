@@ -152,8 +152,10 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
         // The old day room's own keys went with it (DAY-UI-2): the goals live in the window now. `speech` — the
         // target language's spoken rules, once for the whole day (наряд FIX-2, п. 2).
         ->and(array_keys($room))->toBe(['plan_id', 'day', 'scene', 'stages', 'metrics', 'program', 'window', 'speech'])
-        ->and(array_keys($room['speech']))->toBe(['unstressed_words', 'articles', 'abbreviations', 'number_words', 'repeat_misses'])
+        ->and(array_keys($room['speech']))->toBe(['unstressed_words', 'articles', 'abbreviations', 'number_words', 'number_joiners', 'repeat_misses'])
         ->and($room['speech']['repeat_misses'])->toBe(0)
+        // The joiners of one number said the British way (наряд FIX-3 §4) — the phone folds numbers by the same rule.
+        ->and($room['speech']['number_joiners'])->toBe(['and'])
         ->and($room['speech']['articles'])->toBe(['a', 'an', 'the'])
         ->and(array_keys($room['program'][0]))->toBe(['unit_kind', 'source', 'state']);
 
@@ -188,9 +190,11 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
         ->and($closed['day']['cards_done'])->toBe($closed['metrics']['cards_total'])
         ->and($closed['metrics'])->toBe(['cards_total' => $closed['metrics']['cards_total'], 'minutes_spent' => $closed['metrics']['minutes_spent']])
         ->and($closed['metrics']['minutes_spent'])->toBeGreaterThanOrEqual(1)
-        // The word failed twice is the one that returns — on the tab's plate and in the window's brow.
+        // The word failed twice is the one that returns — on the tab's plate and in its own state; the brow's `returns` is
+        // what came BACK into a day (наряд FIX-3 §9) — nothing on day 1.
         ->and(array_count_values(array_column($closed['program'], 'state'))['failed'])->toBe(1)
-        ->and($closed['window']['program']['words']['summary']['returns'])->toBe(1);
+        ->and(array_count_values(array_column($closed['window']['program']['words']['items'], 'state'))['returns_tomorrow'])->toBe(1)
+        ->and($closed['window']['program']['words']['summary']['returns'])->toBe(0);
 
     // The words went to the plan's collection, hidden from «Мои коллекции».
     $tab = planRead($this, $token, $id);
@@ -226,10 +230,20 @@ it('walks day one with two errors and a skip, closes it, and opens day two tomor
         // The returned card sits at the end of its stage, after today's words.
         ->and($returned[0]['position'])->toBe(count(array_filter($two['cards'], static fn (array $c): bool => $c['stage'] === 'words')));
 
-    // The window lists the day's words and phrases — today's and the one returned from yesterday.
+    // The window lists the day's words and phrases — today's and what came back from yesterday: the word failed twice,
+    // and the constructions yesterday's talk did not hear (наряд FIX-3 §6) — each marked returned, with its scene and
+    // day (§9), and counted on the brow.
+    $unsaid = count(array_filter($two['cards'], static fn (array $c): bool => $c['source'] === 'returned' && $c['kind'] === 'speak_retell'));
     $window = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/2")->assertOk()->json('data.window');
+    $back = array_values(array_filter($window['program']['words']['items'], static fn (array $w): bool => $w['source'] === 'returned'));
     expect($window['program']['words']['items'])->toHaveCount(9)
-        ->and($window['program']['phrases']['items'])->toHaveCount(6);
+        ->and($window['program']['words']['summary']['returns'])->toBe(1)
+        ->and($back[0]['ref'])->toBe($choose['unit_ref'])
+        ->and($back[0]['scene']['day_number'])->toBe(1)
+        ->and($back[0]['scene']['id'])->not->toBe($window['program']['words']['items'][0]['scene']['id'])
+        ->and($unsaid)->toBeGreaterThan(0)
+        ->and($window['program']['phrases']['items'])->toHaveCount(6 + $unsaid)
+        ->and($window['program']['phrases']['summary']['returns'])->toBe($unsaid);
 });
 
 it('walks a three-day plan through to the rehearsal, which says every scene aloud, one or two exchanges a scene', function () {

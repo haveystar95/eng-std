@@ -67,8 +67,10 @@ it('deals a review day\'s own cards under «Повторение» and names the
 
     $said = count(array_filter($cards, static fn (array $c): bool => $c['stage'] === 'repetition'));
     expect($closed['window']['highlights'][0])->toContain(" из {$said}")
-        // «Ещё раз» of a passed day: the review's lines, as before the stage had its own name.
-        ->and($closed['window']['allowed_action'])->toBe('again');
+        // «Ещё раз» is the stage's row now (наряд FIX-3 §8): «Повторение» may be walked again on the passed day, and the day
+        // itself has no «again» of its own.
+        ->and(array_column($closed['window']['stages'], 'again', 'stage')['repetition'])->toBeTrue()
+        ->and($closed['window']['allowed_action'])->toBeNull();
 });
 
 // Canon (§3): «уже розданные дни повторения: миграция данных переименовывает speak → repetition только у дней типа

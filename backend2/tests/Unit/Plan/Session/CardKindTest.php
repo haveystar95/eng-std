@@ -174,10 +174,26 @@ it('prices every dealt kind and nothing else, the same in the code and in config
         expect($pace->seconds($kind))->toBeGreaterThan(0, $kind->value);
     }
     expect($pace->seconds(CardKind::ListenPairs))->toBe(0)
-        ->and(DayPace::DEFAULTS['listen_dialogue'])->toBe(110)
-        ->and(DayPace::DEFAULTS['speak_answer'])->toBe(35)
-        ->and(DayPace::DEFAULTS['word_intro'])->toBe(8)
         ->and((require dirname(__DIR__, 4).'/config/plan.php')['pace'])->toBe(DayPace::DEFAULTS);
+});
+
+// Canon (наряд FIX-3 §2): «пересчитать по бою: медиана секунд на карточку по виду по всем отвеченным дням (промежутки
+// ≤ 120 с, первый ответ дня без промежутка), × 1,3 запаса, округление до 5 с; для видов без данных — пропорционально
+// старым ценам». The list is the one measured on the live server on 22.09 (875 answers, 12 days — report FIX-3 §2), every
+// price a multiple of five. CATCHES the order's guesses coming back (the owner's days read 2–2.5 times too long), and a
+// price rounded another way.
+it('prices the kinds by what they took on the phone, to five seconds', function () {
+    expect(DayPace::DEFAULTS)->toBe([
+        'word_intro' => 5, 'word_repeat' => 10, 'word_choose' => 5, 'word_listen' => 5, 'word_assemble' => 10, 'word_in_line' => 10,
+        'phrase_intro' => 15, 'phrase_assemble' => 20, 'phrase_choose_back' => 10, 'phrase_slot' => 10, 'phrase_slot_listen' => 5,
+        'phrase_repeat' => 20, 'phrase_other_slot' => 25, 'phrase_combine' => 25,
+        'dialogue_partner' => 20, 'dialogue_answer' => 10, 'dialogue_ask' => 25, 'dialogue_rescue' => 10,
+        'listen_dialogue' => 70, 'listen_question' => 10, 'listen_review' => 10, 'listen_predict' => 15, 'listen_pace' => 15, 'listen_number' => 10,
+        'speak_answer' => 25, 'speak_echo' => 70, 'speak_retell' => 15, 'recall_scenes' => 45,
+    ]);
+    foreach (DayPace::DEFAULTS as $kind => $seconds) {
+        expect($seconds % 5)->toBe(0, $kind);
+    }
 });
 
 // Canon (наряд FIX-2, п. 5): «последний круг „со своим словом" судит сервер, как у own_slot» — and only there. Catches

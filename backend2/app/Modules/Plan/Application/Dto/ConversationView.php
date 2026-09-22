@@ -12,16 +12,16 @@ namespace App\Modules\Plan\Application\Dto;
  * connection mid-turn (кадр 37-10) gets the same document from `GET …/conversation/{id}` as from
  * the move that dropped — there is no second, thinner shape to keep in step with this one.
  *
- * Since наряд CONV-2: the entry title («Поговори с врачом»), the talk's TARGETS — the phrases it is for, each
- * with whether it has sounded yet («Скажи в разговоре» on 37-5 and the strip of the ribbon) — and `replay`: the day's
- * sixth stage was already walked by an earlier talk, so this one is «Ещё раз» on top of a walked day.
+ * Since наряд CONV-2: the entry title («Поговори с врачом»), the talk's TARGETS — the constructions it is for (наряд
+ * FIX-3 §6), each with whether it has been said and what the learner put in its window — and `replay`: the day's sixth
+ * stage was already walked by an earlier talk, so this one is «Ещё раз» on top of a walked day.
  */
 final readonly class ConversationView
 {
     /**
      * @param  list<ConversationSceneView>  $scenes
      * @param  list<ConversationTurnView>  $turns
-     * @param  list<array{scene_id: string, ref: string, text_target: string, text_native: string, said: bool}>  $targets
+     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}>  $targets
      */
     public function __construct(
         public string $id,

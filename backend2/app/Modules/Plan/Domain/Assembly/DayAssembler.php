@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Assembly;
 
 use App\Modules\Plan\Domain\Entity\DayCard;
+use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\Service\UnitStates;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
@@ -37,6 +38,15 @@ final class DayAssembler
         private readonly SpeakStage $speak = new SpeakStage,
         private readonly RecallStage $recall = new RecallStage,
     ) {}
+
+    /**
+     * The same assembler reckoning «Фразы» against their ceiling by a plan's own price list (наряд FIX-3 §2) — the
+     * only stage whose dealing depends on what a card costs.
+     */
+    public function pacedBy(DayPace $pace): self
+    {
+        return new self($this->words, $this->phrases->pacedBy($pace), $this->dialogue, $this->listen, $this->speak, $this->recall);
+    }
 
     /**
      * @param  array<string, SceneMaterial>  $material  by scene id — today's scene and the scenes the returns come from
@@ -215,24 +225,26 @@ final class DayAssembler
     }
 
     /**
-     * A PHRASE THE TALK DID NOT HEAR, coming back (наряд CONV-1, п. 3): the learner's own line that stands on that
-     * frame, said aloud — `speak_retell`, кадр 35-4. The line is the FIRST the visit says on the frame; a frame no
-     * complete exchange says has no line to give back and is not dealt.
+     * A CONSTRUCTION THE TALK DID NOT HEAR, coming back (наряд CONV-1, п. 3; наряд FIX-3 §6): the frame said with the
+     * lesson's own value, said aloud — `speak_retell`, кадр 35-4 — as a unit of the PHRASE (the talk asked for the
+     * construction, not for a line of the visit), with the exchange the visit first says it in for its place. A scene
+     * with no such phrase term gives nothing back.
      */
     private static function unsaidPhrase(SceneMaterial $scene, string $phraseRef): ?CardDraft
     {
+        $phrase = $scene->phraseTerm($phraseRef);
+        if ($phrase === null) {
+            return null;
+        }
+        $first = null;
         foreach ($scene->lesson->exchanges as $exchange) {
-            $learner = $exchange->learner();
-            if ($exchange->kind === ExchangeKind::Rescue || $learner?->phraseId !== $phraseRef || $exchange->partner() === null) {
-                continue;
-            }
-            $payload = SpeakCards::retell($scene, $exchange);
-            if ($payload !== null) {
-                return new CardDraft(CardKind::SpeakRetell, UnitKind::Exchange, SpokenLines::exchangeRef($exchange->step), $payload);
+            if ($exchange->kind !== ExchangeKind::Rescue && $exchange->learner()?->phraseId === $phraseRef) {
+                $first = $exchange;
+                break;
             }
         }
 
-        return null;
+        return new CardDraft(CardKind::SpeakRetell, UnitKind::Phrase, $phraseRef, SpeakCards::retellFrame($scene, $phrase, $first));
     }
 
     /**

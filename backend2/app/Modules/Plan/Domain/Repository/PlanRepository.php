@@ -56,6 +56,14 @@ interface PlanRepository
     /** The day's numbers, refreshed from the cards they are counted off. */
     public function saveDayMetrics(PlanDayId $dayId, DayMetrics $metrics): void;
 
+    /**
+     * The plan's price list alone (наряд FIX-3 §2, `plan:repace`) — one column by primary key, nothing else of the plan
+     * written: a learner may be walking a day of it while the command runs.
+     *
+     * @param  array<string, int>  $pace
+     */
+    public function savePace(PlanId $id, array $pace): void;
+
     /** The cover photo and its tone — written only while the plan still has none. */
     public function attachCoverImage(PlanId $id, Image $image): void;
 

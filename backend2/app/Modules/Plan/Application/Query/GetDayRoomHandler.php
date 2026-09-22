@@ -77,6 +77,10 @@ final readonly class GetDayRoomHandler
         $walked = $walkedId === null
             ? null
             : ($talk !== null && $talk->id()->equals($walkedId) ? $talk : $this->conversations->findById($walkedId));
+        // «Ещё раз» of the talk (наряд FIX-3 §8): once the stage is walked, while the learner's replays of this day today
+        // are not spent — the same count that turns a replay away with 409 `plan_conversation_replay_limit`.
+        $talkAgain = $passage?->conversationId !== null
+            && $this->conversations->replaysSince($day->id(), $passage->conversationId, $passage->passedAt, $today) < $this->rules->replaysPerDay;
         $metrics = $day->metrics();
         $route = $this->views->day($plan, $day, $today, null, $cards);
         $sceneView = $scene === null ? null : $this->views->scene($plan, $scene);
@@ -96,7 +100,7 @@ final readonly class GetDayRoomHandler
             // progress. A day not yet opened has nothing to count.
             metrics: $dealt ? new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent) : null,
             program: $this->program($cards),
-            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards, $talkStage, $walked, $talk),
+            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards, $talkStage, $walked, $talk, $talkAgain),
             speech: $this->packs->for($plan->targetLang()->value)->speech(),
             repeatMisses: $this->config->repeatMisses,
         );

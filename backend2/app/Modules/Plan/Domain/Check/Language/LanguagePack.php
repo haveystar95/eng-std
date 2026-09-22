@@ -68,6 +68,7 @@ final readonly class LanguagePack
             articles: $this->has('articles') ? $this->words('articles') : [],
             abbreviations: $this->has('abbreviations') ? $this->rawList('abbreviations') : [],
             numberWords: $numbers,
+            numberJoiners: $this->has('number_joiners') ? $this->words('number_joiners') : [],
         );
     }
 

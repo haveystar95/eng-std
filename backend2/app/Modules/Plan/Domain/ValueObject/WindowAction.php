@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\ValueObject;
 
 /**
- * The day window's one action (DAY-UI-2): «Начать», «Продолжить», «Ещё раз». `again` is the day's
- * «Говорю сам» said once more over the cards the day already has — not the day walked anew.
+ * The day window's one action (DAY-UI-2): «Начать», «Продолжить». A passed day has none: «Ещё раз» belongs to each
+ * stage's row (`stages[].again`, наряд FIX-3 §8), not to the day.
  */
 enum WindowAction: string
 {
     case Start = 'start';
     case Continue = 'continue';
-    case Again = 'again';
 }

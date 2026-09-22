@@ -207,70 +207,53 @@ function s1pShape(array $drafts): array
     return $out;
 }
 
-// Canon (решение архитектора 20.09, доработка наряда FIX-2): «потолок этапа «Фразы» — 690 с». CATCHES the stop condition
-// the live pass of 20.09 hit — «Фразы» 663 с при потолке 600 — coming back: a ceiling the clean beginner day cannot meet,
-// and a ladder that cuts a day that already fits (the beginner keeps both its value rounds and its own word here).
+// Canon (решение архитектора 20.09, доработка наряда FIX-2): «потолок этапа «Фразы» — 690 с». CATCHES a ceiling the clean
+// beginner day cannot meet, and a ladder that cuts a day that already fits: at the prices measured on the phone (наряд
+// FIX-3 §2) the beginner keeps both its value rounds, its own word — and a third recognition on every frame of three.
 it('builds the beginner «врач» day inside the 690-second ceiling, with nothing cut', function () {
     $stage = s1pStage();
     $drafts = $stage->build(s1pScene(), PlanLevel::Beginner);
 
     expect($stage->seconds($drafts))->toBeLessThanOrEqual(PhrasesStage::BUDGET)
-        ->and(s1pShape($drafts))->toBe([
-            'p1' => '3 узнавания · 2 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 2 круга + своё',
-            'p5' => '2 узнавания · 2 круга + своё', 'p6' => '3 узнавания · 2 круга + своё',
-        ]);
+        ->and(array_unique(array_values(s1pShape($drafts))))->toBe(['3 узнавания · 2 круга + своё']);
 });
 
-// Canon (наряд BACK-TAILS-2 §1, заменяет DECISIONS пп. 354 и 370): «пол — одно узнавание + два круга + своё; ступени по
-// одной до первого попадания под потолок: третье узнавание → третий круг у каркасов с тремя наполнениями, с наименьшим
-// числом реплик → второе узнавание у каркасов с наименьшим числом реплик (при равенстве — позже в визите); первое узнавание
-// остаётся всегда; дальше — стоп-сигнал». Круг «со своим словом» и второй круг значений не снимаются никогда.
-// CATCHES: a rung out of order (a recognition cut while a third round stands — the defect this наряд reverses the other way
-// round from CONV-2, where the ROUND went first); cutting that does not stop when the stage fits; a cut taken off the most
-// said frames first; a SECOND round cut — the owner's gym day, «That works for me on ___» said with «weekdays» only — and
-// the first recognition or the own word cut to fit.
-it('cuts «Фразы» a rung at a time — third recognition, third round, second recognition — and stops at the floor', function () {
+// Canon (наряд FIX-3 §3, заменяет DECISIONS п. 379 и §1 BACK-TAILS-2): «круги «Скажи целиком» и круг «со своим словом» не
+// срезаются никогда; лестница «Фраз»: сборка → снять третьи узнавания → снять вторые → стоп-сигнал; пол: одно узнавание +
+// все круги + своё». Ступень вторых узнаваний берёт каркасы, которые диалог говорит реже (меньше реплик, при равенстве —
+// позже в визите), по одному, до первого попадания под потолок; первое узнавание — открывашка, выбор — остаётся всегда.
+// CATCHES: a round cut to fit (the owner's gym day — six frames of seven said with one value); a rung out of order; cutting
+// that does not stop when the stage fits; a cut taken off the most said frames first; the first recognition or the own
+// word cut; and a ladder that is not the same every time.
+it('cuts «Фразы» a rung at a time — third recognitions, then second ones — and never a round', function () {
     $scene = s1pScene();
     $shape = static fn (int $budget): array => s1pShape(s1pStage(null, $budget)->build($scene, PlanLevel::Intermediate));
 
-    // Nothing to cut: every frame with three fillers has its third recognition, its three value rounds and its own word.
-    expect($shape(9999))->toBe([
-        'p1' => '3 узнавания · 3 круга + своё', 'p2' => '3 узнавания · 3 круга + своё', 'p3' => '3 узнавания · 3 круга + своё',
-        'p5' => '3 узнавания · 3 круга + своё', 'p6' => '3 узнавания · 3 круга + своё',
-    ]);
+    // Nothing to cut: every frame of three fillers has its third recognition, its three value rounds and its own word.
+    expect(array_unique(array_values($shape(9999))))->toBe(['3 узнавания · 3 круга + своё']);
 
-    // RUNG 1, then RUNG 2 — at the day's own ceiling no third recognition fits, and the third round goes off the frames
-    // the dialogue says least: p3 and p5 (one line each, latest in the visit), then p2. p1 and p6 keep theirs — the
-    // stage fits before their turn comes, which is what «до первого попадания» means. No recognition is touched.
-    expect($shape(PhrasesStage::BUDGET))->toBe([
-        'p1' => '2 узнавания · 3 круга + своё', 'p2' => '2 узнавания · 2 круга + своё', 'p3' => '2 узнавания · 2 круга + своё',
-        'p5' => '2 узнавания · 2 круга + своё', 'p6' => '2 узнавания · 3 круга + своё',
-    ]);
-
-    // RUNG 3 — at 600 every third round is gone (rung 2 first, all of it) and the stage still does not fit, so the SECOND
-    // recognition goes, off the least said frames first: p5, p3 (p4 has one recognition only), p2 — and the stage fits
-    // there. p1 and p6 keep both theirs; nobody loses a second value.
-    $at600 = s1pStage(null, 600)->deal($scene, PlanLevel::Intermediate);
-    expect(s1pShape($at600->drafts))->toBe([
-        'p1' => '2 узнавания · 2 круга + своё', 'p2' => '1 узнавание · 2 круга + своё', 'p3' => '1 узнавание · 2 круга + своё',
-        'p5' => '1 узнавание · 2 круга + своё', 'p6' => '2 узнавания · 2 круга + своё',
+    // RUNG 1, then RUNG 2 — no third recognition fits, and the second goes off the frames the dialogue says least: p5 and
+    // p3 (one line each, latest in the visit), then p2 — and the stage fits there. p1 and p6 keep theirs. Every round stays.
+    $at710 = s1pStage(null, 710)->deal($scene, PlanLevel::Intermediate);
+    expect(s1pShape($at710->drafts))->toBe([
+        'p1' => '2 узнавания · 3 круга + своё', 'p2' => '1 узнавание · 3 круга + своё', 'p3' => '1 узнавание · 3 круга + своё',
+        'p5' => '1 узнавание · 3 круга + своё', 'p6' => '2 узнавания · 3 круга + своё',
     ])
-        ->and($at600->seconds)->toBeLessThanOrEqual(600)
-        ->and($at600->overCeiling())->toBeFalse()
-        // The stage after every rung, cards / seconds: as built, rung 1 adds nothing, rung 2 takes 125 s of rounds, rung
-        // 3 takes three recognitions — in that order and no other.
-        ->and($at600->rungs)->toBe([
-            ['rung' => 0, 'seconds' => 762, 'cards' => 24], ['rung' => 1, 'seconds' => 762, 'cards' => 24],
-            ['rung' => 2, 'seconds' => 637, 'cards' => 24], ['rung' => 3, 'seconds' => 588, 'cards' => 21],
+        ->and($at710->overCeiling())->toBeFalse()
+        // The stage after every rung, cards / seconds: as built, rung 1 adds nothing, rung 2 takes three recognitions.
+        ->and($at710->rungs)->toBe([
+            ['rung' => 0, 'seconds' => 740, 'cards' => 24], ['rung' => 1, 'seconds' => 740, 'cards' => 24],
+            ['rung' => 2, 'seconds' => 700, 'cards' => 21],
         ]);
 
-    // THE FLOOR — a ceiling nothing fits in: ONE recognition, TWO value rounds and the learner's own word on every frame
+    // THE FLOOR — a ceiling nothing fits in: ONE recognition, EVERY value round and the learner's own word on every frame
     // with a window. The stage is dealt over the ceiling rather than broken: the excess is the stop signal.
     $floor = s1pStage(null, 0)->deal($scene, PlanLevel::Intermediate);
-    expect(array_unique(array_values(s1pShape($floor->drafts))))->toBe(['1 узнавание · 2 круга + своё'])
+    expect(array_unique(array_values(s1pShape($floor->drafts))))->toBe(['1 узнавание · 3 круга + своё'])
         ->and(array_filter($floor->drafts, static fn (CardDraft $d): bool => $d->kind === CardKind::PhraseOtherSlot))->toHaveCount(5)
         ->and($floor->overCeiling())->toBeTrue()
-        ->and($floor->seconds)->toBe(564);
+        ->and($floor->seconds)->toBe(690)
+        ->and(array_column($floor->rungs, 'rung'))->toBe([0, 1, 2]);
     // The one recognition left is the frame's FIRST — its seeded opener, a choice and never the assembly.
     foreach (['p1', 'p2', 'p3', 'p5', 'p6'] as $ref) {
         $left = s1pRecognitions($floor->drafts, $ref);
@@ -288,19 +271,19 @@ it('cuts «Фразы» a rung at a time — third recognition, third round, sec
     expect(s1pShape(s1pStage(null, 0)->build($oneValue, PlanLevel::Intermediate))['p5'])->toBe('1 узнавание · 1 круг + своё');
 
     // One seed, one deal: the ladder cuts the same cards every time the day is dealt.
-    expect(s1pStage(null, 600)->build($scene, PlanLevel::Intermediate))->toEqual($at600->drafts);
+    expect(s1pStage(null, 710)->build($scene, PlanLevel::Intermediate))->toEqual($at710->drafts);
 });
 
-// Canon (наряд BACK-TAILS-2 §1): «после ступени 3 — стоп-сигнал, не поломка и не откат». The live «врач» of the e2e stand
-// (beginner, seven frames of three values, `lesson_day.v4.4`) is the day the ladder was re-cut for: with two rounds as the
-// floor (наряд CONV-2) it came to 810 s of «Фразы» and 33 minutes of cards. CATCHES a ladder that stops at rung 2 on it, one
-// that cuts a round or the own word past the floor to fit, and a signal that is not raised when the rungs run out.
-it('cuts every second recognition of the live «врач» and still signals: 810 → 713 s against 690', function () {
+// Canon (наряд FIX-3 §3): «потолки не трогать (690 с / 32 мин)». The live «врач» of the e2e stand (beginner, seven frames of
+// three values, `lesson_day.v4.4`) at the prices measured on the phone: 785 s as built, every second recognition off —
+// 720 s, and the stop signal, the stage dealt over its ceiling with every round and every own word. CATCHES a ladder that
+// cuts a round or the own word past the floor to fit, and a signal that is not raised when the rungs run out.
+it('cuts every second recognition of the live «врач» and still signals: 785 → 720 s against 690', function () {
     $deal = s1pStage()->deal(planLiveDoctorScene(), PlanLevel::Beginner);
 
     expect($deal->rungs)->toBe([
-        ['rung' => 0, 'seconds' => 810, 'cards' => 29], ['rung' => 1, 'seconds' => 810, 'cards' => 29],
-        ['rung' => 2, 'seconds' => 810, 'cards' => 29], ['rung' => 3, 'seconds' => 713, 'cards' => 22],
+        ['rung' => 0, 'seconds' => 785, 'cards' => 29], ['rung' => 1, 'seconds' => 785, 'cards' => 29],
+        ['rung' => 2, 'seconds' => 720, 'cards' => 22],
     ])
         ->and(array_unique(array_map(
             static fn (array $f): string => "{$f['recognitions']}+{$f['rounds']}".($f['own'] ? '+своё' : ''),

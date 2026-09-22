@@ -221,12 +221,18 @@ it('numbers the current row only while the day is walked, and words the brow fro
         ->and($window['stages'][0]['share'])->toEqual(1)
         // One row of six is walked.
         ->and($window['day_progress'])->toBe(0.17)
-        ->and($window['program']['words']['summary'])->toBe(['total' => 8, 'done' => 7, 'returns' => 1])
+        // The brow's `returns` is what CAME BACK into the day (наряд FIX-3 §9) — nothing on day 1; v2 goes back tomorrow,
+        // which its own state says.
+        ->and($window['program']['words']['summary'])->toBe(['total' => 8, 'done' => 7, 'returns' => 0])
         ->and(array_column($window['program']['words']['items'], 'state', 'ref')['v2'])->toBe('returns_tomorrow')
+        ->and(array_unique(array_column($window['program']['words']['items'], 'source')))->toBe(['own'])
+        // The summary of the walked stage (30-6, наряд FIX-3 §10): eight words, seven first-time, one coming back.
+        ->and($window['stages'][0]['summary'])->toBe(['done' => 8, 'total' => 8, 'first_try' => 7, 'returns' => 1])
+        ->and($window['stages'][5]['summary'])->toBeNull()
         ->and($window['allowed_action'])->toBe('continue');
 });
 
-it('closes a passed day with its minutes, every goal checked, every row full, the returns named and «Ещё раз» (23-0c)', function () {
+it('closes a passed day with its minutes, every goal checked, every row full and «Ещё раз» on every row (23-0c)', function () {
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/start")->assertOk();
@@ -246,9 +252,11 @@ it('closes a passed day with its minutes, every goal checked, every row full, th
         ->and(array_column($window['day']['goals'], 'passed'))->each->toBeTrue()
         ->and(array_unique(array_column($window['stages'], 'state')))->toBe(['done'])
         ->and($window['day_progress'])->toEqual(1)
-        ->and($window['program']['words']['summary'])->toBe(['total' => 8, 'done' => 7, 'returns' => 1])
+        ->and($window['program']['words']['summary'])->toBe(['total' => 8, 'done' => 7, 'returns' => 0])
         ->and($window['program']['dialogue']['summary'])->toBe(['total' => 8, 'done' => 8, 'returns' => 0])
-        ->and($window['allowed_action'])->toBe('again');
+        // «Ещё раз» is every row's (наряд FIX-3 §8) — a passed day has no «again» of its own any more.
+        ->and(array_unique(array_column($window['stages'], 'again')))->toBe([true])
+        ->and($window['allowed_action'])->toBeNull();
 });
 
 it('refuses the window of a locked day: no «не начат», no button — catches a start drawn over a day that may not open', function () {
@@ -331,13 +339,21 @@ it('voices everything a day says: both speakers’ lines, every phrase with each
 
 // Canon (TTS-2): «собеседник-женщина, ученик-мужчина; для сцен с мужским собеседником — мужской голос собеседника, ученик
 // тогда женским». Catches one voice for both people, a phrase read by the partner, and a man partner in the learner's voice.
-it('casts a scene’s voices by role and gender: a man partner has a voice of his own, and the learner is then the woman', function () {
+// Canon (наряд FIX-3 §1): «голос ученика берётся только из пола профиля и один на всех сценах и днях; голос собеседника —
+// по полу роли; если оба одного пола — другой голос того же пола; пока пола в профиле нет — ученик мужской». Catches the
+// learner voiced as «the partner's other gender», two people of one gender voiced alike, and the profile not read.
+it('casts a scene’s voices by the role and by the learner’s own profile: two men are two voices', function () {
     windowVoice();
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
     $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
     $keys = static fn (): array => DB::table('plan_line_audios')->where('scene_id', $sceneId)->pluck('voice_key', 'line_ref')->all();
+    $revoice = static function () use ($sceneId): void {
+        DB::table('plan_line_audios')->where('scene_id', $sceneId)->delete();
+        app(VoiceSceneHandler::class)(new VoiceScene(PlanSceneId::fromString($sceneId)));
+    };
 
+    // The profile says nothing: the learner is voiced male, whoever the partner is.
     expect(DB::table('plan_scenes')->where('id', $sceneId)->value('partner_voice_gender'))->toBe('female')
         ->and($keys())->toMatchArray([
             'x1' => windowVoiceKey('partner', 'female'),
@@ -347,17 +363,59 @@ it('casts a scene’s voices by role and gender: a man partner has a voice of hi
             'v1' => windowVoiceKey('learner', 'male'),
         ]);
 
-    DB::table('plan_line_audios')->where('scene_id', $sceneId)->delete();
+    // A man partner and a learner who has not said: two men — two different male voices.
     DB::table('plan_scenes')->where('id', $sceneId)->update(['partner_voice_gender' => 'male']);
-    app(VoiceSceneHandler::class)(new VoiceScene(PlanSceneId::fromString($sceneId)));
-
+    $revoice();
     expect(windowVoiceKey('partner', 'male'))->not->toBe(windowVoiceKey('learner', 'male'))
         ->and($keys())->toMatchArray([
             'x1' => windowVoiceKey('partner', 'male'),
-            'x1b' => windowVoiceKey('learner', 'female'),
-            'p1' => windowVoiceKey('learner', 'female'),
-            'v1' => windowVoiceKey('learner', 'female'),
+            'x1b' => windowVoiceKey('learner', 'male'),
+            'p1' => windowVoiceKey('learner', 'male'),
+            'v1' => windowVoiceKey('learner', 'male'),
         ]);
+
+    // The learner says she is a woman: her lines, phrases and words are hers; the partner's stay his.
+    $this->withHeader('Authorization', "Bearer {$token}")->putJson('/api/v1/profile', ['gender' => 'female'])->assertOk();
+    $revoice();
+    expect($keys())->toMatchArray([
+        'x1' => windowVoiceKey('partner', 'male'),
+        'x1b' => windowVoiceKey('learner', 'female'),
+        'p1' => windowVoiceKey('learner', 'female'),
+        'v1' => windowVoiceKey('learner', 'female'),
+    ]);
+});
+
+// Canon (наряд FIX-3 §1): «команда plan:revoice-learner --plan= [--scene=] — по умолчанию dry-run: число строк, символов,
+// цена; переозвучки существующих строк не делать» — a purchase only by the owner's word, after the price is named.
+// CATCHES a dry run that buys or deletes, a count that is not what buying would take, the partner's lines bought again, and
+// the old voice's files dropped before the new ones are there — or left behind after.
+it('names what the learner\'s own voice would cost, buys nothing without --apply, and with it buys only the learner\'s lines', function () {
+    $vendor = windowVoice();
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 2])['id'];
+    $sceneId = (string) DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->value('id');
+    $files = static fn (string $speaker, string $gender): int => DB::table('plan_line_audios')->where('scene_id', $sceneId)->where('voice_key', windowVoiceKey($speaker, $gender))->count();
+    $male = $files('learner', 'male');
+    $partner = $files('partner', 'female');
+    $calls = $vendor->calls;
+    $this->withHeader('Authorization', "Bearer {$token}")->putJson('/api/v1/profile', ['gender' => 'female'])->assertOk();
+
+    expect(Artisan::call('plan:revoice-learner', ['--plan' => $id, '--scene' => [$sceneId]]))->toBe(0);
+    expect(Artisan::output())->toContain("сцена {$sceneId} · голос ученика female — строк ученика: {$male} ")
+        ->toContain("план {$id}: строк ученика {$male}, собеседника 0 · ")->toContain('ничего не куплено')
+        ->and($vendor->calls)->toBe($calls)
+        ->and($files('learner', 'male'))->toBe($male)
+        ->and($files('learner', 'female'))->toBe(0);
+
+    Artisan::call('plan:revoice-learner', ['--plan' => $id, '--scene' => [$sceneId], '--apply' => true]);
+    expect(Artisan::output())->toContain("файлов прежнего голоса удалено: {$male}")
+        ->and(count($vendor->lines))->toBe(40 + $male)
+        ->and($files('learner', 'female'))->toBe($male)
+        ->and($files('learner', 'male'))->toBe(0)
+        ->and($files('partner', 'female'))->toBe($partner);
+
+    Artisan::call('plan:revoice-learner', ['--plan' => $id, '--scene' => [$sceneId]]);
+    expect(Artisan::output())->toContain("план {$id}: строк ученика 0, собеседника 0 · 0 символов · 0 кредитов");
 });
 
 // Canon (TTS-2, architect's clarification): «Text to Dialogue не использовать: каждая реплика собеседника и ученика —

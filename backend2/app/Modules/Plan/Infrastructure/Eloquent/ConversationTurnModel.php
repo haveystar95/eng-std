@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool|null $off_topic
  * @property string|null $checkpoint_done
  * @property string|null $hint_native
+ * @property string|null $opens_target
  * @property string|null $model
  * @property string|null $prompt_version
  * @property int|null $tokens_in

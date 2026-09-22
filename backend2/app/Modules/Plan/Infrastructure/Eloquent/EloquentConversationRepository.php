@@ -179,6 +179,7 @@ final class EloquentConversationRepository implements ConversationRepository
                 'off_topic' => $turn->offTopic,
                 'checkpoint_done' => $turn->checkpointDone,
                 'hint_native' => $turn->hintNative,
+                'opens_target' => $turn->opensTarget,
                 'model' => $turn->cost->model,
                 'prompt_version' => $turn->cost->promptVersion,
                 'tokens_in' => $turn->cost->tokensIn,
@@ -246,6 +247,7 @@ final class EloquentConversationRepository implements ConversationRepository
                 tokensOut: $row->tokens_out,
             ),
             createdAt: new DateTimeImmutable($row->created_at),
+            opensTarget: $row->opens_target,
         );
     }
 

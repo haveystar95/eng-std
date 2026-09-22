@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\CardView;
-use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
@@ -32,7 +31,7 @@ final readonly class CardViews
 
     public function __construct(
         private PlanTermRepository $terms,
-        private SceneLocator $scenes,
+        private VoiceCasts $casts,
         private SceneVoices $voices,
     ) {}
 
@@ -66,7 +65,7 @@ final readonly class CardViews
             }
         }
         $sceneList = array_map('strval', array_keys($sceneIds));
-        $audio = $sceneList === [] ? SceneAudioIndex::empty() : $this->voices->index($targetLang, $this->scenes->voiceCastsOf($sceneList));
+        $audio = $sceneList === [] ? SceneAudioIndex::empty() : $this->voices->index($targetLang, $this->casts->ofScenes($sceneList));
 
         return array_map(
             fn (DayCard $c): CardView => $this->card($c, $termsByRef, $audio, $dayNumbers),

@@ -33,17 +33,26 @@ use App\Modules\Plan\Domain\Check\Language\LanguageWords;
  *    got the same line word for word. A rescue reply that shares {@see SAME_WORDS} of its words with the line it rescues
  *    is that line again.
  *
- * 3. THE ROLE DOES NOT SAY BACK WHAT THE LEARNER HAS JUST SAID (наряд BACK-TAILS-2 §9). Guard 1 reads the reply against the
- *    lines the PLAN gives the learner, and lets an echo of the talk through — so on the owner's gym replay the
- *    receptionist answered «Weekdays works for me» with «That works for me on weekdays» in its own first person, and the
- *    words could not tell it from listening. The second reading is against the learner's LAST MOVE as heard, by the rule
- *    the talk ticks its phrases by ({@see PhraseUse::share()}): a sentence of the reply whose key words the move had
- *    already said — {@see ECHO} of them or more, by their bases, in any order; as said, or with the first and second
- *    person swapped («My son has a fever» → «Your son has a fever») — is the move said back. Read as a share of the
- *    SENTENCE, not an overlap of the two: «It started three days ago.» after «His lower back hurts, and three days ago it
- *    started.» is all of it the learner's, however much more the move said (the live run of 22.09 — an overlap of the two
- *    came to 0.5). One exception, the one guard 1 has too: the learner ASKED and the role says a statement — an answer in
- *    the question's words («Can I pay by card» → «Yes, you can pay by card.») is the role answering.
+ * 3. THE ROLE DOES NOT SAY BACK WHAT THE LEARNER HAS SAID (наряд BACK-TAILS-2 §9; наряд FIX-3 §11 — any move of the
+ *    talk, not only the last one). Guard 1 reads the reply against the lines the PLAN gives the learner, and lets an
+ *    echo of the talk through — so on the owner's gym replay the receptionist answered «Weekdays works for me» with «That
+ *    works for me on weekdays» in its own first person, and the words could not tell it from listening. The second
+ *    reading is against every MOVE of the learner as heard, by the rule the talk reads the learner by
+ *    ({@see PhraseUse::share()}): a sentence of the reply whose key words a move had already said — {@see ECHO} of them
+ *    or more, by their bases, in any order; as said, or with the first and second person swapped («My son has a fever»
+ *    → «Your son has a fever») — is that move said back. Read as a share of the SENTENCE, not an overlap of the two:
+ *    «It started three days ago.» after «His lower back hurts, and three days ago it started.» is all of it the
+ *    learner's, however much more the move said (the live run of 22.09 — an overlap of the two came to 0.5). One
+ *    exception, the one guard 1 has too: the learner ASKED and the role says a statement — an answer in the question's
+ *    words («Can I pay by card» → «Yes, you can pay by card.») is the role answering.
+ *
+ * 4. THE ROLE DOES NOT SAY ITS OWN LINE AGAIN (наряд FIX-3 §7 — found by its live run). Both talks of that run had a
+ *    line of the role said a second time: the check-in agent answered «only the suitcase» with «Please put the suitcase
+ *    on the scale.», said three moves before, and the rehearsal's receptionist, told «his lower back», asked «Where does
+ *    it hurt: his upper back or his lower back?» once more — the learner answered and was asked the same. A sentence of
+ *    the reply of {@see OWN_LINE_MIN_WORDS} words or more that shares {@see SAME_WORDS} of its words with a sentence the
+ *    role has already said in the talk is that line again; a short one («Thank you.», «I see.») is how people talk. A
+ *    rescue is guard 2's: the line it rescues is the one it must not say again.
  *
  * What the guards do about it — ask the model once more, with the reason — is the caller's; these only say what is wrong.
  */
@@ -55,11 +64,14 @@ final class RoleLines
     /** How close a rescue may stay to the line it rescues before it is the same line again (наряд CONV-2, п. 4б). */
     public const SAME_WORDS = 0.7;
 
-    /** How close a sentence of the role may come to the learner's last move before it is that move said back (§9). */
+    /** How close a sentence of the role may come to a move of the learner before it is that move said back (§9). */
     public const ECHO = 0.7;
 
     /** The fewest words a sentence and a line need to be compared at all. */
     public const MIN_WORDS = 3;
+
+    /** The fewest words a sentence of the role needs before saying it twice is a repeat and not a way of talking (guard 4). */
+    public const OWN_LINE_MIN_WORDS = 4;
 
     /** The reply said a line of the learner and was asked for again — counted per prompt version (`plan_check_counters`). */
     public const CODE_LEARNER_LINE = 'conversation.learner_line';
@@ -88,12 +100,20 @@ final class RoleLines
     /** …and there was no neutral line to say (a language whose pack has none): the answer was said as it came. */
     public const CODE_LEARNER_ECHO_KEPT = 'conversation.learner_echo_kept';
 
+    /** The reply said again a line the role had said before in the talk, and was asked for again (guard 4). */
+    public const CODE_OWN_LINE = 'conversation.own_line';
+
+    /** …and the answer asked for again said one too, or did not come: the talk went on with it. */
+    public const CODE_OWN_LINE_KEPT = 'conversation.own_line_kept';
+
     /** The reasons a second try of a move is asked with — `REDO` of the prompt. */
     public const REDO_LEARNER_LINE = 'learner_line';
 
     public const REDO_SAME_WORDS = 'same_words';
 
     public const REDO_LEARNER_ECHO = 'learner_echo';
+
+    public const REDO_OWN_LINE = 'own_line';
 
     /**
      * The learner line the reply says as the role's own, or null when every sentence of it is the role's.
@@ -161,13 +181,38 @@ final class RoleLines
     }
 
     /**
-     * The sentence of the reply that says the learner's last move back (guard 3), or null. A sentence shorter than
-     * {@see MIN_WORDS} words says nothing of anybody's; a statement after a question the learner asked is an answer.
+     * The sentence the role has already said that the reply says again (guard 4), or null.
+     *
+     * @param  list<string>  $ownLines  every line the role has said in this talk
      */
-    public static function echoIn(string $reply, string $heard, LanguagePack $pack, PhraseUse $words = new PhraseUse): ?string
+    public static function ownLineIn(string $reply, array $ownLines): ?string
     {
         foreach (self::sentences($reply) as $sentence) {
-            if (self::isEcho($sentence, $heard, $pack, $words)) {
+            if (Words::count($sentence) < self::OWN_LINE_MIN_WORDS) {
+                continue;
+            }
+            foreach ($ownLines as $line) {
+                foreach (self::sentences($line) as $said) {
+                    if (Words::count($said) >= self::OWN_LINE_MIN_WORDS && Options::share($sentence, $said) >= self::SAME_WORDS) {
+                        return $said;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The sentence of the reply that says a move of the learner back (guard 3), or null. A sentence shorter than
+     * {@see MIN_WORDS} words says nothing of anybody's; a statement after a question the learner asked is an answer.
+     *
+     * @param  list<string>  $moves  what the learner has said in this talk, as heard, the move being answered included
+     */
+    public static function echoIn(string $reply, array $moves, LanguagePack $pack, PhraseUse $words = new PhraseUse): ?string
+    {
+        foreach (self::sentences($reply) as $sentence) {
+            if (self::isEcho($sentence, $moves, $pack, $words)) {
                 return $sentence;
             }
         }
@@ -176,13 +221,14 @@ final class RoleLines
     }
 
     /**
-     * THE ANSWER WITHOUT THE ECHO (guard 3, the second try): the sentences that say the move back are cut out of the reply
+     * THE ANSWER WITHOUT THE ECHO (guard 3, the second try): the sentences that say a move back are cut out of the reply
      * and out of its translation, sentence for sentence, and the rest is the role's own. Null when nothing would be left,
      * or when the translation does not split the way the reply does — then the caller says the pack's neutral line.
      *
+     * @param  list<string>  $moves
      * @return array{target: string, native: string}|null
      */
-    public static function withoutEcho(string $reply, string $native, string $heard, LanguagePack $pack, PhraseUse $words = new PhraseUse): ?array
+    public static function withoutEcho(string $reply, string $native, array $moves, LanguagePack $pack, PhraseUse $words = new PhraseUse): ?array
     {
         $targets = self::sentences($reply);
         $natives = self::sentences($native);
@@ -192,7 +238,7 @@ final class RoleLines
         $keep = [];
         $keepNative = [];
         foreach ($targets as $i => $sentence) {
-            if (! self::isEcho($sentence, $heard, $pack, $words)) {
+            if (! self::isEcho($sentence, $moves, $pack, $words)) {
                 $keep[] = $sentence;
                 $keepNative[] = $natives[$i];
             }
@@ -204,18 +250,26 @@ final class RoleLines
         return ['target' => implode(' ', $keep), 'native' => implode(' ', $keepNative)];
     }
 
-    /** Does this one sentence of the role say the move back — as heard, or with the persons swapped? */
-    private static function isEcho(string $sentence, string $heard, LanguagePack $pack, PhraseUse $words): bool
+    /**
+     * Does this one sentence of the role say a move back — as heard, or with the persons swapped?
+     *
+     * @param  list<string>  $moves
+     */
+    private static function isEcho(string $sentence, array $moves, LanguagePack $pack, PhraseUse $words): bool
     {
-        if (trim($heard) === '' || Words::count($sentence) < self::MIN_WORDS) {
+        if (Words::count($sentence) < self::MIN_WORDS) {
             return false;
         }
-        if (! self::isQuestion($sentence) && (new LanguageWords($pack))->isQuestion($heard)) {
-            return false;
+        foreach ($moves as $heard) {
+            if (trim($heard) === '' || (! self::isQuestion($sentence) && (new LanguageWords($pack))->isQuestion($heard))) {
+                continue;
+            }
+            if ($words->share($sentence, $heard, $pack) >= self::ECHO || $words->share($sentence, $heard, $pack, swapPersons: true) >= self::ECHO) {
+                return true;
+            }
         }
 
-        return $words->share($sentence, $heard, $pack) >= self::ECHO
-            || $words->share($sentence, $heard, $pack, swapPersons: true) >= self::ECHO;
+        return false;
     }
 
     /**

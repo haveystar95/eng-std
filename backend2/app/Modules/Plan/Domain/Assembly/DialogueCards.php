@@ -71,10 +71,11 @@ final class DialogueCards
     }
 
     /**
-     * THE CHECK OF ONE EXCHANGE as a card asks it: the question on the learner's own language, the three options of
-     * the exchange's own check and a fourth that is surely wrong here because it is right elsewhere — the right option
-     * of the check of the exchange FARTHEST from this one by step (between two as far — the lower step), skipping one
-     * that reads like any of the three, case and spaces aside, the next farthest then.
+     * THE CHECK OF ONE EXCHANGE as a card asks it: the question in the learner's own language and the options of the
+     * exchange's OWN check, and nothing else (наряд FIX-3 §5) — the lesson wrote three, the card has three; wrote four,
+     * four. A fourth borrowed from the farthest exchange's check was a right answer to another question: on the owner's
+     * gym day «К ушам» stood under «О чём спрашивает тренер?», and a comprehension check whose odd option is odd by its
+     * form tests nothing.
      *
      * One place for both cards that ask it ({@see partner()}, {@see ask()}), one seed per exchange — a day dealt twice
      * puts the options in the same order. Null when the exchange has no right option or nothing to choose between.
@@ -88,19 +89,16 @@ final class DialogueCards
             return null;
         }
 
-        $taken = [];
         $candidates = [];
         foreach ($exchange->check->options as $index => $option) {
-            $taken[self::key($option->textNative)] = true;
             if ($index !== $exchange->check->correctOptionIndex) {
                 $candidates[] = ['text' => $option->textNative];
             }
         }
-        $fourth = self::farthestRightOption($scene, $exchange, $taken);
-        if ($fourth !== null) {
-            $candidates[] = ['text' => $fourth];
-        }
-        $chosen = Options::choose($scene->seed("x{$exchange->step}:partner"), ['text' => $right->textNative], $candidates, 4, Options::TEXT, Options::APART);
+        $chosen = Options::choose(
+            $scene->seed("x{$exchange->step}:partner"), ['text' => $right->textNative], $candidates,
+            count($exchange->check->options), Options::TEXT, Options::APART,
+        );
         if (count($chosen['options']) < Options::MIN) {
             return null;
         }
@@ -173,31 +171,9 @@ final class DialogueCards
         ]);
     }
 
-    /**
-     * The right option of the farthest other exchange's check that reads like none of `$taken`.
-     *
-     * @param  array<string, true>  $taken
-     */
-    private static function farthestRightOption(SceneMaterial $scene, Exchange $exchange, array $taken): ?string
-    {
-        foreach ($scene->farthestFrom($exchange->step) as $other) {
-            $text = trim((string) $other->check->correctOption()?->textNative);
-            if ($text !== '' && ! isset($taken[self::key($text)])) {
-                return $text;
-            }
-        }
-
-        return null;
-    }
-
     /** @param array<string, mixed> $payload */
     private static function draft(CardKind $kind, Exchange $exchange, array $payload): CardDraft
     {
         return new CardDraft($kind, UnitKind::Exchange, SpokenLines::exchangeRef($exchange->step), $payload);
-    }
-
-    private static function key(string $text): string
-    {
-        return mb_strtolower(trim($text));
     }
 }

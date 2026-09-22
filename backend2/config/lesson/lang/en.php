@@ -85,8 +85,13 @@ return [
         'thirteen' => '13', 'fourteen' => '14', 'fifteen' => '15', 'sixteen' => '16', 'seventeen' => '17',
         'eighteen' => '18', 'nineteen' => '19', 'twenty' => '20', 'thirty' => '30', 'forty' => '40',
         'fifty' => '50', 'sixty' => '60', 'seventy' => '70', 'eighty' => '80', 'ninety' => '90',
-        'hundred' => '100', 'thousand' => '1000',
+        'hundred' => '100', 'thousand' => '1000', 'million' => '1000000',
     ],
+
+    // The word that joins the parts of one number said the British way (наряд FIX-3 §4: «составные складываются»): «one
+    // hundred and twenty» is 120, «two thousand and five» 2005 — only between a hundred or a thousand and a number below
+    // a hundred after it; «two hundred and a thousand» stays two numbers.
+    'number_joiners' => ['and'],
 
     // Two forms of one word: the shorter's letters but its last `stem_tail`, never fewer than `stem_min`, shared
     // from the start («heat» — «heating», «use» — «used»). A content word is at least `content_min_letters` long.
@@ -151,6 +156,11 @@ return [
 
     // Articles: «an article after an article» at the seam of a frame and its filler.
     'articles' => ['a', 'an', 'the'],
+
+    // WORDS A SENTENCE CANNOT END ON (наряд FIX-3 §7: «обрывок ≠ „не понял"»): a move of the talk that stops on one of
+    // them — «Yes my», «I have a» — broke off, and the role's «not understood» of it is not counted. Only the words that
+    // never close a sentence: «her», «his», «this» can («I told her», «It's his», «I'd like this»).
+    'dangling_words' => ['a', 'an', 'the', 'my', 'your', 'our', 'their'],
 
     // A word the seam may say twice and still be English: the particle of a phrasal verb before a preposition that
     // opens the filler («I can move in ___» + «in June», «Can I check out ___» + «out of the room»), «that that», «had

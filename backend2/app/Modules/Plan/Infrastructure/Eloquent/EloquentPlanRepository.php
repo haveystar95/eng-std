@@ -19,7 +19,6 @@ use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
-use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use Illuminate\Database\Eloquent\Builder;
@@ -126,6 +125,11 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             ->update([...PlanMapper::metricColumns($metrics), 'updated_at' => now()]);
     }
 
+    public function savePace(PlanId $id, array $pace): void
+    {
+        PlanModel::query()->whereKey($id->value)->update(['pace' => json_encode($pace, JSON_THROW_ON_ERROR), 'updated_at' => now()]);
+    }
+
     public function attachCoverImage(PlanId $id, Image $image): void
     {
         PlanModel::query()->whereKey($id->value)->whereNull('cover_image_url')->update([
@@ -168,14 +172,14 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             ->update(['lesson_status' => LessonStatus::Ready->value, 'updated_at' => now()]) > 0;
     }
 
-    public function voiceCastsOf(array $sceneIds): array
+    public function voicesOf(array $sceneIds): array
     {
         if ($sceneIds === []) {
             return [];
         }
         $out = [];
-        foreach (PlanSceneModel::query()->whereKey($sceneIds)->get(['id', 'partner_voice_gender']) as $row) {
-            $out[(string) $row->id] = VoiceCast::of(VoiceGender::tryFromAny($row->partner_voice_gender));
+        foreach (PlanSceneModel::query()->whereKey($sceneIds)->get(['id', 'user_id', 'partner_voice_gender']) as $row) {
+            $out[(string) $row->id] = ['partner' => VoiceGender::tryFromAny($row->partner_voice_gender), 'learner' => UserId::fromString((string) $row->user_id)];
         }
 
         return $out;

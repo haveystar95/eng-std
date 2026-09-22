@@ -69,25 +69,24 @@ it('keeps the clean doctor day under the ceiling — the talk is not counted int
     $cardsMinutes = $budget->cardsMinutes($cards);
     $talkMinutes = $budget->talkMinutes(DayType::Scene, hasConversation: true);
 
+    // By the prices measured on the phone (наряд FIX-3 §2) the clean «врач» is 25 minutes of cards, and its talk — 5.
     expect($budget->overCardsCeiling($cards))->toBeFalse()
         ->and($cardsMinutes)->toBeLessThanOrEqual($budget->ceilingMinutes())
-        ->and($cardsMinutes)->toBe(30)
-        ->and($talkMinutes)->toBe(3)
+        ->and($cardsMinutes)->toBe(25)
+        ->and($talkMinutes)->toBe(5)
         // Длительность дня на экране — карточки ПЛЮС разговор, и она может быть больше потолка карточек.
-        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: true))->toBe(33)
-        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: false))->toBe(30);
+        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: true))->toBe(30)
+        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: false))->toBe(25);
 })->with([PlanLevel::Beginner, PlanLevel::Intermediate]);
 
 /**
- * ЧИСЛО ВЛАДЕЛЬЦА — «35 на враче» (вердикт 21.09). Столько идёт СЛЕДУЮЩИЙ день: он несёт назад
- * фразы, которых не услышал вчерашний разговор, — по одной карточке «Повтори свою реплику» на фразу
- * (наряд CONV-1, DECISIONS п. 362). На живом прогоне их было четыре из семи: 30 минут карточек + 2
- * минуты возвратов + 3 минуты разговора.
+ * Столько идёт СЛЕДУЮЩИЙ день: он несёт назад фразы, которых не услышал вчерашний разговор, — по одной карточке
+ * «Повтори свою реплику» на фразу (наряд CONV-1, DECISIONS п. 362). На живом прогоне их было четыре из семи: по ценам
+ * телефона (наряд FIX-3 §2) — 25 минут карточек + минута возвратов, и 5 минут разговора сверху.
  *
- * Catches the returns being counted as free, and the ceiling being read over the day WITH the talk:
- * с разговором это 35 против 32, а карточки при этом стоят ровно на потолке.
+ * Catches the returns being counted as free, and the ceiling being read over the day WITH the talk.
  */
-it('counts the day that carries yesterday\'s unsaid phrases back at 35 minutes, and still does not stop', function () {
+it('counts the day that carries yesterday\'s unsaid phrases back with them, and the talk on top, and does not stop', function () {
     $budget = dbBudget();
     $cards = dbDay(PlanLevel::Beginner);
     $back = [];
@@ -101,9 +100,9 @@ it('counts the day that carries yesterday\'s unsaid phrases back at 35 minutes, 
     }
     $day = [...$cards, ...$back];
 
-    expect($budget->cardsMinutes($day))->toBe(32)
+    expect($budget->cardsMinutes($day))->toBe(26)
         ->and($budget->overCardsCeiling($day))->toBeFalse()
-        ->and($budget->dayMinutes($day, DayType::Scene, hasConversation: true))->toBe(35);
+        ->and($budget->dayMinutes($day, DayType::Scene, hasConversation: true))->toBe(31);
 });
 
 /**
@@ -114,21 +113,20 @@ it('stops on five card stages that cost more than the ceiling', function () {
     $budget = dbBudget();
     $cards = dbDay(PlanLevel::Beginner);
 
-    // Ещё три минуты карточек — и день карточек перевалил за 32, с разговором или без него.
-    $extra = [];
-    for ($i = 0; $i < 6; $i++) {
-        $extra[] = DayCard::dealt(
+    // «Ответь своими словами» added one by one until the cards cost more than 32 minutes, with the talk or without it.
+    $heavy = $cards;
+    for ($i = 0; $budget->cardsMinutes($heavy) <= $budget->ceilingMinutes(); $i++) {
+        $heavy[] = DayCard::dealt(
             DayCardId::generate(), PlanDayId::fromString('01J8DAYBADGET0000000000002'), Stage::Speak, 100 + $i,
             CardKind::SpeakAnswer, ['scene_id' => '01J8DAYBADGET0000000000001'],
             App\Modules\Plan\Domain\ValueObject\CardSource::Today, null, UnitKind::Exchange, 'x1',
         );
     }
-    $heavy = [...$cards, ...$extra];
 
-    expect($budget->cardsMinutes($heavy))->toBe(34)
+    expect($budget->cardsMinutes($heavy))->toBe($budget->ceilingMinutes() + 1)
         ->and($budget->overCardsCeiling($heavy))->toBeTrue()
         // И наоборот: 32 ровно — ещё не стоп.
-        ->and($budget->overCardsCeiling(array_slice($heavy, 0, count($heavy) - 4)))->toBeFalse();
+        ->and($budget->overCardsCeiling(array_slice($heavy, 0, count($heavy) - 1)))->toBeFalse();
 });
 
 /**
@@ -138,8 +136,9 @@ it('stops on five card stages that cost more than the ceiling', function () {
 it('gives every kind of talk its own minutes, and none to a day without one', function () {
     $budget = dbBudget();
 
-    expect($budget->talkMinutes(DayType::Scene, true))->toBe(3)
+    // Canon (наряд FIX-3 §7): «потолки минут plan.conversation.minutes: день 5, репетиция 6, повторение 4».
+    expect($budget->talkMinutes(DayType::Scene, true))->toBe(5)
         ->and($budget->talkMinutes(DayType::Rehearsal, true))->toBe(6)
-        ->and($budget->talkMinutes(DayType::Review, true))->toBe(6)
+        ->and($budget->talkMinutes(DayType::Review, true))->toBe(4)
         ->and($budget->talkMinutes(DayType::Scene, false))->toBe(0);
 });

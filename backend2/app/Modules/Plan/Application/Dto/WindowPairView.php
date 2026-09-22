@@ -6,7 +6,8 @@ namespace App\Modules\Plan\Application\Dto;
 
 /**
  * One exchange of the dialogue tab: the partner's bubble (with its voice) and the learner's (with its
- * state), and the exchange's kind — `answer`, `ask` or `rescue` (GEN-2a, additive).
+ * state), and the exchange's kind — `answer`, `ask` or `rescue` (GEN-2a, additive); where it is FROM (наряд FIX-3 §9):
+ * `source` — the day's own, or returned from an earlier day — and the scene it belongs to.
  */
 final readonly class WindowPairView
 {
@@ -15,5 +16,7 @@ final readonly class WindowPairView
         public ?WindowLineView $partner,
         public ?WindowLineView $learner,
         public ?string $kind = null,
+        public string $source = WindowSourceView::OWN,
+        public ?WindowSourceView $scene = null,
     ) {}
 }

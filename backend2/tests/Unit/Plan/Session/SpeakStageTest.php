@@ -177,7 +177,7 @@ it('writes speak_answer with exactly its keys: the exchange, the line answered, 
     $exchange = $scene->exchange(1);
     $payload = (new SpeakStage)->speakAnswer($scene, $exchange)->payload;
 
-    expect(array_keys($payload))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'task_native', 'frame', 'key', 'speech_mode', 'hint', 'judge'])
+    expect(array_keys($payload))->toBe(['scene_id', 'exchange', 'partner_line', 'own_line', 'task_native', 'task_clause_native', 'frame', 'key', 'speech_mode', 'hint', 'judge'])
         ->and($payload['exchange'])->toBe(['ref' => 'x1', 'step' => 1, 'kind' => 'answer'])
         ->and($payload['partner_line'])->toBe([
             'ref' => 'x1',
@@ -196,6 +196,8 @@ it('writes speak_answer with exactly its keys: the exchange, the line answered, 
         ])
         ->and($payload['own_line']['key'])->not->toBeNull()
         ->and($payload['task_native'])->toBe('У него болит поясница.')
+        // Canon (наряд FIX-3 §11): «задание 35-2 — придаточным с сервера, клиент придаточное не строит».
+        ->and($payload['task_clause_native'])->toBe('у него болит поясница')
         ->and($payload['key'])->toBe($exchange->learner()->speakingKey)
         ->and($payload['hint'])->toBe('It hurts in his ___.')
         ->and($payload['judge'])->toBeTrue()

@@ -6,8 +6,8 @@ namespace App\Modules\Plan\Domain\Check;
 
 /**
  * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.7`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
- * BACK-TAILS-1) — fifty-eight.
- * Every breach is counted by code; TEN of them are fatal — the day is not dealt until a repair takes their card
+ * BACK-TAILS-1, FIX-3) — fifty-nine.
+ * Every breach is counted by code; ELEVEN of them are fatal — the day is not dealt until a repair takes their card
  * ({@see LessonGate}) — and the other 48 are warnings: counted and kept. One code is not the validator's but the seam
  * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}). Six codes read the story
  * so far or the day as a whole (GEN-3): a word or a frame an earlier day taught, a frame whose native pattern an earlier
@@ -124,6 +124,9 @@ final class LessonCodes
 
     public const CHECK_LISTED_ALTERNATIVE_AS_WRONG = 'check.listed_alternative_as_wrong';
 
+    /** The options of one check are not of one form with the right one (наряд FIX-3 §5). Fatal. */
+    public const OPTIONS_FORM_MISMATCH = 'options.form_mismatch';
+
     // Listening.
     public const LISTENING_COUNT = 'listening.count';
 
@@ -176,7 +179,7 @@ final class LessonCodes
             self::LEARNER_RESTATES_PARTNER,
             self::KIND_ASK_COUNT, self::KIND_RESCUE_COUNT, self::RESCUE_NOT_FIRST, self::RESCUE_NEW_FACT, self::RESCUE_NO_PREV,
             self::PARTNER_TWO_QUESTIONS, self::PARTNER_TOO_LONG, self::PARTNER_CLOSER,
-            self::CHECK_ABOUT_LEARNER, self::CHECK_VERBATIM, self::CHECK_LISTED_ALTERNATIVE_AS_WRONG,
+            self::CHECK_ABOUT_LEARNER, self::CHECK_VERBATIM, self::CHECK_LISTED_ALTERNATIVE_AS_WRONG, self::OPTIONS_FORM_MISMATCH,
             self::LISTENING_COUNT, self::LISTENING_SAME_EXCHANGE, self::LISTENING_NO_LEARNER_VALUE, self::LISTENING_DISTRACTOR_NOT_FILLER,
             self::VOCAB_FREE_COMBINATION, self::VOCAB_EVERYDAY_WORD, self::VOCAB_USED_IN_WRONG, self::VOCAB_LEARNER_SHARE, self::VOCAB_NESTED, self::VOCAB_ABBREVIATION,
             self::NATIVE_GENDERED_PAST, self::IMAGE_PROMPT_RULE_TEXT,

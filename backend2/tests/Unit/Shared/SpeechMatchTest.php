@@ -32,6 +32,59 @@ it('reads a contraction, an abbreviation and a number written either way as one 
         ->and($speech->words('three PM', fix2En()))->toBe(['3', 'pm']);
 });
 
+// Canon (наряд FIX-3 §4): «и ожидаемый, и услышанный текст перед сравнением приводятся к цифрам: слова-числа → число,
+// составные складываются, дефис = пробел». The owner's gym day: «I will rest for 45 seconds» to «I'll rest for forty-five
+// seconds» failed twice, because «forty-five» came out `40 5`. Catches a fold word by word and a fold on one side only.
+it('reads the words of one number as that number on both sides', function () {
+    $speech = new SpeechMatch;
+
+    expect($speech->repeated("I'll rest for forty-five seconds", 'I will rest for 45 seconds', fix2En()))->toBeTrue()
+        ->and($speech->repeated('I will rest for 45 seconds', "I'll rest for forty-five seconds.", fix2En()))->toBeTrue()
+        ->and($speech->repeated('I will rest for forty five seconds', "I'll rest for forty-five seconds.", fix2En()))->toBeTrue()
+        ->and($speech->repeated('twenty one', '21', fix2En()))->toBeTrue()
+        ->and($speech->repeated('21', 'twenty-one', fix2En()))->toBeTrue()
+        ->and($speech->repeated('I will rest for 40 seconds', "I'll rest for forty-five seconds.", fix2En()))->toBeFalse()
+        ->and($speech->words("I'll rest for forty-five seconds.", fix2En()))->toBe(['i', 'will', 'rest', 'for', '45', 'seconds']);
+});
+
+// Canon (наряд FIX-3 §4): «one minute → 1 minute, a hundred → 100, число в середине фразы». Catches a number read only at
+// the end of a line, an article taken for a word of the number, and words of two numbers glued into one.
+it('folds a number in the middle of a line, a hundred with its article, and keeps two numbers two', function () {
+    $speech = new SpeechMatch;
+
+    expect($speech->words('Take one minute, then twenty-one reps', fix2En()))->toBe(['take', '1', 'minute', 'then', '21', 'reps'])
+        ->and($speech->words('a hundred dollars', fix2En()))->toBe(['100', 'dollars'])
+        ->and($speech->words('two hundred and a thousand', fix2En()))->toBe(['200', 'and', '1000'])
+        ->and($speech->words('one hundred twenty-five', fix2En()))->toBe(['125'])
+        ->and($speech->words('two thousand five hundred', fix2En()))->toBe(['2500'])
+        ->and($speech->words('ten five', fix2En()))->toBe(['10', '5'])
+        ->and($speech->words('two three', fix2En()))->toBe(['2', '3'])
+        ->and($speech->words('twenty twelve', fix2En()))->toBe(['20', '12'])
+        ->and($speech->words('a bar', fix2En()))->toBe(['a', 'bar'])
+        ->and($speech->repeated('Do three sets of 12 reps with a 100 kilo bar', 'Do 3 sets of twelve reps with a hundred kilo bar.', fix2En()))->toBeTrue();
+});
+
+// Canon (наряд FIX-3 §4): «составные складываются» — the British way too, and the whole of the pack's words. Catches
+// «one hundred and twenty» read as three numbers, «and» swallowed between two numbers it does not join, a million not
+// known, and the Russian hundreds and the forms of «тысяча» read as words.
+it('joins a hundred and what follows it with «and», knows a million, and reads the Russian hundreds', function () {
+    $speech = new SpeechMatch;
+    $ru = lessonPacks()->for('ru')->speech();
+
+    expect($speech->words('one hundred and twenty', fix2En()))->toBe(['120'])
+        ->and($speech->words('a hundred and five dollars', fix2En()))->toBe(['105', 'dollars'])
+        ->and($speech->words('two thousand and five', fix2En()))->toBe(['2005'])
+        ->and($speech->words('five and six', fix2En()))->toBe(['5', 'and', '6'])
+        ->and($speech->words('a hundred and twenty and five', fix2En()))->toBe(['120', 'and', '5'])
+        ->and($speech->words('one million', fix2En()))->toBe(['1000000'])
+        ->and($speech->repeated('It costs 120 dollars', 'It costs one hundred and twenty dollars.', fix2En()))->toBeTrue()
+        ->and($speech->words('двести пятьдесят', $ru))->toBe(['250'])
+        ->and($speech->words('две тысячи триста', $ru))->toBe(['2300'])
+        ->and($speech->words('пять тысяч', $ru))->toBe(['5000'])
+        ->and(fix2En()->toArray()['number_joiners'])->toBe(['and'])
+        ->and($ru->toArray()['number_joiners'])->toBe([]);
+});
+
 // Canon: «все смысловые слова ожидаемого текста на месте и по порядку… служебные слова не учитываются». Catches the
 // share that let «He has a rush» pass for «He has a rash» on the owner's phone (проход 20.09, п. 2), and a rule that
 // would fail a learner for the article the recogniser ate.

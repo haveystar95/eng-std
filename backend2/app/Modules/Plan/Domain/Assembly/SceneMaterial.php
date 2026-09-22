@@ -194,8 +194,8 @@ final readonly class SceneMaterial
 
     /**
      * The other exchanges of the visit, the FARTHEST from `$step` first — between two as far, the lower step: where a
-     * card looks for a wrong option that is surely wrong here because it belongs elsewhere (`dialogue_partner`'s fourth,
-     * `phrase_combine`'s wrong frames).
+     * card looks for a wrong option that is surely wrong here because it belongs elsewhere (`phrase_combine`'s wrong
+     * frames).
      *
      * @return list<Exchange>
      */

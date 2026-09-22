@@ -15,6 +15,7 @@ use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Exception\ConversationUnavailable;
+use App\Modules\Plan\Domain\Service\ConversationLead;
 use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\PhraseUse;
@@ -24,6 +25,7 @@ use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\ConversationTurnId;
 use App\Modules\Plan\Domain\ValueObject\TurnAudio;
 use App\Modules\Plan\Domain\ValueObject\TurnCost;
+use App\Modules\Plan\Domain\ValueObject\TurnKind;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
@@ -36,13 +38,14 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * anywhere until the role has answered: a move the model did not answer leaves the ribbon exactly
  * as it was, and the learner repeats it.
  *
- * THE MONEY CAP IS NOT A CUT-OFF. When the talk has spent what the plan allows it, the next move is
- * asked for with `TURNS_LEFT: 0` — which the prompt reads as «say goodbye now» — so the learner gets
- * a farewell in the role's own words and the talk ends `limit`. A learner is never left mid-sentence
- * because a number was reached.
+ * THE CAPS ARE NOT A CUT-OFF. When the talk has spent what the plan allows it — the money, or the minutes of its kind
+ * (наряд FIX-3 §7: day 5, rehearsal 6, review 4) — the next move is asked for with `TURNS_LEFT: 0`, which the prompt
+ * reads as «say goodbye now», so the learner gets a farewell in the role's own words and the talk ends `limit`. A
+ * learner is never left mid-sentence because a number was reached.
  *
  * THE ANSWER IS CHECKED BEFORE IT IS SAID (наряд CONV-2, пп. 1 и 4б; наряд BACK-TAILS-2 §9): a reply that says a
- * line of the learner, one that says the learner's last move back, or a rescue that says the rescued line again
+ * line of the learner, one that says a move of the learner back (any move of the talk — наряд FIX-3 §11), or a rescue
+ * that says the rescued line again
  * ({@see RoleLines}), is not voiced — the move is asked for once more with the reason (`REDO`), and counted. Once,
  * because the learner is waiting. When the second answer does it too — or does not come — the sentence that does it is
  * cut out if the rest of the answer stands on its own (`…_cut`). Otherwise a learner line is said as it came (`…_kept`)
@@ -50,10 +53,11 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * with nothing of the role's own around it gives way to the pack's neutral line (`…_neutral`): the learner's words said
  * back are no move of the role at all.
  *
- * WHICH TARGETS THE MOVE SAID is decided here too, once the role has answered it (наряд BACK-TAILS-2 §2,
- * {@see PhraseUse}): the code's rule over every target not said yet, and the role's own `phrases_used` as its second
- * support. The move is completed with them before it is written, and before the next intention is chosen — a phrase
- * just said is not offered again.
+ * WHICH TARGETS THE MOVE SAID is decided here too, once the role has answered it (наряд FIX-3 §6, {@see PhraseUse}):
+ * the code's rule over every target not said yet, and the role's own `phrases_used` as its second support. The move is
+ * completed with them before it is written, and before the next hint is chosen — a construction just said is not
+ * offered again. The line keeps the target it opened the door to (`opens`, наряд FIX-3 §7): the doors are how the role
+ * is led to the targets one by one, and the hint is the target the line just opened ({@see ConversationLead}).
  */
 final readonly class ConversationMoves
 {
@@ -80,17 +84,24 @@ final readonly class ConversationMoves
      */
     public function answer(Plan $plan, Conversation $talk, ConversationMaterialView $material, string $turn, string $heard): void
     {
-        $capped = $talk->overCap($this->rules->costCapUsd);
+        $capped = $talk->overCap($this->rules->costCapUsd) || $talk->activeSeconds() >= $this->rules->secondsFor($talk->type());
         $turnsLeft = $capped ? 0 : $talk->turnsLeft();
         // Was the move BEFORE this one already off the scene? Then this one makes two in a row.
         $pushedAgain = $talk->offTopicStreak() > 0;
 
         $target = $this->packs->for($plan->targetLang()->value);
-        $request = $this->agent->request($plan, $talk, $material, $turn, $heard, $turnsLeft);
+        // What this move says by the code's own rule is told to the role answering it: «it hurts in his lower back» is
+        // SAID, and its prepared exchange DONE, in the very reply to it — the model's word comes after, with its reply.
+        $saidNow = $turn === 'said' ? $this->phrases->heardIn($heard, self::unsaid($talk, $material), [], $target) : [];
+        $request = $this->agent->request($plan, $talk, $material, $turn, $heard, $turnsLeft, $saidNow);
         $reply = $this->checked(
-            $request, $this->agent->ask($request), $talk, $material, $turn, $heard,
-            $target, $this->packs->for($plan->nativeLang()->value),
+            $request, $this->agent->ask($request), $talk, $material, $turn,
+            $target, $this->packs->for($plan->nativeLang()->value), $turnsLeft,
         );
+        // A move that broke off is not a move misunderstood — whatever the role judged (наряд FIX-3 §7).
+        if ($turn === 'said' && $reply->understood === false && $this->phrases->breaksOff($heard, $material->targets, $target)) {
+            $reply = $reply->unjudged();
+        }
         if ($turn === 'said') {
             $talk->creditMove($this->phrases->heardIn($heard, self::unsaid($talk, $material), $reply->phrasesUsed, $target));
         }
@@ -124,6 +135,7 @@ final readonly class ConversationMoves
         );
 
         $now = $this->clock->now();
+        $ends = $reply->endsTalk() || $turnsLeft <= 0;
         $line = ConversationTurn::agent(
             id: $turnId,
             conversationId: $talk->id(),
@@ -132,12 +144,14 @@ final readonly class ConversationMoves
             textNative: $reply->replyNative,
             audio: $audio,
             checkpointDone: $reply->checkpointDone,
-            hintNative: $reply->endsTalk() ? null : $this->hintFor($talk, $material, $reply),
+            // In «Без подсказок» nothing is offered: the chip does not exist there.
+            hintNative: $ends || ! $talk->hintsEnabled() ? null : ConversationLead::hint($talk, $material->targets, $reply->opens)?->hintNative(),
             cost: $cost,
             now: $now,
             understood: $reply->understood,
             phrasesUsed: [],
             offTopic: $reply->offTopic,
+            opensTarget: $ends ? null : $reply->opens,
         );
 
         $talk->recordAgentTurn($line);
@@ -161,11 +175,11 @@ final readonly class ConversationMoves
         Conversation $talk,
         ConversationMaterialView $material,
         string $turn,
-        string $heard,
         LanguagePack $target,
         LanguagePack $native,
+        int $turnsLeft,
     ): ConversationAgentReply {
-        $fault = $this->fault($reply, $talk, $material, $turn, $heard, $target);
+        $fault = $this->fault($reply, $talk, $material, $turn, $target, $turnsLeft);
         if ($fault === null) {
             return $reply;
         }
@@ -177,7 +191,7 @@ final readonly class ConversationMoves
         } catch (ConversationUnavailable) {
             $answer = $reply;
         }
-        if ($answer !== $reply && $this->fault($answer, $talk, $material, $turn, $heard, $target) === null) {
+        if ($answer !== $reply && $this->fault($answer, $talk, $material, $turn, $target, $turnsLeft) === null) {
             return $answer;
         }
         if ($fault['reason'] === RoleLines::REDO_LEARNER_LINE) {
@@ -188,8 +202,8 @@ final readonly class ConversationMoves
                 return $answer->saying($cut['target'], $cut['native']);
             }
         }
-        if ($fault['reason'] === RoleLines::REDO_LEARNER_ECHO && RoleLines::echoIn($answer->replyTarget, $heard, $target, $this->phrases) !== null) {
-            $cut = RoleLines::withoutEcho($answer->replyTarget, $answer->replyNative, $heard, $target, $this->phrases);
+        if ($fault['reason'] === RoleLines::REDO_LEARNER_ECHO && RoleLines::echoIn($answer->replyTarget, self::saidSoFar($talk), $target, $this->phrases) !== null) {
+            $cut = RoleLines::withoutEcho($answer->replyTarget, $answer->replyNative, self::saidSoFar($talk), $target, $this->phrases);
             if ($cut !== null) {
                 $this->counters->recordCodes($version, [RoleLines::CODE_LEARNER_ECHO_CUT]);
 
@@ -208,22 +222,31 @@ final readonly class ConversationMoves
     }
 
     /**
-     * What is wrong with an answer, if anything: a line of the learner said as the role's own (every move), the learner's
-     * last move said back (a move the learner said something on), or, on a rescue, the rescued line said again.
+     * What is wrong with an answer, if anything: a line of the learner said as the role's own, a move of the learner said
+     * back (any move of the talk — наряд FIX-3 §11), on a rescue the rescued line said again, on any other move a line
+     * the role has already said in the talk ({@see RoleLines} guard 4) — and the talk closed with moves still left
+     * ({@see ConversationRules::REDO_EARLY_END}).
      *
-     * @return array{reason: 'learner_line'|'learner_echo'|'same_words', line: string|null, code: string, kept: string}|null
+     * @return array{reason: 'learner_line'|'learner_echo'|'same_words'|'own_line'|'early_end', line: string|null, code: string, kept: string}|null
      */
-    private function fault(ConversationAgentReply $reply, Conversation $talk, ConversationMaterialView $material, string $turn, string $heard, LanguagePack $target): ?array
+    private function fault(ConversationAgentReply $reply, Conversation $talk, ConversationMaterialView $material, string $turn, LanguagePack $target, int $turnsLeft): ?array
     {
         $line = RoleLines::learnerLineIn($reply->replyTarget, $material->learnerLines(), self::saidSoFar($talk));
         if ($line !== null) {
             return ['reason' => RoleLines::REDO_LEARNER_LINE, 'line' => $line, 'code' => RoleLines::CODE_LEARNER_LINE, 'kept' => RoleLines::CODE_LEARNER_LINE_KEPT];
         }
-        if ($turn === 'said' && RoleLines::echoIn($reply->replyTarget, $heard, $target, $this->phrases) !== null) {
+        if (RoleLines::echoIn($reply->replyTarget, self::saidSoFar($talk), $target, $this->phrases) !== null) {
             return ['reason' => RoleLines::REDO_LEARNER_ECHO, 'line' => null, 'code' => RoleLines::CODE_LEARNER_ECHO, 'kept' => RoleLines::CODE_LEARNER_ECHO_KEPT];
         }
         if ($turn === 'rescue' && RoleLines::repeats($reply->replyTarget, $talk->lineBeforeLastMove())) {
             return ['reason' => RoleLines::REDO_SAME_WORDS, 'line' => null, 'code' => RoleLines::CODE_SAME_WORDS, 'kept' => RoleLines::CODE_SAME_WORDS_KEPT];
+        }
+        $own = $turn === 'rescue' ? null : RoleLines::ownLineIn($reply->replyTarget, self::roleSoFar($talk));
+        if ($own !== null) {
+            return ['reason' => RoleLines::REDO_OWN_LINE, 'line' => $own, 'code' => RoleLines::CODE_OWN_LINE, 'kept' => RoleLines::CODE_OWN_LINE_KEPT];
+        }
+        if ($reply->end === ConversationAgentReply::END_NATURAL && $turnsLeft > 0) {
+            return ['reason' => ConversationRules::REDO_EARLY_END, 'line' => null, 'code' => ConversationRules::CODE_EARLY_END, 'kept' => ConversationRules::CODE_EARLY_END_KEPT];
         }
 
         return null;
@@ -261,6 +284,23 @@ final readonly class ConversationMoves
     }
 
     /**
+     * Every line the role has said in the talk so far — what a line said again is read against (guard 4).
+     *
+     * @return list<string>
+     */
+    private static function roleSoFar(Conversation $talk): array
+    {
+        $out = [];
+        foreach ($talk->turns() as $turn) {
+            if ($turn->kind === TurnKind::Agent && $turn->textTarget !== null) {
+                $out[] = $turn->textTarget;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * WHY THE TALK IS OVER, if it is. The role says so itself in its answer; the server only names
      * the money when the money is what made it say so, closes a talk the role forgot to close after
      * its last turn, and closes one the learner pushed off the scene twice in a row.
@@ -277,43 +317,5 @@ final readonly class ConversationMoves
         }
 
         return null;
-    }
-
-    /**
-     * THE INTENTION OFFERED FOR THE NEXT MOVE (кадр 37-7, чип «Скажи, что …»).
-     *
-     * It is the native text of the learner's own line at the nearest checkpoint — the first line of
-     * the scene the talk is in whose phrase has not sounded yet. That is the server's, not the
-     * model's: the hint is what the learner CAME to say, and the lesson knows it exactly. The
-     * model's `next_hint_native` is the fallback for a talk that has walked past its lines.
-     *
-     * In «Без подсказок» nothing is offered at all — the chip and the button do not exist there,
-     * and a hint stored for a talk that will never show one is a hint paid for twice.
-     */
-    private function hintFor(Conversation $talk, ConversationMaterialView $material, ConversationAgentReply $reply): ?string
-    {
-        if (! $talk->hintsEnabled()) {
-            return null;
-        }
-        $used = [];
-        foreach ($talk->turns() as $turn) {
-            foreach ($turn->phrasesUsed as $id) {
-                $used[$id] = true;
-            }
-        }
-        $checkpoint = $material->checkpoint($talk->currentCheckpoint());
-        if ($checkpoint === null) {
-            return $reply->nextHintNative;
-        }
-        foreach ($checkpoint->keyLines as $line) {
-            $ref = $line['phrase_ref'];
-            if ($ref === null || isset($used[$checkpoint->sceneId.':'.$ref])) {
-                continue;
-            }
-
-            return $line['native'];
-        }
-
-        return $reply->nextHintNative;
     }
 }

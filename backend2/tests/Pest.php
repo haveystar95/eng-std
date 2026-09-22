@@ -681,3 +681,51 @@ function learningRatio(string $heard, string $expected): float
         $heard, $expected, App\Modules\Shared\Domain\ValueObject\SpeechPack::none(),
     );
 }
+
+/**
+ * THE OWNER'S GYM PLAN, DAYS 1 AND 2, AS THE LIVE SERVER HELD THEM (GYM-DUMP-2, read-only, 22.09.2026) — for the learner
+ * given: the plan, its days, its two scenes with their lessons, their terms, every dealt and answered card of both days
+ * and the scenes' voice files — each file under the key the pack of THIS environment gives its (role, gender), so the
+ * index finds it the way it found it on the server. Nothing is regenerated: this is the material the наряд FIX-3 is about.
+ *
+ * @return string the plan's id
+ */
+function planGymLoad(string $userId): string
+{
+    $data = json_decode((string) file_get_contents(__DIR__.'/Fixtures/plan-gym/zal-days-1-2.json'), true, flags: JSON_THROW_ON_ERROR);
+    $row = static function (array $r) use ($userId): array {
+        foreach ($r as $k => $v) {
+            if (is_array($v)) {
+                $r[$k] = json_encode($v, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+        }
+        if (array_key_exists('user_id', $r)) {
+            $r['user_id'] = $userId;
+        }
+
+        return $r;
+    };
+    DB::table('plans')->insert($row($data['plan']));
+    foreach ($data['scenes'] as $scene) {
+        DB::table('plan_scenes')->insert($row($scene));
+    }
+    foreach ($data['days'] as $day) {
+        DB::table('plan_days')->insert($row($day));
+    }
+    foreach ($data['terms'] as $term) {
+        DB::table('plan_terms')->insert($row($term));
+    }
+    foreach ($data['cards'] as $card) {
+        DB::table('day_cards')->insert($row($card));
+    }
+    foreach ($data['audios'] as $audio) {
+        [$speaker, $gender] = $audio['voice'];
+        unset($audio['voice']);
+        $audio['voice_key'] = (string) app(App\Modules\Plan\Application\Port\LineSpeaker::class)->voiceKeyFor(
+            'en', App\Modules\Plan\Domain\ValueObject\Speaker::from($speaker), App\Modules\Shared\Domain\ValueObject\VoiceGender::from($gender),
+        );
+        DB::table('plan_line_audios')->insert($row($audio));
+    }
+
+    return (string) $data['plan']['id'];
+}

@@ -126,7 +126,7 @@ function s1daSnapshot(array $cards): array
 // Canon (разд. 2; SESSION-1d «Фразы» через разные окна): the day's stages, counted exactly on the clean lesson. Catches a
 // stage dealing a card too many or too few — a lost spacing slot, a recognition too many or too few, a second
 // phrase_combine, a rescue dealt twice, a listen card per ask missing, a seventh speak_answer.
-it('deals the clean lesson in five stages of exactly 24, 26 or 24, 13, 9 and 8 cards — «Фразы» by what its ceiling leaves', function (PlanLevel $level) {
+it('deals the clean lesson in five stages of exactly 24, 28 or 20, 13, 9 and 8 cards — «Фразы» by what its ceiling leaves', function (PlanLevel $level) {
     $cards = s1daDeal(s1daScene($level), $level);
     $words = s1daIn($cards, Stage::Words);
     $phrases = s1daIn($cards, Stage::Phrases);
@@ -138,14 +138,14 @@ it('deals the clean lesson in five stages of exactly 24, 26 or 24, 13, 9 and 8 c
             'word_assemble' => 2, 'word_choose' => 2, 'word_in_line' => 2, 'word_intro' => 8, 'word_listen' => 2, 'word_repeat' => 8,
         ]);
 
-    // Phrases (SESSION-1d; наряд FIX-2 п. 5 и его доработка): five frames with a window × (intro, two recognitions,
-    // «Скажи целиком») = 20, p4 without a slot: intro, phrase_choose_back, phrase_repeat = 3, + one phrase_combine = 24.
-    // The beginner's two extra cards are THIRD recognitions: its «Скажи целиком» is two rounds and the stage fits two
-    // more cards under its ceiling; the intermediate's three-round trainers leave no room and it gives up round three
-    // instead (the trimming ladder of `PhrasesStage`).
+    // Phrases (SESSION-1d; наряд FIX-2 п. 5; ступени — наряд FIX-3 §3): five frames with a window × (intro, two
+    // recognitions, «Скажи целиком») = 20, p4 without a slot: intro, phrase_choose_back, phrase_repeat = 3, + one
+    // phrase_combine = 24 as built. At the prices measured on the phone (§2) the beginner's two-round trainers leave room
+    // for FOUR third recognitions; the intermediate's three-round ones take the stage over its ceiling, and the ladder
+    // gives up four second recognitions — never a round (the floor of `PhrasesStage`).
     $production = array_values(array_filter($phrases, static fn (DayCard $c): bool => in_array($c->kind(), [CardKind::PhraseRepeat, CardKind::PhraseOtherSlot], true)));
     $recognitions = array_values(array_filter($phrases, static fn (DayCard $c): bool => in_array($c->kind(), PhraseSeries::CYCLE, true)));
-    $thirds = $level === PlanLevel::Beginner ? 2 : 0;
+    $thirds = $level === PlanLevel::Beginner ? 4 : -4;
     expect(count($phrases))->toBe(24 + $thirds)
         ->and(count($recognitions))->toBe(11 + $thirds)
         ->and(s1daKinds($phrases)['phrase_intro'])->toBe(6)
@@ -242,9 +242,9 @@ it('deals the returns once each at the end of their stage: a word as word_choose
         ->and(count($words))->toBe(24 + 1)
         ->and(end($words)->source())->toBe(CardSource::Returned)
         ->and(end($words)->position())->toBe(25)
-        ->and(count($phrases))->toBe(26 + 4)
-        ->and(s1daShape(array_slice($phrases, 26)))->toBe(['phrase_slot_listen@p2', 'phrase_choose_back@p4', 'phrase_repeat@p3', $firstOfP5.'@p5'])
-        ->and(array_slice($phrases, 25, 1)[0]->kind())->toBe(CardKind::PhraseCombine)
+        ->and(count($phrases))->toBe(28 + 4)
+        ->and(s1daShape(array_slice($phrases, 28)))->toBe(['phrase_slot_listen@p2', 'phrase_choose_back@p4', 'phrase_repeat@p3', $firstOfP5.'@p5'])
+        ->and(array_slice($phrases, 27, 1)[0]->kind())->toBe(CardKind::PhraseCombine)
         ->and(count(s1daIn($cards, Stage::Dialogue)))->toBe(13)
         ->and(count(s1daIn($cards, Stage::Listen)))->toBe(9)
         ->and(count($speak))->toBe(8 + 1)
@@ -352,18 +352,24 @@ it('deals yesterday\'s returns on a rehearsal at the end of their stages, the re
 });
 
 // Moved from the assembly test of the old registry (its kinds are gone): the day's numbers are its dealt cards'.
-// Catches a pause over ten minutes counted, and a total or a count that is not the cards'.
-it('computes the day metrics from a dealt day: dealt, done, minutes without the long pauses', function () {
+// Canon (наряд FIX-3 §2): «PAUSE_SECONDS 600 → 120: пауза дольше двух минут не считается временем дня». Catches a pause
+// over two minutes counted (the owner's «Фразы» of day 2: 5:10 of work read as 15:42), a two-minute gap dropped, and a
+// total or a count that is not the cards'.
+it('computes the day metrics from a dealt day: dealt, done, minutes without the pauses over two minutes', function () {
     $cards = s1daDeal(s1daScene(PlanLevel::Beginner), PlanLevel::Beginner);
     $t = new DateTimeImmutable('2026-09-15T10:00:00Z');
+    // Twenty answers 30 s apart, three gaps of their own: 120 s before the sixth (counted), 121 s before the eleventh and
+    // ten minutes before the sixteenth (neither) — 16 × 30 s + 120 s = 600 s = 10 minutes.
+    $at = 0;
     foreach (array_slice($cards, 0, 20) as $i => $card) {
-        // Twenty answers 30 s apart, with one hour's pause before the eleventh: 9 × 30 s + 9 × 30 s = 9 minutes.
-        $card->answer($card->kind()->isJudged() ? CardResult::Skipped : CardResult::Passed, 1, null, $t->modify('+'.($i * 30 + ($i >= 10 ? 3600 : 0)).' seconds'));
+        $at += $i === 0 ? 0 : match ($i) { 5 => 120, 10 => 121, 15 => 600, default => 30 };
+        $card->answer($card->kind()->isJudged() ? CardResult::Skipped : CardResult::Passed, 1, null, $t->modify("+{$at} seconds"));
     }
 
     $metrics = (new DayMetricsCalculator)->calculate($cards);
 
-    expect($metrics->cardsTotal)->toBe(80)
+    expect(DayMetricsCalculator::PAUSE_SECONDS)->toBe(120)
+        ->and($metrics->cardsTotal)->toBe(82)
         ->and($metrics->cardsDone)->toBe(20)
-        ->and($metrics->minutesSpent)->toBe(9);
+        ->and($metrics->minutesSpent)->toBe(10);
 });

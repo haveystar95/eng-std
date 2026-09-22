@@ -12,6 +12,8 @@ use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Exception\ConversationUnavailable;
+use App\Modules\Plan\Domain\Service\ConversationLead;
+use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\ValueObject\ConversationCheckpoint;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\TurnCost;
@@ -25,9 +27,10 @@ use Throwable;
  * ({@see ConversationMoves}, наряд CONV-2) — here a call is a call.
  *
  * It is shown the scene it is in, the scenes still ahead with the lines the learner is preparing,
- * the phrases of the plan, everything said so far and the learner's speech in a field of its own.
- * `TURNS_LEFT` is the only lever on how long the talk runs: at nought the prompt says «say goodbye»,
- * and the role closes the talk itself — nothing here cuts a learner off mid-word.
+ * the talk's targets — constructions, each said or not yet — and the one to open the door to now (`LEAD_TO`, the
+ * server's choice, {@see ConversationLead}; наряд FIX-3 §7), everything said so far and the learner's speech in a field
+ * of its own. `TURNS_LEFT` is the only lever on how long the talk runs: at nought the prompt says «say goodbye», and the
+ * role closes the talk itself — nothing here cuts a learner off mid-word.
  *
  * A model that is silent, slow or off the shape is NOT a turn: it throws, nothing is written, and
  * the learner repeats the move (кадр 37-10 «Врач не отвечает — попробуй ещё раз»). That is the
@@ -42,6 +45,7 @@ final readonly class ConversationAgent
      * What the role is told before one move.
      *
      * @param  'start'|'said'|'rescue'|'skip'  $turn
+     * @param  list<string>  $saidNow  the targets the move being answered says by the code's rule — said already for the role answering it
      */
     public function request(
         Plan $plan,
@@ -50,8 +54,10 @@ final readonly class ConversationAgent
         string $turn,
         string $heard,
         int $turnsLeft,
+        array $saidNow = [],
     ): ConversationAgentRequest {
         $current = $material->checkpoint($talk->currentCheckpoint());
+        $said = [...ConversationOutcomes::heard($talk), ...array_fill_keys($saidNow, true)];
 
         return new ConversationAgentRequest(
             targetLanguage: LanguageName::of($plan->targetLang()->value),
@@ -61,14 +67,15 @@ final readonly class ConversationAgent
             roleNative: $current->roleNative ?? '',
             learnerRoleTarget: $plan->titles()->learnerRoleTarget ?? '',
             learnerRoleNative: $plan->titles()->learnerRoleNative ?? '',
-            checkpoints: array_map(self::checkpoint(...), $material->checkpoints),
+            checkpoints: array_map(static fn (ConversationCheckpoint $c): array => self::checkpoint($c, $said), $material->checkpoints),
             currentCheckpoint: $current?->sceneId,
-            phrases: array_map(self::phrase(...), $material->phrases),
+            targets: array_map(static fn (ConversationPhrase $t): array => self::target($t, isset($said[$t->id()])), $material->targets),
             history: self::history($talk),
             turn: $turn,
             heard: $heard,
             turnsLeft: max(0, $turnsLeft),
             offTopicStreak: $talk->offTopicStreak(),
+            leadTo: ConversationLead::next($talk, $material->targets, $saidNow)?->id(),
         );
     }
 
@@ -81,7 +88,7 @@ final readonly class ConversationAgent
             throw ConversationUnavailable::model(mb_substr($e->getMessage(), 0, 200));
         }
 
-        return self::parse($reply->payload, new TurnCost(
+        return self::parse($reply->payload, $request->targetIds(), new TurnCost(
             modelCostUsd: $reply->costUsd,
             modelLatencyMs: $reply->latencyMs,
             model: $reply->model,
@@ -93,8 +100,9 @@ final readonly class ConversationAgent
 
     /**
      * @param  array<string, mixed>  $payload
+     * @param  list<string>  $targetIds  what `opens` may name — anything else is no door of this talk
      */
-    private static function parse(array $payload, TurnCost $cost): ConversationAgentReply
+    private static function parse(array $payload, array $targetIds, TurnCost $cost): ConversationAgentReply
     {
         $target = $payload['reply_target'] ?? null;
         $native = $payload['reply_native'] ?? null;
@@ -108,7 +116,7 @@ final readonly class ConversationAgent
 
         $understood = $payload['understood'] ?? null;
         $checkpoint = $payload['checkpoint_done'] ?? null;
-        $hint = $payload['next_hint_native'] ?? null;
+        $opens = $payload['opens'] ?? null;
         /** @var list<string> $phrases */
         $phrases = array_values(array_filter(is_array($payload['phrases_used'] ?? null) ? $payload['phrases_used'] : [], is_string(...)));
 
@@ -119,16 +127,21 @@ final readonly class ConversationAgent
             phrasesUsed: $phrases,
             offTopic: ($payload['off_topic'] ?? null) === true,
             checkpointDone: is_string($checkpoint) && trim($checkpoint) !== '' ? $checkpoint : null,
-            nextHintNative: is_string($hint) && trim($hint) !== '' ? trim($hint) : null,
+            opens: is_string($opens) && in_array($opens, $targetIds, true) ? $opens : null,
             end: $end,
             cost: $cost,
         );
     }
 
     /**
-     * @return array{id: string, title_native: string, about_native: string, role_target: string, role_native: string, key_lines: list<array{target: string, native: string, kind: string, partner: string}>}
+     * A scene of the talk as the role is told it: the visit as prepared, exchange by exchange — each one DONE once the
+     * learner has said its target in this talk (наряд FIX-3 §7, the live run: told «his lower back», the receptionist
+     * asked the prepared «upper back or lower back?» all the same, three runs of three).
+     *
+     * @param  array<string, true>  $said  the targets said so far
+     * @return array{id: string, title_native: string, about_native: string, role_target: string, role_native: string, key_lines: list<array{target: string, native: string, kind: string, partner: string, done: bool}>}
      */
-    private static function checkpoint(ConversationCheckpoint $checkpoint): array
+    private static function checkpoint(ConversationCheckpoint $checkpoint, array $said): array
     {
         return [
             'id' => $checkpoint->sceneId,
@@ -142,16 +155,24 @@ final readonly class ConversationAgent
                     'native' => $line['native'],
                     'kind' => $line['kind'] ?? 'answer',
                     'partner' => $line['partner'] ?? '',
+                    'done' => isset($line['phrase_ref']) && isset($said[$checkpoint->sceneId.':'.$line['phrase_ref']]),
                 ],
                 $checkpoint->keyLines,
             ),
         ];
     }
 
-    /** @return array{id: string, target: string, native: string} */
-    private static function phrase(ConversationPhrase $phrase): array
+    /** @return array{id: string, kind: string, frame_target: string, frame_native: string, example_target: string|null, said: bool} */
+    private static function target(ConversationPhrase $target, bool $said): array
     {
-        return ['id' => $phrase->id(), 'target' => $phrase->textTarget, 'native' => $phrase->textNative];
+        return [
+            'id' => $target->id(),
+            'kind' => $target->kind->value,
+            'frame_target' => $target->frameTarget,
+            'frame_native' => $target->frameNative,
+            'example_target' => $target->exampleTarget,
+            'said' => $said,
+        ];
     }
 
     /**

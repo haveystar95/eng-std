@@ -37,6 +37,9 @@ final class PhraseCards
     /** How many values of the window a BEGINNER says the frame with before their own one (решение архитектора 20.09). */
     public const BEGINNER_ROUNDS = 2;
 
+    /** The fewest value rounds of a window of two values or more (наряд FIX-3 §3). */
+    public const MIN_ROUNDS = 2;
+
     private const EXTRA_TILES = 2;
 
     private const COMBINE_FRAMES = 3;
@@ -283,25 +286,24 @@ final class PhraseCards
      * - `partner_line` is the line the frame is said next to, for the JUDGE and not for the screen (32-7 shows no
      *   partner line): the model reads it as `PARTNER_LINE`.
      *
-     * THE STAGE MAY ASK FOR FEWER VALUE ROUNDS (наряд FIX-2, доработка): `$mostRounds` caps them, which is how
-     * «Фразы» comes back under its ceiling ({@see PhrasesStage}). The OWN-WORD round is never among what is cut —
-     * it is the point of the trainer. Nothing here decides to cut; the card is built with what it is told.
+     * NO ROUND IS EVER CUT (наряд FIX-3 §3): «Фразы» over their ceiling give up recognitions, never a value of this
+     * card and never its own word ({@see PhrasesStage}). A frame of two values and more is said with two rounds and
+     * more ({@see rounds()}) — with a filler the seam judge hid when the frame has no other, shown with its value, not a
+     * sentence that does not read, as its line ({@see CardObjects::fillers()}).
      *
-     * Null for a frame without a window, and for one whose fillers no card may show.
+     * Null for a frame without a window.
      */
-    public function sayWhole(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level, ?int $mostRounds = null): ?CardDraft
+    public function sayWhole(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level): ?CardDraft
     {
         $frame = $phrase->frame();
         if ($frame === null || ! self::hasSlot($phrase)) {
             return null;
         }
         $wanted = self::rounds($scene, $phrase, $level);
-        if ($mostRounds !== null) {
-            $wanted = array_slice($wanted, 0, max(1, $mostRounds));
-        }
+        $unhidden = array_values(array_diff($wanted, PhraseSeries::fillers($scene, $phrase)));
         $rounds = [];
         foreach ($wanted as $index) {
-            $filler = self::fillerAt($scene, $phrase, $index);
+            $filler = self::fillerAt($scene, $phrase, $index, $unhidden);
             if ($filler === null) {
                 continue;
             }
@@ -315,11 +317,11 @@ final class PhraseCards
             return null;
         }
         $first = $scene->lesson->linesOf($phrase->ref())[0]['exchange'] ?? null;
-        $fillers = CardObjects::fillers($scene, $phrase);
+        $fillers = CardObjects::fillers($scene, $phrase, $unhidden);
 
         return $this->draft(CardKind::PhraseOtherSlot, $phrase, [
             'scene_id' => $scene->sceneId->value,
-            'frame' => CardObjects::frame($scene, $phrase),
+            'frame' => CardObjects::frame($scene, $phrase, $unhidden),
             'partner_line' => CardObjects::partnerLine($first),
             'key' => $phrase->speakingKey(),
             'rounds' => $rounds,
@@ -340,16 +342,34 @@ final class PhraseCards
      *
      * How many is the ONLY thing the levels differ in (решение архитектора 20.09): an intermediate learner says the
      * frame with every value its window may show — the prompt writes two or three — and a beginner with
-     * {@see BEGINNER_ROUNDS} of them; a frame with one value has that one. There is no ceiling beyond that: a
-     * window with four values is a window with four values.
+     * {@see BEGINNER_ROUNDS} of them; a frame with one value has that one. There is no ceiling beyond that: a window
+     * with four values is a window with four values.
+     *
+     * A WINDOW OF TWO VALUES OR MORE IS SAID WITH TWO ROUNDS OR MORE (наряд FIX-3 §3). «How heavy should ___ be?» of the
+     * owner's gym day 2 had three values and one round: the seam judge had said the native sentences of «the dumbbell»
+     * and «the bar» do not read («Насколько тяжёлым должен быть гантель?»), and a filler it hides is on no card
+     * (SESSION-1e). Such a frame takes the hidden values in the slot's order until it has two rounds — no more: a value
+     * the judge hid may be one the lesson got wrong on both sides («Where are the cardio area?», day 1), and one is what
+     * the canon asks for.
      *
      * @return list<int>
      */
     public static function rounds(SceneMaterial $scene, PlanTerm $phrase, PlanLevel $level): array
     {
-        $fillers = PhraseSeries::fillers($scene, $phrase);
+        $shown = PhraseSeries::fillers($scene, $phrase);
+        $rounds = $level === PlanLevel::Beginner ? array_slice($shown, 0, self::BEGINNER_ROUNDS) : $shown;
+        $frame = $phrase->frame();
+        $all = $frame === null ? [] : array_keys($frame->fillers());
+        foreach ($all as $index) {
+            if (count($rounds) >= min(self::MIN_ROUNDS, count($all))) {
+                break;
+            }
+            if (! in_array($index, $rounds, true)) {
+                $rounds[] = $index;
+            }
+        }
 
-        return $level === PlanLevel::Beginner ? array_slice($fillers, 0, self::BEGINNER_ROUNDS) : $fillers;
+        return $rounds;
     }
 
     /**
@@ -361,8 +381,7 @@ final class PhraseCards
      * the visit whose frame the dialogue says there only (a frame said twice has no single right filler), else the first
      * such exchange. For a frame that comes back as this card (`$for`, SESSION-1d) — the first such exchange of that
      * frame. The two wrong frames have windows too and are the frames of the exchanges FARTHEST from this one by step
-     * (SESSION-1d, as `dialogue_partner`'s fourth option): a frame said in a far exchange belongs to another moment of
-     * the visit.
+     * (SESSION-1d): a frame said in a far exchange belongs to another moment of the visit.
      *
      * Every frame carries `said` — the frame as a whole phrase ({@see CardObjects::whole()}): the right one said with
      * the filler this exchange says it with, a wrong one with the filler the dialogue says it with (none — its first).
@@ -437,14 +456,15 @@ final class PhraseCards
      * The filler at `$index` of a frame with a window, as the cards show it; null for a frame without one, an index the
      * slot does not have, or a filler no card shows ({@see CardObjects::fillers()}).
      *
+     * @param  list<int>  $unhidden  the fillers the seam judge hid that this card shows all the same
      * @return array{index: int, target: string, native: string, pronunciation_native: string, in_dialogue: bool, native_line: string, audio: array{ref: string, voice: 'partner'|'learner', url: null, duration_ms: null}|null}|null
      */
-    private static function fillerAt(SceneMaterial $scene, PlanTerm $phrase, ?int $index): ?array
+    private static function fillerAt(SceneMaterial $scene, PlanTerm $phrase, ?int $index, array $unhidden = []): ?array
     {
         if ($index === null || ! self::hasSlot($phrase)) {
             return null;
         }
-        foreach (CardObjects::fillers($scene, $phrase) as $filler) {
+        foreach (CardObjects::fillers($scene, $phrase, $unhidden) as $filler) {
             if ($filler['index'] === $index) {
                 return $filler;
             }

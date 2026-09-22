@@ -29,6 +29,12 @@ use App\Modules\Plan\Domain\Service\Words;
  * «About the learner» is read two ways: the question names the learner's role as the one who said
  * something, or the right option shares two content words with the learner's line and none with the
  * partner's. The checks are in the target language, and every word is read by the target's pack.
+ *
+ * THE OPTIONS OF ONE CHECK ARE OF ONE FORM WITH THE RIGHT ONE (наряд FIX-3 §5), read on the card's side — the learner's
+ * language, which is what the card shows: each option is 0.5–2× the right one's length in letters, none starts with a
+ * lower-case letter (a fragment is odd by its form, not by its meaning), and none is a piece of the partner's line in the
+ * learner's language word for word (an option copied out of the translation is found by reading, not by hearing).
+ * Otherwise `options.form_mismatch` at the check — fatal: the card a learner would get tests the form, not the meaning.
  */
 final class CheckRules implements LessonRule
 {
@@ -37,7 +43,8 @@ final class CheckRules implements LessonRule
         $verbatim = $context->reads(LessonCodes::CHECK_VERBATIM, LanguageSide::Target, 'function_words', 'word_forms', 'number_pattern', 'sentence_ends');
         $aboutLearner = $context->reads(LessonCodes::CHECK_ABOUT_LEARNER, LanguageSide::Target, 'saying_verbs', 'function_words', 'word_forms');
         $alternatives = $context->reads(LessonCodes::CHECK_LISTED_ALTERNATIVE_AS_WRONG, LanguageSide::Target, 'alternative_words', 'function_words', 'word_forms');
-        if (! $verbatim && ! $aboutLearner && ! $alternatives) {
+        $form = $context->reads(LessonCodes::OPTIONS_FORM_MISMATCH, LanguageSide::Native);
+        if (! $verbatim && ! $aboutLearner && ! $alternatives && ! $form) {
             return [];
         }
         $words = $context->targetWords();
@@ -67,6 +74,11 @@ final class CheckRules implements LessonRule
                 $out[] = new LessonViolation(LessonCodes::CHECK_ABOUT_LEARNER, $address, "«{$exchange->check->textTarget}» → «{$right->textTarget}» is about the learner's line, not the partner's");
             }
 
+            $mismatch = $form ? self::formMismatch($exchange) : null;
+            if ($mismatch !== null) {
+                $out[] = new LessonViolation(LessonCodes::OPTIONS_FORM_MISMATCH, $address, $mismatch);
+            }
+
             if ($alternatives && array_filter(Words::tokens($partner->textTarget), $words->isAlternative(...)) !== []) {
                 foreach ($exchange->check->options as $index => $option) {
                     if ($index === $exchange->check->correctOptionIndex) {
@@ -80,6 +92,48 @@ final class CheckRules implements LessonRule
         }
 
         return $out;
+    }
+
+    /** Shortest and longest an option may be against the right one, in letters (наряд FIX-3 §5). */
+    public const OPTION_LENGTH = [0.5, 2.0];
+
+    /**
+     * What makes the options of an exchange's check not of one form with its right one, in the learner's language — or
+     * null when they are: the first option too short or too long against the right one, starting lower-case, or said
+     * word for word in the partner's line.
+     */
+    private static function formMismatch(Exchange $exchange): ?string
+    {
+        $right = $exchange->check->correctOption();
+        $partner = $exchange->partner();
+        if ($right === null || $partner === null) {
+            return null;
+        }
+        $rightLength = self::letters($right->textNative);
+        $partnerWords = Words::tokens($partner->textNative);
+        foreach ($exchange->check->options as $index => $option) {
+            $text = trim($option->textNative);
+            $length = self::letters($text);
+            if ($index !== $exchange->check->correctOptionIndex && $rightLength > 0
+                && ($length < self::OPTION_LENGTH[0] * $rightLength || $length > self::OPTION_LENGTH[1] * $rightLength)) {
+                return "the option «{$text}» is {$length} letters against {$rightLength} of the right «{$right->textNative}»";
+            }
+            if (preg_match('/^[^\p{L}]*\p{Ll}/u', $text) === 1) {
+                return "the option «{$text}» starts lower-case";
+            }
+            $optionWords = Words::tokens($text);
+            if ($optionWords !== [] && self::contains($partnerWords, $optionWords)) {
+                return "the option «{$text}» is a piece of the partner's line «{$partner->textNative}»";
+            }
+        }
+
+        return null;
+    }
+
+    /** The letters and digits of a text — what «as long as» is measured in, marks and spaces aside. */
+    private static function letters(string $text): int
+    {
+        return mb_strlen((string) preg_replace('/[^\p{L}\p{N}]+/u', '', $text));
     }
 
     private static function aboutLearner(Lesson $answer, Exchange $exchange, LanguageWords $words): bool

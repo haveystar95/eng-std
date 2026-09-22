@@ -98,15 +98,17 @@ it('reads the day in one of three words — day one of a built, unstarted plan i
         ->and(WindowStatus::of(DayStatus::Locked, PlanStatus::Active, 3, false))->toBe(WindowStatus::Locked)
         // Наряд GEN-3 §11: a day next in line whose lesson is still being written has no button, whatever its date says.
         ->and(WindowStatus::of(DayStatus::Open, PlanStatus::Active, 2, true))->toBe(WindowStatus::Building)
-        ->and(WindowStatus::Building->action(true))->toBeNull();
+        ->and(WindowStatus::Building->action())->toBeNull();
 });
 
-it('has one action per status — «Ещё раз» only for a passed day that has something to say aloud', function () {
-    expect(WindowStatus::NotStarted->action(true))->toBe(WindowAction::Start)
-        ->and(WindowStatus::InProgress->action(true))->toBe(WindowAction::Continue)
-        ->and(WindowStatus::Passed->action(true))->toBe(WindowAction::Again)
-        ->and(WindowStatus::Passed->action(false))->toBeNull()
-        ->and(WindowStatus::Locked->action(true))->toBeNull();
+// Canon (наряд FIX-3 §8): «Удалить: … дневной again на итоге» — «Ещё раз» is each stage's row, not the day's. CATCHES a
+// passed day that still offers the day's own «again».
+it('has one action per status, and none on a passed day — «Ещё раз» is the rows\'', function () {
+    expect(WindowStatus::NotStarted->action())->toBe(WindowAction::Start)
+        ->and(WindowStatus::InProgress->action())->toBe(WindowAction::Continue)
+        ->and(WindowStatus::Passed->action())->toBeNull()
+        ->and(WindowStatus::Locked->action())->toBeNull()
+        ->and(array_map(static fn (WindowAction $a): string => $a->value, WindowAction::cases()))->toBe(['start', 'continue']);
 });
 
 it('prints no number on a day not started — every row «впереди», the first one too (23-0a)', function () {
@@ -121,13 +123,13 @@ it('prints no number on a day not started — every row «впереди», the 
 it('puts the count, the minutes left and a partial bar on the current row only — catches a number on every row (23-0b)', function () {
     $rows = DayWindowStages::of(windowDay(WINDOW_WALKED_DAY), [], WindowStatus::InProgress, new DayPace);
 
-    // Listen: 3 of 9 answered → a share of 0.33; the six left at listen_question's 12 s.
+    // Listen: 3 of 9 answered → a share of 0.33; the six left at listen_question's price.
     expect(windowRows($rows))->toBe([
         ['words', 'done', null, null], ['phrases', 'done', null, null], ['dialogue', 'done', null, null],
         ['listen', 'current', 3, 9], ['speak', 'locked', null, null],
     ])
         ->and($rows[3]->share)->toBe(0.33)
-        ->and($rows[3]->minutesLeft)->toBe(DayPace::minutes(6 * 12))
+        ->and($rows[3]->minutesLeft)->toBe(DayPace::minutes(6 * DayPace::DEFAULTS['listen_question']))
         ->and($rows[0]->share)->toBe(1.0)
         ->and($rows[4]->share)->toBe(0.0)
         ->and(DayWindowStages::progress($rows))->toBe(0.6);
@@ -153,9 +155,11 @@ it('estimates the day by the pace of its kinds: all of it before the start, what
     $walked = windowDay(WINDOW_WALKED_DAY);
     $pace = new DayPace;
 
-    // word_intro 8 · phrase_intro 12 · dialogue_partner 15 · listen_question 12 · speak_answer 35 (наряд SESSION-1a, разд. 2).
-    expect(DayWindowStages::minutesEstimate($fresh, WindowStatus::NotStarted, $pace))->toBe(DayPace::minutes(24 * 8 + 19 * 12 + 15 * 15 + 9 * 12 + 8 * 35))
-        ->and(DayWindowStages::minutesEstimate($walked, WindowStatus::InProgress, $pace))->toBe(DayPace::minutes(6 * 12 + 8 * 35))
+    // By the price list of the kinds (наряд SESSION-1a, разд. 2; the prices measured on the phone — наряд FIX-3 §2).
+    $p = DayPace::DEFAULTS;
+    expect(DayWindowStages::minutesEstimate($fresh, WindowStatus::NotStarted, $pace))
+        ->toBe(DayPace::minutes(24 * $p['word_intro'] + 19 * $p['phrase_intro'] + 15 * $p['dialogue_partner'] + 9 * $p['listen_question'] + 8 * $p['speak_answer']))
+        ->and(DayWindowStages::minutesEstimate($walked, WindowStatus::InProgress, $pace))->toBe(DayPace::minutes(6 * $p['listen_question'] + 8 * $p['speak_answer']))
         ->and(DayWindowStages::minutesEstimate($walked, WindowStatus::Passed, $pace))->toBeNull()
         ->and(DayPace::minutes(1))->toBe(1)
         ->and(DayPace::minutes(0))->toBe(0);
@@ -178,7 +182,8 @@ it('reads a unit over all its cards: a second failure returns it, all answered w
         ->and($states[UnitStates::key('S1', UnitKind::Word, 'v2')])->toBe(UnitState::ReturnsTomorrow)
         ->and($states[UnitStates::key('S1', UnitKind::Word, 'v3')])->toBe(UnitState::Pending)
         ->and($states[UnitStates::key('S1', UnitKind::Exchange, 'x1')])->toBe(UnitState::Pending)
-        ->and(ProgramSummary::of(array_values($states)))->toEqual(new ProgramSummary(4, 1, 1));
+        // The tab's brow (наряд FIX-3 §9): all units, walked, and how many came back from earlier days — none here.
+        ->and(ProgramSummary::of(array_values($states), 0))->toEqual(new ProgramSummary(4, 1, 0));
 });
 
 it('paints a slot with the first tone it knows, and with the theme’s empty slot when it knows none', function () {

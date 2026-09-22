@@ -89,28 +89,38 @@ function rpRoom(object $ctx, string $token, string $id, int $number = 1): array
     return $ctx->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/{$number}")->assertOk()->json('data');
 }
 
-// Canon (§7): «window.talk_again = true, когда этап conversation дня пройден по журналу и день показывает окно; POST …/
-// conversation на пройденном дне — replay: не трогает „пройден“ и состояние дня, targets те же, журнал и траты пишутся».
-// CATCHES a «Повторить разговор» offered before the talk is walked, a passed (closed) day that refuses the replay with 409
-// `plan_day_not_open`, a replay that reopens the closed day or rewrites its minutes, other targets, and a replay not
-// journaled.
+/** «Ещё раз» of the talk's row of the window (наряд FIX-3 §8). */
+function rpTalkAgain(array $room): bool
+{
+    $rows = array_values(array_filter($room['window']['stages'], static fn (array $s): bool => $s['stage'] === 'conversation'));
+
+    return $rows[0]['again'];
+}
+
+// Canon (§7; наряд FIX-3 §8 — «Ещё раз» у каждого этапа вместо «Повторить разговор»): «stages[].again разговора — true,
+// пока не упёрся в replays_per_day; повтор не снимает „пройден“ и не трогает план; window.talk_again и дневной again на
+// итоге удалить». CATCHES «Ещё раз» of the talk offered before it is walked, a passed (closed) day that refuses the replay
+// with 409 `plan_day_not_open`, a replay that reopens the closed day or rewrites its minutes, other targets, a replay not
+// journaled — and the removed fields coming back.
 it('offers the walked talk again from the window, and holds it on a passed day as a replay that changes nothing', function () {
     $clock = rpClock('2026-09-22T09:00:00Z');
     ['token' => $token, 'id' => $id] = rpDay($this);
 
-    expect(rpRoom($this, $token, $id)['window']['talk_again'])->toBeFalse();
+    expect(rpTalkAgain(rpRoom($this, $token, $id)))->toBeFalse()
+        ->and(rpRoom($this, $token, $id)['window'])->not->toHaveKey('talk_again');
     rpAnswerAll($this, $token, $id);
-    expect(rpRoom($this, $token, $id)['window']['talk_again'])->toBeFalse();
+    expect(rpTalkAgain(rpRoom($this, $token, $id)))->toBeFalse();
 
     $walked = rpTalk($this, $clock, $token, $id);
     // Walked, the day still open: «Ещё раз» is there — the talk's stage is walked by the journal.
-    expect(rpRoom($this, $token, $id)['window']['talk_again'])->toBeTrue();
+    expect(rpTalkAgain(rpRoom($this, $token, $id)))->toBeTrue();
 
     $closed = $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk()->json('data');
     $minutes = $closed['metrics']['minutes_spent'];
-    expect($closed['window']['talk_again'])->toBeTrue()
-        // The cards' «Ещё раз» of a passed day is what it was.
-        ->and($closed['window']['allowed_action'])->toBe('again');
+    expect(rpTalkAgain($closed))->toBeTrue()
+        // A passed day has no «again» of its own any more: every stage's row has its «Ещё раз», the cards' ones always.
+        ->and($closed['window']['allowed_action'])->toBeNull()
+        ->and(array_unique(array_column($closed['window']['stages'], 'again')))->toBe([true]);
 
     $clock->move('+1 hour');
     $replay = rpTalk($this, $clock, $token, $id);
@@ -122,7 +132,7 @@ it('offers the walked talk again from the window, and holds it on a passed day a
         ->and($replay['summary']['returns_tomorrow'])->toBeFalse()
         ->and($room['day']['status'])->toBe('closed')
         ->and($room['metrics']['minutes_spent'])->toBe($minutes)
-        ->and($room['window']['talk_again'])->toBeTrue()
+        ->and(rpTalkAgain($room))->toBeTrue()
         ->and(DB::table('plan_stage_passages')->where('day_id', $room['day']['id'])->value('conversation_id'))->toBe($walked['id'])
         // Its lines and their bill are written like any talk's.
         ->and(DB::table('conversation_turns')->where('conversation_id', $replay['id'])->count())->toBe(count($replay['turns']))
@@ -146,6 +156,8 @@ it('holds a walked talk again three times a calendar day of the learner, and say
         expect(rpTalk($this, $clock, $token, $id)['replay'])->toBeTrue("replay {$n}");
     }
     $clock->move('+10 minutes');
+    // Three held today: the talk's «Ещё раз» is gone from the window, the cards' ones stay.
+    expect(rpTalkAgain(rpRoom($this, $token, $id)))->toBeFalse();
     $refused = $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/conversation");
     $refused->assertStatus(409)
         ->assertJsonPath('code', 'plan_conversation_replay_limit')
@@ -156,7 +168,8 @@ it('holds a walked talk again three times a calendar day of the learner, and say
 
     // The learner's midnight: the replay opens again.
     $clock->move('+12 hours');
-    expect(rpTalk($this, $clock, $token, $id)['replay'])->toBeTrue()
+    expect(rpTalkAgain(rpRoom($this, $token, $id)))->toBeTrue()
+        ->and(rpTalk($this, $clock, $token, $id)['replay'])->toBeTrue()
         ->and(DB::table('conversations')->where('plan_id', $id)->count())->toBe(5);
 });
 
@@ -170,20 +183,21 @@ it('counts the day\'s minutes as its cards and the talk that walked it, from the
     $cards = rpRoom($this, $token, $id)['metrics']['minutes_spent'];
     expect($cards)->toBe(1);
 
-    // Four moves 20 s apart after the opening line: 80 s of talk — 2 minutes by its own summary.
+    // Eight moves 20 s apart after the opening line (six targets and two more, наряд FIX-3 §7): 160 s of talk — 3 minutes
+    // by its own summary.
     $walked = rpTalk($this, $clock, $token, $id);
-    expect($walked['summary']['minutes'])->toBe(2);
+    expect($walked['summary']['minutes'])->toBe(3);
     $room = rpRoom($this, $token, $id);
     expect($room['day']['status'])->toBe('in_progress')
-        ->and($room['metrics']['minutes_spent'])->toBe($cards + 2)
-        ->and(planRead($this, $token, $id)['days'][0]['minutes_spent'])->toBe($cards + 2);
+        ->and($room['metrics']['minutes_spent'])->toBe($cards + 3)
+        ->and(planRead($this, $token, $id)['days'][0]['minutes_spent'])->toBe($cards + 3);
 
     // A replay of five hours and more: the day is not a minute longer for it.
     $clock->move('+5 hours');
     rpTalk($this, $clock, $token, $id, again: true);
-    expect(rpRoom($this, $token, $id)['metrics']['minutes_spent'])->toBe($cards + 2);
+    expect(rpRoom($this, $token, $id)['metrics']['minutes_spent'])->toBe($cards + 3);
 
     $closed = $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk()->json('data');
-    expect($closed['metrics']['minutes_spent'])->toBe($cards + 2)
-        ->and($closed['window']['day']['minutes_spent'])->toBe($cards + 2);
+    expect($closed['metrics']['minutes_spent'])->toBe($cards + 3)
+        ->and($closed['window']['day']['minutes_spent'])->toBe($cards + 3);
 });

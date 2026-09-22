@@ -44,6 +44,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $started_at
  * @property string|null $finished_at
  * @property string $created_at
+ * @property array<string, int>|null $pace
  */
 final class PlanModel extends Model
 {
@@ -55,7 +56,7 @@ final class PlanModel extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['checks_json' => 'array', 'days_total' => 'int', 'days_requested' => 'int', 'latency_ms_plan' => 'int', 'attempts_plan' => 'int'];
+    protected $casts = ['checks_json' => 'array', 'pace' => 'array', 'days_total' => 'int', 'days_requested' => 'int', 'latency_ms_plan' => 'int', 'attempts_plan' => 'int'];
 
     /** @return HasMany<PlanSceneModel, $this> */
     public function scenes(): HasMany
