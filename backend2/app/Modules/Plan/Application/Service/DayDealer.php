@@ -6,11 +6,11 @@ namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Port\DayBuildLog;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
-use App\Modules\Plan\Domain\Assembly\CardObjects;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\Assembly\ReturnedUnit;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
+use App\Modules\Plan\Domain\Assembly\SpeakCards;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
@@ -109,14 +109,14 @@ final readonly class DayDealer
     }
 
     /**
-     * THE LEARNER'S LINE OF AN EXCHANGE AS A CARD OF THE DAY CARRIES IT — `CardObjects::ownLine()` over this dealer's own
-     * material of the scene, the very line a new deal puts under `own_line` (наряд BACK-TAILS-2, дополнение по отчёту
-     * клиента 1c: the echo cards dealt before CONV-2 get theirs from here). Null when the plan has no such scene, the
-     * scene no lesson, the lesson no such exchange, or the exchange no line of the learner's.
+     * THE ECHO CARD A NEW DEAL GIVES AN EXCHANGE — `SpeakCards::echoLine()` over this dealer's own material of the scene:
+     * the payload of «Повтори через паузу» as it is dealt today, the learner's own line and all (наряд BACK-TAILS-2,
+     * дополнение по отчёту клиента 1c: the echo cards dealt before CONV-2 are brought to this form). Null when the plan
+     * has no such scene, the scene no lesson, the lesson no such exchange, or the exchange no line of the learner's.
      *
      * @return array<string, mixed>|null
      */
-    public function ownLine(Plan $plan, PlanSceneId $sceneId, int $step): ?array
+    public function echoOf(Plan $plan, PlanSceneId $sceneId, int $step): ?array
     {
         try {
             $plan->scene($sceneId);
@@ -126,7 +126,7 @@ final readonly class DayDealer
         $material = $this->material($plan, [$sceneId])[$sceneId->value] ?? null;
         $exchange = $material?->lesson->exchange($step);
 
-        return $material === null || $exchange === null ? null : CardObjects::ownLine($material, $exchange);
+        return $material === null || $exchange === null ? null : SpeakCards::echoLine($material, $exchange);
     }
 
     /**
