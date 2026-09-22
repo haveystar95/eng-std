@@ -18,14 +18,14 @@ import 'conversation_controller.dart';
 import 'talk_screen.dart';
 import 'talk_summary.dart';
 
-/// «ПОВТОРИТЬ РАЗГОВОР» (наряд CLIENT-CONV-1c §9г; кадр 37-1 «пройден», `window.talk_again` of BACK-TAILS-2) — a new
+/// «ЕЩЁ РАЗ» ОВЕР A WALKED TALK (наряд FIX-3 §5; кадр 30-1 «день пройден», `window.stages[].again`) — a new
 /// talk over a walked day of any kind, on the SAME screens the day's session shows: the ribbon (37-6…37-11) and the
 /// summary (37-12). The day window made the one POST before it came here and read the answer — a 409
 /// `plan_conversation_replay_limit` is said there, on a sheet, and never opens this screen.
 ///
 /// The screen owns the [talk] and the [voice] it is given from here on. «Дальше» on the summary is the way back to the
-/// window, which reads the day again; «Ещё раз» starts another replay, and a limit reached then is said where the talk
-/// would have started (the talk's own «could not start» line).
+/// window, which reads the day again; another replay is started from the day's own plate («ещё раз» of the row, наряд
+/// FIX-3 §5), where a spent limit is said on a sheet.
 class TalkReplayScreen extends ConsumerStatefulWidget {
   const TalkReplayScreen({super.key, required this.plan, required this.number, required this.talk, required this.voice});
 
@@ -40,7 +40,6 @@ class TalkReplayScreen extends ConsumerStatefulWidget {
 
 class _TalkReplayScreenState extends ConsumerState<TalkReplayScreen> {
   bool _summary = false;
-  bool _starting = false;
 
   ConversationController get _talk => widget.talk;
 
@@ -71,7 +70,7 @@ class _TalkReplayScreenState extends ConsumerState<TalkReplayScreen> {
     diagnostics: ref.read(speechDiagnosticsProvider),
     localeId: sttLocaleFor(widget.plan.targetLang),
     expected: '',
-    contextualStrings: [...?_talk.talk?.targets.map((t) => t.textTarget)].take(50).toList(),
+    contextualStrings: [...?_talk.talk?.targets.map((t) => t.saidWith(t.exampleTarget))].take(50).toList(),
     config: const SpeechTurnConfig(silenceAfterSpeech: ConversationController.silenceClosesTurn),
   );
 
@@ -81,16 +80,6 @@ class _TalkReplayScreenState extends ConsumerState<TalkReplayScreen> {
     } catch (_) {
       // Settings did not open — the talk's own exits remain.
     }
-  }
-
-  /// «Ещё раз» on the summary — another replay; the old one the server closes as `replayed`.
-  Future<void> _again() async {
-    setState(() {
-      _starting = true;
-      _summary = false;
-    });
-    await _talk.open(again: true);
-    if (mounted) setState(() => _starting = false);
   }
 
   Future<void> _leave() async {
@@ -113,10 +102,7 @@ class _TalkReplayScreenState extends ConsumerState<TalkReplayScreen> {
                     talk: document!,
                     scene: _scene,
                     sceneById: widget.plan.sceneById,
-                    voice: widget.voice,
-                    busy: _starting,
                     onClose: () => unawaited(_leave()),
-                    onAgain: () => unawaited(_again()),
                     onNext: () => unawaited(_leave()),
                   )
                 : TalkView(

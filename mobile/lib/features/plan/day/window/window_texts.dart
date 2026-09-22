@@ -94,9 +94,14 @@ abstract final class WindowTexts {
   /// server sent them (`stages[].minutes`, BACK-TAILS-2; кадры 23-0a, 37-1, 37-2), else «впереди». The current row says
   /// its remainder (`minutes_left`): it is truer than the plan once the stage is under way. [around] — a review or the
   /// rehearsal, whose frames say the minutes in words, as their status line does: «около 4 минут», «идёт · около 6 минут».
-  static String stageState(AppLocalizations l, WindowStage stage, {bool around = false}) {
+  /// СОСТОЯНИЕ РЯДА СЛОВАМИ (кадры 23-0a…0c, 30-1; наряд FIX-3 §5). Пройденный ряд, который можно пройти ещё раз
+  /// (`stages[].again`), говорит «ещё раз» — это и есть его действие; пройденный разговор без повторов — «лимит на
+  /// сегодня» (суточный кап сервера). Цифр «N / M» в рядах нет.
+  static String stageState(AppLocalizations l, WindowStage stage, {bool around = false, bool offerAgain = true}) {
     String? minutes(int? m) => m == null ? null : (around ? l.planTalkEntryMinutes(m) : _approx(l, m, long: false));
     return switch (stage.state) {
+      WindowStageState.done when offerAgain && stage.again => l.planWindowStageAgain,
+      WindowStageState.done when offerAgain && stage.stage == PlanStage.conversation => l.planWindowTalkLimitToday,
       WindowStageState.done => l.planPlateStateDone,
       WindowStageState.current => switch (minutes(stage.minutesLeft)) {
         null => l.planPlateStateCurrent,
@@ -106,12 +111,6 @@ abstract final class WindowTexts {
     };
   }
 
-  /// «6 / 16» — только у текущего ряда: у остальных сервер цифры не прислал, и строки нет.
-  static String? stageCount(AppLocalizations l, WindowStage stage) =>
-      stage.state == WindowStageState.current && stage.doneCount != null && stage.total != null
-          ? l.planWindowStageCount(stage.doneCount!, stage.total!)
-          : null;
-
   static String tabName(AppLocalizations l, WindowTab tab) => switch (tab) {
     WindowTab.words => planStageName(l, PlanStage.words),
     WindowTab.phrases => planStageName(l, PlanStage.phrases),
@@ -120,12 +119,14 @@ abstract final class WindowTexts {
 
   /// Бровь вкладки из счётчиков сервера: «Слова · 8 · 6 пройдено · 2 вернутся завтра». У диалога
   /// общего числа нет (кадр 23-0d), у пустой вкладки — только имя; части с нулём не пишутся.
-  static String brow(AppLocalizations l, WindowTab tab, WindowSummary summary) {
+  static String brow(AppLocalizations l, WindowTab tab, WindowSummary summary, {int returnsTomorrow = 0}) {
     var line = tab == WindowTab.dialogue || summary.total == 0
         ? tabName(l, tab)
         : l.planDot(tabName(l, tab), '${summary.total}');
     if (summary.done > 0) line = l.planDot(line, l.planWindowBrowDone(summary.done));
-    if (summary.returns > 0) line = l.planDot(line, l.planWindowBrowReturns(summary.returns));
+    // «2 вернутся завтра» — по СОСТОЯНИЯМ единиц; `summary.returns` с наряда FIX-3 §9 значит другое — сколько
+    // единиц ВЕРНУЛОСЬ из прошлых дней, и его печатает группа «Вернулось из дня N», а не бровь.
+    if (returnsTomorrow > 0) line = l.planDot(line, l.planWindowBrowReturns(returnsTomorrow));
 
     return line;
   }
@@ -159,7 +160,6 @@ abstract final class WindowTexts {
   static String action(AppLocalizations l, WindowAction action) => switch (action) {
     WindowAction.start => l.planPlateCtaStart,
     WindowAction.resume => l.planPlateCtaContinue,
-    WindowAction.again => l.planWindowCtaAgain,
   };
 
   static String? _approx(AppLocalizations l, int? minutes, {required bool long}) => minutes == null

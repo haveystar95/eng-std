@@ -37,6 +37,16 @@ Timer autoplayOnce(State state, CardEnv env, CardAudio? audio, String fallback, 
       unawaited(env.voice.play(audio, fallback: fallback, key: key));
     });
 
+/// THE LINE SOUNDS BEFORE THE CARD ASKS (кадры 33-1, 33-5 серии 38; наряд FIX-3 §1) — the same single autoplay, with
+/// [then] run once the sound is over: the question and its options come up after the line, never over it. A line that
+/// cannot sound (no file and no voice) ends at once, and the card asks straight away rather than waiting on silence.
+Timer autoplayThen(State state, CardEnv env, CardAudio? audio, String fallback, Object key, {required VoidCallback then}) =>
+    Timer(kAutoplayDelay, () async {
+      if (!state.mounted) return;
+      await env.voice.play(audio, fallback: fallback, key: key);
+      if (state.mounted) then();
+    });
+
 // ── 31-1 ──────────────────────────────────────────────────────────────────────────────────────────
 
 /// WORD INTRO (31-1): photo, word, reading, translation, definition; «In the conversation» — the day's line with

@@ -30,6 +30,7 @@
 library;
 
 import 'dart:math' as math;
+import 'spoken_numbers.dart';
 
 /// How a spoken attempt is compared with what was asked for — the card says which, on the wire.
 enum SpeechMode {
@@ -59,6 +60,7 @@ class SpeechRules {
     this.articles = const {},
     this.abbreviations = const [],
     this.numberWords = const {},
+    this.numberJoiners = const {},
     this.repeatMisses = 0,
   });
 
@@ -72,8 +74,12 @@ class SpeechRules {
   /// Abbreviations AS THEY ARE WRITTEN («p.m.»): folded to their letters before anything else looks at the text.
   final List<String> abbreviations;
 
-  /// A number word → the digits it says («three» → «3»).
+  /// A number word → the digits it says («three» → «3»); the words of ONE number are read as one number
+  /// ([SpokenNumbers], наряд FIX-3 §4).
   final Map<String, String> numberWords;
+
+  /// The words that join the parts of one number (en «and» of «one hundred and twenty»).
+  final Set<String> numberJoiners;
 
   /// How many CONTENT words a line on the screen may lose and still pass — the server's `plan.speech.repeat_misses`.
   final int repeatMisses;
@@ -92,6 +98,7 @@ class SpeechRules {
       for (final e in ((j['number_words'] as Map?) ?? const {}).entries)
         if (e.key is String && e.value is String) (e.key as String).toLowerCase(): e.value as String,
     },
+    numberJoiners: _words(j['number_joiners']),
     repeatMisses: (j['repeat_misses'] as num?)?.toInt() ?? 0,
   );
 
@@ -346,13 +353,18 @@ abstract final class SpeechMatch {
   }
 
   /// THE COMPARABLE WORDS OF A TEXT: the pack's abbreviations folded to their letters, then the kernel's canonical
-  /// form, then the pack's number words written as digits — the same three steps, in the same order, as the server's.
+  /// form, then the words of one NUMBER read as that number ([SpokenNumbers]) — the same three steps, in the same
+  /// order, as the server's `SpeechMatch::words()`.
   static List<String> words(String text, [SpeechRules rules = SpeechRules.none]) {
     final canonical = canonicalize(_foldAbbreviations(text, rules.abbreviations));
     if (canonical.isEmpty) return const [];
-    final split = canonical.split(' ');
-    if (rules.numberWords.isEmpty) return split;
-    return [for (final w in split) rules.numberWords[w] ?? w];
+
+    return SpokenNumbers.fold(
+      canonical.split(' '),
+      numberWords: rules.numberWords,
+      articles: rules.articles,
+      joiners: rules.numberJoiners,
+    );
   }
 
   /// An abbreviation written as its letters: «3 p.m.» → «3 pm». Matched as a whole token, letter case aside.

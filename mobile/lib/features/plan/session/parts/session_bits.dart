@@ -90,17 +90,17 @@ class SessionTask extends StatelessWidget {
   );
 }
 
-/// THE QUESTION OF A CHECK (33-1, 33-5; наряды FIX-1 доработка, CLIENT-CONV-1b).
+/// THE QUESTION OF A CHECK (33-1, 33-5; наряды FIX-1 доработка, CLIENT-CONV-1b, FIX-3 §1).
 ///
-/// The task line small above it («Что тебе сказали?»), the question itself in the card's own question type (Literata
-/// 26) — the head of the block of options in the dock, APART from the conversation: between the two lines it read as a
-/// line of the talk (правка прохода 21.09). Never the grey task line at the top edge of the screen: over a
+/// The question in the card's own question type (Literata 26), APART from the conversation: between the two lines it
+/// read as a line of the talk (правка прохода 21.09). Never the grey task line at the top edge of the screen: over a
 /// conversation of six exchanges the question read as chrome there, and the learner was left with four options and
-/// nothing to answer (живой проход 18.09).
+/// nothing to answer (живой проход 18.09). [task] — «Проверь, что понял» small above it, when the card does not stand
+/// it over the line itself (кадры 33-1, 33-5 серии 38).
 class SessionCheckQuestion extends StatelessWidget {
-  const SessionCheckQuestion({super.key, required this.task, required this.question});
+  const SessionCheckQuestion({super.key, this.task, required this.question});
 
-  final String task;
+  final String? task;
   final String question;
 
   @override
@@ -108,8 +108,7 @@ class SessionCheckQuestion extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     mainAxisSize: MainAxisSize.min,
     children: [
-      Text(task, style: AppTextSession.task),
-      const SizedBox(height: 6),
+      if (task case final line?) ...[Text(line, style: AppTextSession.task), const SizedBox(height: 6)],
       Text(question, key: const ValueKey('check-question'), style: AppTextSession.question),
     ],
   );
@@ -416,6 +415,10 @@ enum SlotLook {
   /// Passed — sage.
   sage,
 
+  /// SAID BY THE LEARNER (плашки 37-7, лист 37-8d, итог 37-12) — a sage outline and an 8 % sage fill, the value itself
+  /// in ink: what stands in the window is the learner's own word, not a verdict on it.
+  said,
+
   /// Mistake — ink outline (32-2c).
   wrong,
 }
@@ -561,12 +564,13 @@ class SessionFrameText extends StatelessWidget {
         ? switch (look) {
             SlotLook.empty => (AppColors.brassInk, AppColors.sessionWindowFillOnInk, AppColors.paper),
             SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.paper),
-            SlotLook.sage => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.sessionSageOnInk),
+            SlotLook.sage || SlotLook.said => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.sessionSageOnInk),
             SlotLook.wrong => (AppColors.paper, Colors.transparent, AppColors.paper),
           }
         : switch (look) {
             SlotLook.empty || SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
             SlotLook.sage => (AppColors.verdictKnown, AppColors.sessionSageWash, AppColors.verdictKnown),
+            SlotLook.said => (AppColors.verdictKnown, AppColors.sessionSaidSlotFill, AppColors.ink),
             SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),
           };
     final value = slot;

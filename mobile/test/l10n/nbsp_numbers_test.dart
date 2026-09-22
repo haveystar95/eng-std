@@ -82,6 +82,18 @@ void main() {
     expect(going, 'идёт · около 5$nbspминут');
     expect(going, nb('идёт · около 5 минут'));
   });
+
+  // ПРАВИЛО (наряд FIX-3 §8): СТРОКА СЕРВЕРА печатается как пришла — неразрывный пробел телефон в неё не вставляет,
+  // даже когда она начинается с числа. Это его типографика для СВОИХ чисел, и правка чужого текста — уже ложь о том,
+  // что прислал сервер (строки с числом сервер шлёт обычным пробелом: `until_phrase`, `highlights`, `route_summary`).
+  // ЛОВИТ: «Разговор ·<nbsp>5 minutes, please.» — склейку, наведённую на текст урока.
+  test('planDotPlain: строка сервера с числом склеивается обычным пробелом', () {
+    final l = lookupAppLocalizations(const Locale('ru'));
+    expect(l.planDotPlain('Разговор', '5 minutes, please.'), 'Разговор · 5 minutes, please.');
+    expect(l.planDotPlain('Разговор', 'Приём у врача'), 'Разговор · Приём у врача');
+    expect(l.planDot('Разговор', '5 minutes, please.'), 'Разговор ·${nbsp}5 minutes, please.',
+        reason: 'своя склейка числа — по-прежнему неразрывная');
+  });
 }
 
 Map<String, dynamic> _arb(String name) => jsonDecode(File('lib/l10n/$name').readAsStringSync()) as Map<String, dynamic>;

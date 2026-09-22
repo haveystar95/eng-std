@@ -17,7 +17,7 @@ import '../parts/session_choice.dart';
 import '../parts/session_tiles.dart';
 import '../session_texts.dart';
 import 'card_kit.dart';
-import 'word_cards.dart' show autoplayOnce;
+import 'word_cards.dart' show autoplayOnce, autoplayThen;
 
 /// DIALOGUE — canvas series 33 (work order SESSION-1c, section 2): one exchange per card, in the order of the visit,
 /// with the conversation so far standing above it ([CardEnv.feed], 33-7) and growing from the bottom.
@@ -51,14 +51,18 @@ TextRange? _keyIn(String text, String? key) {
 // ── 33-1 ──────────────────────────────────────────────────────────────────────────────────────────
 
 /// UNDERSTAND THE PARTNER (33-1): the partner's line sounds once when the card opens; its bubble holds a wave, the
-/// text is closed; four paraphrases in the native language (template 30-9). Correct — the text opens in the bubble,
-/// auto-advance after 600 ms; wrong — an outline on the chosen one, sage on the correct one, «Next».
+/// text is closed; three or four paraphrases in the native language, AS MANY AS THE SERVER SENT. Correct — the text
+/// opens in the bubble, auto-advance after 600 ms; wrong — an outline on the chosen one, sage on the correct one,
+/// «Next».
 ///
-/// THE ORDER OF THE FRAME (правка прохода 21.09, наряд CLIENT-CONV-1b): the conversation so far — its last line is
-/// usually the learner's own — then the partner's bubble with the wave, and then, APART from the lines, one block
-/// «Что тебе сказали?» with the server's `question_native` in the card's question type and the four options under
-/// it ([SessionCheckQuestion] at the head of the dock). Before, the question stood between the two lines and read as
-/// a line of the conversation.
+/// THE ORDER OF THE FRAME (кадр 33-1 серии 38, наряд FIX-3 §1): the conversation so far — its last line is usually
+/// the learner's own — then «Проверь, что понял» over the partner's bubble with its wave, and, APART from the lines,
+/// the server's `question_native` in the card's question type with the options under it.
+///
+/// THE LINE SOUNDS FIRST, AND ONLY THEN IS THE QUESTION ASKED (наряд FIX-3 §1; кадр 33-1 «звучит реплика»): while it
+/// sounds there is nothing to read but the caption — a question shown over the sound is answered by reading it, not
+/// by listening. The block keeps its room from the start ([Visibility] with `maintainSize`), so the bubble does not
+/// jump when the question comes up.
 class DialoguePartnerCard extends StatefulWidget {
   const DialoguePartnerCard({super.key, required this.env, required this.payload});
 
@@ -74,6 +78,9 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
 
   Timer? _autoplay;
 
+  /// The line has sounded — the question may be asked.
+  bool _heard = false;
+
   @override
   CardEnv get env => widget.env;
 
@@ -84,7 +91,7 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
   void initState() {
     super.initState();
     final line = widget.payload.partnerLine;
-    _autoplay = autoplayOnce(this, env, line.audio, line.textTarget, _key);
+    _autoplay = autoplayThen(this, env, line.audio, line.textTarget, _key, then: () => setState(() => _heard = true));
   }
 
   @override
@@ -101,10 +108,15 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
     return CardLayout(
       feed: true,
       bodyGap: 16,
-      // The task line of the screen is gone from this card: the question is the head of its own block in the dock.
+      // The task line of the screen is gone from this card: «Проверь, что понял» stands over the line itself.
       task: null,
       above: _feed(env),
-      body: SessionPartnerRow(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(AppLocalizations.of(context).planSessionTaskUnderstood, style: AppTextSession.task),
+          const SizedBox(height: 14),
+          SessionPartnerRow(
         bubble: ValueListenableBuilder<Object?>(
           valueListenable: env.voice.playing,
           builder: (_, playing, _) => SessionBubble(
@@ -119,20 +131,25 @@ class _DialoguePartnerCardState extends State<DialoguePartnerCard> with ChoiceCa
             ),
           ),
         ),
-        listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _key, size: 28, brass: true),
-      ),
-      bottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SessionCheckQuestion(
-            key: const ValueKey('check-block'),
-            task: AppLocalizations.of(context).planSessionTaskWhatSaid,
-            question: p.questionNative,
+            listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _key, size: 28, brass: true),
           ),
-          const SizedBox(height: 14),
-          optionsDock(context),
         ],
+      ),
+      bottom: Visibility(
+        key: const ValueKey('check-after-sound'),
+        visible: _heard,
+        maintainSize: true,
+        maintainAnimation: true,
+        maintainState: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SessionCheckQuestion(key: const ValueKey('check-block'), question: p.questionNative),
+            const SizedBox(height: 14),
+            optionsDock(context),
+          ],
+        ),
       ),
     );
   }
@@ -183,6 +200,9 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
   /// `dialogue_ask`: the partner's reply has appeared.
   bool _reply = false;
 
+  /// The partner's reply has SOUNDED — the check may be asked (наряд FIX-3 §1, кадр 33-5 «ответ врача закрыт · вопрос»).
+  bool _heard = false;
+
   /// The option chosen in the exchange's check (33-5); null — not answered yet.
   String? _chosen;
   int _shake = 0;
@@ -199,7 +219,11 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
   CardCheck? get _check => _ask ? p.check : null;
 
   /// The check is on screen: the reply has come and there is something to ask.
-  bool get _checking => _reply && _check != null;
+  /// The card is asking its check: the reply has sounded and the day dealt a check with it.
+  bool get _checking => _heard && _check != null;
+
+  /// The reply stands closed — a wave instead of its text — while it sounds and while the check is unanswered.
+  bool get _replyClosed => _check != null && _chosen == null;
 
   bool get _checkedRight => _chosen != null && _chosen == _check?.correct;
 
@@ -291,6 +315,8 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     if (line == null || !mounted) return;
     setState(() => _reply = true);
     await env.voice.play(line.audio, fallback: line.textTarget, key: _replyKey);
+    // The question comes after the line, never over it (наряд FIX-3 §1). A line that cannot sound ends at once.
+    if (mounted) setState(() => _heard = true);
   }
 
   /// THE ANSWER OF AN ASK WITH A CHECK WAITS FOR THE CHOICE: the voice result is known when the learner speaks or
@@ -363,7 +389,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
     // After a rescue of this line the partner's bubble already stands in the feed, before the slow repeat.
     final partner = p.partnerLine == null || (!_ask && DialogueFeed.partnerInFeed(env.feed, p.partnerLine))
         ? null
-        : _checking && _chosen == null
+        : _replyClosed
         ? _closedReply(p.partnerLine!)
         : _partnerRow(env, p.partnerLine!, playKey: _ask ? _replyKey : 'partner-line');
     final rows = _ask ? [own, if (_reply && partner != null) SessionAppear(child: partner)] : [?partner, own];
@@ -371,7 +397,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
       feed: true,
       bodyGap: 16,
       fadeStop: _mode == DialogueMode.chips ? 0.34 : 0.30,
-      // The check's question is not a line at the top of the screen: it heads its own block in the dock ([_checkDock]).
+      // The check's question is not a line at the top of the screen: it stands over the lines it asks about (33-5).
       task: _checking
           ? null
           : SessionTask(switch (_mode) {
@@ -383,6 +409,14 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_check case final check? when _checking) ...[
+            SessionCheckQuestion(
+              key: const ValueKey('check-block'),
+              task: l.planSessionTaskUnderstood,
+              question: check.questionNative,
+            ),
+            const SizedBox(height: 16),
+          ],
           for (final (i, row) in rows.indexed) ...[if (i > 0) const SizedBox(height: 8), row],
         ],
       ),
@@ -502,21 +536,26 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
         children: [
           _playingLine(l),
           const SizedBox(height: 14),
-          SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+          // While the reply is still sounding the check has not come up yet: «Дальше» here would leave the card with
+          // the answer unsent, and the stage would deal it again.
+          SessionDockButton(
+            label: l.planSessionNext,
+            enabled: _held == null,
+            busy: env.advancing,
+            onTap: _held == null ? () => unawaited(env.next()) : null,
+          ),
         ],
       );
     }
     return voiceDock(context, liveLineInDock: false);
   }
 
-  /// THE CHECK AS ITS OWN BLOCK (33-5, the order of 33-1 — наряд CLIENT-CONV-1b): «Что тебе сказали?» and the
-  /// question over the four options, apart from the lines it asks about; after a wrong one, «Next» — the same dock as
-  /// every other check.
+  /// THE OPTIONS OF THE CHECK (кадр 33-5 серии 38): three or four, AS MANY AS THE SERVER SENT, in the dock under the
+  /// lines; «Проверь, что понял» and the question stand over them, with the lines they ask about. After a wrong one,
+  /// «Next» — the same dock as every other check.
   List<Widget> _checkDock(AppLocalizations l) {
     final check = _check!;
     return [
-      SessionCheckQuestion(key: const ValueKey('check-block'), task: l.planSessionTaskWhatSaid, question: check.questionNative),
-      const SizedBox(height: 14),
       for (final o in check.options) ...[
         if (o != check.options.first) const SizedBox(height: 8),
         SessionOption(

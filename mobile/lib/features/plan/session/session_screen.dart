@@ -51,12 +51,16 @@ class SessionScreen extends ConsumerStatefulWidget {
     required this.number,
     this.backend,
     this.talkBackend,
-    this.replay = false,
+    this.replayStage,
   });
 
   final Plan plan;
   final int number;
-  final bool replay;
+
+  /// «Ещё раз» ряда (наряд FIX-3 §5): этот этап проходится снова на телефоне, ничего не отправляется. Null — сессия.
+  final PlanStage? replayStage;
+
+  bool get replay => replayStage != null;
 
   /// The session server; null — the real API. A test substitutes its own.
   final SessionBackend? backend;
@@ -96,7 +100,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       plan: widget.plan,
       number: widget.number,
       store: ref.read(planStoreProvider),
-      replay: widget.replay,
+      replayStage: widget.replayStage,
     )..addListener(_onSession);
     _voice = SessionVoice(lines: ref.read(lineAudioCacheProvider), targetLang: widget.plan.targetLang);
     unawaited(_voice.warmUp().catchError((Object _) {}));
@@ -338,6 +342,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       onNoHints: (v) => unawaited(_session.setNoHints(v)),
       onStart: q.nextIn(stage) != null ? _session.startStage : null,
       onBack: () => Navigator.of(context).maybePop(),
+      rehearsal: _session.day?.day.type == PlanDayType.rehearsal,
       buildLabel: version == null ? null : l.planSessionBuild(version),
     );
   }
@@ -486,7 +491,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     config: const SpeechTurnConfig(silenceAfterSpeech: ConversationController.silenceClosesTurn),
   );
 
-  /// The day's phrases by `ref` — the text behind the server's `phrases_used`.
+  /// The day's phrases — what the recogniser is told to expect of this talk; the talk's own constructions come with
+  /// the document, and the microphone is built before it.
   Map<String, String> get _talkPhrases => {
     for (final p in _session.day?.window?.program.phrases ?? const <WindowPhrase>[]) p.ref: p.text,
   };
@@ -533,7 +539,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       sceneById: _session.currentPlan.sceneById,
       voice: _voice,
       makeMic: _talkMic,
-      phraseTexts: _talkPhrases,
       openSettings: _openSettings,
       onSummary: _session.talkEnded,
       onClose: () => Navigator.of(context).maybePop(),
@@ -549,22 +554,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       talk: document!,
       scene: _session.scene,
       sceneById: _session.currentPlan.sceneById,
-      voice: _voice,
-      busy: _starting,
       onClose: () => Navigator.of(context).maybePop(),
-      onAgain: () => unawaited(_againTalk()),
       onNext: () => unawaited(_session.afterTalk()),
     );
-  }
-
-  /// «Ещё раз» (37-12): a NEW talk — the server closes the old one as `replayed`.
-  Future<void> _againTalk() async {
-    final talk = _talkController();
-    setState(() => _starting = true);
-    _session.talkAgain();
-    await talk.open(again: true);
-    if (!mounted) return;
-    setState(() => _starting = false);
   }
 
   /// THE STAGE SUMMARY (30-6) — one component for every stage with cards (решение архитектора 22.09); the talk's own is
@@ -579,7 +571,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     return SessionStageSummary(
       title: SessionTexts.passed(l, stage, _session.minutesOf(stage)),
       rows: _rows(current: next ?? stage),
-      lines: SessionTexts.stageLines(l, stage, SessionSummaries.stageTally(q, stage), role: _session.scene?.partnerRoleNative),
+      lines: SessionTexts.stageLines(
+        l,
+        stage,
+        SessionSummaries.stageTally(q, stage, server: _session.summaryOf(stage)),
+        role: _session.scene?.partnerRoleNative,
+      ),
       next: next == null
           ? (stage: null, name: l.planSessionDayTotal, value: l.planMinutesCount(_session.dayMinutes))
           : (stage: next, name: SessionTexts.stage(l, next), value: nextMinutes == null ? null : l.planSessionApproxMinutes(nextMinutes)),

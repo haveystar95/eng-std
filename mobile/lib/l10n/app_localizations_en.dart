@@ -3277,11 +3277,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String planWindowStageCount(int done, int total) {
-    return '$done / $total';
-  }
-
-  @override
   String planWindowPassedLine(String minutes) {
     return 'Day passed · $minutes';
   }
@@ -3301,9 +3296,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get planWindowCtaAgain => 'Once more';
 
   @override
   String get planWindowListen => 'Listen';
@@ -3421,6 +3413,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionNoHintsSub => 'Dialogue and “Speak myself” go straight to voice';
+
+  @override
+  String get planSessionNoHintsTalk => 'In the talk — no hints, the partner\'s text stays closed';
 
   @override
   String get planSessionStart => 'Start';
@@ -3959,17 +3954,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String planTalkPhrasesOf(int used, int total) {
-    return 'The day\'s phrases in the talk · $used of $total';
-  }
-
-  @override
-  String get planTalkNotSaidTomorrow => 'Not said — comes back tomorrow';
-
-  @override
-  String get planTalkNotSaidRehearsal => 'Not said — go over it before the visit';
-
-  @override
   String get planTalkReady => 'You are ready for the visit';
 
   @override
@@ -4038,16 +4022,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planWindowFromDays => 'From these days';
 
   @override
-  String get planSessionTaskWhatSaid => 'What were you told?';
+  String get planSessionTaskUnderstood => 'Check what you understood';
 
   @override
   String planSessionHeardLine(String text) {
     return 'heard: $text';
-  }
-
-  @override
-  String planTalkSceneRepeatBefore(String scene) {
-    return '$scene · go over it before the visit';
   }
 
   @override
@@ -4206,18 +4185,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkEntrySay => 'Say in the talk';
 
   @override
-  String planTalkStrip(int said, int total) {
-    return 'phrases · $said of $total';
+  String get planVoiceTitle => 'Which voice should say your lines?';
+
+  @override
+  String get planVoiceMale => 'Male';
+
+  @override
+  String get planVoiceMaleHint => 'lower and calmer';
+
+  @override
+  String get planVoiceFemale => 'Female';
+
+  @override
+  String get planVoiceFemaleHint => 'higher and softer';
+
+  @override
+  String get planVoiceInProfile => 'You can change it in your profile';
+
+  @override
+  String get profileRowVoice => 'Voice of your lines';
+
+  @override
+  String get profileVoiceUnset => 'not chosen';
+
+  @override
+  String get planTalkConstructions => 'Constructions in the talk';
+
+  @override
+  String get planTalkConstruction => 'The construction';
+
+  @override
+  String get planTalkFromLesson => 'From the lesson';
+
+  @override
+  String get planTalkYouSaidLabel => 'You said';
+
+  @override
+  String planTalkYouSaid(String said) {
+    return 'you said: $said';
   }
 
   @override
-  String get planTalkSheetTitle => 'The day\'s phrases';
+  String get planTalkRepeatBefore => 'go over it before the event';
 
   @override
-  String get planTalkNotSaid => 'Not said';
+  String planWindowReturnedFromDay(int n) {
+    return 'Back from day $n';
+  }
 
   @override
-  String get planWindowTalkAgain => 'Replay the talk';
+  String get planWindowReturnedFrom => 'Back from earlier';
+
+  @override
+  String get planWindowStageAgain => 'once more';
+
+  @override
+  String get planWindowTalkLimitToday => 'limit for today';
+
+  @override
+  String get planWindowDaySummary => 'Day summary';
 
   @override
   String get planWindowTalkReplayLimit =>

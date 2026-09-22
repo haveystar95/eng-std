@@ -18,7 +18,15 @@ void main() {
     },
     articles: {'a', 'an', 'the'},
     abbreviations: ['a.m.', 'p.m.', 'e.g.', 'i.e.', 'etc.', 'vs.', 'Mr.', 'Mrs.', 'Ms.', 'Dr.', 'St.'],
-    numberWords: {'one': '1', 'two': '2', 'three': '3', 'five': '5', 'ten': '10'},
+    // The whole of the pack's table, as the day sends it (наряд FIX-3 §4) — the phone folds numbers by the server's rule.
+    numberWords: {
+      'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5', 'six': '6', 'seven': '7',
+      'eight': '8', 'nine': '9', 'ten': '10', 'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14',
+      'fifteen': '15', 'sixteen': '16', 'seventeen': '17', 'eighteen': '18', 'nineteen': '19', 'twenty': '20',
+      'thirty': '30', 'forty': '40', 'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80', 'ninety': '90',
+      'hundred': '100', 'thousand': '1000', 'million': '1000000',
+    },
+    numberJoiners: {'and'},
   );
 
   /// Russian names no articles: its «a» is an ordinary word.
@@ -39,6 +47,37 @@ void main() {
     expect(SpeechMatch.heardAll('He has had it', 'He has had it.', en), isTrue, reason: 'a line of unstressed words waits for them all');
     expect(SpeechMatch.heardAll('He has', 'He has had it.', en), isFalse);
     expect(SpeechMatch.heardAll('three three', 'three days, three nights', en), isFalse, reason: 'a multiset: each heard word once');
+  });
+
+  // Canon (наряд FIX-3 §4, зеркало сервера `SpokenNumbers`): «и ожидаемый, и услышанный текст перед сравнением
+  // приводятся к цифрам: слова-числа → число, составные складываются, дефис = пробел». The same cases as
+  // `backend2/tests/Unit/Shared/SpeechMatchTest.php`, so the two sides never judge a number differently — the owner's
+  // gym day failed «I will rest for 45 seconds» against «I'll rest for forty-five seconds» twice.
+  // CATCHES a fold word by word («forty-five» → «40 5»), a fold on one side only, «and» swallowed between two numbers
+  // it does not join, and a pack whose joiners the phone ignores.
+  test('numbers: the words of ONE number are that number, on both sides', () {
+    expect(SpeechMatch.words("I'll rest for forty-five seconds.", en), ['i', 'will', 'rest', 'for', '45', 'seconds']);
+    expect(SpeechMatch.words('I will rest for 45 seconds', en), ['i', 'will', 'rest', 'for', '45', 'seconds']);
+    expect(SpeechMatch.words('twenty one', en), ['21']);
+    expect(SpeechMatch.words('Take one minute, then twenty-one reps', en), ['take', '1', 'minute', 'then', '21', 'reps']);
+    expect(SpeechMatch.words('a hundred dollars', en), ['100', 'dollars']);
+    expect(SpeechMatch.words('one hundred twenty-five', en), ['125']);
+    expect(SpeechMatch.words('two thousand five hundred', en), ['2500']);
+    expect(SpeechMatch.words('one hundred and twenty', en), ['120']);
+    expect(SpeechMatch.words('two thousand and five', en), ['2005']);
+    expect(SpeechMatch.words('one million', en), ['1000000']);
+    expect(SpeechMatch.words('ten five', en), ['10', '5']);
+    expect(SpeechMatch.words('twenty twelve', en), ['20', '12']);
+    expect(SpeechMatch.words('two three', en), ['2', '3']);
+    expect(SpeechMatch.words('five and six', en), ['5', 'and', '6']);
+    expect(SpeechMatch.words('two hundred and a thousand', en), ['200', 'and', '1000']);
+    expect(SpeechMatch.words('a bar', en), ['a', 'bar']);
+    expect(SpeechMatch.repeated("I'll rest for forty-five seconds.", 'I will rest for 45 seconds', en), isTrue);
+    expect(SpeechMatch.repeated('I will rest for 45 seconds', "I'll rest for forty-five seconds.", en), isTrue);
+    expect(SpeechMatch.repeated('I will rest for 40 seconds', "I'll rest for forty-five seconds.", en), isFalse);
+    expect(SpeechMatch.repeated('It costs 120 dollars', 'It costs one hundred and twenty dollars.', en), isTrue);
+    // A language whose pack names no number words folds nothing.
+    expect(SpeechMatch.words('twenty one', ru), ['twenty', 'one']);
   });
 
   // Canon: «нормализация — регистр, знаки, сокращения, числа словом/цифрой, сокращённые формы (I'd = I would)».

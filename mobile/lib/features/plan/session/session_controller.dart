@@ -112,7 +112,7 @@ class SessionController extends ChangeNotifier {
     required this.plan,
     required this.number,
     this.store,
-    this.replay = false,
+    this.replayStage,
     Duration Function(int failures)? outboxBackoff,
     this.lessonPollEvery = const Duration(seconds: 3),
   }) {
@@ -128,7 +128,11 @@ class SessionController extends ChangeNotifier {
   final PlanStore? store;
 
   /// «Once more» on a passed day — see the class.
-  final bool replay;
+  /// «ЕЩЁ РАЗ» ИМЕНЕМ ЭТАПА (`stages[].again`, наряд FIX-3 §5): какой этап проходится снова. Null — обычная сессия.
+  final PlanStage? replayStage;
+
+  /// Идёт повтор этапа: ничего не отправляется, судья не зовётся, день не меняется.
+  bool get replay => replayStage != null;
 
   /// How often the plan is asked about a lesson that is still being written.
   final Duration lessonPollEvery;
@@ -259,6 +263,15 @@ class SessionController extends ChangeNotifier {
   WindowStageState? serverStateOf(PlanStage stage) {
     for (final r in _day?.window?.stages ?? const <WindowStage>[]) {
       if (r.stage == stage) return r.state;
+    }
+    return null;
+  }
+
+  /// ИТОГ ЭТАПА ЧИСЛАМИ СЕРВЕРА (`stages[].summary`, наряд FIX-3 §7; кадр 30-6): объём, «с первого раза», возвраты.
+  /// Null — ряд без итога (разговор) или день, розданный до наряда: тогда 30-6 печатает только то, что знает сам.
+  StageSummary? summaryOf(PlanStage stage) {
+    for (final r in _day?.window?.stages ?? const <WindowStage>[]) {
+      if (r.stage == stage) return r.summary;
     }
     return null;
   }
@@ -404,9 +417,11 @@ class SessionController extends ChangeNotifier {
     return null;
   }
 
-  /// «Once more»: the stage the contract's `again` names — «Speak myself»; a day without it — its last stage with cards.
+  /// «Ещё раз» — ИМЕННО ТОТ этап, чей ряд нажали (наряд FIX-3 §5); этап без карточек в этом дне — последний, у
+  /// которого они есть (так «Ещё раз» никогда не открывает пустой этап).
   void _startReplay(SessionDay day) {
-    final stage = _queue!.hasCards(PlanStage.speak) ? PlanStage.speak : _lastStageWithCards();
+    final named = replayStage;
+    final stage = named != null && (_queue?.hasCards(named) ?? false) ? named : _lastStageWithCards();
     _queue = SessionQueue.replaying(day.stages, stage);
     _stage = stage;
     _phase = SessionPhase.entry;
@@ -580,13 +595,6 @@ class SessionController extends ChangeNotifier {
   /// «Итог» on the end sheet (37-11 → 37-12).
   void talkEnded() {
     _phase = SessionPhase.talkSummary;
-    _notify();
-  }
-
-  /// «Ещё раз» on the talk's summary (37-12): the old talk is closed by the server and a new one
-  /// begins — back to the ribbon, without passing the entry again.
-  void talkAgain() {
-    _phase = SessionPhase.talk;
     _notify();
   }
 

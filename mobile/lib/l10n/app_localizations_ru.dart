@@ -3421,11 +3421,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String planWindowStageCount(int done, int total) {
-    return '$done / $total';
-  }
-
-  @override
   String planWindowPassedLine(String minutes) {
     return 'День пройден · $minutes';
   }
@@ -3447,9 +3442,6 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get planWindowCtaAgain => 'Ещё раз';
 
   @override
   String get planWindowListen => 'Прослушать';
@@ -3577,6 +3569,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planSessionNoHintsSub => 'Диалог и «Говорю сам» — сразу голосом';
+
+  @override
+  String get planSessionNoHintsTalk => 'В разговоре — без подсказок, текст собеседника закрыт';
 
   @override
   String get planSessionStart => 'Начать';
@@ -4146,17 +4141,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String planTalkPhrasesOf(int used, int total) {
-    return 'Фразы дня в разговоре · $used из $total';
-  }
-
-  @override
-  String get planTalkNotSaidTomorrow => 'Не прозвучало — вернётся завтра';
-
-  @override
-  String get planTalkNotSaidRehearsal => 'Не прозвучало — повтори перед приёмом';
-
-  @override
   String get planTalkReady => 'Ты готов к приёму';
 
   @override
@@ -4223,16 +4207,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planWindowFromDays => 'Из каких дней';
 
   @override
-  String get planSessionTaskWhatSaid => 'Что тебе сказали?';
+  String get planSessionTaskUnderstood => 'Проверь, что понял';
 
   @override
   String planSessionHeardLine(String text) {
     return 'услышал: $text';
-  }
-
-  @override
-  String planTalkSceneRepeatBefore(String scene) {
-    return '$scene · повтори перед приёмом';
   }
 
   @override
@@ -4416,18 +4395,65 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planTalkEntrySay => 'Скажи в разговоре';
 
   @override
-  String planTalkStrip(int said, int total) {
-    return 'фразы · $said из $total';
+  String get planVoiceTitle => 'Каким голосом озвучивать твои реплики?';
+
+  @override
+  String get planVoiceMale => 'Мужской';
+
+  @override
+  String get planVoiceMaleHint => 'ниже и спокойнее';
+
+  @override
+  String get planVoiceFemale => 'Женский';
+
+  @override
+  String get planVoiceFemaleHint => 'выше и мягче';
+
+  @override
+  String get planVoiceInProfile => 'Можно поменять в профиле';
+
+  @override
+  String get profileRowVoice => 'Голос своих реплик';
+
+  @override
+  String get profileVoiceUnset => 'не выбран';
+
+  @override
+  String get planTalkConstructions => 'Конструкции в разговоре';
+
+  @override
+  String get planTalkConstruction => 'Конструкция';
+
+  @override
+  String get planTalkFromLesson => 'Из урока';
+
+  @override
+  String get planTalkYouSaidLabel => 'Ты сказал';
+
+  @override
+  String planTalkYouSaid(String said) {
+    return 'ты сказал: $said';
   }
 
   @override
-  String get planTalkSheetTitle => 'Фразы дня';
+  String get planTalkRepeatBefore => 'повтори перед событием';
 
   @override
-  String get planTalkNotSaid => 'Не прозвучало';
+  String planWindowReturnedFromDay(int n) {
+    return 'Вернулось из дня $n';
+  }
 
   @override
-  String get planWindowTalkAgain => 'Повторить разговор';
+  String get planWindowReturnedFrom => 'Вернулось';
+
+  @override
+  String get planWindowStageAgain => 'ещё раз';
+
+  @override
+  String get planWindowTalkLimitToday => 'лимит на сегодня';
+
+  @override
+  String get planWindowDaySummary => 'Итог дня';
 
   @override
   String get planWindowTalkReplayLimit => 'Разговор сегодня уже повторяли — вернись завтра';

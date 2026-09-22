@@ -35,6 +35,7 @@ class SessionStageEntry extends StatelessWidget {
     required this.onNoHints,
     required this.onStart,
     required this.onBack,
+    this.rehearsal = false,
     this.buildLabel,
   });
 
@@ -52,6 +53,10 @@ class SessionStageEntry extends StatelessWidget {
   /// Null — the stage has nothing left to start.
   final VoidCallback? onStart;
   final VoidCallback onBack;
+
+  /// A REHEARSAL DAY IS ONE TALK (наряд FIX-3 §8): «Без подсказок» there is about the talk, not about «Диалог» and
+  /// «Говорю сам» — those trainers are not in this day at all.
+  final bool rehearsal;
 
   /// «build 1.0.0 (2)».
   final String? buildLabel;
@@ -96,7 +101,11 @@ class SessionStageEntry extends StatelessWidget {
                         _StageListRow(row: rows[i], name: stageName(rows[i].stage)),
                       ],
                       const SizedBox(height: 24),
-                      _NoHintsCard(value: noHints, onChanged: onNoHints),
+                      _NoHintsCard(
+                        value: noHints,
+                        onChanged: onNoHints,
+                        sub: rehearsal ? l.planSessionNoHintsTalk : l.planSessionNoHintsSub,
+                      ),
                       if (buildLabel != null) ...[
                         const SizedBox(height: 24),
                         Text(buildLabel!, textAlign: TextAlign.center, style: AppTextSession.buildStamp),
@@ -195,10 +204,13 @@ class _StageListRow extends StatelessWidget {
 }
 
 class _NoHintsCard extends StatelessWidget {
-  const _NoHintsCard({required this.value, required this.onChanged});
+  const _NoHintsCard({required this.value, required this.onChanged, required this.sub});
 
   final bool value;
   final ValueChanged<bool> onChanged;
+
+  /// What «Без подсказок» switches off in THIS day.
+  final String sub;
 
   @override
   Widget build(BuildContext context) {
@@ -223,7 +235,7 @@ class _NoHintsCard extends StatelessWidget {
                   children: [
                     Text(l.planSessionNoHints, style: AppTextSession.text15),
                     const SizedBox(height: 4),
-                    Text(l.planSessionNoHintsSub, style: AppTextSession.meta),
+                    Text(sub, style: AppTextSession.meta),
                   ],
                 ),
               ),

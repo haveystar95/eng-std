@@ -51,10 +51,9 @@ void main() {
   const frame = Size(390, 844);
   final shotKey = GlobalKey();
   final day = sessionFixture('day-doctor');
-  final open = talkFixture('conversation-day-open');
-  final ended = talkFixture('conversation-day-ended');
-  final rehearsal = talkFixture('conversation-rehearsal-ended');
-  const phrases = {'p1': 'My son has a fever.', 'p2': 'He has had it for three days.'};
+  final open = serverTalk('conversation-day-open');
+  final ended = serverTalk('conversation-day-ended');
+  final rehearsal = serverTalk('conversation-rehearsal-ended');
 
   setUpAll(setUpPlanGoldens);
 
@@ -127,8 +126,7 @@ void main() {
         controller: talk,
         scene: day.scene,
         voice: voice,
-        phraseTexts: phrases,
-        makeMic: () {
+                makeMic: () {
           final mic = SessionMic(recognizer: ListeningRecognizer(), localeId: 'en_US', expected: '');
           mics.add(mic);
           return mic;
@@ -235,7 +233,7 @@ void main() {
   });
 
   testWidgets('09 в «Без подсказок» — ни чипа, ни кнопки, тексты закрыты', (tester) async {
-    final blind = talkFixtureEdited('conversation-day-open', (json) {
+    final blind = serverTalk('conversation-day-open', (json) {
       (json['hints'] as Map<String, dynamic>)
         ..['enabled'] = false
         ..['native'] = null;
@@ -279,7 +277,7 @@ void main() {
   testWidgets('14 итог разговора — день', (tester) async {
     await pumpShot(
       tester,
-      TalkSummaryView(talk: ended, scene: day.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}),
+      TalkSummaryView(talk: ended, scene: day.scene, onNext: () {}, onClose: () {}),
     );
     await shoot(tester, '14-37-12-summary-day');
   });
@@ -287,7 +285,7 @@ void main() {
   testWidgets('15 итог разговора — репетиция', (tester) async {
     await pumpShot(
       tester,
-      TalkSummaryView(talk: rehearsal, scene: day.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}),
+      TalkSummaryView(talk: rehearsal, scene: day.scene, onNext: () {}, onClose: () {}),
     );
     await shoot(tester, '15-37-12-summary-rehearsal');
   });

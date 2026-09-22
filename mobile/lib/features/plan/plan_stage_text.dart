@@ -12,6 +12,14 @@ extension PlanDot on AppLocalizations {
     final l = this;
     return _leadingDigit.hasMatch(second) ? l.planWindowJoinNumber(first, second) : l.planWindowJoin(first, second);
   }
+
+  /// A JOIN OF LINES THE SERVER WROTE (наряд FIX-3 §8) — a plain space after the dot, whatever the second one begins
+  /// with. The no-break space is the app's typography for ITS OWN numbers («· 3 минуты»); a server's line is drawn
+  /// exactly as it came, and «Can I get 5 minutes?» is not re-spaced by the phone.
+  String planDotPlain(String first, String second) {
+    final l = this;
+    return l.planWindowJoin(first, second);
+  }
 }
 
 final RegExp _leadingDigit = RegExp(r'^\d');

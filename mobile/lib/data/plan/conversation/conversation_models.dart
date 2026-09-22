@@ -151,47 +151,88 @@ class TalkHints {
   Duration get delay => Duration(milliseconds: delayMs);
 }
 
-/// A phrase of the plan the SERVER heard in the learner's line — the sage underline of кадр 37-8. Since наряд
-/// CONV-2 (п. 10) it carries its own text, so a phrase of another scene of the rehearsal is underlined too; a
-/// server before that sent the ref alone, and then the text is null.
-typedef TalkPhraseRef = ({String sceneId, String ref, String? textTarget, String? textNative});
+/// A CONSTRUCTION THE SERVER HEARD IN THE LEARNER'S LINE — the sage underline of кадр 37-8. Since наряд FIX-3 (§6) the
+/// wire carries the pair alone: WHAT the construction is and what went into its window stand in `targets[]`, in one
+/// place, and the line is underlined by that construction's own text.
+typedef TalkPhraseRef = ({String sceneId, String ref});
 
-/// ONE OF THE PHRASES THE TALK IS FOR — «Скажи в разговоре» (кадр 37-5), the ribbon's strip and its sheet (37-6…37-11,
-/// 37-8d; наряды CONV-2 п. 10, CLIENT-CONV-1c). [said] is the SERVER's: it turns true on the move the server heard the
-/// phrase by its own rule, and the phone only counts what came.
+/// ONE CONSTRUCTION THE TALK IS FOR — «Скажи в разговоре» (кадр 37-5), the plates over the microphone and their sheet
+/// (37-7…37-11, 37-8d) and the summary's cards (37-12); наряд FIX-3 §6. The target of a talk is a FRAME WITH A WINDOW,
+/// not a phrase: the lesson's own value stands grey beside it, and what the learner put in the window is theirs.
+/// [said] and [valueTarget] are the SERVER's: it turns true on the move the server heard the construction by its own
+/// rule (`PhraseUse`), and the phone counts nothing of its own.
 class TalkTarget {
   const TalkTarget({
     required this.sceneId,
     required this.ref,
-    required this.textTarget,
-    required this.textNative,
+    required this.frameTarget,
+    required this.frameNative,
     required this.said,
+    this.exampleTarget,
+    this.exampleNative,
+    this.valueTarget,
   });
 
   final String sceneId;
   final String ref;
-  final String textTarget;
-  final String textNative;
+
+  /// КАРКАС С ОКНОМ — «I have pain in my ___.» Окно на проводе — `___`; фраза без окна приходит целиком.
+  final String frameTarget;
+
+  /// Тот же каркас на родном — «У меня болит ___.»
+  final String frameNative;
+
+  /// Значение урока, которым каркас сказан в уроке («lower back») — серым примером на входе и в листе; null у каркаса
+  /// без окна.
+  final String? exampleTarget;
+  final String? exampleNative;
+
+  /// Сказана ли конструкция в этом разговоре — считает СЕРВЕР своим правилом (`PhraseUse`), не клиент.
   final bool said;
 
-  /// The list as the server sent it, in its order. ADDITIVE: no list — none (a server before CONV-2, or the talk's
-  /// row of a window before BACK-TAILS-2), and an item without its texts is left out rather than guessed.
+  /// ЧТО УЧЕНИК ВСТАВИЛ В ОКНО, как услышано («Lisbon») — сервер (`value_target`); null, пока не сказана, и у каркаса
+  /// без окна.
+  final String? valueTarget;
+
+  /// Окно каркаса на проводе.
+  static const window = '___';
+
+  /// Каркас, сказанный значением: «I have pain in my ___.» + «lower back» → «I have pain in my lower back.»
+  /// Нет значения — каркас как есть.
+  String saidWith(String? value) => _with(frameTarget, value);
+
+  /// То же на родном: «У меня болит ___.» + «поясница» → «У меня болит поясница.»
+  String nativeWith(String? value) => _with(frameNative, value);
+
+  static String _with(String frame, String? value) =>
+      value == null || value.trim().isEmpty ? frame : frame.replaceFirst(window, value.trim());
+
+  /// Что показывать в плашке и в листе: сказанное учеником значение, пока его нет — каркас с пустым окном.
+  String get chipText => said ? saidWith(valueTarget) : frameTarget;
+
+  /// The list as the server sent it, in its order (наряд FIX-3 §6 — цель разговора это КОНСТРУКЦИЯ). ADDITIVE: no list
+  /// — none; an item without its frame is left out rather than guessed.
   static List<TalkTarget> listOf(Object? raw) => [
     if (raw is List)
       for (final t in raw)
         if (t is Map<String, dynamic> &&
             t['ref'] is String &&
-            t['text_target'] is String &&
-            (t['text_target'] as String).trim().isNotEmpty &&
-            t['text_native'] is String)
+            t['frame_target'] is String &&
+            (t['frame_target'] as String).trim().isNotEmpty &&
+            t['frame_native'] is String)
           TalkTarget(
             sceneId: (t['scene_id'] as String?) ?? '',
             ref: t['ref'] as String,
-            textTarget: t['text_target'] as String,
-            textNative: t['text_native'] as String,
+            frameTarget: t['frame_target'] as String,
+            frameNative: t['frame_native'] as String,
+            exampleTarget: _some(t['example_target']),
+            exampleNative: _some(t['example_native']),
             said: t['said'] == true,
+            valueTarget: _some(t['value_target']),
           ),
   ];
+
+  static String? _some(Object? v) => v is String && v.trim().isNotEmpty ? v : null;
 }
 
 /// ONE LINE OF THE RIBBON, written once and never changed.
@@ -246,45 +287,8 @@ class TalkTurn {
     phrasesUsed: [
       for (final p in _list(j['phrases_used'], 'turn.phrases_used'))
         if (p is Map<String, dynamic>)
-          (
-            sceneId: _string(p['scene_id'], 'phrase.scene_id'),
-            ref: _string(p['ref'], 'phrase.ref'),
-            textTarget: _text(p['text_target']),
-            textNative: _text(p['text_native']),
-          ),
+          (sceneId: _string(p['scene_id'], 'phrase.scene_id'), ref: _string(p['ref'], 'phrase.ref')),
     ],
-  );
-}
-
-/// One phrase of the talk's scenes on the summary — «Фразы дня в разговоре» and «Не прозвучало»
-/// (кадр 37-12).
-class TalkPhrase {
-  const TalkPhrase({
-    required this.sceneId,
-    required this.ref,
-    required this.textTarget,
-    required this.textNative,
-    required this.used,
-    this.audioUrl,
-  });
-
-  final String sceneId;
-  final String ref;
-  final String textTarget;
-  final String textNative;
-  final String? audioUrl;
-  final bool used;
-
-  /// The phrase's sound as the voice engine takes it — the learner's own voice of the scene.
-  CardAudio? get audio => audioUrl == null ? null : CardAudio(ref: '$sceneId/$ref', url: audioUrl, voice: 'learner');
-
-  factory TalkPhrase.fromJson(Map<String, dynamic> j) => TalkPhrase(
-    sceneId: _string(j['scene_id'], 'phrase.scene_id'),
-    ref: _string(j['ref'], 'phrase.ref'),
-    textTarget: _string(j['text_target'], 'phrase.text_target'),
-    textNative: _string(j['text_native'], 'phrase.text_native'),
-    audioUrl: _text(j['audio_url']),
-    used: j['used'] == true,
   );
 }
 
@@ -307,7 +311,10 @@ class TalkSummary {
   final int saidCount;
   final int phrasesUsed;
   final int phrasesTotal;
-  final List<TalkPhrase> phrases;
+
+  /// THE TALK'S CONSTRUCTIONS AS IT LEFT THEM (кадр 37-12) — the same list and the same shape as `targets[]`, `said`
+  /// and `value_target` final (наряд FIX-3 §6).
+  final List<TalkTarget> phrases;
   final bool understoodAll;
 
   /// Moves the role ruled were not an answer to what it asked.
@@ -324,19 +331,17 @@ class TalkSummary {
   /// tomorrow before the event — «повтори перед приёмом».
   final bool returnsTomorrow;
 
-  /// The phrases that did not sound, in the order the server listed them.
-  List<TalkPhrase> get notSaid => [for (final p in phrases) if (!p.used) p];
+  /// The constructions that did not sound, in the order the server listed them.
+  List<TalkTarget> get notSaid => [for (final p in phrases) if (!p.said) p];
 
-  /// The phrases that did sound.
-  List<TalkPhrase> get said => [for (final p in phrases) if (p.used) p];
+  /// The constructions that did sound.
+  List<TalkTarget> get said => [for (final p in phrases) if (p.said) p];
 
   factory TalkSummary.fromJson(Map<String, dynamic> j) => TalkSummary(
     saidCount: _int(j['said_count'], 'summary.said_count'),
     phrasesUsed: _int(j['phrases_used'], 'summary.phrases_used'),
     phrasesTotal: _int(j['phrases_total'], 'summary.phrases_total'),
-    phrases: [
-      for (final p in _list(j['phrases'], 'summary.phrases')) TalkPhrase.fromJson(_map(p, 'summary.phrase')),
-    ],
+    phrases: TalkTarget.listOf(_list(j['phrases'], 'summary.phrases')),
     understoodAll: j['understood_all'] == true,
     notUnderstood: _int(j['not_understood'], 'summary.not_understood'),
     rescues: _int(j['rescues'], 'summary.rescues'),
@@ -380,12 +385,10 @@ class PlanConversation {
   /// server before that, and then the screen prints no title of its own.
   final String? titleNative;
 
-  /// THE PHRASES THE TALK IS FOR (`targets[]`, CONV-2 п. 10), with [TalkTarget.said] recounted by the server on every
-  /// move — the ribbon's strip counts them, its sheet lists them. Empty — the server sent none, and there is no strip.
+  /// THE CONSTRUCTIONS THE TALK IS FOR (`targets[]`, CONV-2 п. 10, FIX-3 §6), with [TalkTarget.said] and
+  /// [TalkTarget.valueTarget] recounted by the server on every move — the entry lists them, the dock holds them as
+  /// plates, the summary closes them. Empty — the server sent none, and the plates are not drawn.
   final List<TalkTarget> targets;
-
-  /// «фразы · N из M» — how many of the targets have sounded, by the server's own `said`.
-  int get targetsSaid => targets.where((t) => t.said).length;
 
   /// The role and the scene the talk is in NOW.
   final TalkPartner partner;

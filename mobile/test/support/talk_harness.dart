@@ -1,25 +1,15 @@
-/// THE TALK ON THE REAL SCREEN (наряд CLIENT-CONV-1a, кадры 37-5…37-12): a server document → the
+/// THE TALK ON THE REAL SCREEN (наряды CLIENT-CONV-1a, FIX-3; кадры 37-5…37-12 серии 38): a server document → the
 /// real [TalkView] → a person's taps → what the phone asked the server for.
 ///
-/// The documents are SNAPSHOTS OF THE LIVE SERVER, not hand-written JSON: a talk the client can draw is a talk the
-/// server actually sends. Three generations of them:
-///
-/// - `test/fixtures/plan/legacy/conversation-*.json` ([talkFixture]) — the talk before наряд CONV-2, taken off
-///   `wordtrainer_e2e_test` with `docs/research/client-conv-1a/tools/dump-talk.php` and kept by the server until
-///   BACK-TAILS-2 re-shot its fixtures: no targets, no title, a rescue without words, the intention as a sentence. The
-///   client still has to draw it — every CONV-2 field is additive;
-/// - `test/fixtures/plan/talk_*_v2.json` ([talkV2]) — the talk since CONV-2 (наряд CLIENT-CONV-1c): the ended one is
-///   the live document of CONV-2's run (`docs/research/conv-2/live/conversation-day-ended-v2.json`), the open one the
-///   same talk cut after the rescue — «Sorry?» in the ribbon, `targets[]` with p1 said, the intention as a clause;
-/// - the server's own `conversation-*.json` ([serverTalk], `server_fixtures.dart`) — the talk as BACK-TAILS-2 re-shot
-///   it: targets said by the server's rule «как человек», a talk that starts with «Sorry?», the rehearsal over two
-///   scenes.
+/// THE DOCUMENTS ARE THE SERVER'S OWN (`backend2/docs/fixtures/conversation-*.json`, [serverTalk]), re-shot by the
+/// code of FIX-3 off `wordtrainer_e2e_test`: the targets are CONSTRUCTIONS (`frame_target`, `example_target`,
+/// `value_target`), `phrases_used` is a pair, the summary's phrases are the same list. The client's own copies of
+/// earlier talks (the pre-CONV-2 `legacy/` set and the `talk_*_v2` pair) are gone with the fields they carried —
+/// a test on a contract the server no longer speaks is a test on nothing (наряд FIX-3 §9).
 library;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -39,34 +29,15 @@ import 'package:eng_std/theme/theme.dart';
 import 'server_fixtures.dart';
 import 'session_harness.dart' show SilentRecognizer;
 
-/// A talk before CONV-2 — `test/fixtures/plan/legacy/[name].json`.
-Map<String, dynamic> talkFixtureJson(String name) =>
-    jsonDecode(File('test/fixtures/plan/legacy/$name.json').readAsStringSync()) as Map<String, dynamic>;
-
-PlanConversation talkFixture(String name) => PlanConversation.fromJson(talkFixtureJson(name));
-
 /// The server's own talk document [name] (`conversation-day-open`, `conversation-day-ended`,
-/// `conversation-rehearsal-ended`) — the one its fixtures keep.
-PlanConversation serverTalk(String name) => PlanConversation.fromJson(serverFixtureJson(name));
-
-/// The same document with [edit] applied before it is parsed — a state the live run did not leave
-/// behind («Без подсказок», a ribbon one move shorter).
-PlanConversation talkFixtureEdited(String name, void Function(Map<String, dynamic> json) edit) {
-  final json = talkFixtureJson(name);
-  edit(json);
-  return PlanConversation.fromJson(json);
-}
-
-/// A talk of the CONV-2 contract — `test/fixtures/plan/[name].json` (`talk_day_open_v2`, `talk_day_ended_v2`).
-Map<String, dynamic> talkV2Json(String name) =>
-    jsonDecode(File('test/fixtures/plan/$name.json').readAsStringSync()) as Map<String, dynamic>;
-
-/// A talk of the CONV-2 contract, with [edit] applied before it is parsed when there is one.
-PlanConversation talkV2(String name, [void Function(Map<String, dynamic> json)? edit]) {
-  final json = talkV2Json(name);
+/// `conversation-rehearsal-ended`), with [edit] applied before it is parsed when there is one — a state the live run
+/// did not leave behind («Без подсказок», a construction not said, a ribbon one move shorter).
+PlanConversation serverTalk(String name, [void Function(Map<String, dynamic> json)? edit]) {
+  final json = serverFixtureJson(name);
   edit?.call(json);
   return PlanConversation.fromJson(json);
 }
+
 
 /// What the screen asked the server for, and what it was answered.
 class TalkProbe {
@@ -249,7 +220,6 @@ typedef TalkStand = ({ConversationController talk, HeldVoice voice, List<Session
 Future<TalkStand> pumpTalk(
   WidgetTester tester,
   TalkProbe probe, {
-  Map<String, String> phraseTexts = const {},
   bool hints = true,
   bool open = true,
   VoidCallback? onSummary,
@@ -285,7 +255,6 @@ Future<TalkStand> pumpTalk(
             controller: talk,
             scene: null,
             voice: voice,
-            phraseTexts: phraseTexts,
             openSettings: openSettings,
             makeMic: () {
               final mic = SessionMic(

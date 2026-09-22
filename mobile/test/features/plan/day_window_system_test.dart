@@ -85,9 +85,9 @@ void main() {
           [PlanStage.repetition, PlanStage.conversation], reason: 'ряды — ровно `window.stages` сервера');
       expect(inRow(PlanStage.repetition, 'Повторение'), findsOneWidget);
       // The frames of 37-1 / 37-2 say the minutes in words, as the status line does (BACK-TAILS-2's contract quotes them).
-      expect(inRow(PlanStage.repetition, 'идёт · около 5 минут'), findsOneWidget, reason: 'у текущего — остаток `minutes_left`');
-      expect(inRow(PlanStage.conversation, 'около 6 минут'), findsOneWidget, reason: 'у ряда впереди — его `minutes`');
-      expect(rowOf(tester, PlanStage.conversation).stage.minutes, 6);
+      expect(inRow(PlanStage.repetition, 'идёт · около 3 минут'), findsOneWidget, reason: 'у текущего — остаток `minutes_left`');
+      expect(inRow(PlanStage.conversation, 'около 4 минут'), findsOneWidget, reason: 'у ряда впереди — его `minutes`');
+      expect(rowOf(tester, PlanStage.conversation).stage.minutes, 4);
       expect(find.byType(WindowPill), findsNothing, reason: 'вкладок программы у повторения нет');
 
       expect(textOf(tester, 'window-sources-brow'), 'ИЗ КАКИХ ДНЕЙ');
@@ -210,7 +210,7 @@ void main() {
       expect([for (final r in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow))) r.stage.stage],
           [PlanStage.recall, PlanStage.conversation]);
       expect(inRow(PlanStage.conversation, 'около 6 минут'), findsOneWidget);
-      expect(inRow(PlanStage.recall, 'идёт · около 7 минут'), findsOneWidget, reason: 'кадр 37-1b: остаток `minutes_left`');
+      expect(inRow(PlanStage.recall, 'идёт · около 4 минут'), findsOneWidget, reason: 'кадр 37-1b: остаток `minutes_left`');
       expect(textOf(tester, 'window-sources-brow'), 'ИЗ КАКИХ СЦЕН');
       final tops = <double>[];
       for (final s in [booking, visit]) {
@@ -257,11 +257,11 @@ void main() {
       final json = dayJson('day-doctor');
       rowsOf(json).firstWhere((r) => r['stage'] == 'speak').remove('minutes');
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json));
-      expect(inRow(PlanStage.words, 'идёт · ≈ 5 мин'), findsOneWidget);
-      expect(inRow(PlanStage.phrases, '≈ 12 мин'), findsOneWidget);
-      expect(inRow(PlanStage.dialogue, '≈ 6 мин'), findsOneWidget);
-      expect(inRow(PlanStage.listen, '≈ 5 мин'), findsOneWidget);
-      expect(inRow(PlanStage.conversation, '≈ 3 мин'), findsOneWidget);
+      expect(inRow(PlanStage.words, 'идёт · ≈ 3 мин'), findsOneWidget);
+      expect(inRow(PlanStage.phrases, '≈ 14 мин'), findsOneWidget);
+      expect(inRow(PlanStage.dialogue, '≈ 4 мин'), findsOneWidget);
+      expect(inRow(PlanStage.listen, '≈ 3 мин'), findsOneWidget);
+      expect(inRow(PlanStage.conversation, '≈ 5 мин'), findsOneWidget);
       expect(inRow(PlanStage.speak, 'впереди'), findsOneWidget, reason: 'ряд без `minutes`');
     });
 

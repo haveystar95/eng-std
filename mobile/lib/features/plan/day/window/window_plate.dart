@@ -19,13 +19,23 @@ import 'window_texts.dart';
 /// предложением; хайрлайн и пять рядов этапов 48 с полосой — цифра «N / M» только у текущего. Низ 48:
 /// 24 заходит пилюля вкладок, 24 воздуха. Кнопки на плите нет: она одна и живёт внизу экрана.
 class WindowPlate extends StatelessWidget {
-  const WindowPlate({super.key, required this.window, this.onBack, this.poppedStages = const {}, this.system});
+  const WindowPlate({
+    super.key,
+    required this.window,
+    this.onBack,
+    this.poppedStages = const {},
+    this.system,
+    this.onStageAgain,
+  });
 
   final DayWindow window;
   final VoidCallback? onBack;
 
   /// Этапы, закрытые с прошлого показа окна, — их галки появляются через 300 мс (`om-check-pop`).
   final Set<PlanStage> poppedStages;
+
+  /// «Ещё раз» пройденного ряда (`stages[].again`, наряд FIX-3 §5). Null — ряды только рассказывают состояние.
+  final void Function(PlanStage stage)? onStageAgain;
 
   /// A REVIEW OR THE REHEARSAL (кадры 37-1, 37-2, наряд CLIENT-CONV-1b) — the same plate with its own words: the
   /// day's kind for the brow, its own title, one status line and one sentence of what the day holds in place of the
@@ -110,6 +120,7 @@ class WindowPlate extends StatelessWidget {
                         stage: stage,
                         popCheck: poppedStages.contains(stage.stage),
                         aroundMinutes: system != null,
+                        onAgain: onStageAgain == null ? null : () => onStageAgain!(stage.stage),
                       ),
                     ),
                   ),

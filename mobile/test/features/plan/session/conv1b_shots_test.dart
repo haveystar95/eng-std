@@ -57,10 +57,9 @@ void main() {
   final doctor = sessionFixture('day-doctor');
   final rehearsalDay = sessionFixture('day-rehearsal');
   final plan = planFrom('plan_rehearsal');
-  final open = talkFixture('conversation-day-open');
-  final ended = talkFixture('conversation-day-ended');
-  final rehearsalTalk = talkFixture('conversation-rehearsal-ended');
-  const phrases = {'p1': 'My son has a fever.', 'p2': 'He has had it for three days.'};
+  final open = serverTalk('conversation-day-open');
+  final ended = serverTalk('conversation-day-ended');
+  final rehearsalTalk = serverTalk('conversation-rehearsal-ended');
 
   setUpAll(setUpPlanGoldens);
 
@@ -234,8 +233,7 @@ void main() {
         controller: talk,
         scene: doctor.scene,
         voice: voice,
-        phraseTexts: phrases,
-        makeMic: () {
+                makeMic: () {
           final mic = SessionMic(recognizer: ListeningRecognizer(), localeId: 'en_US', expected: '');
           mics.add(mic);
           return mic;
@@ -423,7 +421,7 @@ void main() {
   });
 
   testWidgets('18 37-7 «Без подсказок» — тексты закрыты', (tester) async {
-    final blind = talkFixtureEdited('conversation-day-open', (json) {
+    final blind = serverTalk('conversation-day-open', (json) {
       (json['hints'] as Map<String, dynamic>)
         ..['enabled'] = false
         ..['native'] = null;
@@ -435,27 +433,28 @@ void main() {
 
   // ── 37-12 · 37-12b ────────────────────────────────────────────────────────────────────────────
   testWidgets('19 37-12 итог разговора дня — галка у «понял»', (tester) async {
-    await pumpShot(tester, TalkSummaryView(talk: ended, scene: doctor.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}));
+    await pumpShot(tester, TalkSummaryView(talk: ended, scene: doctor.scene, onNext: () {}, onClose: () {}));
     await shoot(tester, '19-37-12-summary-day');
   });
 
   testWidgets('20 37-12b итог репетиции — группы по сценам', (tester) async {
     await pumpShot(
       tester,
-      TalkSummaryView(talk: rehearsalTalk, scene: doctor.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}),
+      TalkSummaryView(talk: rehearsalTalk, scene: doctor.scene, onNext: () {}, onClose: () {}),
     );
     await shoot(tester, '20-37-12b-summary-rehearsal');
   });
 
-  testWidgets('21 37-12b итог репетиции — прокручен к «повтори перед приёмом»', (tester) async {
+  testWidgets('21 37-12b итог репетиции — прокручен к последней конструкции', (tester) async {
     await pumpShot(
       tester,
-      TalkSummaryView(talk: rehearsalTalk, scene: doctor.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}),
+      TalkSummaryView(talk: rehearsalTalk, scene: doctor.scene, onNext: () {}, onClose: () {}),
     );
-    final notSaid = find.byWidgetPredicate((w) => w.key is ValueKey<String> && (w.key! as ValueKey<String>).value.endsWith('-not-said'));
-    await tester.ensureVisible(notSaid.first);
+    // Наряд FIX-3 §3: итог — один список карточек-конструкций в порядке сервера.
+    final last = rehearsalTalk.summary!.phrases.last;
+    await tester.ensureVisible(find.byKey(ValueKey('talk-construction-card-${last.sceneId}-${last.ref}')));
     await tester.pumpAndSettle();
-    await shoot(tester, '21-37-12b-summary-rehearsal-not-said');
+    await shoot(tester, '21-37-12b-summary-rehearsal-constructions');
   });
 
   // ── 32 · 33 · 34 · 35 — правки прохода 21.09 ──────────────────────────────────────────────────

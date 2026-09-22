@@ -5,6 +5,7 @@
 /// Pure functions, not a single widget.
 library;
 
+import '../day_window.dart';
 import '../plan_models.dart';
 import 'session_models.dart';
 import 'session_queue.dart';
@@ -15,10 +16,9 @@ typedef DayReturns = ({int words, int phrases, int exchanges});
 /// What the day summary says about the next day's lesson.
 enum NextDayLesson { building, ready }
 
-/// THE NUMBERS OF ONE STAGE'S SUMMARY (30-6, решение архитектора 22.09): [units] — the stage's words, phrases, lines,
-/// questions or cards; [firstTry] — how many of them were passed at the first attempt without a hint; [returns] — its
-/// units the server sends back tomorrow; for «Вспомнить», [scenes] — how many scenes its lines come from; for «Диалог»,
-/// [saidAloud] — the learner's own lines passed by voice and [rescues] — the «Не понял» exchanges walked.
+/// THE NUMBERS OF ONE STAGE'S SUMMARY (30-6): [units], [firstTry] и [returns] приходят ГОТОВЫМИ с сервера
+/// (`stages[].summary`, наряд FIX-3 §10) — объём этапа, «с первого раза» и что вернётся завтра; клиент их не считает
+/// и не проверяет. Своими остаются [scenes] у «Вспомнить» и [saidAloud] с [rescues] у «Диалога»: этого в контракте нет.
 typedef StageTally = ({int units, int firstTry, int returns, int scenes, int saidAloud, int rescues});
 
 abstract final class SessionSummaries {
@@ -32,33 +32,31 @@ abstract final class SessionSummaries {
   /// - «Повторение» counts its CARDS as dealt (a lapse's copy is not a second card of the day);
   /// - «Вспомнить» counts its lines said aloud and the scenes they come from; its sheet of lines is not a line;
   /// - every other stage counts its UNITS ([SessionQueue.unitsOf]) — a unit is first-time when all of its cards are.
-  static StageTally stageTally(SessionQueue queue, PlanStage stage) {
+  /// [server] — числа сервера (`stages[].summary`, наряд FIX-3 §10): объём, «с первого раза» и возвраты приходят
+  /// готовыми, и клиент их НЕ считает. Своими остаются только те части, которых в контракте нет: сколько сцен у листа
+  /// «Вспомнить» и сколько реплик «Диалога» сказано вслух с переспросами.
+  static StageTally stageTally(SessionQueue queue, PlanStage stage, {StageSummary? server}) {
     final cards = queue.cardsOf(stage);
-    bool firstTime(SessionCard c) => c.result == SessionResult.passed && c.attempts <= 1;
-    final returns = queue.returningUnits(stage).length;
+    final units = server?.total ?? 0;
+    final firstTry = server?.firstTry ?? 0;
+    final returns = server?.returns ?? 0;
     switch (stage) {
       case PlanStage.listen:
-        final questions = [for (final c in cards) if (listenQuestions.contains(c.kind)) c];
-        return (units: questions.length, firstTry: questions.where(firstTime).length, returns: returns, scenes: 0, saidAloud: 0, rescues: 0);
       case PlanStage.repetition:
-        final dealt = [for (final c in cards) if (c.retryOf == null) c];
-        return (units: dealt.length, firstTry: dealt.where(firstTime).length, returns: returns, scenes: 0, saidAloud: 0, rescues: 0);
+        return (units: units, firstTry: firstTry, returns: returns, scenes: 0, saidAloud: 0, rescues: 0);
       case PlanStage.recall:
+        // Сколько СЦЕН у листа «Вспомнить», в контракте нет — это единственное, что здесь считается по карточкам.
         final lines = [for (final c in cards) if (c.kind != SessionKind.recallScenes && c.retryOf == null) c];
         final scenes = {for (final c in lines) c.payload.sceneId}.length;
-        return (units: lines.length, firstTry: lines.where(firstTime).length, returns: 0, scenes: scenes, saidAloud: 0, rescues: 0);
+        return (units: units, firstTry: firstTry, returns: returns, scenes: scenes, saidAloud: 0, rescues: 0);
       default:
-        final units = queue.unitsOf(stage);
-        final first = units.where((key) {
-          final own = [for (final c in cards) if (!c.unit.isDay && queue.unitKey(c) == key) c];
-          return own.isNotEmpty && own.every(firstTime);
-        }).length;
+        // «Сказал вслух» и «переспросил» — тоже не из контракта: они о том, КАК прошли карточки «Диалога».
         final aloud = cards.where((c) =>
             (c.kind == SessionKind.dialogueAnswer || c.kind == SessionKind.dialogueAsk) &&
             (c.result == SessionResult.passed || c.result == SessionResult.hinted) &&
             c.response?['mode'] != 'chips').length;
         final rescues = cards.where((c) => c.kind == SessionKind.dialogueRescue && c.result == SessionResult.passed).length;
-        return (units: units.length, firstTry: first, returns: returns, scenes: 0, saidAloud: aloud, rescues: rescues);
+        return (units: units, firstTry: firstTry, returns: returns, scenes: 0, saidAloud: aloud, rescues: rescues);
     }
   }
 

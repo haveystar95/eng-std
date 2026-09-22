@@ -20,6 +20,7 @@ import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
+import '../plan/entry/voice_gender_sheet.dart';
 import '../plan/plan_notifications_host.dart';
 import 'build_stamp.dart';
 import 'perf_log_screen.dart';
@@ -41,11 +42,23 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final user = ref.watch(authControllerProvider).value;
+    final auth = ref.watch(authControllerProvider);
+    final user = auth.value;
     final settings = ref.watch(appSettingsProvider).value ?? AppSettings.defaults;
     final uiLang = ref.watch(localeControllerProvider).value ?? UiLanguageOption.system;
 
-    if (user == null) return const SizedBox.shrink();
+    // ВЫШЕЛ ИЗ АККАУНТА, А ПРОФИЛЬ ОСТАЛСЯ СВЕРХУ (наряд FIX-3 §8; зал, оба захода): без пользователя рисовать
+    // нечего, и пустой непрозрачный маршрут над экраном входа — это и есть «чёрный экран». Экран уходит сам, а
+    // пока уходит — держит бумагу, а не пустоту. Уходит ТОЛЬКО на ответе «пользователя нет»: пока аккаунт
+    // перечитывается, профиль стоит на месте.
+    if (user == null) {
+      if (pushed && auth.hasValue) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) Navigator.of(context).maybePop();
+        });
+      }
+      return const ColoredBox(color: AppColors.paper, child: SizedBox.expand());
+    }
     final profile = user.profile;
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s16;
@@ -113,6 +126,17 @@ class ProfileScreen extends ConsumerWidget {
                 value: languageByCode(profile.nativeLanguage).endonym,
                 hint: l.profileNativeLangHint,
                 onTap: () => _editNativeLang(context, ref, profile.nativeLanguage),
+              ),
+              // ГОЛОС СВОИХ РЕПЛИК (кадр 38-1, наряд FIX-3 §6) — the same sheet the first plan asks with; until it is
+              // said the server speaks the learner's lines male.
+              _NavRow(
+                label: l.profileRowVoice,
+                value: switch (profile.gender) {
+                  kVoiceMale => l.planVoiceMale,
+                  kVoiceFemale => l.planVoiceFemale,
+                  _ => l.profileVoiceUnset,
+                },
+                onTap: () => _editVoice(context, ref, profile.gender),
                 last: true,
               ),
             ],
@@ -235,6 +259,13 @@ class ProfileScreen extends ConsumerWidget {
     );
     if (chosen != null && chosen != current && context.mounted) {
       await _saveProfile(context, ref, {'cefr_level': chosen});
+    }
+  }
+
+  Future<void> _editVoice(BuildContext context, WidgetRef ref, String? current) async {
+    final chosen = await showVoiceGenderSheet(context, current: current);
+    if (chosen != null && chosen != current && context.mounted) {
+      await _saveProfile(context, ref, {'gender': chosen});
     }
   }
 

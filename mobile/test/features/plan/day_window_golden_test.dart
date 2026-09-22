@@ -107,14 +107,11 @@ void main() {
   });
 
   // ── 23-0b · идёт ──────────────────────────────────────────────────────────────────────────
-  testWidgets('23-0b · идёт: «6 / 16» только на «Слушаю и отвечаю», счёт в брови, не в пилюле', (tester) async {
+  testWidgets('23-0b · идёт: цифр в рядах нет, счёт в брови, не в пилюле', (tester) async {
     await pumpDayWindow(tester, windowRoom('in_progress'));
 
-    expect(counts, findsOneWidget, reason: 'цифра только у текущего ряда');
-    expect(
-      find.descendant(of: find.widgetWithText(WindowStageRow, 'Слушаю и отвечаю'), matching: find.text('6 / 16')),
-      findsOneWidget,
-    );
+    // Наряд FIX-3 §5, кадры серии 38: «N / M» снято из рядов — состояние говорит словом и полосой.
+    expect(counts, findsNothing, reason: 'цифр в рядах нет');
     expect(find.text(nb('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
     expect(find.descendant(of: find.byType(WindowPill), matching: find.textContaining(RegExp(r'\d'))), findsNothing);
     expectPlateCeiling(tester);
@@ -124,11 +121,12 @@ void main() {
   });
 
   // ── 23-0c · пройден ───────────────────────────────────────────────────────────────────────
-  testWidgets('23-0c · пройден: строка итога, «Научился:», возвраты в брови, латунная точка, «Ещё раз»', (tester) async {
+  testWidgets('23-0c · пройден: строка итога, «Научился:», возвраты в брови, латунная точка, «ещё раз» у рядов', (tester) async {
     await pumpDayWindow(tester, windowRoom('passed'));
 
     expect(counts, findsNothing, reason: 'текущего ряда нет — цифр нет совсем');
-    expect(find.descendant(of: find.byType(WindowStageRow), matching: find.text('пройдено')), findsNWidgets(5));
+    // Наряд FIX-3 §5: пройденный ряд, который можно пройти ещё раз (`stages[].again`), говорит «ещё раз» и ведёт туда.
+    expect(find.descendant(of: find.byType(WindowStageRow), matching: find.text('ещё раз')), findsNWidgets(5));
     expect(find.textContaining('День пройден ·'), findsOneWidget);
     expect(find.text(nb('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
     final brass = find.descendant(
@@ -137,7 +135,7 @@ void main() {
     );
     expect(brass, findsNWidgets(2), reason: 'латунная точка у каждого возврата');
     expectPlateCeiling(tester);
-    expectOneButton(tester, 'Ещё раз');
+    expectOneButton(tester, 'Итог дня');
     expectNothingCut(tester);
     await shoot('23-0c-passed');
   });
@@ -146,7 +144,7 @@ void main() {
   const states = [
     (state: 'not_started', slug: 'not-started', action: 'Начать'),
     (state: 'in_progress', slug: 'in-progress', action: 'Продолжить'),
-    (state: 'passed', slug: 'passed', action: 'Ещё раз'),
+    (state: 'passed', slug: 'passed', action: 'Итог дня'),
   ];
   for (final s in states) {
     testWidgets('23-0d · ${s.slug}: пилюля под шапкой с тенью, вкладки Слова · Фразы · Диалог', (tester) async {
@@ -220,7 +218,7 @@ void main() {
       await pumpDayWindow(tester, PlanDayRoom.fromJson(serverFixtureJson(s.fixture)), plan: planFrom('plan_rehearsal'));
       expect(find.byType(WindowPill), findsNothing);
       expect(find.text(s.brow), findsOneWidget);
-      expect(counts, findsOneWidget, reason: 'цифра только у текущего ряда');
+      expect(counts, findsNothing, reason: 'цифр в рядах нет (наряд FIX-3 §5)');
       expectOneButton(tester, 'Продолжить');
       expectNothingCut(tester);
       await shoot(s.golden);

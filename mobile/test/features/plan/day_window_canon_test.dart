@@ -15,7 +15,6 @@ import 'package:eng_std/features/plan/day/window/window_phrases.dart';
 import 'package:eng_std/features/plan/day/window/window_pill.dart';
 import 'package:eng_std/features/plan/day/window/window_plate.dart';
 import 'package:eng_std/features/plan/day/window/window_scroll.dart';
-import 'package:eng_std/features/plan/day/window/window_stage_row.dart';
 import 'package:eng_std/features/plan/day/window/window_word_sheet.dart';
 import 'package:eng_std/features/plan/day/window/window_words.dart';
 import 'package:eng_std/features/plan/plan_tab_parts.dart' show PlanLoadFailedCard;
@@ -47,24 +46,18 @@ void main() {
   ScrollController outerOf(WidgetTester tester) =>
       tester.state<NestedScrollViewState>(find.byType(NestedScrollView)).outerController;
 
-  // ── 1 · ЦИФРА ТОЛЬКО У ТЕКУЩЕГО ЭТАПА ─────────────────────────────────────────────────────
-  group('цифра только у текущего этапа', () {
-    // ПРАВИЛО (канва 23-0b): «N / M» стоит в одном ряду — у этапа, который идёт; остальные ряды —
-    // слово состояния и полоса.
-    // ЛОВИТ: старый кабинет со счётом в каждом ряду («Слова · 32 из 32») — цифра у пройденного ряда.
-    testWidgets('идущий день — одна цифра, и она в ряду текущего этапа', (tester) async {
+  // ── 1 · В РЯДАХ ЭТАПОВ ЦИФР НЕТ ───────────────────────────────────────────────────────────
+  group('в рядах этапов цифр нет', () {
+    // ПРАВИЛО (кадры 23-0a…0c, 30-1 серии 38; наряд FIX-3 §5): ряд этапа говорит СЛОВО состояния и полосу — «N / M»
+    // снято отовсюду, и у идущего этапа тоже: сколько сделано, говорит полоса, а числа этапа — его итог 30-6.
+    // ЛОВИТ: кабинет со счётом в ряду («Слова · 32 из 32») и счёт, вернувшийся к текущему ряду.
+    testWidgets('идущий день — ни одной цифры в рядах', (tester) async {
       await pumpDayWindow(tester, windowRoom('in_progress'));
-
-      final withCount = [
-        for (final row in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow)))
-          if (find.descendant(of: find.byWidget(row), matching: counts).evaluate().isNotEmpty) row.stage.state,
-      ];
-      expect(withCount, [WindowStageState.current]);
+      expect(counts, findsNothing);
     });
 
-    // ЛОВИТ: клиента, который рисует цифру всякому ряду, где она пришла, — сервер ошибся одним полем,
-    // и у пройденного этапа снова «32 / 32».
-    testWidgets('счёт, присланный пройденному ряду, не рисуется', (tester) async {
+    // ЛОВИТ: клиента, который рисует цифру всякому ряду, где она пришла с сервера.
+    testWidgets('счёт сервера в ряду не рисуется', (tester) async {
       await pumpDayWindow(
         tester,
         windowRoom('in_progress', (j) {
@@ -76,10 +69,10 @@ void main() {
       );
 
       expect(find.text('32 / 32'), findsNothing);
-      expect(counts, findsOneWidget);
+      expect(counts, findsNothing);
     });
 
-    // ЛОВИТ: «0 / 16» у не начатого дня и «16 / 16» у пройденного — цифру там, где текущего ряда нет.
+    // ЛОВИТ: «0 / 16» у не начатого дня и «16 / 16» у пройденного.
     testWidgets('не начатый и пройденный дни — цифр нет совсем', (tester) async {
       await pumpDayWindow(tester, windowRoom('not_started'));
       expect(counts, findsNothing);
@@ -91,12 +84,13 @@ void main() {
 
   // ── 2 · КНОПКА ОДНА И ПО ALLOWED_ACTION ───────────────────────────────────────────────────
   group('кнопка одна и по allowed_action', () {
-    // ПРАВИЛО (наряд DAY-UI-2 §3): одно главное действие, прижатое к низу поверх ленты; его слово —
-    // `allowed_action` сервера: start → «Начать», continue → «Продолжить», again → «Ещё раз».
+    // ПРАВИЛО (наряд DAY-UI-2 §3, FIX-3 §5): одно главное действие, прижатое к низу поверх ленты; его слово —
+    // `allowed_action` сервера: start → «Начать», continue → «Продолжить». Дневного «Ещё раз» на проводе больше нет —
+    // повтор живёт у ряда этапа.
     // ЛОВИТ: вторую кнопку на плите (в старом кабинете «Начать» стояла и в плите, и в подвале) и
     // клиента, который выбирает слово по своему чтению статуса дня: статус здесь один и тот же
     // («идёт»), меняется только действие — и слово обязано идти за ним.
-    for (final (action, label) in [('start', 'Начать'), ('continue', 'Продолжить'), ('again', 'Ещё раз')]) {
+    for (final (action, label) in [('start', 'Начать'), ('continue', 'Продолжить')]) {
       testWidgets('$action → «$label», одна на экране', (tester) async {
         await pumpDayWindow(tester, windowRoom('in_progress', (j) => j..['window']['allowed_action'] = action));
 
@@ -127,6 +121,12 @@ void main() {
         tester,
         windowRoom('in_progress', (j) {
           tabOf(j, 'words')['summary'] = {'total': 8, 'done': 3, 'returns': 1};
+          // «Вернётся завтра» — СОСТОЯНИЕ единицы, а не `summary.returns`: с наряда FIX-3 §4 `returns` значит, сколько
+          // ВЕРНУЛОСЬ из прошлых дней, и бровь его не печатает. Здесь вернётся ровно одно слово.
+          for (final item in itemsOf(j, 'words')) {
+            item['state'] = 'done';
+          }
+          itemsOf(j, 'words').first['state'] = 'returns_tomorrow';
           return j;
         }),
       );
@@ -723,7 +723,7 @@ void main() {
     await settleRoute();
 
     expect(server.reads, 2);
-    expect(find.text('Ещё раз'), findsOneWidget);
+    expect(find.text('Итог дня'), findsOneWidget, reason: 'у пройденного дня внизу — итог, а не повтор дня');
     expect(find.text('Продолжить'), findsNothing);
   });
 

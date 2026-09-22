@@ -17,7 +17,7 @@ import '../session/parts/session_chrome.dart';
 import '../session/session_mic.dart';
 import '../session/session_voice.dart';
 import 'conversation_controller.dart';
-import 'talk_phrases.dart';
+import 'talk_constructions.dart';
 import 'talk_ribbon.dart';
 
 /// THE TALK (кадры 37-6…37-11) — the ribbon, the microphone and the three ways a move can fail.
@@ -35,7 +35,6 @@ class TalkView extends StatefulWidget {
     required this.makeMic,
     required this.onSummary,
     required this.onClose,
-    this.phraseTexts = const {},
     this.openSettings,
     this.sceneById,
   });
@@ -55,10 +54,6 @@ class TalkView extends StatefulWidget {
   /// «Итог» on the end sheet (37-11).
   final VoidCallback onSummary;
   final VoidCallback onClose;
-
-  /// The day's phrases by `ref` — the text of a `phrases_used` entry from a server that sent the ref alone (before
-  /// CONV-2). Without any text there is no underline: the client does not guess which words the server matched.
-  final Map<String, String> phraseTexts;
 
   /// iOS Settings — the only way left once the system will not ask for the microphone again.
   final Future<void> Function()? openSettings;
@@ -125,29 +120,37 @@ class _TalkViewState extends State<TalkView> {
     if (!ok && _mic.blockedInSettings) await widget.openSettings?.call();
   }
 
-  /// Every phrase the talk is for, as one reference line — the live line paints the words of the plan that have
-  /// already sounded in sage (37-7 «слушаю»). A talk whose server sent no targets reads the day's phrases.
+  /// Every construction the talk is for, as one reference line — the live line paints the words of the plan that have
+  /// already sounded in sage (37-7 «слушаю»). A frame is read with the lesson's own value in its window: that is the
+  /// whole of what the server wrote for it.
   String get _expected {
     final targets = _talk.talk?.targets ?? const <TalkTarget>[];
-    return targets.isNotEmpty ? targets.map((t) => t.textTarget).join(' ') : widget.phraseTexts.values.join(' ');
+    return targets.map((t) => t.saidWith(t.exampleTarget)).join(' ');
   }
 
-  /// THE PHRASE STRIP (наряд CLIENT-CONV-1c §4) — «фразы · N из M» off the latest answer's `targets[]`; a talk whose
-  /// server sent none has no strip.
-  Widget? _strip(PlanConversation talk) => talk.targets.isEmpty
+  /// THE CONSTRUCTIONS OVER THE MICROPHONE (наряд FIX-3 §3, кадры 37-7…37-11) — the plates off the latest answer's
+  /// `targets[]`, filled by the SERVER's `said`; a talk whose server sent none has no row. A tap opens the
+  /// construction's sheet (37-8d), and the sheet reads the list again while it is open.
+  Widget? _constructions(PlanConversation talk) => talk.targets.isEmpty
       ? null
-      : TalkPhraseStrip(
-          said: talk.targetsSaid,
-          total: talk.targets.length,
-          onTap: () => unawaited(
-            showTalkPhraseSheet(
+      : TalkConstructionChips(
+          targets: talk.targets,
+          onTap: (target) => unawaited(
+            showTalkConstructionSheet(
               context,
               talk: _talk,
-              targets: () => _talk.talk?.targets ?? const <TalkTarget>[],
-              voice: widget.voice,
+              target: () => _targetOf(target.sceneId, target.ref),
             ),
           ),
         );
+
+  /// The construction by its pair, as the talk has it NOW — null once it is no longer in the list.
+  TalkTarget? _targetOf(String sceneId, String ref) {
+    for (final t in _talk.talk?.targets ?? const <TalkTarget>[]) {
+      if (t.sceneId == sceneId && t.ref == ref) return t;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,16 +306,17 @@ class _TalkViewState extends State<TalkView> {
     };
   }
 
-  /// The ranges of the learner's line the SERVER matched to phrases of the plan — by the phrase's own text, which
-  /// `phrases_used` carries since CONV-2 (a phrase of another scene of the rehearsal too); from a server that sent the
-  /// ref alone — by the day's text of that ref. No text at all — no mark.
+  /// The ranges of the learner's line the SERVER matched to constructions of the day — WHICH construction it heard is
+  /// the server's (`phrases_used`, a pair since FIX-3 §6), and the words of that construction are read from `targets[]`
+  /// as it said them: the frame with what went into its window. A pair the list does not hold is not marked — the phone
+  /// does not guess the words behind a ref.
   List<({int start, int end})> _marksOf(TalkTurn turn) {
     final text = turn.textTarget ?? '';
     final marks = <({int start, int end})>[];
     for (final used in turn.phrasesUsed) {
-      final phrase = used.textTarget ?? widget.phraseTexts[used.ref];
-      if (phrase == null) continue;
-      marks.addAll(HeardWords.matched(text, phrase));
+      final target = _targetOf(used.sceneId, used.ref);
+      if (target == null) continue;
+      marks.addAll(HeardWords.matched(text, target.saidWith(target.valueTarget)));
     }
     marks.sort((a, b) => a.start.compareTo(b.start));
     return marks;
@@ -346,7 +350,7 @@ class _TalkViewState extends State<TalkView> {
 
     return TalkDock(
       debugMic: yourTurn ? _mic : null,
-      strip: _strip(talk),
+      constructions: _constructions(talk),
       notice: switch (trouble) {
         TalkTrouble.offline => TalkNotice(text: l.planTalkOffline, onAction: () => unawaited(_talk.retry())),
         TalkTrouble.agentSilent => TalkNotice(text: l.planTalkSilent, onAction: () => unawaited(_talk.retry())),
@@ -388,17 +392,16 @@ class _TalkViewState extends State<TalkView> {
   }
 
   /// THE END (кадр 37-11): the role's goodbye stays in the ribbon and a sheet rises over it —
-  /// «Разговор окончен · N минут» and one button; the phrase strip stays over it with the talk's final count (наряд
-  /// CLIENT-CONV-1c §4 — the frame draws the sheet alone).
+  /// «Разговор окончен · N минут» and one button; the constructions stay over it as the talk left them.
   Widget _endSheet(AppLocalizations l, PlanConversation talk) {
     final minutes = talk.summary?.minutes;
-    final strip = _strip(talk);
+    final constructions = _constructions(talk);
     return Column(
       key: const ValueKey('talk-end-sheet'),
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (strip != null) ...[strip, const SizedBox(height: 14)],
+        if (constructions != null) ...[constructions, const SizedBox(height: 14)],
         SessionSheet(
           child: Row(
             children: [

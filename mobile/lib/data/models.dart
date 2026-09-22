@@ -658,6 +658,10 @@ class Profile {
   /// rounding), kept for round-tripping the cached user.
   final String timezone;
 
+  /// WHICH VOICE SAYS THE LEARNER'S OWN LINES — `male` | `female`, the server's `gender` (наряд FIX-3 §6). Null — it
+  /// has not been asked yet: the plan asks once, before the first plan, and until then the server speaks male.
+  final String? gender;
+
   Profile({
     required this.nativeLanguage,
     required this.targetLanguage,
@@ -666,6 +670,7 @@ class Profile {
     this.tier = 'free',
     this.onboardedAt,
     this.timezone = 'UTC',
+    this.gender,
   });
 
   bool get isPremium => tier == 'premium';
@@ -681,6 +686,7 @@ class Profile {
     tier: (j['tier'] as String?) ?? 'free',
     onboardedAt: j['onboarded_at'] as String?,
     timezone: (j['timezone'] as String?) ?? 'UTC',
+    gender: j['gender'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -694,6 +700,8 @@ class Profile {
     // re-login. The server still enforces the real gate (403), so mild staleness is safe.
     'tier': tier,
     'onboarded_at': onboardedAt, // keep the onboarding gate correct on offline cold start
+    // The voice of the learner's own lines: kept so a cold start does not ask a question already answered.
+    'gender': gender,
   };
 }
 

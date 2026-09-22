@@ -51,6 +51,7 @@ class WindowSourcesScroll extends StatefulWidget {
     required this.bottomCover,
     this.onBack,
     this.poppedStages = const {},
+    this.onStageAgain,
   });
 
   final DayWindow window;
@@ -59,6 +60,9 @@ class WindowSourcesScroll extends StatefulWidget {
   final double bottomCover;
   final VoidCallback? onBack;
   final Set<PlanStage> poppedStages;
+
+  /// «Ещё раз» пройденного ряда (наряд FIX-3 §5) — вниз, в плиту.
+  final void Function(PlanStage stage)? onStageAgain;
 
   @override
   State<WindowSourcesScroll> createState() => _WindowSourcesScrollState();
@@ -104,6 +108,7 @@ class _WindowSourcesScrollState extends State<WindowSourcesScroll> {
               window: widget.window,
               onBack: widget.onBack,
               poppedStages: widget.poppedStages,
+              onStageAgain: widget.onStageAgain,
               system: widget.system,
             ),
           ),

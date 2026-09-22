@@ -5049,12 +5049,6 @@ abstract class AppLocalizations {
   /// **'{first} · {second}'**
   String planWindowJoinNumber(String first, String second);
 
-  /// Окно дня, плита (23-0b): цифра ТОЛЬКО у текущего этапа — «6 / 16»; у остальных рядов цифры нет (done_count и total сервера — null).
-  ///
-  /// In ru, this message translates to:
-  /// **'{done} / {total}'**
-  String planWindowStageCount(int done, int total);
-
   /// Окно дня, плита пройденного дня (23-0c): строка итога вместо цифр — «День пройден · 19 минут»; minutes — planMinutesCount(minutes_spent).
   ///
   /// In ru, this message translates to:
@@ -5072,12 +5066,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{n, plural, one{{n} вернётся завтра} few{{n} вернутся завтра} many{{n} вернутся завтра} other{{n} вернутся завтра}}'**
   String planWindowBrowReturns(int n);
-
-  /// Окно дня, кнопка пройденного дня (23-0c, allowed_action = again): «Говорю сам» ещё раз по карточкам дня, без записи ответов — не пересдача дня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ещё раз'**
-  String get planWindowCtaAgain;
 
   /// Окно дня и шит слова (23-0a…0e): подпись кружка «прослушать» — у слова, фразы, обеих реплик диалога, реплики «В разговоре» и слова в шите — для читалки экрана.
   ///
@@ -5234,6 +5222,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Диалог и «Говорю сам» — сразу голосом'**
   String get planSessionNoHintsSub;
+
+  /// Вход в день-репетицию (30-1, наряд FIX-3 §8): подпись тумблера — про разговор; «Диалог» и «Говорю сам» в этом дне не идут.
+  ///
+  /// In ru, this message translates to:
+  /// **'В разговоре — без подсказок, текст собеседника закрыт'**
+  String get planSessionNoHintsTalk;
 
   /// Сессия, вход в этап (30-1): кнопка.
   ///
@@ -6051,24 +6045,6 @@ abstract class AppLocalizations {
   /// **'{n, plural, one{переспросил {n} раз} few{переспросил {n} раза} many{переспросил {n} раз} other{переспросил {n} раза}}'**
   String planTalkRescues(int n);
 
-  /// Итог разговора (37-12): бровь списка фраз — счёт сервера.
-  ///
-  /// In ru, this message translates to:
-  /// **'Фразы дня в разговоре · {used} из {total}'**
-  String planTalkPhrasesOf(int used, int total);
-
-  /// Итог разговора (37-12): группа несказанного у дня и повторения (returns_tomorrow = true).
-  ///
-  /// In ru, this message translates to:
-  /// **'Не прозвучало — вернётся завтра'**
-  String get planTalkNotSaidTomorrow;
-
-  /// Итог разговора (37-12): группа несказанного у репетиции — завтра событие, возврата не будет (returns_tomorrow = false).
-  ///
-  /// In ru, this message translates to:
-  /// **'Не прозвучало — повтори перед приёмом'**
-  String get planTalkNotSaidRehearsal;
-
   /// Итог разговора репетиции (37-12): заголовок вместо счёта реплик.
   ///
   /// In ru, this message translates to:
@@ -6177,23 +6153,17 @@ abstract class AppLocalizations {
   /// **'Из каких дней'**
   String get planWindowFromDays;
 
-  /// Диалог, «Пойми собеседника» (33-1): строка отдельного блока с вопросом и вариантами — под пузырём собеседника, а не между репликами.
+  /// Проверка понимания (33-1, 33-5): подпись над репликой — одна и та же на обоих кадрах (наряд FIX-3 §1).
   ///
   /// In ru, this message translates to:
-  /// **'Что тебе сказали?'**
-  String get planSessionTaskWhatSaid;
+  /// **'Проверь, что понял'**
+  String get planSessionTaskUnderstood;
 
   /// «Ответь своими словами» (35-2) и круг своего слова «Скажи целиком» (32-7): отказ судьи — что он судил (heard ответа судьи, CONV-2 п. 8), строкой под причиной; без поля — что распознал телефон.
   ///
   /// In ru, this message translates to:
   /// **'услышал: {text}'**
   String planSessionHeardLine(String text);
-
-  /// Итог разговора репетиции (37-12b): подпись несказанных фраз сцены — «Рецепт и аптека · повтори перед приёмом».
-  ///
-  /// In ru, this message translates to:
-  /// **'{scene} · повтори перед приёмом'**
-  String planTalkSceneRepeatBefore(String scene);
 
   /// Имя этапа дня повторения (кадр 37-2, наряд CLIENT-CONV-1c): id repetition, который BACK-TAILS-2 даёт этапу карточек повторения вместо speak.
   ///
@@ -6351,29 +6321,119 @@ abstract class AppLocalizations {
   /// **'Скажи в разговоре'**
   String get planTalkEntrySay;
 
-  /// Лента разговора (37-6…37-11): полоска над микрофоном — сколько фраз разговора уже прозвучало (targets[].said сервера). Единственный счётчик ленты, назван нарядом.
+  /// Лист голоса (38-1, наряд FIX-3 §6): спрашивается один раз перед первым планом, пока пол в профиле не сказан.
   ///
   /// In ru, this message translates to:
-  /// **'фразы · {said} из {total}'**
-  String planTalkStrip(int said, int total);
+  /// **'Каким голосом озвучивать твои реплики?'**
+  String get planVoiceTitle;
 
-  /// Лист фраз (37-8d): заголовок — открывается тапом по полоске ленты.
+  /// Лист голоса (38-1): плашка мужского голоса.
   ///
   /// In ru, this message translates to:
-  /// **'Фразы дня'**
-  String get planTalkSheetTitle;
+  /// **'Мужской'**
+  String get planVoiceMale;
 
-  /// Итог разговора-повтора (37-12, replay: true): группа несказанного — повтор ничего не возвращает завтра, и строки «вернётся завтра» у него нет.
+  /// Лист голоса (38-1): подпись мужской плашки.
   ///
   /// In ru, this message translates to:
-  /// **'Не прозвучало'**
-  String get planTalkNotSaid;
+  /// **'ниже и спокойнее'**
+  String get planVoiceMaleHint;
 
-  /// Окно пройденного дня (37-1 «пройден»; window.talk_again, BACK-TAILS-2): кнопка нового разговора поверх пройденного этапа — тот же экран разговора.
+  /// Лист голоса (38-1): плашка женского голоса.
   ///
   /// In ru, this message translates to:
-  /// **'Повторить разговор'**
-  String get planWindowTalkAgain;
+  /// **'Женский'**
+  String get planVoiceFemale;
+
+  /// Лист голоса (38-1): подпись женской плашки.
+  ///
+  /// In ru, this message translates to:
+  /// **'выше и мягче'**
+  String get planVoiceFemaleHint;
+
+  /// Лист голоса (38-1): строка под плашками — выбор не навсегда.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно поменять в профиле'**
+  String get planVoiceInProfile;
+
+  /// Профиль: ряд выбора голоса своих реплик — тот же лист, что перед первым планом (38-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Голос своих реплик'**
+  String get profileRowVoice;
+
+  /// Профиль: пол для голоса ещё не сказан — сервер озвучивает мужским, пока не сказан.
+  ///
+  /// In ru, this message translates to:
+  /// **'не выбран'**
+  String get profileVoiceUnset;
+
+  /// Итог разговора (37-12, 37-12b): надпись над карточками конструкций. Счётчика рядом нет — наряд FIX-3 §3 снял «N из M».
+  ///
+  /// In ru, this message translates to:
+  /// **'Конструкции в разговоре'**
+  String get planTalkConstructions;
+
+  /// Лист конструкции (37-8d): заголовок — открывается тапом по плашке над микрофоном.
+  ///
+  /// In ru, this message translates to:
+  /// **'Конструкция'**
+  String get planTalkConstruction;
+
+  /// Лист конструкции (37-8d): надпись над примером урока — каркас, сказанный значением урока (example_target/example_native сервера).
+  ///
+  /// In ru, this message translates to:
+  /// **'Из урока'**
+  String get planTalkFromLesson;
+
+  /// Лист конструкции (37-8d): надпись над тем, как ученик сказал конструкцию (value_target сервера).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты сказал'**
+  String get planTalkYouSaidLabel;
+
+  /// Итог разговора (37-12): серая строка под закрашенной карточкой — каркас со значением ученика.
+  ///
+  /// In ru, this message translates to:
+  /// **'ты сказал: {said}'**
+  String planTalkYouSaid(String said);
+
+  /// Итог репетиции (37-12b): серая строка под незакрашенной карточкой — завтра событие, а не новый день.
+  ///
+  /// In ru, this message translates to:
+  /// **'повтори перед событием'**
+  String get planTalkRepeatBefore;
+
+  /// Окно дня, вкладка программы (23-0d · вернулось): заголовок группы единиц, вернувшихся из прошлого дня — items[].source = returned, номер дня из items[].scene.day_number.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернулось из дня {n}'**
+  String planWindowReturnedFromDay(int n);
+
+  /// То же, когда у сцены-источника нет своего дня (items[].scene.day_number = null).
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернулось'**
+  String get planWindowReturnedFrom;
+
+  /// Окно дня и вход в этап (23-0c, 30-1): вторичное действие пройденного ряда — пройти этап ещё раз; по stages[].again сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'ещё раз'**
+  String get planWindowStageAgain;
+
+  /// Ряд разговора пройденного дня, когда повторы суток исчерпаны (30-1e): stages[].again = false.
+  ///
+  /// In ru, this message translates to:
+  /// **'лимит на сегодня'**
+  String get planWindowTalkLimitToday;
+
+  /// Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Итог дня'**
+  String get planWindowDaySummary;
 
   /// Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан.
   ///

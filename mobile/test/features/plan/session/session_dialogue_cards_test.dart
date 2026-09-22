@@ -22,6 +22,13 @@ void main() {
 
   SessionCard dialogueAt(int position) => day.stageOf(PlanStage.dialogue)!.cards.firstWhere((c) => c.position == position);
   List<SessionResult> results(CardProbe probe) => [for (final a in probe.answers) a.result];
+  /// THE LINE SOUNDS, AND THEN THE CARD ASKS (наряд FIX-3 §1): the autoplay waits 280, the sound ends at once on a
+  /// quiet voice — and the question with its options comes up.
+  Future<void> lineSounds(WidgetTester tester) async {
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+  }
+
   SessionFrameText ownFrame(WidgetTester tester) =>
       tester.widget<SessionFrameText>(find.descendant(of: find.byType(SessionOwnRow), matching: find.byType(SessionFrameText)).first);
 
@@ -39,6 +46,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['x1@1.0'], reason: 'the partner\'s line plays once when the card opens');
 
+      await tester.pump();
       await tapText(tester, 'Верх или низ спины');
       expect(results(probe), [SessionResult.passed]);
       await tester.pump(const Duration(milliseconds: 250));
@@ -51,6 +59,7 @@ void main() {
     testWidgets('wrong — failed, the text stays closed, «Next» by hand', (tester) async {
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(dialogueAt(1), probe));
+      await lineSounds(tester);
       await tapText(tester, 'Колени или ступни');
       expect(results(probe), [SessionResult.failed]);
       await settleCard(tester);
@@ -60,11 +69,11 @@ void main() {
       expect(probe.nexts, 1);
     });
 
-    // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b, кадр 33-1): своя реплика → пузырь собеседника с волной →
-    // ОТДЕЛЬНЫЙ блок «Что тебе сказали?» с вопросом и вариантами под ним. Вопрос не стоит над лентой строкой задания:
-    // между прошлой своей репликой и пузырём собеседника его читали репликой разговора.
+    // ПРАВИЛО (кадр 33-1 серии 38, наряд FIX-3 §1): своя реплика → «Проверь, что понял» → пузырь собеседника с
+    // волной → вопрос и варианты под ним. Подпись стоит НАД репликой, о которой спрашивают, вопрос — под ней; ни то ни
+    // другое не читается репликой разговора.
     // ЛОВИТ: вопрос снова в строке задания над лентой; блок, разрезанный пузырём; варианты под краем экрана.
-    testWidgets('33-1: своя реплика → пузырь с волной → блок «Что тебе сказали?» с вариантами', (tester) async {
+    testWidgets('33-1: своя реплика → «Проверь, что понял» → пузырь с волной → вопрос и варианты', (tester) async {
       final raw = serverFixtureJson('day-doctor');
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 3)) {
@@ -76,17 +85,26 @@ void main() {
       final payload = card.payload as DialoguePartnerPayload;
       await pumpCard(tester, probeEnv(card, CardProbe(), feed: DialogueFeed.before(cards, card)), size: const Size(390, 844));
 
+      // ПРАВИЛО (наряд FIX-3 §1): пока реплика звучит, на экране только подпись — вопроса и вариантов ещё нет.
+      final question = find.byKey(const ValueKey('check-question'));
+      expect(find.text('Проверь, что понял'), findsOneWidget);
+      expect(find.byKey(const ValueKey('partner-wave')), findsOneWidget);
+      // Место блок держит с самого начала (пузырь не прыгает), но вопроса и вариантов на экране ещё нет.
+      expect(tester.widget<Visibility>(find.byKey(const ValueKey('check-after-sound'))).visible, isFalse,
+          reason: 'вопрос и варианты — после звука');
+      await lineSounds(tester);
+      expect(tester.widget<Visibility>(find.byKey(const ValueKey('check-after-sound'))).visible, isTrue);
+
       final own = tester.getRect(find.byType(SessionOwnRow).last);
       final wave = tester.getRect(find.byKey(const ValueKey('partner-wave')));
-      final task = tester.getRect(find.text('Что тебе сказали?'));
-      final question = tester.getRect(find.byKey(const ValueKey('check-question')));
+      final task = tester.getRect(find.text('Проверь, что понял'));
       final options = [for (final o in payload.options) tester.getRect(find.byKey(ValueKey('option-${o.id}')))];
-      expect(own.bottom, lessThanOrEqualTo(wave.top), reason: 'своя реплика прошлого обмена — над пузырём собеседника');
-      expect(wave.bottom, lessThanOrEqualTo(task.top), reason: 'блок — под пузырём, а не над лентой');
-      expect(task.bottom, lessThanOrEqualTo(question.top));
+      expect(own.bottom, lessThanOrEqualTo(task.top), reason: 'своя реплика прошлого обмена — над подписью');
+      expect(task.bottom, lessThanOrEqualTo(wave.top), reason: 'подпись — над репликой, о которой спрашивают');
+      expect(wave.bottom, lessThanOrEqualTo(tester.getRect(question).top), reason: 'вопрос — под пузырём');
       expect(tester.widget<Text>(find.byKey(const ValueKey('check-question'))).data, payload.questionNative);
       for (final o in options) {
-        expect(question.bottom, lessThanOrEqualTo(o.top), reason: 'вопрос над вариантами — один блок');
+        expect(tester.getRect(question).bottom, lessThanOrEqualTo(o.top), reason: 'вопрос над вариантами — один блок');
         expect(o.bottom, lessThanOrEqualTo(844), reason: 'варианты на экране');
       }
       expect(find.descendant(of: find.byKey(const ValueKey('check-block')), matching: find.text(payload.questionNative)), findsOneWidget);
@@ -186,7 +204,7 @@ void main() {
       final voice = QuietVoice();
       final card = dialogueAt(12);
       final check = (card.payload as DialogueAnswerPayload).check!;
-      expect(check.options, hasLength(4));
+      expect(check.options, hasLength(3), reason: 'сколько отдал сервер — столько и вариантов (наряд FIX-3 §1)');
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
       expect(find.text('Скажи свою реплику'), findsOneWidget);
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
@@ -195,7 +213,7 @@ void main() {
       await sayDebug(tester, 'Do we need an X-ray');
       expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');
       await tester.pump();
-      expect(find.text('Что тебе сказали?'), findsOneWidget);
+      expect(find.text('Проверь, что понял'), findsOneWidget);
       expect(find.text(check.questionNative), findsOneWidget);
       expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply sounds with its text closed');
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
@@ -274,7 +292,7 @@ void main() {
     // репликами. Блок целиком на экране, какой бы длинной ни была лента разговора.
     // CATCHES: the question back between the two lines, where it read as a line of the talk; the task or the question
     // pushed off the screen by a long conversation.
-    testWidgets('варианты без вопроса: блок «Что тебе сказали?» под пузырём, над вариантами, лента уезжает под шапку', (tester) async {
+    testWidgets('варианты без вопроса: «Проверь, что понял» и вопрос над репликами, варианты в доке', (tester) async {
       final raw = serverFixtureJson('day-doctor');
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 12)) {
@@ -290,11 +308,11 @@ void main() {
       await sayDebug(tester, 'Do we need an X-ray');
       await tester.pump();
 
-      final task = tester.getRect(find.text('Что тебе сказали?'));
+      final task = tester.getRect(find.text('Проверь, что понял'));
       final question = tester.getRect(find.byKey(const ValueKey('check-question')));
       final reply = tester.getRect(find.byKey(const ValueKey('reply-wave')));
       final option = tester.getRect(find.byKey(ValueKey('option-${check.options.first.id}')));
-      expect(reply.bottom, lessThanOrEqualTo(task.top), reason: 'блок стоит под закрытым ответом, а не между репликами');
+      expect(question.bottom, lessThanOrEqualTo(reply.top), reason: 'подпись и вопрос — над репликами, о которых спрашивают');
       expect(task.bottom, lessThanOrEqualTo(question.top), reason: 'задание над вопросом');
       expect(question.bottom, lessThanOrEqualTo(option.top), reason: 'вопрос над вариантами — один блок');
       expect(option.bottom, lessThanOrEqualTo(844), reason: 'the whole block is on the screen');
@@ -342,7 +360,7 @@ void main() {
 
       expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply comes closed');
       expect(voice.played, contains('x7@1.0'), reason: 'and sounds by itself');
-      expect(find.text('Что тебе сказали?'), findsOneWidget);
+      expect(find.text('Проверь, что понял'), findsOneWidget);
       expect(find.text(check.questionNative), findsOneWidget);
       expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing, reason: 'the text stays closed');
       expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');

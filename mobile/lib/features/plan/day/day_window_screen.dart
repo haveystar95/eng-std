@@ -44,8 +44,9 @@ import 'window/window_word_sheet.dart';
 /// the day's kind, its title, one status line, the rows the server dealt — and under it, in place of the three tabs,
 /// the list of what the day is made of ([WindowSourcesScroll]).
 ///
-/// A WALKED DAY OF ANY KIND may offer the talk again (`window.talk_again`, наряд CLIENT-CONV-1c §9г): «Повторить
-/// разговор» starts a new talk over the walked stage on the talk's own screens ([TalkReplayScreen]).
+/// A WALKED ROW MAY BE WALKED AGAIN (`stages[].again`, наряд FIX-3 §5): «ещё раз» on a row of cards opens that stage
+/// on the phone alone, and «ещё раз» on the talk's row starts a new talk over the walked stage on the talk's own
+/// screens ([TalkReplayScreen]).
 class DayWindowScreen extends ConsumerStatefulWidget {
   const DayWindowScreen({super.key, required this.plan, required this.number});
 
@@ -143,7 +144,7 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
 
   void _openWord(WindowWord word) => unawaited(showWindowWordSheet(context, word: word, onListen: _listen));
 
-  Future<void> _act(WindowAction action, PlanDayRoom room) async {
+  Future<void> _act(WindowAction? action, PlanDayRoom room, {PlanStage? replayStage}) async {
     var current = room;
     // НЕНАЧАТЫЙ ПЛАН (13.09): «Начать» дня 1 плана, который собран и не запущен, — это «Начать»
     // плана. День такого плана сервер не откроет (409 `plan_state`), поэтому сначала `POST /start`.
@@ -171,7 +172,7 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
     // stage on the phone and ends on the day summary again, without sending anything (SESSION-2a §4).
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => SessionScreen(plan: _plan, number: current.day.number, replay: action == WindowAction.again),
+        builder: (_) => SessionScreen(plan: _plan, number: current.day.number, replayStage: replayStage),
       ),
     );
     if (!mounted) return;
@@ -179,7 +180,7 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
     unawaited(ref.read(planTabProvider.notifier).refresh());
   }
 
-  /// «ПОВТОРИТЬ РАЗГОВОР» (наряд CLIENT-CONV-1c §9г, `window.talk_again`): the one POST of a talk's start, here, so its
+  /// «ЕЩЁ РАЗ» У РЯДА РАЗГОВОРА (`stages[].again`, наряд FIX-3 §5): the one POST of a talk's start, here, so its
   /// answer is heard where the button is — started, the talk opens on the screen every talk has (37-6…37-12); a 409
   /// `plan_conversation_replay_limit` is a sheet over the window, «Разговор сегодня уже повторяли — вернись завтра»,
   /// and anything else the talk's own «could not start». «Ещё раз» of the cards is untouched: it is the other action.
@@ -220,6 +221,11 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
     unawaited(ref.read(planTabProvider.notifier).refresh());
   }
 
+  /// «ЕЩЁ РАЗ» РЯДА (наряд FIX-3 §5): этап карточек проходится снова на телефоне — ничего не отправляется, день не
+  /// меняется; ряд разговора ведёт в повтор разговора (ручка сервера, 409 лимита — листом над окном).
+  Future<void> _again(PlanStage stage, PlanDayRoom room) =>
+      stage == PlanStage.conversation ? _replayTalk() : _act(null, room, replayStage: stage);
+
   @override
   Widget build(BuildContext context) {
     ref.listen(dayRoomProvider(_address), (previous, next) {
@@ -245,11 +251,11 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
           // A review and the rehearsal (37-1, 37-2) are the same window with other rows and, in place of the tabs,
           // the list of what the day is made of.
           final system = WindowTexts.system(l, window.day, planTitle: _plan.shortTitle ?? _plan.displayTitle, slot: r.day.slot);
-          // «Повторить разговор» (37-1 «пройден»): the one button of a walked day that has no other action, a brass link
-          // over the button of one that has (a walked scene day keeps its «Ещё раз»).
-          final talkAgain = window.talkAgain;
-          final hasBar = action != null || talkAgain;
-          final cover = hasBar ? WindowActionBar.coverOf(context, withSecondary: action != null && talkAgain) : 0.0;
+          // ОДНА КНОПКА ДНЯ (кадры 23-0a…0c, наряд FIX-3 §5): «Начать» / «Продолжить», у пройденного дня — «Итог дня»
+          // (30-7); повтора дня целиком нет, «ещё раз» живёт у каждого ряда этапа.
+          final passed = window.day.status == WindowDayStatus.passed;
+          final barLabel = action != null ? WindowTexts.action(l, action) : (passed ? l.planWindowDaySummary : null);
+          final cover = barLabel != null ? WindowActionBar.coverOf(context) : 0.0;
 
           return Stack(
             children: [
@@ -261,6 +267,7 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
                   onBack: () => Navigator.of(context).maybePop(),
                   poppedStages: _popped,
                   bottomCover: cover,
+                  onStageAgain: (stage) => unawaited(_again(stage, r)),
                 )
               else
                 WindowScroll(
@@ -270,21 +277,19 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
                   onBack: () => Navigator.of(context).maybePop(),
                   poppedStages: _popped,
                   bottomCover: cover,
+                  onStageAgain: (stage) => unawaited(_again(stage, r)),
+                  sceneImageOf: (sceneId) => _plan.sceneById(sceneId)?.image,
                 ),
-              if (hasBar)
+              if (barLabel != null)
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: action == null
-                      ? WindowActionBar(label: l.planWindowTalkAgain, busy: _replaying, onTap: () => unawaited(_replayTalk()))
-                      : WindowActionBar(
-                          label: WindowTexts.action(l, action),
-                          onTap: () => unawaited(_act(action, r)),
-                          secondaryLabel: talkAgain ? l.planWindowTalkAgain : null,
-                          onSecondary: talkAgain ? () => unawaited(_replayTalk()) : null,
-                          busy: _replaying,
-                        ),
+                  child: WindowActionBar(
+                    label: barLabel,
+                    busy: _replaying,
+                    onTap: () => unawaited(_act(action, r)),
+                  ),
                 ),
             ],
           );

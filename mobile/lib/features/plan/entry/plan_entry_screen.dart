@@ -23,6 +23,7 @@ import 'entry_preview_step.dart';
 import 'entry_scaffold.dart';
 import 'entry_state.dart';
 import 'goal_dictation.dart';
+import 'voice_gender_sheet.dart';
 
 /// Open the entry over the tab. Resolves with the started plan, or null when the learner left.
 Future<Plan?> openPlanEntry(BuildContext context) =>
@@ -281,10 +282,13 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     }
   }
 
-  /// «Начать» (22-4b → 22-5a): the plan goes live and the entry closes over the tab.
+  /// «Начать» (22-4b → 22-5a): the plan goes live and the entry closes over the tab. Before the FIRST plan — before
+  /// the day the learner's own lines are voiced in — the voice is asked once (кадр 38-1, наряд FIX-3 §6).
   Future<void> _start() async {
     final id = _s.planId;
     if (id == null || _s.phase != EntryBuildPhase.ready) return;
+    await _askVoice();
+    if (!mounted) return;
     setState(() => _s = _s.copyWith(phase: EntryBuildPhase.starting));
     try {
       final plan = await ref.read(planTabProvider.notifier).start(id);
@@ -295,6 +299,21 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       if (!mounted) return;
       AppHaptics.warning();
       setState(() => _s = _s.copyWith(phase: EntryBuildPhase.ready));
+    }
+  }
+
+  /// THE VOICE OF THE LEARNER'S LINES, ASKED ONCE (кадр 38-1): only while the profile has no gender — once it is
+  /// said, this never comes up again, and it is changed in the profile. A sheet dismissed without «Дальше» saves
+  /// nothing: the server speaks male until it is told otherwise, and the question stands for the next plan.
+  Future<void> _askVoice() async {
+    if (ref.read(authControllerProvider).value?.profile?.gender != null) return;
+    final chosen = await showVoiceGenderSheet(context);
+    if (chosen == null || !mounted) return;
+    try {
+      await ref.read(authControllerProvider.notifier).updateProfile({'gender': chosen});
+    } catch (e) {
+      // The plan does not wait on the profile: the voice is asked again next time, and the day sounds male meanwhile.
+      debugPrint('[plan-entry] voice: $e');
     }
   }
 

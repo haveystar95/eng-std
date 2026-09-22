@@ -3,30 +3,50 @@ import 'package:flutter/material.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../../data/plan/day_window.dart';
+import '../../../../data/plan/plan_models.dart';
 import 'window_bits.dart';
+import 'window_returns.dart';
 
 /// ВКЛАДКА «СЛОВА» (кадры 23-0a…0d): сетка в две колонки через 12. Карточка — фото 4:3 со скруглением
 /// 12 (тон → фото), маркер 14 в углу на бумажной подложке; через 8 слово Literata 22; через 4 чтение
 /// кириллицей 13 и перевод 15 столбиком, справа «прослушать» 28. Тап по карточке открывает шит слова
 /// 23-0e. Длинное слово переносится, а не режется троеточием.
 class WindowWords extends StatelessWidget {
-  const WindowWords({super.key, required this.words, required this.onListen, required this.onOpen});
+  const WindowWords({super.key, required this.words, required this.onListen, required this.onOpen, this.imageOf});
 
   final List<WindowWord> words;
   final WindowListen onListen;
   final ValueChanged<WindowWord> onOpen;
 
+  /// Фото сцены-источника для полосы группы «Вернулось из дня N» (наряд FIX-3 §4).
+  final PlanImage? Function(String sceneId)? imageOf;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, box) {
       final width = (box.maxWidth - 12) / 2;
-
-      return Wrap(
+      // Свои слова дня — сеткой без заголовка; вернувшиеся — своей сеткой под заголовком группы.
+      final grouped = windowReturnGroups(words, sourceOf: (w) => w.source, sceneOf: (w) => w.scene);
+      Widget grid(List<WindowWord> items) => Wrap(
         spacing: 12,
         runSpacing: 12,
         children: [
-          for (final word in words)
+          for (final word in items)
             SizedBox(width: width, child: WindowWordCard(word: word, onListen: onListen, onOpen: () => onOpen(word))),
+        ],
+      );
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          grid(grouped.own),
+          for (final group in grouped.returns) ...[
+            WindowReturnHeading(
+              scene: group.scene,
+              image: group.scene == null ? null : imageOf?.call(group.scene!.id),
+            ),
+            grid(group.items),
+          ],
         ],
       );
     },

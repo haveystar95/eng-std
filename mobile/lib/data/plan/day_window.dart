@@ -56,17 +56,16 @@ enum WindowUnitState {
   };
 }
 
-/// Одна кнопка окна. `again` — «Говорю сам» ещё раз по карточкам дня, без записи ответов.
+/// ОДНА КНОПКА ОКНА — «Начать» или «Продолжить» (наряд FIX-3 §5: дневного `again` больше нет, «ещё раз» живёт у ряда
+/// этапа, `stages[].again`). Нет действия — нет кнопки.
 enum WindowAction {
   start,
-  resume,
-  again;
+  resume;
 
   static WindowAction? fromWire(Object? s) => switch (s) {
     null => null,
     'start' => start,
     'continue' => resume,
-    'again' => again,
     _ => throw PlanContractError('window action «$s»'),
   };
 }
@@ -111,8 +110,8 @@ class WindowDay {
   final List<WindowGoal> goals;
 }
 
-/// Ряд этапа. [doneCount], [total] и [minutesLeft] не null ТОЛЬКО у текущего — цифра рисуется там и
-/// больше нигде.
+/// Ряд этапа. [doneCount], [total] и [minutesLeft] не null ТОЛЬКО у текущего — цифра «N / M» в рядах не рисуется
+/// вовсе (кадры 23-0a…23-0c, серия 38): ряд говорит словами — «впереди», «идёт · ≈ 8 мин», «ещё раз».
 class WindowStage {
   const WindowStage({
     required this.stage,
@@ -125,6 +124,8 @@ class WindowStage {
     this.talkTitleNative,
     this.scenesCount,
     this.targets = const [],
+    this.again = false,
+    this.summary,
   });
 
   final PlanStage stage;
@@ -149,8 +150,30 @@ class WindowStage {
   /// Empty — the server sent none, and the entry has no such block.
   final List<TalkTarget> targets;
 
+  /// «ЕЩЁ РАЗ» У РЯДА (`stages[].again`, наряд FIX-3 §8; кадры 23-0c, 30-1): этап карточек — всегда, и у пройденного
+  /// дня; разговор — когда этап пройден и повторы дня не исчерпаны. Нет поля — false, и ряд ничего не предлагает.
+  final bool again;
+
+  /// ИТОГ ЭТАПА 30-6 (`stages[].summary`, наряд FIX-3 §10) — считает сервер: объём, «с первого раза», возвраты.
+  /// Null у ряда разговора и у дня, розданного до наряда.
+  final StageSummary? summary;
+
   /// Полоса ряда 0…1.
   final double share;
+}
+
+/// ИТОГ ЭТАПА (кадр 30-6, наряд FIX-3 §10) — числа сервера, клиент ничего не пересчитывает.
+class StageSummary {
+  const StageSummary({required this.done, required this.total, required this.firstTry, required this.returns});
+
+  final int done;
+  final int total;
+
+  /// «С первого раза» — единицы, все карточки которых прошли с первой попытки.
+  final int firstTry;
+
+  /// Единицы, которые вернутся завтра.
+  final int returns;
 }
 
 /// A SCENE A REVIEW OR THE REHEARSAL IS MADE OF (`window.sources[]`, наряд BACK-TAILS-2; кадры 37-1 «Из каких сцен»,
@@ -163,13 +186,46 @@ class WindowSourceRef {
   final int? dayNumber;
 }
 
-/// Счётчики брови вкладки: всего, пройдено, вернётся завтра.
+/// Счётчики брови вкладки: всего, пройдено и сколько единиц ВЕРНУЛОСЬ из прошлых дней (`summary.returns`, наряд
+/// FIX-3 §9 — не «вернутся завтра»: то считается по состояниям единиц, [WindowUnitState.returnsTomorrow]).
 class WindowSummary {
   const WindowSummary({required this.total, required this.done, required this.returns});
 
   final int total;
   final int done;
   final int returns;
+}
+
+/// ОТКУДА ЕДИНИЦА ПРОГРАММЫ (`items[].source`, наряд FIX-3 §9): своя сцена дня или возврат из прошлого дня.
+enum WindowUnitSource {
+  own,
+  returned;
+
+  static WindowUnitSource fromWire(Object? s) => switch (s) {
+    null => own,
+    'own' => own,
+    'returned' => returned,
+    _ => throw PlanContractError('window unit source «$s»'),
+  };
+}
+
+/// СЦЕНА ЕДИНИЦЫ (`items[].scene`, наряд FIX-3 §9) — сцена плана, откуда она: своя у `own`, прошлая у `returned`.
+/// Из неё полоса группы «Вернулось из дня N» (кадр 23-0d · вернулось).
+class WindowUnitScene {
+  const WindowUnitScene({required this.id, required this.titleNative, this.dayNumber});
+
+  final String id;
+  final String titleNative;
+  final int? dayNumber;
+
+  static WindowUnitScene? fromWire(Object? v) {
+    if (v is! Map<String, dynamic>) return null;
+    final id = v['id'];
+    final title = v['title_native'];
+    if (id is! String || title is! String) return null;
+
+    return WindowUnitScene(id: id, titleNative: title, dayNumber: (v['day_number'] as num?)?.toInt());
+  }
 }
 
 /// Слово или связка — карточка сетки и её шит 23-0e. Всё, что шит пишет, пришло с сервера: как слово
@@ -187,6 +243,8 @@ class WindowWord {
     this.audioUrl,
     this.usage,
     this.returnsDay,
+    this.source = WindowUnitSource.own,
+    this.scene,
   });
 
   final String ref;
@@ -207,6 +265,10 @@ class WindowWord {
 
   /// «В разговоре» — реплика дня со словом; null — слова в диалоге нет, блока нет.
   final WindowUsage? usage;
+
+  /// Своя единица дня или возврат из прошлого дня (наряд FIX-3 §9) и сцена, откуда она.
+  final WindowUnitSource source;
+  final WindowUnitScene? scene;
 
   /// «вернётся в день N» — только у `returnsTomorrow`.
   final int? returnsDay;
@@ -239,6 +301,8 @@ class WindowPhrase {
     required this.state,
     this.pronunciation,
     this.audioUrl,
+    this.source = WindowUnitSource.own,
+    this.scene,
   });
 
   final String ref;
@@ -247,6 +311,10 @@ class WindowPhrase {
   final WindowUnitState state;
   final String? pronunciation;
   final String? audioUrl;
+
+  /// Своя единица дня или возврат из прошлого дня (наряд FIX-3 §9).
+  final WindowUnitSource source;
+  final WindowUnitScene? scene;
 }
 
 /// Пузырь реплики. Голос — у обеих, каждой голосом своего говорящего; состояние — у реплики ученика.
@@ -276,12 +344,23 @@ enum WindowExchangeKind {
 }
 
 class WindowPair {
-  const WindowPair({required this.step, this.kind, this.partner, this.learner});
+  const WindowPair({
+    required this.step,
+    this.kind,
+    this.partner,
+    this.learner,
+    this.source = WindowUnitSource.own,
+    this.scene,
+  });
 
   final int step;
   final WindowExchangeKind? kind;
   final WindowLine? partner;
   final WindowLine? learner;
+
+  /// Своя реплика дня или возврат из прошлого дня (наряд FIX-3 §9).
+  final WindowUnitSource source;
+  final WindowUnitScene? scene;
 
   /// In an `ask` and a `rescue` the learner opens the exchange; in an `answer` (and an exchange without a
   /// kind) the partner speaks first.
@@ -315,7 +394,6 @@ class DayWindow {
     this.highlights = const [],
     this.action,
     this.sources = const [],
-    this.talkAgain = false,
   });
 
   final WindowDay day;
@@ -338,9 +416,6 @@ class DayWindow {
   /// (`window.sources[]`, BACK-TAILS-2). Empty — no field or nothing in it, and the list is not drawn: the client does
   /// not work out where a day comes from.
   final List<WindowSourceRef> sources;
-
-  /// «Повторить разговор» on a walked day of any kind (`window.talk_again`, BACK-TAILS-2); no field — false.
-  final bool talkAgain;
 
   /// Разбор блока `window`. Нет блока, нет поля, чужое слово — [PlanContractError].
   factory DayWindow.fromJson(Object? json) {
@@ -393,7 +468,6 @@ class DayWindow {
               dayNumber: (s['day_number'] as num?)?.toInt(),
             ),
       ],
-      talkAgain: j['talk_again'] == true,
     );
   }
 
@@ -418,7 +492,26 @@ class DayWindow {
       talkTitleNative: _text(s['talk_title_native']),
       scenesCount: (s['scenes_count'] as num?)?.toInt(),
       targets: TalkTarget.listOf(s['targets']),
+      again: s['again'] == true,
+      summary: _stageSummary(s['summary']),
       share: _share(s['share'], 'stage.share'),
+    );
+  }
+
+  /// Итог этапа 30-6 — только целиком: ряд без него (разговор, день до наряда) числа не рисует.
+  static StageSummary? _stageSummary(Object? v) {
+    if (v is! Map<String, dynamic>) return null;
+    final done = v['done'];
+    final total = v['total'];
+    final firstTry = v['first_try'];
+    final returns = v['returns'];
+    if (done is! num || total is! num || firstTry is! num || returns is! num) return null;
+
+    return StageSummary(
+      done: done.toInt(),
+      total: total.toInt(),
+      firstTry: firstTry.toInt(),
+      returns: returns.toInt(),
     );
   }
 
@@ -437,6 +530,8 @@ class DayWindow {
       audioUrl: _text(w['audio_url']),
       usage: usage == null ? null : _usage(_map(usage, 'word.usage')),
       returnsDay: (w['returns_day'] as num?)?.toInt(),
+      source: WindowUnitSource.fromWire(w['source']),
+      scene: WindowUnitScene.fromWire(w['scene']),
     );
   }
 
@@ -455,6 +550,8 @@ class DayWindow {
     state: WindowUnitState.fromWire(p['state']),
     pronunciation: _text(p['pronunciation']),
     audioUrl: _text(p['audio_url']),
+    source: WindowUnitSource.fromWire(p['source']),
+    scene: WindowUnitScene.fromWire(p['scene']),
   );
 
   static WindowPair _pair(Map<String, dynamic> d) {
@@ -479,6 +576,8 @@ class DayWindow {
               audioUrl: _map(learner, 'learner')['audio_url'] as String?,
               state: WindowUnitState.fromWire(_map(learner, 'learner')['state']),
             ),
+      source: WindowUnitSource.fromWire(d['source']),
+      scene: WindowUnitScene.fromWire(d['scene']),
     );
   }
 

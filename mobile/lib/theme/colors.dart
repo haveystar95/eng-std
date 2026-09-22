@@ -308,6 +308,9 @@ abstract final class AppColors {
   /// Frame slot fill, 8 % brass.
   static const sessionWindowFill = Color.fromARGB(20, 140, 106, 58);
 
+  /// Frame slot fill of a construction the learner has said — 8 % sage (плашки 37-7, лист 37-8d, итог 37-12).
+  static const sessionSaidSlotFill = Color.fromARGB(20, 78, 107, 82);
+
   /// Sage ring 30 % around the «listening» button.
   static const sessionListenRing = Color.fromARGB(77, 78, 107, 82);
 

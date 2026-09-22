@@ -576,7 +576,7 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) => old.color != color || old.width != width;
 }
 
-/// THE TALK'S DOCK (37-6…37-10): the phrase strip on top, the chip, the live line, the caption, and the row of
+/// THE TALK'S DOCK (37-6…37-10): the constructions on top, the chip, the live line, the caption, and the row of
 /// three — the left exit, the microphone 72 in the middle, the right exit.
 ///
 /// The two exits are the caller's: in the talk «Не понял» stands on the left in EVERY state of the
@@ -587,7 +587,7 @@ class TalkDock extends StatelessWidget {
     super.key,
     required this.mic,
     this.debugMic,
-    this.strip,
+    this.constructions,
     this.chip,
     this.caption,
     this.subCaption,
@@ -603,11 +603,11 @@ class TalkDock extends StatelessWidget {
   /// dock, and the simulator has no other way to say anything (наряд SESSION-1b).
   final SessionMic? debugMic;
 
-  /// «фразы · N из M» (наряд CLIENT-CONV-1c §4) — part of the dock in every state of the ribbon, 14 over what stands
-  /// under it; the ribbon rises by its height.
-  final Widget? strip;
+  /// THE CONSTRUCTIONS OF THE TALK (наряд FIX-3 §3) — plates that scroll sideways, part of the dock in every state of
+  /// the ribbon, 14 over what stands under it; the ribbon rises by their height.
+  final Widget? constructions;
 
-  /// The hint chip, under the strip.
+  /// The hint chip, under the constructions.
   final Widget? chip;
 
   /// «тап — говорить» / «слушай» / «говори, я слушаю».
@@ -632,7 +632,7 @@ class TalkDock extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (notice case final n?) ...[n, const SizedBox(height: 14)],
-      if (strip case final s?) ...[s, const SizedBox(height: 14)],
+      if (constructions case final row?) ...[row, const SizedBox(height: 14)],
       if (chip case final c?) ...[c, const SizedBox(height: 14)],
       if (liveLine case final line?) ...[line, const SizedBox(height: 14)],
       // The frame's order (37-7 «слушаю», 37-10): the caption over the button, the button's 88 box, and what

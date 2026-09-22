@@ -4393,18 +4393,6 @@
       }
     }
   },
-  "planWindowStageCount": "{done} / {total}",
-  "@planWindowStageCount": {
-    "description": "Окно дня, плита (23-0b): цифра ТОЛЬКО у текущего этапа — «6 / 16»; у остальных рядов цифры нет (done_count и total сервера — null).",
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "planWindowPassedLine": "День пройден · {minutes}",
   "@planWindowPassedLine": {
     "description": "Окно дня, плита пройденного дня (23-0c): строка итога вместо цифр — «День пройден · 19 минут»; minutes — planMinutesCount(minutes_spent).",
@@ -4431,10 +4419,6 @@
         "type": "int"
       }
     }
-  },
-  "planWindowCtaAgain": "Ещё раз",
-  "@planWindowCtaAgain": {
-    "description": "Окно дня, кнопка пройденного дня (23-0c, allowed_action = again): «Говорю сам» ещё раз по карточкам дня, без записи ответов — не пересдача дня."
   },
   "planWindowListen": "Прослушать",
   "@planWindowListen": {
@@ -4588,6 +4572,10 @@
   "planSessionNoHintsSub": "Диалог и «Говорю сам» — сразу голосом",
   "@planSessionNoHintsSub": {
     "description": "Сессия, вход в этап (30-1): подпись под переключателем «Без подсказок»."
+  },
+  "planSessionNoHintsTalk": "В разговоре — без подсказок, текст собеседника закрыт",
+  "@planSessionNoHintsTalk": {
+    "description": "Вход в день-репетицию (30-1, наряд FIX-3 §8): подпись тумблера — про разговор; «Диалог» и «Говорю сам» в этом дне не идут."
   },
   "planSessionStart": "Начать",
   "@planSessionStart": {
@@ -5282,26 +5270,6 @@
       }
     }
   },
-  "planTalkPhrasesOf": "Фразы дня в разговоре · {used} из {total}",
-  "@planTalkPhrasesOf": {
-    "description": "Итог разговора (37-12): бровь списка фраз — счёт сервера.",
-    "placeholders": {
-      "used": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "planTalkNotSaidTomorrow": "Не прозвучало — вернётся завтра",
-  "@planTalkNotSaidTomorrow": {
-    "description": "Итог разговора (37-12): группа несказанного у дня и повторения (returns_tomorrow = true)."
-  },
-  "planTalkNotSaidRehearsal": "Не прозвучало — повтори перед приёмом",
-  "@planTalkNotSaidRehearsal": {
-    "description": "Итог разговора (37-12): группа несказанного у репетиции — завтра событие, возврата не будет (returns_tomorrow = false)."
-  },
   "planTalkReady": "Ты готов к приёму",
   "@planTalkReady": {
     "description": "Итог разговора репетиции (37-12): заголовок вместо счёта реплик."
@@ -5379,24 +5347,15 @@
   "@planWindowFromDays": {
     "description": "Окно дня повторения (37-2): бровь списка дней под плитой."
   },
-  "planSessionTaskWhatSaid": "Что тебе сказали?",
-  "@planSessionTaskWhatSaid": {
-    "description": "Диалог, «Пойми собеседника» (33-1): строка отдельного блока с вопросом и вариантами — под пузырём собеседника, а не между репликами."
+  "planSessionTaskUnderstood": "Проверь, что понял",
+  "@planSessionTaskUnderstood": {
+    "description": "Проверка понимания (33-1, 33-5): подпись над репликой — одна и та же на обоих кадрах (наряд FIX-3 §1)."
   },
   "planSessionHeardLine": "услышал: {text}",
   "@planSessionHeardLine": {
     "description": "«Ответь своими словами» (35-2) и круг своего слова «Скажи целиком» (32-7): отказ судьи — что он судил (heard ответа судьи, CONV-2 п. 8), строкой под причиной; без поля — что распознал телефон.",
     "placeholders": {
       "text": {
-        "type": "String"
-      }
-    }
-  },
-  "planTalkSceneRepeatBefore": "{scene} · повтори перед приёмом",
-  "@planTalkSceneRepeatBefore": {
-    "description": "Итог разговора репетиции (37-12b): подпись несказанных фраз сцены — «Рецепт и аптека · повтори перед приёмом».",
-    "placeholders": {
-      "scene": {
         "type": "String"
       }
     }
@@ -5579,29 +5538,87 @@
   "@planTalkEntrySay": {
     "description": "Вход в разговор (37-5, SESSION-DES-4): бровь списка фраз, ради которых разговор (targets ряда разговора окна)."
   },
-  "planTalkStrip": "фразы · {said} из {total}",
-  "@planTalkStrip": {
-    "description": "Лента разговора (37-6…37-11): полоска над микрофоном — сколько фраз разговора уже прозвучало (targets[].said сервера). Единственный счётчик ленты, назван нарядом.",
+  "planVoiceTitle": "Каким голосом озвучивать твои реплики?",
+  "@planVoiceTitle": {
+    "description": "Лист голоса (38-1, наряд FIX-3 §6): спрашивается один раз перед первым планом, пока пол в профиле не сказан."
+  },
+  "planVoiceMale": "Мужской",
+  "@planVoiceMale": {
+    "description": "Лист голоса (38-1): плашка мужского голоса."
+  },
+  "planVoiceMaleHint": "ниже и спокойнее",
+  "@planVoiceMaleHint": {
+    "description": "Лист голоса (38-1): подпись мужской плашки."
+  },
+  "planVoiceFemale": "Женский",
+  "@planVoiceFemale": {
+    "description": "Лист голоса (38-1): плашка женского голоса."
+  },
+  "planVoiceFemaleHint": "выше и мягче",
+  "@planVoiceFemaleHint": {
+    "description": "Лист голоса (38-1): подпись женской плашки."
+  },
+  "planVoiceInProfile": "Можно поменять в профиле",
+  "@planVoiceInProfile": {
+    "description": "Лист голоса (38-1): строка под плашками — выбор не навсегда."
+  },
+  "profileRowVoice": "Голос своих реплик",
+  "@profileRowVoice": {
+    "description": "Профиль: ряд выбора голоса своих реплик — тот же лист, что перед первым планом (38-1)."
+  },
+  "profileVoiceUnset": "не выбран",
+  "@profileVoiceUnset": {
+    "description": "Профиль: пол для голоса ещё не сказан — сервер озвучивает мужским, пока не сказан."
+  },
+  "planTalkConstructions": "Конструкции в разговоре",
+  "@planTalkConstructions": {
+    "description": "Итог разговора (37-12, 37-12b): надпись над карточками конструкций. Счётчика рядом нет — наряд FIX-3 §3 снял «N из M»."
+  },
+  "planTalkConstruction": "Конструкция",
+  "@planTalkConstruction": {
+    "description": "Лист конструкции (37-8d): заголовок — открывается тапом по плашке над микрофоном."
+  },
+  "planTalkFromLesson": "Из урока",
+  "@planTalkFromLesson": {
+    "description": "Лист конструкции (37-8d): надпись над примером урока — каркас, сказанный значением урока (example_target/example_native сервера)."
+  },
+  "planTalkYouSaidLabel": "Ты сказал",
+  "@planTalkYouSaidLabel": {
+    "description": "Лист конструкции (37-8d): надпись над тем, как ученик сказал конструкцию (value_target сервера)."
+  },
+  "planTalkYouSaid": "ты сказал: {said}",
+  "@planTalkYouSaid": {
+    "description": "Итог разговора (37-12): серая строка под закрашенной карточкой — каркас со значением ученика.",
     "placeholders": {
       "said": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
-  "planTalkSheetTitle": "Фразы дня",
-  "@planTalkSheetTitle": {
-    "description": "Лист фраз (37-8d): заголовок — открывается тапом по полоске ленты."
+  "planTalkRepeatBefore": "повтори перед событием",
+  "@planTalkRepeatBefore": {
+    "description": "Итог репетиции (37-12b): серая строка под незакрашенной карточкой — завтра событие, а не новый день."
   },
-  "planTalkNotSaid": "Не прозвучало",
-  "@planTalkNotSaid": {
-    "description": "Итог разговора-повтора (37-12, replay: true): группа несказанного — повтор ничего не возвращает завтра, и строки «вернётся завтра» у него нет."
+  "planWindowReturnedFromDay": "Вернулось из дня {n}",
+  "@planWindowReturnedFromDay": {
+    "description": "Окно дня, вкладка программы (23-0d · вернулось): заголовок группы единиц, вернувшихся из прошлого дня — items[].source = returned, номер дня из items[].scene.day_number.",
+    "placeholders": { "n": { "type": "int" } }
   },
-  "planWindowTalkAgain": "Повторить разговор",
-  "@planWindowTalkAgain": {
-    "description": "Окно пройденного дня (37-1 «пройден»; window.talk_again, BACK-TAILS-2): кнопка нового разговора поверх пройденного этапа — тот же экран разговора."
+  "planWindowReturnedFrom": "Вернулось",
+  "@planWindowReturnedFrom": {
+    "description": "То же, когда у сцены-источника нет своего дня (items[].scene.day_number = null)."
+  },
+  "planWindowStageAgain": "ещё раз",
+  "@planWindowStageAgain": {
+    "description": "Окно дня и вход в этап (23-0c, 30-1): вторичное действие пройденного ряда — пройти этап ещё раз; по stages[].again сервера."
+  },
+  "planWindowTalkLimitToday": "лимит на сегодня",
+  "@planWindowTalkLimitToday": {
+    "description": "Ряд разговора пройденного дня, когда повторы суток исчерпаны (30-1e): stages[].again = false."
+  },
+  "planWindowDaySummary": "Итог дня",
+  "@planWindowDaySummary": {
+    "description": "Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет."
   },
   "planWindowTalkReplayLimit": "Разговор сегодня уже повторяли — вернись завтра",
   "@planWindowTalkReplayLimit": {

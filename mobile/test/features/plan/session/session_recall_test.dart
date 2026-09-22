@@ -121,10 +121,10 @@ void main() {
 
   group('«Вспомнить» на экране сессии', () {
     // ПРАВИЛО (кадры 37-3, 35-4): у обзора в шапке — минуты этапа, бусин нет; полоса сцены идёт за страницей обзора и
-    // за карточкой пересказа — у репетиции своей сцены нет. Пересказы считаются по обменам СВОИХ сцен: десять
-    // пересказов двух сцен — «ещё 10 реплик» и десять бусин.
-    // ЛОВИТ: пустую полосу сцены на репетиции, бусины у обзора, «ещё 8 реплик» на десяти пересказах.
-    testWidgets('обзор → пересказы: минуты в шапке, полоса идёт за сценой, десять реплик', (tester) async {
+    // за карточкой пересказа — у репетиции своей сцены нет. Пересказы считаются по обменам СВОИХ сцен: девять
+    // пересказов двух сцен — «ещё 9 реплик» и девять бусин.
+    // ЛОВИТ: пустую полосу сцены на репетиции, бусины у обзора, «ещё 8 реплик» на девяти пересказах.
+    testWidgets('обзор → пересказы: минуты в шапке, полоса идёт за сценой, девять реплик', (tester) async {
       final backend = _Backend(sessionFixtureJson('day-rehearsal'));
       await _open(tester, backend);
       expect(find.text('Вспомнить'), findsWidgets);
@@ -135,7 +135,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Вспомни свои реплики'), findsOneWidget);
-      expect(find.text(nb('≈ 7 мин')), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
+      expect(find.text(nb('≈ 4 мин')), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
       expect(_beads(), findsNothing);
       expect(find.textContaining('Запись к врачу'), findsOneWidget);
 
@@ -149,8 +149,8 @@ void main() {
       }
       expect(backend.answered, [overview.id]);
       expect(find.text('Повтори свою реплику'), findsOneWidget);
-      expect(find.text(nb('ещё 10 реплик')), findsOneWidget);
-      expect(_beads(), findsNWidgets(10));
+      expect(find.text(nb('ещё 9 реплик')), findsOneWidget);
+      expect(_beads(), findsNWidgets(9));
       expect(find.textContaining('Запись к врачу'), findsOneWidget, reason: 'the first retell is the first scene\'s');
       await tester.pump(const Duration(seconds: 2));
     });

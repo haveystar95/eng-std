@@ -23,10 +23,13 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/plan/conversation/conversation_controller.dart';
+import 'package:eng_std/data/plan/session/dialogue_feed.dart';
 import 'package:eng_std/features/plan/conversation/talk_entry.dart';
 import 'package:eng_std/features/plan/conversation/talk_screen.dart';
 import 'package:eng_std/features/plan/conversation/talk_summary.dart';
 import 'package:eng_std/features/plan/day/day_window_screen.dart';
+import 'package:eng_std/features/plan/day/window/window_scroll.dart';
+import 'package:eng_std/features/plan/entry/voice_gender_sheet.dart';
 import 'package:eng_std/features/plan/plan_providers.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
 import 'package:eng_std/features/plan/session/cards/card_host.dart';
@@ -37,62 +40,65 @@ import 'package:eng_std/features/plan/session/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
-import '../../../support/day_window_harness.dart' show RecordingLines, kWindowInsets;
+import '../../../support/day_window_harness.dart' show RecordingLines, kWindowInsets, openWindowTab, scrollToHeader, windowRoom;
 import '../../../support/nbsp.dart';
 import '../../../support/plan_goldens.dart' show planFixture, planFrom, planGoldenApp, setUpPlanGoldens;
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 import '../../../support/talk_harness.dart';
 
-/// СНИМКИ НАРЯДА CLIENT-CONV-1c (§10) — каждый изменённый экран и состояние кадром 390 × 844 @2×, для архитектора ДО
+/// СНИМКИ НАРЯДА FIX-3, ОКНО 2 (§9) — каждый изменённый экран и состояние кадром 390 × 844 @2×, для архитектора ДО
 /// сборки на телефон.
 ///
 /// Не golden-тест: сравнивать не с чем. Без ключа файл проверяет, что каждый экран рисуется и ничего не переполняет.
 ///
 /// ```bash
-/// flutter test test/features/plan/session/conv1c_shots_test.dart --dart-define=CONV1C_SHOTS=true
+/// flutter test test/features/plan/session/fix3_shots_test.dart --dart-define=FIX3_SHOTS=true
 /// ```
-/// Кадры ложатся в `../backend2/docs/research/client-conv-1c/shots/`. Ответы дней и документы разговора — фикстуры
-/// сервера BACK-TAILS-2 (`server_fixtures.dart`: минуты рядов, `targets` ряда разговора, `sources`, этап `repetition`);
-/// свой JSON поверх них — только то, чего в фикстурах нет: пройденные дни с `talk_again`, лента, обрезанная до
-/// нужного хода.
+/// Кадры ложатся в `../backend2/docs/research/fix-3/shots/`. Ответы дней и документы разговора — фикстуры сервера,
+/// переснятые кодом окна 1 (`server_fixtures.dart`: цели-конструкции, `stages[].again`, `stages[].summary`,
+/// `source`/`scene` единиц, минуты рядов); свой JSON поверх них — только то, чего живой прогон не оставил.
 void main() {
-  const writeShots = bool.fromEnvironment('CONV1C_SHOTS');
+  const writeShots = bool.fromEnvironment('FIX3_SHOTS');
   const frame = Size(390, 844);
   final shotKey = GlobalKey();
   final doctor = sessionFixture('day-doctor');
   final plan = planFrom('plan_rehearsal');
   final booking = plan.scenes.firstWhere((s) => s.titleNative == 'Запись к врачу');
   final visit = plan.scenes.firstWhere((s) => s.titleNative == 'Приём у врача');
-  final openV2 = talkV2('talk_day_open_v2');
+  final openV2 = serverTalk('conversation-day-open');
   // The talk's end and summaries as the server keeps them (BACK-TAILS-2's re-shot documents).
   final endedDay = serverTalk('conversation-day-ended');
   final rehearsalTalk = serverTalk('conversation-rehearsal-ended');
 
   /// The talk before «Не понял»: the role's first question, the learner's first line, the role's second question.
-  final beforeRescue = talkV2('talk_day_open_v2', (json) {
+  final beforeRescue = serverTalk('conversation-day-open', (json) {
     json['turns'] = (json['turns'] as List).take(3).toList();
     json['turns_left'] = 3;
   });
 
-  /// The talk one move on: «He has had it for three days.» said, p2 ticked by the server, the role's next question.
-  final afterMove = talkV2('talk_day_open_v2', (json) {
+  /// The talk one move on: the learner said the construction p4, the server ticked it and put its value in its window,
+  /// and the role asked its next question.
+  final afterMove = serverTalk('conversation-day-open', (json) {
     final turns = (json['turns'] as List).cast<Map<String, dynamic>>();
     final learner = Map<String, dynamic>.of(turns[1]);
     final partner = Map<String, dynamic>.of(turns[2]);
-    final p2 = ((json['targets'] as List).cast<Map<String, dynamic>>())[1];
+    final p4 = ((json['targets'] as List).cast<Map<String, dynamic>>()).firstWhere((t) => t['ref'] == 'p4');
+    final next = (turns.last['index'] as int) + 1;
     turns.addAll([
       {
         ...learner,
-        'index': 6,
-        'text_target': 'He has had it for three days.',
+        'index': next,
+        'text_target': "I'm checking in the suitcase only.",
         'phrases_used': [
-          {'scene_id': p2['scene_id'], 'ref': 'p2', 'text_target': p2['text_target'], 'text_native': p2['text_native']},
+          {'scene_id': p4['scene_id'], 'ref': 'p4'},
         ],
       },
-      {...partner, 'index': 7, 'text_target': 'Has he had a temperature?', 'text_native': 'У него была температура?', 'understood': true},
+      {...partner, 'index': next + 1, 'text_target': 'Sure. Please put it on the belt.', 'text_native': 'Конечно. Поставьте его на ленту.', 'understood': true},
     ]);
-    p2['said'] = true;
+    p4
+      ..['said'] = true
+      ..['value_target'] = 'the suitcase only';
     json['turns_left'] = 1;
   });
 
@@ -147,7 +153,7 @@ void main() {
       image.dispose();
       return data;
     });
-    final file = File('../backend2/docs/research/client-conv-1c/shots/$name.png')..createSync(recursive: true);
+    final file = File('../backend2/docs/research/fix-3/shots/$name.png')..createSync(recursive: true);
     file.writeAsBytesSync(bytes!.buffer.asUint8List());
   }
 
@@ -339,18 +345,13 @@ void main() {
     await shoot(tester, '01-37-5-entry-day');
   });
 
-  // The photo band stands 64 whole or not at all (приёмка 22.09, третий заход): under a title of two lines and the cut
-  // third phrase it needs 84 of air (64 and its 20) — the 390 phone has it from 909 high, not yet at 874.
-  testWidgets('01b 37-5 вход дня на 390 × 874 — полосе фото ещё мало места', (tester) async {
-    await pumpDayEntry(tester, size: const Size(390, 874));
-    expect(photoBand(tester), 0);
-    await shoot(tester, '01b-37-5-entry-day-874');
-  });
-
-  testWidgets('01c 37-5 вход дня на 390 × 909 — полоса фото 64 целиком', (tester) async {
-    await pumpDayEntry(tester, size: const Size(390, 909));
-    expect(photoBand(tester), 64);
-    await shoot(tester, '01c-37-5-entry-day-909');
+  // Наряд FIX-3 §3: экран прокручивается целиком под прижатым доком — снимок нижней части списка конструкций.
+  testWidgets('01b 37-5 вход дня прокручен — последние конструкции под доком', (tester) async {
+    await pumpDayEntry(tester);
+    expect(photoBand(tester), 64, reason: 'полоса фото — кадровые 64 всегда');
+    await tester.drag(find.byType(TalkEntryView), const Offset(0, -400));
+    await tester.pump();
+    await shoot(tester, '01b-37-5-entry-day-scrolled');
   });
 
   testWidgets('02 37-5b репетиция — «Разговор целиком · 2 сцены», «Скажи в разговоре»', (tester) async {
@@ -373,7 +374,7 @@ void main() {
     await shoot(tester, '02-37-5b-entry-rehearsal');
   });
 
-  // ── 37-6…37-11 · лента с полоской фраз ────────────────────────────────────────────────────────
+  // ── 37-6…37-11 · лента с плашками конструкций ─────────────────────────────────────────────────
   testWidgets('03 37-6 роль говорит — текст открыт, полоска', (tester) async {
     await pumpTalkShot(tester, beforeRescue, speaking: true);
     await shoot(tester, '03-37-6-speaking');
@@ -408,7 +409,7 @@ void main() {
   });
 
   testWidgets('08 37-7 «Без подсказок»', (tester) async {
-    final blind = talkV2('talk_day_open_v2', (json) {
+    final blind = serverTalk('conversation-day-open', (json) {
       json['turns'] = (json['turns'] as List).take(3).toList();
       (json['hints'] as Map<String, dynamic>)
         ..['enabled'] = false
@@ -421,7 +422,7 @@ void main() {
   });
 
   testWidgets('08b 37-7 «Без подсказок» — чип «текст» открыл текст этой реплики', (tester) async {
-    final blind = talkV2('talk_day_open_v2', (json) {
+    final blind = serverTalk('conversation-day-open', (json) {
       json['turns'] = (json['turns'] as List).take(3).toList();
       (json['hints'] as Map<String, dynamic>)
         ..['enabled'] = false
@@ -444,22 +445,32 @@ void main() {
     await settleTalk(tester);
   });
 
-  testWidgets('10 37-8b ответ врача — пузырь с волной, полоска «2 из 5» вспыхнула', (tester) async {
+  testWidgets('10 37-8b ответ роли — плашка конструкции закрасилась по said', (tester) async {
     final stand = await pumpTalkShot(tester, openV2, next: afterMove);
-    await sayInTalk(tester, 'He has had it for three days.');
-    expect(find.text(nb('фразы · 2 из 5')), findsOneWidget);
-    expect(find.byKey(const ValueKey('talk-strip-check')), findsOneWidget, reason: 'the flash is on');
-    await shoot(tester, '10-37-8b-answer-strip-flash', settle: false);
+    await sayInTalk(tester, "I'm checking in the suitcase only.");
+    final said = afterMove.targets.firstWhere((t) => t.ref == 'p4');
+    await tester.dragUntilVisible(
+      find.byKey(ValueKey('talk-construction-${said.sceneId}-${said.ref}')),
+      find.byKey(const ValueKey('talk-constructions')),
+      const Offset(-120, 0),
+    );
+    await tester.pump();
+    expect(find.text(said.valueTarget!), findsOneWidget, reason: 'значение ученика встало в окно плашки');
+    await shoot(tester, '10-37-8b-construction-filled', settle: false);
     stand.voice.finish();
     await settleTalk(tester);
   });
 
-  testWidgets('11 37-8d лист фраз открыт', (tester) async {
+  testWidgets('11 37-8d лист конструкции открыт', (tester) async {
     await pumpTalkShot(tester, afterMove);
-    await tester.tap(find.byKey(const ValueKey('talk-strip')));
+    final said = afterMove.targets.firstWhere((t) => t.ref == 'p4');
+    final chip = find.byKey(ValueKey('talk-construction-${said.sceneId}-${said.ref}'));
+    await tester.dragUntilVisible(chip, find.byKey(const ValueKey('talk-constructions')), const Offset(-120, 0));
+    await tester.pump();
+    await tester.tap(chip);
     await tester.pumpAndSettle();
-    await shoot(tester, '11-37-8d-phrase-sheet');
-    await tester.tap(find.byKey(const ValueKey('talk-phrase-sheet-close')));
+    await shoot(tester, '11-37-8d-construction-sheet');
+    await tester.tap(find.byKey(const ValueKey('talk-construction-sheet-close')));
     await tester.pumpAndSettle();
     await settleTalk(tester);
   });
@@ -506,7 +517,7 @@ void main() {
     await settleTalk(tester);
   });
 
-  testWidgets('16 37-11 прощание — полоска с итогом фраз', (tester) async {
+  testWidgets('16 37-11 прощание — плашки конструкций над листом конца', (tester) async {
     await pumpTalkShot(tester, endedDay);
     await shoot(tester, '16-37-11-goodbye');
     await settleTalk(tester);
@@ -514,14 +525,14 @@ void main() {
 
   // ── 37-12 ─────────────────────────────────────────────────────────────────────────────────────
   testWidgets('17 37-12 итог разговора дня', (tester) async {
-    await pumpShot(tester, TalkSummaryView(talk: endedDay, scene: doctor.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}));
+    await pumpShot(tester, TalkSummaryView(talk: endedDay, scene: doctor.scene, onNext: () {}, onClose: () {}));
     await shoot(tester, '17-37-12-summary-day');
   });
 
   testWidgets('18 37-12b итог репетиции', (tester) async {
     await pumpShot(
       tester,
-      TalkSummaryView(talk: rehearsalTalk, scene: visit, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}),
+      TalkSummaryView(talk: rehearsalTalk, scene: visit, onNext: () {}, onClose: () {}),
     );
     await shoot(tester, '18-37-12b-summary-rehearsal');
   });
@@ -705,23 +716,37 @@ void main() {
     await shoot(tester, '27-37-2-review-repetition-sources');
   });
 
-  testWidgets('28 37-1 репетиция пройдена — «Повторить разговор» кнопкой', (tester) async {
-    // The fixtures carry no walked rehearsal: the reply of day-rehearsal.json, passed, as the server writes one.
+  testWidgets('28 37-1 репетиция пройдена — «ещё раз» у обоих рядов', (tester) async {
+    // The fixtures carry no walked rehearsal: the reply of day-rehearsal.json, passed, as the server writes one — with
+    // `again` on both rows (наряд FIX-3 §5: карточки — всегда, разговор — пока лимит дня не исчерпан).
     final json = dayJson('day-rehearsal');
     passed(json);
-    windowOf(json)
-      ..['allowed_action'] = null
-      ..['talk_again'] = true;
+    windowOf(json)['allowed_action'] = null;
+    for (final row in rows(json)) {
+      row['again'] = true;
+    }
     await pumpWindowShot(tester, PlanDayRoom.fromJson(json));
-    await shoot(tester, '28-37-1-passed-talk-again');
+    expect(find.text('ещё раз'), findsNWidgets(2));
+    await shoot(tester, '28-37-1-passed-rows-again');
   });
 
-  testWidgets('29 23-0a день пройден — «Ещё раз» и ссылка «Повторить разговор»', (tester) async {
+  testWidgets('29 23-0a день пройден — «ещё раз» у рядов, «Итог дня» внизу', (tester) async {
+    final json = planFixture('room_window_passed');
+    await pumpWindowShot(tester, PlanDayRoom.fromJson(json), of: planFrom('plan_window'));
+    expect(find.text('ещё раз'), findsWidgets);
+    expect(find.text('Итог дня'), findsOneWidget);
+    await shoot(tester, '29-23-0a-passed-rows-again');
+  });
+
+  testWidgets('29b 23-0a день пройден — разговор упёрся в лимит повторов', (tester) async {
     final json = planFixture('room_window_passed');
     final data = (json['data'] as Map<String, dynamic>?) ?? json;
-    windowOf(data)['talk_again'] = true;
+    // Разговор дня исчерпал повторы: сервер шлёт ряду `again: false` — ряд говорит «лимит на сегодня».
+    final talk = {...rows(data).first, 'stage': 'conversation', 'again': false};
+    rows(data).add(talk);
     await pumpWindowShot(tester, PlanDayRoom.fromJson(json), of: planFrom('plan_window'));
-    await shoot(tester, '29-23-0a-passed-again-and-talk-again');
+    expect(find.text('лимит на сегодня'), findsOneWidget);
+    await shoot(tester, '29b-23-0a-passed-talk-limit');
   });
 
   testWidgets('30 23-0a день идёт — «≈ N мин» у рядов впереди', (tester) async {
@@ -776,6 +801,71 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Начни с этапа «Повторение». Остальные откроются по порядку'), findsOneWidget);
     await shoot(tester, '33-21-2c-review-day-first-stage-hint');
+  });
+
+  // ── 33-1 · проверка понимания: сначала звук, потом вопрос (наряд FIX-3 §1) ──────────────────────
+  /// The day's check card 33-1 — the partner's line closed, its options in the dock.
+  Future<void> pumpCheck(WidgetTester tester) async {
+    final cards = doctor.stageOf(PlanStage.dialogue)!.cards;
+    final card = cards.firstWhere((c) => c.kind == SessionKind.dialoguePartner);
+    await pumpCardShot(tester, () => probeEnv(card, CardProbe(), day: doctor, feed: DialogueFeed.before(cards, card)));
+  }
+
+  testWidgets('34 33-1 звучит реплика — подпись есть, вопроса и вариантов ещё нет', (tester) async {
+    await pumpCheck(tester);
+    expect(find.text('Проверь, что понял'), findsOneWidget);
+    expect(tester.widget<Visibility>(find.byKey(const ValueKey('check-after-sound'))).visible, isFalse);
+    await shoot(tester, '34-33-1-line-sounding', settle: false);
+    await tester.pump(const Duration(milliseconds: 400));
+  });
+
+  testWidgets('35 33-1 звук доиграл — вопрос и варианты', (tester) async {
+    await pumpCheck(tester);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+    expect(tester.widget<Visibility>(find.byKey(const ValueKey('check-after-sound'))).visible, isTrue);
+    await shoot(tester, '35-33-1-question-and-options');
+  });
+
+  // ── 38-1 · голос своих реплик (наряд FIX-3 §6) ─────────────────────────────────────────────────
+  testWidgets('36 38-1 лист голоса перед первым планом', (tester) async {
+    await pumpShot(
+      tester,
+      Builder(
+        builder: (context) => Center(
+          child: TextButton(onPressed: () => unawaited(showVoiceGenderSheet(context)), child: const Text('open')),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('voice-gender-sheet')), findsOneWidget);
+    await shoot(tester, '36-38-1-voice-sheet');
+    Navigator.of(tester.element(find.byKey(const ValueKey('voice-gender-sheet')))).pop();
+    await tester.pumpAndSettle();
+  });
+
+  // ── 23-0d · вернулось из прошлого дня (наряд FIX-3 §4) ─────────────────────────────────────────
+  testWidgets('37 23-0d вкладка «Диалог» — своё дня и группа «Вернулось из дня 1»', (tester) async {
+    final room = windowRoom('in_progress', (j) {
+      final items = ((((j['window'] as Map<String, dynamic>)['program'] as Map<String, dynamic>)['dialogue']
+              as Map<String, dynamic>)['items'] as List)
+          .cast<Map<String, dynamic>>();
+      for (final item in items.skip(3)) {
+        item
+          ..['source'] = 'returned'
+          ..['scene'] = {'id': 'ulid-0001', 'title_native': 'Ресепшен зала', 'day_number': 1};
+      }
+      return j;
+    });
+    await pumpWindowShot(tester, room, of: planFrom('plan_window'));
+    await scrollToHeader(tester);
+    await openWindowTab(tester, 'Диалог');
+    await tester.drag(find.byType(WindowScroll), const Offset(0, -700));
+    await tester.pump();
+    expect(find.text('ВЕРНУЛОСЬ ИЗ ДНЯ 1'), findsOneWidget);
+    expect(find.text(nb('День 1 · Ресепшен зала')), findsOneWidget);
+    await shoot(tester, '37-23-0d-dialogue-returned');
   });
 }
 

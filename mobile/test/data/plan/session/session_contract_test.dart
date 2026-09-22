@@ -19,17 +19,17 @@ void main() {
   final intermediate = _fixture('day-doctor');
   final beginner = _fixture('day-doctor-beginner');
 
-  test('both fixtures parse in full: 78 + 78 cards, none skipped', () {
+  test('both fixtures parse in full: 83 + 83 cards, none skipped', () {
     final a = SessionDay.fromJson(intermediate);
     final b = SessionDay.fromJson(beginner);
 
     int count(SessionDay d) => d.stages.fold(0, (n, s) => n + s.cards.length);
-    // The beginner day is two cards longer: its «Скажи целиком» is two rounds, so the stage's ceiling has room for
-    // two THIRD recognitions the intermediate's three-round cards leave no room for (DECISIONS п. 354).
-    expect(count(a), 78);
-    expect(count(b), 80);
+    // Both days are the same length now: the rounds of «Скажи целиком» are never cut (наряд FIX-3 §3), and the
+    // stage's ceiling (900 с) holds every recognition of both levels.
+    expect(count(a), 83);
+    expect(count(b), 83);
     expect(a.skipped + b.skipped, 0);
-    expect(count(a) + count(b), 158);
+    expect(count(a) + count(b), 166);
   });
 
   // The fixtures together carry EVERY dealt kind: `phrase_slot` opens a frame's series on the beginner day, whose
@@ -66,7 +66,7 @@ void main() {
     final rehearsal = SessionDay.fromJson(_fixture('day-rehearsal'));
     expect(rehearsal.skipped, 0);
     final recall = rehearsal.stageOf(PlanStage.recall)!.cards;
-    expect(recall, hasLength(11));
+    expect(recall, hasLength(10));
     expect(recall.first.kind, SessionKind.recallScenes);
     expect(recall.first.unit.isDay, isTrue);
     expect(recall.skip(1).every((c) => c.kind == SessionKind.speakRetell && c.stage == PlanStage.recall), isTrue);
@@ -121,13 +121,13 @@ void main() {
     expect(listen.first.unit.isDay, isTrue);
     // BACK-TAILS-2 (CLIENT-CONV-1c §9а): every row carries its planned `minutes` — a stage ahead says them («Дальше ·
     // Фразы ≈ 12 мин» on 30-6); the current one keeps its remainder.
-    expect(day.minutesLeft(PlanStage.words), 5);
-    expect(day.minutesLeft(PlanStage.phrases), 12);
+    expect(day.minutesLeft(PlanStage.words), 3);
+    expect(day.minutesLeft(PlanStage.phrases), 14);
     List<Map<String, dynamic>> rows(Map<String, dynamic> json) =>
         ((json['window'] as Map<String, dynamic>)['stages'] as List).cast<Map<String, dynamic>>();
     final longer = _fixture('day-doctor');
     rows(longer).firstWhere((r) => r['stage'] == 'words')['minutes'] = 6;
-    expect(SessionDay.fromJson(longer).minutesLeft(PlanStage.words), 5, reason: 'the current row\'s remainder, not its plan');
+    expect(SessionDay.fromJson(longer).minutesLeft(PlanStage.words), 3, reason: 'the current row\'s remainder, not its plan');
     // A server before it sent none — no number.
     final before = _fixture('day-doctor');
     for (final r in rows(before)) {
@@ -149,16 +149,16 @@ void main() {
     expect(assemble.slotAt, 4);
     expect(assemble.fillerIndex, 1);
 
-    // «Скажи целиком» (FIX-2 §5): the rounds are the SERVER'S, and the own-word round is last when the stage's
-    // ceiling left it (DECISIONS п. 354). p6, the frame the dialogue says most, is the one that keeps all three.
+    // «Скажи целиком» (FIX-2 §5, наряд FIX-3 §3): the rounds are the SERVER'S, and they are NEVER cut — the ladder
+    // takes recognitions, never a round, and the own-word round is last.
     final whole = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().firstWhere((p) => p.frame.ref == 'p1');
     expect(whole.speechMode, SpeechMode.repeat);
-    expect([for (final r in whole.rounds) r.fillerIndex], [0, 1], reason: 'the ceiling took p1\'s third round');
+    expect([for (final r in whole.rounds) r.fillerIndex], [0, 1, 2], reason: 'круги не режутся');
     expect(whole.rounds.first.expectedText, 'It hurts in his lower back.');
     expect(whole.rounds.first.taskNative, 'У него болит поясница.');
     expect(whole.ownRound!.speechMode, SpeechMode.free);
     expect(whole.ownRound!.examples, hasLength(3));
-    expect(whole.frame.fillers, hasLength(3), reason: 'the window keeps every value — only the ROUNDS were cut');
+    expect(whole.frame.fillers, hasLength(3), reason: 'каждое наполнение — свой круг');
     final kept = phrases.map((c) => c.payload).whereType<PhraseOtherSlotPayload>().firstWhere((p) => p.frame.ref == 'p6');
     expect([for (final r in kept.rounds) r.fillerIndex], [0, 1, 2]);
     // The line the judge reads, never shown: 32-7 has no partner line.

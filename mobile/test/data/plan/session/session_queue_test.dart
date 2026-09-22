@@ -226,23 +226,31 @@ void main() {
     // обмены с x1, и «Вспомнить» держит x3 первой сцены рядом с x3 второй; один этап одной сцены считается по ref, как
     // и раньше. Обзор 37-3 — единица дня, его в счёте нет.
     // ЛОВИТ: «ещё 8 реплик» и восемь бусин на десяти пересказах двух сцен — x3 и x5 второй сцены слились с первой.
-    test('a stage of two scenes counts each scene\'s exchanges: ten retells are ten lines', () {
+    test('этап из двух сцен считает обмены каждой: девять пересказов — девять реплик', () {
       final raw = serverFixtureJson('day-rehearsal');
       final q = SessionQueue(SessionDay.fromJson(raw).stages);
       final retells = q.cardsOf(PlanStage.recall).where((c) => c.kind == SessionKind.speakRetell).toList();
-      expect(retells, hasLength(10));
-      expect(retells.map((c) => c.unit.ref).toSet(), hasLength(8), reason: 'the refs alone collide across the scenes');
-      expect(q.unitsOf(PlanStage.recall), hasLength(10));
-      expect(q.unitsLeft(PlanStage.recall), 10);
-      expect(q.beads(PlanStage.recall, currentUnit: q.unitKey(retells.first)), hasLength(10));
+      expect(retells, hasLength(9));
+      expect(q.unitsOf(PlanStage.recall), hasLength(9));
+      expect(q.unitsLeft(PlanStage.recall), 9);
+      expect(q.beads(PlanStage.recall, currentUnit: q.unitKey(retells.first)), hasLength(9));
 
-      final second = retells.lastWhere((c) => c.unit.ref == 'x3');
-      final first = retells.firstWhere((c) => c.unit.ref == 'x3');
-      expect(q.unitKey(first), isNot(q.unitKey(second)));
-      q.markAnswered(first, SessionResult.passed, 1);
-      expect(q.unitDone(PlanStage.recall, q.unitKey(first)), isTrue);
-      expect(q.unitDone(PlanStage.recall, q.unitKey(second)), isFalse, reason: 'x3 of the other scene is still ahead');
-      expect(q.unitCard(PlanStage.recall, q.unitKey(second))!.id, second.id);
+      // ПРАВИЛО: ключ единицы — СЦЕНА И ref: один и тот же ref в двух сценах — две реплики, а не одна. Живая
+      // репетиция наряда столкновения не оставила, поэтому оно ставится правкой: ref чужой сцены переименован в свой.
+      final collide = serverFixtureJson('day-rehearsal');
+      final cards = ((collide['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'recall')['cards'] as List)
+          .cast<Map<String, dynamic>>();
+      final taken = cards.firstWhere((c) => (c['unit'] as Map<String, dynamic>)['ref'] == 'x3');
+      final other = cards.lastWhere((c) => (c['payload'] as Map<String, dynamic>)['scene_id'] != (taken['payload'] as Map<String, dynamic>)['scene_id']);
+      (other['unit'] as Map<String, dynamic>)['ref'] = 'x3';
+      final two = SessionQueue(SessionDay.fromJson(collide).stages);
+      final both = two.cardsOf(PlanStage.recall).where((c) => c.unit.ref == 'x3').toList();
+      expect(both, hasLength(2));
+      expect(two.unitKey(both.first), isNot(two.unitKey(both.last)));
+      two.markAnswered(both.first, SessionResult.passed, 1);
+      expect(two.unitDone(PlanStage.recall, two.unitKey(both.first)), isTrue);
+      expect(two.unitDone(PlanStage.recall, two.unitKey(both.last)), isFalse, reason: 'x3 другой сцены ещё впереди');
+      expect(two.unitCard(PlanStage.recall, two.unitKey(both.last))!.id, both.last.id);
 
       final oneScene = SessionQueue(SessionDay.fromJson(_raw()).stages);
       expect(oneScene.unitsOf(PlanStage.speak).every((k) => !k.contains('/')), isTrue, reason: 'one scene — the bare refs');
@@ -538,7 +546,7 @@ void main() {
       final closed = _talkDone(_allAnswered(_raw()));
       (closed['day'] as Map<String, dynamic>)['status'] = 'closed';
       final backend = _FakeBackend([closed]);
-      final session = SessionController(backend: backend, plan: _plan(), number: 1, replay: true);
+      final session = SessionController(backend: backend, plan: _plan(), number: 1, replayStage: PlanStage.speak);
       await session.load();
       expect(session.phase, SessionPhase.entry, reason: 'not the day summary');
       expect(session.stage, PlanStage.speak);

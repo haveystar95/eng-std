@@ -38,6 +38,8 @@ class WindowScroll extends StatefulWidget {
     required this.bottomCover,
     this.onBack,
     this.poppedStages = const {},
+    this.onStageAgain,
+    this.sceneImageOf,
   });
 
   final DayWindow window;
@@ -48,6 +50,12 @@ class WindowScroll extends StatefulWidget {
   final double bottomCover;
   final VoidCallback? onBack;
   final Set<PlanStage> poppedStages;
+
+  /// «Ещё раз» пройденного ряда (наряд FIX-3 §5) — вниз, в плиту.
+  final void Function(PlanStage stage)? onStageAgain;
+
+  /// Фото сцены плана по её id — для полосы группы «Вернулось из дня N» (наряд FIX-3 §4).
+  final PlanImage? Function(String sceneId)? sceneImageOf;
 
   @override
   State<WindowScroll> createState() => _WindowScrollState();
@@ -150,7 +158,12 @@ class _WindowScrollState extends State<WindowScroll> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final plateHeight = _plateHeight;
-    final plate = WindowPlate(window: widget.window, onBack: widget.onBack, poppedStages: widget.poppedStages);
+    final plate = WindowPlate(
+      window: widget.window,
+      onBack: widget.onBack,
+      poppedStages: widget.poppedStages,
+      onStageAgain: widget.onStageAgain,
+    );
 
     return Stack(
       children: [
@@ -187,12 +200,25 @@ class _WindowScrollState extends State<WindowScroll> with SingleTickerProviderSt
                   for (final tab in WindowTab.values)
                     _Page(
                       tab: tab,
-                      brow: WindowTexts.brow(l, tab, _summaryOf(tab)),
+                      brow: WindowTexts.brow(l, tab, _summaryOf(tab), returnsTomorrow: _returnsTomorrowOf(tab)),
                       bottom: widget.bottomCover,
                       child: switch (tab) {
-                        WindowTab.words => WindowWords(words: widget.window.program.words, onListen: widget.onListen, onOpen: widget.onOpenWord),
-                        WindowTab.phrases => WindowPhrases(phrases: widget.window.program.phrases, onListen: widget.onListen),
-                        WindowTab.dialogue => WindowDialogue(pairs: widget.window.program.dialogue, onListen: widget.onListen),
+                        WindowTab.words => WindowWords(
+                          words: widget.window.program.words,
+                          onListen: widget.onListen,
+                          onOpen: widget.onOpenWord,
+                          imageOf: widget.sceneImageOf,
+                        ),
+                        WindowTab.phrases => WindowPhrases(
+                          phrases: widget.window.program.phrases,
+                          onListen: widget.onListen,
+                          imageOf: widget.sceneImageOf,
+                        ),
+                        WindowTab.dialogue => WindowDialogue(
+                          pairs: widget.window.program.dialogue,
+                          onListen: widget.onListen,
+                          imageOf: widget.sceneImageOf,
+                        ),
                       },
                     ),
                 ],
@@ -201,6 +227,19 @@ class _WindowScrollState extends State<WindowScroll> with SingleTickerProviderSt
           ),
       ],
     );
+  }
+
+  /// «N вернутся завтра» в брови — по СОСТОЯНИЯМ единиц вкладки (`items[].state`), а не по `summary.returns`: тот с
+  /// наряда FIX-3 §9 считает, сколько ВЕРНУЛОСЬ из прошлых дней.
+  int _returnsTomorrowOf(WindowTab tab) {
+    final p = widget.window.program;
+    bool back(WindowUnitState? s) => s == WindowUnitState.returnsTomorrow;
+
+    return switch (tab) {
+      WindowTab.words => p.words.where((w) => back(w.state)).length,
+      WindowTab.phrases => p.phrases.where((f) => back(f.state)).length,
+      WindowTab.dialogue => p.dialogue.where((d) => back(d.learner?.state)).length,
+    };
   }
 
   WindowSummary _summaryOf(WindowTab tab) => switch (tab) {

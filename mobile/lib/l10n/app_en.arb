@@ -2099,17 +2099,6 @@
       }
     }
   },
-  "planWindowStageCount": "{done} / {total}",
-  "@planWindowStageCount": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "planWindowPassedLine": "Day passed · {minutes}",
   "@planWindowPassedLine": {
     "placeholders": {
@@ -2134,7 +2123,6 @@
       }
     }
   },
-  "planWindowCtaAgain": "Once more",
   "planWindowListen": "Listen",
   "planWindowGoalsLearn": "You will learn to {goals}",
   "planWindowGoalsLearned": "Learned:",
@@ -2165,6 +2153,7 @@
   "planSessionDescSpeak": "They ask — answer about yourself, in your own words. You know the frames; the slot is yours",
   "planSessionNoHints": "No hints",
   "planSessionNoHintsSub": "Dialogue and “Speak myself” go straight to voice",
+  "planSessionNoHintsTalk": "In the talk — no hints, the partner's text stays closed",
   "planSessionStart": "Start",
   "planSessionBuild": "build {version}",
   "planSessionLeftWords": "{n, plural, one{{n} word left} other{{n} words left}}",
@@ -2343,19 +2332,6 @@
       }
     }
   },
-  "planTalkPhrasesOf": "The day's phrases in the talk · {used} of {total}",
-  "@planTalkPhrasesOf": {
-    "placeholders": {
-      "used": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "planTalkNotSaidTomorrow": "Not said — comes back tomorrow",
-  "planTalkNotSaidRehearsal": "Not said — go over it before the visit",
   "planTalkReady": "You are ready for the visit",
   "planTalkHighlights": "What went well",
   "planSessionListenWholeOne": "Listen to the whole of it — only one answer fits",
@@ -2381,19 +2357,11 @@
   "planWindowReviewLead": "You will bring back the phrases of past days and talk them through",
   "planWindowFromScenes": "From these scenes",
   "planWindowFromDays": "From these days",
-  "planSessionTaskWhatSaid": "What were you told?",
+  "planSessionTaskUnderstood": "Check what you understood",
   "planSessionHeardLine": "heard: {text}",
   "@planSessionHeardLine": {
     "placeholders": {
       "text": {
-        "type": "String"
-      }
-    }
-  },
-  "planTalkSceneRepeatBefore": "{scene} · go over it before the visit",
-  "@planTalkSceneRepeatBefore": {
-    "placeholders": {
-      "scene": {
         "type": "String"
       }
     }
@@ -2508,19 +2476,40 @@
   "planSessionWarmRecall": "Your lines are in place — next comes the whole talk",
   "planSessionWarmRepetition": "Everything that came back has been said once more",
   "planTalkEntrySay": "Say in the talk",
-  "planTalkStrip": "phrases · {said} of {total}",
-  "@planTalkStrip": {
-    "placeholders": {
-      "said": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
+  "planVoiceTitle": "Which voice should say your lines?",
+  "planVoiceMale": "Male",
+  "planVoiceMaleHint": "lower and calmer",
+  "planVoiceFemale": "Female",
+  "planVoiceFemaleHint": "higher and softer",
+  "planVoiceInProfile": "You can change it in your profile",
+  "profileRowVoice": "Voice of your lines",
+  "profileVoiceUnset": "not chosen",
+  "planTalkConstructions": "Constructions in the talk",
+  "planTalkConstruction": "The construction",
+  "planTalkFromLesson": "From the lesson",
+  "planTalkYouSaidLabel": "You said",
+  "planTalkYouSaid": "you said: {said}",
+  "planTalkRepeatBefore": "go over it before the event",
+  "planWindowReturnedFromDay": "Back from day {n}",
+  "@planWindowReturnedFromDay": {
+    "description": "Окно дня, вкладка программы (23-0d · вернулось): заголовок группы единиц, вернувшихся из прошлого дня — items[].source = returned, номер дня из items[].scene.day_number.",
+    "placeholders": { "n": { "type": "int" } }
   },
-  "planTalkSheetTitle": "The day's phrases",
-  "planTalkNotSaid": "Not said",
-  "planWindowTalkAgain": "Replay the talk",
+  "planWindowReturnedFrom": "Back from earlier",
+  "@planWindowReturnedFrom": {
+    "description": "То же, когда у сцены-источника нет своего дня (items[].scene.day_number = null)."
+  },
+  "planWindowStageAgain": "once more",
+  "@planWindowStageAgain": {
+    "description": "Окно дня и вход в этап (23-0c, 30-1): вторичное действие пройденного ряда — пройти этап ещё раз; по stages[].again сервера."
+  },
+  "planWindowTalkLimitToday": "limit for today",
+  "@planWindowTalkLimitToday": {
+    "description": "Ряд разговора пройденного дня, когда повторы суток исчерпаны (30-1e): stages[].again = false."
+  },
+  "planWindowDaySummary": "Day summary",
+  "@planWindowDaySummary": {
+    "description": "Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет."
+  },
   "planWindowTalkReplayLimit": "The talk was already replayed today — come back tomorrow"
 }
