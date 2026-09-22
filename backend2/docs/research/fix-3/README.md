@@ -358,7 +358,13 @@ task_clause_native`, `speech.number_joiners` и правило сложения 
 
 ### Хеши
 
-HASHES_PLACEHOLDER
+Ветка `fix-3` (worktree `../backend2-fix3`), от `main` `9762e702`, **в `main` не влито**:
+
+| что | коммит |
+|---|---|
+| код, тесты, OpenAPI, фикстуры | **`6b3074d3`** |
+| канон, контракт, DECISIONS, ROADMAP, handoff, этот отчёт | **`288a10f9`** |
+| хеши в отчёт и handoff | коммит следом за `288a10f9` (`git log fix-3`) |
 
 ---
 
