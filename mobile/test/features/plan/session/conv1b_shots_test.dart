@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -38,6 +37,7 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/day_window_harness.dart' show RecordingLines, kWindowInsets;
 import '../../../support/plan_goldens.dart' show planFrom, setUpPlanGoldens;
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 import '../../../support/talk_harness.dart';
 
@@ -64,7 +64,7 @@ void main() {
   setUpAll(setUpPlanGoldens);
 
   Map<String, dynamic> dayJson(String name) =>
-      jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+      serverFixtureJson(name);
   Map<String, dynamic> windowDay(Map<String, dynamic> json) => (json['window'] as Map<String, dynamic>)['day'] as Map<String, dynamic>;
   Map<String, dynamic> notDealt(Map<String, dynamic> json) {
     for (final s in (json['stages'] as List).cast<Map<String, dynamic>>()) {

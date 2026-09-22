@@ -47,12 +47,12 @@ void main() {
     await settleCard(tester);
   });
 
-  // The review and the rehearsal (наряд CLIENT-CONV-1b, fixtures from the e2e stand): a review deals «Говорю сам» of
-  // the scene days before it, the rehearsal the overview 37-3 and the retells 35-4 of every scene — two scenes here,
-  // whose exchanges both count from x1.
-  testWidgets('the system days: a review\'s 7 cards and the rehearsal\'s 10 render; the overview is dealt there', (tester) async {
+  // The review and the rehearsal (наряд CLIENT-CONV-1b, fixtures from the e2e stand): a review deals its cards of «Говорю
+  // сам» kinds under «Повторение» (BACK-TAILS-2 §3), the rehearsal the overview 37-3 and the retells 35-4 of every scene —
+  // two scenes here, whose exchanges both count from x1.
+  testWidgets('the system days: a review\'s 7 cards and the rehearsal\'s 11 render; the overview is dealt there', (tester) async {
     final kinds = <SessionKind>{};
-    for (final (name, count) in [('day-review', 7), ('day-rehearsal', 10)]) {
+    for (final (name, count) in [('day-review', 7), ('day-rehearsal', 11)]) {
       final day = sessionFixture(name);
       var cards = 0;
       for (final stage in day.stages) {

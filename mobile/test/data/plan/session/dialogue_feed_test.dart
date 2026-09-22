@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/plan_models.dart';
@@ -8,10 +5,12 @@ import 'package:eng_std/data/plan/session/dialogue_feed.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 
+import '../../../support/server_fixtures.dart';
+
 /// THE CONVERSATION SO FAR (work order SESSION-1c §2, canvas 33-7): the bubbles above a dialogue card are read off the
 /// stage's answered cards — each line once, in the walk's order, none the current card draws itself; a chip answer is
 /// the frame with that chip.
-Map<String, dynamic> _raw() => jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+Map<String, dynamic> _raw() => serverFixtureJson('day-doctor');
 
 /// The day with the dialogue cards up to [position] (exclusive) answered — [responses] by position.
 SessionDay _dialogueAnsweredBefore(int position, {Map<int, Map<String, dynamic>> responses = const {}, Set<int> skipped = const {}}) {

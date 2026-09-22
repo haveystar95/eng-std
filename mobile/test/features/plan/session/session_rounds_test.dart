@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,6 +5,7 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/features/plan/session/parts/session_bits.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
 /// THE ROUNDS OF «СКАЖИ ЦЕЛИКОМ» (work order FIX-2 §5): the values of the window one after another, then the
@@ -91,7 +89,7 @@ void main() {
   // CATCHES: a phone that draws a round the server did not send; an own-word chip or task on a cut card; a
   // `filler_index` read off the ROUND COUNT instead of the round (a one-round card then names no meaning at all).
   testWidgets('the ceiling took the own word: the card is its value rounds, and the answer still names the meaning', (tester) async {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+    final raw = serverFixtureJson('day-doctor');
     final json = [
       for (final stage in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
     ].firstWhere((c) => c['kind'] == 'phrase_other_slot');
@@ -116,7 +114,7 @@ void main() {
 
   // CATCHES: a chip row on a frame with a single meaning, and a card that never reaches its own-word round.
   testWidgets('one meaning — one round and the own word after it', (tester) async {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+    final raw = serverFixtureJson('day-doctor');
     final json = [
       for (final stage in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
     ].firstWhere((c) => c['kind'] == 'phrase_other_slot');

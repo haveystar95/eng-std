@@ -239,19 +239,24 @@ void main() {
   });
 
   group('35-3 speak_echo', () {
-    // Since CONV-2 (21.09) the echo is dealt on the LEARNER'S own line (`own_line`); `partner_line` carries that same
-    // line only for builds up to 17 (DECISIONS 366–378), and this build reads `own_line` alone (CLIENT-CONV-1c §2в).
-    // The rules below hold for any line, so the line is read off the card, not written into the test.
+    // Since CONV-2 (21.09) the echo is dealt on the LEARNER'S own line (`own_line`), and since BACK-TAILS-2 §10 the copy
+    // under `partner_line` that builds up to 17 read is gone from the server (the fixture has none); this build reads
+    // `own_line` alone (CLIENT-CONV-1c §2в). The rules below hold for any line, so the line is read off the card.
     SpeakEchoPayload echoOf() => speakAt(7).payload as SpeakEchoPayload;
 
     // RULE (CLIENT-CONV-1c §2в, §9е): the echo shows and sounds the learner's own line with its translation, and
-    // `partner_line` is not read — a payload without it is a whole card, and a payload whose `partner_line` says
-    // something else changes nothing on the screen.
+    // `partner_line` is not read — the server's card without it (the fixture) is a whole card, and a payload whose
+    // `partner_line` says something else changes nothing on the screen.
     // CATCHES: a card that still reads the deprecated field (it would sound and open the partner's line, or fail to
-    // parse once the server drops it).
+    // parse now that the server dropped it).
     testWidgets('the echo reads `own_line` — `partner_line` absent or different changes nothing', (tester) async {
       final own = echoOf().ownLine;
-      final without = fixtureCardEdited('day-doctor', 'speak_echo', (p) => p.remove('partner_line'));
+      final raw = [
+        for (final s in (sessionFixtureJson('day-doctor')['stages'] as List).cast<Map<String, dynamic>>())
+          ...(s['cards'] as List).cast<Map<String, dynamic>>(),
+      ].firstWhere((c) => c['kind'] == 'speak_echo');
+      expect((raw['payload'] as Map<String, dynamic>).containsKey('partner_line'), isFalse, reason: 'the server sends none');
+      final without = speakAt(7);
       final other = fixtureCardEdited('day-doctor', 'speak_echo', (p) {
         p['partner_line'] = {
           'ref': 'x3',

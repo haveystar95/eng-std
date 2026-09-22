@@ -1,10 +1,6 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/plan/day_window.dart' show WindowStageState;
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/features/plan/day/window/window_pill.dart';
 import 'package:eng_std/features/plan/day/window/window_plate.dart';
@@ -13,15 +9,16 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../support/day_window_harness.dart';
 import '../../support/plan_goldens.dart';
+import '../../support/server_fixtures.dart';
 
 /// THE WINDOW OF A REVIEW AND OF THE REHEARSAL (кадры 37-1, 37-2; наряды CLIENT-CONV-1b, CLIENT-CONV-1c) — «второй
-/// компонент окна: то же окно дня 23-0a, сменились ряды и список под плитой». Over live replies of the e2e plan the stand
-/// walked (`backend2/docs/fixtures/day-review.json`, `day-rehearsal.json`, the plan — `test/fixtures/plan/plan_rehearsal.json`).
+/// компонент окна: то же окно дня 23-0a, сменились ряды и список под плитой». Over the server's own replies
+/// (`day-review.json`, `day-rehearsal.json`, `day-doctor.json` of BACK-TAILS-2 — `server_fixtures.dart`; the plan —
+/// `test/fixtures/plan/plan_rehearsal.json`).
 ///
-/// Rows, minutes and scenes come from the server's `stages[]` and `window`; where the reply has no number, none is
-/// printed. BACK-TAILS-2's fields — every row's `minutes`, `window.sources[]`, the stage `repetition` — are not in the
-/// server's fixtures yet: [tails2] writes them onto a reply the way that branch serializes them (`PlanJson`), and a
-/// reply without them is the window of a server before it.
+/// Rows, minutes and scenes come from the server's `stages[]` and `window` — every row's `minutes`, `window.sources[]`,
+/// the stage `repetition`; where the reply has no number, none is printed. A reply without those fields is the window of
+/// a server before BACK-TAILS-2 ([beforeTails2]) — the one case the fixtures no longer carry.
 void main() {
   setUpAll(setUpPlanGoldens);
 
@@ -29,28 +26,25 @@ void main() {
   final booking = plan.scenes.firstWhere((s) => s.titleNative == 'Запись к врачу');
   final visit = plan.scenes.firstWhere((s) => s.titleNative == 'Приём у врача');
 
-  Map<String, dynamic> dayJson(String name) =>
-      jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
-  Map<String, dynamic> windowDay(Map<String, dynamic> json) => (json['window'] as Map<String, dynamic>)['day'] as Map<String, dynamic>;
+  Map<String, dynamic> dayJson(String name) => serverFixtureJson(name);
+  Map<String, dynamic> windowOf(Map<String, dynamic> json) => json['window'] as Map<String, dynamic>;
+  Map<String, dynamic> windowDay(Map<String, dynamic> json) => windowOf(json)['day'] as Map<String, dynamic>;
+  List<Map<String, dynamic>> rowsOf(Map<String, dynamic> json) => (windowOf(json)['stages'] as List).cast<Map<String, dynamic>>();
 
-  /// BACK-TAILS-2 on [json]: [minutes] — a row's planned minutes by stage id; [sources] — the list the day is made of;
-  /// [repetition] — a review's cards under the stage id `repetition` instead of `speak`.
-  Map<String, dynamic> tails2(
-    Map<String, dynamic> json, {
-    Map<String, int> minutes = const {},
-    List<Map<String, dynamic>>? sources,
-    bool repetition = false,
-  }) {
-    final window = json['window'] as Map<String, dynamic>;
-    for (final s in (window['stages'] as List).cast<Map<String, dynamic>>()) {
-      if (repetition && s['stage'] == 'speak') s['stage'] = 'repetition';
-      if (minutes[s['stage']] case final m?) s['minutes'] = m;
+  /// [json] as a server before BACK-TAILS-2 wrote it: no `minutes`, `targets`, `sources`, `talk_again`, and a review's
+  /// cards under `speak`.
+  Map<String, dynamic> beforeTails2(Map<String, dynamic> json) {
+    for (final row in rowsOf(json)) {
+      row
+        ..remove('minutes')
+        ..remove('targets');
+      if (row['stage'] == 'repetition') row['stage'] = 'speak';
     }
-    if (sources != null) window['sources'] = sources;
+    windowOf(json)
+      ..remove('sources')
+      ..remove('talk_again');
     return json;
   }
-
-  Map<String, dynamic> source(PlanScene scene, int? day) => {'scene_id': scene.id, 'title_native': scene.titleNative, 'day_number': day};
 
   WindowStageRow rowOf(WidgetTester tester, PlanStage stage) =>
       tester.widgetList<WindowStageRow>(find.byType(WindowStageRow)).firstWhere((r) => r.stage.stage == stage);
@@ -80,13 +74,7 @@ void main() {
     // ЛОВИТ: окно сценного дня на повторении (пустая плита «День 2», вкладки «Слова · Фразы · Диалог» с чужим диалогом);
     // «Говорю сам» на месте «Повторения»; список, собранный на телефоне из маршрута или карточек мимо ответа сервера.
     testWidgets('идёт: «Что уже было», ряд «Повторение», минуты рядов, «Из каких дней» — список сервера', (tester) async {
-      final json = tails2(
-        dayJson('day-review'),
-        repetition: true,
-        minutes: {'repetition': 6, 'conversation': 5},
-        sources: [source(visit, 1), source(booking, null)],
-      );
-      await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(dayJson('day-review')), plan: plan);
 
       expect(find.text('ПОВТОРЕНИЕ'), findsOneWidget);
       expect(find.text('Что уже было'), findsOneWidget);
@@ -96,36 +84,48 @@ void main() {
           [PlanStage.repetition, PlanStage.conversation], reason: 'ряды — ровно `window.stages` сервера');
       expect(inRow(PlanStage.repetition, 'Повторение'), findsOneWidget);
       // The frames of 37-1 / 37-2 say the minutes in words, as the status line does (BACK-TAILS-2's contract quotes them).
-      expect(inRow(PlanStage.repetition, 'идёт · около 5 минут'), findsOneWidget, reason: 'у текущего — остаток `minutes_left`, не план');
-      expect(inRow(PlanStage.conversation, 'около 5 минут'), findsOneWidget, reason: 'у ряда впереди — его `minutes`');
-      expect(rowOf(tester, PlanStage.conversation).stage.minutes, 5);
+      expect(inRow(PlanStage.repetition, 'идёт · около 5 минут'), findsOneWidget, reason: 'у текущего — остаток `minutes_left`');
+      expect(inRow(PlanStage.conversation, 'около 6 минут'), findsOneWidget, reason: 'у ряда впереди — его `minutes`');
+      expect(rowOf(tester, PlanStage.conversation).stage.minutes, 6);
       expect(find.byType(WindowPill), findsNothing, reason: 'вкладок программы у повторения нет');
 
       expect(textOf(tester, 'window-sources-brow'), 'ИЗ КАКИХ ДНЕЙ');
       expect(find.text('День 1 · Приём у врача'), findsOneWidget);
-      expect(find.text('Запись к врачу'), findsOneWidget, reason: 'сцена без своего дня — одним именем');
-      final first = tester.getRect(find.byKey(ValueKey('window-source-${visit.id}')));
-      expect(first.top, lessThan(tester.getRect(find.byKey(ValueKey('window-source-${booking.id}'))).top), reason: 'порядок сервера');
+      final card = tester.getRect(find.byKey(ValueKey('window-source-${visit.id}')));
       expect(find.byKey(ValueKey('window-source-lines-${visit.id}')), findsNothing, reason: '«N карточек» сервер не шлёт — числа нет');
-      expect(first.height, greaterThanOrEqualTo(72));
-      expect(first.left, 24);
-      expect(first.right, 390 - 24);
+      expect(card.height, greaterThanOrEqualTo(72));
+      expect(card.left, 24);
+      expect(card.right, 390 - 24);
+    });
+
+    // ПРАВИЛО (наряд CLIENT-CONV-1c §9б; handoff BACK-TAILS-2 §9 п. 4): `day_number` бывает null — у сцены без своего дня
+    // (стенд e2e 1b: «Запись к врачу»); такая сцена печатается одним именем, и порядок — сервера.
+    // ЛОВИТ: «День null · …» и список, пересортированный телефоном.
+    testWidgets('сцена без своего дня — одним именем, порядок сервера', (tester) async {
+      final json = dayJson('day-review');
+      (windowOf(json)['sources'] as List).add({'scene_id': booking.id, 'title_native': booking.titleNative, 'day_number': null});
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
+      expect(find.text('Запись к врачу'), findsOneWidget);
+      final visitCard = tester.getRect(find.byKey(ValueKey('window-source-${visit.id}')));
+      expect(visitCard.top, lessThan(tester.getRect(find.byKey(ValueKey('window-source-${booking.id}'))).top));
     });
 
     // ПРАВИЛО (наряд CLIENT-CONV-1c §9а, §9б): нет `minutes` — у ряда впереди «впереди», минут, которых сервер не дал, нет;
     // нет `sources` или список пуст — блока «Из каких дней» нет вовсе. Ответ до BACK-TAILS-2 — это `speak`, и ряд — «Говорю
     // сам».
     // ЛОВИТ: «≈ 0 мин», список дней, придуманный на телефоне, и бровь над пустым списком.
-    testWidgets('без полей BACK-TAILS-2: «впереди», ряд «Говорю сам», списка нет', (tester) async {
-      await pumpDayWindow(tester, PlanDayRoom.fromJson(dayJson('day-review')), plan: plan);
+    testWidgets('ответ до BACK-TAILS-2: «впереди», ряд «Говорю сам», списка нет', (tester) async {
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(beforeTails2(dayJson('day-review'))), plan: plan);
       expect([for (final r in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow))) r.stage.stage],
           [PlanStage.speak, PlanStage.conversation]);
       expect(inRow(PlanStage.conversation, 'впереди'), findsOneWidget);
       expect(find.byKey(const ValueKey('window-sources-brow')), findsNothing);
       expect(find.text('День 1 · Приём у врача'), findsNothing);
 
+      final empty = dayJson('day-review');
+      windowOf(empty)['sources'] = <dynamic>[];
       await tester.pumpWidget(const SizedBox());
-      await pumpDayWindow(tester, PlanDayRoom.fromJson(tails2(dayJson('day-review'), sources: [])), plan: plan);
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(empty), plan: plan);
       expect(find.byKey(const ValueKey('window-sources-brow')), findsNothing, reason: 'пустой список — блока нет');
     });
 
@@ -150,7 +150,7 @@ void main() {
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
       debugPrint = print;
       expect([for (final r in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow))) r.stage.stage],
-          [PlanStage.speak, PlanStage.conversation]);
+          [PlanStage.repetition, PlanStage.conversation]);
       expect(logs.where((m) => m.contains('warmup')), isNotEmpty);
     });
 
@@ -158,7 +158,7 @@ void main() {
     // дней до раздачи — тот, что прислал сервер.
     // ЛОВИТ: минуты, посчитанные на телефоне, и «≈ 0 минут» у дня, которому сервер минут не дал.
     testWidgets('не начат — «не начат · около N минут», дни — из ответа сервера', (tester) async {
-      final json = tails2(notDealt(dayJson('day-review')), sources: [source(visit, 1)]);
+      final json = notDealt(dayJson('day-review'));
       final estimate = windowDay(json)['minutes_estimate'] as int;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
       expect(textOf(tester, 'window-system-status'), 'не начат · около $estimate минут');
@@ -186,7 +186,7 @@ void main() {
     // ПРАВИЛО (кадр 37-2): плита без пилюли — под последним рядом 28 воздуха, и лента начинается под ней через 24.
     // ЛОВИТ: низ плиты сценного дня (48 под пилюлю), который оставлял пустую полосу над списком.
     testWidgets('плита без пилюли: список дней под плитой, бровь списка — стиль бровей окна', (tester) async {
-      await pumpDayWindow(tester, PlanDayRoom.fromJson(tails2(dayJson('day-review'), sources: [source(visit, 1)])), plan: plan);
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(dayJson('day-review')), plan: plan);
       final brow = find.byKey(const ValueKey('window-sources-brow'));
       expect(tester.widget<Text>(brow).style, AppTextWindow.tabBrow);
       final lastRow = tester.getRect(find.byType(WindowStageRow).last);
@@ -201,8 +201,7 @@ void main() {
     // карточках нет: список его не несёт, а телефон не считает.
     // ЛОВИТ: «День 3» вместо имени плана, числа, посчитанные на телефоне по карточке обзора, список сцен мимо сервера.
     testWidgets('идёт: «перед событием · сегодня · идёт», «Из каких сцен» — список сервера без чисел', (tester) async {
-      final json = tails2(dayJson('day-rehearsal'), minutes: {'recall': 6, 'conversation': 6}, sources: [source(booking, null), source(visit, 1)]);
-      await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(dayJson('day-rehearsal')), plan: plan);
       expect(find.text('РЕПЕТИЦИЯ'), findsOneWidget);
       expect(find.descendant(of: find.byType(WindowPlate), matching: find.text(plan.shortTitle ?? plan.displayTitle)), findsOneWidget);
       expect(textOf(tester, 'window-system-status'), 'перед событием · сегодня · идёт');
@@ -210,25 +209,39 @@ void main() {
       expect([for (final r in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow))) r.stage.stage],
           [PlanStage.recall, PlanStage.conversation]);
       expect(inRow(PlanStage.conversation, 'около 6 минут'), findsOneWidget);
-      expect(inRow(PlanStage.recall, 'идёт · около 6 минут'), findsOneWidget, reason: 'кадр 37-1b');
+      expect(inRow(PlanStage.recall, 'идёт · около 7 минут'), findsOneWidget, reason: 'кадр 37-1b: остаток `minutes_left`');
       expect(textOf(tester, 'window-sources-brow'), 'ИЗ КАКИХ СЦЕН');
+      final tops = <double>[];
       for (final s in [booking, visit]) {
         expect(find.byKey(ValueKey('window-source-${s.id}')), findsOneWidget);
         expect(find.descendant(of: find.byKey(ValueKey('window-source-${s.id}')), matching: find.text(s.titleNative)), findsOneWidget);
         expect(find.byKey(ValueKey('window-source-lines-${s.id}')), findsNothing);
+        tops.add(tester.getRect(find.byKey(ValueKey('window-source-${s.id}'))).top);
       }
+      expect(tops.first, lessThan(tops.last), reason: 'порядок сервера: сцены плана по порядку');
       expect(find.text('День 1 · Приём у врача'), findsNothing, reason: 'у репетиции сцены — без дня');
     });
 
     // ПРАВИЛО: до раздачи — тот же список сервера; день недели — из даты слота («в четверг»), «сегодня» и «завтра» — как
-    // их прислал сервер. Без `sources` — блока нет.
+    // их прислал сервер. Без `sources` (сервер до BACK-TAILS-2) — блока нет.
     // ЛОВИТ: дату цифрами там, где кадр говорит днём недели; сцены плана, вписанные телефоном в пустой ответ.
-    testWidgets('не начат: «перед событием · в четверг · не начат · около N минут»; без `sources` — блока нет', (tester) async {
-      final json = notDealt(dayJson('day-rehearsal'));
-      (json['day'] as Map<String, dynamic>)['slot'] = {'code': 'date', 'date': '2026-09-24', 'label_native': null};
+    testWidgets('не начат: «перед событием · в четверг · не начат · около N минут», сцены сервера; без `sources` — блока нет',
+        (tester) async {
+      Map<String, dynamic> notStarted(Map<String, dynamic> json) {
+        (notDealt(json)['day'] as Map<String, dynamic>)['slot'] = {'code': 'date', 'date': '2026-09-24', 'label_native': null};
+        return json;
+      }
+
+      final json = notStarted(dayJson('day-rehearsal'));
       final estimate = windowDay(json)['minutes_estimate'] as int;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
       expect(textOf(tester, 'window-system-status'), 'перед событием · в четверг · не начат · около $estimate минут');
+      for (final s in [booking, visit]) {
+        expect(find.byKey(ValueKey('window-source-${s.id}')), findsOneWidget);
+      }
+
+      await tester.pumpWidget(const SizedBox());
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(beforeTails2(notStarted(dayJson('day-rehearsal')))), plan: plan);
       expect(find.byKey(const ValueKey('window-sources-brow')), findsNothing);
       for (final s in plan.scenes) {
         expect(find.byKey(ValueKey('window-source-${s.id}')), findsNothing);
@@ -236,22 +249,19 @@ void main() {
     });
 
     // ПРАВИЛО (наряд CLIENT-CONV-1c §9а, кадр 23-0a): у дня-сцены ряд впереди говорит свои плановые минуты коротко —
-    // «≈ 5 мин», как компактная шапка; слово «впереди» остаётся ряду, минут которого сервер не прислал.
+    // «≈ 12 мин», как компактная шапка; текущий — остаток «идёт · ≈ 5 мин»; слово «впереди» остаётся ряду, минут которого
+    // сервер не прислал. День — `day-doctor.json` BACK-TAILS-2: минуты у каждого ряда.
     // ЛОВИТ: «около N минут» дня повторения, протёкшее на день-сцену, и «≈ 0 мин».
     testWidgets('день-сцена: у рядов впереди «≈ N мин», без минут — «впереди»', (tester) async {
-      final room = windowRoom('in_progress', (json) {
-        final data = (json['data'] as Map<String, dynamic>?) ?? json;
-        for (final row in ((data['window'] as Map<String, dynamic>)['stages'] as List).cast<Map<String, dynamic>>()) {
-          if (row['stage'] != 'speak') row['minutes'] = 4;
-        }
-        return json;
-      });
-      await pumpDayWindow(tester, room);
-      final locked = [for (final r in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow))) if (r.stage.state == WindowStageState.locked) r.stage.stage];
-      expect(locked, contains(PlanStage.speak));
-      for (final stage in locked) {
-        expect(inRow(stage, stage == PlanStage.speak ? 'впереди' : '≈ 4 мин'), findsOneWidget, reason: stage.name);
-      }
+      final json = dayJson('day-doctor');
+      rowsOf(json).firstWhere((r) => r['stage'] == 'speak').remove('minutes');
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(json));
+      expect(inRow(PlanStage.words, 'идёт · ≈ 5 мин'), findsOneWidget);
+      expect(inRow(PlanStage.phrases, '≈ 12 мин'), findsOneWidget);
+      expect(inRow(PlanStage.dialogue, '≈ 6 мин'), findsOneWidget);
+      expect(inRow(PlanStage.listen, '≈ 5 мин'), findsOneWidget);
+      expect(inRow(PlanStage.conversation, '≈ 3 мин'), findsOneWidget);
+      expect(inRow(PlanStage.speak, 'впереди'), findsOneWidget, reason: 'ряд без `minutes`');
     });
 
     testWidgets('пройден: «перед событием · завтра · пройден · N минут»', (tester) async {

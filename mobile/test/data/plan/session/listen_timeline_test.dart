@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/plan_models.dart';
@@ -8,10 +5,12 @@ import 'package:eng_std/data/plan/session/listen_timeline.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 
+import '../../../support/server_fixtures.dart';
+
 /// THE VISIT PLAYER'S TIMELINE (work order SESSION-1c §3, canvas 34-1): the files in the order of `lines[]`, the
 /// exchange marks at the end of every `exchange_step`, the length from `total_ms` or the lines' `duration_ms`.
 void main() {
-  Map<String, dynamic> raw() => jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+  Map<String, dynamic> raw() => serverFixtureJson('day-doctor');
   ListenDialoguePayload visit(Map<String, dynamic> json) =>
       SessionDay.fromJson(json).stageOf(PlanStage.listen)!.cards.map((c) => c.payload).whereType<ListenDialoguePayload>().single;
 

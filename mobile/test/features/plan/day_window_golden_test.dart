@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/day_window.dart';
+import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/features/plan/day/window/window_action_bar.dart';
 import 'package:eng_std/features/plan/day/window/window_bits.dart';
 import 'package:eng_std/features/plan/day/window/window_pill.dart';
@@ -17,6 +18,7 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../support/day_window_harness.dart';
 import '../../support/plan_goldens.dart';
+import '../../support/server_fixtures.dart';
 
 /// ОКНО ДНЯ — кадры 23-0a…0e канвы `plan-canvas.dc.html`: ответ сервера → экран → снимок (DAY-UI-3).
 ///
@@ -202,6 +204,25 @@ void main() {
       expect(find.descendant(of: sheet, matching: counts), findsNothing);
       expectNothingCut(tester);
       await shoot('23-0e-${s.slug}');
+    });
+  }
+
+  // ── 37-1 · 37-2 · окно репетиции и повторения — ответы сервера BACK-TAILS-2 ─────────────────
+  // Кадры 37-1, 37-2 (CLIENT-CONV-1c): ряды — ровно `window.stages` сервера с минутами («около N минут»), под плитой —
+  // `window.sources[]`; пилюли и вкладок нет. Фикстуры — `server_fixtures.dart`, план — `plan_rehearsal`.
+  const system = [
+    (fixture: 'day-review', golden: '37-2-review-in-progress', brow: 'ИЗ КАКИХ ДНЕЙ'),
+    (fixture: 'day-rehearsal', golden: '37-1-rehearsal-in-progress', brow: 'ИЗ КАКИХ СЦЕН'),
+  ];
+  for (final s in system) {
+    testWidgets('${s.golden}: ряды и минуты сервера, «${s.brow}», одна кнопка', (tester) async {
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(serverFixtureJson(s.fixture)), plan: planFrom('plan_rehearsal'));
+      expect(find.byType(WindowPill), findsNothing);
+      expect(find.text(s.brow), findsOneWidget);
+      expect(counts, findsOneWidget, reason: 'цифра только у текущего ряда');
+      expectOneButton(tester, 'Продолжить');
+      expectNothingCut(tester);
+      await shoot(s.golden);
     });
   }
 }

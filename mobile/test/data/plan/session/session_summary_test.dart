@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -11,6 +8,8 @@ import 'package:eng_std/data/plan/session/session_summary.dart';
 import 'package:eng_std/features/plan/session/session_texts.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../../support/server_fixtures.dart';
+
 /// THE NUMBERS OF THE SUMMARIES (наряды SESSION-1c, CLIENT-CONV-1c; кадры 30-6, 30-7) — read off the server's cards:
 /// the three lines of a stage summary for every stage with cards (решение архитектора 22.09), and «comes back
 /// tomorrow» of the day.
@@ -19,7 +18,7 @@ void main() {
   setUpAll(() async => l = await AppLocalizations.delegate.load(const Locale('ru')));
 
   Map<String, dynamic> raw([String name = 'day-doctor']) {
-    final json = jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+    final json = serverFixtureJson(name);
     return (json['data'] as Map<String, dynamic>?) ?? json;
   }
 
@@ -148,17 +147,10 @@ void main() {
   test('30-6: «Вспомнить» — lines and scenes, two lines; «Повторение» — cards', () {
     final rehearsal = raw('day-rehearsal');
     passAll(rehearsal, 'recall');
-    expect(linesOf(rehearsal, PlanStage.recall), ['9 реплик из 2 сцен', 'Реплики на месте — дальше разговор целиком']);
+    expect(linesOf(rehearsal, PlanStage.recall), ['10 реплик из 2 сцен', 'Реплики на месте — дальше разговор целиком']);
 
-    // The review as BACK-TAILS-2 sends it: its cards under `repetition`.
+    // The review as the server deals it: its cards under `repetition` (BACK-TAILS-2 §3).
     final review = raw('day-review');
-    for (final s in (review['stages'] as List).cast<Map<String, dynamic>>()) {
-      if (s['stage'] != 'speak') continue;
-      s['stage'] = 'repetition';
-      for (final c in (s['cards'] as List).cast<Map<String, dynamic>>()) {
-        c['stage'] = 'repetition';
-      }
-    }
     passAll(review, 'repetition');
     answer(review, 'repetition', 3, 'hinted');
     expect(linesOf(review, PlanStage.repetition), [

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/features/plan/session/parts/session_bits.dart';
 
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
 /// TEXT ON SESSION CARDS IS NEVER CUT (the owner's rule of 16.09, polish pass SESSION-1b′): a line wraps in full
@@ -16,7 +16,7 @@ void main() {
   // CATCHES: the partner's line on step 2 of 32-8 cut inside the canvas height 48 (to two lines, with or without an
   // ellipsis), and a long line that runs into the sheet below it.
   testWidgets('phrase_combine step 2: a long partner line wraps in full above the sheet on a small screen', (tester) async {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+    final raw = serverFixtureJson('day-doctor');
     final json = [
       for (final stage in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
     ].firstWhere((c) => c['kind'] == 'phrase_combine');

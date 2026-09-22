@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -17,6 +16,7 @@ import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart' show AppUser;
 import 'package:eng_std/data/plan/conversation/conversation_models.dart';
 import 'package:eng_std/data/plan/day_providers.dart';
+import 'package:eng_std/data/plan/day_window.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
@@ -37,6 +37,7 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/day_window_harness.dart' show RecordingLines, kWindowInsets;
 import '../../../support/plan_goldens.dart' show planFixture, planFrom, setUpPlanGoldens;
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 import '../../../support/talk_harness.dart';
 
@@ -48,9 +49,10 @@ import '../../../support/talk_harness.dart';
 /// ```bash
 /// flutter test test/features/plan/session/conv1c_shots_test.dart --dart-define=CONV1C_SHOTS=true
 /// ```
-/// Кадры ложатся в `../backend2/docs/research/client-conv-1c/shots/`. Поля BACK-TAILS-2 (`stages[].minutes`,
-/// `stages[].targets`, `window.sources[]`, `window.talk_again`, этап `repetition`) — тестовый JSON поверх ответов
-/// сервера: в фикстурах backend2 их ещё нет.
+/// Кадры ложатся в `../backend2/docs/research/client-conv-1c/shots/`. Ответы дней и документы разговора — фикстуры
+/// сервера BACK-TAILS-2 (`server_fixtures.dart`: минуты рядов, `targets` ряда разговора, `sources`, этап `repetition`);
+/// свой JSON поверх них — только то, чего в фикстурах нет: пройденные дни с `talk_again`, лента, обрезанная до
+/// нужного хода.
 void main() {
   const writeShots = bool.fromEnvironment('CONV1C_SHOTS');
   const frame = Size(390, 844);
@@ -60,8 +62,9 @@ void main() {
   final booking = plan.scenes.firstWhere((s) => s.titleNative == 'Запись к врачу');
   final visit = plan.scenes.firstWhere((s) => s.titleNative == 'Приём у врача');
   final openV2 = talkV2('talk_day_open_v2');
-  final endedV2 = talkV2('talk_day_ended_v2');
-  final rehearsalTalk = talkFixture('conversation-rehearsal-ended');
+  // The talk's end and summaries as the server keeps them (BACK-TAILS-2's re-shot documents).
+  final endedDay = serverTalk('conversation-day-ended');
+  final rehearsalTalk = serverTalk('conversation-rehearsal-ended');
 
   /// The talk before «Не понял»: the role's first question, the learner's first line, the role's second question.
   final beforeRescue = talkV2('talk_day_open_v2', (json) {
@@ -90,21 +93,18 @@ void main() {
     json['turns_left'] = 1;
   });
 
-  /// The talk row's targets as the window sends them before the day's first talk — nothing said yet.
-  final entryTargets = [
-    for (final t in openV2.targets) TalkTarget(sceneId: t.sceneId, ref: t.ref, textTarget: t.textTarget, textNative: t.textNative, said: false),
-  ];
+  /// The talk row of a day's window as the server sends it — its title, scenes, minutes and «Скажи в разговоре».
+  WindowStage talkRow(String day) =>
+      DayWindow.fromJson(serverFixtureJson(day)['window']).stages.firstWhere((s) => s.stage == PlanStage.conversation);
 
   setUpAll(setUpPlanGoldens);
 
-  Map<String, dynamic> dayJson(String name) =>
-      jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+  Map<String, dynamic> dayJson(String name) => serverFixtureJson(name);
   Map<String, dynamic> windowOf(Map<String, dynamic> json) => json['window'] as Map<String, dynamic>;
   Map<String, dynamic> windowDay(Map<String, dynamic> json) => windowOf(json)['day'] as Map<String, dynamic>;
   List<Map<String, dynamic>> rows(Map<String, dynamic> json) => (windowOf(json)['stages'] as List).cast<Map<String, dynamic>>();
   List<Map<String, dynamic>> cardsOf(Map<String, dynamic> json, String stage) =>
       ((json['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == stage)['cards'] as List).cast<Map<String, dynamic>>();
-  Map<String, dynamic> source(PlanScene scene, int? day) => {'scene_id': scene.id, 'title_native': scene.titleNative, 'day_number': day};
 
   void passed(Map<String, dynamic> json) {
     windowDay(json)
@@ -307,14 +307,16 @@ void main() {
 
   // ── 37-5 · вход в разговор с блоком фраз ──────────────────────────────────────────────────────
   testWidgets('01 37-5 вход в разговор дня — «Скажи в разговоре»', (tester) async {
+    // The talk row of day-doctor.json as the server sends it: its title, minutes, scenes and six phrases.
+    final row = talkRow('day-doctor');
     await pumpShot(
       tester,
       TalkEntryView(
         scene: doctor.scene,
-        minutes: 3,
-        // The day's talk row says it so (`talk_title_native` of day-doctor.json): the scene's role is the registrar.
-        title: 'Поговори с регистратором',
-        targets: entryTargets,
+        minutes: row.minutes,
+        title: row.talkTitleNative,
+        scenesCount: row.scenesCount,
+        targets: row.targets,
         rehearsal: false,
         noHints: false,
         onNoHints: (_) {},
@@ -325,15 +327,16 @@ void main() {
     await shoot(tester, '01-37-5-entry-day');
   });
 
-  testWidgets('02 37-5b репетиция — «Разговор целиком · 3 сцены», «Скажи в разговоре»', (tester) async {
+  testWidgets('02 37-5b репетиция — «Разговор целиком · 2 сцены», «Скажи в разговоре»', (tester) async {
+    final row = talkRow('day-rehearsal');
     await pumpShot(
       tester,
       TalkEntryView(
-        scene: visit,
-        minutes: 6,
-        title: 'Поговори с врачом',
-        scenesCount: 3,
-        targets: entryTargets.take(4).toList(),
+        scene: booking,
+        minutes: row.minutes,
+        title: row.talkTitleNative,
+        scenesCount: row.scenesCount,
+        targets: row.targets,
         rehearsal: true,
         noHints: false,
         onNoHints: (_) {},
@@ -463,14 +466,14 @@ void main() {
   });
 
   testWidgets('16 37-11 прощание — полоска с итогом фраз', (tester) async {
-    await pumpTalkShot(tester, endedV2);
+    await pumpTalkShot(tester, endedDay);
     await shoot(tester, '16-37-11-goodbye');
     await settleTalk(tester);
   });
 
   // ── 37-12 ─────────────────────────────────────────────────────────────────────────────────────
   testWidgets('17 37-12 итог разговора дня', (tester) async {
-    await pumpShot(tester, TalkSummaryView(talk: endedV2, scene: doctor.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}));
+    await pumpShot(tester, TalkSummaryView(talk: endedDay, scene: doctor.scene, voice: HeldVoice(), onAgain: () {}, onNext: () {}, onClose: () {}));
     await shoot(tester, '17-37-12-summary-day');
   });
 
@@ -484,7 +487,8 @@ void main() {
 
   // ── 30-6 · итог этапа — один компонент (Слова, Диалог, Говорю сам) ──────────────────────────────
   /// The doctor's day at the last card of [stage]: every card of the stages before it and of it but the last is
-  /// answered, [spoil] writes the answers the three lines count, and the next stage has its planned minutes.
+  /// answered, and [spoil] writes the answers the three lines count; the next stage's minutes are the server's own
+  /// (`minutes` of every row, BACK-TAILS-2).
   Map<String, dynamic> atLastCard(String stage, List<String> before, void Function(Map<String, dynamic> json) spoil) {
     final json = sessionFixtureJson('day-doctor');
     for (final s in [...before, stage]) {
@@ -497,15 +501,6 @@ void main() {
       }
     }
     spoil(json);
-    for (final row in rows(json)) {
-      row['minutes'] = switch (row['stage']) {
-        'words' || 'phrases' => 5,
-        'dialogue' => 3,
-        'listen' => 4,
-        'speak' => 3,
-        _ => 3,
-      };
-    }
     return json;
   }
 
@@ -660,33 +655,22 @@ void main() {
 
   // ── 37-1 · 37-2 · окно: минуты, «Из каких сцен/дней», «Повторение», «Повторить разговор» ───────────
   testWidgets('26 37-1 репетиция — идёт, минуты рядов, «Из каких сцен»', (tester) async {
-    final json = dayJson('day-rehearsal');
-    for (final row in rows(json)) {
-      row['minutes'] = row['stage'] == 'recall' ? 4 : 6;
-    }
-    windowOf(json)['sources'] = [source(booking, null), source(visit, 1)];
-    await pumpWindowShot(tester, PlanDayRoom.fromJson(json));
+    await pumpWindowShot(tester, PlanDayRoom.fromJson(dayJson('day-rehearsal')));
     await shoot(tester, '26-37-1-rehearsal-minutes-sources');
   });
 
   testWidgets('27 37-2 повторение — «Повторение», минуты рядов, «Из каких дней»', (tester) async {
-    final json = dayJson('day-review');
-    for (final row in rows(json)) {
-      if (row['stage'] == 'speak') row['stage'] = 'repetition';
-      row['minutes'] = 6;
-    }
-    windowOf(json)['sources'] = [source(visit, 1), source(booking, null)];
-    await pumpWindowShot(tester, PlanDayRoom.fromJson(json));
+    await pumpWindowShot(tester, PlanDayRoom.fromJson(dayJson('day-review')));
     await shoot(tester, '27-37-2-review-repetition-sources');
   });
 
   testWidgets('28 37-1 репетиция пройдена — «Повторить разговор» кнопкой', (tester) async {
+    // The fixtures carry no walked rehearsal: the reply of day-rehearsal.json, passed, as the server writes one.
     final json = dayJson('day-rehearsal');
     passed(json);
     windowOf(json)
       ..['allowed_action'] = null
-      ..['talk_again'] = true
-      ..['sources'] = [source(booking, null), source(visit, 1)];
+      ..['talk_again'] = true;
     await pumpWindowShot(tester, PlanDayRoom.fromJson(json));
     await shoot(tester, '28-37-1-passed-talk-again');
   });
@@ -700,16 +684,8 @@ void main() {
   });
 
   testWidgets('30 23-0a день идёт — «≈ N мин» у рядов впереди', (tester) async {
-    final json = planFixture('room_window_in_progress');
-    final data = (json['data'] as Map<String, dynamic>?) ?? json;
-    for (final row in rows(data)) {
-      row['minutes'] = switch (row['stage']) {
-        'words' || 'phrases' => 5,
-        'dialogue' || 'speak' => 3,
-        _ => 4,
-      };
-    }
-    await pumpWindowShot(tester, PlanDayRoom.fromJson(json), of: planFrom('plan_window'));
+    // day-doctor.json as the server sends it: «Слова» under way, every row with its planned minutes.
+    await pumpWindowShot(tester, PlanDayRoom.fromJson(dayJson('day-doctor')), of: planFrom('plan_window'));
     await shoot(tester, '30-23-0a-in-progress-row-minutes');
   });
 }

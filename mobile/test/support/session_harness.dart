@@ -5,7 +5,6 @@
 library;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -30,11 +29,12 @@ import 'package:eng_std/features/plan/session/session_voice.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import 'server_fixtures.dart';
+
 SessionDay sessionFixture(String name) => SessionDay.fromJson(sessionFixtureJson(name));
 
 /// The fixture's raw JSON — to answer cards before parsing it ([sessionDayOf]).
-Map<String, dynamic> sessionFixtureJson(String name) =>
-    jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+Map<String, dynamic> sessionFixtureJson(String name) => serverFixtureJson(name);
 
 SessionDay sessionDayOf(Map<String, dynamic> json) => SessionDay.fromJson(json);
 

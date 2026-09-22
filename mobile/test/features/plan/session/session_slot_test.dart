@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +6,7 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/session_outcomes.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
 /// THE FRAME'S SLOT IS SIZED BY ITS TEXT (polish pass SESSION-1b′, item 10): 8 on the sides and 4 above and below
@@ -23,7 +21,7 @@ void main() {
   const narrow = Size(375, 812);
 
   SessionCard card(String kind, void Function(Map<String, dynamic> payload) edit, {String fixture = 'day-doctor', String? ref}) {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/$fixture.json').readAsStringSync()) as Map<String, dynamic>;
+    final raw = serverFixtureJson(fixture);
     final json = [
       for (final stage in (raw['stages'] as List).cast<Map<String, dynamic>>()) ...(stage['cards'] as List).cast<Map<String, dynamic>>(),
     ].firstWhere((c) => c['kind'] == kind && (ref == null || (c['unit'] as Map<String, dynamic>)['ref'] == ref));

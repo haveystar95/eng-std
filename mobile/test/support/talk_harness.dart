@@ -2,14 +2,18 @@
 /// real [TalkView] → a person's taps → what the phone asked the server for.
 ///
 /// The documents are SNAPSHOTS OF THE LIVE SERVER, not hand-written JSON: a talk the client can draw is a talk the
-/// server actually sends. Two generations of them:
+/// server actually sends. Three generations of them:
 ///
-/// - `../backend2/docs/fixtures/conversation-*.json` ([talkFixture]) — the talk before наряд CONV-2, taken off
-///   `wordtrainer_e2e_test` with `docs/research/client-conv-1a/tools/dump-talk.php`: no targets, no title, a rescue
-///   without words, the intention as a sentence. The client still has to draw it — every CONV-2 field is additive;
+/// - `test/fixtures/plan/legacy/conversation-*.json` ([talkFixture]) — the talk before наряд CONV-2, taken off
+///   `wordtrainer_e2e_test` with `docs/research/client-conv-1a/tools/dump-talk.php` and kept by the server until
+///   BACK-TAILS-2 re-shot its fixtures: no targets, no title, a rescue without words, the intention as a sentence. The
+///   client still has to draw it — every CONV-2 field is additive;
 /// - `test/fixtures/plan/talk_*_v2.json` ([talkV2]) — the talk since CONV-2 (наряд CLIENT-CONV-1c): the ended one is
 ///   the live document of CONV-2's run (`docs/research/conv-2/live/conversation-day-ended-v2.json`), the open one the
-///   same talk cut after the rescue — «Sorry?» in the ribbon, `targets[]` with p1 said, the intention as a clause.
+///   same talk cut after the rescue — «Sorry?» in the ribbon, `targets[]` with p1 said, the intention as a clause;
+/// - the server's own `conversation-*.json` ([serverTalk], `server_fixtures.dart`) — the talk as BACK-TAILS-2 re-shot
+///   it: targets said by the server's rule «как человек», a talk that starts with «Sorry?», the rehearsal over two
+///   scenes.
 library;
 
 import 'dart:async';
@@ -32,12 +36,18 @@ import 'package:eng_std/features/plan/session/session_voice.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import 'server_fixtures.dart';
 import 'session_harness.dart' show SilentRecognizer;
 
+/// A talk before CONV-2 — `test/fixtures/plan/legacy/[name].json`.
 Map<String, dynamic> talkFixtureJson(String name) =>
-    jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+    jsonDecode(File('test/fixtures/plan/legacy/$name.json').readAsStringSync()) as Map<String, dynamic>;
 
 PlanConversation talkFixture(String name) => PlanConversation.fromJson(talkFixtureJson(name));
+
+/// The server's own talk document [name] (`conversation-day-open`, `conversation-day-ended`,
+/// `conversation-rehearsal-ended`) — the one its fixtures keep.
+PlanConversation serverTalk(String name) => PlanConversation.fromJson(serverFixtureJson(name));
 
 /// The same document with [edit] applied before it is parsed — a state the live run did not leave
 /// behind («Без подсказок», a ribbon one move shorter).

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fake_async/fake_async.dart';
@@ -16,11 +15,12 @@ import 'package:eng_std/data/plan/session/session_rules.dart';
 import 'package:eng_std/data/plan/session/session_summary.dart';
 import 'package:eng_std/features/plan/session/session_controller.dart';
 
+import '../../../support/server_fixtures.dart';
+
 /// THE SESSION QUEUE (work order SESSION-1b §1 and §6): the copy after a failure goes to the end of the stage;
 /// after a repeated GET the session resumes at the first unanswered card; a deferred answer is sent once the network
 /// is back and holds the next card until it has gone.
-Map<String, dynamic> _raw() =>
-    jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+Map<String, dynamic> _raw() => serverFixtureJson('day-doctor');
 
 Map<String, dynamic> _cardJson(Map<String, dynamic> raw, String stage, int position) {
   final s = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((x) => x['stage'] == stage);
@@ -225,16 +225,16 @@ void main() {
     // ПРАВИЛО (наряд CLIENT-CONV-1b, живой проход репетиции): единица этапа — обмен СВОЕЙ сцены. Каждая сцена считает
     // обмены с x1, и «Вспомнить» держит x3 первой сцены рядом с x3 второй; один этап одной сцены считается по ref, как
     // и раньше. Обзор 37-3 — единица дня, его в счёте нет.
-    // ЛОВИТ: «ещё 6 реплик» и шесть бусин на девяти пересказах двух сцен — три обмена второй сцены слились с первой.
-    test('a stage of two scenes counts each scene\'s exchanges: nine retells are nine lines', () {
-      final raw = jsonDecode(File('../backend2/docs/fixtures/day-rehearsal.json').readAsStringSync()) as Map<String, dynamic>;
+    // ЛОВИТ: «ещё 8 реплик» и восемь бусин на десяти пересказах двух сцен — x3 и x5 второй сцены слились с первой.
+    test('a stage of two scenes counts each scene\'s exchanges: ten retells are ten lines', () {
+      final raw = serverFixtureJson('day-rehearsal');
       final q = SessionQueue(SessionDay.fromJson(raw).stages);
       final retells = q.cardsOf(PlanStage.recall).where((c) => c.kind == SessionKind.speakRetell).toList();
-      expect(retells, hasLength(9));
-      expect(retells.map((c) => c.unit.ref).toSet(), hasLength(6), reason: 'the refs alone collide across the scenes');
-      expect(q.unitsOf(PlanStage.recall), hasLength(9));
-      expect(q.unitsLeft(PlanStage.recall), 9);
-      expect(q.beads(PlanStage.recall, currentUnit: q.unitKey(retells.first)), hasLength(9));
+      expect(retells, hasLength(10));
+      expect(retells.map((c) => c.unit.ref).toSet(), hasLength(8), reason: 'the refs alone collide across the scenes');
+      expect(q.unitsOf(PlanStage.recall), hasLength(10));
+      expect(q.unitsLeft(PlanStage.recall), 10);
+      expect(q.beads(PlanStage.recall, currentUnit: q.unitKey(retells.first)), hasLength(10));
 
       final second = retells.lastWhere((c) => c.unit.ref == 'x3');
       final first = retells.firstWhere((c) => c.unit.ref == 'x3');

@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/plan_models.dart';
@@ -10,12 +7,12 @@ import 'package:eng_std/data/plan/session/session_outcomes.dart';
 import 'package:eng_std/data/plan/session/session_rules.dart';
 import 'package:eng_std/data/plan/session/speech_match.dart';
 
+import '../../../support/server_fixtures.dart';
+
 /// THE SESSION'S GRADING RULES (work order SESSION-1b §1 and §6): the «what the client may write» matrix, checking
 /// choices and tiles, the voice pass.
 void main() {
-  final day = SessionDay.fromJson(
-    jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>,
-  );
+  final day = SessionDay.fromJson(serverFixtureJson('day-doctor'));
   T first<T extends CardPayload>(PlanStage stage) => day.stageOf(stage)!.cards.map((c) => c.payload).whereType<T>().first;
   final en = day.speech;
 

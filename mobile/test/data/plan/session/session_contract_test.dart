@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,12 +7,13 @@ import 'package:eng_std/data/plan/session/session_day.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/data/plan/session/speech_match.dart';
 
+import '../../../support/server_fixtures.dart';
+
 /// THE DAY SESSION CONTRACT AT THE CLIENT'S DOOR (work order SESSION-1b §6): both server fixtures
-/// (`backend2/docs/fixtures/day-doctor*.json` — the body of `GET /plans/{id}/days/1`, kept byte-for-byte by the
-/// server) parse in full — 156 cards since FIX-2 (a frame with a window is said once, as «Скажи целиком», and no third
-/// recognition fits after it), all 27 dealt kinds; a card of an unknown kind is skipped without an error.
-Map<String, dynamic> _fixture(String name) =>
-    jsonDecode(File('../backend2/docs/fixtures/$name.json').readAsStringSync()) as Map<String, dynamic>;
+/// (`day-doctor*.json` — the body of `GET /plans/{id}/days/1`, kept byte-for-byte by the server; `server_fixtures.dart`)
+/// parse in full — 158 cards since FIX-2 (a frame with a window is said once, as «Скажи целиком», and no third
+/// recognition fits after it), every dealt kind; a card of an unknown kind is skipped without an error.
+Map<String, dynamic> _fixture(String name) => serverFixtureJson(name);
 
 void main() {
   final intermediate = _fixture('day-doctor');
@@ -46,28 +46,32 @@ void main() {
     expect(SessionKind.values, hasLength(28));
   });
 
-  // CLIENT-CONV-1b: the system days as the e2e stand dealt them. A review — «Говорю сам» of the scene day before it, no
-  // scene of its own; the rehearsal — the overview (a day unit, envelope stage `recall`) and the retells of EVERY
-  // scene with their envelope stage `recall` too, although 35-4 is a kind of «Говорю сам»: the envelope decides where
-  // a card is walked.
-  // CATCHES: a retell filed under `speak` (the rehearsal would open on a stage it does not have), an overview skipped
-  // as an unknown kind, a day room that loses the scenes the overview names.
-  test('the system days: a review\'s speak cards; the rehearsal\'s overview and retells under «recall»', () {
+  // CLIENT-CONV-1b, BACK-TAILS-2 §3, §5–6: the system days as the e2e stand dealt them. A review — its cards of «Говорю
+  // сам» kinds under the stage `repetition` («Повторение», кадр 37-2), no scene of its own; the rehearsal — the overview
+  // (a day unit, envelope stage `recall`) and the retells of EVERY scene with their envelope stage `recall` too,
+  // although 35-4 is a kind of «Говорю сам»: the envelope decides where a card is walked. The overview's scenes are
+  // named as the plan names them.
+  // CATCHES: review cards filed under `speak` (the review would open on a stage it does not have), a retell filed
+  // under `speak`, an overview skipped as an unknown kind.
+  test('the system days: a review\'s cards under «repetition»; the rehearsal\'s overview and retells under «recall»', () {
     final review = SessionDay.fromJson(_fixture('day-review'));
     expect(review.scene, isNull);
-    expect([for (final s in review.stages) if (s.cards.isNotEmpty) s.stage], [PlanStage.speak]);
-    expect(review.stageOf(PlanStage.speak)!.cards.map((c) => c.kind).toSet(), {SessionKind.speakAnswer});
+    expect([for (final s in review.stages) if (s.cards.isNotEmpty) s.stage], [PlanStage.repetition]);
+    final cards = review.stageOf(PlanStage.repetition)!.cards;
+    expect(cards, hasLength(7));
+    expect(cards.map((c) => c.kind).toSet(), {SessionKind.speakAnswer});
+    expect(cards.every((c) => c.stage == PlanStage.repetition), isTrue);
     expect(review.skipped, 0);
 
     final rehearsal = SessionDay.fromJson(_fixture('day-rehearsal'));
     expect(rehearsal.skipped, 0);
     final recall = rehearsal.stageOf(PlanStage.recall)!.cards;
-    expect(recall, hasLength(10));
+    expect(recall, hasLength(11));
     expect(recall.first.kind, SessionKind.recallScenes);
     expect(recall.first.unit.isDay, isTrue);
     expect(recall.skip(1).every((c) => c.kind == SessionKind.speakRetell && c.stage == PlanStage.recall), isTrue);
     final overview = recall.first.payload as RecallScenesPayload;
-    expect([for (final s in overview.scenes) s.titleNative], ['Запись к врачу', 'У врача с сыном']);
+    expect([for (final s in overview.scenes) s.titleNative], ['Запись к врачу', 'Приём у врача'], reason: 'names of the plan');
     expect([for (final s in overview.scenes) s.lines.length], [7, 7]);
     expect(overview.scenes.first.lines.first.textTarget, 'It hurts in his lower back.');
     expect(overview.audios, hasLength(14), reason: 'every own line has its sound');
@@ -115,17 +119,21 @@ void main() {
     expect(words.first.unit.kind, PlanUnitKind.word);
     final listen = day.stageOf(PlanStage.listen)!.cards;
     expect(listen.first.unit.isDay, isTrue);
-    expect(day.minutesLeft(PlanStage.words), 5);
-    expect(day.minutesLeft(PlanStage.phrases), isNull);
     // BACK-TAILS-2 (CLIENT-CONV-1c §9а): every row carries its planned `minutes` — a stage ahead says them («Дальше ·
-    // Фразы ≈ 4 мин» on 30-6); the current one keeps its remainder.
-    final tails = _fixture('day-doctor');
-    for (final s in ((tails['window'] as Map<String, dynamic>)['stages'] as List).cast<Map<String, dynamic>>()) {
-      s['minutes'] = s['stage'] == 'words' ? 6 : 4;
+    // Фразы ≈ 12 мин» on 30-6); the current one keeps its remainder.
+    expect(day.minutesLeft(PlanStage.words), 5);
+    expect(day.minutesLeft(PlanStage.phrases), 12);
+    List<Map<String, dynamic>> rows(Map<String, dynamic> json) =>
+        ((json['window'] as Map<String, dynamic>)['stages'] as List).cast<Map<String, dynamic>>();
+    final longer = _fixture('day-doctor');
+    rows(longer).firstWhere((r) => r['stage'] == 'words')['minutes'] = 6;
+    expect(SessionDay.fromJson(longer).minutesLeft(PlanStage.words), 5, reason: 'the current row\'s remainder, not its plan');
+    // A server before it sent none — no number.
+    final before = _fixture('day-doctor');
+    for (final r in rows(before)) {
+      r.remove('minutes');
     }
-    final planned = SessionDay.fromJson(tails);
-    expect(planned.minutesLeft(PlanStage.words), 5, reason: 'the current row\'s remainder, not its plan');
-    expect(planned.minutesLeft(PlanStage.phrases), 4);
+    expect(SessionDay.fromJson(before).minutesLeft(PlanStage.phrases), isNull);
   });
 
   test('word and phrase payloads — the contract\'s fields in their places', () {

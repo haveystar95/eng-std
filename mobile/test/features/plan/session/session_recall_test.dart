@@ -25,8 +25,8 @@ import '../../../support/plan_goldens.dart' show planFrom;
 import '../../../support/session_harness.dart';
 
 /// «ВСПОМНИТЬ» — THE REHEARSAL'S OVERVIEW AND ITS STAGE (кадры 37-3, 35-4, 37-4; наряд CLIENT-CONV-1b), over the
-/// rehearsal the e2e stand dealt (`backend2/docs/fixtures/day-rehearsal.json`): two scenes, seven own lines each, nine
-/// retells.
+/// rehearsal the e2e stand dealt (the server's `day-rehearsal.json` of BACK-TAILS-2): two scenes named as the plan names
+/// them, seven own lines each, ten retells.
 void main() {
   final day = sessionFixture('day-rehearsal');
   final overview = fixtureCard(day, SessionKind.recallScenes);
@@ -120,10 +120,10 @@ void main() {
 
   group('«Вспомнить» на экране сессии', () {
     // ПРАВИЛО (кадры 37-3, 35-4): у обзора в шапке — минуты этапа, бусин нет; полоса сцены идёт за страницей обзора и
-    // за карточкой пересказа — у репетиции своей сцены нет. Пересказы считаются по обменам СВОИХ сцен: девять
-    // пересказов двух сцен — «ещё 9 реплик» и девять бусин.
-    // ЛОВИТ: пустую полосу сцены на репетиции, бусины у обзора, «ещё 6 реплик» на девяти пересказах.
-    testWidgets('обзор → пересказы: минуты в шапке, полоса идёт за сценой, девять реплик', (tester) async {
+    // за карточкой пересказа — у репетиции своей сцены нет. Пересказы считаются по обменам СВОИХ сцен: десять
+    // пересказов двух сцен — «ещё 10 реплик» и десять бусин.
+    // ЛОВИТ: пустую полосу сцены на репетиции, бусины у обзора, «ещё 8 реплик» на десяти пересказах.
+    testWidgets('обзор → пересказы: минуты в шапке, полоса идёт за сценой, десять реплик', (tester) async {
       final backend = _Backend(sessionFixtureJson('day-rehearsal'));
       await _open(tester, backend);
       expect(find.text('Вспомнить'), findsWidgets);
@@ -134,7 +134,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Вспомни свои реплики'), findsOneWidget);
-      expect(find.text('≈ 6 мин'), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
+      expect(find.text('≈ 7 мин'), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
       expect(_beads(), findsNothing);
       expect(find.textContaining('Запись к врачу'), findsOneWidget);
 
@@ -148,8 +148,8 @@ void main() {
       }
       expect(backend.answered, [overview.id]);
       expect(find.text('Повтори свою реплику'), findsOneWidget);
-      expect(find.text('ещё 9 реплик'), findsOneWidget);
-      expect(_beads(), findsNWidgets(9));
+      expect(find.text('ещё 10 реплик'), findsOneWidget);
+      expect(_beads(), findsNWidgets(10));
       expect(find.textContaining('Запись к врачу'), findsOneWidget, reason: 'the first retell is the first scene\'s');
       await tester.pump(const Duration(seconds: 2));
     });

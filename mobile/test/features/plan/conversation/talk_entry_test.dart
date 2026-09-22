@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/plan/conversation/conversation_models.dart';
+import 'package:eng_std/data/plan/day_window.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/features/plan/conversation/talk_entry.dart';
 import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionSheet;
@@ -10,16 +11,20 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart' show sessionFixture;
-import '../../../support/talk_harness.dart' show talkV2;
 
 /// THE WAY INTO THE TALK (кадр 37-5, SESSION-DES-4; наряд CLIENT-CONV-1c §3) — on a 390 × 844 phone with the real fonts.
 void main() {
   setUpAll(setUpPlanGoldens);
   final day = sessionFixture('day-doctor');
 
-  /// The talk row's `targets` as the window sends them — the talk's own list, before its first move nothing said.
-  final targets = [for (final t in talkV2('talk_day_open_v2').targets) TalkTarget(sceneId: t.sceneId, ref: t.ref, textTarget: t.textTarget, textNative: t.textNative, said: false)];
+  /// The talk row's `targets` as the server sends them on the day window before the day's first talk — `day-doctor.json`
+  /// of BACK-TAILS-2 (six phrases, nothing said yet).
+  final targets = DayWindow.fromJson(serverFixtureJson('day-doctor')['window'])
+      .stages
+      .firstWhere((s) => s.stage == PlanStage.conversation)
+      .targets;
 
   Future<void> pumpEntry(
     WidgetTester tester,
@@ -151,7 +156,7 @@ void main() {
     // The window scrolls on its own: the last phrase comes up into it.
     await tester.drag(window, const Offset(0, -300));
     await tester.pump();
-    final last = tester.getRect(find.byKey(ValueKey('talk-entry-target-${targets[4].sceneId}-p5')));
+    final last = tester.getRect(find.byKey(ValueKey('talk-entry-target-${targets.last.sceneId}-${targets.last.ref}')));
     expect(last.bottom, lessThanOrEqualTo(tester.getRect(window).bottom), reason: 'последняя фраза доступна прокруткой');
     expect(tester.getRect(toggle).top - tester.getRect(window).bottom, moreOrLessEquals(24, epsilon: 1), reason: 'экран не уехал');
 

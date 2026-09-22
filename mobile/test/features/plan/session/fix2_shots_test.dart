@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -16,6 +15,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
 /// СНИМКИ НАРЯДА FIX-2 — каждый ИЗМЕНЁННЫЙ экран кадром 390 × 844 @2×, как просит наряд (§5 сдачи).
@@ -154,7 +154,7 @@ void main() {
 
   // ── §6 · полоса сцены без кружка ученика ──────────────────────────────────────────────────────
   testWidgets('09 полоса сцены: фото сцены и строка, кружка справа нет', (tester) async {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+    final raw = serverFixtureJson('day-doctor');
     final scene = PlanScene.fromJson(raw['scene'] as Map<String, dynamic>);
     await pumpShot(tester, Column(children: [SessionSceneStrip(scene: scene)]));
     await shoot(tester, '09-scene-strip-no-learner-circle');

@@ -1013,6 +1013,49 @@ void main() {
     });
   });
 
+  group('документы сервера BACK-TAILS-2', () {
+    // ПРАВИЛО (handoff BACK-TAILS-2 §9 п. 6; CONV-2): документы разговора, как их переснял сервер ветки, — живые и
+    // рисуются без правок: `targets[].said` по правилу сервера «как человек», `phrases_used` на ходе УЧЕНИКА со своим
+    // текстом, переспрос первым ходом, репетиция по двум сценам, итог — числа сервера.
+    // ЛОВИТ: документ сервера, который клиент перестал разбирать, и счёт полоски не по `said`.
+    test('разбор: цели «как человек», переспрос первым ходом, итоги сервера', () {
+      final open = serverTalk('conversation-day-open');
+      expect(open.titleNative, 'Поговори с врачом');
+      expect(open.replay, isFalse);
+      expect([for (final t in open.targets) if (t.said) t.ref], ['p1', 'p4']);
+      expect(open.turns[1].kind, TalkTurnKind.rescue);
+      expect(open.turns[1].textTarget, 'Sorry?');
+      expect([for (final u in open.turns[3].phrasesUsed) u.ref], ['p1', 'p4']);
+      expect(open.turns[3].phrasesUsed.every((u) => u.textTarget != null), isTrue, reason: 'со своим текстом');
+
+      final ended = serverTalk('conversation-day-ended');
+      expect(ended.targetsSaid, 5);
+      expect(ended.summary!.saidCount, 4);
+      expect((ended.summary!.phrasesUsed, ended.summary!.phrasesTotal), (5, 7));
+      expect(ended.summary!.returnsTomorrow, isTrue);
+
+      final rehearsal = serverTalk('conversation-rehearsal-ended');
+      expect(rehearsal.type, TalkType.rehearsal);
+      expect(rehearsal.scenes, hasLength(2));
+      expect(rehearsal.targetsSaid, 7);
+      expect(rehearsal.summary!.returnsTomorrow, isFalse);
+    });
+
+    // ПРАВИЛО (кадры 37-7d, 37-8; наряд CLIENT-CONV-1c §2б, §4): разговор, начатый с «Не понял», — свой тёмный пузырь
+    // «Sorry?» первым ходом ученика; полоска считает `said` сервера («2 из 7»), а фразы, которые сервер засчитал ходу, в
+    // своём пузыре подчёркнуты.
+    // ЛОВИТ: пустой пузырь переспроса в начале ленты и полоску, посчитанную телефоном.
+    testWidgets('лента: «Sorry?» первым ходом, полоска «фразы · 2 из 7», засчитанное подчёркнуто', (tester) async {
+      final probe = TalkProbe()..documents.add(serverTalk('conversation-day-open'));
+      final stand = await pumpTalk(tester, probe);
+      await finishLine(tester, stand);
+      expect(tester.widget<TalkOwnBubble>(find.byKey(const ValueKey('turn-2'))).text, 'Sorry?');
+      expect(find.text('фразы · 2 из 7'), findsOneWidget);
+      expect(tester.widget<TalkOwnBubble>(find.byKey(const ValueKey('turn-4'))).marks, isNotEmpty);
+      await settleTalk(tester);
+    });
+  });
+
   group('контракт', () {
     // ПРАВИЛО НАРЯДА: нет поля на проводе — честная ошибка, а не догадка.
     // ЛОВИТ: разбор, который подставляет ноль вместо пропавшего счёта и рисует «0 из 0».

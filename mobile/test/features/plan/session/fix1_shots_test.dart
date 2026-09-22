@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -29,6 +28,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
 /// СНИМКИ НАРЯДА FIX-1 — каждый ИЗМЕНЁННЫЙ экран кадром 390 × 844 @2×, как просит наряд.
@@ -97,7 +97,7 @@ void main() {
 
   // ── §1 · диалог: задание и вопрос над закрытым ответом ────────────────────────────────────────
   testWidgets('01 диалог: вопрос и варианты на экране под длинной лентой', (tester) async {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+    final raw = serverFixtureJson('day-doctor');
     final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
     for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 12)) {
       c['result'] = 'passed';
@@ -114,7 +114,7 @@ void main() {
 
   // Тот же блок у 33-1 — экран, который владелец и видел живьём (проверка обмена x6).
   testWidgets('07 диалог: проверка реплики собеседника (33-1) на шестом обмене', (tester) async {
-    final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+    final raw = serverFixtureJson('day-doctor');
     final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
     for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 9)) {
       c['result'] = 'passed';

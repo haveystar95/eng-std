@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +12,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
 import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
 
+import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
 /// DIALOGUE (work order SESSION-1c §2, canvas series 33): each kind from a fixture card — its states, the modes of
@@ -66,7 +65,7 @@ void main() {
     // между прошлой своей репликой и пузырём собеседника его читали репликой разговора.
     // ЛОВИТ: вопрос снова в строке задания над лентой; блок, разрезанный пузырём; варианты под краем экрана.
     testWidgets('33-1: своя реплика → пузырь с волной → блок «Что тебе сказали?» с вариантами', (tester) async {
-      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final raw = serverFixtureJson('day-doctor');
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 3)) {
         c['result'] = 'passed';
@@ -276,7 +275,7 @@ void main() {
     // CATCHES: the question back between the two lines, where it read as a line of the talk; the task or the question
     // pushed off the screen by a long conversation.
     testWidgets('варианты без вопроса: блок «Что тебе сказали?» под пузырём, над вариантами, лента уезжает под шапку', (tester) async {
-      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final raw = serverFixtureJson('day-doctor');
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 12)) {
         c['result'] = 'passed';
@@ -421,7 +420,7 @@ void main() {
   group('33-7 the conversation above the card', () {
     // CATCHES: a card drawn without the exchanges before it, and a passed answer without its mark.
     testWidgets('the exchanges before stand above the card, the own lines with their marks', (tester) async {
-      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final raw = serverFixtureJson('day-doctor');
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 4)) {
         c['result'] = 'passed';
@@ -446,7 +445,7 @@ void main() {
 
     // CATCHES: the answer after a rescue repeating the rescued line under the slow repeat (live pass, SESSION-1c).
     testWidgets('after «Didn\'t catch that»: the partner line once, above the rescue; the own answer by the dock', (tester) async {
-      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final raw = serverFixtureJson('day-doctor');
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       for (final c in (dialogue['cards'] as List).cast<Map<String, dynamic>>().where((c) => (c['position'] as int) < 11)) {
         c['result'] = 'passed';
@@ -470,7 +469,7 @@ void main() {
     // CATCHES: the group that used to hold the task line and the bubbles together — with six exchanges above it, the
     // task and the question stood off the screen and the learner was left with four options and no question.
     testWidgets('the last exchange on a small phone: the task and the question stand, the beginning is a scroll up', (tester) async {
-      final raw = jsonDecode(File('../backend2/docs/fixtures/day-doctor.json').readAsStringSync()) as Map<String, dynamic>;
+      final raw = serverFixtureJson('day-doctor');
       final dialogue = (raw['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'dialogue');
       final all = (dialogue['cards'] as List).cast<Map<String, dynamic>>();
       for (final c in all.where((c) => (c['position'] as int) < all.length)) {
