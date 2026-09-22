@@ -1,0 +1,21 @@
+== migrate (код ветки, база wordtrainer_e2e_test) 2026-09-22T02:07:18Z
+
+   INFO  Running migrations.  
+
+  2026_09_22_100000_add_repetition_stage_of_review_days ........ 158.42ms DONE
+
+
+== plan:reconcile-scenes (без флага)
+[dry-run] план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 · сцена 01M2QRHF9M86KAM8JW8XYRAWDR: «Запись к врачу» → «Запись к врачу» · «At the doctor's with a child» → «Booking»
+[dry-run] план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 · сцена 01M2QRHF9M69AMBE2XGD18KQ8P: «У врача с сыном» → «Приём у врача» · «At the doctor's with your son» → «Doctor visit»
+карточек «Вспомнить» с именем сцены не из плана: было 1 / стало 1
+
+== plan:reconcile-scenes --apply
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 · сцена 01M2QRHF9M86KAM8JW8XYRAWDR: «Запись к врачу» → «Запись к врачу» · «At the doctor's with a child» → «Booking»
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 · сцена 01M2QRHF9M69AMBE2XGD18KQ8P: «У врача с сыном» → «Приём у врача» · «At the doctor's with your son» → «Doctor visit»
+карточек «Вспомнить» с именем сцены не из плана: было 1 / стало 0
+исправлено карточек: 1
+
+== plan:reconcile-scenes --apply (повтор)
+карточек «Вспомнить» с именем сцены не из плана: было 0 / стало 0
+исправлено карточек: 0

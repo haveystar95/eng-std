@@ -6,7 +6,8 @@
 `backend2/` (app, config, tests, openapi, docs кроме `docs/design/`) и `docs/DECISIONS.md`, который наряд назвал сам.
 `mobile/` и `docs/design/` не тронуты.
 
-**Коммиты:** код — `5987b16e`; документы и этот отчёт — `DOCS_HASH`; шаги e2e после слияния — `E2E_HASH`.
+**Коммиты:** код — `5987b16e`; документы и этот отчёт — `890eac9f`; e2e на ветке и бой одним заходом — следующий
+за ним коммит документов. **Ветка в `main` НЕ влита** (§9): бой исполняет рабочее дерево `main`, и любое влитие — выкат.
 
 **Деньги.** Живые вызовы — только §12: **$0.040269**, 36 вызовов `gpt-5.4-mini` (разговор), всё на одноразовой копии
 e2e `wordtrainer_bt2_e2e_test` (журнал `model_calls`, 21:52–22:05 UTC 21.09). Кап наряда — $0.50. **Озвучки — 0**
@@ -38,11 +39,31 @@ e2e `wordtrainer_bt2_e2e_test` (журнал `model_calls`, 21:52–22:05 UTC 21
 | 12 | **Живой прогон** — §4 | `tools/live-run.php` | — | — |
 | 13 | Фикстуры: `day-doctor*.json` (тест держит байт-в-байт), `day-review.json` / `day-rehearsal.json` (копия e2e, дни пересданы кодом ветки), `conversation-day-open/ended.json`, `conversation-rehearsal-ended.json` (живой прогон); OpenAPI; `plan-api.md`, `plan-v2.md`, DECISIONS 379–388, ROADMAP, handoff §9 | — | `SessionDayFixtureTest` | — |
 | 14 | Качество: удалённое — §6; комментарии/имена/ошибки по-английски; EXPLAIN — `explain.txt`; мутации — `mutations.md` (§7) | — | — | — |
-| 15 | Ворота — §7; rebase, ff-слияние, e2e — `E2E_HASH` (ниже, «Выкат на e2e») | — | — | — |
+| 15 | Ворота — §7. **Слияние отложено решением Дена** (22.09): стек боя (`wt_app`, `wt_horizon`, `wt_scheduler` → `wordtrainer`) и сайдкар e2e смонтированы на рабочее дерево `main`, так что ff-влитие — это выкат на бой до миграции боя и до сборки (19). Rebase не понадобился: `main` не двигался (`ef1ea78a`). e2e переведён на ветку — ниже | — | — | — |
 
-### Выкат на e2e (§15)
+### e2e на ветке (§15, по решению Дена — без влития в `main`)
 
-`E2E_STEPS`
+Вывод целиком — `live/e2e-deploy.txt` (миграция и reconcile) и `live/e2e-verify.txt` (проверка).
+
+1. `DB=wordtrainer_e2e_test scripts/db-backup.sh --safety` →
+   `storage/db-backups/wordtrainer_e2e_test-20260922-050706.sql.gz` (2,7 МБ, ничего не удалено).
+2. Старый сайдкар `wt_app_e2e` (код `main`) остановлен и снят.
+3. `migrate --force` кодом ветки на `wordtrainer_e2e_test` — одна миграция (`2026_09_22_100000…`, 158 мс): 657 карточек
+   дней повторения `speak` → `repetition`.
+4. `plan:reconcile-scenes` — без флага: 1 лист (план `01M2QRH5…`, день 3, 2 сцены); `--apply` — исправлено 1; повтор — 0.
+5. `wt_app_e2e` поднят заново на ветке: тот же образ, порт 8010, `php -S … -t /wt/public`, то же окружение
+   (`DB_DATABASE=wordtrainer_e2e_test`, `SPEECH_ENABLED=true`, `QUEUE_CONNECTION=sync`, `CACHE_STORE=array`), код —
+   worktree `../backend2-tails2`, `storage/app/private` — основного дерева (звук и фото стенда те же). Отдельного
+   horizon у e2e нет — очередь стенда синхронная в самом сайдкаре, его перезапуск и есть «restart horizon e2e»;
+   боевой `wt_horizon` не трогался.
+6. Проверка (`live/e2e-verify.txt`): день повторения — этап `repetition` (7 карточек), `minutes` у каждого ряда (5 и 6),
+   у ряда разговора `targets` — 7, `said` по последнему разговору дня, `sources` — своя сцена, `talk_again: true`,
+   `allowed_action: again`; репетиция — ряд «Вспомнить» 7 мин, `sources` — две сцены (у «Запись к врачу»
+   `day_number: null`), `targets` по обеим сценам, `talk_again: true`, имена листа — из плана («Booking», «Doctor
+   visit»). Раздача кодом ветки на данных e2e (в памяти, сессия READ ONLY): день-сцена «врач» — `speak_echo` без
+   `partner_line`; повторение — `repetition` ×7; репетиция — реплики листа в четыре поля. Лист репетиции, розданный до
+   наряда, хранит свои прежние служебные поля строки (`step`, `frame_ref`, …) — reconcile правит только имена; новые
+   листы раздаются в четыре поля.
 
 ---
 
@@ -251,7 +272,21 @@ back hurts, and three days ago it started.» роль ответила «It star
 
 ## §9. Бой
 
-Пусто до команды Дена (после сборки 1.0.0 (19)). Порядок, который тогда выполнить: `scripts/db-backup.sh --safety` →
-pull → `migrate` → `docker compose restart horizon` → `php artisan plan:reconcile-scenes --apply` → проверить, что дни
-раздаются. Чего ждать: миграция — 0 карточек (`speak` на днях повторения на бою нет), reconcile — 1 лист (план Дена
-`01M2TSRM3DJPGCR5VQNBE8N3S7`, день 3, 2 сцены).
+**Пусто до команды Дена.** Ветка `back-tails-2` в `main` **не влита**; e2e работает на ветке (сайдкар `wt_app_e2e` на
+worktree, §1 «e2e на ветке»); `main` и бой не тронуты.
+
+На бой — **ОДНИМ заходом по команде после сборки 1.0.0 (19)**, по порядку:
+
+1. `scripts/db-backup.sh --safety`;
+2. `migrate` боя кодом ветки (до влития — чтобы у живого API не было окна «новый код без миграции»);
+3. ff-влитие `back-tails-2` в `main` (бой исполняет рабочее дерево `main` — это и есть выкат кода);
+4. `docker compose restart horizon`;
+5. `php artisan plan:reconcile-scenes --apply`;
+6. сайдкар e2e обратно на `main` (`wt_app_e2e` с `/app`);
+7. worktree `../backend2-tails2` снести (и сайдкар `wt_tails2` с его тестовыми базами `wordtrainer_bt2_test*`, копию
+   `wordtrainer_bt2_e2e_test`);
+8. `wordtrainer_test` догнать миграцией (`exec -e DB_DATABASE=wordtrainer_test app php artisan migrate`).
+
+Чего ждать: миграция — 0 карточек (`speak` на днях повторения на бою нет); reconcile — 1 лист (план Дена
+`01M2TSRM3DJPGCR5VQNBE8N3S7`, удалён, день 3: «Звонок агенту по аренде» → «Звонок агенту», «Просмотр квартиры» →
+«Просмотр жилья»); затем — проверить, что дни раздаются. Команды и вывод — сюда.

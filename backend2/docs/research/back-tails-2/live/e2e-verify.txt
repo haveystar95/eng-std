@@ -1,0 +1,32 @@
+BACK-TAILS-2 · e2e на ветке — проверка 2026-09-22T02:09:25Z
+сайдкар wt_app_e2e (:8010): код /wt = worktree ../backend2-tails2 (5987b16e + 890eac9f), база wordtrainer_e2e_test, SPEECH_ENABLED=true, QUEUE_CONNECTION=sync; /up — 200
+
+== HTTP (POST /auth/dev QA-аккаунтов, GET дней; ничего не пишется)
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 1 (scene, closed) · этапы карточек: 
+  window.stages [stage, state, minutes, targets]: [('words', 'done', 0, None), ('phrases', 'done', 0, None), ('dialogue', 'done', 0, None), ('listen', 'done', 0, None), ('speak', 'done', 0, None)]
+  window.sources: [{"scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P", "title_native": "Приём у врача", "day_number": 1}]
+  window.talk_again: False · allowed_action: None
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 2 (review, closed) · этапы карточек: repetition:7
+  window.stages [stage, state, minutes, targets]: [('repetition', 'done', 5, None), ('conversation', 'done', 6, 7)]
+  window.sources: [{"scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P", "title_native": "Приём у врача", "day_number": 1}]
+  window.talk_again: True · allowed_action: again
+  ряд разговора: targets 7 (KQ8P:p1, KQ8P:p2, KQ8P:p3, KQ8P:p4, KQ8P:p5, KQ8P:p6, KQ8P:p7), said по последнему разговору: ['p1', 'p2', 'p6', 'p7']
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 (rehearsal, closed) · этапы карточек: recall:10
+  window.stages [stage, state, minutes, targets]: [('recall', 'done', 7, None), ('conversation', 'done', 6, 7)]
+  window.sources: [{"scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR", "title_native": "Запись к врачу", "day_number": null}, {"scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P", "title_native": "Приём у врача", "day_number": 1}]
+  window.talk_again: True · allowed_action: None
+  ряд разговора: targets 7 (AWDR:p1, AWDR:p2, AWDR:p3, AWDR:p4, KQ8P:p1, KQ8P:p2, KQ8P:p3), said по последнему разговору: ['p1', 'p2', 'p3', 'p4']
+  recall_scenes: «Запись к врачу» / «Booking» · ключи реплики: ['audio', 'filler_index', 'frame_ref', 'key', 'ref', 'step', 'text_native', 'text_target']
+  recall_scenes: «Приём у врача» / «Doctor visit» · ключи реплики: ['audio', 'filler_index', 'frame_ref', 'key', 'ref', 'step', 'text_native', 'text_target']
+план 01M2KPJ4E8MN5WHA33JGZEJTWN · день 1 (не открыт — контур раздачи кодом ветки) · этапы: words:24, phrases:24, dialogue:13, listen:9, speak:8, recall:0, repetition:0, conversation:0
+  window.stages [stage, state, minutes, targets]: [('words', 'done', 5, None), ('phrases', 'done', 12, None), ('dialogue', 'done', 6, None), ('listen', 'done', 5, None), ('speak', 'done', 5, None), ('conversation', 'done', 3, 6)]
+  window.sources: [{"scene_id": "01M2KPJ4EF5K5WA2S27K5WGK8T", "title_native": "Сцена 1", "day_number": 1}] · talk_again: False
+
+== раздача кодом ветки на данных e2e в памяти (DayDealer::outline — тот же сборщик, что у open; сессия READ ONLY)
+база wordtrainer_e2e_test · код /wt
+план 01M2H13E1QT6F5D4FKJSEKTAD7 · день 1 (scene) — раздача в памяти: {"words":24,"phrases":22,"dialogue":13,"listen":10,"speak":8}
+  speak_echo: ключи payload ["scene_id","exchange","own_line","expected_text","speech_mode","pause_ms"] · partner_line нет
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 2 (review) — раздача в памяти: {"repetition":7}
+план 01M2QRH5MYEFZ1DEQ78RH54P6X · день 3 (rehearsal) — раздача в памяти: {"recall":10}
+  recall_scenes: «Запись к врачу» / «Booking» · реплик 7 · ключи реплики ["ref","text_target","text_native","audio"]
+  recall_scenes: «Приём у врача» / «Doctor visit» · реплик 7 · ключи реплики ["ref","text_target","text_native","audio"]
