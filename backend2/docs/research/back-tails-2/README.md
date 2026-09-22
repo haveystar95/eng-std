@@ -9,8 +9,9 @@
 **Коммиты:** код — `5987b16e`; документы и этот отчёт — `890eac9f`; e2e на ветке и бой одним заходом — `543cca72`;
 решение по §11 в ROADMAP — `55816897`; **дополнение по отчёту клиента 1c** (эхо старой формы) — первая версия (один
 `own_line`): код `5b357b61`, документы `adb04cdb`; эхо к нынешней форме целиком (решение Дена по §5 п. 11): код
-`71b08b08`, документы — следующий за ним коммит. **Ветка в `main` НЕ влита** (§9): бой исполняет рабочее дерево `main`,
-и любое влитие — выкат.
+`71b08b08`, документы `dec902db`. Это хеши ветки до выката; **22.09 ветка перебазирована на `main` и влита
+fast-forward** (§9) — в `main` те же коммиты под новыми хешами: `5d8c37cd` (код), `ddee5f78`, `d5f473c6`, `3cb660b3`,
+`0f12e54b` (код), `7d1bc867`, `1b4e61b5` (код), `39eb3804`; §9 с выводом выката — отдельным коммитом отчёта.
 
 **Деньги.** Живые вызовы — только §12: **$0.040269**, 36 вызовов `gpt-5.4-mini` (разговор), всё на одноразовой копии
 e2e `wordtrainer_bt2_e2e_test` (журнал `model_calls`, 21:52–22:05 UTC 21.09). Кап наряда — $0.50. **Озвучки — 0**
@@ -287,28 +288,32 @@ back hurts, and three days ago it started.» роль ответила «It star
 
 ## §9. Бой
 
-**Пусто до команды Дена.** Ветка `back-tails-2` в `main` **не влита**; e2e работает на ветке (сайдкар `wt_app_e2e` на
-worktree, §1 «e2e на ветке»); `main` и бой не тронуты.
+**Выкачено 22.09.2026, 11:13–11:17 UTC**, по команде Дена «выкат» после сборки 1.0.0 (19) на телефоне, одним заходом,
+шаги 1–8 по порядку. Команды и вывод целиком — `live/prod-deploy.txt`; ниже — каждый шаг и что он дал.
 
-На бой — **ОДНИМ заходом по команде после сборки 1.0.0 (19)**, по порядку:
+| шаг | команда | вывод |
+|---|---|---|
+| 0 | до выката: `GET …/plans/01M2H355…/days/2` QA-аккаунта (только чтение) | старый код: ряды окна без `minutes` и `targets`, нет `sources` и `talk_again` |
+| 1 | `scripts/db-backup.sh --safety` | `storage/db-backups/wordtrainer-20260922-141339.sql.gz` (21 МБ), ничего не удалено |
+| 2 | `docker exec -e DB_DATABASE=wordtrainer wt_tails2 php artisan migrate --force` — **кодом ветки до влития** | `2026_09_22_100000_add_repetition_stage_of_review_days` 34,66 мс, `2026_09_22_110000_bring_old_echo_cards_to_todays_form` 323,82 мс. До → после: `speak_echo` без `own_line` 10 → **0**, с `coverage_min` 9 → **0**, `repetition` 0 → **0**; эхо нынешней формы с `partner_line` собеседника — **10** (`expected_text` = `own_line.text_target`, `speech_mode` `repeat`) — **ожидаемо 10 строк, три ключа** ✓ |
+| 3 | `git -C ../backend2-tails2 rebase main` (main ушёл на `c958c534`: шесть коммитов клиента 1c, пересечений нет) → `git merge --ff-only back-tails-2` в основном дереве | rebase 8/8 без конфликтов; `main` → **`39eb3804`** fast-forward; незакоммиченная работа клиента в `mobile/` не задета. С этого мига боевой API — на новом коде |
+| 4 | `docker compose restart horizon` → `horizon:status` | «Horizon is running», `GET /up` — 200 |
+| 5 | `docker compose exec -T app php artisan plan:reconcile-scenes --apply`, затем повтор | **1 лист** — план Дена `01M2TSRM3DJPGCR5VQNBE8N3S7` (удалён), день 3: «Звонок агенту по аренде» → «Звонок агенту» · «Calling a rental agent» → «Call to the Agent»; «Просмотр квартиры» → «Просмотр жилья» · «Apartment Viewing» → «Flat Viewing»; «было 1 / стало 0, исправлено 1»; повтор — «было 0 / стало 0» ✓ |
+| 6 | `DB=wordtrainer_e2e_test scripts/db-backup.sh --safety` → сайдкар `wt_app_e2e` снят и поднят на основном дереве (`/app`, `php -S 0.0.0.0:8010 -t /app/public`, прежнее окружение) → `docker exec -e DB_DATABASE=wordtrainer_e2e_test wt_app_e2e php artisan migrate --force` | бэкап `wordtrainer_e2e_test-20260922-141502.sql.gz` (3,1 МБ); `:8010/up` — 200; миграция эха 178,98 мс: эхо без `own_line` 1 → **0**, нынешней формы — **1** ✓ |
+| 7 | `docker stop wt_tails2 && docker rm wt_tails2`; `DROP DATABASE` × 12 (`wordtrainer_bt2_test`, `…_test_1…10`, копия `wordtrainer_bt2_e2e_test`); `git worktree remove ../backend2-tails2` | снято всё; `git worktree list` — `../backend2-tails2` нет (в worktree были только игнорируемые кэши, `vendor/` и артефакты тестов — их сцен нет ни на бою, ни на e2e). Ветка `back-tails-2` осталась — влита |
+| 8 | `docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate` | обе миграции, 1 с и 3 с |
 
-1. `scripts/db-backup.sh --safety`;
-2. `migrate` боя кодом ветки (до влития — чтобы у живого API не было окна «новый код без миграции»);
-3. ff-влитие `back-tails-2` в `main` (бой исполняет рабочее дерево `main` — это и есть выкат кода);
-4. `docker compose restart horizon`;
-5. `php artisan plan:reconcile-scenes --apply`;
-6. сайдкар e2e обратно на `main` (`wt_app_e2e` с `/app`);
-7. worktree `../backend2-tails2` снести (и сайдкар `wt_tails2` с его тестовыми базами `wordtrainer_bt2_test*`, копию
-   `wordtrainer_bt2_e2e_test`);
-8. `wordtrainer_test` догнать миграцией (`exec -e DB_DATABASE=wordtrainer_test app php artisan migrate`).
+**Проверка после** — на бою, QA-аккаунт `qa-dayui3@wt.test`, план `01M2H35564226BG6B96ZW1J8V2`, день 2 «Аптека» (дни
+учеников не трогались):
 
-Чего ждать: две миграции — `2026_09_22_100000` (этап `repetition`) — 0 карточек (`speak` на днях повторения на бою нет);
-`2026_09_22_110000_bring_old_echo_cards_to_todays_form` — **ожидаемо 10 строк, три ключа**: у 10 карточек `speak_echo`
-`own_line`, `expected_text` и `speech_mode` нынешней формы, `coverage_min` снят у 9, `partner_line` на месте; все 10
-равны свежей раздаче своего обмена, кроме `partner_line` (проба только чтением — `live/echo-own-line-prod.txt`);
-reconcile — 1 лист (план Дена `01M2TSRM3DJPGCR5VQNBE8N3S7`, удалён, день 3: «Звонок агенту по аренде» → «Звонок агенту»,
-«Просмотр квартиры» → «Просмотр жилья»); затем — проверить, что дни раздаются. Команды и вывод — сюда.
-
-К шагам: `main` ушёл вперёд на три коммита клиента 1c (`mobile/`, `docs/research/client-conv-1c/`,
-`docs/plan-ui-glossary.md`) — перед шагом 3 ветка перебазируется на `main`, пересечений нет. На e2e миграция эха ещё не
-прогнана (1 карточка, `live/echo-own-line-e2e.txt`): к шагу 6 — `migrate` e2e.
+- **окно дня отдаёт `stages[].minutes` и `targets`**: ряды words 5 · phrases 12 · dialogue 6 · listen 6 · speak 5 ·
+  conversation 3 минуты — у каждого ряда, все `locked`; у ряда разговора `targets` — 7 (p1…p7, `said` у всех `false`);
+  `sources` — «Аптека», день 2; `talk_again: false`;
+- **день раздаётся**: `POST …/days/2/open` → 200, 77 карточек (words 24, phrases 22, dialogue 10, listen 13, speak 8);
+  `speak_echo` — `exchange, expected_text, own_line, pause_ms, scene_id, speech_mode`, без `partner_line`;
+- **разговор стартует**: `POST …/days/2/conversation` → 200, разговор `01M34DARNTZFNYNJDRZZ8C3DX7` (`day`, `your_turn`,
+  `replay: false`), «Поговори с фармацевтом», 7 целей, первая реплика роли «Hello. How can I help you today?» со звуком.
+  Цена — **$0.003867**: модель `gpt-5.4-mini`, `conversation_agent.v2.1`, 2 609 / 69 токенов, 2,5 с, $0.002267; голос —
+  32 символа · 8 кредитов · $0.001600, 1,4 с; ход 3,9 с. Разговор оставлен открытым на QA-аккаунте;
+- после — день `in_progress`, ряд words `current`; ошибок в логах `app`, `horizon`, `scheduler` и в `laravel.log` с
+  11:13 UTC нет.

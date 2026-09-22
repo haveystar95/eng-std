@@ -1,0 +1,180 @@
+BACK-TAILS-2 · выкат на бой 22.09.2026 (команда Дена «выкат» после сборки 1.0.0 (19)) — команды и вывод по шагам §9
+
+#### 0. до выката — окно дня QA-аккаунта на старом коде (только чтение)
+GET /plans/01M2H35564226BG6B96ZW1J8V2/days/2 → 200
+  день: scene · статус open · окно not_started · allowed_action start
+  ряд words        state locked   minutes НЕТ ПОЛЯ
+  ряд phrases      state locked   minutes НЕТ ПОЛЯ
+  ряд dialogue     state locked   minutes НЕТ ПОЛЯ
+  ряд listen       state locked   minutes НЕТ ПОЛЯ
+  ряд speak        state locked   minutes НЕТ ПОЛЯ
+  ряд conversation state locked   minutes НЕТ ПОЛЯ
+  sources: "НЕТ ПОЛЯ" · talk_again: НЕТ ПОЛЯ
+
+#### 1. бэкап боя
+$ scripts/db-backup.sh --safety   # 2026-09-22T11:13:39Z
+backup: storage/db-backups/wordtrainer-20260922-141339.sql.gz ( 21M)
+safety copy: nothing pruned
+
+#### 2. migrate боя кодом ветки (до влития)
+== до (2026-09-22T11:13:56Z)
+speak_echo без own_line|10
+speak_echo с coverage_min|9
+карточки stage=repetition|0
+
+$ docker exec -e DB_DATABASE=wordtrainer wt_tails2 php artisan migrate --force   # код ветки back-tails-2 (dec902db)
+
+   INFO  Running migrations.  
+
+  2026_09_22_100000_add_repetition_stage_of_review_days ......... 34.66ms DONE
+  2026_09_22_110000_bring_old_echo_cards_to_todays_form ........ 323.82ms DONE
+
+== после
+speak_echo без own_line|0
+speak_echo с coverage_min|0
+карточки stage=repetition|0
+эхо нынешней формы с partner_line собеседника|10
+
+#### 3. rebase на main и ff-влитие
+== до: main c958c534, ветка dec902db от ef1ea78a
+5987b16e feat(plan): BACK-TAILS-2 — лестница «Фраз», фразы разговора «как человек», repetition, окно дня, повтор разговора, эхо роли
+890eac9f docs(plan): BACK-TAILS-2 — отчёт, канон, контракт, DECISIONS 379–388, handoff §9 клиенту
+543cca72 docs(plan): BACK-TAILS-2 — e2e на ветке, бой одним заходом, ветка не влита
+55816897 docs(plan): BACK-TAILS-2 — решение по §11 в ROADMAP
+5b357b61 feat(plan): BACK-TAILS-2 — эхо старой формы получает own_line (дополнение по отчёту клиента 1c)
+adb04cdb docs(plan): BACK-TAILS-2 — дополнение 1c в отчёте, ROADMAP-хвосты клиента, хеши
+71b08b08 feat(plan): BACK-TAILS-2 — старое эхо к нынешней форме целиком (решение Дена по §5 п. 11)
+dec902db docs(plan): BACK-TAILS-2 — старое эхо целиком в отчёте, §9 «10 строк, три ключа», хеши
+
+$ git -C ../backend2-tails2 rebase main   # 2026-09-22T11:14:07Z
+Rebasing (1/8)Rebasing (2/8)Rebasing (3/8)Rebasing (4/8)Rebasing (5/8)Rebasing (6/8)Rebasing (7/8)Rebasing (8/8)Successfully rebased and updated refs/heads/back-tails-2.
+
+== после rebase
+5d8c37cd feat(plan): BACK-TAILS-2 — лестница «Фраз», фразы разговора «как человек», repetition, окно дня, повтор разговора, эхо роли
+ddee5f78 docs(plan): BACK-TAILS-2 — отчёт, канон, контракт, DECISIONS 379–388, handoff §9 клиенту
+d5f473c6 docs(plan): BACK-TAILS-2 — e2e на ветке, бой одним заходом, ветка не влита
+3cb660b3 docs(plan): BACK-TAILS-2 — решение по §11 в ROADMAP
+0f12e54b feat(plan): BACK-TAILS-2 — эхо старой формы получает own_line (дополнение по отчёту клиента 1c)
+7d1bc867 docs(plan): BACK-TAILS-2 — дополнение 1c в отчёте, ROADMAP-хвосты клиента, хеши
+1b4e61b5 feat(plan): BACK-TAILS-2 — старое эхо к нынешней форме целиком (решение Дена по §5 п. 11)
+39eb3804 docs(plan): BACK-TAILS-2 — старое эхо целиком в отчёте, §9 «10 строк, три ключа», хеши
+
+$ git merge --ff-only back-tails-2   # в основном дереве, 2026-09-22T11:14:16Z
+ create mode 100644 backend2/tests/Feature/Plan/DayBuildSignalTest.php
+ create mode 100644 backend2/tests/Feature/Plan/OldEchoFormTest.php
+ create mode 100644 backend2/tests/Feature/Plan/RepetitionStageTest.php
+ create mode 100644 backend2/tests/Feature/Plan/WindowSourcesTest.php
+ create mode 100644 backend2/tests/Unit/Plan/PhraseUseTest.php
+== main теперь: 39eb3804 docs(plan): BACK-TAILS-2 — старое эхо целиком в отчёте, §9 «10 строк, три ключа», хеши
+(пусто выше — рабочее дерево main по файлам ветки чистое)
+
+#### 4. restart horizon
+$ docker compose restart horizon   # 2026-09-22T11:14:27Z
+ Container wt_horizon  Restarting
+ Container wt_horizon  Started
+$ docker compose exec -T horizon php artisan horizon:status
+
+   INFO  Horizon is running.  
+
+$ curl http://localhost:8001/up → 200
+
+#### 5. plan:reconcile-scenes --apply
+$ docker compose exec -T app php artisan plan:reconcile-scenes --apply   # 2026-09-22T11:14:47Z
+план 01M2TSRM3DJPGCR5VQNBE8N3S7 · день 3 · сцена 01M2TSS0SMGDKFFD8CPKV4543X: «Звонок агенту по аренде» → «Звонок агенту» · «Calling a rental agent» → «Call to the Agent»
+план 01M2TSRM3DJPGCR5VQNBE8N3S7 · день 3 · сцена 01M2TSS0SN8DE80KJ8MJ5SAQ4J: «Просмотр квартиры» → «Просмотр жилья» · «Apartment Viewing» → «Flat Viewing»
+карточек «Вспомнить» с именем сцены не из плана: было 1 / стало 0
+исправлено карточек: 1
+
+$ docker compose exec -T app php artisan plan:reconcile-scenes --apply   # повтор
+карточек «Вспомнить» с именем сцены не из плана: было 0 / стало 0
+исправлено карточек: 0
+
+#### 6. сайдкар e2e обратно на main + миграция e2e
+$ DB=wordtrainer_e2e_test scripts/db-backup.sh --safety   # 2026-09-22T11:15:02Z
+backup: storage/db-backups/wordtrainer_e2e_test-20260922-141502.sql.gz (3.1M)
+safety copy: nothing pruned
+
+$ docker stop wt_app_e2e && docker rm wt_app_e2e   # сайдкар на worktree снят
+снят
+$ docker compose run -d --no-deps --name wt_app_e2e -p 8010:8010 -e SPEECH_ENABLED=true -e APP_ENV=local -e APP_DEBUG=true -e DB_DATABASE=wordtrainer_e2e_test -e QUEUE_CONNECTION=sync -e CACHE_STORE=array app php -S 0.0.0.0:8010 -t /app/public
+424206a9b982
+сайдкар: /Users/yalantisdenys/eng-std/backend2->/app · ["php","-S","0.0.0.0:8010","-t","/app/public"]
+$ curl http://localhost:8010/up → 200
+
+== e2e до
+speak_echo без own_line|1
+эхо нынешней формы с partner_line собеседника|0
+$ docker exec -e DB_DATABASE=wordtrainer_e2e_test wt_app_e2e php artisan migrate --force   # код main, 2026-09-22T11:15:21Z
+
+   INFO  Running migrations.  
+
+  2026_09_22_110000_bring_old_echo_cards_to_todays_form ........ 178.98ms DONE
+
+== e2e после
+speak_echo без own_line|0
+эхо нынешней формы с partner_line собеседника|1
+
+#### 7. worktree снесён (и сайдкар ветки, её тестовые базы, копия e2e)
+$ docker stop wt_tails2 && docker rm wt_tails2   # 2026-09-22T11:16:13Z
+сайдкар ветки снят
+$ DROP DATABASE — тестовые базы ветки и копия e2e
+  снята wordtrainer_bt2_e2e_test
+  снята wordtrainer_bt2_test
+  снята wordtrainer_bt2_test_test_1
+  снята wordtrainer_bt2_test_test_2
+  снята wordtrainer_bt2_test_test_3
+  снята wordtrainer_bt2_test_test_4
+  снята wordtrainer_bt2_test_test_5
+  снята wordtrainer_bt2_test_test_6
+  снята wordtrainer_bt2_test_test_7
+  снята wordtrainer_bt2_test_test_8
+  снята wordtrainer_bt2_test_test_9
+  снята wordtrainer_bt2_test_test_10
+$ git worktree remove ../backend2-tails2
+/Users/yalantisdenys/eng-std        39eb3804 [main]
+/Users/yalantisdenys/backend2-1e    9b976d2f [session-1e]
+/Users/yalantisdenys/eng-std-day-ui 6a9f8dfc [day-ui]
+ls: /Users/yalantisdenys/backend2-tails2: No such file or directory
+
+#### 8. wordtrainer_test догнан
+$ docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate   # 2026-09-22T11:16:42Z
+
+   INFO  Running migrations.  
+
+  2026_09_22_100000_add_repetition_stage_of_review_days .............. 1s DONE
+  2026_09_22_110000_bring_old_echo_cards_to_todays_form .............. 3s DONE
+
+
+#### проверка после
+== проверка на бою, QA-аккаунт qa-dayui3@wt.test, план 01M2H35564226BG6B96ZW1J8V2, день 2 · 2026-09-22T11:17:00Z
+GET /plans/01M2H35564226BG6B96ZW1J8V2/days/2 → 200
+  день: scene · статус open · окно not_started · allowed_action start
+  ряд words        state locked   minutes 5
+  ряд phrases      state locked   minutes 12
+  ряд dialogue     state locked   minutes 6
+  ряд listen       state locked   minutes 6
+  ряд speak        state locked   minutes 5
+  ряд conversation state locked   minutes 3 · targets 7: p1, p2, p3, p4, p5, p6, p7
+  sources: [{"scene_id": "01M2H35D29PG2TQMECGSZ0G893", "title_native": "Аптека", "day_number": 2}] · talk_again: False
+POST /plans/01M2H35564226BG6B96ZW1J8V2/days/2/open → 200
+  роздано карточек 77: {"words": 24, "phrases": 22, "dialogue": 10, "listen": 13, "speak": 8}
+  speak_echo: ключи payload ['exchange', 'expected_text', 'own_line', 'pause_ms', 'scene_id', 'speech_mode']
+POST /plans/01M2H35564226BG6B96ZW1J8V2/days/2/conversation → 200
+  разговор 01M34DARNTZFNYNJDRZZ8C3DX7 · day · state your_turn · replay False · «Поговори с фармацевтом» · целей 7
+  первая реплика роли: «Hello. How can I help you today?» / «Здравствуйте. Чем я могу вам помочь сегодня?» · звук: есть
+GET /plans/01M2H35564226BG6B96ZW1J8V2/days/2 → 200
+  день: scene · статус in_progress · окно in_progress · allowed_action continue
+  ряд words        state current  minutes 5
+  ряд phrases      state locked   minutes 12
+  ряд dialogue     state locked   minutes 6
+  ряд listen       state locked   minutes 6
+  ряд speak        state locked   minutes 5
+  ряд conversation state locked   minutes 3 · targets 7: p1, p2, p3, p4, p5, p6, p7
+  sources: [{"scene_id": "01M2H35D29PG2TQMECGSZ0G893", "title_native": "Аптека", "day_number": 2}] · talk_again: False
+
+== цена проверочного разговора (журнал хода)
+модель|gpt-5.4-mini-2026-03-17|conversation_agent.v2.1|2609|69|0.002267|2504|голос|32|8|0.001600|1414|ход мс|3918
+== ошибки в логах контейнеров с выката (app, horizon, scheduler), 11:13 UTC
+(пусто выше — ошибок нет)
+== laravel.log с выката
+(пусто выше — ошибок нет)

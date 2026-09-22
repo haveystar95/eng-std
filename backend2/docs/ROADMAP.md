@@ -864,9 +864,11 @@ PLAYGROUND, «Журнал вызовов модели»; решения — DEC
 - [x] **e2e на ветке** (решение Дена 22.09, без влития в `main`): бэкап → `migrate` кодом ветки (657 карточек →
   `repetition`) → `plan:reconcile-scenes --apply` (1 лист) → сайдкар `wt_app_e2e` (:8010) на worktree; новый контракт на
   стенде проверен (отчёт §1 «e2e на ветке»).
-- [ ] **Бой — ОДНИМ заходом по команде Дена после сборки (19)**: `scripts/db-backup.sh --safety` → `migrate` боя →
+- [x] **Бой — ОДНИМ заходом по команде Дена после сборки (19)**: `scripts/db-backup.sh --safety` → `migrate` боя →
   ff-влитие в `main` → `restart horizon` → `plan:reconcile-scenes --apply` (1 лист, план Дена) → сайдкар e2e обратно на
-  `main` → worktree снести → `wordtrainer_test` догнать (отчёт §9).
+  `main` → worktree снести → `wordtrainer_test` догнать (отчёт §9). *Выкачено 22.09, 11:13–11:17 UTC:* эхо старой формы —
+  10 строк, три ключа; `repetition` — 0; `main` → `39eb3804` (rebase + ff); reconcile — 1 лист; e2e на `main` + 1 эхо;
+  проверка на QA-аккаунте боя — окно с `minutes` и `targets`, день раздаётся, разговор стартует; ошибок в логах нет.
 - [ ] **Инфра (не сейчас): бой исполняет рабочее дерево `main`, поэтому любое влитие = выкат.** `wt_app`, `wt_horizon`,
   `wt_scheduler` (и сайдкар e2e) смонтированы на `/Users/yalantisdenys/eng-std/backend2`: ff в `main` сразу отдаёт код
   боевому API, миграция и сборка клиента его не ждут. Нужен отдельный checkout или тег для боя, чтобы влитие в `main`
