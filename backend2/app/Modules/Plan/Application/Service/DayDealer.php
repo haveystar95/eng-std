@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Port\DayBuildLog;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
+use App\Modules\Plan\Domain\Assembly\CardObjects;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\Assembly\ReturnedUnit;
@@ -17,6 +18,7 @@ use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Exception\LessonNotReady;
+use App\Modules\Plan\Domain\Exception\SceneNotFound;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
@@ -104,6 +106,27 @@ final readonly class DayDealer
         } catch (LessonNotReady) {
             return [];
         }
+    }
+
+    /**
+     * THE LEARNER'S LINE OF AN EXCHANGE AS A CARD OF THE DAY CARRIES IT — `CardObjects::ownLine()` over this dealer's own
+     * material of the scene, the very line a new deal puts under `own_line` (наряд BACK-TAILS-2, дополнение по отчёту
+     * клиента 1c: the echo cards dealt before CONV-2 get theirs from here). Null when the plan has no such scene, the
+     * scene no lesson, the lesson no such exchange, or the exchange no line of the learner's.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function ownLine(Plan $plan, PlanSceneId $sceneId, int $step): ?array
+    {
+        try {
+            $plan->scene($sceneId);
+        } catch (SceneNotFound) {
+            return null;
+        }
+        $material = $this->material($plan, [$sceneId])[$sceneId->value] ?? null;
+        $exchange = $material?->lesson->exchange($step);
+
+        return $material === null || $exchange === null ? null : CardObjects::ownLine($material, $exchange);
     }
 
     /**
