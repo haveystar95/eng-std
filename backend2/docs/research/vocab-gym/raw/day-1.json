@@ -1,0 +1,1393 @@
+{
+    "id": "01M32DXHYG50H7SWQEMD33A39F",
+    "kind": "situation",
+    "order": 1,
+    "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+    "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+    "priority": 2,
+    "image_url": "https://images.pexels.com/photos/12255816/pexels-photo-12255816.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "created_at": "2026-09-21T16:48:49+00:00",
+    "image_tone": "#BAB4A6",
+    "plan_terms": [
+        {
+            "id": "01M32DYVQR91NY1F3FJTEM1A3N",
+            "ref": "v1",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "p1",
+                "A1"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 0,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/6812435/pexels-photo-6812435.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#87827B",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "дневной пропуск",
+            "text_target": "day pass",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Pavel Danilyuk",
+            "image_prompt": "gym reception desk with a printed day pass and payment terminal",
+            "speaking_key": null,
+            "example_native": "У вас есть дневной пропуск?",
+            "example_target": "Do you have a day pass?",
+            "image_author_url": "https://www.pexels.com/@pavel-danilyuk",
+            "definition_target": "a ticket or pass that lets you use a place for one day",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "дей пас",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQSNZT4YTZQDTJ4P720",
+            "ref": "v2",
+            "kind": "word",
+            "slot": null,
+            "used_in": [
+                "p2"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 1,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/6812443/pexels-photo-6812443.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#706B67",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "абонемент",
+            "text_target": "membership",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Pavel Danilyuk",
+            "image_prompt": "gym brochure on a front desk with membership options",
+            "speaking_key": null,
+            "example_native": "Какие у вас есть месячные абонементы?",
+            "example_target": "What monthly memberships do you have?",
+            "image_author_url": "https://www.pexels.com/@pavel-danilyuk",
+            "definition_target": "an arrangement to use a club or service regularly",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "мембершип",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQSQESNTV0YD1GBQT7M",
+            "ref": "v3",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "A2"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 2,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/30732854/pexels-photo-30732854.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#665D54",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "безлимитный план",
+            "text_target": "unlimited plan",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "James Collington",
+            "image_prompt": "price board at a gym showing an unlimited plan option",
+            "speaking_key": null,
+            "example_native": "У нас есть базовый план и безлимитный план.",
+            "example_target": "We have a basic plan and an unlimited plan.",
+            "image_author_url": "https://www.pexels.com/@james-collington-2147687246",
+            "definition_target": "a plan that allows use without visit limits",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "анлимитид плэн",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQS6VGRGTG291S271XC",
+            "ref": "v4",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "p5"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 3,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/6390241/pexels-photo-6390241.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#33393E",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "раздевалка",
+            "text_target": "changing room",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Tima Miroshnichenko",
+            "image_prompt": "gym changing room with benches and lockers",
+            "speaking_key": null,
+            "example_native": null,
+            "example_target": null,
+            "image_author_url": "https://www.pexels.com/@tima-miroshnichenko",
+            "definition_target": "a room where people change clothes",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "чейнджинг рум",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQS0ECJS664G3VZTZVR",
+            "ref": "v5",
+            "kind": "word",
+            "slot": null,
+            "used_in": [
+                "A5",
+                "p6",
+                "A6",
+                "A7"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 4,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/38543280/pexels-photo-38543280.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#975149",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "шкафчик",
+            "text_target": "locker",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Jan van der Wolf",
+            "image_prompt": "row of gym lockers in a locker area",
+            "speaking_key": null,
+            "example_native": "Они внизу, рядом со шкафчиками.",
+            "example_target": "They are downstairs, next to the lockers.",
+            "image_author_url": "https://www.pexels.com/@jan-van-der-wolf-11680885",
+            "definition_target": "a small storage space that can be locked",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "локер",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQSSYNXREKNMCX8083H",
+            "ref": "v6",
+            "kind": "word",
+            "slot": null,
+            "used_in": [
+                "A6",
+                "A7",
+                "p1"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 5,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/3757937/pexels-photo-3757937.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#CBC1BA",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "полотенце",
+            "text_target": "towel",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Andrea Piacquadio",
+            "image_prompt": "folded gym towel on a bench near workout equipment",
+            "speaking_key": null,
+            "example_native": "Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.",
+            "example_target": "Please bring a towel, use clean shoes, and return the locker key after training.",
+            "image_author_url": "https://www.pexels.com/@olly",
+            "definition_target": "a piece of cloth used for drying your body or hands",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "тауэл",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQSMWX83RA85ZKD9VEA",
+            "ref": "v7",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "A6",
+                "A7"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 6,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/4853736/pexels-photo-4853736.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#443F3A",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "чистая обувь",
+            "text_target": "clean shoes",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Ketut Subiyanto",
+            "image_prompt": "pair of clean indoor training shoes by a gym entrance mat",
+            "speaking_key": null,
+            "example_native": "Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.",
+            "example_target": "Please bring a towel, use clean shoes, and return the locker key after training.",
+            "image_author_url": "https://www.pexels.com/@ketut-subiyanto",
+            "definition_target": "shoes that are not dirty and are suitable for indoor use",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "клин шуз",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQSV83QVBV5K5N6ZG69",
+            "ref": "v8",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "A8"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 7,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": "https://images.pexels.com/photos/9545909/pexels-photo-9545909.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": null,
+            "image_tone": "#676153",
+            "updated_at": "2026-09-21T16:49:35+00:00",
+            "text_native": "тренировочная зона",
+            "text_target": "training floor",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "TUBARONES PHOTOGRAPHY",
+            "image_prompt": "open gym training floor with machines and free weights",
+            "speaking_key": null,
+            "example_native": "Да, картой можно, а тренировочная зона наверху.",
+            "example_target": "Yes, card is fine, and the training floor is upstairs.",
+            "image_author_url": "https://www.pexels.com/@tubarones",
+            "definition_target": "the main area in a gym where people exercise",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "трейнинг флор",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32DYVQSYX92KAKQJC0JC0SQ",
+            "ref": "p1",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "дневной пропуск",
+                        "target": "a day pass",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э дей пас"
+                    },
+                    {
+                        "native": "недельный пропуск",
+                        "target": "a weekly pass",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э уикли пас"
+                    },
+                    {
+                        "native": "аренда полотенца",
+                        "target": "towel rental",
+                        "in_dialogue": false,
+                        "pronunciation_native": "тауэл рентэл"
+                    }
+                ],
+                "hint_native": "что есть в наличии"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 8,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": null,
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": "ask",
+            "image_tone": null,
+            "updated_at": "2026-09-21T16:49:32+00:00",
+            "text_native": "У вас есть дневной пропуск?",
+            "text_target": "Do you have a day pass?",
+            "frame_native": "У вас есть ___?",
+            "frame_target": "Do you have ___?",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "Do you have",
+            "example_native": "У вас есть дневной пропуск?",
+            "example_target": "Do you have a day pass?",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "Can I get a day pass?"
+            ],
+            "pronunciation_native": "Ду ю хэв э дей пас?",
+            "frame_pronunciation_native": "Ду ю хэв ___?"
+        },
+        {
+            "id": "01M32DYVQSGC7ENTQ98CDR715P",
+            "ref": "p2",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "месячные абонементы",
+                        "target": "monthly memberships",
+                        "in_dialogue": true,
+                        "pronunciation_native": "мансли мембершипс"
+                    },
+                    {
+                        "native": "способы оплаты",
+                        "target": "payment options",
+                        "in_dialogue": false,
+                        "pronunciation_native": "пэймэнт опшнз"
+                    }
+                ],
+                "hint_native": "какие варианты вас интересуют"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 9,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": null,
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": "ask",
+            "image_tone": null,
+            "updated_at": "2026-09-21T16:49:32+00:00",
+            "text_native": "Какие месячные абонементы у вас есть?",
+            "text_target": "What monthly memberships do you have?",
+            "frame_native": "Какие ___ у вас есть?",
+            "frame_target": "What ___ do you have?",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "What",
+            "example_native": "Какие у вас есть месячные абонементы?",
+            "example_target": "What monthly memberships do you have?",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "What monthly plans do you have?"
+            ],
+            "pronunciation_native": "Уот мансли мембершипс ду ю хэв?",
+            "frame_pronunciation_native": "Уот ___ ду ю хэв?"
+        },
+        {
+            "id": "01M32DYVQS766FPX18TQQC5VN5",
+            "ref": "p3",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "мой первый визит",
+                        "target": "my first visit",
+                        "in_dialogue": true,
+                        "pronunciation_native": "май фёрст визит"
+                    },
+                    {
+                        "native": "мой пробный день",
+                        "target": "my trial day",
+                        "in_dialogue": false,
+                        "pronunciation_native": "май трайэл дей"
+                    }
+                ],
+                "hint_native": "что это за визит или ситуация"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 10,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": null,
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": "answer",
+            "image_tone": null,
+            "updated_at": "2026-09-21T16:49:32+00:00",
+            "text_native": "Это мой первый визит.",
+            "text_target": "This is my first visit.",
+            "frame_native": "Это ___.",
+            "frame_target": "This is ___.",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "This is",
+            "example_native": "Да, это мой первый визит.",
+            "example_target": "Yes, this is my first visit.",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "Yes, it's my first time."
+            ],
+            "pronunciation_native": "Зис из май фёрст визит.",
+            "frame_pronunciation_native": "Зис из ___ ."
+        },
+        {
+            "id": "01M32DYVQS0CR1S65HHJHJHMB0",
+            "ref": "p4",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "будням",
+                        "target": "weekdays",
+                        "in_dialogue": true,
+                        "pronunciation_native": "уикдэйз"
+                    },
+                    {
+                        "native": "выходным",
+                        "target": "weekends",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уикэндз"
+                    }
+                ],
+                "hint_native": "в какие дни это подходит"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 11,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": null,
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": "answer",
+            "image_tone": null,
+            "updated_at": "2026-09-21T16:49:32+00:00",
+            "text_native": "Мне это подходит по будням.",
+            "text_target": "That works for me on weekdays.",
+            "frame_native": "Мне это подходит по ___.",
+            "frame_target": "That works for me on ___.",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "works for me on",
+            "example_native": "Мне это подходит по будням.",
+            "example_target": "That works for me on weekdays.",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "That works on weekdays."
+            ],
+            "pronunciation_native": "Зэт уоркс фор ми он уикдэйз.",
+            "frame_pronunciation_native": "Зэт уоркс фор ми он ___ ."
+        },
+        {
+            "id": "01M32DYVQS0KCTYSRT4M935VED",
+            "ref": "p5",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "раздевалки",
+                        "target": "the changing rooms",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ чейнджинг румз"
+                    },
+                    {
+                        "native": "душевые",
+                        "target": "the showers",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ шауэрз"
+                    },
+                    {
+                        "native": "кардиозона",
+                        "target": "the cardio area",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ кардио эриа"
+                    }
+                ],
+                "hint_native": "какое место внутри зала"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 12,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": null,
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": "ask",
+            "image_tone": null,
+            "updated_at": "2026-09-21T16:49:32+00:00",
+            "text_native": "Где раздевалки?",
+            "text_target": "Where are the changing rooms?",
+            "frame_native": "Где ___?",
+            "frame_target": "Where are ___?",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "Where are",
+            "example_native": "Где раздевалки?",
+            "example_target": "Where are the changing rooms?",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "Where is the locker room?"
+            ],
+            "pronunciation_native": "Уэа ар зэ чейнджинг румз?",
+            "frame_pronunciation_native": "Уэа ар ___?"
+        },
+        {
+            "id": "01M32DYVQSN7V3QF7Z0AJH5792",
+            "ref": "p6",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "ключ от шкафчика",
+                        "target": "the locker key",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ локер ки"
+                    },
+                    {
+                        "native": "карту доступа",
+                        "target": "the access card",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ эксес кард"
+                    }
+                ],
+                "hint_native": "что нужно вернуть"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 13,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": null,
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": "answer",
+            "image_tone": null,
+            "updated_at": "2026-09-21T16:49:32+00:00",
+            "text_native": "Я верну ключ от шкафчика.",
+            "text_target": "I'll return the locker key.",
+            "frame_native": "Я верну ___.",
+            "frame_target": "I'll return ___.",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "I'll return",
+            "example_native": "Хорошо, я верну ключ от шкафчика.",
+            "example_target": "Okay, I'll return the locker key.",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "Okay, I'll bring it back."
+            ],
+            "pronunciation_native": "Айл ритёрн зэ локер ки.",
+            "frame_pronunciation_native": "Айл ритёрн ___ ."
+        },
+        {
+            "id": "01M32DYVQSB69WSYYNHZB3TXXY",
+            "ref": "p7",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "картой",
+                        "target": "by card",
+                        "in_dialogue": true,
+                        "pronunciation_native": "бай кард"
+                    },
+                    {
+                        "native": "наличными",
+                        "target": "in cash",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ин кэш"
+                    }
+                ],
+                "hint_native": "как вы хотите оплатить"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 14,
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "image_url": null,
+            "created_at": "2026-09-21T16:49:32+00:00",
+            "frame_kind": "ask",
+            "image_tone": null,
+            "updated_at": "2026-09-21T16:49:32+00:00",
+            "text_native": "Я могу оплатить картой?",
+            "text_target": "Can I pay by card?",
+            "frame_native": "Я могу оплатить ___?",
+            "frame_target": "Can I pay ___?",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "Can I pay",
+            "example_native": "Я могу оплатить картой?",
+            "example_target": "Can I pay by card?",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "Do you take cards?"
+            ],
+            "pronunciation_native": "Кэн ай пэй бай кард?",
+            "frame_pronunciation_native": "Кэн ай пэй ___?"
+        }
+    ],
+    "updated_at": "2026-09-21T17:20:33+00:00",
+    "checks_json": [
+        {
+            "code": "frame.native_agreement",
+            "detail": "«Какие ___ у вас есть?»: «какие» agrees with the slot — it changes with the filler",
+            "address": "p2"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "detail": "«changing room» is not in frame p5 or its fillers",
+            "address": "v4"
+        },
+        {
+            "code": "filler.native_seam",
+            "detail": "«Где кардиозона?» («Где ___?» with «кардиозона») does not read as Russian, the seam judge says",
+            "address": "p5.f3"
+        }
+    ],
+    "fail_reason": null,
+    "lesson_json": {
+        "topic": {
+            "title_native": "На ресепшене в зале",
+            "title_target": "At the gym reception",
+            "description_native": "Спросите про абонементы, цены, правила и куда идти внутри зала.",
+            "description_target": "Ask about passes, prices, rules, and where to go inside the gym."
+        },
+        "phrases": [
+            {
+                "id": "p1",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "дневной пропуск",
+                            "target": "a day pass",
+                            "in_dialogue": true,
+                            "pronunciation_native": "э дей пас"
+                        },
+                        {
+                            "native": "недельный пропуск",
+                            "target": "a weekly pass",
+                            "in_dialogue": false,
+                            "pronunciation_native": "э уикли пас"
+                        },
+                        {
+                            "native": "аренда полотенца",
+                            "target": "towel rental",
+                            "in_dialogue": false,
+                            "pronunciation_native": "тауэл рентэл"
+                        }
+                    ],
+                    "hint_native": "что есть в наличии"
+                },
+                "frame_native": "У вас есть ___?",
+                "frame_target": "Do you have ___?",
+                "pronunciation_native": "Ду ю хэв ___?"
+            },
+            {
+                "id": "p2",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "месячные абонементы",
+                            "target": "monthly memberships",
+                            "in_dialogue": true,
+                            "pronunciation_native": "мансли мембершипс"
+                        },
+                        {
+                            "native": "способы оплаты",
+                            "target": "payment options",
+                            "in_dialogue": false,
+                            "pronunciation_native": "пэймэнт опшнз"
+                        }
+                    ],
+                    "hint_native": "какие варианты вас интересуют"
+                },
+                "frame_native": "Какие ___ у вас есть?",
+                "frame_target": "What ___ do you have?",
+                "pronunciation_native": "Уот ___ ду ю хэв?"
+            },
+            {
+                "id": "p3",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "мой первый визит",
+                            "target": "my first visit",
+                            "in_dialogue": true,
+                            "pronunciation_native": "май фёрст визит"
+                        },
+                        {
+                            "native": "мой пробный день",
+                            "target": "my trial day",
+                            "in_dialogue": false,
+                            "pronunciation_native": "май трайэл дей"
+                        }
+                    ],
+                    "hint_native": "что это за визит или ситуация"
+                },
+                "frame_native": "Это ___.",
+                "frame_target": "This is ___.",
+                "pronunciation_native": "Зис из ___ ."
+            },
+            {
+                "id": "p4",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "будням",
+                            "target": "weekdays",
+                            "in_dialogue": true,
+                            "pronunciation_native": "уикдэйз"
+                        },
+                        {
+                            "native": "выходным",
+                            "target": "weekends",
+                            "in_dialogue": false,
+                            "pronunciation_native": "уикэндз"
+                        }
+                    ],
+                    "hint_native": "в какие дни это подходит"
+                },
+                "frame_native": "Мне это подходит по ___.",
+                "frame_target": "That works for me on ___.",
+                "pronunciation_native": "Зэт уоркс фор ми он ___ ."
+            },
+            {
+                "id": "p5",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "раздевалки",
+                            "target": "the changing rooms",
+                            "in_dialogue": true,
+                            "pronunciation_native": "зэ чейнджинг румз"
+                        },
+                        {
+                            "native": "душевые",
+                            "target": "the showers",
+                            "in_dialogue": false,
+                            "pronunciation_native": "зэ шауэрз"
+                        },
+                        {
+                            "native": "кардиозона",
+                            "target": "the cardio area",
+                            "in_dialogue": false,
+                            "pronunciation_native": "зэ кардио эриа"
+                        }
+                    ],
+                    "hint_native": "какое место внутри зала"
+                },
+                "frame_native": "Где ___?",
+                "frame_target": "Where are ___?",
+                "pronunciation_native": "Уэа ар ___?"
+            },
+            {
+                "id": "p6",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "ключ от шкафчика",
+                            "target": "the locker key",
+                            "in_dialogue": true,
+                            "pronunciation_native": "зэ локер ки"
+                        },
+                        {
+                            "native": "карту доступа",
+                            "target": "the access card",
+                            "in_dialogue": false,
+                            "pronunciation_native": "зэ эксес кард"
+                        }
+                    ],
+                    "hint_native": "что нужно вернуть"
+                },
+                "frame_native": "Я верну ___.",
+                "frame_target": "I'll return ___.",
+                "pronunciation_native": "Айл ритёрн ___ ."
+            },
+            {
+                "id": "p7",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "картой",
+                            "target": "by card",
+                            "in_dialogue": true,
+                            "pronunciation_native": "бай кард"
+                        },
+                        {
+                            "native": "наличными",
+                            "target": "in cash",
+                            "in_dialogue": false,
+                            "pronunciation_native": "ин кэш"
+                        }
+                    ],
+                    "hint_native": "как вы хотите оплатить"
+                },
+                "frame_native": "Я могу оплатить ___?",
+                "frame_target": "Can I pay ___?",
+                "pronunciation_native": "Кэн ай пэй ___?"
+            }
+        ],
+        "dialogue": [
+            {
+                "kind": "ask",
+                "step": 1,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Десять долларов",
+                            "text_target": "Ten dollars"
+                        },
+                        {
+                            "text_native": "Пятнадцать долларов",
+                            "text_target": "Fifteen dollars"
+                        },
+                        {
+                            "text_native": "Двадцать долларов",
+                            "text_target": "Twenty dollars"
+                        }
+                    ],
+                    "text_native": "Сколько, по словам администратора, стоит вариант на один день?",
+                    "text_target": "How much does the reception desk say the one-day option costs?",
+                    "explanation_native": "Администратор говорит, что дневной пропуск стоит пятнадцать долларов.",
+                    "correct_option_index": 1
+                },
+                "messages": [
+                    {
+                        "filler": "a day pass",
+                        "speaker": "B",
+                        "phrase_id": "p1",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "У вас есть дневной пропуск?",
+                        "text_target": "Do you have a day pass?",
+                        "speaking_key": "Do you have",
+                        "simplified_variants": [
+                            "Can I get a day pass?"
+                        ],
+                        "pronunciation_native": "Ду ю хэв э дей пас?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "Да, дневной пропуск стоит пятнадцать долларов.",
+                        "text_target": "Yes, a day pass is fifteen dollars."
+                    }
+                ],
+                "initiator": "B"
+            },
+            {
+                "kind": "ask",
+                "step": 2,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Студенческий план и семейный план",
+                            "text_target": "A student plan and a family plan"
+                        },
+                        {
+                            "text_native": "Утренний план и вечерний план",
+                            "text_target": "A morning plan and an evening plan"
+                        },
+                        {
+                            "text_native": "Обычный вариант и вариант с полным доступом",
+                            "text_target": "A standard option and a full-access option"
+                        }
+                    ],
+                    "text_native": "Какие два варианта абонемента называет администратор?",
+                    "text_target": "Which two membership choices does the receptionist mention?",
+                    "explanation_native": "Администратор говорит о базовом и безлимитном планах.",
+                    "correct_option_index": 2
+                },
+                "messages": [
+                    {
+                        "filler": "monthly memberships",
+                        "speaker": "B",
+                        "phrase_id": "p2",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Какие у вас есть месячные абонементы?",
+                        "text_target": "What monthly memberships do you have?",
+                        "speaking_key": "What monthly memberships",
+                        "simplified_variants": [
+                            "What monthly plans do you have?"
+                        ],
+                        "pronunciation_native": "Уот мансли мембершипс ду ю хэв?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "У нас есть базовый план и безлимитный план.",
+                        "text_target": "We have a basic plan and an unlimited plan."
+                    }
+                ],
+                "initiator": "B"
+            },
+            {
+                "kind": "answer",
+                "step": 3,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Был ли посетитель здесь раньше",
+                            "text_target": "Whether the learner has been here before"
+                        },
+                        {
+                            "text_native": "Нужен ли посетителю тренер",
+                            "text_target": "Whether the learner needs a trainer"
+                        },
+                        {
+                            "text_native": "Принёс ли посетитель полотенце",
+                            "text_target": "Whether the learner brought a towel"
+                        }
+                    ],
+                    "text_native": "Что хочет узнать администратор?",
+                    "text_target": "What does the receptionist want to know?",
+                    "explanation_native": "Администратор спрашивает, первый ли это визит.",
+                    "correct_option_index": 0
+                },
+                "messages": [
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "Это ваш первый визит сюда?",
+                        "text_target": "Is this your first visit here?"
+                    },
+                    {
+                        "filler": "my first visit",
+                        "speaker": "B",
+                        "phrase_id": "p3",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Да, это мой первый визит.",
+                        "text_target": "Yes, this is my first visit.",
+                        "speaking_key": "this is",
+                        "simplified_variants": [
+                            "Yes, it's my first time."
+                        ],
+                        "pronunciation_native": "Йес, зис из май фёрст визит."
+                    }
+                ],
+                "initiator": "A"
+            },
+            {
+                "kind": "answer",
+                "step": 4,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "В восемь вечера",
+                            "text_target": "At eight in the evening"
+                        },
+                        {
+                            "text_native": "В десять вечера",
+                            "text_target": "At ten at night"
+                        },
+                        {
+                            "text_native": "В полдень",
+                            "text_target": "At noon"
+                        }
+                    ],
+                    "text_native": "Во сколько зал закрывается в будни?",
+                    "text_target": "When does the gym close during the week?",
+                    "explanation_native": "Администратор говорит, что в будни зал закрывается в десять.",
+                    "correct_option_index": 1
+                },
+                "messages": [
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "В будни мы открываемся в шесть и закрываемся в десять.",
+                        "text_target": "We open at six and close at ten on weekdays."
+                    },
+                    {
+                        "filler": "weekdays",
+                        "speaker": "B",
+                        "phrase_id": "p4",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Мне это подходит по будням.",
+                        "text_target": "That works for me on weekdays.",
+                        "speaking_key": "works for me",
+                        "simplified_variants": [
+                            "That works on weekdays."
+                        ],
+                        "pronunciation_native": "Зэт уоркс фор ми он уикдэйз."
+                    }
+                ],
+                "initiator": "A"
+            },
+            {
+                "kind": "ask",
+                "step": 5,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Наверху у кардиотренажёров",
+                            "text_target": "Upstairs by the cardio machines"
+                        },
+                        {
+                            "text_native": "Рядом с ресепшеном",
+                            "text_target": "Near the front desk"
+                        },
+                        {
+                            "text_native": "На нижнем этаже рядом со шкафчиками",
+                            "text_target": "On the lower level beside the lockers"
+                        }
+                    ],
+                    "text_native": "Где, по словам администратора, находится зона для переодевания?",
+                    "text_target": "Where does the receptionist say the changing area is?",
+                    "explanation_native": "Администратор говорит, что раздевалки внизу, рядом со шкафчиками.",
+                    "correct_option_index": 2
+                },
+                "messages": [
+                    {
+                        "filler": "the changing rooms",
+                        "speaker": "B",
+                        "phrase_id": "p5",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Где раздевалки?",
+                        "text_target": "Where are the changing rooms?",
+                        "speaking_key": "Where are the",
+                        "simplified_variants": [
+                            "Where is the locker room?"
+                        ],
+                        "pronunciation_native": "Уэа ар зэ чейнджинг румз?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "Они внизу, рядом со шкафчиками.",
+                        "text_target": "They are downstairs, next to the lockers."
+                    }
+                ],
+                "initiator": "B"
+            },
+            {
+                "kind": "answer",
+                "step": 6,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Карту доступа",
+                            "text_target": "The access card"
+                        },
+                        {
+                            "text_native": "Ключ от шкафчика",
+                            "text_target": "The locker key"
+                        },
+                        {
+                            "text_native": "Полотенце",
+                            "text_target": "The towel"
+                        }
+                    ],
+                    "text_native": "Что, по словам администратора, нужно вернуть после тренировки?",
+                    "text_target": "What does the receptionist say you should give back after training?",
+                    "explanation_native": "Администратор говорит вернуть после тренировки ключ от шкафчика.",
+                    "correct_option_index": 1
+                },
+                "messages": [
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.",
+                        "text_target": "Please bring a towel, use clean shoes, and return the locker key after training."
+                    },
+                    {
+                        "filler": "the locker key",
+                        "speaker": "B",
+                        "phrase_id": "p6",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Хорошо, я верну ключ от шкафчика.",
+                        "text_target": "Okay, I'll return the locker key.",
+                        "speaking_key": "I'll return the",
+                        "simplified_variants": [
+                            "Okay, I'll bring it back."
+                        ],
+                        "pronunciation_native": "Окей, айл ритёрн зэ локер ки."
+                    }
+                ],
+                "initiator": "A"
+            },
+            {
+                "kind": "rescue",
+                "step": 7,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Бутылку воды",
+                            "text_target": "A bottle of water"
+                        },
+                        {
+                            "text_native": "Полотенце",
+                            "text_target": "A towel"
+                        },
+                        {
+                            "text_native": "Сумку для зала",
+                            "text_target": "A gym bag"
+                        }
+                    ],
+                    "text_native": "Что администратор называет первым в повторённых правилах?",
+                    "text_target": "Which item does the receptionist mention first in the repeated rules?",
+                    "explanation_native": "В повторе администратор сначала говорит взять полотенце.",
+                    "correct_option_index": 1
+                },
+                "messages": [
+                    {
+                        "filler": null,
+                        "speaker": "B",
+                        "phrase_id": null,
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Не могли бы вы сказать это помедленнее, пожалуйста?",
+                        "text_target": "Could you say that more slowly, please?",
+                        "speaking_key": "say that more slowly",
+                        "simplified_variants": [
+                            "Could you repeat that, please?"
+                        ],
+                        "pronunciation_native": "Куд ю сэй зэт мор слоули, плиз?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "Возьмите полотенце, наденьте чистую обувь и верните ключ от шкафчика.",
+                        "text_target": "Bring a towel, wear clean shoes, and return the locker key."
+                    }
+                ],
+                "initiator": "B"
+            },
+            {
+                "kind": "ask",
+                "step": 8,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Наверху",
+                            "text_target": "Up on the next level"
+                        },
+                        {
+                            "text_native": "Внизу рядом с ресепшеном",
+                            "text_target": "Downstairs near reception"
+                        },
+                        {
+                            "text_native": "Снаружи у входа",
+                            "text_target": "Outside by the entrance"
+                        }
+                    ],
+                    "text_native": "Где, по словам администратора, находится основная тренировочная зона?",
+                    "text_target": "Where does the receptionist say the main workout area is?",
+                    "explanation_native": "Администратор говорит, что тренировочная зона наверху.",
+                    "correct_option_index": 0
+                },
+                "messages": [
+                    {
+                        "filler": "by card",
+                        "speaker": "B",
+                        "phrase_id": "p7",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Я могу оплатить картой?",
+                        "text_target": "Can I pay by card?",
+                        "speaking_key": "Can I pay",
+                        "simplified_variants": [
+                            "Do you take cards?"
+                        ],
+                        "pronunciation_native": "Кэн ай пэй бай кард?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Администратор",
+                        "role_target": "Receptionist",
+                        "text_native": "Да, картой можно, а тренировочная зона наверху.",
+                        "text_target": "Yes, card is fine, and the training floor is upstairs."
+                    }
+                ],
+                "initiator": "B"
+            }
+        ],
+        "listening": {
+            "questions": [
+                {
+                    "text_native": "Сколько стоит дневной пропуск?",
+                    "options_native": [
+                        "Пятнадцать долларов",
+                        "Двадцать долларов",
+                        "Десять долларов"
+                    ],
+                    "explanation_native": "В начале разговора администратор говорит цену дневного пропуска: пятнадцать долларов.",
+                    "correct_option_index": 0
+                },
+                {
+                    "text_native": "Что посетитель сказал о своём визите?",
+                    "options_native": [
+                        "Это уже не первый раз",
+                        "Это первый визит",
+                        "Это визит с тренером"
+                    ],
+                    "explanation_native": "Посетитель отвечает, что это его первый визит.",
+                    "correct_option_index": 1
+                },
+                {
+                    "text_native": "Где находятся раздевалки?",
+                    "options_native": [
+                        "Наверху рядом с тренажёрами",
+                        "Рядом с ресепшеном",
+                        "Внизу рядом со шкафчиками"
+                    ],
+                    "explanation_native": "Администратор объясняет, что раздевалки внизу рядом со шкафчиками.",
+                    "correct_option_index": 2
+                },
+                {
+                    "text_native": "Что нужно вернуть после тренировки?",
+                    "options_native": [
+                        "Ключ от шкафчика",
+                        "Полотенце",
+                        "Бутылку воды"
+                    ],
+                    "explanation_native": "По правилам нужно вернуть ключ от шкафчика.",
+                    "correct_option_index": 0
+                }
+            ]
+        },
+        "vocabulary": [
+            {
+                "id": "v1",
+                "kind": "chunk",
+                "used_in": [
+                    "p1",
+                    "A1"
+                ],
+                "term_target": "day pass",
+                "image_prompt": "gym reception desk with a printed day pass and payment terminal",
+                "definition_target": "a ticket or pass that lets you use a place for one day",
+                "translation_native": "дневной пропуск",
+                "pronunciation_native": "дей пас"
+            },
+            {
+                "id": "v2",
+                "kind": "word",
+                "used_in": [
+                    "p2"
+                ],
+                "term_target": "membership",
+                "image_prompt": "gym brochure on a front desk with membership options",
+                "definition_target": "an arrangement to use a club or service regularly",
+                "translation_native": "абонемент",
+                "pronunciation_native": "мембершип"
+            },
+            {
+                "id": "v3",
+                "kind": "chunk",
+                "used_in": [
+                    "A2"
+                ],
+                "term_target": "unlimited plan",
+                "image_prompt": "price board at a gym showing an unlimited plan option",
+                "definition_target": "a plan that allows use without visit limits",
+                "translation_native": "безлимитный план",
+                "pronunciation_native": "анлимитид плэн"
+            },
+            {
+                "id": "v4",
+                "kind": "chunk",
+                "used_in": [
+                    "p5"
+                ],
+                "term_target": "changing room",
+                "image_prompt": "gym changing room with benches and lockers",
+                "definition_target": "a room where people change clothes",
+                "translation_native": "раздевалка",
+                "pronunciation_native": "чейнджинг рум"
+            },
+            {
+                "id": "v5",
+                "kind": "word",
+                "used_in": [
+                    "A5",
+                    "p6",
+                    "A6",
+                    "A7"
+                ],
+                "term_target": "locker",
+                "image_prompt": "row of gym lockers in a locker area",
+                "definition_target": "a small storage space that can be locked",
+                "translation_native": "шкафчик",
+                "pronunciation_native": "локер"
+            },
+            {
+                "id": "v6",
+                "kind": "word",
+                "used_in": [
+                    "A6",
+                    "A7",
+                    "p1"
+                ],
+                "term_target": "towel",
+                "image_prompt": "folded gym towel on a bench near workout equipment",
+                "definition_target": "a piece of cloth used for drying your body or hands",
+                "translation_native": "полотенце",
+                "pronunciation_native": "тауэл"
+            },
+            {
+                "id": "v7",
+                "kind": "chunk",
+                "used_in": [
+                    "A6",
+                    "A7"
+                ],
+                "term_target": "clean shoes",
+                "image_prompt": "pair of clean indoor training shoes by a gym entrance mat",
+                "definition_target": "shoes that are not dirty and are suitable for indoor use",
+                "translation_native": "чистая обувь",
+                "pronunciation_native": "клин шуз"
+            },
+            {
+                "id": "v8",
+                "kind": "chunk",
+                "used_in": [
+                    "A8"
+                ],
+                "term_target": "training floor",
+                "image_prompt": "open gym training floor with machines and free weights",
+                "definition_target": "the main area in a gym where people exercise",
+                "translation_native": "тренировочная зона",
+                "pronunciation_native": "трейнинг флор"
+            }
+        ],
+        "role_gender": "female",
+        "learner_role": {
+            "role_native": "Посетитель",
+            "role_target": "Gym member"
+        }
+    },
+    "generated_at": "2026-09-21T16:48:52+00:00",
+    "goals_native": [
+        "спросить про разовый вход",
+        "уточнить цену и оплату",
+        "узнать правила и часы",
+        "спросить, где раздевалка"
+    ],
+    "image_author": "Jan van der Wolf",
+    "image_prompt": "realistic photo of a gym reception desk with turnstile and locker area in the background, bright indoor light, no text, no logos, no faces in close-up",
+    "model_lesson": "gpt-5.4-2026-03-05",
+    "title_native": "Ресепшен зала",
+    "title_target": "Gym Reception",
+    "build_version": "bca543ce",
+    "lesson_status": "ready",
+    "teaches_native": "уточнить тариф, правила и доступ",
+    "attempts_lesson": 1,
+    "cost_usd_lesson": 0.108786,
+    "build_started_at": "2026-09-21T16:48:52+00:00",
+    "image_author_url": "https://www.pexels.com/@jan-van-der-wolf-11680885",
+    "latency_ms_lesson": 40043,
+    "topic_description": "Situation: At the reception desk of a gym in a new country, the learner wants to start training and needs to handle the first contact confidently. This may be a first visit, so local rules and access procedures are unfamiliar.\nLearner: the learner's role. Partner: the receptionist.\nLearner must be able to: ask about a day pass or membership options; understand prices, payment methods, and opening hours; ask about gym rules, towels, lockers, and access to changing rooms; ask where key areas are, such as the locker room and training floor.\nPartner will: explain prices or membership choices; ask whether this is a first visit and how the learner wants to pay; give brief rules and directions inside the gym.\nNot in this scene: using machines, asking for exercise technique, discussing pain or limitations during training.",
+    "learner_role_native": "Посетитель",
+    "learner_role_target": "Gym member",
+    "partner_role_native": "Администратор",
+    "partner_role_target": "Receptionist",
+    "partner_voice_gender": "female",
+    "prompt_version_lesson": "lesson_day.v4.7"
+}

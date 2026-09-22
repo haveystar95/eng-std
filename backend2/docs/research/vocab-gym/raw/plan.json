@@ -1,0 +1,234 @@
+{
+    "days": [
+        {
+            "id": "01M32DX8QF4042C0CDVAY9P7DE",
+            "type": "scene",
+            "number": 1,
+            "status": "closed",
+            "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "opens_on": "2026-09-21",
+            "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+            "closed_at": "2026-09-21T17:20:33+00:00",
+            "opened_at": "2026-09-21T16:50:34+00:00",
+            "cards_done": 85,
+            "created_at": "2026-09-21T16:48:40+00:00",
+            "updated_at": "2026-09-21T17:20:33+00:00",
+            "cards_total": 85,
+            "minutes_spent": 29,
+            "has_conversation": true
+        },
+        {
+            "id": "01M32DX8QF5SQ3BMJ8R4PDD7R8",
+            "type": "scene",
+            "number": 2,
+            "status": "locked",
+            "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "opens_on": "2026-09-22",
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "closed_at": null,
+            "opened_at": null,
+            "cards_done": 0,
+            "created_at": "2026-09-21T16:48:40+00:00",
+            "updated_at": "2026-09-21T17:20:33+00:00",
+            "cards_total": 0,
+            "minutes_spent": 0,
+            "has_conversation": false
+        },
+        {
+            "id": "01M32DX8QFZVPCFFEV51F85HGK",
+            "type": "rehearsal",
+            "number": 3,
+            "status": "locked",
+            "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "opens_on": null,
+            "scene_id": null,
+            "closed_at": null,
+            "opened_at": null,
+            "cards_done": 0,
+            "created_at": "2026-09-21T16:48:40+00:00",
+            "updated_at": "2026-09-21T16:48:40+00:00",
+            "cards_total": 0,
+            "minutes_spent": 0,
+            "has_conversation": false
+        }
+    ],
+    "plan": {
+        "id": "01M32DX8QCABM348XP45Z1ZD4M",
+        "level": "intermediate",
+        "status": "active",
+        "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+        "goal_text": "Тренировка в тренажерном зале в новой стране",
+        "created_at": "2026-09-21T16:48:40+00:00",
+        "days_total": 3,
+        "event_date": "2026-09-24",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "started_at": "2026-09-21T16:49:02+00:00",
+        "updated_at": "2026-09-21T17:20:33+00:00",
+        "checks_json": [
+        ],
+        "fail_reason": null,
+        "finished_at": null,
+        "native_lang": "ru",
+        "target_lang": "en",
+        "event_native": "Тренировка",
+        "title_native": "Тренировка в зале",
+        "title_target": "Gym Workout",
+        "attempts_plan": 1,
+        "build_version": "bca543ce",
+        "collection_id": "01M32FQN9M5QVVC8GR0BVREG3Y",
+        "cost_usd_plan": 0.018932,
+        "days_requested": 3,
+        "overdue_native": "Тренировка была вчера",
+        "unclear_reason": null,
+        "cover_image_url": "https://images.pexels.com/photos/9545909/pexels-photo-9545909.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+        "latency_ms_plan": 8581,
+        "build_started_at": null,
+        "cover_image_tone": "#676153",
+        "cover_image_author": "TUBARONES PHOTOGRAPHY",
+        "cover_image_prompt": "realistic photo of a modern gym workout area with weight machines and free weights, bright indoor light, no text, no logos, no faces in close-up",
+        "learner_role_native": "Посетитель",
+        "learner_role_target": "Gym member",
+        "prompt_version_plan": "plan-builder-v2",
+        "until_phrase_native": "До тренировки",
+        "cover_image_author_url": "https://www.pexels.com/@tubarones"
+    },
+    "scenes": [
+        {
+            "id": "01M32DXHYG50H7SWQEMD33A39F",
+            "kind": "situation",
+            "order": 1,
+            "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "priority": 2,
+            "image_url": "https://images.pexels.com/photos/12255816/pexels-photo-12255816.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:48:49+00:00",
+            "image_tone": "#BAB4A6",
+            "updated_at": "2026-09-21T17:20:33+00:00",
+            "checks_json": [
+                {
+                    "code": "frame.native_agreement",
+                    "detail": "«Какие ___ у вас есть?»: «какие» agrees with the slot — it changes with the filler",
+                    "address": "p2"
+                },
+                {
+                    "code": "vocab.used_in_wrong",
+                    "detail": "«changing room» is not in frame p5 or its fillers",
+                    "address": "v4"
+                },
+                {
+                    "code": "filler.native_seam",
+                    "detail": "«Где кардиозона?» («Где ___?» with «кардиозона») does not read as Russian, the seam judge says",
+                    "address": "p5.f3"
+                }
+            ],
+            "fail_reason": null,
+            "generated_at": "2026-09-21T16:48:52+00:00",
+            "goals_native": [
+                "спросить про разовый вход",
+                "уточнить цену и оплату",
+                "узнать правила и часы",
+                "спросить, где раздевалка"
+            ],
+            "image_author": "Jan van der Wolf",
+            "image_prompt": "realistic photo of a gym reception desk with turnstile and locker area in the background, bright indoor light, no text, no logos, no faces in close-up",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "title_native": "Ресепшен зала",
+            "title_target": "Gym Reception",
+            "build_version": "bca543ce",
+            "lesson_status": "ready",
+            "teaches_native": "уточнить тариф, правила и доступ",
+            "attempts_lesson": 1,
+            "cost_usd_lesson": 0.108786,
+            "build_started_at": "2026-09-21T16:48:52+00:00",
+            "image_author_url": "https://www.pexels.com/@jan-van-der-wolf-11680885",
+            "latency_ms_lesson": 40043,
+            "topic_description": "Situation: At the reception desk of a gym in a new country, the learner wants to start training and needs to handle the first contact confidently. This may be a first visit, so local rules and access procedures are unfamiliar.\nLearner: the learner's role. Partner: the receptionist.\nLearner must be able to: ask about a day pass or membership options; understand prices, payment methods, and opening hours; ask about gym rules, towels, lockers, and access to changing rooms; ask where key areas are, such as the locker room and training floor.\nPartner will: explain prices or membership choices; ask whether this is a first visit and how the learner wants to pay; give brief rules and directions inside the gym.\nNot in this scene: using machines, asking for exercise technique, discussing pain or limitations during training.",
+            "learner_role_native": "Посетитель",
+            "learner_role_target": "Gym member",
+            "partner_role_native": "Администратор",
+            "partner_role_target": "Receptionist",
+            "partner_voice_gender": "female",
+            "prompt_version_lesson": "lesson_day.v4.7"
+        },
+        {
+            "id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "kind": "situation",
+            "order": 2,
+            "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "priority": 1,
+            "image_url": "https://images.pexels.com/photos/47084/gym-exercise-fitness-workout-47084.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T16:48:49+00:00",
+            "image_tone": "#A19A93",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "checks_json": [
+                {
+                    "code": "variant.longer",
+                    "detail": "the variant «I have pain in my shoulder.» has 6 words, the line 5",
+                    "address": "B3"
+                },
+                {
+                    "code": "vocab.used_in_wrong",
+                    "detail": "«machine» is not in the partner's line of exchange 4",
+                    "address": "v4"
+                },
+                {
+                    "code": "vocab.free_combination",
+                    "detail": "«good form» is a free combination of ordinary words",
+                    "address": "v6"
+                },
+                {
+                    "code": "vocab.used_in_wrong",
+                    "detail": "«set» is not in the partner's line of exchange 7",
+                    "address": "v7"
+                },
+                {
+                    "code": "vocab.used_in_wrong",
+                    "detail": "«shoulders down» is not in the partner's line of exchange 8",
+                    "address": "v8"
+                },
+                {
+                    "code": "filler.native_seam",
+                    "detail": "«Насколько тяжёлым должен быть гантель?» («Насколько тяжёлым должен быть ___?» with «гантель») does not read as Russian, the seam judge says",
+                    "address": "p5.f2"
+                },
+                {
+                    "code": "filler.native_seam",
+                    "detail": "«Насколько тяжёлым должен быть штанга?» («Насколько тяжёлым должен быть ___?» with «штанга») does not read as Russian, the seam judge says",
+                    "address": "p5.f3"
+                }
+            ],
+            "fail_reason": null,
+            "generated_at": "2026-09-21T17:20:34+00:00",
+            "goals_native": [
+                "объяснить цель тренировки",
+                "сказать про опыт и форму",
+                "уточнить технику упражнения",
+                "понять правки и нагрузку"
+            ],
+            "image_author": "Pixabay",
+            "image_prompt": "realistic photo of a gym trainer showing an exercise beside a weight machine on the training floor, bright indoor light, no text, no logos, no faces in close-up",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "title_native": "С тренером",
+            "title_target": "With a Trainer",
+            "build_version": "bca543ce",
+            "lesson_status": "ready",
+            "teaches_native": "обсудить цель и технику",
+            "attempts_lesson": 1,
+            "cost_usd_lesson": 0.065114,
+            "build_started_at": "2026-09-21T17:20:34+00:00",
+            "image_author_url": "https://www.pexels.com/@pixabay",
+            "latency_ms_lesson": 33166,
+            "topic_description": "Situation: On the gym floor, the learner speaks with a trainer during a workout in a new country. The learner wants to train safely, explain personal goals and experience, and understand instructions on technique and intensity.\nLearner: the learner's role. Partner: the trainer.\nLearner must be able to: explain training goals such as strength, weight loss, or general fitness; describe previous gym experience and current fitness level; ask how to use a machine or do an exercise correctly; understand corrections, repetitions, rest time, and how heavy the weight should be.\nPartner will: ask about goals, experience, and any physical limitations; explain how to position the body and use equipment; correct mistakes and give instructions about sets, reps, and pace.\nNot in this scene: membership prices, payment, opening hours, locker access, buying sports products.",
+            "learner_role_native": "Посетитель",
+            "learner_role_target": "Gym member",
+            "partner_role_native": "Тренер",
+            "partner_role_target": "Trainer",
+            "partner_voice_gender": "male",
+            "prompt_version_lesson": "lesson_day.v4.7"
+        }
+    ]
+}

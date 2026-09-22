@@ -1,0 +1,1481 @@
+{
+    "id": "01M32DXHYGYMK0E1DBR01PYDHA",
+    "kind": "situation",
+    "order": 2,
+    "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+    "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+    "priority": 1,
+    "image_url": "https://images.pexels.com/photos/47084/gym-exercise-fitness-workout-47084.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "created_at": "2026-09-21T16:48:49+00:00",
+    "image_tone": "#A19A93",
+    "plan_terms": [
+        {
+            "id": "01M32FRPMJBGZ5N34RBHNN9ZHQ",
+            "ref": "v1",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "p1"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 0,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/6740314/pexels-photo-6740314.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#645E56",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "общая физическая форма",
+            "text_target": "general fitness",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Mikhail Nilov",
+            "image_prompt": null,
+            "speaking_key": null,
+            "example_native": "Я работаю над общей формой.",
+            "example_target": "I'm working on general fitness.",
+            "image_author_url": "https://www.pexels.com/@mikhail-nilov",
+            "definition_target": "overall health and physical condition",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "дженерал фитнес",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMKFWKSVNNW03FV400A",
+            "ref": "v2",
+            "kind": "word",
+            "slot": null,
+            "used_in": [
+                "p2",
+                "A2"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 1,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/4587355/pexels-photo-4587355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#9FA4A6",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "опыт",
+            "text_target": "experience",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Anna Shvets",
+            "image_prompt": null,
+            "speaking_key": null,
+            "example_native": "У меня около года опыта.",
+            "example_target": "I have about a year of experience.",
+            "image_author_url": "https://www.pexels.com/@shvetsa",
+            "definition_target": "time and practice you already have in an activity",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "икспириэнс",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMKBZRPZX780EFYKG9J",
+            "ref": "v3",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "p3"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 2,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/9834709/pexels-photo-9834709.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#41322F",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "боль в плече",
+            "text_target": "shoulder pain",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Anastasia  Shuraeva",
+            "image_prompt": "person touching one shoulder in a gym",
+            "speaking_key": null,
+            "example_native": "У меня немного болит плечо.",
+            "example_target": "I have some shoulder pain.",
+            "image_author_url": "https://www.pexels.com/@anastasia-shuraeva",
+            "definition_target": "pain in the shoulder area",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "шоулдэр пэйн",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMKA8WPKF45E8Z7F57B",
+            "ref": "v4",
+            "kind": "word",
+            "slot": null,
+            "used_in": [
+                "p4",
+                "A4"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 3,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/897061/pexels-photo-897061.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#4A4743",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "тренажёр",
+            "text_target": "machine",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Victor Freitas",
+            "image_prompt": "gym strength machine on a workout floor",
+            "speaking_key": null,
+            "example_native": "Как пользоваться этим тренажёром?",
+            "example_target": "How do I use this machine?",
+            "image_author_url": "https://www.pexels.com/@victorfreitas",
+            "definition_target": "a piece of gym equipment used for exercise",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "мэшин",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMKTWDB6S5MTPC3D2N9",
+            "ref": "v5",
+            "kind": "word",
+            "slot": null,
+            "used_in": [
+                "A4",
+                "A5"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 4,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/4971007/pexels-photo-4971007.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#847661",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "пятки",
+            "text_target": "heels",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Gustavo Fring",
+            "image_prompt": "close-up of athletic shoes pressing through heels on a gym machine",
+            "speaking_key": null,
+            "example_native": "Сядьте ровно, держите спину прямой и отталкивайтесь пятками.",
+            "example_target": "Sit tall, keep your back flat, and push through your heels.",
+            "image_author_url": "https://www.pexels.com/@gustavo-fring",
+            "definition_target": "the back parts of your feet",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "хилз",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMK7M7RQJ78F1S7PJ8X",
+            "ref": "v6",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "A6"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 5,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/6111580/pexels-photo-6111580.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#C1BDBC",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "хорошая техника",
+            "text_target": "good form",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Kampus Production",
+            "image_prompt": "trainer correcting posture during a gym exercise",
+            "speaking_key": null,
+            "example_native": "Возьмите вес, который сможете поднять двенадцать раз с хорошей техникой.",
+            "example_target": "Use a weight you can lift twelve times with good form.",
+            "image_author_url": "https://www.pexels.com/@kampus",
+            "definition_target": "correct and safe body position during exercise",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "гуд форм",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMKFPXKBBGS7M485A57",
+            "ref": "v7",
+            "kind": "word",
+            "slot": null,
+            "used_in": [
+                "A7"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 6,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/6740822/pexels-photo-6740822.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#686055",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "подход",
+            "text_target": "set",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "Mikhail Nilov",
+            "image_prompt": "gym workout plan showing numbered sets beside dumbbells",
+            "speaking_key": null,
+            "example_native": null,
+            "example_target": null,
+            "image_author_url": "https://www.pexels.com/@mikhail-nilov",
+            "definition_target": "a group of repetitions done without stopping",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "сэт",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMKVWZ7BM79PC83XKN8",
+            "ref": "v8",
+            "kind": "chunk",
+            "slot": null,
+            "used_in": [
+                "p7",
+                "A8"
+            ],
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 7,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": "https://images.pexels.com/photos/6539827/pexels-photo-6539827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": null,
+            "image_tone": "#AC9582",
+            "updated_at": "2026-09-21T17:21:12+00:00",
+            "text_native": "плечи опущены",
+            "text_target": "shoulders down",
+            "frame_native": null,
+            "frame_target": null,
+            "image_author": "RDNE Stock project",
+            "image_prompt": "trainer demonstrating lowered shoulders during an exercise",
+            "speaking_key": null,
+            "example_native": "Мне держать плечи опущенными?",
+            "example_target": "Should I keep my shoulders down?",
+            "image_author_url": "https://www.pexels.com/@rdne",
+            "definition_target": "kept low and relaxed, not raised up",
+            "simplified_variants": [
+            ],
+            "pronunciation_native": "шоулдэрз даун",
+            "frame_pronunciation_native": null
+        },
+        {
+            "id": "01M32FRPMK9HZXT7XWYS286FPM",
+            "ref": "p1",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "общей формой",
+                        "target": "general fitness",
+                        "in_dialogue": true,
+                        "pronunciation_native": "дженерал фитнес"
+                    },
+                    {
+                        "native": "силой",
+                        "target": "strength",
+                        "in_dialogue": false,
+                        "pronunciation_native": "стрэнгс"
+                    },
+                    {
+                        "native": "снижением веса",
+                        "target": "weight loss",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уэйт лос"
+                    }
+                ],
+                "hint_native": "цель тренировки"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 8,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": null,
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": "answer",
+            "image_tone": null,
+            "updated_at": "2026-09-21T17:21:07+00:00",
+            "text_native": "Я работаю над общей формой.",
+            "text_target": "I'm working on general fitness.",
+            "frame_native": "Я работаю над ___.",
+            "frame_target": "I'm working on ___.",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "I'm working on",
+            "example_native": "Я работаю над общей формой.",
+            "example_target": "I'm working on general fitness.",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "I'm training for general fitness.",
+                "General fitness is my goal."
+            ],
+            "pronunciation_native": "Айм воркинг он дженерал фитнес.",
+            "frame_pronunciation_native": "Айм воркинг он ___."
+        },
+        {
+            "id": "01M32FRPMKZQDN4V4FGTGDKKPC",
+            "ref": "p2",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "около года",
+                        "target": "about a year",
+                        "in_dialogue": true,
+                        "pronunciation_native": "эбаут э йир"
+                    },
+                    {
+                        "native": "шесть месяцев",
+                        "target": "six months",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сикс манс"
+                    },
+                    {
+                        "native": "несколько лет",
+                        "target": "a few years",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э фью йирз"
+                    }
+                ],
+                "hint_native": "срок опыта"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 9,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": null,
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": "answer",
+            "image_tone": null,
+            "updated_at": "2026-09-21T17:21:07+00:00",
+            "text_native": "У меня около года опыта.",
+            "text_target": "I have about a year of experience.",
+            "frame_native": "У меня ___ опыта.",
+            "frame_target": "I have ___ of experience.",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "of experience",
+            "example_native": "У меня около года опыта.",
+            "example_target": "I have about a year of experience.",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "I have about a year here.",
+                "About a year of training."
+            ],
+            "pronunciation_native": "Ай хэв эбаут э йир ов икспириэнс.",
+            "frame_pronunciation_native": "Ай хэв ___ ов икспириэнс."
+        },
+        {
+            "id": "01M32FRPMKD3NZ5WS4DX4M36E5",
+            "ref": "p3",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "боль в плече",
+                        "target": "shoulder pain",
+                        "in_dialogue": true,
+                        "pronunciation_native": "шоулдэр пэйн"
+                    },
+                    {
+                        "native": "боль в колене",
+                        "target": "knee pain",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ни пэйн"
+                    },
+                    {
+                        "native": "боль в пояснице",
+                        "target": "lower back pain",
+                        "in_dialogue": false,
+                        "pronunciation_native": "лоуэр бэк пэйн"
+                    }
+                ],
+                "hint_native": "боль или ограничение"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 10,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": null,
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": "answer",
+            "image_tone": null,
+            "updated_at": "2026-09-21T17:21:07+00:00",
+            "text_native": "У меня есть боль в плече.",
+            "text_target": "I have some shoulder pain.",
+            "frame_native": "У меня есть ___.",
+            "frame_target": "I have some ___.",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "I have some",
+            "example_native": "У меня немного болит плечо.",
+            "example_target": "I have some shoulder pain.",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "My shoulder hurts a little.",
+                "I have pain in my shoulder."
+            ],
+            "pronunciation_native": "Ай хэв сам шоулдэр пэйн.",
+            "frame_pronunciation_native": "Ай хэв сам ___."
+        },
+        {
+            "id": "01M32FRPMK7T6Y1QQ52NMR4ZYV",
+            "ref": "p4",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "этим тренажёром",
+                        "target": "this machine",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зис мэшин"
+                    },
+                    {
+                        "native": "блочным тренажёром",
+                        "target": "the cable machine",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ кэйбл мэшин"
+                    },
+                    {
+                        "native": "гребным тренажёром",
+                        "target": "the rowing machine",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ роуинг мэшин"
+                    }
+                ],
+                "hint_native": "оборудование"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 11,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": null,
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": "ask",
+            "image_tone": null,
+            "updated_at": "2026-09-21T17:21:07+00:00",
+            "text_native": "Как пользоваться этим тренажёром?",
+            "text_target": "How do I use this machine?",
+            "frame_native": "Как пользоваться ___?",
+            "frame_target": "How do I use ___?",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "How do I use",
+            "example_native": "Как пользоваться этим тренажёром?",
+            "example_target": "How do I use this machine?",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "How do I use it?",
+                "Can you show me this machine?"
+            ],
+            "pronunciation_native": "Хау ду ай юз зис мэшин?",
+            "frame_pronunciation_native": "Хау ду ай юз ___?"
+        },
+        {
+            "id": "01M32FRPMKZ6Z6N27YG8T98CQP",
+            "ref": "p5",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "вес",
+                        "target": "the weight",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ уэйт"
+                    },
+                    {
+                        "native": "гантель",
+                        "target": "the dumbbell",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ дамбэл"
+                    },
+                    {
+                        "native": "штанга",
+                        "target": "the bar",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ бар"
+                    }
+                ],
+                "hint_native": "что выбрать по весу"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 12,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": null,
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": "ask",
+            "image_tone": null,
+            "updated_at": "2026-09-21T17:21:07+00:00",
+            "text_native": "Насколько тяжёлым должен быть вес?",
+            "text_target": "How heavy should the weight be?",
+            "frame_native": "Насколько тяжёлым должен быть ___?",
+            "frame_target": "How heavy should ___ be?",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "How heavy should",
+            "example_native": "Насколько тяжёлым должен быть вес?",
+            "example_target": "How heavy should the weight be?",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "What weight should I use?",
+                "How heavy should it be?"
+            ],
+            "pronunciation_native": "Хау хэви шуд зэ уэйт би?",
+            "frame_pronunciation_native": "Хау хэви шуд ___ би?"
+        },
+        {
+            "id": "01M32FRPMKYCSPXP9VFB6AZ75Q",
+            "ref": "p6",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "сорок пять секунд",
+                        "target": "forty-five seconds",
+                        "in_dialogue": true,
+                        "pronunciation_native": "форти-файв секондз"
+                    },
+                    {
+                        "native": "тридцать секунд",
+                        "target": "thirty seconds",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сёрти секондз"
+                    },
+                    {
+                        "native": "минуту",
+                        "target": "one minute",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уан минут"
+                    }
+                ],
+                "hint_native": "время отдыха"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 13,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": null,
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": "answer",
+            "image_tone": null,
+            "updated_at": "2026-09-21T17:21:07+00:00",
+            "text_native": "Я буду отдыхать сорок пять секунд.",
+            "text_target": "I'll rest for forty-five seconds.",
+            "frame_native": "Я буду отдыхать ___.",
+            "frame_target": "I'll rest for ___.",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "I'll rest for",
+            "example_native": "Я буду отдыхать сорок пять секунд.",
+            "example_target": "I'll rest for forty-five seconds.",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "I'll rest forty-five seconds.",
+                "Rest is forty-five seconds."
+            ],
+            "pronunciation_native": "Айл рэст фор форти-файв секондз.",
+            "frame_pronunciation_native": "Айл рэст фор ___."
+        },
+        {
+            "id": "01M32FRPMMZM87C3K9PBDVPND6",
+            "ref": "p7",
+            "kind": "phrase",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "плечи",
+                        "target": "my shoulders",
+                        "in_dialogue": true,
+                        "pronunciation_native": "май шоулдэрз"
+                    },
+                    {
+                        "native": "локти",
+                        "target": "my elbows",
+                        "in_dialogue": false,
+                        "pronunciation_native": "май элбоуз"
+                    },
+                    {
+                        "native": "грудь",
+                        "target": "my chest",
+                        "in_dialogue": false,
+                        "pronunciation_native": "май чест"
+                    }
+                ],
+                "hint_native": "часть тела"
+            },
+            "used_in": null,
+            "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+            "position": 14,
+            "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+            "image_url": null,
+            "created_at": "2026-09-21T17:21:07+00:00",
+            "frame_kind": "ask",
+            "image_tone": null,
+            "updated_at": "2026-09-21T17:21:07+00:00",
+            "text_native": "Мне держать плечи опущенными?",
+            "text_target": "Should I keep my shoulders down?",
+            "frame_native": "Мне держать ___ опущенными?",
+            "frame_target": "Should I keep ___ down?",
+            "image_author": null,
+            "image_prompt": null,
+            "speaking_key": "Should I keep",
+            "example_native": "Мне держать плечи опущенными?",
+            "example_target": "Should I keep my shoulders down?",
+            "image_author_url": null,
+            "definition_target": null,
+            "simplified_variants": [
+                "Do I keep my shoulders down?",
+                "Should my shoulders stay down?"
+            ],
+            "pronunciation_native": "Шуд ай кип май шоулдэрз даун?",
+            "frame_pronunciation_native": "Шуд ай кип ___ даун?"
+        }
+    ],
+    "updated_at": "2026-09-21T17:21:12+00:00",
+    "checks_json": [
+        {
+            "code": "variant.longer",
+            "detail": "the variant «I have pain in my shoulder.» has 6 words, the line 5",
+            "address": "B3"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "detail": "«machine» is not in the partner's line of exchange 4",
+            "address": "v4"
+        },
+        {
+            "code": "vocab.free_combination",
+            "detail": "«good form» is a free combination of ordinary words",
+            "address": "v6"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "detail": "«set» is not in the partner's line of exchange 7",
+            "address": "v7"
+        },
+        {
+            "code": "vocab.used_in_wrong",
+            "detail": "«shoulders down» is not in the partner's line of exchange 8",
+            "address": "v8"
+        },
+        {
+            "code": "filler.native_seam",
+            "detail": "«Насколько тяжёлым должен быть гантель?» («Насколько тяжёлым должен быть ___?» with «гантель») does not read as Russian, the seam judge says",
+            "address": "p5.f2"
+        },
+        {
+            "code": "filler.native_seam",
+            "detail": "«Насколько тяжёлым должен быть штанга?» («Насколько тяжёлым должен быть ___?» with «штанга») does not read as Russian, the seam judge says",
+            "address": "p5.f3"
+        }
+    ],
+    "fail_reason": null,
+    "lesson_json": {
+        "topic": {
+            "title_native": "Разговор с тренером",
+            "title_target": "Talking to a trainer",
+            "description_native": "Научитесь говорить о своих целях, опыте и понимать инструкции тренера во время тренировки.",
+            "description_target": "Learn to explain your fitness goals, talk about your experience, and follow workout instructions safely."
+        },
+        "phrases": [
+            {
+                "id": "p1",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "общей формой",
+                            "target": "general fitness",
+                            "in_dialogue": true,
+                            "pronunciation_native": "дженерал фитнес"
+                        },
+                        {
+                            "native": "силой",
+                            "target": "strength",
+                            "in_dialogue": false,
+                            "pronunciation_native": "стрэнгс"
+                        },
+                        {
+                            "native": "снижением веса",
+                            "target": "weight loss",
+                            "in_dialogue": false,
+                            "pronunciation_native": "уэйт лос"
+                        }
+                    ],
+                    "hint_native": "цель тренировки"
+                },
+                "frame_native": "Я работаю над ___.",
+                "frame_target": "I'm working on ___.",
+                "pronunciation_native": "Айм воркинг он ___."
+            },
+            {
+                "id": "p2",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "около года",
+                            "target": "about a year",
+                            "in_dialogue": true,
+                            "pronunciation_native": "эбаут э йир"
+                        },
+                        {
+                            "native": "шесть месяцев",
+                            "target": "six months",
+                            "in_dialogue": false,
+                            "pronunciation_native": "сикс манс"
+                        },
+                        {
+                            "native": "несколько лет",
+                            "target": "a few years",
+                            "in_dialogue": false,
+                            "pronunciation_native": "э фью йирз"
+                        }
+                    ],
+                    "hint_native": "срок опыта"
+                },
+                "frame_native": "У меня ___ опыта.",
+                "frame_target": "I have ___ of experience.",
+                "pronunciation_native": "Ай хэв ___ ов икспириэнс."
+            },
+            {
+                "id": "p3",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "боль в плече",
+                            "target": "shoulder pain",
+                            "in_dialogue": true,
+                            "pronunciation_native": "шоулдэр пэйн"
+                        },
+                        {
+                            "native": "боль в колене",
+                            "target": "knee pain",
+                            "in_dialogue": false,
+                            "pronunciation_native": "ни пэйн"
+                        },
+                        {
+                            "native": "боль в пояснице",
+                            "target": "lower back pain",
+                            "in_dialogue": false,
+                            "pronunciation_native": "лоуэр бэк пэйн"
+                        }
+                    ],
+                    "hint_native": "боль или ограничение"
+                },
+                "frame_native": "У меня есть ___.",
+                "frame_target": "I have some ___.",
+                "pronunciation_native": "Ай хэв сам ___."
+            },
+            {
+                "id": "p4",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "этим тренажёром",
+                            "target": "this machine",
+                            "in_dialogue": true,
+                            "pronunciation_native": "зис мэшин"
+                        },
+                        {
+                            "native": "блочным тренажёром",
+                            "target": "the cable machine",
+                            "in_dialogue": false,
+                            "pronunciation_native": "зэ кэйбл мэшин"
+                        },
+                        {
+                            "native": "гребным тренажёром",
+                            "target": "the rowing machine",
+                            "in_dialogue": false,
+                            "pronunciation_native": "зэ роуинг мэшин"
+                        }
+                    ],
+                    "hint_native": "оборудование"
+                },
+                "frame_native": "Как пользоваться ___?",
+                "frame_target": "How do I use ___?",
+                "pronunciation_native": "Хау ду ай юз ___?"
+            },
+            {
+                "id": "p5",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "вес",
+                            "target": "the weight",
+                            "in_dialogue": true,
+                            "pronunciation_native": "зэ уэйт"
+                        },
+                        {
+                            "native": "гантель",
+                            "target": "the dumbbell",
+                            "in_dialogue": false,
+                            "pronunciation_native": "зэ дамбэл"
+                        },
+                        {
+                            "native": "штанга",
+                            "target": "the bar",
+                            "in_dialogue": false,
+                            "pronunciation_native": "зэ бар"
+                        }
+                    ],
+                    "hint_native": "что выбрать по весу"
+                },
+                "frame_native": "Насколько тяжёлым должен быть ___?",
+                "frame_target": "How heavy should ___ be?",
+                "pronunciation_native": "Хау хэви шуд ___ би?"
+            },
+            {
+                "id": "p6",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "сорок пять секунд",
+                            "target": "forty-five seconds",
+                            "in_dialogue": true,
+                            "pronunciation_native": "форти-файв секондз"
+                        },
+                        {
+                            "native": "тридцать секунд",
+                            "target": "thirty seconds",
+                            "in_dialogue": false,
+                            "pronunciation_native": "сёрти секондз"
+                        },
+                        {
+                            "native": "минуту",
+                            "target": "one minute",
+                            "in_dialogue": false,
+                            "pronunciation_native": "уан минут"
+                        }
+                    ],
+                    "hint_native": "время отдыха"
+                },
+                "frame_native": "Я буду отдыхать ___.",
+                "frame_target": "I'll rest for ___.",
+                "pronunciation_native": "Айл рэст фор ___."
+            },
+            {
+                "id": "p7",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "плечи",
+                            "target": "my shoulders",
+                            "in_dialogue": true,
+                            "pronunciation_native": "май шоулдэрз"
+                        },
+                        {
+                            "native": "локти",
+                            "target": "my elbows",
+                            "in_dialogue": false,
+                            "pronunciation_native": "май элбоуз"
+                        },
+                        {
+                            "native": "грудь",
+                            "target": "my chest",
+                            "in_dialogue": false,
+                            "pronunciation_native": "май чест"
+                        }
+                    ],
+                    "hint_native": "часть тела"
+                },
+                "frame_native": "Мне держать ___ опущенными?",
+                "frame_target": "Should I keep ___ down?",
+                "pronunciation_native": "Шуд ай кип ___ даун?"
+            }
+        ],
+        "dialogue": [
+            {
+                "kind": "answer",
+                "step": 1,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Цель тренировки на сегодня",
+                            "text_target": "Today's training goal"
+                        },
+                        {
+                            "text_native": "Номер шкафчика",
+                            "text_target": "The locker number"
+                        },
+                        {
+                            "text_native": "Способ оплаты",
+                            "text_target": "A payment method"
+                        }
+                    ],
+                    "text_native": "О чём спрашивает тренер?",
+                    "text_target": "What does the trainer ask about?",
+                    "explanation_native": "Тренер спрашивает, для чего сегодня тренировка.",
+                    "correct_option_index": 0
+                },
+                "messages": [
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Над чем вы сегодня хотите поработать?",
+                        "text_target": "What are you training for today?"
+                    },
+                    {
+                        "filler": "general fitness",
+                        "speaker": "B",
+                        "phrase_id": "p1",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Я работаю над общей формой.",
+                        "text_target": "I'm working on general fitness.",
+                        "speaking_key": "working on",
+                        "simplified_variants": [
+                            "I'm training for general fitness.",
+                            "General fitness is my goal."
+                        ],
+                        "pronunciation_native": "Айм воркинг он дженерал фитнес."
+                    }
+                ],
+                "initiator": "A"
+            },
+            {
+                "kind": "answer",
+                "step": 2,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Как долго вы уже тренируетесь",
+                            "text_target": "How long you have trained"
+                        },
+                        {
+                            "text_native": "Как часто вы делаете растяжку",
+                            "text_target": "How often you stretch"
+                        },
+                        {
+                            "text_native": "Сколько воды вы пьёте",
+                            "text_target": "How much water you drink"
+                        }
+                    ],
+                    "text_native": "Что хочет узнать тренер?",
+                    "text_target": "What does the trainer want to know?",
+                    "explanation_native": "Тренер спрашивает именно об опыте тренировок.",
+                    "correct_option_index": 0
+                },
+                "messages": [
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Какой у вас опыт тренировок в зале?",
+                        "text_target": "How much gym experience do you have?"
+                    },
+                    {
+                        "filler": "about a year",
+                        "speaker": "B",
+                        "phrase_id": "p2",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "У меня около года опыта.",
+                        "text_target": "I have about a year of experience.",
+                        "speaking_key": "have of experience",
+                        "simplified_variants": [
+                            "I have about a year here.",
+                            "About a year of training."
+                        ],
+                        "pronunciation_native": "Ай хэв эбаут э йир ов икспириэнс."
+                    }
+                ],
+                "initiator": "A"
+            },
+            {
+                "kind": "answer",
+                "step": 3,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Есть ли сейчас боль или травма",
+                            "text_target": "Current pain or injury"
+                        },
+                        {
+                            "text_native": "Ваш целевой вес",
+                            "text_target": "Your target weight"
+                        },
+                        {
+                            "text_native": "Ваш следующий день тренировки",
+                            "text_target": "Your next workout day"
+                        }
+                    ],
+                    "text_native": "Что проверяет тренер?",
+                    "text_target": "What is the trainer checking?",
+                    "explanation_native": "Тренер уточняет, есть ли сейчас травмы или боль.",
+                    "correct_option_index": 0
+                },
+                "messages": [
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Есть ли у вас сейчас травмы или боль?",
+                        "text_target": "Do you have any injuries or pain right now?"
+                    },
+                    {
+                        "filler": "shoulder pain",
+                        "speaker": "B",
+                        "phrase_id": "p3",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "У меня немного болит плечо.",
+                        "text_target": "I have some shoulder pain.",
+                        "speaking_key": "have some",
+                        "simplified_variants": [
+                            "My shoulder hurts a little.",
+                            "I have pain in my shoulder."
+                        ],
+                        "pronunciation_native": "Ай хэв сам шоулдэр пэйн."
+                    }
+                ],
+                "initiator": "A"
+            },
+            {
+                "kind": "ask",
+                "step": 4,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Пятками",
+                            "text_target": "With your heels"
+                        },
+                        {
+                            "text_native": "Носками",
+                            "text_target": "With your toes"
+                        },
+                        {
+                            "text_native": "Одной ногой",
+                            "text_target": "With one leg"
+                        }
+                    ],
+                    "text_native": "Как нужно отталкиваться?",
+                    "text_target": "How should you push?",
+                    "explanation_native": "Тренер говорит отталкиваться именно пятками.",
+                    "correct_option_index": 0
+                },
+                "messages": [
+                    {
+                        "filler": "this machine",
+                        "speaker": "B",
+                        "phrase_id": "p4",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Как пользоваться этим тренажёром?",
+                        "text_target": "How do I use this machine?",
+                        "speaking_key": "How do I use",
+                        "simplified_variants": [
+                            "How do I use it?",
+                            "Can you show me this machine?"
+                        ],
+                        "pronunciation_native": "Хау ду ай юз зис мэшин?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Сядьте ровно, держите спину прямой и отталкивайтесь пятками.",
+                        "text_target": "Sit tall, keep your back flat, and push through your heels."
+                    }
+                ],
+                "initiator": "B"
+            },
+            {
+                "kind": "rescue",
+                "step": 5,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Спина",
+                            "text_target": "Your back"
+                        },
+                        {
+                            "text_native": "Руки",
+                            "text_target": "Your arms"
+                        },
+                        {
+                            "text_native": "Стопы",
+                            "text_target": "Your feet"
+                        }
+                    ],
+                    "text_native": "Что должно оставаться прямым?",
+                    "text_target": "What should stay flat?",
+                    "explanation_native": "В повторе тренер говорит держать спину прямой.",
+                    "correct_option_index": 0
+                },
+                "messages": [
+                    {
+                        "filler": null,
+                        "speaker": "B",
+                        "phrase_id": null,
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Не могли бы вы сказать это помедленнее?",
+                        "text_target": "Could you say that more slowly, please?",
+                        "speaking_key": "say that more slowly",
+                        "simplified_variants": [
+                            "Could you repeat that, please?"
+                        ],
+                        "pronunciation_native": "Куд ю сэй зэт мор слоули, плиз?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Держите спину прямой и отталкивайтесь пятками.",
+                        "text_target": "Keep your back flat and push through your heels."
+                    }
+                ],
+                "initiator": "B"
+            },
+            {
+                "kind": "ask",
+                "step": 6,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Десять повторений",
+                            "text_target": "Ten repetitions"
+                        },
+                        {
+                            "text_native": "Двенадцать повторений",
+                            "text_target": "Twelve repetitions"
+                        },
+                        {
+                            "text_native": "Пятнадцать повторений",
+                            "text_target": "Fifteen repetitions"
+                        }
+                    ],
+                    "text_native": "Сколько качественных повторений хочет тренер?",
+                    "text_target": "How many good reps does the trainer want?",
+                    "explanation_native": "Тренер говорит про вес на двенадцать повторений с хорошей техникой.",
+                    "correct_option_index": 1
+                },
+                "messages": [
+                    {
+                        "filler": "the weight",
+                        "speaker": "B",
+                        "phrase_id": "p5",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Насколько тяжёлым должен быть вес?",
+                        "text_target": "How heavy should the weight be?",
+                        "speaking_key": "How heavy should",
+                        "simplified_variants": [
+                            "What weight should I use?",
+                            "How heavy should it be?"
+                        ],
+                        "pronunciation_native": "Хау хэви шуд зэ уэйт би?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Возьмите вес, который сможете поднять двенадцать раз с хорошей техникой.",
+                        "text_target": "Use a weight you can lift twelve times with good form."
+                    }
+                ],
+                "initiator": "B"
+            },
+            {
+                "kind": "answer",
+                "step": 7,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "Полминуты",
+                            "text_target": "Half a minute"
+                        },
+                        {
+                            "text_native": "Около минуты",
+                            "text_target": "About one minute"
+                        },
+                        {
+                            "text_native": "Сорок пять секунд",
+                            "text_target": "Forty-five seconds"
+                        }
+                    ],
+                    "text_native": "Сколько длится перерыв?",
+                    "text_target": "How long is the break?",
+                    "explanation_native": "Тренер назначает отдых сорок пять секунд.",
+                    "correct_option_index": 2
+                },
+                "messages": [
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+                        "text_target": "Do three sets, and rest forty-five seconds between them."
+                    },
+                    {
+                        "filler": "forty-five seconds",
+                        "speaker": "B",
+                        "phrase_id": "p6",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Я буду отдыхать сорок пять секунд.",
+                        "text_target": "I'll rest for forty-five seconds.",
+                        "speaking_key": "rest for",
+                        "simplified_variants": [
+                            "I'll rest forty-five seconds.",
+                            "Rest is forty-five seconds."
+                        ],
+                        "pronunciation_native": "Айл рэст фор форти-файв секондз."
+                    }
+                ],
+                "initiator": "A"
+            },
+            {
+                "kind": "ask",
+                "step": 8,
+                "check": {
+                    "options": [
+                        {
+                            "text_native": "К шее",
+                            "text_target": "Toward the neck"
+                        },
+                        {
+                            "text_native": "К ушам",
+                            "text_target": "Toward the ears"
+                        },
+                        {
+                            "text_native": "К груди",
+                            "text_target": "Toward the chest"
+                        }
+                    ],
+                    "text_native": "Куда не нужно поднимать плечи?",
+                    "text_target": "Where should the shoulders not go?",
+                    "explanation_native": "Тренер говорит не поднимать плечи к ушам.",
+                    "correct_option_index": 1
+                },
+                "messages": [
+                    {
+                        "filler": "my shoulders",
+                        "speaker": "B",
+                        "phrase_id": "p7",
+                        "role_native": "Посетитель",
+                        "role_target": "Gym member",
+                        "text_native": "Мне держать плечи опущенными?",
+                        "text_target": "Should I keep my shoulders down?",
+                        "speaking_key": "Should I keep",
+                        "simplified_variants": [
+                            "Do I keep my shoulders down?",
+                            "Should my shoulders stay down?"
+                        ],
+                        "pronunciation_native": "Шуд ай кип май шоулдэрз даун?"
+                    },
+                    {
+                        "speaker": "A",
+                        "role_native": "Тренер",
+                        "role_target": "Trainer",
+                        "text_native": "Да, держите их опущенными и не поднимайте к ушам.",
+                        "text_target": "Yes, keep them down and don't lift them toward your ears."
+                    }
+                ],
+                "initiator": "B"
+            }
+        ],
+        "listening": {
+            "questions": [
+                {
+                    "text_native": "Какая цель тренировки у посетителя?",
+                    "options_native": [
+                        "Общая форма",
+                        "Подготовка к марафону",
+                        "Набор массы"
+                    ],
+                    "explanation_native": "В начале посетитель говорит, что работает над общей формой.",
+                    "correct_option_index": 0
+                },
+                {
+                    "text_native": "Какая проблема есть у посетителя сейчас?",
+                    "options_native": [
+                        "Боль в колене",
+                        "Боль в плече",
+                        "Боль в пояснице"
+                    ],
+                    "explanation_native": "Посетитель говорит о боли в плече.",
+                    "correct_option_index": 1
+                },
+                {
+                    "text_native": "Сколько отдыхать между подходами?",
+                    "options_native": [
+                        "Тридцать секунд",
+                        "Сорок пять секунд",
+                        "Полторы минуты"
+                    ],
+                    "explanation_native": "Тренер говорит отдыхать сорок пять секунд.",
+                    "correct_option_index": 1
+                },
+                {
+                    "text_native": "Сколько повторений с хорошей техникой должен позволять вес?",
+                    "options_native": [
+                        "Восемь",
+                        "Двенадцать",
+                        "Двадцать"
+                    ],
+                    "explanation_native": "Тренер рекомендует вес на двенадцать повторений.",
+                    "correct_option_index": 1
+                }
+            ]
+        },
+        "vocabulary": [
+            {
+                "id": "v1",
+                "kind": "chunk",
+                "used_in": [
+                    "p1"
+                ],
+                "term_target": "general fitness",
+                "image_prompt": null,
+                "definition_target": "overall health and physical condition",
+                "translation_native": "общая физическая форма",
+                "pronunciation_native": "дженерал фитнес"
+            },
+            {
+                "id": "v2",
+                "kind": "word",
+                "used_in": [
+                    "p2",
+                    "A2"
+                ],
+                "term_target": "experience",
+                "image_prompt": null,
+                "definition_target": "time and practice you already have in an activity",
+                "translation_native": "опыт",
+                "pronunciation_native": "икспириэнс"
+            },
+            {
+                "id": "v3",
+                "kind": "chunk",
+                "used_in": [
+                    "p3"
+                ],
+                "term_target": "shoulder pain",
+                "image_prompt": "person touching one shoulder in a gym",
+                "definition_target": "pain in the shoulder area",
+                "translation_native": "боль в плече",
+                "pronunciation_native": "шоулдэр пэйн"
+            },
+            {
+                "id": "v4",
+                "kind": "word",
+                "used_in": [
+                    "p4",
+                    "A4"
+                ],
+                "term_target": "machine",
+                "image_prompt": "gym strength machine on a workout floor",
+                "definition_target": "a piece of gym equipment used for exercise",
+                "translation_native": "тренажёр",
+                "pronunciation_native": "мэшин"
+            },
+            {
+                "id": "v5",
+                "kind": "word",
+                "used_in": [
+                    "A4",
+                    "A5"
+                ],
+                "term_target": "heels",
+                "image_prompt": "close-up of athletic shoes pressing through heels on a gym machine",
+                "definition_target": "the back parts of your feet",
+                "translation_native": "пятки",
+                "pronunciation_native": "хилз"
+            },
+            {
+                "id": "v6",
+                "kind": "chunk",
+                "used_in": [
+                    "A6"
+                ],
+                "term_target": "good form",
+                "image_prompt": "trainer correcting posture during a gym exercise",
+                "definition_target": "correct and safe body position during exercise",
+                "translation_native": "хорошая техника",
+                "pronunciation_native": "гуд форм"
+            },
+            {
+                "id": "v7",
+                "kind": "word",
+                "used_in": [
+                    "A7"
+                ],
+                "term_target": "set",
+                "image_prompt": "gym workout plan showing numbered sets beside dumbbells",
+                "definition_target": "a group of repetitions done without stopping",
+                "translation_native": "подход",
+                "pronunciation_native": "сэт"
+            },
+            {
+                "id": "v8",
+                "kind": "chunk",
+                "used_in": [
+                    "p7",
+                    "A8"
+                ],
+                "term_target": "shoulders down",
+                "image_prompt": "trainer demonstrating lowered shoulders during an exercise",
+                "definition_target": "kept low and relaxed, not raised up",
+                "translation_native": "плечи опущены",
+                "pronunciation_native": "шоулдэрз даун"
+            }
+        ],
+        "role_gender": "male",
+        "learner_role": {
+            "role_native": "Посетитель",
+            "role_target": "Gym member"
+        }
+    },
+    "generated_at": "2026-09-21T17:20:34+00:00",
+    "goals_native": [
+        "объяснить цель тренировки",
+        "сказать про опыт и форму",
+        "уточнить технику упражнения",
+        "понять правки и нагрузку"
+    ],
+    "image_author": "Pixabay",
+    "image_prompt": "realistic photo of a gym trainer showing an exercise beside a weight machine on the training floor, bright indoor light, no text, no logos, no faces in close-up",
+    "model_lesson": "gpt-5.4-2026-03-05",
+    "title_native": "С тренером",
+    "title_target": "With a Trainer",
+    "build_version": "bca543ce",
+    "lesson_status": "ready",
+    "teaches_native": "обсудить цель и технику",
+    "attempts_lesson": 1,
+    "cost_usd_lesson": 0.065114,
+    "build_started_at": "2026-09-21T17:20:34+00:00",
+    "image_author_url": "https://www.pexels.com/@pixabay",
+    "latency_ms_lesson": 33166,
+    "topic_description": "Situation: On the gym floor, the learner speaks with a trainer during a workout in a new country. The learner wants to train safely, explain personal goals and experience, and understand instructions on technique and intensity.\nLearner: the learner's role. Partner: the trainer.\nLearner must be able to: explain training goals such as strength, weight loss, or general fitness; describe previous gym experience and current fitness level; ask how to use a machine or do an exercise correctly; understand corrections, repetitions, rest time, and how heavy the weight should be.\nPartner will: ask about goals, experience, and any physical limitations; explain how to position the body and use equipment; correct mistakes and give instructions about sets, reps, and pace.\nNot in this scene: membership prices, payment, opening hours, locker access, buying sports products.",
+    "learner_role_native": "Посетитель",
+    "learner_role_target": "Gym member",
+    "partner_role_native": "Тренер",
+    "partner_role_target": "Trainer",
+    "partner_voice_gender": "male",
+    "prompt_version_lesson": "lesson_day.v4.7"
+}

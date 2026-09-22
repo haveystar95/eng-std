@@ -1,0 +1,21 @@
+{
+    "day": {
+        "id": "01M32DX8QFZVPCFFEV51F85HGK",
+        "type": "rehearsal",
+        "number": 3,
+        "status": "locked",
+        "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+        "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+        "opens_on": null,
+        "scene_id": null,
+        "closed_at": null,
+        "opened_at": null,
+        "cards_done": 0,
+        "created_at": "2026-09-21T16:48:40+00:00",
+        "updated_at": "2026-09-21T16:48:40+00:00",
+        "cards_total": 0,
+        "minutes_spent": 0,
+        "has_conversation": false
+    },
+    "note": "rehearsal day: scene_id null, no lesson document"
+}

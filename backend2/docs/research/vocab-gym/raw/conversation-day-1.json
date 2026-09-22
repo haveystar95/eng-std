@@ -1,0 +1,142 @@
+{
+    "id": "01M32FJ5FQNRNSQH6PNC7DP5E0",
+    "type": "day",
+    "state": "ended",
+    "turns": [
+        {
+            "kind": "agent",
+            "speaker": "partner",
+            "off_topic": false,
+            "turn_index": 1,
+            "understood": null,
+            "hint_native": "У вас есть дневной пропуск?",
+            "text_native": "Здравствуйте! Добро пожаловать в зал. Чем я могу вам помочь сегодня?",
+            "text_target": "Hello! Welcome to the gym. How can I help you today?",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "said",
+            "speaker": "learner",
+            "off_topic": null,
+            "turn_index": 2,
+            "understood": null,
+            "hint_native": null,
+            "text_native": null,
+            "text_target": "Hello I need daily training",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "agent",
+            "speaker": "partner",
+            "off_topic": false,
+            "turn_index": 3,
+            "understood": true,
+            "hint_native": "У вас есть дневной пропуск?",
+            "text_native": "У вас есть дневной пропуск?",
+            "text_target": "Do you have a day pass?",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "said",
+            "speaker": "learner",
+            "off_topic": null,
+            "turn_index": 4,
+            "understood": null,
+            "hint_native": null,
+            "text_native": null,
+            "text_target": "No I want to buy monthly membership",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "agent",
+            "speaker": "partner",
+            "off_topic": false,
+            "turn_index": 5,
+            "understood": true,
+            "hint_native": "У вас есть дневной пропуск?",
+            "text_native": "У нас есть несколько месячных абонементов. Это ваш первый визит, верно?",
+            "text_target": "We have a few monthly memberships. This is your first visit, right?",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "said",
+            "speaker": "learner",
+            "off_topic": null,
+            "turn_index": 6,
+            "understood": null,
+            "hint_native": null,
+            "text_native": null,
+            "text_target": "Yes it is my first visit",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "agent",
+            "speaker": "partner",
+            "off_topic": false,
+            "turn_index": 7,
+            "understood": true,
+            "hint_native": "У вас есть дневной пропуск?",
+            "text_native": "Хорошо, тогда я могу показать вам месячные варианты. Какие месячные абонементы вам нужны, и вам нужны только будни?",
+            "text_target": "Great, then I can show you the monthly options. What monthly memberships do you have in mind, and do you need weekdays only?",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "said",
+            "speaker": "learner",
+            "off_topic": null,
+            "turn_index": 8,
+            "understood": null,
+            "hint_native": null,
+            "text_native": null,
+            "text_target": "Weekdays works for me",
+            "phrases_used": [
+            ],
+            "checkpoint_done": null
+        },
+        {
+            "kind": "agent",
+            "speaker": "partner",
+            "off_topic": false,
+            "turn_index": 9,
+            "understood": true,
+            "hint_native": null,
+            "text_native": "Отлично, это подходит. Где раздевалки?",
+            "text_target": "Great, that works. Where are the changing rooms?",
+            "phrases_used": [
+            ],
+            "checkpoint_done": "01M32DXHYG50H7SWQEMD33A39F"
+        }
+    ],
+    "day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+    "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+    "cost_usd": 0.020778,
+    "ended_at": "2026-09-21T17:18:42+00:00",
+    "scene_ids": [
+        "01M32DXHYG50H7SWQEMD33A39F"
+    ],
+    "created_at": "2026-09-21T17:17:36+00:00",
+    "day_number": 1,
+    "started_at": "2026-09-21T17:17:33+00:00",
+    "turn_limit": 4,
+    "updated_at": "2026-09-21T17:18:42+00:00",
+    "ended_reason": "natural",
+    "hints_enabled": true,
+    "checkpoints_done": [
+        "01M32DXHYG50H7SWQEMD33A39F"
+    ]
+}
