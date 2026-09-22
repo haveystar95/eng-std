@@ -1,0 +1,4 @@
+база wordtrainer_e2e_test · speak_echo без own_line: 1
+  01M2MS8YFT6AA8B06BPT12CY5H · план 01M2H13E1QT6F5D4FKJSEKTAD7 (active) · день 1 (closed) · итог passed · обмен 5 · partner_line x5 «It looks like a throat infection. Give paracetamol, warm drinks, and rest at home.»
+    → own_line x5b «He should rest at home.» / «Ему нужно отдыхать дома.»
+миграция добавит own_line: 1 из 1

@@ -6,8 +6,10 @@
 `backend2/` (app, config, tests, openapi, docs кроме `docs/design/`) и `docs/DECISIONS.md`, который наряд назвал сам.
 `mobile/` и `docs/design/` не тронуты.
 
-**Коммиты:** код — `5987b16e`; документы и этот отчёт — `890eac9f`; e2e на ветке и бой одним заходом — следующий
-за ним коммит документов. **Ветка в `main` НЕ влита** (§9): бой исполняет рабочее дерево `main`, и любое влитие — выкат.
+**Коммиты:** код — `5987b16e`; документы и этот отчёт — `890eac9f`; e2e на ветке и бой одним заходом — `543cca72`;
+решение по §11 в ROADMAP — `55816897`; **дополнение по отчёту клиента 1c** (эхо старой формы получает `own_line`) — код
+`5b357b61`, документы — следующий за ним коммит. **Ветка в `main` НЕ влита** (§9): бой исполняет рабочее дерево `main`,
+и любое влитие — выкат.
 
 **Деньги.** Живые вызовы — только §12: **$0.040269**, 36 вызовов `gpt-5.4-mini` (разговор), всё на одноразовой копии
 e2e `wordtrainer_bt2_e2e_test` (журнал `model_calls`, 21:52–22:05 UTC 21.09). Кап наряда — $0.50. **Озвучки — 0**
@@ -35,6 +37,7 @@ e2e `wordtrainer_bt2_e2e_test` (журнал `model_calls`, 21:52–22:05 UTC 21
 | 8 | **`minutes_spent`** = минуты карточек + `summary.minutes` разговора, прошедшего этап, — с хода прохождения; повторы не входят | `Application/Service/DayMetricsOf`; `ConversationPassing`, `AnswerCardHandler`, `JudgeCardHandler`, `CloseDayHandler` | `ConversationReplayTest` | 386 |
 | 9 | **Эхо роли**: вторая сверка предложений ответа против `heard` последнего хода — доля ключевых слов предложения, уже сказанных ходом, ≥ 0,7, как сказано или с обменом лиц; перезапрос `REDO: learner_echo`, вырез, нейтральный ход пакета; промпт `conversation_agent.v2` → **v2.1** — одна строка правила ECHO (и имя версии в заголовке), остальное байт в байт. sha256: v2 `9052efcd4409e197de503138cd9f0488e2eda7188a8e2ce9f89672c873cf0b04`, v2.1 `2fb06451274a76ec45c15550adeabea40206ca2566332e0d8d9da3ef70f36afa` | `RoleLines::echoIn/withoutEcho`, `PhraseUse::share`, `ConversationMoves`, `PlanPromptFiles`; `neutral_reply` и `person_swap` в пакетах | `RoleLinesTest` (3), `ConversationApiTest` (2), `ConversationPromptTest` (sha и «v2 плюс одно правило») | 387 |
 | 10 | **`partner_line` у эха снят** из payload, фикстур и OpenAPI; у 35-4 чужой реплики нет | `SpeakCards` | `SpeakStageTest` | 388 |
+| 10+ | **Эхо старой формы получает `own_line`** (дополнение по отчёту клиента 1c): на бою 10 карточек `speak_echo`, сданных до CONV-2 без `own_line` (закрытые дни и удалённые планы); сборка (19) эхо без `own_line` не рисует. Обратимая миграция данных — только `speak_echo` без `own_line`: реплика ученика того же обмена (`payload.scene_id`, `payload.exchange.step`) той же функцией, что у новой раздачи (`DayDealer::ownLine()` → `CardObjects::ownLine()`); ключ добавляется `jsonb_set`, остальное в payload не трогается; реплика не нашлась — карточка остаётся как есть; назад — `own_line` снимается только там, где `partner_line` — чужая реплика (`xN` против `xNb`). Проба на бою (только чтение): 10 из 10 находят свою реплику (`live/echo-own-line-prod.txt`); на e2e — 1 из 1 (`live/echo-own-line-e2e.txt`) | `DayDealer::ownLine()`; миграция `2026_09_22_110000_add_own_line_to_old_echo_cards`; проба `tools/echo-own-line.php` | `OldEchoOwnLineTest` (старая форма получает ровно тот `own_line`, что дала новая раздача; форма CONV-2, сегодняшняя и карточка без обмена не тронуты вверх и вниз; повтор не пишет; назад — старая форма байт в байт) | — |
 | 11 | **Не сделано — условие не выполнено**: на бою 4 дня `in_progress` с `has_conversation = false` (все на удалённых планах) — колонка и рубильник стоят (§5 п. 6) | — | — | — |
 | 12 | **Живой прогон** — §4 | `tools/live-run.php` | — | — |
 | 13 | Фикстуры: `day-doctor*.json` (тест держит байт-в-байт), `day-review.json` / `day-rehearsal.json` (копия e2e, дни пересданы кодом ветки), `conversation-day-open/ended.json`, `conversation-rehearsal-ended.json` (живой прогон); OpenAPI; `plan-api.md`, `plan-v2.md`, DECISIONS 379–388, ROADMAP, handoff §9 | — | `SessionDayFixtureTest` | — |
@@ -225,6 +228,11 @@ back hurts, and three days ago it started.» роль ответила «It star
 10. **Хвосты, найденные прогоном** (в ROADMAP, в работу не брались): роль переспрашивает уже сказанное («How long has he
     had the fever?» сразу после «he has had it for three days») — это не эхо, а невнимание, промпт в этом наряде
     правился одним правилом; смена лица I → we при трёх ключевых словах (§2).
+11. **Дополнение: эхо старой формы.** По указанию «ничего другого в payload не трогать» у 10 старых карточек остались
+    `expected_text` — текст реплики СОБЕСЕДНИКА («Please bring a towel, use clean shoes…» у зала Дена) — и у 8 из 10
+    `coverage_min` вместо `speech_mode` (форма до FIX-2). Если сборка (19) сверяет эхо по `expected_text`, «Ещё раз»
+    закрытого дня такое эхо не зачтёт, хотя звучит и показывается уже своя реплика. Решение — за вами: та же миграция
+    может дописать и `expected_text = own_line.text_target`.
 
 ---
 
@@ -254,9 +262,9 @@ back hurts, and three days ago it started.» роль ответила «It star
 | OpenApiLint | `openapi.yaml` ok, `openapi-admin.yaml` ok (OpenAPI 3.1.0) |
 | deptrac | 0 нарушений, 0 ошибок (3 «uncovered» — Identity/Google, те же на `main`) |
 | PHPStan L8 | 0 ошибок (1626 файлов) |
-| Pest `--parallel` (10 процессов) | **2416 passed**, 21 358 assertions, 124 с |
-| invariant-reviewer | **CLEAN** — 63 изменённых и 14 новых файлов `app/`, `config/`, `tests/` против `main`: Domain без фреймворка (`PhraseUse`, `PhrasesDeal`, `ConversationReplayLimit`, `Conversation`, `RoleLines`); `conversation_turns` и `plan_stage_passages` только INSERT (`creditMove` меняет ход в памяти до первой записи); миграция обратима; зачёт — только сервер; межмодульных обращений не добавлено |
-| мутации (§1, §2, §9 + §4, §7, §8) | **23 из 23 пойманы**, 0 выжило (`mutations.md`, `tools/mutations.json`, копия дерева со своим контейнером и базой, снесены после) |
+| Pest `--parallel` (10 процессов) | **2416 passed**, 21 358 assertions, 124 с; с дополнением (эхо старой формы) ворота прогнаны ещё раз целиком — **2417 passed**, 21 368 assertions, 82 с; OpenApiLint, deptrac, PHPStan — те же нули |
+| invariant-reviewer | **CLEAN** — 63 изменённых и 14 новых файлов `app/`, `config/`, `tests/` против `main`: Domain без фреймворка (`PhraseUse`, `PhrasesDeal`, `ConversationReplayLimit`, `Conversation`, `RoleLines`); `conversation_turns` и `plan_stage_passages` только INSERT (`creditMove` меняет ход в памяти до первой записи); миграция обратима; зачёт — только сервер; межмодульных обращений не добавлено. Дополнение (`DayDealer::ownLine()`, миграция `2026_09_22_110000`, `OldEchoOwnLineTest`) — второй прогон, тоже **CLEAN**: пишется только `day_cards` (не журнал), назад снимается ровно добавленное (проверены все прежние формы эха по истории git), зачёт не тронут |
+| мутации (§1, §2, §9 + §4, §7, §8) | **23 из 23 пойманы**, 0 выжило (`mutations.md`, `tools/mutations.json`, копия дерева со своим контейнером и базой, снесены после). Дополнение мутациями не проверялось — тест канона `OldEchoOwnLineTest` сверяет реплику с той, что дала новая раздача, и каждую другую форму эха вверх и вниз |
 | EXPLAIN | каждый новый и изменённый запрос — `explain.txt` (копия e2e и бой, только чтение): `replaysSince`, `latestForDay`, `latestForDays` — `conversations_day_started_idx`; `DayMetricsOf` — `plan_stage_passages_day_stage_uidx` и `conversations_pkey`; все < 0,2 мс. `plan:reconcile-scenes` читает `day_cards` целиком (7,8 мс на 20 тыс. строк e2e) — команда ручная и разовая, индекс под неё не заводился. Новых индексов не понадобилось: под `plan_stage_passages` и `conversations` (день · этап · пользователь) они есть |
 
 Хук ворот на коммите из worktree гоняет `composer check` в `wt_app` (основное дерево) — ворота ветки поэтому гонялись
@@ -287,6 +295,12 @@ worktree, §1 «e2e на ветке»); `main` и бой не тронуты.
    `wordtrainer_bt2_e2e_test`);
 8. `wordtrainer_test` догнать миграцией (`exec -e DB_DATABASE=wordtrainer_test app php artisan migrate`).
 
-Чего ждать: миграция — 0 карточек (`speak` на днях повторения на бою нет); reconcile — 1 лист (план Дена
-`01M2TSRM3DJPGCR5VQNBE8N3S7`, удалён, день 3: «Звонок агенту по аренде» → «Звонок агенту», «Просмотр квартиры» →
-«Просмотр жилья»); затем — проверить, что дни раздаются. Команды и вывод — сюда.
+Чего ждать: две миграции — `2026_09_22_100000` (этап `repetition`) — 0 карточек (`speak` на днях повторения на бою нет);
+`2026_09_22_110000` (эхо старой формы) — **`own_line` у 10 карточек `speak_echo`**, все 10 находят свою реплику (проба
+только чтением — `live/echo-own-line-prod.txt`); reconcile — 1 лист (план Дена `01M2TSRM3DJPGCR5VQNBE8N3S7`, удалён,
+день 3: «Звонок агенту по аренде» → «Звонок агенту», «Просмотр квартиры» → «Просмотр жилья»); затем — проверить, что дни
+раздаются. Команды и вывод — сюда.
+
+К шагам: `main` ушёл вперёд на три коммита клиента 1c (`mobile/`, `docs/research/client-conv-1c/`,
+`docs/plan-ui-glossary.md`) — перед шагом 3 ветка перебазируется на `main`, пересечений нет. На e2e миграция эха ещё не
+прогнана (1 карточка, `live/echo-own-line-e2e.txt`): к шагу 6 — `migrate` e2e.
