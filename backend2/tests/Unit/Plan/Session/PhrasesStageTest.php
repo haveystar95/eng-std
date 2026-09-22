@@ -207,10 +207,11 @@ function s1pShape(array $drafts): array
     return $out;
 }
 
-// Canon (решение архитектора 20.09, доработка наряда FIX-2): «потолок этапа «Фразы» — 690 с». CATCHES a ceiling the clean
-// beginner day cannot meet, and a ladder that cuts a day that already fits: at the prices measured on the phone (наряд
-// FIX-3 §2) the beginner keeps both its value rounds, its own word — and a third recognition on every frame of three.
-it('builds the beginner «врач» day inside the 690-second ceiling, with nothing cut', function () {
+// Canon (решение архитектора 20.09; потолок 690 → 900 — приёмка окна 1 наряда FIX-3, 22.09): «потолок этапа «Фразы» —
+// 900 с». CATCHES a ceiling the clean beginner day cannot meet, and a ladder that cuts a day that already fits: at the
+// prices measured on the phone (наряд FIX-3 §2) the beginner keeps both its value rounds, its own word — and a third
+// recognition on every frame of three.
+it('builds the beginner «врач» day inside the 900-second ceiling, with nothing cut', function () {
     $stage = s1pStage();
     $drafts = $stage->build(s1pScene(), PlanLevel::Beginner);
 
@@ -274,24 +275,26 @@ it('cuts «Фразы» a rung at a time — third recognitions, then second one
     expect(s1pStage(null, 710)->build($scene, PlanLevel::Intermediate))->toEqual($at710->drafts);
 });
 
-// Canon (наряд FIX-3 §3): «потолки не трогать (690 с / 32 мин)». The live «врач» of the e2e stand (beginner, seven frames of
-// three values, `lesson_day.v4.4`) at the prices measured on the phone: 785 s as built, every second recognition off —
-// 720 s, and the stop signal, the stage dealt over its ceiling with every round and every own word. CATCHES a ladder that
-// cuts a round or the own word past the floor to fit, and a signal that is not raised when the rungs run out.
-it('cuts every second recognition of the live «врач» and still signals: 785 → 720 s against 690', function () {
+// Canon (приёмка окна 1 наряда FIX-3, 22.09: потолок 690 → 900 — «сигнал должен ловить аномалию, а не каждый день»). The
+// live «врач» of the e2e stand (beginner, seven frames of three values, `lesson_day.v4.4`) at the prices measured on the
+// phone: 785 s as built, and under the new ceiling every frame takes its THIRD recognition too — 870 s, nothing cut, the
+// signal silent. CATCHES a ceiling that keeps cutting a live lesson, a third recognition not given where it fits, and a
+// signal raised on an ordinary day.
+it('gives the live «врач» its third recognitions under the 900-second ceiling and stays silent: 785 → 870 s', function () {
     $deal = s1pStage()->deal(planLiveDoctorScene(), PlanLevel::Beginner);
 
     expect($deal->rungs)->toBe([
-        ['rung' => 0, 'seconds' => 785, 'cards' => 29], ['rung' => 1, 'seconds' => 785, 'cards' => 29],
-        ['rung' => 2, 'seconds' => 720, 'cards' => 22],
+        ['rung' => 0, 'seconds' => 785, 'cards' => 29], ['rung' => 1, 'seconds' => 870, 'cards' => 36],
+        ['rung' => 2, 'seconds' => 870, 'cards' => 36],
     ])
         ->and(array_unique(array_map(
             static fn (array $f): string => "{$f['recognitions']}+{$f['rounds']}".($f['own'] ? '+своё' : ''),
             array_values($deal->frames),
-        )))->toBe(['1+2+своё'])
+        )))->toBe(['3+2+своё'])
         ->and($deal->frames)->toHaveCount(7)
-        ->and($deal->overCeiling())->toBeTrue()
-        ->and($deal->budget)->toBe(PhrasesStage::BUDGET);
+        ->and($deal->overCeiling())->toBeFalse()
+        ->and($deal->budget)->toBe(PhrasesStage::BUDGET)
+        ->and(PhrasesStage::BUDGET)->toBe(900);
 });
 
 // Canon (SESSION-1d, решение архитектора 16.09): «два узнавания КАЖДОМУ каркасу с окном», своё наполнение каждому. Catches
@@ -342,15 +345,16 @@ it('adds a third recognition to the most said frames first, while the stage stil
     $flat = s1pPace(20);
     $one = s1pStage($flat, 800)->build($scene, PlanLevel::Intermediate);
     $three = s1pStage($flat, 840)->build($scene, PlanLevel::Intermediate);
-    // At the day's own pace and its own ceiling the intermediate stage has no room for a third: it gives up round
-    // three instead (rung 2 of the ladder), which is the order the ceiling decision names.
+    // At the day's own pace and its own ceiling (900 s — приёмка окна 1 FIX-3) the clean intermediate stage has room for
+    // a third on EVERY frame of three values: 740 s as built, 800 with them.
     $all = s1pStage()->build($scene, PlanLevel::Intermediate);
 
     expect($thirds($one))->toBe(['p6'])
         ->and(s1pStage($flat, 800)->seconds($one))->toBe(800)
         ->and($thirds($three))->toBe(['p1', 'p2', 'p6'])
         ->and(s1pStage($flat, 840)->seconds($three))->toBe(840)
-        ->and($thirds($all))->toBe([])
+        ->and($thirds($all))->toBe(['p1', 'p2', 'p3', 'p5', 'p6'])
+        ->and(s1pStage()->seconds($all))->toBe(800)
         // A frame of two fillers has nothing to say a third recognition with, however often the dialogue says it.
         ->and($thirds(s1pStage(s1pPace(1), 9999)->build(s1pScene(static function (array $payload): array {
             array_pop($payload['phrases'][5]['slot']['fillers']);

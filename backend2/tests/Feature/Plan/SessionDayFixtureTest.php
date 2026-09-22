@@ -116,10 +116,10 @@ it('holds day 1 of the clean doctor lesson byte for byte, every card of the regi
     $sounds = s1fxSounds($cards);
 
     // What the file is for: the day of the registry, dealt and voiced — checked here, not only by eye.
-    // Диалог is 13 since наряд BACK-TAILS-1 §1.5: an ask deals one card, not two. «Фразы» differs by level: «Скажи
-    // целиком» is a series of rounds, never cut (наряд FIX-3 §3); at the prices measured on the phone the beginner's two
-    // rounds leave the stage room for four THIRD recognitions under its 690 s (625 → 675 s), the intermediate's three
-    // take it over (750 s) and give up five SECOND recognitions (→ 680 s).
+    // Диалог is 13 since наряд BACK-TAILS-1 §1.5: an ask deals one card, not two. «Скажи целиком» is a series of rounds,
+    // never cut (наряд FIX-3 §3); with the ceiling at 900 s (приёмка окна 1) BOTH levels also take a third recognition on
+    // every frame of three values — five of them — and nothing is cut: beginner 625 → 695 s, intermediate 750 → 820 s.
+    // The levels differ by the rounds inside «Скажи целиком» (two and three), not by the number of cards.
     // Eight rows since наряд BACK-TAILS-2 §3: «Вспомнить» is the rehearsal's and «Повторение» a review day's (both absent
     // here), and the talk has no cards at all.
     expect(array_map(static fn (array $s): int => count($s['cards']), $room['stages']))->toBe([24, $phrases, 13, 9, 8, 0, 0, 0])
@@ -139,6 +139,6 @@ it('holds day 1 of the clean doctor lesson byte for byte, every card of the regi
     expect(is_file($path))->toBeTrue("{$file}.json is missing — run with UPDATE_SESSION_FIXTURES=1 once")
         ->and($json === (string) file_get_contents($path))->toBeTrue("the day differs from docs/fixtures/{$file}.json");
 })->with([
-    'intermediate' => ['intermediate', 'day-doctor', 19],
-    'beginner' => ['beginner', 'day-doctor-beginner', 28],
+    'intermediate' => ['intermediate', 'day-doctor', 29],
+    'beginner' => ['beginner', 'day-doctor-beginner', 29],
 ]);

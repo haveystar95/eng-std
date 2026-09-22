@@ -1,9 +1,9 @@
 {
     "day_1": {
         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
-        "seconds": 740,
-        "budget": 690,
-        "over_ceiling": true,
+        "seconds": 840,
+        "budget": 900,
+        "over_ceiling": false,
         "rungs": [
             {
                 "rung": 0,
@@ -12,53 +12,70 @@
             },
             {
                 "rung": 1,
-                "seconds": 820,
-                "cards": 29
+                "seconds": 840,
+                "cards": 30
             },
             {
                 "rung": 2,
-                "seconds": 740,
-                "cards": 22
+                "seconds": 840,
+                "cards": 30
             }
         ],
         "frames": {
             "p1": {
-                "recognitions": 1,
+                "recognitions": 3,
                 "rounds": 3,
                 "own": true
             },
             "p2": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 2,
                 "own": true
             },
             "p3": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 2,
                 "own": true
             },
             "p4": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 2,
                 "own": true
             },
             "p5": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 2,
                 "own": true
             },
             "p6": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 2,
                 "own": true
             },
             "p7": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 2,
                 "own": true
             }
         },
         "say_whole": [
+            {
+                "unit_ref": "p2",
+                "rounds": [
+                    {
+                        "expected_text": "What monthly memberships do you have?",
+                        "task_native": "Какие у вас есть месячные абонементы?"
+                    },
+                    {
+                        "expected_text": "What payment options do you have?",
+                        "task_native": "Какие способы оплаты у вас есть?"
+                    }
+                ],
+                "chips": [
+                    "monthly memberships — Какие у вас есть месячные абонементы?",
+                    "payment options — Какие способы оплаты у вас есть?"
+                ]
+            },
             {
                 "unit_ref": "p1",
                 "rounds": [
@@ -79,23 +96,6 @@
                     "a day pass — У вас есть дневной пропуск?",
                     "a weekly pass — У вас есть недельный пропуск?",
                     "towel rental — У вас есть аренда полотенца?"
-                ]
-            },
-            {
-                "unit_ref": "p2",
-                "rounds": [
-                    {
-                        "expected_text": "What monthly memberships do you have?",
-                        "task_native": "Какие у вас есть месячные абонементы?"
-                    },
-                    {
-                        "expected_text": "What payment options do you have?",
-                        "task_native": "Какие способы оплаты у вас есть?"
-                    }
-                ],
-                "chips": [
-                    "monthly memberships — Какие у вас есть месячные абонементы?",
-                    "payment options — Какие способы оплаты у вас есть?"
                 ]
             },
             {
@@ -187,9 +187,9 @@
     },
     "day_2": {
         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
-        "seconds": 860,
-        "budget": 690,
-        "over_ceiling": true,
+        "seconds": 885,
+        "budget": 900,
+        "over_ceiling": false,
         "rungs": [
             {
                 "rung": 0,
@@ -203,18 +203,18 @@
             },
             {
                 "rung": 2,
-                "seconds": 860,
-                "cards": 22
+                "seconds": 885,
+                "cards": 24
             }
         ],
         "frames": {
             "p1": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 3,
                 "own": true
             },
             "p2": {
-                "recognitions": 1,
+                "recognitions": 2,
                 "rounds": 3,
                 "own": true
             },
@@ -268,28 +268,6 @@
                 ]
             },
             {
-                "unit_ref": "p2",
-                "rounds": [
-                    {
-                        "expected_text": "I have about a year of experience.",
-                        "task_native": "У меня около года опыта."
-                    },
-                    {
-                        "expected_text": "I have six months of experience.",
-                        "task_native": "У меня шесть месяцев опыта."
-                    },
-                    {
-                        "expected_text": "I have a few years of experience.",
-                        "task_native": "У меня несколько лет опыта."
-                    }
-                ],
-                "chips": [
-                    "about a year — У меня около года опыта.",
-                    "six months — У меня шесть месяцев опыта.",
-                    "a few years — У меня несколько лет опыта."
-                ]
-            },
-            {
                 "unit_ref": "p3",
                 "rounds": [
                     {
@@ -309,6 +287,28 @@
                     "shoulder pain — У меня немного болит плечо.",
                     "knee pain — У меня есть боль в колене.",
                     "lower back pain — У меня есть боль в пояснице."
+                ]
+            },
+            {
+                "unit_ref": "p2",
+                "rounds": [
+                    {
+                        "expected_text": "I have about a year of experience.",
+                        "task_native": "У меня около года опыта."
+                    },
+                    {
+                        "expected_text": "I have six months of experience.",
+                        "task_native": "У меня шесть месяцев опыта."
+                    },
+                    {
+                        "expected_text": "I have a few years of experience.",
+                        "task_native": "У меня несколько лет опыта."
+                    }
+                ],
+                "chips": [
+                    "about a year — У меня около года опыта.",
+                    "six months — У меня шесть месяцев опыта.",
+                    "a few years — У меня несколько лет опыта."
                 ]
             },
             {

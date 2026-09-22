@@ -1,0 +1,11 @@
+== Живой урок v4.4 «Регистрация» (день 1, qa-gen2a-airport): как роздан при потолке 690 → как раздался бы при 900
+  было:  words:24 phrases:22 dialogue:12 listen:11 speak:8
+         words=3 phrases=12 dialogue=4 listen=4 speak=4 conversation=5
+  стало: words:24 phrases:36 dialogue:12 listen:11 speak:8
+         words=3 phrases=15 dialogue=4 listen=4 speak=4 conversation=5
+== Живой урок v4.6 «Запись к врачу» (день 1, qa-gen3-doctor), раздача при 900 (на стенде день был пуст)
+  стало: words:24 phrases:36 dialogue:12 listen:10 speak:8
+         words=3 phrases=15 dialogue=4 listen=3 speak=4 conversation=5
+
+plan:repace --all на e2e повторён: планов 63, записано 0 — прейскурант тот же; потолок этапа в снимок плана не входит
+и на уже розданные дни не действует: он меняет то, что раздаётся с этого момента (e2e-repace-after-ceiling.txt).

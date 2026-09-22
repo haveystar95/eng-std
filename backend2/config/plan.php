@@ -118,7 +118,8 @@ return [
         'phrase_repeat' => 20,
         // «Скажи целиком» (наряд FIX-2, п. 5) is a SERIES: every value of the window said aloud and the learner's own
         // one after them, all on one card — so this is the price of ONE ROUND and the card's payload says how many
-        // it has (`plan.phrases_budget` cuts rounds off it, and a flat per-card price would hide that).
+        // it has (a flat per-card price would make a frame of two values cost what a frame of three does; the ladder
+        // никогда не режет круги — наряд FIX-3 §3).
         'phrase_other_slot' => 25,
         'phrase_combine' => 25,
         'dialogue_partner' => 20,
@@ -143,7 +144,12 @@ return [
 
     /*
      * HOW LONG «ФРАЗЫ» MAY TAKE before the stage starts cutting itself (решение архитектора 20.09, доработка наряда
-     * FIX-2). The day's own ceiling — 32 minutes — is unchanged; this is the stage's, by {@see \App\Modules\Plan\Domain\Service\DayPace}.
+     * FIX-2; 690 → 900 — приёмка окна 1 FIX-3, 22.09). The day's own ceiling — 32 minutes — is unchanged; this is the
+     * stage's, by {@see \App\Modules\Plan\Domain\Service\DayPace}.
+     *
+     * NINE HUNDRED, because the prices are honest now (наряд FIX-3 §2) and the rounds are never cut (§3): a lesson of
+     * `lesson_day.v4.7` costs 30–170 s more than the old ceiling, and a signal that fires on EVERY live day says
+     * nothing. The ceiling is for an anomaly, not for the ordinary day.
      *
      * Over it the stage is cut in ONE order, a rung at a time until it fits (наряд FIX-3 §3): the third recognitions
      * are not added, then the second recognitions go — off the frames the dialogue says least first. The ROUNDS of
@@ -152,7 +158,7 @@ return [
      * that will not fit even then is dealt anyway: the excess is a warning in the day's build log
      * (`plan.phrases_over_ceiling`), not a refusal to build the day (`Domain/Assembly/PhrasesStage`).
      */
-    'phrases_budget' => (int) env('PLAN_PHRASES_BUDGET', 690),
+    'phrases_budget' => (int) env('PLAN_PHRASES_BUDGET', 900),
 
     /*
      * ПОТОЛОК ПЯТИ ЭТАПОВ КАРТОЧЕК, МИНУТ (решение владельца 21.09, наряд CONV-1).

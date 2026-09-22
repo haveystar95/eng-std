@@ -62,22 +62,24 @@ function dbBudget(): DayBudget
  * в него не входит. Catches the ceiling read over the whole day: with the talk inside it, the clean
  * day would stop the build over a stage the owner ordered.
  */
-it('keeps the clean doctor day under the ceiling — the talk is not counted into it', function (PlanLevel $level) {
+it('keeps the clean doctor day under the ceiling — the talk is not counted into it', function (PlanLevel $level, int $minutes) {
     $cards = dbDay($level);
     $budget = dbBudget();
 
     $cardsMinutes = $budget->cardsMinutes($cards);
     $talkMinutes = $budget->talkMinutes(DayType::Scene, hasConversation: true);
 
-    // By the prices measured on the phone (наряд FIX-3 §2) the clean «врач» is 25 minutes of cards, and its talk — 5.
+    // By the prices measured on the phone (наряд FIX-3 §2), with the «Фразы» ceiling at 900 s (приёмка окна 1: every
+    // frame of three values keeps its third recognition), the clean «врач» is 25 minutes of cards at beginner and 27 at
+    // intermediate — the levels differ by the rounds of «Скажи целиком» — and its talk is 5 either way.
     expect($budget->overCardsCeiling($cards))->toBeFalse()
         ->and($cardsMinutes)->toBeLessThanOrEqual($budget->ceilingMinutes())
-        ->and($cardsMinutes)->toBe(25)
+        ->and($cardsMinutes)->toBe($minutes)
         ->and($talkMinutes)->toBe(5)
         // Длительность дня на экране — карточки ПЛЮС разговор, и она может быть больше потолка карточек.
-        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: true))->toBe(30)
-        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: false))->toBe(25);
-})->with([PlanLevel::Beginner, PlanLevel::Intermediate]);
+        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: true))->toBe($minutes + 5)
+        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: false))->toBe($minutes);
+})->with([[PlanLevel::Beginner, 25], [PlanLevel::Intermediate, 27]]);
 
 /**
  * Столько идёт СЛЕДУЮЩИЙ день: он несёт назад фразы, которых не услышал вчерашний разговор, — по одной карточке

@@ -52,7 +52,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 final class PhrasesStage
 {
     /** How long «Фразы» may take by the day's pace before the ladder starts cutting (`plan.phrases_budget`). */
-    public const BUDGET = 690;
+    public const BUDGET = 900;
 
     /** The recognitions every frame with a window gets — as many as its fillers, up to this. */
     public const RECOGNITIONS = 2;
