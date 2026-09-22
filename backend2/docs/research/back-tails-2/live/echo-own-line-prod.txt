@@ -1,22 +1,32 @@
 база wordtrainer · speak_echo без own_line: 10
-  01M2N3QXECGQ68H6RYVRR3NF0Q · план 01M2HV227644ZQAR37K7Y7HV00 (deleted) · день 1 (in_progress) · итог — · обмен 5 · partner_line x5 «This role is full-time, remote, and starts with a six-month contract.»
-    → own_line x5b «I'm comfortable with a six-month contract.» / «Мне подходит контракт на шесть месяцев.»
-  01M2N6BD3Y8WPTEARTGGMDYRRX · план 01M2N5VGKSGD87P7WRJ6P0YQRJ (deleted) · день 1 (in_progress) · итог — · обмен 6 · partner_line x6 «Small pets are sometimes allowed, but the owner wants to approve them first.»
-    → own_line x6b «I have a small dog.» / «У меня есть маленькая собака.»
-  01M2NKRH05RCSJ6YT5JNKRQ9V5 · план 01M2NKKGFF8H7TQG8HB75NRJP1 (deleted) · день 1 (closed) · итог passed · обмен 7 · partner_line x7 «I can show it on Thursday at six in the evening.»
-    → own_line x7b «Thursday at six works for me.» / «Четверг в шесть мне подходит.»
-  01M2QZ7CBRWJSWGB5VMDFZ9SWH · план 01M2NKKGFF8H7TQG8HB75NRJP1 (deleted) · день 2 (closed) · итог passed · обмен 8 · partner_line x8 «If you want to apply, I can send the form today. Move-in is from next month.»
-    → own_line x8b «Please send me the form.» / «Пожалуйста, отправьте мне анкету.»
-  01M2NPWAYDJER98BJZ3MHSYS0A · план 01M2NPRKVCZ7130Y1TFHPMBBV4 (deleted) · день 1 (in_progress) · итог — · обмен 6 · partner_line x6 «Yes, dogs are allowed in this building.»
-    → own_line x6b «Are two dogs allowed?» / «Можно с двумя собаками?»
-  01M2TJD3FBC0B2AEAKWFPP7KP9 · план 01M2TJ85933DFD0X3G97A2A60T (deleted) · день 1 (in_progress) · итог — · обмен 6 · partner_line x6 «The area is safe and close to shops, but the bus stop is ten minutes away.»
-    → own_line x6b «That's fine for the bus stop.» / «Для меня это нормально, если речь про автобусную остановку.»
-  01M2TSZ7T88GG5EWVRYN0DX2VC · план 01M2TSRM3DJPGCR5VQNBE8N3S7 (deleted) · день 1 (closed) · итог skipped · обмен 6 · partner_line x6 «The deposit is one month's rent, and the minimum term is twelve months.»
-    → own_line x6b «How much is the deposit?» / «Какой залог?»
-  01M2WKSK9Y2VFRMDKD0BF6YPTN · план 01M2TSRM3DJPGCR5VQNBE8N3S7 (deleted) · день 2 (closed) · итог passed · обмен 5 · partner_line x5 «In the flat it's fine, but in common areas your dog must stay on a lead.»
-    → own_line x5b «What are the rules for my dog?» / «Какие правила для моей собаки?»
-  01M2Z5S7VDAAEEYFSFR2EEJ51P · план 01M2WSW1H6EBJC0DN9NZJE0EVD (active) · день 1 (closed) · итог skipped · обмен 5 · partner_line x5 «Yes, we have 3 p.m. and 5:30 p.m.»
-    → own_line x5b «Do you have anything today?» / «У вас есть что-нибудь на сегодня?»
-  01M32E0RJGAFG7T8KZQRMFP8PX · план 01M32DX8QCABM348XP45Z1ZD4M (active) · день 1 (closed) · итог skipped · обмен 6 · partner_line x6 «Please bring a towel, use clean shoes, and return the locker key after training.»
-    → own_line x6b «Okay, I'll return the locker key.» / «Хорошо, я верну ключ от шкафчика.»
-миграция добавит own_line: 10 из 10
+  01M2N3QXECGQ68H6RYVRR3NF0Q · план 01M2HV227644ZQAR37K7Y7HV00 (deleted) · день 1 (in_progress) · итог — · обмен 5 · partner_line x5 «This role is full-time, remote, and starts with a six-month contract.» · правило речи coverage_min 0.7
+    → own_line x5b «I'm comfortable with a six-month contract.» · expected_text «I'm comfortable with a six-month contract.» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «This role is full-time, remote, and starts with a six-month contract.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2N6BD3Y8WPTEARTGGMDYRRX · план 01M2N5VGKSGD87P7WRJ6P0YQRJ (deleted) · день 1 (in_progress) · итог — · обмен 6 · partner_line x6 «Small pets are sometimes allowed, but the owner wants to approve them first.» · правило речи coverage_min 0.7
+    → own_line x6b «I have a small dog.» · expected_text «I have a small dog.» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «Small pets are sometimes allowed, but the owner wants to approve them first.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2NKRH05RCSJ6YT5JNKRQ9V5 · план 01M2NKKGFF8H7TQG8HB75NRJP1 (deleted) · день 1 (closed) · итог passed · обмен 7 · partner_line x7 «I can show it on Thursday at six in the evening.» · правило речи coverage_min 0.7
+    → own_line x7b «Thursday at six works for me.» · expected_text «Thursday at six works for me.» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «I can show it on Thursday at six in the evening.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2QZ7CBRWJSWGB5VMDFZ9SWH · план 01M2NKKGFF8H7TQG8HB75NRJP1 (deleted) · день 2 (closed) · итог passed · обмен 8 · partner_line x8 «If you want to apply, I can send the form today. Move-in is from next month.» · правило речи coverage_min 0.7
+    → own_line x8b «Please send me the form.» · expected_text «Please send me the form.» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «If you want to apply, I can send the form today. Move-in is from next month.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2NPWAYDJER98BJZ3MHSYS0A · план 01M2NPRKVCZ7130Y1TFHPMBBV4 (deleted) · день 1 (in_progress) · итог — · обмен 6 · partner_line x6 «Yes, dogs are allowed in this building.» · правило речи coverage_min 0.7
+    → own_line x6b «Are two dogs allowed?» · expected_text «Are two dogs allowed?» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «Yes, dogs are allowed in this building.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2TJD3FBC0B2AEAKWFPP7KP9 · план 01M2TJ85933DFD0X3G97A2A60T (deleted) · день 1 (in_progress) · итог — · обмен 6 · partner_line x6 «The area is safe and close to shops, but the bus stop is ten minutes away.» · правило речи coverage_min 0.7
+    → own_line x6b «That's fine for the bus stop.» · expected_text «That's fine for the bus stop.» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «The area is safe and close to shops, but the bus stop is ten minutes away.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2TSZ7T88GG5EWVRYN0DX2VC · план 01M2TSRM3DJPGCR5VQNBE8N3S7 (deleted) · день 1 (closed) · итог skipped · обмен 6 · partner_line x6 «The deposit is one month's rent, and the minimum term is twelve months.» · правило речи coverage_min 0.7
+    → own_line x6b «How much is the deposit?» · expected_text «How much is the deposit?» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «The deposit is one month's rent, and the minimum term is twelve months.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2WKSK9Y2VFRMDKD0BF6YPTN · план 01M2TSRM3DJPGCR5VQNBE8N3S7 (deleted) · день 2 (closed) · итог passed · обмен 5 · partner_line x5 «In the flat it's fine, but in common areas your dog must stay on a lead.» · правило речи coverage_min 0.7
+    → own_line x5b «What are the rules for my dog?» · expected_text «What are the rules for my dog?» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «In the flat it's fine, but in common areas your dog must stay on a lead.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M2Z5S7VDAAEEYFSFR2EEJ51P · план 01M2WSW1H6EBJC0DN9NZJE0EVD (active) · день 1 (closed) · итог skipped · обмен 5 · partner_line x5 «Yes, we have 3 p.m. and 5:30 p.m.» · правило речи coverage_min 0.7
+    → own_line x5b «Do you have anything today?» · expected_text «Do you have anything today?» · speech_mode repeat · coverage_min снят: да · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «Yes, we have 3 p.m. and 5:30 p.m.» · coverage_min 0.7 обратно, speech_mode снять (день роздан до FIX-2)
+  01M32E0RJGAFG7T8KZQRMFP8PX · план 01M32DX8QCABM348XP45Z1ZD4M (active) · день 1 (closed) · итог skipped · обмен 6 · partner_line x6 «Please bring a towel, use clean shoes, and return the locker key after training.» · правило речи speech_mode "repeat"
+    → own_line x6b «Okay, I'll return the locker key.» · expected_text «Okay, I'll return the locker key.» · speech_mode repeat · coverage_min снят: не было · равна свежей раздаче (кроме partner_line): да
+    ← откат: expected_text «Please bring a towel, use clean shoes, and return the locker key after training.» · speech_mode остаётся, coverage_min не появляется (день роздан после FIX-2)
+миграция приведёт к нынешней форме: 10 из 10 · равны свежей раздаче своего обмена (кроме partner_line): 10
