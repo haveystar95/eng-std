@@ -76,7 +76,13 @@ Branch: **`fix-3`** (worktree `../backend2-fix3`, от `main` `9762e702`). Last 
 - `mini`-роль всё ещё временами идёт по приготовленному визиту (переспрос, приготовленное значение);
 - `speak_echo` 70 с по n = 7 — пересчитать `tools/prices.py`;
 - снос `has_conversation` и рубильника (BACK-TAILS-2 §11) — не в этом наряде;
-- смена лица I → we в цели из трёх ключевых слов не засчитывается.
+- смена лица I → we в цели из трёх ключевых слов не засчитывается;
+- **изоляция тестов (долг будущего серверного наряда, в FIX-3 не брался):** девять тестов озвучки и фото —
+  `PlanDayWindowTest` («backfills a lesson whole», «backfills real learners…», «re-voices with --drop-unread», «deletes
+  with --drop-only», «voices nothing on its own», «finds every photo…», «paints a word…», «backfills what the plan…») и
+  `PlansBeforeFramesPurgeTest` («drops every plan…») — зависят от порядка: падают при СЕРИЙНОМ прогоне всей
+  `tests/Feature/Plan` и проходят поодиночке и в `--parallel` (штатный режим сьюта). Проверено: на `main` без ветки
+  FIX-3 тот же серийный прогон роняет те же девять — дефект изоляции, а не наряда.
 
 ## 7. Стенд e2e после окна 1
 
