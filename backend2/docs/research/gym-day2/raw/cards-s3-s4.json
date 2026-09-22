@@ -1,0 +1,6542 @@
+{
+ "s3_returned": [
+  {
+   "card": {
+    "id": "01M34GF5GVKRZHG88H5YNJVV06",
+    "stage": "speak",
+    "position": 9,
+    "kind": "speak_retell",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x1"
+    },
+    "source": "returned",
+    "source_day": 1,
+    "retry_of": null,
+    "payload": {
+     "exchange": {
+      "ref": "x1",
+      "kind": "ask",
+      "step": 1
+     },
+     "own_line": {
+      "key": "Do you have",
+      "ref": "x1b",
+      "audio": {
+       "ref": "x1b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ42DK3Z5K90ADSATAYZ",
+       "duration_ms": 1257,
+       "voice": "learner"
+      },
+      "frame_ref": "p1",
+      "text_native": "У вас есть дневной пропуск?",
+      "text_target": "Do you have a day pass?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "repeat",
+     "expected_text": "Do you have a day pass?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "heard": "Do you have a day pass"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x1",
+    "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "answered_at": "2026-09-22T12:35:58+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HV9ARQKXEFSYXFJRNFQGF",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVKRZHG88H5YNJVV06/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 28,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 78,
+     "response_bytes": 1216,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "heard": "Do you have a day pass"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 79,
+        "cards_total": 85,
+        "minutes_spent": 25
+       },
+       "card": {
+        "id": "01M34GF5GVKRZHG88H5YNJVV06",
+        "kind": "speak_retell",
+        "unit": {
+         "ref": "x1",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "passed",
+        "source": "returned",
+        "payload": {
+         "exchange": {
+          "ref": "x1",
+          "kind": "ask",
+          "step": 1
+         },
+         "own_line": {
+          "key": "Do you have",
+          "ref": "x1b",
+          "audio": {
+           "ref": "x1b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ42DK3Z5K90ADSATAYZ",
+           "voice": "learner",
+           "duration_ms": 1257
+          },
+          "frame_ref": "p1",
+          "text_native": "У вас есть дневной пропуск?",
+          "text_target": "Do you have a day pass?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "repeat",
+         "expected_text": "Do you have a day pass?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 9,
+        "response": {
+         "heard": "Do you have a day pass"
+        },
+        "retry_of": null,
+        "unit_ref": "x1",
+        "unit_kind": "exchange",
+        "source_day": 1,
+        "answered_at": "2026-09-22T12:35:58+00:00",
+        "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE"
+       },
+       "unit": {
+        "ref": "x1",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "speak",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:35:58+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GVGVW5A8MK861FG2CY",
+    "stage": "speak",
+    "position": 10,
+    "kind": "speak_retell",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x2"
+    },
+    "source": "returned",
+    "source_day": 1,
+    "retry_of": null,
+    "payload": {
+     "exchange": {
+      "ref": "x2",
+      "kind": "ask",
+      "step": 2
+     },
+     "own_line": {
+      "key": "What",
+      "ref": "x2b",
+      "audio": {
+       "ref": "x2b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ4WG07AHFAKEYT8DP99",
+       "duration_ms": 2380,
+       "voice": "learner"
+      },
+      "frame_ref": "p2",
+      "text_native": "Какие у вас есть месячные абонементы?",
+      "text_target": "What monthly memberships do you have?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "repeat",
+     "expected_text": "What monthly memberships do you have?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "heard": "What monthly membership do you have"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x2",
+    "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "answered_at": "2026-09-22T12:36:08+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HVJWCFX80YSS1JY6XE7WC",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVGVW5A8MK861FG2CY/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 31,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 91,
+     "response_bytes": 1306,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "heard": "What monthly membership do you have"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 80,
+        "cards_total": 85,
+        "minutes_spent": 25
+       },
+       "card": {
+        "id": "01M34GF5GVGVW5A8MK861FG2CY",
+        "kind": "speak_retell",
+        "unit": {
+         "ref": "x2",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "passed",
+        "source": "returned",
+        "payload": {
+         "exchange": {
+          "ref": "x2",
+          "kind": "ask",
+          "step": 2
+         },
+         "own_line": {
+          "key": "What",
+          "ref": "x2b",
+          "audio": {
+           "ref": "x2b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ4WG07AHFAKEYT8DP99",
+           "voice": "learner",
+           "duration_ms": 2380
+          },
+          "frame_ref": "p2",
+          "text_native": "Какие у вас есть месячные абонементы?",
+          "text_target": "What monthly memberships do you have?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "repeat",
+         "expected_text": "What monthly memberships do you have?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 10,
+        "response": {
+         "heard": "What monthly membership do you have"
+        },
+        "retry_of": null,
+        "unit_ref": "x2",
+        "unit_kind": "exchange",
+        "source_day": 1,
+        "answered_at": "2026-09-22T12:36:08+00:00",
+        "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE"
+       },
+       "unit": {
+        "ref": "x2",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "speak",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:36:08+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GV7QBK1Y233BR7YVQH",
+    "stage": "speak",
+    "position": 11,
+    "kind": "speak_retell",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x3"
+    },
+    "source": "returned",
+    "source_day": 1,
+    "retry_of": null,
+    "payload": {
+     "exchange": {
+      "ref": "x3",
+      "kind": "answer",
+      "step": 3
+     },
+     "own_line": {
+      "key": "This is",
+      "ref": "x3b",
+      "audio": {
+       "ref": "x3b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZY289WESY1B4PY4DE7C",
+       "duration_ms": 1910,
+       "voice": "learner"
+      },
+      "frame_ref": "p3",
+      "text_native": "Да, это мой первый визит.",
+      "text_target": "Yes, this is my first visit.",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "repeat",
+     "expected_text": "Yes, this is my first visit."
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "heard": "Yes this is my first visit"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x3",
+    "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "answered_at": "2026-09-22T12:36:19+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HVXJ2ZJ1WW2Y9M8SXQSZ0",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GV7QBK1Y233BR7YVQH/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 22,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 82,
+     "response_bytes": 1213,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "heard": "Yes this is my first visit"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 81,
+        "cards_total": 85,
+        "minutes_spent": 25
+       },
+       "card": {
+        "id": "01M34GF5GV7QBK1Y233BR7YVQH",
+        "kind": "speak_retell",
+        "unit": {
+         "ref": "x3",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "passed",
+        "source": "returned",
+        "payload": {
+         "exchange": {
+          "ref": "x3",
+          "kind": "answer",
+          "step": 3
+         },
+         "own_line": {
+          "key": "This is",
+          "ref": "x3b",
+          "audio": {
+           "ref": "x3b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZY289WESY1B4PY4DE7C",
+           "voice": "learner",
+           "duration_ms": 1910
+          },
+          "frame_ref": "p3",
+          "text_native": "Да, это мой первый визит.",
+          "text_target": "Yes, this is my first visit.",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "repeat",
+         "expected_text": "Yes, this is my first visit."
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 11,
+        "response": {
+         "heard": "Yes this is my first visit"
+        },
+        "retry_of": null,
+        "unit_ref": "x3",
+        "unit_kind": "exchange",
+        "source_day": 1,
+        "answered_at": "2026-09-22T12:36:19+00:00",
+        "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE"
+       },
+       "unit": {
+        "ref": "x3",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "speak",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:36:19+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GVBD2CD685HCHT0J2X",
+    "stage": "speak",
+    "position": 12,
+    "kind": "speak_retell",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x4"
+    },
+    "source": "returned",
+    "source_day": 1,
+    "retry_of": null,
+    "payload": {
+     "exchange": {
+      "ref": "x4",
+      "kind": "answer",
+      "step": 4
+     },
+     "own_line": {
+      "key": "works for me on",
+      "ref": "x4b",
+      "audio": {
+       "ref": "x4b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0Y8BEHAQV6HQVP1GFX2",
+       "duration_ms": 1831,
+       "voice": "learner"
+      },
+      "frame_ref": "p4",
+      "text_native": "Мне это подходит по будням.",
+      "text_target": "That works for me on weekdays.",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "repeat",
+     "expected_text": "That works for me on weekdays."
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "heard": "That works for me on weekdays"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x4",
+    "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "answered_at": "2026-09-22T12:36:28+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HW777AXBY73GAVGZDBASQ",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVBD2CD685HCHT0J2X/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 42,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 85,
+     "response_bytes": 1245,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "heard": "That works for me on weekdays"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 82,
+        "cards_total": 85,
+        "minutes_spent": 25
+       },
+       "card": {
+        "id": "01M34GF5GVBD2CD685HCHT0J2X",
+        "kind": "speak_retell",
+        "unit": {
+         "ref": "x4",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "passed",
+        "source": "returned",
+        "payload": {
+         "exchange": {
+          "ref": "x4",
+          "kind": "answer",
+          "step": 4
+         },
+         "own_line": {
+          "key": "works for me on",
+          "ref": "x4b",
+          "audio": {
+           "ref": "x4b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0Y8BEHAQV6HQVP1GFX2",
+           "voice": "learner",
+           "duration_ms": 1831
+          },
+          "frame_ref": "p4",
+          "text_native": "Мне это подходит по будням.",
+          "text_target": "That works for me on weekdays.",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "repeat",
+         "expected_text": "That works for me on weekdays."
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 12,
+        "response": {
+         "heard": "That works for me on weekdays"
+        },
+        "retry_of": null,
+        "unit_ref": "x4",
+        "unit_kind": "exchange",
+        "source_day": 1,
+        "answered_at": "2026-09-22T12:36:28+00:00",
+        "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE"
+       },
+       "unit": {
+        "ref": "x4",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "speak",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:36:29+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GVY1Q0W09PMN9QKQXA",
+    "stage": "speak",
+    "position": 13,
+    "kind": "speak_retell",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x5"
+    },
+    "source": "returned",
+    "source_day": 1,
+    "retry_of": null,
+    "payload": {
+     "exchange": {
+      "ref": "x5",
+      "kind": "ask",
+      "step": 5
+     },
+     "own_line": {
+      "key": "Where are",
+      "ref": "x5b",
+      "audio": {
+       "ref": "x5b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0YBNR8BB4GD4NVDN55V",
+       "duration_ms": 1518,
+       "voice": "learner"
+      },
+      "frame_ref": "p5",
+      "text_native": "Где раздевалки?",
+      "text_target": "Where are the changing rooms?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "repeat",
+     "expected_text": "Where are the changing rooms?"
+    },
+    "result": "passed",
+    "attempts": 2,
+    "response": {
+     "heard": "Where is the changing room"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x5",
+    "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "answered_at": "2026-09-22T12:36:42+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HWMDS5Z5JTZ74E4G1HSHH",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVY1Q0W09PMN9QKQXA/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 32,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 82,
+     "response_bytes": 1174,
+     "request_body": {
+      "result": "passed",
+      "attempts": 2,
+      "response": {
+       "heard": "Where is the changing room"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 83,
+        "cards_total": 85,
+        "minutes_spent": 25
+       },
+       "card": {
+        "id": "01M34GF5GVY1Q0W09PMN9QKQXA",
+        "kind": "speak_retell",
+        "unit": {
+         "ref": "x5",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "passed",
+        "source": "returned",
+        "payload": {
+         "exchange": {
+          "ref": "x5",
+          "kind": "ask",
+          "step": 5
+         },
+         "own_line": {
+          "key": "Where are",
+          "ref": "x5b",
+          "audio": {
+           "ref": "x5b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0YBNR8BB4GD4NVDN55V",
+           "voice": "learner",
+           "duration_ms": 1518
+          },
+          "frame_ref": "p5",
+          "text_native": "Где раздевалки?",
+          "text_target": "Where are the changing rooms?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "repeat",
+         "expected_text": "Where are the changing rooms?"
+        },
+        "returns": false,
+        "attempts": 2,
+        "position": 13,
+        "response": {
+         "heard": "Where is the changing room"
+        },
+        "retry_of": null,
+        "unit_ref": "x5",
+        "unit_kind": "exchange",
+        "source_day": 1,
+        "answered_at": "2026-09-22T12:36:42+00:00",
+        "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE"
+       },
+       "unit": {
+        "ref": "x5",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "speak",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:36:42+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GV2W7G60X9HHAADEP1",
+    "stage": "speak",
+    "position": 14,
+    "kind": "speak_retell",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x6"
+    },
+    "source": "returned",
+    "source_day": 1,
+    "retry_of": null,
+    "payload": {
+     "exchange": {
+      "ref": "x6",
+      "kind": "answer",
+      "step": 6
+     },
+     "own_line": {
+      "key": "I'll return",
+      "ref": "x6b",
+      "audio": {
+       "ref": "x6b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ1ZXY05B24VN6QFK9HSR",
+       "duration_ms": 2066,
+       "voice": "learner"
+      },
+      "frame_ref": "p6",
+      "text_native": "Хорошо, я верну ключ от шкафчика.",
+      "text_target": "Okay, I'll return the locker key.",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "repeat",
+     "expected_text": "Okay, I'll return the locker key."
+    },
+    "result": "skipped",
+    "attempts": 2,
+    "response": {
+     "heard": "OK I will return a locker key"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x6",
+    "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "answered_at": "2026-09-22T12:37:00+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HX6B9YHSG8DC53H0PH4VC",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GV2W7G60X9HHAADEP1/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 32,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 86,
+     "response_bytes": 1274,
+     "request_body": {
+      "result": "skipped",
+      "attempts": 2,
+      "response": {
+       "heard": "OK I will return a locker key"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 84,
+        "cards_total": 85,
+        "minutes_spent": 26
+       },
+       "card": {
+        "id": "01M34GF5GV2W7G60X9HHAADEP1",
+        "kind": "speak_retell",
+        "unit": {
+         "ref": "x6",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "skipped",
+        "source": "returned",
+        "payload": {
+         "exchange": {
+          "ref": "x6",
+          "kind": "answer",
+          "step": 6
+         },
+         "own_line": {
+          "key": "I'll return",
+          "ref": "x6b",
+          "audio": {
+           "ref": "x6b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ1ZXY05B24VN6QFK9HSR",
+           "voice": "learner",
+           "duration_ms": 2066
+          },
+          "frame_ref": "p6",
+          "text_native": "Хорошо, я верну ключ от шкафчика.",
+          "text_target": "Okay, I'll return the locker key.",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "repeat",
+         "expected_text": "Okay, I'll return the locker key."
+        },
+        "returns": false,
+        "attempts": 2,
+        "position": 14,
+        "response": {
+         "heard": "OK I will return a locker key"
+        },
+        "retry_of": null,
+        "unit_ref": "x6",
+        "unit_kind": "exchange",
+        "source_day": 1,
+        "answered_at": "2026-09-22T12:37:00+00:00",
+        "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE"
+       },
+       "unit": {
+        "ref": "x6",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "speak",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:37:00+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GVSVY6GSXSMAX46AGY",
+    "stage": "speak",
+    "position": 15,
+    "kind": "speak_retell",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x8"
+    },
+    "source": "returned",
+    "source_day": 1,
+    "retry_of": null,
+    "payload": {
+     "exchange": {
+      "ref": "x8",
+      "kind": "ask",
+      "step": 8
+     },
+     "own_line": {
+      "key": "Can I pay",
+      "ref": "x8b",
+      "audio": {
+       "ref": "x8b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ2YRHG1STHJ27JDJH4JD",
+       "duration_ms": 1518,
+       "voice": "learner"
+      },
+      "frame_ref": "p7",
+      "text_native": "Я могу оплатить картой?",
+      "text_target": "Can I pay by card?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "repeat",
+     "expected_text": "Can I pay by card?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "heard": "Can I pay my card"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x8",
+    "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE",
+    "answered_at": "2026-09-22T12:37:08+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HXDV3GX32HRTQVZ4YFBRV",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVSVY6GSXSMAX46AGY/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 28,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 73,
+     "response_bytes": 1181,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "heard": "Can I pay my card"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 85,
+        "cards_total": 85,
+        "minutes_spent": 26
+       },
+       "card": {
+        "id": "01M34GF5GVSVY6GSXSMAX46AGY",
+        "kind": "speak_retell",
+        "unit": {
+         "ref": "x8",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "passed",
+        "source": "returned",
+        "payload": {
+         "exchange": {
+          "ref": "x8",
+          "kind": "ask",
+          "step": 8
+         },
+         "own_line": {
+          "key": "Can I pay",
+          "ref": "x8b",
+          "audio": {
+           "ref": "x8b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ2YRHG1STHJ27JDJH4JD",
+           "voice": "learner",
+           "duration_ms": 1518
+          },
+          "frame_ref": "p7",
+          "text_native": "Я могу оплатить картой?",
+          "text_target": "Can I pay by card?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "repeat",
+         "expected_text": "Can I pay by card?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 15,
+        "response": {
+         "heard": "Can I pay my card"
+        },
+        "retry_of": null,
+        "unit_ref": "x8",
+        "unit_kind": "exchange",
+        "source_day": 1,
+        "answered_at": "2026-09-22T12:37:08+00:00",
+        "source_day_id": "01M32DX8QF4042C0CDVAY9P7DE"
+       },
+       "unit": {
+        "ref": "x8",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "speak",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:37:08+00:00"
+    }
+   ]
+  }
+ ],
+ "s4_weight_loss": {
+  "card": {
+   "id": "01M34GF5GVK9NJPW7MFZAAC6YB",
+   "stage": "phrases",
+   "position": 7,
+   "kind": "phrase_other_slot",
+   "unit": {
+    "kind": "phrase",
+    "ref": "p1"
+   },
+   "source": "today",
+   "source_day": null,
+   "retry_of": null,
+   "payload": {
+    "key": "I'm working on",
+    "frame": {
+     "ref": "p1",
+     "kind": "answer",
+     "slot": {
+      "fillers": [
+       {
+        "audio": {
+         "ref": "p1",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRYHWC08RJGGCR8832TWE",
+         "duration_ms": 2066,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "общей формой",
+        "target": "general fitness",
+        "in_dialogue": true,
+        "native_line": "Я работаю над общей формой.",
+        "pronunciation_native": "дженерал фитнес"
+       },
+       {
+        "audio": {
+         "ref": "p1.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS010R5789KQ8KMBSHNAG",
+         "duration_ms": 2066,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "силой",
+        "target": "strength",
+        "in_dialogue": false,
+        "native_line": "Я работаю над силой.",
+        "pronunciation_native": "стрэнгс"
+       },
+       {
+        "audio": {
+         "ref": "p1.f3",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS0RC7ZRT0DAG3WTZJ8YB",
+         "duration_ms": 1988,
+         "voice": "learner"
+        },
+        "index": 2,
+        "native": "снижением веса",
+        "target": "weight loss",
+        "in_dialogue": false,
+        "native_line": "Я работаю над снижением веса.",
+        "pronunciation_native": "уэйт лос"
+       }
+      ],
+      "hint_native": "цель тренировки"
+     },
+     "frame_native": "Я работаю над ___.",
+     "frame_target": "I'm working on ___.",
+     "frame_pronunciation_native": "Айм воркинг он ___."
+    },
+    "rounds": [
+     {
+      "task_native": "Я работаю над общей формой.",
+      "filler_index": 0,
+      "expected_text": "I'm working on general fitness."
+     },
+     {
+      "task_native": "Я работаю над силой.",
+      "filler_index": 1,
+      "expected_text": "I'm working on strength."
+     }
+    ],
+    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+    "own_round": {
+     "judge": true,
+     "examples": [
+      "общей формой",
+      "силой",
+      "снижением веса"
+     ],
+     "speech_mode": "free",
+     "task_native": "Я работаю над ___."
+    },
+    "speech_mode": "repeat",
+    "partner_line": {
+     "ref": "x1",
+     "audio": {
+      "ref": "x1",
+      "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRSDR80G88TP16J0DQWX3",
+      "duration_ms": 1753,
+      "voice": "partner"
+     },
+     "text_native": "Над чем вы сегодня хотите поработать?",
+     "text_target": "What are you training for today?"
+    }
+   },
+   "result": "passed",
+   "attempts": 3,
+   "response": {
+    "heard": "I'm working on a strength",
+    "judge": {
+     "by": "code",
+     "model": null,
+     "accepted": true,
+     "cost_usd": null,
+     "tokens_in": null,
+     "latency_ms": null,
+     "tokens_out": null,
+     "reason_native": null,
+     "prompt_version": null
+    }
+   },
+   "unit_kind": "phrase",
+   "unit_ref": "p1",
+   "source_day_id": null,
+   "answered_at": "2026-09-22T12:16:58+00:00",
+   "returns": false
+  },
+  "requests": [
+   {
+    "id": "01M34GRGC24ZHAWJDF4FY6TT1F",
+    "direction": "inbound",
+    "method": "POST",
+    "host": "greedily-thermos-finer.ngrok-free.dev",
+    "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVK9NJPW7MFZAAC6YB/judge",
+    "service": null,
+    "purpose": null,
+    "status": 200,
+    "duration_ms": 41,
+    "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+    "request_bytes": 52,
+    "response_bytes": 3953,
+    "request_body": {
+     "heard": "I'm working on a strength",
+     "hinted": false
+    },
+    "response_body": {
+     "data": {
+      "card": {
+       "id": "01M34GF5GVK9NJPW7MFZAAC6YB",
+       "kind": "phrase_other_slot",
+       "unit": {
+        "ref": "p1",
+        "kind": "phrase"
+       },
+       "stage": "phrases",
+       "result": null,
+       "source": "today",
+       "payload": {
+        "key": "I'm working on",
+        "frame": {
+         "ref": "p1",
+         "kind": "answer",
+         "slot": {
+          "fillers": [
+           {
+            "audio": {
+             "ref": "p1",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRYHWC08RJGGCR8832TWE",
+             "voice": "learner",
+             "duration_ms": 2066
+            },
+            "index": 0,
+            "native": "общей формой",
+            "target": "general fitness",
+            "in_dialogue": true,
+            "native_line": "Я работаю над общей формой.",
+            "pronunciation_native": "дженерал фитнес"
+           },
+           {
+            "audio": {
+             "ref": "p1.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS010R5789KQ8KMBSHNAG",
+             "voice": "learner",
+             "duration_ms": 2066
+            },
+            "index": 1,
+            "native": "силой",
+            "target": "strength",
+            "in_dialogue": false,
+            "native_line": "Я работаю над силой.",
+            "pronunciation_native": "стрэнгс"
+           },
+           {
+            "audio": {
+             "ref": "p1.f3",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS0RC7ZRT0DAG3WTZJ8YB",
+             "voice": "learner",
+             "duration_ms": 1988
+            },
+            "index": 2,
+            "native": "снижением веса",
+            "target": "weight loss",
+            "in_dialogue": false,
+            "native_line": "Я работаю над снижением веса.",
+            "pronunciation_native": "уэйт лос"
+           }
+          ],
+          "hint_native": "цель тренировки"
+         },
+         "frame_native": "Я работаю над ___.",
+         "frame_target": "I'm working on ___.",
+         "frame_pronunciation_native": "Айм воркинг он ___."
+        },
+        "rounds": [
+         {
+          "task_native": "Я работаю над общей формой.",
+          "filler_index": 0,
+          "expected_text": "I'm working on general fitness."
+         },
+         {
+          "task_native": "Я работаю над силой.",
+          "filler_index": 1,
+          "expected_text": "I'm working on strength."
+         }
+        ],
+        "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+        "own_round": {
+         "judge": true,
+         "examples": [
+          "общей формой",
+          "силой",
+          "снижением веса"
+         ],
+         "speech_mode": "free",
+         "task_native": "Я работаю над ___."
+        },
+        "speech_mode": "repeat",
+        "partner_line": {
+         "ref": "x1",
+         "audio": {
+          "ref": "x1",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRSDR80G88TP16J0DQWX3",
+          "voice": "partner",
+          "duration_ms": 1753
+         },
+         "text_native": "Над чем вы сегодня хотите поработать?",
+         "text_target": "What are you training for today?"
+        }
+       },
+       "returns": false,
+       "attempts": 1,
+       "position": 7,
+       "response": {
+        "heard": "I'm working on a strength",
+        "judge": {
+         "by": "code",
+         "model": null,
+         "accepted": true,
+         "cost_usd": null,
+         "tokens_in": "[REDACTED]",
+         "latency_ms": null,
+         "tokens_out": "[REDACTED]",
+         "reason_native": null,
+         "prompt_version": null
+        },
+        "hinted": false,
+        "slot_value": "strength"
+       },
+       "retry_of": null,
+       "unit_ref": "p1",
+       "unit_kind": "phrase",
+       "source_day": null,
+       "answered_at": null,
+       "source_day_id": null
+      },
+      "heard": "I'm working on a strength",
+      "result": null,
+      "accepted": true,
+      "attempts": 1,
+      "slot_value": "strength",
+      "reason_native": null
+     }
+    },
+    "error": null,
+    "occurred_at": "2026-09-22T12:16:58+00:00"
+   },
+   {
+    "id": "01M34GRGG15EK0FQWNS1ZF5Q9B",
+    "direction": "inbound",
+    "method": "POST",
+    "host": "greedily-thermos-finer.ngrok-free.dev",
+    "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVK9NJPW7MFZAAC6YB/answer",
+    "service": null,
+    "purpose": null,
+    "status": 200,
+    "duration_ms": 19,
+    "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+    "request_bytes": 81,
+    "response_bytes": 4018,
+    "request_body": {
+     "result": "passed",
+     "attempts": 3,
+     "response": {
+      "heard": "I'm working on a strength"
+     }
+    },
+    "response_body": {
+     "data": {
+      "day": {
+       "cards_done": 31,
+       "cards_total": 84,
+       "minutes_spent": 6
+      },
+      "card": {
+       "id": "01M34GF5GVK9NJPW7MFZAAC6YB",
+       "kind": "phrase_other_slot",
+       "unit": {
+        "ref": "p1",
+        "kind": "phrase"
+       },
+       "stage": "phrases",
+       "result": "passed",
+       "source": "today",
+       "payload": {
+        "key": "I'm working on",
+        "frame": {
+         "ref": "p1",
+         "kind": "answer",
+         "slot": {
+          "fillers": [
+           {
+            "audio": {
+             "ref": "p1",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRYHWC08RJGGCR8832TWE",
+             "voice": "learner",
+             "duration_ms": 2066
+            },
+            "index": 0,
+            "native": "общей формой",
+            "target": "general fitness",
+            "in_dialogue": true,
+            "native_line": "Я работаю над общей формой.",
+            "pronunciation_native": "дженерал фитнес"
+           },
+           {
+            "audio": {
+             "ref": "p1.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS010R5789KQ8KMBSHNAG",
+             "voice": "learner",
+             "duration_ms": 2066
+            },
+            "index": 1,
+            "native": "силой",
+            "target": "strength",
+            "in_dialogue": false,
+            "native_line": "Я работаю над силой.",
+            "pronunciation_native": "стрэнгс"
+           },
+           {
+            "audio": {
+             "ref": "p1.f3",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS0RC7ZRT0DAG3WTZJ8YB",
+             "voice": "learner",
+             "duration_ms": 1988
+            },
+            "index": 2,
+            "native": "снижением веса",
+            "target": "weight loss",
+            "in_dialogue": false,
+            "native_line": "Я работаю над снижением веса.",
+            "pronunciation_native": "уэйт лос"
+           }
+          ],
+          "hint_native": "цель тренировки"
+         },
+         "frame_native": "Я работаю над ___.",
+         "frame_target": "I'm working on ___.",
+         "frame_pronunciation_native": "Айм воркинг он ___."
+        },
+        "rounds": [
+         {
+          "task_native": "Я работаю над общей формой.",
+          "filler_index": 0,
+          "expected_text": "I'm working on general fitness."
+         },
+         {
+          "task_native": "Я работаю над силой.",
+          "filler_index": 1,
+          "expected_text": "I'm working on strength."
+         }
+        ],
+        "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+        "own_round": {
+         "judge": true,
+         "examples": [
+          "общей формой",
+          "силой",
+          "снижением веса"
+         ],
+         "speech_mode": "free",
+         "task_native": "Я работаю над ___."
+        },
+        "speech_mode": "repeat",
+        "partner_line": {
+         "ref": "x1",
+         "audio": {
+          "ref": "x1",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRSDR80G88TP16J0DQWX3",
+          "voice": "partner",
+          "duration_ms": 1753
+         },
+         "text_native": "Над чем вы сегодня хотите поработать?",
+         "text_target": "What are you training for today?"
+        }
+       },
+       "returns": false,
+       "attempts": 3,
+       "position": 7,
+       "response": {
+        "heard": "I'm working on a strength",
+        "judge": {
+         "by": "code",
+         "model": null,
+         "accepted": true,
+         "cost_usd": null,
+         "tokens_in": "[REDACTED]",
+         "latency_ms": null,
+         "tokens_out": "[REDACTED]",
+         "reason_native": null,
+         "prompt_version": null
+        }
+       },
+       "retry_of": null,
+       "unit_ref": "p1",
+       "unit_kind": "phrase",
+       "source_day": null,
+       "answered_at": "2026-09-22T12:16:58+00:00",
+       "source_day_id": null
+      },
+      "unit": {
+       "ref": "p1",
+       "kind": "phrase",
+       "returns_day": null,
+       "returns_tomorrow": false
+      },
+      "stage": {
+       "stage": "phrases",
+       "minutes_spent": 3
+      },
+      "requeued": null
+     }
+    },
+    "error": null,
+    "occurred_at": "2026-09-22T12:16:58+00:00"
+   }
+  ]
+ },
+ "s4_what_said": [
+  {
+   "day": 1,
+   "card": {
+    "id": "01M32E0RJG14FWTH4HGTP0EXYV",
+    "stage": "dialogue",
+    "position": 1,
+    "kind": "dialogue_ask",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x1"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p1",
+      "kind": "ask",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p1",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3PZ181NVC8JCQQA9Y11",
+          "duration_ms": 1257,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "дневной пропуск",
+         "target": "a day pass",
+         "in_dialogue": true,
+         "native_line": "У вас есть дневной пропуск?",
+         "pronunciation_native": "э дей пас"
+        },
+        {
+         "audio": {
+          "ref": "p1.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52S2XSKHD358DD372B1",
+          "duration_ms": 1675,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "недельный пропуск",
+         "target": "a weekly pass",
+         "in_dialogue": false,
+         "native_line": "У вас есть недельный пропуск?",
+         "pronunciation_native": "э уикли пас"
+        },
+        {
+         "audio": {
+          "ref": "p1.f3",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S1GSP47HEPVAWS9QJJ",
+          "duration_ms": 1335,
+          "voice": "learner"
+         },
+         "index": 2,
+         "native": "аренда полотенца",
+         "target": "towel rental",
+         "in_dialogue": false,
+         "native_line": "У вас есть аренда полотенца?",
+         "pronunciation_native": "тауэл рентэл"
+        }
+       ],
+       "hint_native": "что есть в наличии"
+      },
+      "frame_native": "У вас есть ___?",
+      "frame_target": "Do you have ___?",
+      "frame_pronunciation_native": "Ду ю хэв ___?"
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p1",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3PZ181NVC8JCQQA9Y11",
+         "duration_ms": 1257,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "дневной пропуск",
+        "target": "a day pass",
+        "in_dialogue": true,
+        "native_line": "У вас есть дневной пропуск?",
+        "pronunciation_native": "э дей пас"
+       },
+       {
+        "audio": {
+         "ref": "p1.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52S2XSKHD358DD372B1",
+         "duration_ms": 1675,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "недельный пропуск",
+        "target": "a weekly pass",
+        "in_dialogue": false,
+        "native_line": "У вас есть недельный пропуск?",
+        "pronunciation_native": "э уикли пас"
+       },
+       {
+        "audio": {
+         "ref": "p1.f3",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S1GSP47HEPVAWS9QJJ",
+         "duration_ms": 1335,
+         "voice": "learner"
+        },
+        "index": 2,
+        "native": "аренда полотенца",
+        "target": "towel rental",
+        "in_dialogue": false,
+        "native_line": "У вас есть аренда полотенца?",
+        "pronunciation_native": "тауэл рентэл"
+       }
+      ],
+      "voice_hint": "Do you have a day pass?",
+      "voice_blind": "Do you have ___?"
+     },
+     "correct": "o4",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Двадцать долларов"
+      },
+      {
+       "id": "o2",
+       "text": "Десять долларов"
+      },
+      {
+       "id": "o3",
+       "text": "Наверху"
+      },
+      {
+       "id": "o4",
+       "text": "Пятнадцать долларов"
+      }
+     ],
+     "exchange": {
+      "ref": "x1",
+      "kind": "ask",
+      "step": 1
+     },
+     "own_line": {
+      "key": "Do you have",
+      "ref": "x1b",
+      "audio": {
+       "ref": "x1b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ42DK3Z5K90ADSATAYZ",
+       "duration_ms": 1257,
+       "voice": "learner"
+      },
+      "frame_ref": "p1",
+      "text_native": "У вас есть дневной пропуск?",
+      "text_target": "Do you have a day pass?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x1",
+      "audio": {
+       "ref": "x1",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ4RBWFP8P9WNW2GWKHH",
+       "duration_ms": 3111,
+       "voice": "partner"
+      },
+      "text_native": "Да, дневной пропуск стоит пятнадцать долларов.",
+      "text_target": "Yes, a day pass is fifteen dollars."
+     },
+     "question_native": "Сколько, по словам администратора, стоит вариант на один день?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "Do you have a day pass",
+     "choice": "o4"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x1",
+    "source_day_id": null,
+    "answered_at": "2026-09-21T17:03:38+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M32ERPF4179AGRE6HPSMX5WQ",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/1/cards/01M32E0RJG14FWTH4HGTP0EXYV/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 22,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 112,
+     "response_bytes": 6318,
+     "request_body": {
+      "choice": "o4",
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "Do you have a day pass"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 55,
+        "cards_total": 85,
+        "minutes_spent": 13
+       },
+       "card": {
+        "id": "01M32E0RJG14FWTH4HGTP0EXYV",
+        "kind": "dialogue_ask",
+        "unit": {
+         "ref": "x1",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p1",
+          "kind": "ask",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p1",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3PZ181NVC8JCQQA9Y11",
+              "voice": "learner",
+              "duration_ms": 1257
+             },
+             "index": 0,
+             "native": "дневной пропуск",
+             "target": "a day pass",
+             "in_dialogue": true,
+             "native_line": "У вас есть дневной пропуск?",
+             "pronunciation_native": "э дей пас"
+            },
+            {
+             "audio": {
+              "ref": "p1.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52S2XSKHD358DD372B1",
+              "voice": "learner",
+              "duration_ms": 1675
+             },
+             "index": 1,
+             "native": "недельный пропуск",
+             "target": "a weekly pass",
+             "in_dialogue": false,
+             "native_line": "У вас есть недельный пропуск?",
+             "pronunciation_native": "э уикли пас"
+            },
+            {
+             "audio": {
+              "ref": "p1.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S1GSP47HEPVAWS9QJJ",
+              "voice": "learner",
+              "duration_ms": 1335
+             },
+             "index": 2,
+             "native": "аренда полотенца",
+             "target": "towel rental",
+             "in_dialogue": false,
+             "native_line": "У вас есть аренда полотенца?",
+             "pronunciation_native": "тауэл рентэл"
+            }
+           ],
+           "hint_native": "что есть в наличии"
+          },
+          "frame_native": "У вас есть ___?",
+          "frame_target": "Do you have ___?",
+          "frame_pronunciation_native": "Ду ю хэв ___?"
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p1",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3PZ181NVC8JCQQA9Y11",
+             "voice": "learner",
+             "duration_ms": 1257
+            },
+            "index": 0,
+            "native": "дневной пропуск",
+            "target": "a day pass",
+            "in_dialogue": true,
+            "native_line": "У вас есть дневной пропуск?",
+            "pronunciation_native": "э дей пас"
+           },
+           {
+            "audio": {
+             "ref": "p1.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52S2XSKHD358DD372B1",
+             "voice": "learner",
+             "duration_ms": 1675
+            },
+            "index": 1,
+            "native": "недельный пропуск",
+            "target": "a weekly pass",
+            "in_dialogue": false,
+            "native_line": "У вас есть недельный пропуск?",
+            "pronunciation_native": "э уикли пас"
+           },
+           {
+            "audio": {
+             "ref": "p1.f3",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S1GSP47HEPVAWS9QJJ",
+             "voice": "learner",
+             "duration_ms": 1335
+            },
+            "index": 2,
+            "native": "аренда полотенца",
+            "target": "towel rental",
+            "in_dialogue": false,
+            "native_line": "У вас есть аренда полотенца?",
+            "pronunciation_native": "тауэл рентэл"
+           }
+          ],
+          "voice_hint": "Do you have a day pass?",
+          "voice_blind": "Do you have ___?"
+         },
+         "correct": "o4",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Двадцать долларов"
+          },
+          {
+           "id": "o2",
+           "text": "Десять долларов"
+          },
+          {
+           "id": "o3",
+           "text": "Наверху"
+          },
+          {
+           "id": "o4",
+           "text": "Пятнадцать долларов"
+          }
+         ],
+         "exchange": {
+          "ref": "x1",
+          "kind": "ask",
+          "step": 1
+         },
+         "own_line": {
+          "key": "Do you have",
+          "ref": "x1b",
+          "audio": {
+           "ref": "x1b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ42DK3Z5K90ADSATAYZ",
+           "voice": "learner",
+           "duration_ms": 1257
+          },
+          "frame_ref": "p1",
+          "text_native": "У вас есть дневной пропуск?",
+          "text_target": "Do you have a day pass?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x1",
+          "audio": {
+           "ref": "x1",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ4RBWFP8P9WNW2GWKHH",
+           "voice": "partner",
+           "duration_ms": 3111
+          },
+          "text_native": "Да, дневной пропуск стоит пятнадцать долларов.",
+          "text_target": "Yes, a day pass is fifteen dollars."
+         },
+         "question_native": "Сколько, по словам администратора, стоит вариант на один день?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 1,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "Do you have a day pass",
+         "choice": "o4"
+        },
+        "retry_of": null,
+        "unit_ref": "x1",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-21T17:03:38+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x1",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 1
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-21T17:03:38+00:00"
+    }
+   ]
+  },
+  {
+   "day": 1,
+   "card": {
+    "id": "01M32E0RJG7SAJ75GZDVGVQAQ7",
+    "stage": "dialogue",
+    "position": 2,
+    "kind": "dialogue_ask",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x2"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p2",
+      "kind": "ask",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3Q4AN9J8D4M3697VSQF",
+          "duration_ms": 2145,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "месячные абонементы",
+         "target": "monthly memberships",
+         "in_dialogue": true,
+         "native_line": "Какие у вас есть месячные абонементы?",
+         "pronunciation_native": "мансли мембершипс"
+        },
+        {
+         "audio": {
+          "ref": "p2.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S5ZNCD13W5GG21NSXH",
+          "duration_ms": 1910,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "способы оплаты",
+         "target": "payment options",
+         "in_dialogue": false,
+         "native_line": "Какие способы оплаты у вас есть?",
+         "pronunciation_native": "пэймэнт опшнз"
+        }
+       ],
+       "hint_native": "какие варианты вас интересуют"
+      },
+      "frame_native": "Какие ___ у вас есть?",
+      "frame_target": "What ___ do you have?",
+      "frame_pronunciation_native": "Уот ___ ду ю хэв?"
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3Q4AN9J8D4M3697VSQF",
+         "duration_ms": 2145,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "месячные абонементы",
+        "target": "monthly memberships",
+        "in_dialogue": true,
+        "native_line": "Какие у вас есть месячные абонементы?",
+        "pronunciation_native": "мансли мембершипс"
+       },
+       {
+        "audio": {
+         "ref": "p2.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S5ZNCD13W5GG21NSXH",
+         "duration_ms": 1910,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "способы оплаты",
+        "target": "payment options",
+        "in_dialogue": false,
+        "native_line": "Какие способы оплаты у вас есть?",
+        "pronunciation_native": "пэймэнт опшнз"
+       }
+      ],
+      "voice_hint": "What monthly memberships do you have?",
+      "voice_blind": "What ___ do you have?"
+     },
+     "correct": "o1",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Обычный вариант и вариант с полным доступом"
+      },
+      {
+       "id": "o2",
+       "text": "Утренний план и вечерний план"
+      },
+      {
+       "id": "o3",
+       "text": "Студенческий план и семейный план"
+      },
+      {
+       "id": "o4",
+       "text": "Наверху"
+      }
+     ],
+     "exchange": {
+      "ref": "x2",
+      "kind": "ask",
+      "step": 2
+     },
+     "own_line": {
+      "key": "What",
+      "ref": "x2b",
+      "audio": {
+       "ref": "x2b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ4WG07AHFAKEYT8DP99",
+       "duration_ms": 2380,
+       "voice": "learner"
+      },
+      "frame_ref": "p2",
+      "text_native": "Какие у вас есть месячные абонементы?",
+      "text_target": "What monthly memberships do you have?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x2",
+      "audio": {
+       "ref": "x2",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZXYP62A0F4ZJHY8HNFB",
+       "duration_ms": 2876,
+       "voice": "partner"
+      },
+      "text_native": "У нас есть базовый план и безлимитный план.",
+      "text_target": "We have a basic plan and an unlimited plan."
+     },
+     "question_native": "Какие два варианта абонемента называет администратор?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "What monthly memberships do you have",
+     "choice": "o1"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x2",
+    "source_day_id": null,
+    "answered_at": "2026-09-21T17:03:56+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M32ES7CEHPSG4FA2Y9B27GRB",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/1/cards/01M32E0RJG7SAJ75GZDVGVQAQ7/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 20,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 126,
+     "response_bytes": 5909,
+     "request_body": {
+      "choice": "o1",
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "What monthly memberships do you have"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 56,
+        "cards_total": 85,
+        "minutes_spent": 14
+       },
+       "card": {
+        "id": "01M32E0RJG7SAJ75GZDVGVQAQ7",
+        "kind": "dialogue_ask",
+        "unit": {
+         "ref": "x2",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p2",
+          "kind": "ask",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3Q4AN9J8D4M3697VSQF",
+              "voice": "learner",
+              "duration_ms": 2145
+             },
+             "index": 0,
+             "native": "месячные абонементы",
+             "target": "monthly memberships",
+             "in_dialogue": true,
+             "native_line": "Какие у вас есть месячные абонементы?",
+             "pronunciation_native": "мансли мембершипс"
+            },
+            {
+             "audio": {
+              "ref": "p2.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S5ZNCD13W5GG21NSXH",
+              "voice": "learner",
+              "duration_ms": 1910
+             },
+             "index": 1,
+             "native": "способы оплаты",
+             "target": "payment options",
+             "in_dialogue": false,
+             "native_line": "Какие способы оплаты у вас есть?",
+             "pronunciation_native": "пэймэнт опшнз"
+            }
+           ],
+           "hint_native": "какие варианты вас интересуют"
+          },
+          "frame_native": "Какие ___ у вас есть?",
+          "frame_target": "What ___ do you have?",
+          "frame_pronunciation_native": "Уот ___ ду ю хэв?"
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3Q4AN9J8D4M3697VSQF",
+             "voice": "learner",
+             "duration_ms": 2145
+            },
+            "index": 0,
+            "native": "месячные абонементы",
+            "target": "monthly memberships",
+            "in_dialogue": true,
+            "native_line": "Какие у вас есть месячные абонементы?",
+            "pronunciation_native": "мансли мембершипс"
+           },
+           {
+            "audio": {
+             "ref": "p2.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ5S5ZNCD13W5GG21NSXH",
+             "voice": "learner",
+             "duration_ms": 1910
+            },
+            "index": 1,
+            "native": "способы оплаты",
+            "target": "payment options",
+            "in_dialogue": false,
+            "native_line": "Какие способы оплаты у вас есть?",
+            "pronunciation_native": "пэймэнт опшнз"
+           }
+          ],
+          "voice_hint": "What monthly memberships do you have?",
+          "voice_blind": "What ___ do you have?"
+         },
+         "correct": "o1",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Обычный вариант и вариант с полным доступом"
+          },
+          {
+           "id": "o2",
+           "text": "Утренний план и вечерний план"
+          },
+          {
+           "id": "o3",
+           "text": "Студенческий план и семейный план"
+          },
+          {
+           "id": "o4",
+           "text": "Наверху"
+          }
+         ],
+         "exchange": {
+          "ref": "x2",
+          "kind": "ask",
+          "step": 2
+         },
+         "own_line": {
+          "key": "What",
+          "ref": "x2b",
+          "audio": {
+           "ref": "x2b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZ4WG07AHFAKEYT8DP99",
+           "voice": "learner",
+           "duration_ms": 2380
+          },
+          "frame_ref": "p2",
+          "text_native": "Какие у вас есть месячные абонементы?",
+          "text_target": "What monthly memberships do you have?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x2",
+          "audio": {
+           "ref": "x2",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZXYP62A0F4ZJHY8HNFB",
+           "voice": "partner",
+           "duration_ms": 2876
+          },
+          "text_native": "У нас есть базовый план и безлимитный план.",
+          "text_target": "We have a basic plan and an unlimited plan."
+         },
+         "question_native": "Какие два варианта абонемента называет администратор?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 2,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "What monthly memberships do you have",
+         "choice": "o1"
+        },
+        "retry_of": null,
+        "unit_ref": "x2",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-21T17:03:56+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x2",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 1
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-21T17:03:56+00:00"
+    }
+   ]
+  },
+  {
+   "day": 1,
+   "card": {
+    "id": "01M32E0RJGHWNWJ6425NNAK47D",
+    "stage": "dialogue",
+    "position": 3,
+    "kind": "dialogue_partner",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x3"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "correct": "o2",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Наверху"
+      },
+      {
+       "id": "o2",
+       "text": "Был ли посетитель здесь раньше"
+      },
+      {
+       "id": "o3",
+       "text": "Нужен ли посетителю тренер"
+      },
+      {
+       "id": "o4",
+       "text": "Принёс ли посетитель полотенце"
+      }
+     ],
+     "exchange": {
+      "ref": "x3",
+      "kind": "answer",
+      "step": 3
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "partner_line": {
+      "ref": "x3",
+      "audio": {
+       "ref": "x3",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZY176KPKGZJCTA1RX9F",
+       "duration_ms": 2458,
+       "voice": "partner"
+      },
+      "text_native": "Это ваш первый визит сюда?",
+      "text_target": "Is this your first visit here?"
+     },
+     "question_native": "Что хочет узнать администратор?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": null,
+    "unit_kind": "exchange",
+    "unit_ref": "x3",
+    "source_day_id": null,
+    "answered_at": "2026-09-21T17:04:08+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M32ESKP751PCZBX0B27VZN6K",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/1/cards/01M32E0RJGHWNWJ6425NNAK47D/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 22,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 32,
+     "response_bytes": 1869,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 57,
+        "cards_total": 85,
+        "minutes_spent": 14
+       },
+       "card": {
+        "id": "01M32E0RJGHWNWJ6425NNAK47D",
+        "kind": "dialogue_partner",
+        "unit": {
+         "ref": "x3",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "correct": "o2",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Наверху"
+          },
+          {
+           "id": "o2",
+           "text": "Был ли посетитель здесь раньше"
+          },
+          {
+           "id": "o3",
+           "text": "Нужен ли посетителю тренер"
+          },
+          {
+           "id": "o4",
+           "text": "Принёс ли посетитель полотенце"
+          }
+         ],
+         "exchange": {
+          "ref": "x3",
+          "kind": "answer",
+          "step": 3
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "partner_line": {
+          "ref": "x3",
+          "audio": {
+           "ref": "x3",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DYZY176KPKGZJCTA1RX9F",
+           "voice": "partner",
+           "duration_ms": 2458
+          },
+          "text_native": "Это ваш первый визит сюда?",
+          "text_target": "Is this your first visit here?"
+         },
+         "question_native": "Что хочет узнать администратор?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 3,
+        "response": null,
+        "retry_of": null,
+        "unit_ref": "x3",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-21T17:04:08+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x3",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 1
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-21T17:04:08+00:00"
+    }
+   ]
+  },
+  {
+   "day": 1,
+   "card": {
+    "id": "01M32E0RJGTP0BPDW2G61EQ0RD",
+    "stage": "dialogue",
+    "position": 5,
+    "kind": "dialogue_partner",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x4"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "correct": "o2",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Наверху"
+      },
+      {
+       "id": "o2",
+       "text": "В десять вечера"
+      },
+      {
+       "id": "o3",
+       "text": "В полдень"
+      }
+     ],
+     "exchange": {
+      "ref": "x4",
+      "kind": "answer",
+      "step": 4
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "partner_line": {
+      "ref": "x4",
+      "audio": {
+       "ref": "x4",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0Y47V6SFCS65436C2J2",
+       "duration_ms": 3503,
+       "voice": "partner"
+      },
+      "text_native": "В будни мы открываемся в шесть и закрываемся в десять.",
+      "text_target": "We open at six and close at ten on weekdays."
+     },
+     "question_native": "Во сколько зал закрывается в будни?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": null,
+    "unit_kind": "exchange",
+    "unit_ref": "x4",
+    "source_day_id": null,
+    "answered_at": "2026-09-21T17:04:36+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M32ETE9MFGZBV966SFFKMYM6",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/1/cards/01M32E0RJGTP0BPDW2G61EQ0RD/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 19,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 32,
+     "response_bytes": 1681,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 59,
+        "cards_total": 85,
+        "minutes_spent": 14
+       },
+       "card": {
+        "id": "01M32E0RJGTP0BPDW2G61EQ0RD",
+        "kind": "dialogue_partner",
+        "unit": {
+         "ref": "x4",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "correct": "o2",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Наверху"
+          },
+          {
+           "id": "o2",
+           "text": "В десять вечера"
+          },
+          {
+           "id": "o3",
+           "text": "В полдень"
+          }
+         ],
+         "exchange": {
+          "ref": "x4",
+          "kind": "answer",
+          "step": 4
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "partner_line": {
+          "ref": "x4",
+          "audio": {
+           "ref": "x4",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0Y47V6SFCS65436C2J2",
+           "voice": "partner",
+           "duration_ms": 3503
+          },
+          "text_native": "В будни мы открываемся в шесть и закрываемся в десять.",
+          "text_target": "We open at six and close at ten on weekdays."
+         },
+         "question_native": "Во сколько зал закрывается в будни?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 5,
+        "response": null,
+        "retry_of": null,
+        "unit_ref": "x4",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-21T17:04:36+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x4",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 1
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-21T17:04:36+00:00"
+    }
+   ]
+  },
+  {
+   "day": 1,
+   "card": {
+    "id": "01M32E0RJGX3DMBAS1MTHC1QBK",
+    "stage": "dialogue",
+    "position": 7,
+    "kind": "dialogue_ask",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x5"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p5",
+      "kind": "ask",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p5",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ4C7ZG04DE7JGV29ZGJY",
+          "duration_ms": 1518,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "раздевалки",
+         "target": "the changing rooms",
+         "in_dialogue": true,
+         "native_line": "Где раздевалки?",
+         "pronunciation_native": "зэ чейнджинг румз"
+        },
+        {
+         "audio": {
+          "ref": "p5.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ6C0W3SR0T7RAHMZVW3G",
+          "duration_ms": 1257,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "душевые",
+         "target": "the showers",
+         "in_dialogue": false,
+         "native_line": "Где душевые?",
+         "pronunciation_native": "зэ шауэрз"
+        }
+       ],
+       "hint_native": "какое место внутри зала"
+      },
+      "frame_native": "Где ___?",
+      "frame_target": "Where are ___?",
+      "frame_pronunciation_native": "Уэа ар ___?"
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p5",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ4C7ZG04DE7JGV29ZGJY",
+         "duration_ms": 1518,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "раздевалки",
+        "target": "the changing rooms",
+        "in_dialogue": true,
+        "native_line": "Где раздевалки?",
+        "pronunciation_native": "зэ чейнджинг румз"
+       },
+       {
+        "audio": {
+         "ref": "p5.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ6C0W3SR0T7RAHMZVW3G",
+         "duration_ms": 1257,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "душевые",
+        "target": "the showers",
+        "in_dialogue": false,
+        "native_line": "Где душевые?",
+        "pronunciation_native": "зэ шауэрз"
+       }
+      ],
+      "voice_hint": "Where are the changing rooms?",
+      "voice_blind": "Where are ___?"
+     },
+     "correct": "o4",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Наверху у кардиотренажёров"
+      },
+      {
+       "id": "o2",
+       "text": "Рядом с ресепшеном"
+      },
+      {
+       "id": "o3",
+       "text": "Пятнадцать долларов"
+      },
+      {
+       "id": "o4",
+       "text": "На нижнем этаже рядом со шкафчиками"
+      }
+     ],
+     "exchange": {
+      "ref": "x5",
+      "kind": "ask",
+      "step": 5
+     },
+     "own_line": {
+      "key": "Where are",
+      "ref": "x5b",
+      "audio": {
+       "ref": "x5b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0YBNR8BB4GD4NVDN55V",
+       "duration_ms": 1518,
+       "voice": "learner"
+      },
+      "frame_ref": "p5",
+      "text_native": "Где раздевалки?",
+      "text_target": "Where are the changing rooms?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x5",
+      "audio": {
+       "ref": "x5",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ1ZNC4NAB71MMF7C12FR",
+       "duration_ms": 3190,
+       "voice": "partner"
+      },
+      "text_native": "Они внизу, рядом со шкафчиками.",
+      "text_target": "They are downstairs, next to the lockers."
+     },
+     "question_native": "Где, по словам администратора, находится зона для переодевания?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "Where are they changing in rooms?",
+     "choice": "o4"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x5",
+    "source_day_id": null,
+    "answered_at": "2026-09-21T17:04:57+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M32EV30PKXHYV7RHQKAC77NK",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/1/cards/01M32E0RJGX3DMBAS1MTHC1QBK/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 23,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 123,
+     "response_bytes": 4892,
+     "request_body": {
+      "choice": "o4",
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "Where are they changing in rooms?"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 61,
+        "cards_total": 85,
+        "minutes_spent": 15
+       },
+       "card": {
+        "id": "01M32E0RJGX3DMBAS1MTHC1QBK",
+        "kind": "dialogue_ask",
+        "unit": {
+         "ref": "x5",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p5",
+          "kind": "ask",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p5",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ4C7ZG04DE7JGV29ZGJY",
+              "voice": "learner",
+              "duration_ms": 1518
+             },
+             "index": 0,
+             "native": "раздевалки",
+             "target": "the changing rooms",
+             "in_dialogue": true,
+             "native_line": "Где раздевалки?",
+             "pronunciation_native": "зэ чейнджинг румз"
+            },
+            {
+             "audio": {
+              "ref": "p5.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ6C0W3SR0T7RAHMZVW3G",
+              "voice": "learner",
+              "duration_ms": 1257
+             },
+             "index": 1,
+             "native": "душевые",
+             "target": "the showers",
+             "in_dialogue": false,
+             "native_line": "Где душевые?",
+             "pronunciation_native": "зэ шауэрз"
+            }
+           ],
+           "hint_native": "какое место внутри зала"
+          },
+          "frame_native": "Где ___?",
+          "frame_target": "Where are ___?",
+          "frame_pronunciation_native": "Уэа ар ___?"
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p5",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ4C7ZG04DE7JGV29ZGJY",
+             "voice": "learner",
+             "duration_ms": 1518
+            },
+            "index": 0,
+            "native": "раздевалки",
+            "target": "the changing rooms",
+            "in_dialogue": true,
+            "native_line": "Где раздевалки?",
+            "pronunciation_native": "зэ чейнджинг румз"
+           },
+           {
+            "audio": {
+             "ref": "p5.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ6C0W3SR0T7RAHMZVW3G",
+             "voice": "learner",
+             "duration_ms": 1257
+            },
+            "index": 1,
+            "native": "душевые",
+            "target": "the showers",
+            "in_dialogue": false,
+            "native_line": "Где душевые?",
+            "pronunciation_native": "зэ шауэрз"
+           }
+          ],
+          "voice_hint": "Where are the changing rooms?",
+          "voice_blind": "Where are ___?"
+         },
+         "correct": "o4",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Наверху у кардиотренажёров"
+          },
+          {
+           "id": "o2",
+           "text": "Рядом с ресепшеном"
+          },
+          {
+           "id": "o3",
+           "text": "Пятнадцать долларов"
+          },
+          {
+           "id": "o4",
+           "text": "На нижнем этаже рядом со шкафчиками"
+          }
+         ],
+         "exchange": {
+          "ref": "x5",
+          "kind": "ask",
+          "step": 5
+         },
+         "own_line": {
+          "key": "Where are",
+          "ref": "x5b",
+          "audio": {
+           "ref": "x5b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ0YBNR8BB4GD4NVDN55V",
+           "voice": "learner",
+           "duration_ms": 1518
+          },
+          "frame_ref": "p5",
+          "text_native": "Где раздевалки?",
+          "text_target": "Where are the changing rooms?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x5",
+          "audio": {
+           "ref": "x5",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ1ZNC4NAB71MMF7C12FR",
+           "voice": "partner",
+           "duration_ms": 3190
+          },
+          "text_native": "Они внизу, рядом со шкафчиками.",
+          "text_target": "They are downstairs, next to the lockers."
+         },
+         "question_native": "Где, по словам администратора, находится зона для переодевания?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 7,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "Where are they changing in rooms?",
+         "choice": "o4"
+        },
+        "retry_of": null,
+        "unit_ref": "x5",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-21T17:04:57+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x5",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-21T17:04:57+00:00"
+    }
+   ]
+  },
+  {
+   "day": 1,
+   "card": {
+    "id": "01M32E0RJGDCS6EV2694GCBTAB",
+    "stage": "dialogue",
+    "position": 8,
+    "kind": "dialogue_partner",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x6"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "correct": "o3",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Полотенце"
+      },
+      {
+       "id": "o2",
+       "text": "Карту доступа"
+      },
+      {
+       "id": "o3",
+       "text": "Ключ от шкафчика"
+      },
+      {
+       "id": "o4",
+       "text": "Пятнадцать долларов"
+      }
+     ],
+     "exchange": {
+      "ref": "x6",
+      "kind": "answer",
+      "step": 6
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "partner_line": {
+      "ref": "x6",
+      "audio": {
+       "ref": "x6",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ1ZS6J0F328G058ATZ0D",
+       "duration_ms": 5018,
+       "voice": "partner"
+      },
+      "text_native": "Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.",
+      "text_target": "Please bring a towel, use clean shoes, and return the locker key after training."
+     },
+     "question_native": "Что, по словам администратора, нужно вернуть после тренировки?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": null,
+    "unit_kind": "exchange",
+    "unit_ref": "x6",
+    "source_day_id": null,
+    "answered_at": "2026-09-21T17:05:13+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M32EVJP1X8MKWBZ7ZT6GATX3",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/1/cards/01M32E0RJGDCS6EV2694GCBTAB/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 21,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 32,
+     "response_bytes": 2289,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 62,
+        "cards_total": 85,
+        "minutes_spent": 15
+       },
+       "card": {
+        "id": "01M32E0RJGDCS6EV2694GCBTAB",
+        "kind": "dialogue_partner",
+        "unit": {
+         "ref": "x6",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "correct": "o3",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Полотенце"
+          },
+          {
+           "id": "o2",
+           "text": "Карту доступа"
+          },
+          {
+           "id": "o3",
+           "text": "Ключ от шкафчика"
+          },
+          {
+           "id": "o4",
+           "text": "Пятнадцать долларов"
+          }
+         ],
+         "exchange": {
+          "ref": "x6",
+          "kind": "answer",
+          "step": 6
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "partner_line": {
+          "ref": "x6",
+          "audio": {
+           "ref": "x6",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ1ZS6J0F328G058ATZ0D",
+           "voice": "partner",
+           "duration_ms": 5018
+          },
+          "text_native": "Пожалуйста, возьмите полотенце, используйте чистую обувь и верните ключ от шкафчика после тренировки.",
+          "text_target": "Please bring a towel, use clean shoes, and return the locker key after training."
+         },
+         "question_native": "Что, по словам администратора, нужно вернуть после тренировки?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 8,
+        "response": null,
+        "retry_of": null,
+        "unit_ref": "x6",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-21T17:05:13+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x6",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-21T17:05:13+00:00"
+    }
+   ]
+  },
+  {
+   "day": 1,
+   "card": {
+    "id": "01M32E0RJGGNAPQ1KJ4898C5E5",
+    "stage": "dialogue",
+    "position": 11,
+    "kind": "dialogue_ask",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x8"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p7",
+      "kind": "ask",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p7",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52P5KFAQQHG3Y9JC4FR",
+          "duration_ms": 1335,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "картой",
+         "target": "by card",
+         "in_dialogue": true,
+         "native_line": "Я могу оплатить картой?",
+         "pronunciation_native": "бай кард"
+        },
+        {
+         "audio": {
+          "ref": "p7.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ72FJ9DSV91BG8TQEY36",
+          "duration_ms": 1518,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "наличными",
+         "target": "in cash",
+         "in_dialogue": false,
+         "native_line": "Я могу оплатить наличными?",
+         "pronunciation_native": "ин кэш"
+        }
+       ],
+       "hint_native": "как вы хотите оплатить"
+      },
+      "frame_native": "Я могу оплатить ___?",
+      "frame_target": "Can I pay ___?",
+      "frame_pronunciation_native": "Кэн ай пэй ___?"
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p7",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52P5KFAQQHG3Y9JC4FR",
+         "duration_ms": 1335,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "картой",
+        "target": "by card",
+        "in_dialogue": true,
+        "native_line": "Я могу оплатить картой?",
+        "pronunciation_native": "бай кард"
+       },
+       {
+        "audio": {
+         "ref": "p7.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ72FJ9DSV91BG8TQEY36",
+         "duration_ms": 1518,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "наличными",
+        "target": "in cash",
+        "in_dialogue": false,
+        "native_line": "Я могу оплатить наличными?",
+        "pronunciation_native": "ин кэш"
+       }
+      ],
+      "voice_hint": "Can I pay by card?",
+      "voice_blind": "Can I pay ___?"
+     },
+     "correct": "o1",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Наверху"
+      },
+      {
+       "id": "o2",
+       "text": "Пятнадцать долларов"
+      },
+      {
+       "id": "o3",
+       "text": "Внизу рядом с ресепшеном"
+      },
+      {
+       "id": "o4",
+       "text": "Снаружи у входа"
+      }
+     ],
+     "exchange": {
+      "ref": "x8",
+      "kind": "ask",
+      "step": 8
+     },
+     "own_line": {
+      "key": "Can I pay",
+      "ref": "x8b",
+      "audio": {
+       "ref": "x8b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ2YRHG1STHJ27JDJH4JD",
+       "duration_ms": 1518,
+       "voice": "learner"
+      },
+      "frame_ref": "p7",
+      "text_native": "Я могу оплатить картой?",
+      "text_target": "Can I pay by card?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x8",
+      "audio": {
+       "ref": "x8",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3PV8GV7R5KPGSYPX4SD",
+       "duration_ms": 3425,
+       "voice": "partner"
+      },
+      "text_native": "Да, картой можно, а тренировочная зона наверху.",
+      "text_target": "Yes, card is fine, and the training floor is upstairs."
+     },
+     "question_native": "Где, по словам администратора, находится основная тренировочная зона?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "Can I pay my card",
+     "choice": "o1"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x8",
+    "source_day_id": null,
+    "answered_at": "2026-09-21T17:06:37+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M32EY52NGCVCNC91J2PF499T",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/1/cards/01M32E0RJGGNAPQ1KJ4898C5E5/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 20,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 107,
+     "response_bytes": 4956,
+     "request_body": {
+      "choice": "o1",
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "Can I pay my card"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 65,
+        "cards_total": 85,
+        "minutes_spent": 16
+       },
+       "card": {
+        "id": "01M32E0RJGGNAPQ1KJ4898C5E5",
+        "kind": "dialogue_ask",
+        "unit": {
+         "ref": "x8",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p7",
+          "kind": "ask",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p7",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52P5KFAQQHG3Y9JC4FR",
+              "voice": "learner",
+              "duration_ms": 1335
+             },
+             "index": 0,
+             "native": "картой",
+             "target": "by card",
+             "in_dialogue": true,
+             "native_line": "Я могу оплатить картой?",
+             "pronunciation_native": "бай кард"
+            },
+            {
+             "audio": {
+              "ref": "p7.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ72FJ9DSV91BG8TQEY36",
+              "voice": "learner",
+              "duration_ms": 1518
+             },
+             "index": 1,
+             "native": "наличными",
+             "target": "in cash",
+             "in_dialogue": false,
+             "native_line": "Я могу оплатить наличными?",
+             "pronunciation_native": "ин кэш"
+            }
+           ],
+           "hint_native": "как вы хотите оплатить"
+          },
+          "frame_native": "Я могу оплатить ___?",
+          "frame_target": "Can I pay ___?",
+          "frame_pronunciation_native": "Кэн ай пэй ___?"
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p7",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ52P5KFAQQHG3Y9JC4FR",
+             "voice": "learner",
+             "duration_ms": 1335
+            },
+            "index": 0,
+            "native": "картой",
+            "target": "by card",
+            "in_dialogue": true,
+            "native_line": "Я могу оплатить картой?",
+            "pronunciation_native": "бай кард"
+           },
+           {
+            "audio": {
+             "ref": "p7.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ72FJ9DSV91BG8TQEY36",
+             "voice": "learner",
+             "duration_ms": 1518
+            },
+            "index": 1,
+            "native": "наличными",
+            "target": "in cash",
+            "in_dialogue": false,
+            "native_line": "Я могу оплатить наличными?",
+            "pronunciation_native": "ин кэш"
+           }
+          ],
+          "voice_hint": "Can I pay by card?",
+          "voice_blind": "Can I pay ___?"
+         },
+         "correct": "o1",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Наверху"
+          },
+          {
+           "id": "o2",
+           "text": "Пятнадцать долларов"
+          },
+          {
+           "id": "o3",
+           "text": "Внизу рядом с ресепшеном"
+          },
+          {
+           "id": "o4",
+           "text": "Снаружи у входа"
+          }
+         ],
+         "exchange": {
+          "ref": "x8",
+          "kind": "ask",
+          "step": 8
+         },
+         "own_line": {
+          "key": "Can I pay",
+          "ref": "x8b",
+          "audio": {
+           "ref": "x8b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ2YRHG1STHJ27JDJH4JD",
+           "voice": "learner",
+           "duration_ms": 1518
+          },
+          "frame_ref": "p7",
+          "text_native": "Я могу оплатить картой?",
+          "text_target": "Can I pay by card?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x8",
+          "audio": {
+           "ref": "x8",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32DZ3PV8GV7R5KPGSYPX4SD",
+           "voice": "partner",
+           "duration_ms": 3425
+          },
+          "text_native": "Да, картой можно, а тренировочная зона наверху.",
+          "text_target": "Yes, card is fine, and the training floor is upstairs."
+         },
+         "question_native": "Где, по словам администратора, находится основная тренировочная зона?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 11,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "Can I pay my card",
+         "choice": "o1"
+        },
+        "retry_of": null,
+        "unit_ref": "x8",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-21T17:06:37+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x8",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-21T17:06:37+00:00"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "card": {
+    "id": "01M34GF5GV30N18HFT8B44XH7Z",
+    "stage": "dialogue",
+    "position": 1,
+    "kind": "dialogue_partner",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x1"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "correct": "o4",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Способ оплаты"
+      },
+      {
+       "id": "o2",
+       "text": "Номер шкафчика"
+      },
+      {
+       "id": "o3",
+       "text": "К ушам"
+      },
+      {
+       "id": "o4",
+       "text": "Цель тренировки на сегодня"
+      }
+     ],
+     "exchange": {
+      "ref": "x1",
+      "kind": "answer",
+      "step": 1
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "partner_line": {
+      "ref": "x1",
+      "audio": {
+       "ref": "x1",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRSDR80G88TP16J0DQWX3",
+       "duration_ms": 1753,
+       "voice": "partner"
+      },
+      "text_native": "Над чем вы сегодня хотите поработать?",
+      "text_target": "What are you training for today?"
+     },
+     "question_native": "О чём спрашивает тренер?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": null,
+    "unit_kind": "exchange",
+    "unit_ref": "x1",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:29:16+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HF0FX33Q8D49F5V1QBX2V",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GV30N18HFT8B44XH7Z/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 19,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 32,
+     "response_bytes": 1706,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 48,
+        "cards_total": 85,
+        "minutes_spent": 18
+       },
+       "card": {
+        "id": "01M34GF5GV30N18HFT8B44XH7Z",
+        "kind": "dialogue_partner",
+        "unit": {
+         "ref": "x1",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "correct": "o4",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Способ оплаты"
+          },
+          {
+           "id": "o2",
+           "text": "Номер шкафчика"
+          },
+          {
+           "id": "o3",
+           "text": "К ушам"
+          },
+          {
+           "id": "o4",
+           "text": "Цель тренировки на сегодня"
+          }
+         ],
+         "exchange": {
+          "ref": "x1",
+          "kind": "answer",
+          "step": 1
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "partner_line": {
+          "ref": "x1",
+          "audio": {
+           "ref": "x1",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRSDR80G88TP16J0DQWX3",
+           "voice": "partner",
+           "duration_ms": 1753
+          },
+          "text_native": "Над чем вы сегодня хотите поработать?",
+          "text_target": "What are you training for today?"
+         },
+         "question_native": "О чём спрашивает тренер?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 1,
+        "response": null,
+        "retry_of": null,
+        "unit_ref": "x1",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:29:16+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x1",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 1
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:29:16+00:00"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "card": {
+    "id": "01M34GF5GV6VGRQ4XZRMTMVK2S",
+    "stage": "dialogue",
+    "position": 3,
+    "kind": "dialogue_partner",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x2"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "correct": "o1",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Как долго вы уже тренируетесь"
+      },
+      {
+       "id": "o2",
+       "text": "Сколько воды вы пьёте"
+      },
+      {
+       "id": "o3",
+       "text": "Как часто вы делаете растяжку"
+      },
+      {
+       "id": "o4",
+       "text": "К ушам"
+      }
+     ],
+     "exchange": {
+      "ref": "x2",
+      "kind": "answer",
+      "step": 2
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "partner_line": {
+      "ref": "x2",
+      "audio": {
+       "ref": "x2",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRSEGPKANKB7GDRD28FAY",
+       "duration_ms": 2615,
+       "voice": "partner"
+      },
+      "text_native": "Какой у вас опыт тренировок в зале?",
+      "text_target": "How much gym experience do you have?"
+     },
+     "question_native": "Что хочет узнать тренер?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": null,
+    "unit_kind": "exchange",
+    "unit_ref": "x2",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:30:27+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HH6F5V4GD41HCWK3E76JW",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GV6VGRQ4XZRMTMVK2S/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 27,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 32,
+     "response_bytes": 1819,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 50,
+        "cards_total": 85,
+        "minutes_spent": 19
+       },
+       "card": {
+        "id": "01M34GF5GV6VGRQ4XZRMTMVK2S",
+        "kind": "dialogue_partner",
+        "unit": {
+         "ref": "x2",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "correct": "o1",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Как долго вы уже тренируетесь"
+          },
+          {
+           "id": "o2",
+           "text": "Сколько воды вы пьёте"
+          },
+          {
+           "id": "o3",
+           "text": "Как часто вы делаете растяжку"
+          },
+          {
+           "id": "o4",
+           "text": "К ушам"
+          }
+         ],
+         "exchange": {
+          "ref": "x2",
+          "kind": "answer",
+          "step": 2
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "partner_line": {
+          "ref": "x2",
+          "audio": {
+           "ref": "x2",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRSEGPKANKB7GDRD28FAY",
+           "voice": "partner",
+           "duration_ms": 2615
+          },
+          "text_native": "Какой у вас опыт тренировок в зале?",
+          "text_target": "How much gym experience do you have?"
+         },
+         "question_native": "Что хочет узнать тренер?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 3,
+        "response": null,
+        "retry_of": null,
+        "unit_ref": "x2",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:30:27+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x2",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:30:27+00:00"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "card": {
+    "id": "01M34GF5GV9RNRNM03VSR0XXEA",
+    "stage": "dialogue",
+    "position": 5,
+    "kind": "dialogue_partner",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x3"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "correct": "o2",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Ваш целевой вес"
+      },
+      {
+       "id": "o2",
+       "text": "Есть ли сейчас боль или травма"
+      },
+      {
+       "id": "o3",
+       "text": "К ушам"
+      },
+      {
+       "id": "o4",
+       "text": "Ваш следующий день тренировки"
+      }
+     ],
+     "exchange": {
+      "ref": "x3",
+      "kind": "answer",
+      "step": 3
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "partner_line": {
+      "ref": "x3",
+      "audio": {
+       "ref": "x3",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRTFMGHPV6CBMVFRYXPXD",
+       "duration_ms": 2615,
+       "voice": "partner"
+      },
+      "text_native": "Есть ли у вас сейчас травмы или боль?",
+      "text_target": "Do you have any injuries or pain right now?"
+     },
+     "question_native": "Что проверяет тренер?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": null,
+    "unit_kind": "exchange",
+    "unit_ref": "x3",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:30:40+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HHJS593HBJ0WMZED1W70H",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GV9RNRNM03VSR0XXEA/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 20,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 32,
+     "response_bytes": 1795,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 52,
+        "cards_total": 85,
+        "minutes_spent": 19
+       },
+       "card": {
+        "id": "01M34GF5GV9RNRNM03VSR0XXEA",
+        "kind": "dialogue_partner",
+        "unit": {
+         "ref": "x3",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "correct": "o2",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Ваш целевой вес"
+          },
+          {
+           "id": "o2",
+           "text": "Есть ли сейчас боль или травма"
+          },
+          {
+           "id": "o3",
+           "text": "К ушам"
+          },
+          {
+           "id": "o4",
+           "text": "Ваш следующий день тренировки"
+          }
+         ],
+         "exchange": {
+          "ref": "x3",
+          "kind": "answer",
+          "step": 3
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "partner_line": {
+          "ref": "x3",
+          "audio": {
+           "ref": "x3",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRTFMGHPV6CBMVFRYXPXD",
+           "voice": "partner",
+           "duration_ms": 2615
+          },
+          "text_native": "Есть ли у вас сейчас травмы или боль?",
+          "text_target": "Do you have any injuries or pain right now?"
+         },
+         "question_native": "Что проверяет тренер?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 5,
+        "response": null,
+        "retry_of": null,
+        "unit_ref": "x3",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:30:40+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x3",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:30:40+00:00"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "card": {
+    "id": "01M34GF5GVVX15ZFK3Z8KMJAPB",
+    "stage": "dialogue",
+    "position": 7,
+    "kind": "dialogue_ask",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x4"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p4",
+      "kind": "ask",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p4",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5JZPWYZMMYHRVEABCS",
+          "duration_ms": 1831,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "этим тренажёром",
+         "target": "this machine",
+         "in_dialogue": true,
+         "native_line": "Как пользоваться этим тренажёром?",
+         "pronunciation_native": "зис мэшин"
+        },
+        {
+         "audio": {
+          "ref": "p4.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS1Q4FVBM47GNZK9APP82",
+          "duration_ms": 2302,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "блочным тренажёром",
+         "target": "the cable machine",
+         "in_dialogue": false,
+         "native_line": "Как пользоваться блочным тренажёром?",
+         "pronunciation_native": "зэ кэйбл мэшин"
+        },
+        {
+         "audio": {
+          "ref": "p4.f3",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS2JS44483DC7YW6S0DPG",
+          "duration_ms": 2537,
+          "voice": "learner"
+         },
+         "index": 2,
+         "native": "гребным тренажёром",
+         "target": "the rowing machine",
+         "in_dialogue": false,
+         "native_line": "Как пользоваться гребным тренажёром?",
+         "pronunciation_native": "зэ роуинг мэшин"
+        }
+       ],
+       "hint_native": "оборудование"
+      },
+      "frame_native": "Как пользоваться ___?",
+      "frame_target": "How do I use ___?",
+      "frame_pronunciation_native": "Хау ду ай юз ___?"
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p4",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5JZPWYZMMYHRVEABCS",
+         "duration_ms": 1831,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "этим тренажёром",
+        "target": "this machine",
+        "in_dialogue": true,
+        "native_line": "Как пользоваться этим тренажёром?",
+        "pronunciation_native": "зис мэшин"
+       },
+       {
+        "audio": {
+         "ref": "p4.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS1Q4FVBM47GNZK9APP82",
+         "duration_ms": 2302,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "блочным тренажёром",
+        "target": "the cable machine",
+        "in_dialogue": false,
+        "native_line": "Как пользоваться блочным тренажёром?",
+        "pronunciation_native": "зэ кэйбл мэшин"
+       },
+       {
+        "audio": {
+         "ref": "p4.f3",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS2JS44483DC7YW6S0DPG",
+         "duration_ms": 2537,
+         "voice": "learner"
+        },
+        "index": 2,
+        "native": "гребным тренажёром",
+        "target": "the rowing machine",
+        "in_dialogue": false,
+        "native_line": "Как пользоваться гребным тренажёром?",
+        "pronunciation_native": "зэ роуинг мэшин"
+       }
+      ],
+      "voice_hint": "How do I use this machine?",
+      "voice_blind": "How do I use ___?"
+     },
+     "correct": "o1",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Пятками"
+      },
+      {
+       "id": "o2",
+       "text": "Носками"
+      },
+      {
+       "id": "o3",
+       "text": "К ушам"
+      },
+      {
+       "id": "o4",
+       "text": "Одной ногой"
+      }
+     ],
+     "exchange": {
+      "ref": "x4",
+      "kind": "ask",
+      "step": 4
+     },
+     "own_line": {
+      "key": "How do I use",
+      "ref": "x4b",
+      "audio": {
+       "ref": "x4b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRVGDHHFASZVS340H578E",
+       "duration_ms": 1675,
+       "voice": "learner"
+      },
+      "frame_ref": "p4",
+      "text_native": "Как пользоваться этим тренажёром?",
+      "text_target": "How do I use this machine?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x4",
+      "audio": {
+       "ref": "x4",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRVGGYA6S8RXG7D75A01G",
+       "duration_ms": 3895,
+       "voice": "partner"
+      },
+      "text_native": "Сядьте ровно, держите спину прямой и отталкивайтесь пятками.",
+      "text_target": "Sit tall, keep your back flat, and push through your heels."
+     },
+     "question_native": "Как нужно отталкиваться?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "How do I use this machine",
+     "choice": "o1"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x4",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:31:01+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HJ7MD1CMFBCE9ATKK6EVF",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVVX15ZFK3Z8KMJAPB/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 26,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 115,
+     "response_bytes": 6577,
+     "request_body": {
+      "choice": "o1",
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "How do I use this machine"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 54,
+        "cards_total": 85,
+        "minutes_spent": 20
+       },
+       "card": {
+        "id": "01M34GF5GVVX15ZFK3Z8KMJAPB",
+        "kind": "dialogue_ask",
+        "unit": {
+         "ref": "x4",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p4",
+          "kind": "ask",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p4",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5JZPWYZMMYHRVEABCS",
+              "voice": "learner",
+              "duration_ms": 1831
+             },
+             "index": 0,
+             "native": "этим тренажёром",
+             "target": "this machine",
+             "in_dialogue": true,
+             "native_line": "Как пользоваться этим тренажёром?",
+             "pronunciation_native": "зис мэшин"
+            },
+            {
+             "audio": {
+              "ref": "p4.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS1Q4FVBM47GNZK9APP82",
+              "voice": "learner",
+              "duration_ms": 2302
+             },
+             "index": 1,
+             "native": "блочным тренажёром",
+             "target": "the cable machine",
+             "in_dialogue": false,
+             "native_line": "Как пользоваться блочным тренажёром?",
+             "pronunciation_native": "зэ кэйбл мэшин"
+            },
+            {
+             "audio": {
+              "ref": "p4.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS2JS44483DC7YW6S0DPG",
+              "voice": "learner",
+              "duration_ms": 2537
+             },
+             "index": 2,
+             "native": "гребным тренажёром",
+             "target": "the rowing machine",
+             "in_dialogue": false,
+             "native_line": "Как пользоваться гребным тренажёром?",
+             "pronunciation_native": "зэ роуинг мэшин"
+            }
+           ],
+           "hint_native": "оборудование"
+          },
+          "frame_native": "Как пользоваться ___?",
+          "frame_target": "How do I use ___?",
+          "frame_pronunciation_native": "Хау ду ай юз ___?"
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p4",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5JZPWYZMMYHRVEABCS",
+             "voice": "learner",
+             "duration_ms": 1831
+            },
+            "index": 0,
+            "native": "этим тренажёром",
+            "target": "this machine",
+            "in_dialogue": true,
+            "native_line": "Как пользоваться этим тренажёром?",
+            "pronunciation_native": "зис мэшин"
+           },
+           {
+            "audio": {
+             "ref": "p4.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS1Q4FVBM47GNZK9APP82",
+             "voice": "learner",
+             "duration_ms": 2302
+            },
+            "index": 1,
+            "native": "блочным тренажёром",
+            "target": "the cable machine",
+            "in_dialogue": false,
+            "native_line": "Как пользоваться блочным тренажёром?",
+            "pronunciation_native": "зэ кэйбл мэшин"
+           },
+           {
+            "audio": {
+             "ref": "p4.f3",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS2JS44483DC7YW6S0DPG",
+             "voice": "learner",
+             "duration_ms": 2537
+            },
+            "index": 2,
+            "native": "гребным тренажёром",
+            "target": "the rowing machine",
+            "in_dialogue": false,
+            "native_line": "Как пользоваться гребным тренажёром?",
+            "pronunciation_native": "зэ роуинг мэшин"
+           }
+          ],
+          "voice_hint": "How do I use this machine?",
+          "voice_blind": "How do I use ___?"
+         },
+         "correct": "o1",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Пятками"
+          },
+          {
+           "id": "o2",
+           "text": "Носками"
+          },
+          {
+           "id": "o3",
+           "text": "К ушам"
+          },
+          {
+           "id": "o4",
+           "text": "Одной ногой"
+          }
+         ],
+         "exchange": {
+          "ref": "x4",
+          "kind": "ask",
+          "step": 4
+         },
+         "own_line": {
+          "key": "How do I use",
+          "ref": "x4b",
+          "audio": {
+           "ref": "x4b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRVGDHHFASZVS340H578E",
+           "voice": "learner",
+           "duration_ms": 1675
+          },
+          "frame_ref": "p4",
+          "text_native": "Как пользоваться этим тренажёром?",
+          "text_target": "How do I use this machine?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x4",
+          "audio": {
+           "ref": "x4",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRVGGYA6S8RXG7D75A01G",
+           "voice": "partner",
+           "duration_ms": 3895
+          },
+          "text_native": "Сядьте ровно, держите спину прямой и отталкивайтесь пятками.",
+          "text_target": "Sit tall, keep your back flat, and push through your heels."
+         },
+         "question_native": "Как нужно отталкиваться?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 7,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "How do I use this machine",
+         "choice": "o1"
+        },
+        "retry_of": null,
+        "unit_ref": "x4",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:31:01+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x4",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 2
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:31:01+00:00"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "card": {
+    "id": "01M34GF5GVR1ZV6PFRKQZKKW94",
+    "stage": "dialogue",
+    "position": 9,
+    "kind": "dialogue_ask",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x6"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p5",
+      "kind": "ask",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p5",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5MQ2D6JG3T72X14G3Y",
+          "duration_ms": 2066,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "вес",
+         "target": "the weight",
+         "in_dialogue": true,
+         "native_line": "Насколько тяжёлым должен быть вес?",
+         "pronunciation_native": "зэ уэйт"
+        }
+       ],
+       "hint_native": "что выбрать по весу"
+      },
+      "frame_native": "Насколько тяжёлым должен быть ___?",
+      "frame_target": "How heavy should ___ be?",
+      "frame_pronunciation_native": "Хау хэви шуд ___ би?"
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p5",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5MQ2D6JG3T72X14G3Y",
+         "duration_ms": 2066,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "вес",
+        "target": "the weight",
+        "in_dialogue": true,
+        "native_line": "Насколько тяжёлым должен быть вес?",
+        "pronunciation_native": "зэ уэйт"
+       }
+      ],
+      "voice_hint": "How heavy should the weight be?",
+      "voice_blind": "How heavy should ___ be?"
+     },
+     "correct": "o1",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Двенадцать повторений"
+      },
+      {
+       "id": "o2",
+       "text": "Пятнадцать повторений"
+      },
+      {
+       "id": "o3",
+       "text": "Десять повторений"
+      },
+      {
+       "id": "o4",
+       "text": "Цель тренировки на сегодня"
+      }
+     ],
+     "exchange": {
+      "ref": "x6",
+      "kind": "ask",
+      "step": 6
+     },
+     "own_line": {
+      "key": "How heavy should",
+      "ref": "x6b",
+      "audio": {
+       "ref": "x6b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRWK36H6GXY71EM3TPK7E",
+       "duration_ms": 1675,
+       "voice": "learner"
+      },
+      "frame_ref": "p5",
+      "text_native": "Насколько тяжёлым должен быть вес?",
+      "text_target": "How heavy should the weight be?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x6",
+      "audio": {
+       "ref": "x6",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRWK6GYZG1R5VC44T8ZMR",
+       "duration_ms": 3346,
+       "voice": "partner"
+      },
+      "text_native": "Возьмите вес, который сможете поднять двенадцать раз с хорошей техникой.",
+      "text_target": "Use a weight you can lift twelve times with good form."
+     },
+     "question_native": "Сколько качественных повторений хочет тренер?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "How heavy should the weight be?",
+     "choice": "o1"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x6",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:31:23+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HJWRV6BST7YH08VJEMKK0",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVR1ZV6PFRKQZKKW94/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 38,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 121,
+     "response_bytes": 4400,
+     "request_body": {
+      "choice": "o1",
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "How heavy should the weight be?"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 56,
+        "cards_total": 85,
+        "minutes_spent": 20
+       },
+       "card": {
+        "id": "01M34GF5GVR1ZV6PFRKQZKKW94",
+        "kind": "dialogue_ask",
+        "unit": {
+         "ref": "x6",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p5",
+          "kind": "ask",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p5",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5MQ2D6JG3T72X14G3Y",
+              "voice": "learner",
+              "duration_ms": 2066
+             },
+             "index": 0,
+             "native": "вес",
+             "target": "the weight",
+             "in_dialogue": true,
+             "native_line": "Насколько тяжёлым должен быть вес?",
+             "pronunciation_native": "зэ уэйт"
+            }
+           ],
+           "hint_native": "что выбрать по весу"
+          },
+          "frame_native": "Насколько тяжёлым должен быть ___?",
+          "frame_target": "How heavy should ___ be?",
+          "frame_pronunciation_native": "Хау хэви шуд ___ би?"
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p5",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRZ5MQ2D6JG3T72X14G3Y",
+             "voice": "learner",
+             "duration_ms": 2066
+            },
+            "index": 0,
+            "native": "вес",
+            "target": "the weight",
+            "in_dialogue": true,
+            "native_line": "Насколько тяжёлым должен быть вес?",
+            "pronunciation_native": "зэ уэйт"
+           }
+          ],
+          "voice_hint": "How heavy should the weight be?",
+          "voice_blind": "How heavy should ___ be?"
+         },
+         "correct": "o1",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Двенадцать повторений"
+          },
+          {
+           "id": "o2",
+           "text": "Пятнадцать повторений"
+          },
+          {
+           "id": "o3",
+           "text": "Десять повторений"
+          },
+          {
+           "id": "o4",
+           "text": "Цель тренировки на сегодня"
+          }
+         ],
+         "exchange": {
+          "ref": "x6",
+          "kind": "ask",
+          "step": 6
+         },
+         "own_line": {
+          "key": "How heavy should",
+          "ref": "x6b",
+          "audio": {
+           "ref": "x6b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRWK36H6GXY71EM3TPK7E",
+           "voice": "learner",
+           "duration_ms": 1675
+          },
+          "frame_ref": "p5",
+          "text_native": "Насколько тяжёлым должен быть вес?",
+          "text_target": "How heavy should the weight be?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x6",
+          "audio": {
+           "ref": "x6",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRWK6GYZG1R5VC44T8ZMR",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Возьмите вес, который сможете поднять двенадцать раз с хорошей техникой.",
+          "text_target": "Use a weight you can lift twelve times with good form."
+         },
+         "question_native": "Сколько качественных повторений хочет тренер?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 9,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "How heavy should the weight be?",
+         "choice": "o1"
+        },
+        "retry_of": null,
+        "unit_ref": "x6",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:31:23+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x6",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:31:23+00:00"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "card": {
+    "id": "01M34GF5GV4QJMG64ZGQ1C93K8",
+    "stage": "dialogue",
+    "position": 10,
+    "kind": "dialogue_partner",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x7"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "correct": "o3",
+     "options": [
+      {
+       "id": "o1",
+       "text": "Полминуты"
+      },
+      {
+       "id": "o2",
+       "text": "Цель тренировки на сегодня"
+      },
+      {
+       "id": "o3",
+       "text": "Сорок пять секунд"
+      },
+      {
+       "id": "o4",
+       "text": "Около минуты"
+      }
+     ],
+     "exchange": {
+      "ref": "x7",
+      "kind": "answer",
+      "step": 7
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "partner_line": {
+      "ref": "x7",
+      "audio": {
+       "ref": "x7",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+       "duration_ms": 3346,
+       "voice": "partner"
+      },
+      "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+      "text_target": "Do three sets, and rest forty-five seconds between them."
+     },
+     "question_native": "Сколько длится перерыв?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": null,
+    "unit_kind": "exchange",
+    "unit_ref": "x7",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:31:29+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HK28GGZWZFMRKMWQM1PC0",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GV4QJMG64ZGQ1C93K8/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 30,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 32,
+     "response_bytes": 1890,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 57,
+        "cards_total": 85,
+        "minutes_spent": 20
+       },
+       "card": {
+        "id": "01M34GF5GV4QJMG64ZGQ1C93K8",
+        "kind": "dialogue_partner",
+        "unit": {
+         "ref": "x7",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "correct": "o3",
+         "options": [
+          {
+           "id": "o1",
+           "text": "Полминуты"
+          },
+          {
+           "id": "o2",
+           "text": "Цель тренировки на сегодня"
+          },
+          {
+           "id": "o3",
+           "text": "Сорок пять секунд"
+          },
+          {
+           "id": "o4",
+           "text": "Около минуты"
+          }
+         ],
+         "exchange": {
+          "ref": "x7",
+          "kind": "answer",
+          "step": 7
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "partner_line": {
+          "ref": "x7",
+          "audio": {
+           "ref": "x7",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+          "text_target": "Do three sets, and rest forty-five seconds between them."
+         },
+         "question_native": "Сколько длится перерыв?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 10,
+        "response": null,
+        "retry_of": null,
+        "unit_ref": "x7",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:31:29+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x7",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:31:29+00:00"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "card": {
+    "id": "01M34GF5GVGWQRH1J0HGW3KZTA",
+    "stage": "dialogue",
+    "position": 12,
+    "kind": "dialogue_ask",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x8"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p7",
+      "kind": "ask",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p7",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00YH126145WCVHKQY12",
+          "duration_ms": 1753,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "плечи",
+         "target": "my shoulders",
+         "in_dialogue": true,
+         "native_line": "Мне держать плечи опущенными?",
+         "pronunciation_native": "май шоулдэрз"
+        },
+        {
+         "audio": {
+          "ref": "p7.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NNG3DRJRA7SRGS83DK",
+          "duration_ms": 1910,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "локти",
+         "target": "my elbows",
+         "in_dialogue": false,
+         "native_line": "Мне держать локти опущенными?",
+         "pronunciation_native": "май элбоуз"
+        },
+        {
+         "audio": {
+          "ref": "p7.f3",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS4AFBVQJZYV0H2EAQD08",
+          "duration_ms": 1675,
+          "voice": "learner"
+         },
+         "index": 2,
+         "native": "грудь",
+         "target": "my chest",
+         "in_dialogue": false,
+         "native_line": "Мне держать грудь опущенными?",
+         "pronunciation_native": "май чест"
+        }
+       ],
+       "hint_native": "часть тела"
+      },
+      "frame_native": "Мне держать ___ опущенными?",
+      "frame_target": "Should I keep ___ down?",
+      "frame_pronunciation_native": "Шуд ай кип ___ даун?"
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p7",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00YH126145WCVHKQY12",
+         "duration_ms": 1753,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "плечи",
+        "target": "my shoulders",
+        "in_dialogue": true,
+        "native_line": "Мне держать плечи опущенными?",
+        "pronunciation_native": "май шоулдэрз"
+       },
+       {
+        "audio": {
+         "ref": "p7.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NNG3DRJRA7SRGS83DK",
+         "duration_ms": 1910,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "локти",
+        "target": "my elbows",
+        "in_dialogue": false,
+        "native_line": "Мне держать локти опущенными?",
+        "pronunciation_native": "май элбоуз"
+       },
+       {
+        "audio": {
+         "ref": "p7.f3",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS4AFBVQJZYV0H2EAQD08",
+         "duration_ms": 1675,
+         "voice": "learner"
+        },
+        "index": 2,
+        "native": "грудь",
+        "target": "my chest",
+        "in_dialogue": false,
+        "native_line": "Мне держать грудь опущенными?",
+        "pronunciation_native": "май чест"
+       }
+      ],
+      "voice_hint": "Should I keep my shoulders down?",
+      "voice_blind": "Should I keep ___ down?"
+     },
+     "correct": "o1",
+     "options": [
+      {
+       "id": "o1",
+       "text": "К ушам"
+      },
+      {
+       "id": "o2",
+       "text": "К шее"
+      },
+      {
+       "id": "o3",
+       "text": "Цель тренировки на сегодня"
+      },
+      {
+       "id": "o4",
+       "text": "К груди"
+      }
+     ],
+     "exchange": {
+      "ref": "x8",
+      "kind": "ask",
+      "step": 8
+     },
+     "own_line": {
+      "key": "Should I keep",
+      "ref": "x8b",
+      "audio": {
+       "ref": "x8b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJFQQD5SZ67C9RDGK80",
+       "duration_ms": 1831,
+       "voice": "learner"
+      },
+      "frame_ref": "p7",
+      "text_native": "Мне держать плечи опущенными?",
+      "text_target": "Should I keep my shoulders down?",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x8",
+      "audio": {
+       "ref": "x8",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRYHQPA77FY25VJQKYPBE",
+       "duration_ms": 3346,
+       "voice": "partner"
+      },
+      "text_native": "Да, держите их опущенными и не поднимайте к ушам.",
+      "text_target": "Yes, keep them down and don't lift them toward your ears."
+     },
+     "question_native": "Куда не нужно поднимать плечи?"
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "Should I keep my shoulders down",
+     "choice": "o1"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x8",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:32:01+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HM21HBSB5MGAKXHD7KY0G",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVGWQRH1J0HGW3KZTA/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 27,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 121,
+     "response_bytes": 5898,
+     "request_body": {
+      "choice": "o1",
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "Should I keep my shoulders down"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 59,
+        "cards_total": 85,
+        "minutes_spent": 21
+       },
+       "card": {
+        "id": "01M34GF5GVGWQRH1J0HGW3KZTA",
+        "kind": "dialogue_ask",
+        "unit": {
+         "ref": "x8",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p7",
+          "kind": "ask",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p7",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00YH126145WCVHKQY12",
+              "voice": "learner",
+              "duration_ms": 1753
+             },
+             "index": 0,
+             "native": "плечи",
+             "target": "my shoulders",
+             "in_dialogue": true,
+             "native_line": "Мне держать плечи опущенными?",
+             "pronunciation_native": "май шоулдэрз"
+            },
+            {
+             "audio": {
+              "ref": "p7.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NNG3DRJRA7SRGS83DK",
+              "voice": "learner",
+              "duration_ms": 1910
+             },
+             "index": 1,
+             "native": "локти",
+             "target": "my elbows",
+             "in_dialogue": false,
+             "native_line": "Мне держать локти опущенными?",
+             "pronunciation_native": "май элбоуз"
+            },
+            {
+             "audio": {
+              "ref": "p7.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS4AFBVQJZYV0H2EAQD08",
+              "voice": "learner",
+              "duration_ms": 1675
+             },
+             "index": 2,
+             "native": "грудь",
+             "target": "my chest",
+             "in_dialogue": false,
+             "native_line": "Мне держать грудь опущенными?",
+             "pronunciation_native": "май чест"
+            }
+           ],
+           "hint_native": "часть тела"
+          },
+          "frame_native": "Мне держать ___ опущенными?",
+          "frame_target": "Should I keep ___ down?",
+          "frame_pronunciation_native": "Шуд ай кип ___ даун?"
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p7",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00YH126145WCVHKQY12",
+             "voice": "learner",
+             "duration_ms": 1753
+            },
+            "index": 0,
+            "native": "плечи",
+            "target": "my shoulders",
+            "in_dialogue": true,
+            "native_line": "Мне держать плечи опущенными?",
+            "pronunciation_native": "май шоулдэрз"
+           },
+           {
+            "audio": {
+             "ref": "p7.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NNG3DRJRA7SRGS83DK",
+             "voice": "learner",
+             "duration_ms": 1910
+            },
+            "index": 1,
+            "native": "локти",
+            "target": "my elbows",
+            "in_dialogue": false,
+            "native_line": "Мне держать локти опущенными?",
+            "pronunciation_native": "май элбоуз"
+           },
+           {
+            "audio": {
+             "ref": "p7.f3",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS4AFBVQJZYV0H2EAQD08",
+             "voice": "learner",
+             "duration_ms": 1675
+            },
+            "index": 2,
+            "native": "грудь",
+            "target": "my chest",
+            "in_dialogue": false,
+            "native_line": "Мне держать грудь опущенными?",
+            "pronunciation_native": "май чест"
+           }
+          ],
+          "voice_hint": "Should I keep my shoulders down?",
+          "voice_blind": "Should I keep ___ down?"
+         },
+         "correct": "o1",
+         "options": [
+          {
+           "id": "o1",
+           "text": "К ушам"
+          },
+          {
+           "id": "o2",
+           "text": "К шее"
+          },
+          {
+           "id": "o3",
+           "text": "Цель тренировки на сегодня"
+          },
+          {
+           "id": "o4",
+           "text": "К груди"
+          }
+         ],
+         "exchange": {
+          "ref": "x8",
+          "kind": "ask",
+          "step": 8
+         },
+         "own_line": {
+          "key": "Should I keep",
+          "ref": "x8b",
+          "audio": {
+           "ref": "x8b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJFQQD5SZ67C9RDGK80",
+           "voice": "learner",
+           "duration_ms": 1831
+          },
+          "frame_ref": "p7",
+          "text_native": "Мне держать плечи опущенными?",
+          "text_target": "Should I keep my shoulders down?",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x8",
+          "audio": {
+           "ref": "x8",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRYHQPA77FY25VJQKYPBE",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Да, держите их опущенными и не поднимайте к ушам.",
+          "text_target": "Yes, keep them down and don't lift them toward your ears."
+         },
+         "question_native": "Куда не нужно поднимать плечи?"
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 12,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "Should I keep my shoulders down",
+         "choice": "o1"
+        },
+        "retry_of": null,
+        "unit_ref": "x8",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:32:01+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x8",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:32:01+00:00"
+    }
+   ]
+  }
+ ],
+ "s4_forty_five": [
+  {
+   "card": {
+    "id": "01M34GF5GVVG4FXHR8FSPAR1QK",
+    "stage": "phrases",
+    "position": 20,
+    "kind": "phrase_other_slot",
+    "unit": {
+     "kind": "phrase",
+     "ref": "p6"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "key": "I'll rest for",
+     "frame": {
+      "ref": "p6",
+      "kind": "answer",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p6",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+          "duration_ms": 2302,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "сорок пять секунд",
+         "target": "forty-five seconds",
+         "in_dialogue": true,
+         "native_line": "Я буду отдыхать сорок пять секунд.",
+         "pronunciation_native": "форти-файв секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+          "duration_ms": 2380,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "тридцать секунд",
+         "target": "thirty seconds",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать тридцать секунд.",
+         "pronunciation_native": "сёрти секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f3",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+          "duration_ms": 2066,
+          "voice": "learner"
+         },
+         "index": 2,
+         "native": "минуту",
+         "target": "one minute",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать минуту.",
+         "pronunciation_native": "уан минут"
+        }
+       ],
+       "hint_native": "время отдыха"
+      },
+      "frame_native": "Я буду отдыхать ___.",
+      "frame_target": "I'll rest for ___.",
+      "frame_pronunciation_native": "Айл рэст фор ___."
+     },
+     "rounds": [
+      {
+       "task_native": "Я буду отдыхать сорок пять секунд.",
+       "filler_index": 0,
+       "expected_text": "I'll rest for forty-five seconds."
+      },
+      {
+       "task_native": "Я буду отдыхать тридцать секунд.",
+       "filler_index": 1,
+       "expected_text": "I'll rest for thirty seconds."
+      }
+     ],
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "own_round": {
+      "judge": true,
+      "examples": [
+       "сорок пять секунд",
+       "тридцать секунд",
+       "минуту"
+      ],
+      "speech_mode": "free",
+      "task_native": "Я буду отдыхать ___."
+     },
+     "speech_mode": "repeat",
+     "partner_line": {
+      "ref": "x7",
+      "audio": {
+       "ref": "x7",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+       "duration_ms": 3346,
+       "voice": "partner"
+      },
+      "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+      "text_target": "Do three sets, and rest forty-five seconds between them."
+     }
+    },
+    "result": "skipped",
+    "attempts": 2,
+    "response": {
+     "heard": "I will rest for 45 seconds"
+    },
+    "unit_kind": "phrase",
+    "unit_ref": "p6",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:23:22+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34H471FJQ0CK2WC1J4CKFW2",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVVG4FXHR8FSPAR1QK/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 47,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 83,
+     "response_bytes": 8579,
+     "request_body": {
+      "result": "skipped",
+      "attempts": 2,
+      "response": {
+       "heard": "I will rest for 45 seconds"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 44,
+        "cards_total": 85,
+        "minutes_spent": 12
+       },
+       "card": {
+        "id": "01M34GF5GVVG4FXHR8FSPAR1QK",
+        "kind": "phrase_other_slot",
+        "unit": {
+         "ref": "p6",
+         "kind": "phrase"
+        },
+        "stage": "phrases",
+        "result": "skipped",
+        "source": "today",
+        "payload": {
+         "key": "I'll rest for",
+         "frame": {
+          "ref": "p6",
+          "kind": "answer",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p6",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+              "voice": "learner",
+              "duration_ms": 2302
+             },
+             "index": 0,
+             "native": "сорок пять секунд",
+             "target": "forty-five seconds",
+             "in_dialogue": true,
+             "native_line": "Я буду отдыхать сорок пять секунд.",
+             "pronunciation_native": "форти-файв секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+              "voice": "learner",
+              "duration_ms": 2380
+             },
+             "index": 1,
+             "native": "тридцать секунд",
+             "target": "thirty seconds",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать тридцать секунд.",
+             "pronunciation_native": "сёрти секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+              "voice": "learner",
+              "duration_ms": 2066
+             },
+             "index": 2,
+             "native": "минуту",
+             "target": "one minute",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать минуту.",
+             "pronunciation_native": "уан минут"
+            }
+           ],
+           "hint_native": "время отдыха"
+          },
+          "frame_native": "Я буду отдыхать ___.",
+          "frame_target": "I'll rest for ___.",
+          "frame_pronunciation_native": "Айл рэст фор ___."
+         },
+         "rounds": [
+          {
+           "task_native": "Я буду отдыхать сорок пять секунд.",
+           "filler_index": 0,
+           "expected_text": "I'll rest for forty-five seconds."
+          },
+          {
+           "task_native": "Я буду отдыхать тридцать секунд.",
+           "filler_index": 1,
+           "expected_text": "I'll rest for thirty seconds."
+          }
+         ],
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "own_round": {
+          "judge": true,
+          "examples": [
+           "сорок пять секунд",
+           "тридцать секунд",
+           "минуту"
+          ],
+          "speech_mode": "free",
+          "task_native": "Я буду отдыхать ___."
+         },
+         "speech_mode": "repeat",
+         "partner_line": {
+          "ref": "x7",
+          "audio": {
+           "ref": "x7",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+          "text_target": "Do three sets, and rest forty-five seconds between them."
+         }
+        },
+        "returns": false,
+        "attempts": 2,
+        "position": 20,
+        "response": {
+         "heard": "I will rest for 45 seconds"
+        },
+        "retry_of": null,
+        "unit_ref": "p6",
+        "unit_kind": "phrase",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:23:22+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "p6",
+        "kind": "phrase",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "phrases",
+        "minutes_spent": 10
+       },
+       "requeued": {
+        "id": "01M34H470X2XX3WMRRPDQ55EAV",
+        "kind": "phrase_other_slot",
+        "unit": {
+         "ref": "p6",
+         "kind": "phrase"
+        },
+        "stage": "phrases",
+        "result": null,
+        "source": "today",
+        "payload": {
+         "key": "I'll rest for",
+         "frame": {
+          "ref": "p6",
+          "kind": "answer",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p6",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+              "voice": "learner",
+              "duration_ms": 2302
+             },
+             "index": 0,
+             "native": "сорок пять секунд",
+             "target": "forty-five seconds",
+             "in_dialogue": true,
+             "native_line": "Я буду отдыхать сорок пять секунд.",
+             "pronunciation_native": "форти-файв секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+              "voice": "learner",
+              "duration_ms": 2380
+             },
+             "index": 1,
+             "native": "тридцать секунд",
+             "target": "thirty seconds",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать тридцать секунд.",
+             "pronunciation_native": "сёрти секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+              "voice": "learner",
+              "duration_ms": 2066
+             },
+             "index": 2,
+             "native": "минуту",
+             "target": "one minute",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать минуту.",
+             "pronunciation_native": "уан минут"
+            }
+           ],
+           "hint_native": "время отдыха"
+          },
+          "frame_native": "Я буду отдыхать ___.",
+          "frame_target": "I'll rest for ___.",
+          "frame_pronunciation_native": "Айл рэст фор ___."
+         },
+         "rounds": [
+          {
+           "task_native": "Я буду отдыхать сорок пять секунд.",
+           "filler_index": 0,
+           "expected_text": "I'll rest for forty-five seconds."
+          },
+          {
+           "task_native": "Я буду отдыхать тридцать секунд.",
+           "filler_index": 1,
+           "expected_text": "I'll rest for thirty seconds."
+          },
+          {
+           "task_native": "Я буду отдыхать минуту.",
+           "filler_index": 2,
+           "expected_text": "I'll rest for one minute."
+          }
+         ],
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "own_round": {
+          "judge": true,
+          "examples": [
+           "сорок пять секунд",
+           "тридцать секунд",
+           "минуту"
+          ],
+          "speech_mode": "free",
+          "task_native": "Я буду отдыхать ___."
+         },
+         "speech_mode": "repeat",
+         "partner_line": {
+          "ref": "x7",
+          "audio": {
+           "ref": "x7",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+          "text_target": "Do three sets, and rest forty-five seconds between them."
+         }
+        },
+        "returns": false,
+        "attempts": 0,
+        "position": 23,
+        "response": null,
+        "retry_of": "01M34GF5GVVG4FXHR8FSPAR1QK",
+        "unit_ref": "p6",
+        "unit_kind": "phrase",
+        "source_day": null,
+        "answered_at": null,
+        "source_day_id": null
+       }
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:23:22+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34H470X2XX3WMRRPDQ55EAV",
+    "stage": "phrases",
+    "position": 23,
+    "kind": "phrase_other_slot",
+    "unit": {
+     "kind": "phrase",
+     "ref": "p6"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": "01M34GF5GVVG4FXHR8FSPAR1QK",
+    "payload": {
+     "key": "I'll rest for",
+     "frame": {
+      "ref": "p6",
+      "kind": "answer",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p6",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+          "duration_ms": 2302,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "сорок пять секунд",
+         "target": "forty-five seconds",
+         "in_dialogue": true,
+         "native_line": "Я буду отдыхать сорок пять секунд.",
+         "pronunciation_native": "форти-файв секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+          "duration_ms": 2380,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "тридцать секунд",
+         "target": "thirty seconds",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать тридцать секунд.",
+         "pronunciation_native": "сёрти секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f3",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+          "duration_ms": 2066,
+          "voice": "learner"
+         },
+         "index": 2,
+         "native": "минуту",
+         "target": "one minute",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать минуту.",
+         "pronunciation_native": "уан минут"
+        }
+       ],
+       "hint_native": "время отдыха"
+      },
+      "frame_native": "Я буду отдыхать ___.",
+      "frame_target": "I'll rest for ___.",
+      "frame_pronunciation_native": "Айл рэст фор ___."
+     },
+     "rounds": [
+      {
+       "task_native": "Я буду отдыхать сорок пять секунд.",
+       "filler_index": 0,
+       "expected_text": "I'll rest for forty-five seconds."
+      },
+      {
+       "task_native": "Я буду отдыхать тридцать секунд.",
+       "filler_index": 1,
+       "expected_text": "I'll rest for thirty seconds."
+      },
+      {
+       "task_native": "Я буду отдыхать минуту.",
+       "filler_index": 2,
+       "expected_text": "I'll rest for one minute."
+      }
+     ],
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "own_round": {
+      "judge": true,
+      "examples": [
+       "сорок пять секунд",
+       "тридцать секунд",
+       "минуту"
+      ],
+      "speech_mode": "free",
+      "task_native": "Я буду отдыхать ___."
+     },
+     "speech_mode": "repeat",
+     "partner_line": {
+      "ref": "x7",
+      "audio": {
+       "ref": "x7",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+       "duration_ms": 3346,
+       "voice": "partner"
+      },
+      "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+      "text_target": "Do three sets, and rest forty-five seconds between them."
+     }
+    },
+    "result": "skipped",
+    "attempts": 1,
+    "response": {
+     "heard": "I will rest for 45 seconds"
+    },
+    "unit_kind": "phrase",
+    "unit_ref": "p6",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:29:08+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HES876H8ZCYN34V0HMQ3E",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34H470X2XX3WMRRPDQ55EAV/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 26,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 83,
+     "response_bytes": 4544,
+     "request_body": {
+      "result": "skipped",
+      "attempts": 1,
+      "response": {
+       "heard": "I will rest for 45 seconds"
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 47,
+        "cards_total": 85,
+        "minutes_spent": 18
+       },
+       "card": {
+        "id": "01M34H470X2XX3WMRRPDQ55EAV",
+        "kind": "phrase_other_slot",
+        "unit": {
+         "ref": "p6",
+         "kind": "phrase"
+        },
+        "stage": "phrases",
+        "result": "skipped",
+        "source": "today",
+        "payload": {
+         "key": "I'll rest for",
+         "frame": {
+          "ref": "p6",
+          "kind": "answer",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p6",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+              "voice": "learner",
+              "duration_ms": 2302
+             },
+             "index": 0,
+             "native": "сорок пять секунд",
+             "target": "forty-five seconds",
+             "in_dialogue": true,
+             "native_line": "Я буду отдыхать сорок пять секунд.",
+             "pronunciation_native": "форти-файв секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+              "voice": "learner",
+              "duration_ms": 2380
+             },
+             "index": 1,
+             "native": "тридцать секунд",
+             "target": "thirty seconds",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать тридцать секунд.",
+             "pronunciation_native": "сёрти секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+              "voice": "learner",
+              "duration_ms": 2066
+             },
+             "index": 2,
+             "native": "минуту",
+             "target": "one minute",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать минуту.",
+             "pronunciation_native": "уан минут"
+            }
+           ],
+           "hint_native": "время отдыха"
+          },
+          "frame_native": "Я буду отдыхать ___.",
+          "frame_target": "I'll rest for ___.",
+          "frame_pronunciation_native": "Айл рэст фор ___."
+         },
+         "rounds": [
+          {
+           "task_native": "Я буду отдыхать сорок пять секунд.",
+           "filler_index": 0,
+           "expected_text": "I'll rest for forty-five seconds."
+          },
+          {
+           "task_native": "Я буду отдыхать тридцать секунд.",
+           "filler_index": 1,
+           "expected_text": "I'll rest for thirty seconds."
+          },
+          {
+           "task_native": "Я буду отдыхать минуту.",
+           "filler_index": 2,
+           "expected_text": "I'll rest for one minute."
+          }
+         ],
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "own_round": {
+          "judge": true,
+          "examples": [
+           "сорок пять секунд",
+           "тридцать секунд",
+           "минуту"
+          ],
+          "speech_mode": "free",
+          "task_native": "Я буду отдыхать ___."
+         },
+         "speech_mode": "repeat",
+         "partner_line": {
+          "ref": "x7",
+          "audio": {
+           "ref": "x7",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+          "text_target": "Do three sets, and rest forty-five seconds between them."
+         }
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 23,
+        "response": {
+         "heard": "I will rest for 45 seconds"
+        },
+        "retry_of": "01M34GF5GVVG4FXHR8FSPAR1QK",
+        "unit_ref": "p6",
+        "unit_kind": "phrase",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:29:08+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "p6",
+        "kind": "phrase",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "phrases",
+        "minutes_spent": 15
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:29:08+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GVG6SSSPR12MV51W4V",
+    "stage": "dialogue",
+    "position": 11,
+    "kind": "dialogue_answer",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x7"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "frame": {
+      "ref": "p6",
+      "kind": "answer",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p6",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+          "duration_ms": 2302,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "сорок пять секунд",
+         "target": "forty-five seconds",
+         "in_dialogue": true,
+         "native_line": "Я буду отдыхать сорок пять секунд.",
+         "pronunciation_native": "форти-файв секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+          "duration_ms": 2380,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "тридцать секунд",
+         "target": "thirty seconds",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать тридцать секунд.",
+         "pronunciation_native": "сёрти секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f3",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+          "duration_ms": 2066,
+          "voice": "learner"
+         },
+         "index": 2,
+         "native": "минуту",
+         "target": "one minute",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать минуту.",
+         "pronunciation_native": "уан минут"
+        }
+       ],
+       "hint_native": "время отдыха"
+      },
+      "frame_native": "Я буду отдыхать ___.",
+      "frame_target": "I'll rest for ___.",
+      "frame_pronunciation_native": "Айл рэст фор ___."
+     },
+     "modes": {
+      "chips": [
+       {
+        "audio": {
+         "ref": "p6",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+         "duration_ms": 2302,
+         "voice": "learner"
+        },
+        "index": 0,
+        "native": "сорок пять секунд",
+        "target": "forty-five seconds",
+        "in_dialogue": true,
+        "native_line": "Я буду отдыхать сорок пять секунд.",
+        "pronunciation_native": "форти-файв секондз"
+       },
+       {
+        "audio": {
+         "ref": "p6.f2",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+         "duration_ms": 2380,
+         "voice": "learner"
+        },
+        "index": 1,
+        "native": "тридцать секунд",
+        "target": "thirty seconds",
+        "in_dialogue": false,
+        "native_line": "Я буду отдыхать тридцать секунд.",
+        "pronunciation_native": "сёрти секондз"
+       },
+       {
+        "audio": {
+         "ref": "p6.f3",
+         "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+         "duration_ms": 2066,
+         "voice": "learner"
+        },
+        "index": 2,
+        "native": "минуту",
+        "target": "one minute",
+        "in_dialogue": false,
+        "native_line": "Я буду отдыхать минуту.",
+        "pronunciation_native": "уан минут"
+       }
+      ],
+      "voice_hint": "I'll rest for forty-five seconds.",
+      "voice_blind": "I'll rest for ___."
+     },
+     "exchange": {
+      "ref": "x7",
+      "kind": "answer",
+      "step": 7
+     },
+     "own_line": {
+      "key": "I'll rest for",
+      "ref": "x7b",
+      "audio": {
+       "ref": "x7b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJBSQEHDD8R6YDBC4VF",
+       "duration_ms": 2302,
+       "voice": "learner"
+      },
+      "frame_ref": "p6",
+      "text_native": "Я буду отдыхать сорок пять секунд.",
+      "text_target": "I'll rest for forty-five seconds.",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "speech_mode": "free",
+     "partner_line": {
+      "ref": "x7",
+      "audio": {
+       "ref": "x7",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+       "duration_ms": 3346,
+       "voice": "partner"
+      },
+      "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+      "text_target": "Do three sets, and rest forty-five seconds between them."
+     }
+    },
+    "result": "passed",
+    "attempts": 1,
+    "response": {
+     "mode": "voice_hint",
+     "heard": "I rest for forty-five seconds."
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x7",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:31:36+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HK9VNNRFDVGYCRM9W35BN",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVG6SSSPR12MV51W4V/answer",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 30,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 106,
+     "response_bytes": 5789,
+     "request_body": {
+      "result": "passed",
+      "attempts": 1,
+      "response": {
+       "mode": "voice_hint",
+       "heard": "I rest for forty-five seconds."
+      }
+     },
+     "response_body": {
+      "data": {
+       "day": {
+        "cards_done": 58,
+        "cards_total": 85,
+        "minutes_spent": 20
+       },
+       "card": {
+        "id": "01M34GF5GVG6SSSPR12MV51W4V",
+        "kind": "dialogue_answer",
+        "unit": {
+         "ref": "x7",
+         "kind": "exchange"
+        },
+        "stage": "dialogue",
+        "result": "passed",
+        "source": "today",
+        "payload": {
+         "frame": {
+          "ref": "p6",
+          "kind": "answer",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p6",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+              "voice": "learner",
+              "duration_ms": 2302
+             },
+             "index": 0,
+             "native": "сорок пять секунд",
+             "target": "forty-five seconds",
+             "in_dialogue": true,
+             "native_line": "Я буду отдыхать сорок пять секунд.",
+             "pronunciation_native": "форти-файв секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+              "voice": "learner",
+              "duration_ms": 2380
+             },
+             "index": 1,
+             "native": "тридцать секунд",
+             "target": "thirty seconds",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать тридцать секунд.",
+             "pronunciation_native": "сёрти секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+              "voice": "learner",
+              "duration_ms": 2066
+             },
+             "index": 2,
+             "native": "минуту",
+             "target": "one minute",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать минуту.",
+             "pronunciation_native": "уан минут"
+            }
+           ],
+           "hint_native": "время отдыха"
+          },
+          "frame_native": "Я буду отдыхать ___.",
+          "frame_target": "I'll rest for ___.",
+          "frame_pronunciation_native": "Айл рэст фор ___."
+         },
+         "modes": {
+          "chips": [
+           {
+            "audio": {
+             "ref": "p6",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+             "voice": "learner",
+             "duration_ms": 2302
+            },
+            "index": 0,
+            "native": "сорок пять секунд",
+            "target": "forty-five seconds",
+            "in_dialogue": true,
+            "native_line": "Я буду отдыхать сорок пять секунд.",
+            "pronunciation_native": "форти-файв секондз"
+           },
+           {
+            "audio": {
+             "ref": "p6.f2",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+             "voice": "learner",
+             "duration_ms": 2380
+            },
+            "index": 1,
+            "native": "тридцать секунд",
+            "target": "thirty seconds",
+            "in_dialogue": false,
+            "native_line": "Я буду отдыхать тридцать секунд.",
+            "pronunciation_native": "сёрти секондз"
+           },
+           {
+            "audio": {
+             "ref": "p6.f3",
+             "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+             "voice": "learner",
+             "duration_ms": 2066
+            },
+            "index": 2,
+            "native": "минуту",
+            "target": "one minute",
+            "in_dialogue": false,
+            "native_line": "Я буду отдыхать минуту.",
+            "pronunciation_native": "уан минут"
+           }
+          ],
+          "voice_hint": "I'll rest for forty-five seconds.",
+          "voice_blind": "I'll rest for ___."
+         },
+         "exchange": {
+          "ref": "x7",
+          "kind": "answer",
+          "step": 7
+         },
+         "own_line": {
+          "key": "I'll rest for",
+          "ref": "x7b",
+          "audio": {
+           "ref": "x7b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJBSQEHDD8R6YDBC4VF",
+           "voice": "learner",
+           "duration_ms": 2302
+          },
+          "frame_ref": "p6",
+          "text_native": "Я буду отдыхать сорок пять секунд.",
+          "text_target": "I'll rest for forty-five seconds.",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "speech_mode": "free",
+         "partner_line": {
+          "ref": "x7",
+          "audio": {
+           "ref": "x7",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+          "text_target": "Do three sets, and rest forty-five seconds between them."
+         }
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 11,
+        "response": {
+         "mode": "voice_hint",
+         "heard": "I rest for forty-five seconds."
+        },
+        "retry_of": null,
+        "unit_ref": "x7",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:31:36+00:00",
+        "source_day_id": null
+       },
+       "unit": {
+        "ref": "x7",
+        "kind": "exchange",
+        "returns_day": null,
+        "returns_tomorrow": false
+       },
+       "stage": {
+        "stage": "dialogue",
+        "minutes_spent": 3
+       },
+       "requeued": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:31:36+00:00"
+    }
+   ]
+  },
+  {
+   "card": {
+    "id": "01M34GF5GVRSKR3BHH1P0AF2SM",
+    "stage": "speak",
+    "position": 6,
+    "kind": "speak_answer",
+    "unit": {
+     "kind": "exchange",
+     "ref": "x7"
+    },
+    "source": "today",
+    "source_day": null,
+    "retry_of": null,
+    "payload": {
+     "key": "I'll rest for",
+     "hint": "I'll rest for ___.",
+     "frame": {
+      "ref": "p6",
+      "kind": "answer",
+      "slot": {
+       "fillers": [
+        {
+         "audio": {
+          "ref": "p6",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+          "duration_ms": 2302,
+          "voice": "learner"
+         },
+         "index": 0,
+         "native": "сорок пять секунд",
+         "target": "forty-five seconds",
+         "in_dialogue": true,
+         "native_line": "Я буду отдыхать сорок пять секунд.",
+         "pronunciation_native": "форти-файв секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f2",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+          "duration_ms": 2380,
+          "voice": "learner"
+         },
+         "index": 1,
+         "native": "тридцать секунд",
+         "target": "thirty seconds",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать тридцать секунд.",
+         "pronunciation_native": "сёрти секондз"
+        },
+        {
+         "audio": {
+          "ref": "p6.f3",
+          "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+          "duration_ms": 2066,
+          "voice": "learner"
+         },
+         "index": 2,
+         "native": "минуту",
+         "target": "one minute",
+         "in_dialogue": false,
+         "native_line": "Я буду отдыхать минуту.",
+         "pronunciation_native": "уан минут"
+        }
+       ],
+       "hint_native": "время отдыха"
+      },
+      "frame_native": "Я буду отдыхать ___.",
+      "frame_target": "I'll rest for ___.",
+      "frame_pronunciation_native": "Айл рэст фор ___."
+     },
+     "judge": true,
+     "exchange": {
+      "ref": "x7",
+      "kind": "answer",
+      "step": 7
+     },
+     "own_line": {
+      "key": "I'll rest for",
+      "ref": "x7b",
+      "audio": {
+       "ref": "x7b",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJBSQEHDD8R6YDBC4VF",
+       "duration_ms": 2302,
+       "voice": "learner"
+      },
+      "frame_ref": "p6",
+      "text_native": "Я буду отдыхать сорок пять секунд.",
+      "text_target": "I'll rest for forty-five seconds.",
+      "filler_index": 0
+     },
+     "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+     "speech_mode": "free",
+     "task_native": "Я буду отдыхать сорок пять секунд.",
+     "partner_line": {
+      "ref": "x7",
+      "audio": {
+       "ref": "x7",
+       "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+       "duration_ms": 3346,
+       "voice": "partner"
+      },
+      "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+      "text_target": "Do three sets, and rest forty-five seconds between them."
+     }
+    },
+    "result": "hinted",
+    "attempts": 1,
+    "response": {
+     "heard": "I will be rest for 45 seconds",
+     "judge": {
+      "by": "model",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "accepted": true,
+      "cost_usd": "0.000668",
+      "tokens_in": 759,
+      "latency_ms": 917,
+      "tokens_out": 22,
+      "reason_native": null,
+      "prompt_version": "slot_judge.v3"
+     },
+     "hinted": true,
+     "slot_value": "45 seconds"
+    },
+    "unit_kind": "exchange",
+    "unit_ref": "x7",
+    "source_day_id": null,
+    "answered_at": "2026-09-22T12:35:23+00:00",
+    "returns": false
+   },
+   "requests": [
+    {
+     "id": "01M34HT884VJTVK3RQF62B0DVC",
+     "direction": "inbound",
+     "method": "POST",
+     "host": "greedily-thermos-finer.ngrok-free.dev",
+     "path": "api/v1/plans/01M32DX8QCABM348XP45Z1ZD4M/days/2/cards/01M34GF5GVRSKR3BHH1P0AF2SM/judge",
+     "service": null,
+     "purpose": null,
+     "status": 200,
+     "duration_ms": 960,
+     "user_id": "01M12HTZ1QHPNDZ5J8SPKB58QP",
+     "request_bytes": 55,
+     "response_bytes": 4347,
+     "request_body": {
+      "heard": "I will be rest for 45 seconds",
+      "hinted": true
+     },
+     "response_body": {
+      "data": {
+       "card": {
+        "id": "01M34GF5GVRSKR3BHH1P0AF2SM",
+        "kind": "speak_answer",
+        "unit": {
+         "ref": "x7",
+         "kind": "exchange"
+        },
+        "stage": "speak",
+        "result": "hinted",
+        "source": "today",
+        "payload": {
+         "key": "I'll rest for",
+         "hint": "I'll rest for ___.",
+         "frame": {
+          "ref": "p6",
+          "kind": "answer",
+          "slot": {
+           "fillers": [
+            {
+             "audio": {
+              "ref": "p6",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS00WTS0YG7XKTFK3MNN1",
+              "voice": "learner",
+              "duration_ms": 2302
+             },
+             "index": 0,
+             "native": "сорок пять секунд",
+             "target": "forty-five seconds",
+             "in_dialogue": true,
+             "native_line": "Я буду отдыхать сорок пять секунд.",
+             "pronunciation_native": "форти-файв секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f2",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3ND7BSRH89KWPQRNRF0",
+              "voice": "learner",
+              "duration_ms": 2380
+             },
+             "index": 1,
+             "native": "тридцать секунд",
+             "target": "thirty seconds",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать тридцать секунд.",
+             "pronunciation_native": "сёрти секондз"
+            },
+            {
+             "audio": {
+              "ref": "p6.f3",
+              "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FS3NJXCYHZT9SA1A4PKK9",
+              "voice": "learner",
+              "duration_ms": 2066
+             },
+             "index": 2,
+             "native": "минуту",
+             "target": "one minute",
+             "in_dialogue": false,
+             "native_line": "Я буду отдыхать минуту.",
+             "pronunciation_native": "уан минут"
+            }
+           ],
+           "hint_native": "время отдыха"
+          },
+          "frame_native": "Я буду отдыхать ___.",
+          "frame_target": "I'll rest for ___.",
+          "frame_pronunciation_native": "Айл рэст фор ___."
+         },
+         "judge": true,
+         "exchange": {
+          "ref": "x7",
+          "kind": "answer",
+          "step": 7
+         },
+         "own_line": {
+          "key": "I'll rest for",
+          "ref": "x7b",
+          "audio": {
+           "ref": "x7b",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJBSQEHDD8R6YDBC4VF",
+           "voice": "learner",
+           "duration_ms": 2302
+          },
+          "frame_ref": "p6",
+          "text_native": "Я буду отдыхать сорок пять секунд.",
+          "text_target": "I'll rest for forty-five seconds.",
+          "filler_index": 0
+         },
+         "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+         "speech_mode": "free",
+         "task_native": "Я буду отдыхать сорок пять секунд.",
+         "partner_line": {
+          "ref": "x7",
+          "audio": {
+           "ref": "x7",
+           "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FRXJ4Y0T8WKS1ZAVN64YH",
+           "voice": "partner",
+           "duration_ms": 3346
+          },
+          "text_native": "Сделайте три подхода и отдыхайте сорок пять секунд между ними.",
+          "text_target": "Do three sets, and rest forty-five seconds between them."
+         }
+        },
+        "returns": false,
+        "attempts": 1,
+        "position": 6,
+        "response": {
+         "heard": "I will be rest for 45 seconds",
+         "judge": {
+          "by": "model",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "accepted": true,
+          "cost_usd": "0.000668",
+          "tokens_in": "[REDACTED]",
+          "latency_ms": 917,
+          "tokens_out": "[REDACTED]",
+          "reason_native": null,
+          "prompt_version": "slot_judge.v3"
+         },
+         "hinted": true,
+         "slot_value": "45 seconds"
+        },
+        "retry_of": null,
+        "unit_ref": "x7",
+        "unit_kind": "exchange",
+        "source_day": null,
+        "answered_at": "2026-09-22T12:35:23+00:00",
+        "source_day_id": null
+       },
+       "heard": "I will be rest for 45 seconds",
+       "result": "hinted",
+       "accepted": true,
+       "attempts": 1,
+       "slot_value": "45 seconds",
+       "reason_native": null
+      }
+     },
+     "error": null,
+     "occurred_at": "2026-09-22T12:35:24+00:00"
+    }
+   ]
+  }
+ ]
+}

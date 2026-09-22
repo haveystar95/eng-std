@@ -1,0 +1,292 @@
+{
+    "data": {
+        "id": "01M32FJ5FQNRNSQH6PNC7DP5E0",
+        "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+        "day": 1,
+        "type": "day",
+        "state": "ended",
+        "replay": false,
+        "talk_title_native": "Поговори с администратором",
+        "partner": {
+            "role_native": "Администратор",
+            "role_target": "Receptionist"
+        },
+        "scene": {
+            "title_native": "Ресепшен зала",
+            "title_target": "Gym Reception"
+        },
+        "scenes": [
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "title_native": "Ресепшен зала",
+                "title_target": "Gym Reception",
+                "role_native": "Администратор",
+                "role_target": "Receptionist",
+                "lines": 7,
+                "state": "done"
+            }
+        ],
+        "minutes_estimate": 3,
+        "turns_left": 0,
+        "targets": [
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "ref": "p1",
+                "text_target": "Do you have a day pass?",
+                "text_native": "У вас есть дневной пропуск?",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "ref": "p2",
+                "text_target": "What monthly memberships do you have?",
+                "text_native": "Какие месячные абонементы у вас есть?",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "ref": "p3",
+                "text_target": "This is my first visit.",
+                "text_native": "Это мой первый визит.",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "ref": "p4",
+                "text_target": "That works for me on weekdays.",
+                "text_native": "Мне это подходит по будням.",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "ref": "p5",
+                "text_target": "Where are the changing rooms?",
+                "text_native": "Где раздевалки?",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "ref": "p6",
+                "text_target": "I'll return the locker key.",
+                "text_native": "Я верну ключ от шкафчика.",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                "ref": "p7",
+                "text_target": "Can I pay by card?",
+                "text_native": "Я могу оплатить картой?",
+                "said": false
+            }
+        ],
+        "hints": {
+            "enabled": true,
+            "delay_ms": 5000,
+            "native": null
+        },
+        "turns": [
+            {
+                "index": 1,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "Hello! Welcome to the gym. How can I help you today?",
+                "text_native": "Здравствуйте! Добро пожаловать в зал. Чем я могу вам помочь сегодня?",
+                "audio": {
+                    "ref": "01M32FJ6ZJ3PGTA5HHQG2DH9GS",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FJ6ZJ3PGTA5HHQG2DH9GS",
+                    "duration_ms": 4078,
+                    "voice": "partner"
+                },
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-21T17:17:36+00:00"
+            },
+            {
+                "index": 2,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "Hello I need daily training",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": null,
+                "created_at": "2026-09-21T17:17:56+00:00"
+            },
+            {
+                "index": 3,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "Do you have a day pass?",
+                "text_native": "У вас есть дневной пропуск?",
+                "audio": {
+                    "ref": "01M32FJX37WG0XRSQ2ZQWTNMTD",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FJX37WG0XRSQ2ZQWTNMTD",
+                    "duration_ms": 1675,
+                    "voice": "partner"
+                },
+                "understood": true,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-21T17:17:58+00:00"
+            },
+            {
+                "index": 4,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "No I want to buy monthly membership",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": null,
+                "created_at": "2026-09-21T17:18:08+00:00"
+            },
+            {
+                "index": 5,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "We have a few monthly memberships. This is your first visit, right?",
+                "text_native": "У нас есть несколько месячных абонементов. Это ваш первый визит, верно?",
+                "audio": {
+                    "ref": "01M32FK98YT60HMGBSH58T070D",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FK98YT60HMGBSH58T070D",
+                    "duration_ms": 3738,
+                    "voice": "partner"
+                },
+                "understood": true,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-21T17:18:11+00:00"
+            },
+            {
+                "index": 6,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "Yes it is my first visit",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": null,
+                "created_at": "2026-09-21T17:18:21+00:00"
+            },
+            {
+                "index": 7,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "Great, then I can show you the monthly options. What monthly memberships do you have in mind, and do you need weekdays only?",
+                "text_native": "Хорошо, тогда я могу показать вам месячные варианты. Какие месячные абонементы вам нужны, и вам нужны только будни?",
+                "audio": {
+                    "ref": "01M32FKNV75EA3W3553N6GRB6N",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FKNV75EA3W3553N6GRB6N",
+                    "duration_ms": 6559,
+                    "voice": "partner"
+                },
+                "understood": true,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-21T17:18:24+00:00"
+            },
+            {
+                "index": 8,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "Weekdays works for me",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": null,
+                "created_at": "2026-09-21T17:18:39+00:00"
+            },
+            {
+                "index": 9,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "Great, that works. Where are the changing rooms?",
+                "text_native": "Отлично, это подходит. Где раздевалки?",
+                "audio": {
+                    "ref": "01M32FM7TAS6HBGNAM3BJH21YA",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M32FM7TAS6HBGNAM3BJH21YA",
+                    "duration_ms": 3033,
+                    "voice": "partner"
+                },
+                "understood": true,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-21T17:18:42+00:00"
+            }
+        ],
+        "summary": {
+            "said_count": 4,
+            "phrases_used": 0,
+            "phrases_total": 7,
+            "phrases": [
+                {
+                    "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                    "ref": "p1",
+                    "text_target": "Do you have a day pass?",
+                    "text_native": "У вас есть дневной пропуск?",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                    "ref": "p2",
+                    "text_target": "What monthly memberships do you have?",
+                    "text_native": "Какие месячные абонементы у вас есть?",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                    "ref": "p3",
+                    "text_target": "This is my first visit.",
+                    "text_native": "Это мой первый визит.",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                    "ref": "p4",
+                    "text_target": "That works for me on weekdays.",
+                    "text_native": "Мне это подходит по будням.",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                    "ref": "p5",
+                    "text_target": "Where are the changing rooms?",
+                    "text_native": "Где раздевалки?",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                    "ref": "p6",
+                    "text_target": "I'll return the locker key.",
+                    "text_native": "Я верну ключ от шкафчика.",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+                    "ref": "p7",
+                    "text_target": "Can I pay by card?",
+                    "text_native": "Я могу оплатить картой?",
+                    "audio_url": null,
+                    "used": false
+                }
+            ],
+            "understood_all": true,
+            "not_understood": 0,
+            "rescues": 0,
+            "ended_reason": "natural",
+            "minutes": 2,
+            "returns_tomorrow": true
+        }
+    }
+}

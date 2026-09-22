@@ -1,0 +1,531 @@
+{
+    "day_1": {
+        "scene_id": "01M32DXHYG50H7SWQEMD33A39F",
+        "level": "intermediate",
+        "seconds": 713,
+        "budget": 690,
+        "over_ceiling": true,
+        "rungs": [
+            {
+                "rung": 0,
+                "seconds": 848,
+                "cards": 29
+            },
+            {
+                "rung": 1,
+                "seconds": 848,
+                "cards": 29
+            },
+            {
+                "rung": 2,
+                "seconds": 823,
+                "cards": 29
+            },
+            {
+                "rung": 3,
+                "seconds": 713,
+                "cards": 22
+            }
+        ],
+        "frames": {
+            "p1": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p2": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p3": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p4": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p5": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p6": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p7": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            }
+        },
+        "built": [
+            {
+                "ref": "p1",
+                "fillers_most": 3,
+                "recognitions": 2,
+                "rounds": 3
+            },
+            {
+                "ref": "p2",
+                "fillers_most": 2,
+                "recognitions": 2,
+                "rounds": 2
+            },
+            {
+                "ref": "p3",
+                "fillers_most": 2,
+                "recognitions": 2,
+                "rounds": 2
+            },
+            {
+                "ref": "p4",
+                "fillers_most": 2,
+                "recognitions": 2,
+                "rounds": 2
+            },
+            {
+                "ref": "p5",
+                "fillers_most": 2,
+                "recognitions": 2,
+                "rounds": 2
+            },
+            {
+                "ref": "p6",
+                "fillers_most": 2,
+                "recognitions": 2,
+                "rounds": 2
+            },
+            {
+                "ref": "p7",
+                "fillers_most": 2,
+                "recognitions": 2,
+                "rounds": 2
+            }
+        ],
+        "cards": [
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p1",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p2",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p3",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_choose_back",
+                "unit_ref": "p1",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_slot_listen",
+                "unit_ref": "p2",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p4",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p1",
+                "rounds": [
+                    "Do you have a day pass?",
+                    "Do you have a weekly pass?"
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_slot",
+                "unit_ref": "p3",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p2",
+                "rounds": [
+                    "What monthly memberships do you have?",
+                    "What payment options do you have?"
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p5",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_slot_listen",
+                "unit_ref": "p4",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p3",
+                "rounds": [
+                    "This is my first visit.",
+                    "This is my trial day."
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p6",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_slot",
+                "unit_ref": "p5",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p7",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p4",
+                "rounds": [
+                    "That works for me on weekdays.",
+                    "That works for me on weekends."
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_slot",
+                "unit_ref": "p6",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_choose_back",
+                "unit_ref": "p7",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p5",
+                "rounds": [
+                    "Where are the changing rooms?",
+                    "Where are the showers?"
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p6",
+                "rounds": [
+                    "I'll return the locker key.",
+                    "I'll return the access card."
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p7",
+                "rounds": [
+                    "Can I pay by card?",
+                    "Can I pay in cash?"
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_combine",
+                "unit_ref": "p3",
+                "rounds": null,
+                "own_round": false
+            }
+        ]
+    },
+    "day_2": {
+        "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+        "level": "intermediate",
+        "seconds": 688,
+        "budget": 690,
+        "over_ceiling": false,
+        "rungs": [
+            {
+                "rung": 0,
+                "seconds": 949,
+                "cards": 28
+            },
+            {
+                "rung": 1,
+                "seconds": 949,
+                "cards": 28
+            },
+            {
+                "rung": 2,
+                "seconds": 799,
+                "cards": 28
+            },
+            {
+                "rung": 3,
+                "seconds": 688,
+                "cards": 22
+            }
+        ],
+        "frames": {
+            "p1": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p2": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p3": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p4": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p5": {
+                "recognitions": 1,
+                "rounds": 1,
+                "own": true
+            },
+            "p6": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            },
+            "p7": {
+                "recognitions": 1,
+                "rounds": 2,
+                "own": true
+            }
+        },
+        "built": [
+            {
+                "ref": "p1",
+                "fillers_most": 3,
+                "recognitions": 2,
+                "rounds": 3
+            },
+            {
+                "ref": "p2",
+                "fillers_most": 3,
+                "recognitions": 2,
+                "rounds": 3
+            },
+            {
+                "ref": "p3",
+                "fillers_most": 3,
+                "recognitions": 2,
+                "rounds": 3
+            },
+            {
+                "ref": "p4",
+                "fillers_most": 3,
+                "recognitions": 2,
+                "rounds": 3
+            },
+            {
+                "ref": "p5",
+                "fillers_most": 1,
+                "recognitions": 1,
+                "rounds": 1
+            },
+            {
+                "ref": "p6",
+                "fillers_most": 3,
+                "recognitions": 2,
+                "rounds": 3
+            },
+            {
+                "ref": "p7",
+                "fillers_most": 3,
+                "recognitions": 2,
+                "rounds": 3
+            }
+        ],
+        "cards": [
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p1",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p2",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p3",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_slot_listen",
+                "unit_ref": "p1",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_choose_back",
+                "unit_ref": "p2",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p4",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p1",
+                "rounds": [
+                    "I'm working on general fitness.",
+                    "I'm working on strength."
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_slot_listen",
+                "unit_ref": "p3",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p2",
+                "rounds": [
+                    "I have about a year of experience.",
+                    "I have six months of experience."
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p5",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_slot",
+                "unit_ref": "p4",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p3",
+                "rounds": [
+                    "I have some shoulder pain.",
+                    "I have some knee pain."
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p6",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_slot",
+                "unit_ref": "p5",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_intro",
+                "unit_ref": "p7",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p4",
+                "rounds": [
+                    "How do I use this machine?",
+                    "How do I use the cable machine?"
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_slot_listen",
+                "unit_ref": "p6",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_choose_back",
+                "unit_ref": "p7",
+                "rounds": null,
+                "own_round": false
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p5",
+                "rounds": [
+                    "How heavy should the weight be?"
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p6",
+                "rounds": [
+                    "I'll rest for forty-five seconds.",
+                    "I'll rest for thirty seconds."
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_other_slot",
+                "unit_ref": "p7",
+                "rounds": [
+                    "Should I keep my shoulders down?",
+                    "Should I keep my elbows down?"
+                ],
+                "own_round": true
+            },
+            {
+                "kind": "phrase_combine",
+                "unit_ref": "p1",
+                "rounds": null,
+                "own_round": false
+            }
+        ]
+    }
+}

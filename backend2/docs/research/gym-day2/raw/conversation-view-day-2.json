@@ -1,0 +1,299 @@
+{
+    "data": {
+        "id": "01M34HXHP05JY8NVF1305NRY5N",
+        "plan_id": "01M32DX8QCABM348XP45Z1ZD4M",
+        "day": 2,
+        "type": "day",
+        "state": "ended",
+        "replay": false,
+        "talk_title_native": "Поговори с тренером",
+        "partner": {
+            "role_native": "Тренер",
+            "role_target": "Trainer"
+        },
+        "scene": {
+            "title_native": "С тренером",
+            "title_target": "With a Trainer"
+        },
+        "scenes": [
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "title_native": "С тренером",
+                "title_target": "With a Trainer",
+                "role_native": "Тренер",
+                "role_target": "Trainer",
+                "lines": 7,
+                "state": "done"
+            }
+        ],
+        "minutes_estimate": 3,
+        "turns_left": 0,
+        "targets": [
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "ref": "p1",
+                "text_target": "I'm working on general fitness.",
+                "text_native": "Я работаю над общей формой.",
+                "said": true
+            },
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "ref": "p2",
+                "text_target": "I have about a year of experience.",
+                "text_native": "У меня около года опыта.",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "ref": "p3",
+                "text_target": "I have some shoulder pain.",
+                "text_native": "У меня есть боль в плече.",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "ref": "p4",
+                "text_target": "How do I use this machine?",
+                "text_native": "Как пользоваться этим тренажёром?",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "ref": "p5",
+                "text_target": "How heavy should the weight be?",
+                "text_native": "Насколько тяжёлым должен быть вес?",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "ref": "p6",
+                "text_target": "I'll rest for forty-five seconds.",
+                "text_native": "Я буду отдыхать сорок пять секунд.",
+                "said": false
+            },
+            {
+                "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                "ref": "p7",
+                "text_target": "Should I keep my shoulders down?",
+                "text_native": "Мне держать плечи опущенными?",
+                "said": false
+            }
+        ],
+        "hints": {
+            "enabled": true,
+            "delay_ms": 5000,
+            "native": null
+        },
+        "turns": [
+            {
+                "index": 1,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "Hi. What are you training for today?",
+                "text_native": "Привет. Что ты сегодня тренируешь?",
+                "audio": {
+                    "ref": "01M34HXK6F6FDP8B41RD6JESHZ",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M34HXK6F6FDP8B41RD6JESHZ",
+                    "duration_ms": 2458,
+                    "voice": "partner"
+                },
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-22T12:37:15+00:00"
+            },
+            {
+                "index": 2,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "Hi I am working on general fitness",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [
+                    {
+                        "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                        "ref": "p1",
+                        "text_target": "I'm working on general fitness.",
+                        "text_native": "Я работаю над общей формой."
+                    }
+                ],
+                "off_topic": null,
+                "created_at": "2026-09-22T12:37:24+00:00"
+            },
+            {
+                "index": 3,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "That sounds good. How much gym experience do you have?",
+                "text_native": "Это хорошо. Какой у вас опыт в зале?",
+                "audio": {
+                    "ref": "01M34HXZ0ZAS8NRY8JH51FPJP4",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M34HXZ0ZAS8NRY8JH51FPJP4",
+                    "duration_ms": 3425,
+                    "voice": "partner"
+                },
+                "understood": true,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-22T12:37:26+00:00"
+            },
+            {
+                "index": 4,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "I don't have any experience",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": null,
+                "created_at": "2026-09-22T12:37:38+00:00"
+            },
+            {
+                "index": 5,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "Okay, we’ll keep it simple. Do you have any injuries or pain right now?",
+                "text_native": "Хорошо, тогда всё будет просто. У вас есть сейчас травмы или боль?",
+                "audio": {
+                    "ref": "01M34HYDF73R6E0JRF3KMKTCBX",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M34HYDF73R6E0JRF3KMKTCBX",
+                    "duration_ms": 3999,
+                    "voice": "partner"
+                },
+                "understood": true,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-22T12:37:42+00:00"
+            },
+            {
+                "index": 6,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "Yes my",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": null,
+                "created_at": "2026-09-22T12:37:52+00:00"
+            },
+            {
+                "index": 7,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "What kind of pain is it?",
+                "text_native": "Какая это боль?",
+                "audio": {
+                    "ref": "01M34HYT2VMPNK94AWFA3GHDGS",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M34HYT2VMPNK94AWFA3GHDGS",
+                    "duration_ms": 1518,
+                    "voice": "partner"
+                },
+                "understood": false,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-22T12:37:54+00:00"
+            },
+            {
+                "index": 8,
+                "speaker": "learner",
+                "kind": "said",
+                "text_target": "I have lower back pain",
+                "text_native": null,
+                "audio": null,
+                "understood": null,
+                "phrases_used": [],
+                "off_topic": null,
+                "created_at": "2026-09-22T12:38:03+00:00"
+            },
+            {
+                "index": 9,
+                "speaker": "partner",
+                "kind": "agent",
+                "text_target": "Thanks for telling me. We should avoid anything that bothers your back today, and I’ll keep the plan simple.",
+                "text_native": "Спасибо, что сказали. Сегодня мы избежим всего, что беспокоит вашу спину, и я сделаю план простым.",
+                "audio": {
+                    "ref": "01M34HZ5H94BTBF583EHKJQT93",
+                    "url": "https://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M34HZ5H94BTBF583EHKJQT93",
+                    "duration_ms": 5593,
+                    "voice": "partner"
+                },
+                "understood": true,
+                "phrases_used": [],
+                "off_topic": false,
+                "created_at": "2026-09-22T12:38:06+00:00"
+            }
+        ],
+        "summary": {
+            "said_count": 4,
+            "phrases_used": 1,
+            "phrases_total": 7,
+            "phrases": [
+                {
+                    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                    "ref": "p1",
+                    "text_target": "I'm working on general fitness.",
+                    "text_native": "Я работаю над общей формой.",
+                    "audio_url": null,
+                    "used": true
+                },
+                {
+                    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                    "ref": "p2",
+                    "text_target": "I have about a year of experience.",
+                    "text_native": "У меня около года опыта.",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                    "ref": "p3",
+                    "text_target": "I have some shoulder pain.",
+                    "text_native": "У меня есть боль в плече.",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                    "ref": "p4",
+                    "text_target": "How do I use this machine?",
+                    "text_native": "Как пользоваться этим тренажёром?",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                    "ref": "p5",
+                    "text_target": "How heavy should the weight be?",
+                    "text_native": "Насколько тяжёлым должен быть вес?",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                    "ref": "p6",
+                    "text_target": "I'll rest for forty-five seconds.",
+                    "text_native": "Я буду отдыхать сорок пять секунд.",
+                    "audio_url": null,
+                    "used": false
+                },
+                {
+                    "scene_id": "01M32DXHYGYMK0E1DBR01PYDHA",
+                    "ref": "p7",
+                    "text_target": "Should I keep my shoulders down?",
+                    "text_native": "Мне держать плечи опущенными?",
+                    "audio_url": null,
+                    "used": false
+                }
+            ],
+            "understood_all": false,
+            "not_understood": 1,
+            "rescues": 0,
+            "ended_reason": "natural",
+            "minutes": 1,
+            "returns_tomorrow": true
+        }
+    }
+}
