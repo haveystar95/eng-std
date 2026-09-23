@@ -74,6 +74,8 @@ export interface PlanIssues {
   data: PlanIssue[]
   checks: { code: string; title: string; count: number }[]
   healthy: boolean
+  /** Grey marks, not findings: what a check could not look at on this plan (e.g. a talk before 23.09). */
+  notes: { check: string; day: number | null; place_kind: string; place: string; message: string }[]
   not_checked: string[]
 }
 
@@ -307,6 +309,8 @@ export interface PlanTalk {
   cost_usd: number
   scenes: { scene_id: string; title_native: string; role_native: string; partner_gender: string; done: boolean }[]
   checkpoints_done: string[]
+  /** false — begun before `opens_target` was recorded (23.09): its openings are not judged */
+  openers_checked: boolean
   targets: TalkTarget[]
   turns: TalkTurn[]
   not_stored: string[]
@@ -350,7 +354,15 @@ export interface DayMoney {
   repair_share: number | null
 }
 export interface PlanMoney {
-  canon: { day_usd: number; generation_usd: number; voice_usd: number; repair_share: number }
+  canon: {
+    day_usd: number
+    generation_usd: number
+    voice_usd: number
+    repair_share: number
+    warn_ratio: number
+    error_ratio: number
+    openers_since: string
+  }
   plan_build: {
     cost_usd: number | null
     model: string | null

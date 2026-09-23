@@ -28,7 +28,8 @@ const { data, loading, error, run } = usePlanSection<PlanMoney>(toRef(props, 'co
     <template v-if="data">
       <p class="canon">
         Канон дня: {{ usdOrNa(data.canon.day_usd) }} = генерация ≈ {{ usdOrNa(data.canon.generation_usd) }} + озвучка ≈ {{ usdOrNa(data.canon.voice_usd) }};
-        починки ≤ {{ percent(data.canon.repair_share) }} цены генерации.
+        предупреждение от {{ percent(data.canon.warn_ratio) }} ({{ usdOrNa(data.canon.day_usd * data.canon.warn_ratio) }}), красное от
+        {{ percent(data.canon.error_ratio) }} ({{ usdOrNa(data.canon.day_usd * data.canon.error_ratio) }}); починки ≤ {{ percent(data.canon.repair_share) }} цены генерации.
       </p>
       <div class="table-wrap">
         <table class="mt">

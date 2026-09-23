@@ -124,6 +124,7 @@ function issues(day: number | null): PlanIssues {
       { code: 'lost_model_call', title: 'Вызов модели lost', count: 0 },
     ],
     healthy: data.length === 0,
+    notes: [],
     not_checked: ['причина «телефонного голоса» (402 вендора, предохранитель, кап) не хранится — видно только, что файла нет'],
   }
 }
@@ -377,6 +378,7 @@ function talks(day: number | null): PlanTalks {
     ended_at: at(28.9),
     turn_limit: 12,
     hints_enabled: true,
+    openers_checked: true,
     cost_usd: 0.011,
     scenes: [{ scene_id: SCENES[0].id, title_native: SCENES[0].title, role_native: 'врач', partner_gender: 'female', done: true }],
     checkpoints_done: [SCENES[0].id],
@@ -421,7 +423,7 @@ function money(day: number | null): PlanMoney {
   }))
   const sum = (f: (x: (typeof d)[number]) => number) => d.reduce((a, x) => a + f(x), 0)
   return {
-    canon: { day_usd: 0.16, generation_usd: 0.08, voice_usd: 0.08, repair_share: 0.1 },
+    canon: { day_usd: 0.16, generation_usd: 0.08, voice_usd: 0.08, repair_share: 0.1, warn_ratio: 1.25, error_ratio: 1.5, openers_since: '2026-09-23T00:00:00+00:00' },
     plan_build: { cost_usd: 0.0212, model: 'gpt-5.4', attempts: 1, tokens_in: 9700, tokens_out: 3100, included: day === null },
     days: d,
     totals: {

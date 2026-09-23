@@ -45,6 +45,11 @@ function anchor(kind: string): string {
           <span class="check faint">{{ issue.title }}</span>
         </li>
       </ul>
+      <ul v-if="data.notes?.length" class="notes">
+        <li v-for="(n, i) in data.notes" :key="i" class="faint">
+          {{ n.day === null ? 'план' : `день ${n.day}` }} · <a :href="anchor(n.place_kind)" class="place">{{ n.place }}</a> — {{ n.message }}
+        </li>
+      </ul>
       <div class="checks">
         <span v-for="c in data.checks" :key="c.code" class="check-count" :class="{ hit: c.count > 0 }">
           {{ c.title }} <b class="tnum">{{ c.count }}</b>
@@ -98,6 +103,15 @@ function anchor(kind: string): string {
 .check {
   font-size: 11.5px;
   white-space: nowrap;
+}
+.notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .checks {
   display: flex;

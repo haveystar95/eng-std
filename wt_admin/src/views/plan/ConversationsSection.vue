@@ -54,6 +54,7 @@ function opened(talk: PlanTalk, opensTarget: string | null): string | null {
           <StatusChip :status="t.state" />
           <span class="faint tnum">{{ absoluteTime(t.started_at) }} · {{ t.turns.length }} ходов из {{ t.turn_limit }} · {{ usdOrNa(t.cost_usd) }}</span>
           <span class="end" :class="{ warn: t.ended_reason === 'limit' }">{{ t.ended_label ?? 'идёт' }}</span>
+          <span v-if="!t.openers_checked" class="faint">до 23.09 — открытия не проверялись</span>
           <button class="lnk" @click="downloadTranscript(t)">скачать стенограмму .json</button>
         </header>
 
