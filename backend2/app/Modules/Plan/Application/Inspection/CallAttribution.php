@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Dto\Inspection\InspectedTalk;
 use App\Modules\Plan\Application\Port\PlanCallJournal;
 use App\Modules\Plan\Application\Port\PlanInspectionReader;
 use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
+use App\Modules\Shared\Domain\Service\Clock;
 
 /**
  * WHICH MODEL CALLS ARE THIS PLAN'S (наряд ADM-1). The journal names no plan, so a call is read as the plan's when it
@@ -22,6 +23,7 @@ final readonly class CallAttribution
     public function __construct(
         private PlanInspectionReader $reader,
         private PlanCallJournal $journal,
+        private Clock $clock,
     ) {}
 
     /** @return list<AttributedCall> oldest first */
@@ -57,15 +59,36 @@ final readonly class CallAttribution
     {
         $windows = [];
         $row = $data->row;
-        $ready = $data->firstEvent(PlanEventKind::PlanReady)?->occurredAt;
+        // The plan's build ends with its `plan_ready` line; a failed or unclear build at the row's last change, one still
+        // building — now; otherwise its end is not known and it gets no window.
         $from = $row->buildStartedAt ?? $row->createdAt;
-        $windows[] = new BuildWindow(BuildWindow::PLAN, $row->id, $from, max($from, $ready ?? $row->updatedAt ?? $from), ['plan']);
+        $ready = $data->firstEvent(PlanEventKind::PlanReady);
+        $to = $ready !== null ? $ready->occurredAt : match ($row->status) {
+            'failed', 'unclear' => $row->updatedAt ?? $from,
+            'building' => $this->clock->now(),
+            default => null,
+        };
+        if ($to !== null) {
+            $windows[] = new BuildWindow(BuildWindow::PLAN, $row->id, $from, max($from, $to), ['plan']);
+        }
 
         foreach ($data->scenes as $scene) {
             if ($scene->buildStartedAt === null) {
                 continue;
             }
-            $to = $scene->generatedAt ?? $scene->updatedAt ?? $scene->buildStartedAt;
+            // The build ends with the scene's `day_ready` line — written once the lesson, its repairs, the seam judge and the
+            // photos are all done. NOT `generated_at`: it is stamped with the moment the build began. A failed build ends
+            // with the row's last change; one still being written is open until now. A ready scene with no `day_ready`
+            // line (built before the journal) has no known end — no window: its row's last change may be days later, and
+            // the slot judges of its passage are journaled as `judge` too.
+            $to = $data->sceneReadyAt($scene->id) ?? match ($scene->lessonStatus) {
+                'building', 'illustrating' => $this->clock->now(),
+                'failed' => $scene->updatedAt ?? $scene->buildStartedAt,
+                default => null,
+            };
+            if ($to === null) {
+                continue;
+            }
             $windows[] = new BuildWindow(BuildWindow::SCENE, $scene->id, $scene->buildStartedAt, max($scene->buildStartedAt, $to), ['lesson', 'repair', 'judge']);
         }
 

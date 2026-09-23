@@ -164,20 +164,34 @@ it('pages the journal without losing or repeating a row, and keeps a day to its 
 
 it('reads a model call in the window of a scene\'s build as that day\'s, and flags it when lost', function () {
     $scene = DB::table('plan_scenes')->where('plan_id', $this->planId)->orderBy('order')->first();
-    DB::table('plan_scenes')->where('id', $scene->id)->update(['generated_at' => (new DateTimeImmutable((string) $scene->build_started_at))->modify('+2 minutes')]);
+    $started = new DateTimeImmutable((string) $scene->build_started_at);
+    // The build ends with the scene's `day_ready` line (`generated_at` is stamped with the build's start).
+    DB::table('plan_events')->insert([
+        'id' => Ulid::generate(), 'user_id' => (string) $this->learner->id, 'plan_id' => $this->planId,
+        'day_id' => DB::table('plan_days')->where('plan_id', $this->planId)->where('number', 1)->value('id'),
+        'day_number' => 1, 'kind' => 'day_ready', 'payload' => json_encode(['scene_id' => $scene->id]),
+        'occurred_at' => $started->modify('+2 minutes'), 'created_at' => now(),
+    ]);
+    // A slot judge of the passage, long after the build: `judge` too, and NOT the seam judge of the build.
+    DB::table('model_calls')->insert([
+        'id' => Ulid::generate(), 'status' => 'completed', 'provider' => 'openai', 'model' => 'gpt-5.4-mini', 'purpose' => 'judge',
+        'estimated_tokens_in' => 500, 'timeout_seconds' => 8, 'started_at' => $started->modify('+40 minutes'),
+    ]);
     DB::table('model_calls')->insert([
         'id' => Ulid::generate(), 'status' => 'lost', 'provider' => 'openai', 'model' => 'gpt-5.4', 'purpose' => 'lesson',
         'estimated_tokens_in' => 9000, 'timeout_seconds' => 180, 'error' => 'cURL error 28',
-        'started_at' => (new DateTimeImmutable((string) $scene->build_started_at))->modify('+30 seconds'),
+        'started_at' => $started->modify('+30 seconds'),
     ]);
 
     $issues = collect(planPage($this, '/issues?day=1')['data']);
-    $lesson = collect(planPage($this, '/pipeline?day=1')['days'][0]['stages'])->firstWhere('key', 'lesson');
+    $stages = collect(planPage($this, '/pipeline?day=1')['days'][0]['stages']);
+    $lesson = $stages->firstWhere('key', 'lesson');
 
     expect($issues->where('check', 'lost_model_call')->pluck('day')->all())->toBe([1])
         ->and($lesson['calls'])->toHaveCount(1)
         ->and($lesson['calls'][0]['status'])->toBe('lost')
-        ->and($lesson['calls'][0]['certain'])->toBeTrue();
+        ->and($lesson['calls'][0]['certain'])->toBeTrue()
+        ->and($stages->firstWhere('key', 'seam_judge')['calls'])->toBe([]);
 });
 
 it('flags a closed day without its day_passed line, and stops once the line is there', function () {

@@ -48,7 +48,10 @@ final readonly class PipelineReport
         $own = self::callsOf($calls, 'plan', $row->id, null);
         $ready = $data->firstEvent(PlanEventKind::PlanReady)?->occurredAt;
 
-        return self::stage('plan', 'Job плана', $row->status, $row->buildStartedAt ?? $row->createdAt, $ready, [
+        // The stage's status is the BUILD's: done once `plan_ready` is written, else what the row says of the build.
+        $status = $ready !== null ? 'done' : $row->status;
+
+        return self::stage('plan', 'Job плана', $status, $row->buildStartedAt ?? $row->createdAt, $ready, [
             'model' => $row->model,
             'prompt_version' => $row->promptVersion,
             'build_version' => $row->buildVersion,
@@ -69,7 +72,8 @@ final readonly class PipelineReport
     {
         $scene = $day->type() === DayType::Scene ? $data->sceneRow($day->sceneId()?->value) : null;
         $path = 'api/v1/plans/'.$data->id().'/days/'.$day->number();
-        $servedStage = self::stage('served', 'Выдан клиенту', $day->openedAt() !== null ? 'opened' : 'not_opened', $day->openedAt(), $served[$path] ?? null, [
+        // Served = the first time the client received the day's document (it may be read before the day is opened).
+        $servedStage = self::stage('served', 'Выдан клиенту', $day->openedAt() !== null ? 'opened' : 'not_opened', $served[$path] ?? null, null, [
             'opened_at' => $day->openedAt()?->format(DATE_ATOM),
             'first_served_at' => ($served[$path] ?? null)?->format(DATE_ATOM),
             'path' => $path,
@@ -101,7 +105,7 @@ final readonly class PipelineReport
             'type' => $day->type()->value,
             'scene_id' => $scene->id,
             'stages' => [
-                self::stage('lesson', 'Урок дня', $scene->lessonStatus, $scene->buildStartedAt, $scene->generatedAt, [
+                self::stage('lesson', 'Урок дня', $scene->lessonStatus, $scene->buildStartedAt, $data->sceneReadyAt($scene->id), [
                     'model' => $scene->model,
                     'prompt_version' => $scene->promptVersion,
                     'build_version' => $scene->buildVersion,
@@ -110,7 +114,10 @@ final readonly class PipelineReport
                     'cost_usd' => $scene->costUsd,
                     'cost_note' => 'cost_usd сцены — все попытки урока, починки P2R и судья швов вместе',
                     'fail_reason' => $scene->failReason,
-                ], $lessonCalls, ['окно вызовов — только последняя сборка сцены (build_started_at перезаписывается)']),
+                ], $lessonCalls, [
+                    'окно вызовов — только последняя сборка сцены (build_started_at перезаписывается)',
+                    'время конца урока: plan_scenes.generated_at пишется моментом НАЧАЛА сборки — конец берётся из строки day_ready; у сцен без неё окна нет',
+                ]),
                 self::stage('validator', 'Валидатор', $scene->failReason === null ? ($findings === [] ? 'clean' : 'warnings') : 'failed', null, null, [
                     'findings' => $findings,
                     'fatal' => count(array_filter($findings, static fn (array $f): bool => $f['fatal'])),

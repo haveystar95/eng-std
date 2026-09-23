@@ -201,14 +201,18 @@ final readonly class TalkReport
         $out = [];
         foreach ($talk->turns as $turn) {
             if ($turn->speaker === Speaker::Partner->value) {
+                // The talk's current scene as `Conversation::currentCheckpoint()` reads it — the first of ITS scenes not
+                // walked — and that scene's checkpoint as the move picks it: none left means the LAST one
+                // ({@see ConversationMaterialView::checkpoint()}), never the first.
                 $current = null;
-                foreach ($material->checkpoints as $checkpoint) {
-                    if (! in_array($checkpoint->sceneId, $done, true)) {
-                        $current = $checkpoint;
+                foreach ($talk->sceneIds as $sceneId) {
+                    if (! in_array($sceneId, $done, true)) {
+                        $current = $sceneId;
                         break;
                     }
                 }
-                $out[$turn->index] = $this->speaker->voiceKeyFor($lang, Speaker::Partner, $current->partnerGender ?? VoiceGender::Female);
+                $gender = $material->checkpoint($current)->partnerGender ?? VoiceGender::Female;
+                $out[$turn->index] = $this->speaker->voiceKeyFor($lang, Speaker::Partner, $gender);
             }
             if ($turn->checkpointDone !== null) {
                 $done[] = $turn->checkpointDone;

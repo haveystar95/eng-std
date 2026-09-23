@@ -252,25 +252,31 @@ final class EloquentPlanInspectionReader implements PlanInspectionReader
         $from = min(array_map(static fn (BuildWindow $w): DateTimeImmutable => $w->from, $windows))->format(DATE_ATOM);
         $to = max(array_map(static fn (BuildWindow $w): DateTimeImmutable => $w->to, $windows))->format(DATE_ATOM);
 
-        // Every other plan's window that touches the span of this plan's windows: plan builds (to the `plan_ready` line,
-        // or the row's last change for a build that never got there), scene lessons (to `generated_at`, or the last
-        // change of a failed one) and talks (to their end, or the last change of an open one).
+        // Every other plan's window that touches the span of this plan's windows, ended by the same rule as this plan's
+        // own ({@see \App\Modules\Plan\Application\Inspection\CallAttribution}): a plan build at its `plan_ready` line (a
+        // failed or unclear one at the row's last change, one still building — now), a scene lesson at its `day_ready`
+        // line (a failed one at the row's last change, one being written — now), a talk at its end (an open one — now).
+        // A build whose end is unknown has no window here either: a row's last change can be days after its build.
         $spans = DB::select(<<<'SQL'
-            SELECT COALESCE(p.build_started_at, p.created_at) AS f,
-                   COALESCE((SELECT MIN(e.occurred_at) FROM plan_events e WHERE e.plan_id = p.id AND e.kind = 'plan_ready'), p.updated_at, p.created_at) AS t
-              FROM plans p
-             WHERE p.id <> ? AND COALESCE(p.build_started_at, p.created_at) <= ?
-               AND COALESCE((SELECT MIN(e.occurred_at) FROM plan_events e WHERE e.plan_id = p.id AND e.kind = 'plan_ready'), p.updated_at, p.created_at) >= ?
-            UNION ALL
-            SELECT s.build_started_at, COALESCE(s.generated_at, s.updated_at, s.build_started_at)
-              FROM plan_scenes s
-             WHERE s.plan_id <> ? AND s.build_started_at IS NOT NULL AND s.build_started_at <= ?
-               AND COALESCE(s.generated_at, s.updated_at, s.build_started_at) >= ?
-            UNION ALL
-            SELECT c.started_at, COALESCE(c.ended_at, c.updated_at, c.started_at)
-              FROM conversations c
-             WHERE c.plan_id <> ? AND c.started_at <= ? AND COALESCE(c.ended_at, c.updated_at, c.started_at) >= ?
-            SQL, [$planId, $to, $from, $planId, $to, $from, $planId, $to, $from]);
+            SELECT f, t FROM (
+                SELECT COALESCE(p.build_started_at, p.created_at) AS f,
+                       COALESCE((SELECT MIN(e.occurred_at) FROM plan_events e WHERE e.plan_id = p.id AND e.kind = 'plan_ready'),
+                                CASE WHEN p.status IN ('failed', 'unclear') THEN p.updated_at WHEN p.status = 'building' THEN now() END) AS t
+                  FROM plans p
+                 WHERE p.id <> ?
+                UNION ALL
+                SELECT s.build_started_at,
+                       COALESCE((SELECT MIN(e.occurred_at) FROM plan_events e WHERE e.plan_id = s.plan_id AND e.kind = 'day_ready' AND e.payload->>'scene_id' = s.id),
+                                CASE WHEN s.lesson_status = 'failed' THEN s.updated_at WHEN s.lesson_status IN ('building', 'illustrating') THEN now() END)
+                  FROM plan_scenes s
+                 WHERE s.plan_id <> ? AND s.build_started_at IS NOT NULL
+                UNION ALL
+                SELECT c.started_at, COALESCE(c.ended_at, now())
+                  FROM conversations c
+                 WHERE c.plan_id <> ?
+            ) w
+            WHERE t IS NOT NULL AND f <= ? AND t >= ?
+            SQL, [$planId, $planId, $planId, $to, $from]);
 
         $others = array_map(static function (object $row): array {
             $r = (array) $row;
