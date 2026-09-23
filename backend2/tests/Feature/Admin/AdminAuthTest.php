@@ -63,6 +63,17 @@ it('answers 401 (never a redirect/500) on every protected route without a token,
         ['GET', '/admin/api/practice-dialogs'],
         ['GET', "/admin/api/practice-dialogs/{$id}"],
         ['GET', '/admin/api/generations'],
+        ['GET', "/admin/api/users/{$id}/plans"],
+        ['GET', '/admin/api/plans/NKKGFF'],
+        ['GET', '/admin/api/plans/NKKGFF/issues'],
+        ['GET', '/admin/api/plans/NKKGFF/days'],
+        ['GET', '/admin/api/plans/NKKGFF/pipeline'],
+        ['GET', '/admin/api/plans/NKKGFF/lesson'],
+        ['GET', '/admin/api/plans/NKKGFF/passage'],
+        ['GET', '/admin/api/plans/NKKGFF/conversations'],
+        ['GET', '/admin/api/plans/NKKGFF/money'],
+        ['GET', '/admin/api/plans/NKKGFF/calls'],
+        ['GET', "/admin/api/plans/NKKGFF/audio/{$id}"],
     ];
 
     foreach ($routes as [$method, $url]) {
