@@ -6,7 +6,9 @@ namespace App\Modules\Plan\Domain\Inspection;
 
 /**
  * A talk as the checks see it: its role's lines and how many of them opened a construction (`opens_target`), how it ended,
- * and every voiced line of the role with the voice it was said in against the voice its cast gives it.
+ * and every voiced line of the role with the voice it was said in against the voice its cast gives it. `openersRecorded`
+ * — the talk began once `opens_target` was being written (23.09, FIX-3 §7); before that a role line carries none, and its
+ * absence says nothing.
  */
 final readonly class TalkFact
 {
@@ -20,5 +22,6 @@ final readonly class TalkFact
         public int $roleLines,
         public int $openers,
         public array $voicedLines,
+        public bool $openersRecorded = true,
     ) {}
 }

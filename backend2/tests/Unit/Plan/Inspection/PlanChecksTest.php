@@ -60,42 +60,58 @@ function checkCodes(array $issues): array
     return array_map(static fn (PlanIssue $i): string => $i->check, $issues);
 }
 
+/** A line as the client is given it: the card's text beside the text of the file its sound id names. */
+function servedLine(string $cardText, ?string $soundText, ?string $fileRef = 'S1:x1b', string $kind = 'dialogue_answer', int $day = 1): CardSoundFact
+{
+    return new CardSoundFact($day, 'cards', 'C1', $kind, 'payload.own_line', '01AUDIO', $fileRef, $cardText, $soundText);
+}
+
 describe('звук ≠ текст', function () {
-    it('passes a card whose line reads as its sound says it', function () {
-        $facts = new PlanFacts(cardSounds: [new CardSoundFact(1, 'C1', 'dialogue_answer', 'own_line', 'x1b', 'I have a fever.', 'I have a fever.')]);
+    it('passes a line whose sound says it', function () {
+        expect((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [servedLine('I have a fever.', 'I have a fever.')])))->toBe([]);
+    });
+
+    it('flags «Вспомнить» playing another scene\'s line (the phone, 2DX8QC, «С тренером»)', function () {
+        $issue = (new SoundTextMismatch)->find(new PlanFacts(cardSounds: [
+            servedLine('I have some shoulder pain.', 'Yes, this is my first visit.', 'RECEPTION:x3b', 'recall_scenes', 3),
+        ]));
+
+        expect($issue)->toHaveCount(1)
+            ->and($issue[0]->severity)->toBe(PlanIssue::ERROR)
+            ->and($issue[0]->day)->toBe(3)
+            ->and($issue[0]->place)->toBe('C1')
+            ->and($issue[0]->detail['file_ref'])->toBe('RECEPTION:x3b');
+    });
+
+    it('compares without case and without the closing mark', function () {
+        $facts = new PlanFacts(cardSounds: [
+            servedLine('I can come at 3 p.m..', 'I can come at 3 p.m.'),
+            servedLine('Do you have a day pass', 'do you have a day pass?'),
+            servedLine('  Where are  the rooms?! ', 'Where are the rooms'),
+        ]);
 
         expect((new SoundTextMismatch)->find($facts))->toBe([]);
     });
 
-    it('flags a card whose sound says another line than the card shows', function () {
-        $facts = new PlanFacts(cardSounds: [new CardSoundFact(2, 'C1', 'recall_scenes', 'scenes.0.lines.2', 'x3b', 'Is parking included?', 'Are dogs allowed?')]);
-
-        $issues = (new SoundTextMismatch)->find($facts);
-
-        expect($issues)->toHaveCount(1)
-            ->and($issues[0]->severity)->toBe(PlanIssue::ERROR)
-            ->and($issues[0]->day)->toBe(2)
-            ->and($issues[0]->place)->toBe('C1');
-    });
-
-    it('flags a card showing one more mark than the line it plays', function () {
-        $facts = new PlanFacts(cardSounds: [new CardSoundFact(1, 'C1', 'dialogue_ask', 'own_line', 'x6b', 'I can come at 3 p.m..', 'I can come at 3 p.m.')]);
-
-        expect((new SoundTextMismatch)->find($facts))->toHaveCount(1);
-    });
-
     it('reads a gap on the card as whatever the sound says there, and nothing else', function () {
-        $gapOk = new CardSoundFact(1, 'C1', 'word_in_line', 'line', 'x2', 'We have a basic plan and an ___.', 'We have a basic plan and an unlimited plan.');
-        $gapWrong = new CardSoundFact(1, 'C2', 'word_in_line', 'line', 'x2', 'We have a gold plan and an ___.', 'We have a basic plan and an unlimited plan.');
+        $ok = servedLine('We have a basic plan and an ___.', 'We have a basic plan and an unlimited plan.', kind: 'word_in_line');
+        $wrong = servedLine('We have a gold plan and an ___.', 'We have a basic plan and an unlimited plan.', kind: 'word_in_line');
 
-        expect(checkCodes((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [$gapOk]))))->toBe([])
-            ->and(checkCodes((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [$gapWrong]))))->toBe([SoundTextMismatch::CODE]);
+        expect(checkCodes((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [$ok]))))->toBe([])
+            ->and(checkCodes((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [$wrong]))))->toBe([SoundTextMismatch::CODE]);
     });
 
-    it('flags a sound whose ref names no line of the lesson', function () {
-        $facts = new PlanFacts(cardSounds: [new CardSoundFact(1, 'C1', 'listen_predict', 'own_line', 'x9b', 'Hello.', null)]);
+    it('holds an option to its phrase: its sound must say it within the phrase', function () {
+        $option = static fn (string $text, string $sound): CardSoundFact => new CardSoundFact(1, 'cards', 'C1', 'phrase_slot', 'payload.options.2', '01AUDIO', 'S1:p7', $text, $sound, fragment: true);
 
-        expect((new SoundTextMismatch)->find($facts))->toHaveCount(1);
+        expect((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [$option('by card', 'Can I pay by card?')])))->toBe([])
+            ->and(checkCodes((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [$option('in cash', 'Can I pay by card?')]))))->toBe([SoundTextMismatch::CODE])
+            ->and(checkCodes((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [$option('card', 'Can I pay by cards?')]))))->toBe([SoundTextMismatch::CODE]);
+    });
+
+    it('flags a sound id that is no file of the plan, and says nothing of a file whose text is unknown', function () {
+        expect((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [servedLine('Hello.', null, null)])))->toHaveCount(1)
+            ->and((new SoundTextMismatch)->find(new PlanFacts(cardSounds: [servedLine('Hello.', null)])))->toBe([]);
     });
 
     it('flags a file bought for another text than the line has now, and stays silent when that text is unknown', function () {
@@ -190,11 +206,18 @@ describe('дни', function () {
 });
 
 describe('деньги', function () {
-    it('holds a day to $0.16 of generation and voice', function () {
-        $check = new DayCostOverCanon(0.16, 0.10);
+    it('holds a day to $0.16 with room: a warning from 125 % ($0.20), an error from 150 % ($0.24)', function () {
+        $check = new DayCostOverCanon(0.16, 0.10, 1.25, 1.5);
+        $severity = static fn (float $gen, float $voice): array => array_map(
+            static fn (PlanIssue $i): string => $i->severity,
+            $check->find(new PlanFacts(days: [inspectDay(['generationUsd' => $gen, 'voiceUsd' => $voice])])),
+        );
 
-        expect(checkCodes($check->find(new PlanFacts(days: [inspectDay(['generationUsd' => 0.10, 'voiceUsd' => 0.07])]))))->toBe([DayCostOverCanon::CODE])
-            ->and($check->find(new PlanFacts(days: [inspectDay(['generationUsd' => 0.08, 'voiceUsd' => 0.08])])))->toBe([])
+        expect($severity(0.1088, 0.056))->toBe([])            // $0.1648 — the gym's day 1: no finding
+            ->and($severity(0.12, 0.07))->toBe([])             // $0.19
+            ->and($severity(0.13, 0.07))->toBe([PlanIssue::WARNING]) // $0.20
+            ->and($severity(0.15, 0.08))->toBe([PlanIssue::WARNING]) // $0.23
+            ->and($severity(0.16, 0.08))->toBe([PlanIssue::ERROR])   // $0.24
             ->and($check->find(new PlanFacts(days: [inspectDay(['generationUsd' => null, 'voiceUsd' => 0.0])])))->toBe([]);
     });
 
@@ -227,6 +250,12 @@ describe('вызовы и разговоры', function () {
         expect(checkCodes($check->find(new PlanFacts(talks: [new TalkFact('T1', 1, 'day', true, 'natural', 4, 0, [])]))))->toBe([TalkWithoutOpeners::CODE])
             ->and($check->find(new PlanFacts(talks: [new TalkFact('T1', 1, 'day', true, 'natural', 4, 1, [])])))->toBe([])
             ->and($check->find(new PlanFacts(talks: [new TalkFact('T1', 1, 'day', false, null, 0, 0, [])])))->toBe([]);
+    });
+
+    it('does not judge a talk begun before the openings were recorded', function () {
+        $old = new TalkFact('T1', 1, 'day', true, 'natural', 4, 0, [], openersRecorded: false);
+
+        expect((new TalkWithoutOpeners)->find(new PlanFacts(talks: [$old])))->toBe([]);
     });
 
     it('flags a talk that ended by its limit, not with a goodbye', function () {

@@ -1257,7 +1257,8 @@ paths:
       tags: [Plan page]
       summary: «Что не так» — the page's automatic checks
       description: >
-        Findings of eleven checks (sound ≠ text, voice not by gender, line without sound, day failed,
+        Findings of eleven checks (sound ≠ text — on the answers the client gets, `…/days/{n}/cards` and `…/days/{n}`,
+        each line's sound id led to its file and the file's text; voice not by gender, line without sound, day failed,
         scheduled day not ready, build out of line, lost model call, day cost over canon / P2R share,
         passed without summary, talk without openers, talk ended by limit), errors first; `checks` —
         every check with its count; `healthy` — nothing found; `not_checked` — what the checks cannot see.
@@ -2617,6 +2618,17 @@ components:
               title: { type: string }
               count: { type: integer }
         healthy: { type: boolean }
+        notes:
+          type: array
+          description: 'grey marks, not findings — e.g. a talk begun before `opens_target` was recorded (23.09)'
+          items:
+            type: object
+            properties:
+              check: { type: string }
+              day: { type: [integer, 'null'] }
+              place_kind: { type: string }
+              place: { type: string }
+              message: { type: string }
         not_checked: { type: array, items: { type: string } }
 
     PlanDayRow:
@@ -2814,6 +2826,7 @@ components:
         cost_usd: { type: number }
         scenes: { type: array, items: { type: object, additionalProperties: true } }
         checkpoints_done: { type: array, items: { type: string } }
+        openers_checked: { type: boolean, description: 'false — begun before `opens_target` was recorded; its openings are not judged' }
         targets:
           type: array
           items:
@@ -2842,6 +2855,9 @@ components:
             generation_usd: { type: number }
             voice_usd: { type: number }
             repair_share: { type: number }
+            warn_ratio: { type: number, description: 'a day from this share of the canon is a warning (1.25)' }
+            error_ratio: { type: number, description: 'a day from this share of the canon is an error (1.5)' }
+            openers_since: { type: string, format: date-time }
         plan_build: { type: object, additionalProperties: true }
         days: { type: array, items: { type: object, additionalProperties: true } }
         totals: { type: object, additionalProperties: true }

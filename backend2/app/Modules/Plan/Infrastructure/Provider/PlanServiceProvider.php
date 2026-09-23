@@ -133,6 +133,9 @@ final class PlanServiceProvider extends ServiceProvider
             generationUsd: (float) config('plan.inspection.generation_usd', 0.08),
             voiceUsd: (float) config('plan.inspection.voice_usd', 0.08),
             repairShare: (float) config('plan.inspection.repair_share', 0.10),
+            warnRatio: (float) config('plan.inspection.warn_ratio', 1.25),
+            errorRatio: (float) config('plan.inspection.error_ratio', 1.5),
+            openersSince: new \DateTimeImmutable((string) config('plan.inspection.openers_since', '2026-09-23T00:00:00+00:00')),
         ));
 
         // The journal, the letters and the door to the phone (PLAN-UI-3).

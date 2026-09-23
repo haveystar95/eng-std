@@ -9,11 +9,12 @@ use App\Modules\Plan\Domain\Inspection\PlanFacts;
 use App\Modules\Plan\Domain\Inspection\PlanIssue;
 
 /**
- * ЗВУК ≠ ТЕКСТ. A line must sound as it reads: the sound a card's line plays is the file of the ref its stub names, so the
- * lesson's text at that ref must be the text the card shows; and the file bought for a line must have been bought for the
- * line's text as it stands now (the vendor was sent that text). Either differs — the learner hears one thing and reads
- * another. Whitespace aside, the texts must be equal — except where the card hides a part of the line on purpose: a gap
- * `___` on the card (the word to find, the slot to fill) stands for whatever the sound says there.
+ * ЗВУК ≠ ТЕКСТ. A line must sound as it reads — as the CLIENT is given it: in the answer the phone gets (the day's cards,
+ * «Вспомнить» among them, and the day), a line's sound id names a file, and that file's text must be the line's text;
+ * and the file bought for a line must have been bought for the line's text as it stands now (the vendor was sent that
+ * text). Compared without case and without the closing mark (наряд ADM-1, доработка: «p.m.» and «p.m..» are one line) —
+ * and a gap `___` on a card (the word to find, the slot to fill) stands for whatever the sound says there. An id that
+ * names no file of the plan is a sound that is not this plan's at all.
  */
 final class SoundTextMismatch implements PlanCheck
 {
@@ -30,15 +31,18 @@ final class SoundTextMismatch implements PlanCheck
     public function find(PlanFacts $facts): array
     {
         $out = [];
-        foreach ($facts->cardSounds as $card) {
-            if ($card->lessonText !== null && self::shows($card->cardText, $card->lessonText)) {
+        foreach ($facts->cardSounds as $line) {
+            if ($line->fileRef !== null && ($line->soundText === null || ($line->fragment
+                ? self::holds($line->soundText, $line->cardText)
+                : self::shows($line->cardText, $line->soundText)))) {
                 continue;
             }
-            $out[] = new PlanIssue(self::CODE, PlanIssue::ERROR, $card->day, 'card', $card->cardId,
-                $card->lessonText === null
-                    ? "Карточка {$card->kind}: звук ссылается на {$card->audioRef}, а такой строки в уроке нет"
-                    : "Карточка {$card->kind}: звук {$card->audioRef} — «{$card->lessonText}», на карточке — «{$card->cardText}»",
-                ['path' => $card->path, 'audio_ref' => $card->audioRef, 'card_text' => $card->cardText, 'sound_text' => $card->lessonText],
+            $what = $line->kind === $line->answer ? 'Строка' : "Карточка {$line->kind}";
+            $out[] = new PlanIssue(self::CODE, PlanIssue::ERROR, $line->day, $line->place === $line->answer ? 'day' : 'card', $line->place,
+                $line->fileRef === null
+                    ? "{$what}: звук {$line->audioId} — не файл этого плана, а строка — «{$line->cardText}»"
+                    : "{$what}: звук играет «{$line->soundText}» ({$line->fileRef}), а строка — «{$line->cardText}»",
+                ['answer' => $line->answer, 'path' => $line->path, 'audio_id' => $line->audioId, 'file_ref' => $line->fileRef, 'card_text' => $line->cardText, 'sound_text' => $line->soundText],
             );
         }
         foreach ($facts->lines as $line) {
@@ -71,8 +75,19 @@ final class SoundTextMismatch implements PlanCheck
         return preg_match('/^'.$pattern.'$/u', self::norm($sound)) === 1;
     }
 
+    /** An option's or a filler's sound is the phrase said with it: the sound holds the fragment, as whole words. */
+    private static function holds(string $sound, string $fragment): bool
+    {
+        $fragment = self::norm($fragment);
+
+        return $fragment !== '' && preg_match('/(^|\W)'.preg_quote($fragment, '/').'(\W|$)/u', self::norm($sound)) === 1;
+    }
+
+    /** Whitespace collapsed, case folded, the closing marks gone. */
     private static function norm(string $text): string
     {
-        return trim((string) preg_replace('/\s+/u', ' ', $text));
+        $text = mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $text)));
+
+        return (string) preg_replace('/[\s.!?…;:,]+$/u', '', $text);
     }
 }

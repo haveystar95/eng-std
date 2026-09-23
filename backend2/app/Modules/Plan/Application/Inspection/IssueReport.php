@@ -53,6 +53,7 @@ final readonly class IssueReport
         private TalkReport $talks,
         private DayMoney $money,
         private InspectionCanon $canon,
+        private ServedSounds $served,
     ) {}
 
     /** @return list<PlanCheck> */
@@ -66,7 +67,7 @@ final readonly class IssueReport
             new ScheduledDayNotReady,
             new BuildingOutOfLine,
             new LostModelCall,
-            new DayCostOverCanon($this->canon->dayUsd, $this->canon->repairShare),
+            new DayCostOverCanon($this->canon->dayUsd, $this->canon->repairShare, $this->canon->warnRatio, $this->canon->errorRatio),
             new PassedWithoutSummary,
             new TalkWithoutOpeners,
             new TalkEndedByLimit,
@@ -79,7 +80,8 @@ final readonly class IssueReport
      */
     public function of(PlanInspectionData $data, ?int $number, array $calls): array
     {
-        $facts = $this->facts($data, $calls);
+        $served = $this->served->of($data);
+        $facts = $this->facts($data, $calls, $served);
         $issues = [];
         $counts = [];
         foreach ($this->checks() as $check) {
@@ -102,7 +104,16 @@ final readonly class IssueReport
             ], $issues),
             'checks' => $counts,
             'healthy' => $issues === [],
+            // Grey marks, not findings: what a check was not able to look at on this plan.
+            'notes' => array_values(array_map(fn (TalkFact $t): array => [
+                'check' => TalkWithoutOpeners::CODE,
+                'day' => $t->day,
+                'place_kind' => 'talk',
+                'place' => $t->id,
+                'message' => 'Разговор дня '.$t->day.' начат до '.$this->canon->openersSince->format('d.m').' — открытия конструкций не проверялись',
+            ], array_filter($facts->talks, static fn (TalkFact $t): bool => ($number === null || $t->day === $number) && $t->roleLines > 0 && ! $t->openersRecorded))),
             'not_checked' => [
+                ...($served['unavailable'] === null ? [] : ['звук ≠ текст по ответу клиенту: '.$served['unavailable']]),
                 'причина «телефонного голоса» (402 вендора, предохранитель, кап) не хранится — видно только, что файла нет',
                 'вызовы модели — по окнам сборки; вызов в окне, которое пересекается с чужими сборками, может быть не этого плана',
                 'доля P2R — только у дней, чьи вызовы в журнале однозначно этого плана',
@@ -111,12 +122,14 @@ final readonly class IssueReport
         ];
     }
 
-    /** @param list<AttributedCall> $calls */
-    private function facts(PlanInspectionData $data, array $calls): PlanFacts
+    /**
+     * @param  list<AttributedCall>  $calls
+     * @param  array{sounds: list<ServedSound>, unavailable: string|null}  $served
+     */
+    private function facts(PlanInspectionData $data, array $calls, array $served): PlanFacts
     {
         $days = [];
         $lines = [];
-        $texts = [];
         $next = $data->plan->currentDay()?->number();
         foreach ($data->days() as $day) {
             $scene = $day->type() === DayType::Scene ? $data->scene($day->sceneId()?->value) : null;
@@ -147,20 +160,12 @@ final readonly class IssueReport
                     }
                 }
                 $lines[] = new LineFact($scene->id()->value, [$day->number()], $line->ref, $line->speaker, $line->text, $line->gender, $line->expectedVoice, $stored, $line->voicedText);
-                $texts[$scene->id()->value][$line->ref] = $line->text;
             }
         }
 
-        $cardSounds = [];
-        foreach ($data->cards() as $card) {
-            $number = $data->dayNumberOf($card->dayId);
-            if ($number === null) {
-                continue;
-            }
-            foreach (self::sounds($card->payload, is_string($card->payload['scene_id'] ?? null) ? $card->payload['scene_id'] : null, '') as [$path, $scene, $ref, $text]) {
-                $cardSounds[] = new CardSoundFact($number, $card->id, $card->kind, $path, $ref, $text, $scene === null ? null : ($texts[$scene][$ref] ?? $this->textIn($data, $scene, $ref, $texts)));
-            }
-        }
+        $cardSounds = array_map(static fn (ServedSound $s): CardSoundFact => new CardSoundFact(
+            $s->day, $s->answer, $s->place, $s->kind, $s->path, $s->audioId, $s->fileRef, $s->text, $s->fileText, $s->fragment,
+        ), $served['sounds']);
 
         $talks = array_map(fn ($talk): TalkFact => new TalkFact(
             id: $talk->id,
@@ -171,6 +176,7 @@ final readonly class IssueReport
             roleLines: count(array_filter($talk->turns, static fn ($t): bool => $t->kind === 'agent')),
             openers: count(array_filter($talk->turns, static fn ($t): bool => $t->kind === 'agent' && $t->opensTarget !== null)),
             voicedLines: $this->talks->voicedRoleLines($data, $talk),
+            openersRecorded: $talk->startedAt >= $this->canon->openersSince,
         ), $data->talks());
 
         $callFacts = array_map(static fn (AttributedCall $c): CallFact => new CallFact($c->call->id, $c->day, $c->call->purpose, $c->call->status, $c->call->error), $calls);
@@ -191,47 +197,4 @@ final readonly class IssueReport
         return ($previous === null || $previous->status() === DayStatus::Closed) && $day->isAvailableOn($data->today);
     }
 
-    /**
-     * The lesson's text at a ref of a scene no day of the filter holds (a returned card's scene).
-     *
-     * @param  array<string, array<string, string>>  $texts
-     */
-    private function textIn(PlanInspectionData $data, string $sceneId, string $ref, array &$texts): ?string
-    {
-        if (! isset($texts[$sceneId])) {
-            $texts[$sceneId] = [];
-            $scene = $data->scene($sceneId);
-            if ($scene !== null) {
-                foreach ($this->voices->of($data, $scene) as $line) {
-                    $texts[$sceneId][$line->ref] = $line->text;
-                }
-            }
-        }
-
-        return $texts[$sceneId][$ref] ?? null;
-    }
-
-    /**
-     * Every line of a payload shown next to its sound: a node with `text_target` and an `audio` stub naming a ref, with the
-     * scene it stands in (the nearest `scene_id` above it).
-     *
-     * @param  array<mixed>  $node
-     * @return list<array{0: string, 1: string|null, 2: string, 3: string}>
-     */
-    private static function sounds(array $node, ?string $scene, string $path): array
-    {
-        $scene = is_string($node['scene_id'] ?? null) ? $node['scene_id'] : $scene;
-        $out = [];
-        $audio = $node['audio'] ?? null;
-        if (is_array($audio) && is_string($audio['ref'] ?? null) && is_string($node['text_target'] ?? null)) {
-            $out[] = [$path === '' ? '.' : $path, $scene, $audio['ref'], $node['text_target']];
-        }
-        foreach ($node as $key => $child) {
-            if (is_array($child) && $key !== 'audio') {
-                array_push($out, ...self::sounds($child, $scene, ltrim($path.'.'.$key, '.')));
-            }
-        }
-
-        return $out;
-    }
 }

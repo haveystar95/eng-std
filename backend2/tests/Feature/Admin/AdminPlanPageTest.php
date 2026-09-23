@@ -194,6 +194,49 @@ it('reads a model call in the window of a scene\'s build as that day\'s, and fla
         ->and($stages->firstWhere('key', 'seam_judge')['calls'])->toBe([]);
 });
 
+it('checks «звук ≠ текст» on the answer the client gets: a card whose line is not what its file says', function () {
+    $sounds = static fn (object $ctx): array => array_values(array_filter(
+        planPage($ctx, '/issues?day=1')['data'],
+        static fn (array $i): bool => $i['check'] === 'sound_text_mismatch',
+    ));
+    expect($sounds($this))->toBe([]);
+
+    $day1 = DB::table('plan_days')->where('plan_id', $this->planId)->where('number', 1)->value('id');
+    $card = DB::table('day_cards')->where('day_id', $day1)->where('kind', 'speak_answer')->orderBy('position')->first();
+    $payload = json_decode((string) $card->payload, true);
+    $payload['own_line']['text_target'] = 'Something else entirely.';
+    DB::table('day_cards')->where('id', $card->id)->update(['payload' => json_encode($payload)]);
+
+    $found = $sounds($this);
+    expect($found)->toHaveCount(1)
+        ->and($found[0]['place'])->toBe($card->id)
+        ->and($found[0]['detail']['answer'])->toBe('cards')
+        ->and($found[0]['detail']['card_text'])->toBe('Something else entirely.')
+        ->and($found[0]['detail']['file_ref'])->toBe($payload['scene_id'].':'.$payload['own_line']['audio']['ref']);
+});
+
+it('marks a talk begun before openings were recorded grey, not as a finding', function () {
+    $day1 = DB::table('plan_days')->where('plan_id', $this->planId)->where('number', 1)->value('id');
+    $talk = static fn (string $at): array => [
+        'id' => Ulid::generate(), 'user_id' => (string) test()->learner->id, 'plan_id' => test()->planId, 'day_id' => $day1, 'day_number' => 1,
+        'type' => 'day', 'state' => 'ended', 'scene_ids' => '[]', 'checkpoints_done' => '[]', 'turn_limit' => 8, 'ended_reason' => 'natural',
+        'started_at' => $at, 'ended_at' => $at, 'created_at' => $at, 'updated_at' => $at,
+    ];
+    $turn = static fn (string $talkId, string $at): array => [
+        'id' => Ulid::generate(), 'conversation_id' => $talkId, 'user_id' => (string) test()->learner->id, 'turn_index' => 1, 'kind' => 'agent',
+        'speaker' => 'partner', 'text_target' => 'Hello!', 'phrases_used' => '[]', 'created_at' => $at,
+    ];
+    $old = $talk('2026-09-21 16:40:00+00');
+    $new = $talk('2026-09-23 12:00:00+00');
+    DB::table('conversations')->insert([$old, $new]);
+    DB::table('conversation_turns')->insert([$turn($old['id'], $old['started_at']), $turn($new['id'], $new['started_at'])]);
+
+    $page = planPage($this, '/issues?day=1');
+
+    expect(collect($page['data'])->where('check', 'talk_without_openers')->pluck('place')->all())->toBe([$new['id']])
+        ->and(collect($page['notes'])->pluck('place')->all())->toBe([$old['id']]);
+});
+
 it('flags a closed day without its day_passed line, and stops once the line is there', function () {
     $checks = static fn (array $page): array => array_column($page['data'], 'check');
 

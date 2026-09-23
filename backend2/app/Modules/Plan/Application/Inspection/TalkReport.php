@@ -38,6 +38,7 @@ final readonly class TalkReport
         private LanguagePacks $packs,
         private LineSpeaker $speaker,
         private VoiceTable $voices,
+        private InspectionCanon $canon,
         private PhraseUse $phrases = new PhraseUse,
     ) {}
 
@@ -103,6 +104,7 @@ final readonly class TalkReport
                 'done' => in_array($c->sceneId, $talk->checkpointsDone, true),
             ], $material->checkpoints),
             'checkpoints_done' => $talk->checkpointsDone,
+            'openers_checked' => $talk->startedAt >= $this->canon->openersSince,
             'targets' => $this->targets($talk, $material),
             'turns' => array_map(fn (InspectedTurn $turn): array => [
                 'index' => $turn->index,

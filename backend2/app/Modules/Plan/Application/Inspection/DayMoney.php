@@ -48,7 +48,7 @@ final readonly class DayMoney
             'slot_judge' => $judge,
             'build_usd' => $build === null ? null : round($build, 6),
             'total_usd' => round($total, 6),
-            'over_canon' => $build !== null && $build > $this->canon->dayUsd,
+            'over_canon' => $build !== null && $build >= $this->canon->dayUsd * $this->canon->warnRatio,
             'repair_share' => $lessonAndJudge === null || $lessonAndJudge <= 0.0 ? null : round((float) $repair / $lessonAndJudge, 4),
         ];
     }

@@ -245,14 +245,19 @@ return [
     ],
 
     /*
-     * THE MONEY CANON OF THE ADMIN'S PLAN PAGE (наряд ADM-1, «Что не так» и «Деньги»): a day ≈ $0.16 — generation ≈ $0.08
-     * (lesson, repairs, seam judge) plus voice ≈ $0.08 — and the repairs at most 10 % of the day's generation (DECISIONS
-     * п. 323). Read by the page only; nothing is stopped or bought by it.
+     * THE CANON OF THE ADMIN'S PLAN PAGE (наряд ADM-1 и доработка, «Что не так» и «Деньги»): a day ≈ $0.16 — generation
+     * ≈ $0.08 (lesson, repairs, seam judge) plus voice ≈ $0.08 — a warning from 125 % of it ($0.20), an error from 150 %
+     * ($0.24); the repairs at most 10 % of the day's generation (DECISIONS п. 323); the role's openings (`opens_target`)
+     * are recorded since 23.09 — talks begun earlier are not judged on them. Read by the page only; nothing is stopped or
+     * bought by it.
      */
     'inspection' => [
         'day_usd' => (float) env('PLAN_CANON_DAY_USD', 0.16),
         'generation_usd' => (float) env('PLAN_CANON_GENERATION_USD', 0.08),
         'voice_usd' => (float) env('PLAN_CANON_VOICE_USD', 0.08),
         'repair_share' => (float) env('PLAN_CANON_REPAIR_SHARE', 0.10),
+        'warn_ratio' => (float) env('PLAN_CANON_WARN_RATIO', 1.25),
+        'error_ratio' => (float) env('PLAN_CANON_ERROR_RATIO', 1.5),
+        'openers_since' => env('PLAN_CANON_OPENERS_SINCE', '2026-09-23T00:00:00+00:00'),
     ],
 ];
