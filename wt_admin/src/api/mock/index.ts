@@ -52,6 +52,8 @@ import type {
 } from '../types'
 import { mockCollectionContentHealth, mockContentHealthSummary, mockTermContentPassport } from './contentHealth'
 import { mockPlaygroundGenerate, mockPlaygroundProviders, mockPlaygroundValidate } from './playground'
+import { mockLearnerPlans, mockPlanCalls, mockPlanHeader, mockPlanSection } from './plan'
+import type { LearnerPlanRow, PlanCalls, PlanCallsQuery, PlanHeader, PlanSection } from '../planTypes'
 import {
   MOCK_NOW,
   collectionRows,
@@ -660,6 +662,23 @@ export const mock = {
     if (q.userId) rows = rows.filter((g) => g.userId === q.userId)
     if (q.status) rows = rows.filter((g) => g.status === q.status)
     return paginate(rows, q)
+  },
+
+  // ── The learner's plan page (ADM-1): the wire's snake_case, as httpGetRaw returns it ──
+  async listLearnerPlans(userId: string): Promise<LearnerPlanRow[]> {
+    return mockLearnerPlans(userId)
+  },
+  async getPlan(code: string): Promise<PlanHeader> {
+    return mockPlanHeader(code)
+  },
+  async getPlanSection(code: string, section: PlanSection, day: number | null): Promise<unknown> {
+    return mockPlanSection(code, section, day)
+  },
+  async getPlanCalls(code: string, q: PlanCallsQuery = {}): Promise<PlanCalls> {
+    return mockPlanCalls(code, q)
+  },
+  async getPlanAudio(): Promise<Blob> {
+    return new Blob([], { type: 'audio/mpeg' })
   },
 }
 

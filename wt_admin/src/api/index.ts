@@ -2,7 +2,7 @@
 // `useMocks`. One typed facade means views never branch on transport, and the mock and
 // the wire always present the same camelCase DTOs (mirrors of openapi-admin.yaml).
 import { useMocks } from './config'
-import { httpDelete, httpGet, httpGetPage, httpPatch, httpPost, httpPut } from './http'
+import { httpDelete, httpGet, httpGetBlob, httpGetPage, httpGetRaw, httpPatch, httpPost, httpPut } from './http'
 import { snakeizeParams } from './mapping'
 import { mock } from './mock'
 import { awaitPlaygroundRun } from './playgroundRun'
@@ -56,6 +56,7 @@ import type {
   UserRow,
 } from './types'
 import type { DayPlan, LogsQuery } from './types'
+import type { LearnerPlanRow, PlanCalls, PlanCallsQuery, PlanHeader, PlanSection } from './planTypes'
 
 export { useMocks }
 
@@ -229,4 +230,19 @@ export const api = {
   // ── Generations (global; filter by userId/status) ──
   listGenerations: (q: GenerationsQuery = {}): Promise<Paginated<Generation>> =>
     useMocks ? mock.listGenerations(q) : httpGetPage('/generations', q),
+
+  // ── The learner's plan page (ADM-1). Read-only. Raw wire JSON (snake_case, see httpGetRaw):
+  // every block prints the endpoint's answer as it came. `code` is the 6-letter plan code or the full id.
+  listLearnerPlans: async (userId: string): Promise<LearnerPlanRow[]> =>
+    useMocks ? mock.listLearnerPlans(userId) : (await httpGetRaw<{ data: LearnerPlanRow[] }>(`/users/${userId}/plans`)).data,
+  getPlan: (code: string): Promise<PlanHeader> =>
+    useMocks ? mock.getPlan(code) : httpGetRaw(`/plans/${code}`),
+  getPlanSection: <T>(code: string, section: PlanSection, day: number | null): Promise<T> =>
+    (useMocks ? mock.getPlanSection(code, section, day) : httpGetRaw(`/plans/${code}/${section}`, { day: day ?? undefined })) as Promise<T>,
+  getPlanCalls: (code: string, q: PlanCallsQuery = {}): Promise<PlanCalls> =>
+    useMocks
+      ? mock.getPlanCalls(code, q)
+      : httpGetRaw(`/plans/${code}/calls`, { day: q.day ?? undefined, source: q.source ?? undefined, cursor: q.cursor ?? undefined, limit: q.limit }),
+  getPlanAudio: (code: string, audioId: string): Promise<Blob> =>
+    useMocks ? mock.getPlanAudio() : httpGetBlob(`/plans/${code}/audio/${audioId}`),
 }

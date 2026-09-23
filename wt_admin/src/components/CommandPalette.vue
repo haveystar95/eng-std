@@ -13,7 +13,7 @@ import { api } from '@/api'
 import type { RouteLocationRaw } from 'vue-router'
 
 interface Hit {
-  kind: 'user' | 'term' | 'collection'
+  kind: 'plan' | 'user' | 'term' | 'collection'
   id: string
   title: string
   subtitle: string
@@ -21,6 +21,7 @@ interface Hit {
 }
 
 const KIND_LABEL: Record<Hit['kind'], string> = {
+  plan: 'план',
   user: 'юзер',
   term: 'термин',
   collection: 'коллекция',
@@ -46,13 +47,15 @@ async function search(text: string) {
   const mine = ++seq
   searching.value = true
   try {
-    const [users, terms, collections] = await Promise.all([
+    const [plan, users, terms, collections] = await Promise.all([
+      findPlan(term),
       api.listUsers({ search: term, limit: 5 }),
       api.listTerms({ search: term, limit: 5 }),
       api.listCollections({ search: term, limit: 5 }),
     ])
     if (mine !== seq) return // a newer query already answered
     hits.value = [
+      ...(plan ? [plan] : []),
       ...users.data.map((u): Hit => ({
         kind: 'user',
         id: u.id,
@@ -78,6 +81,28 @@ async function search(text: string) {
     active.value = 0
   } finally {
     if (mine === seq) searching.value = false
+  }
+}
+
+/**
+ * A plan by its code — the 6 letters reports call plans by (`NKKGFF`, characters 5–10 of the ULID)
+ * — or by its full id. Anything else is not a plan code, and asks nothing; an unknown code is no hit.
+ */
+const PLAN_CODE = /^[0-9A-HJKMNP-TV-Z]{6}$|^[0-9A-HJKMNP-TV-Z]{26}$/
+async function findPlan(text: string): Promise<Hit | null> {
+  const code = text.toUpperCase()
+  if (!PLAN_CODE.test(code)) return null
+  try {
+    const plan = await api.getPlan(code)
+    return {
+      kind: 'plan',
+      id: plan.id,
+      title: `${plan.code} · ${plan.title_native ?? 'без названия'}`,
+      subtitle: plan.user?.email ?? plan.user_id,
+      to: { name: 'plan', params: { code: plan.code } },
+    }
+  } catch {
+    return null
   }
 }
 

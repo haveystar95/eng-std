@@ -15,6 +15,7 @@ import StateBlock from '@/components/StateBlock.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import Breadcrumbs from '@/components/Breadcrumbs.vue'
 import PlanTab from './user/PlanTab.vue'
+import PlansTab from './user/PlansTab.vue'
 import ReviewsTab from './user/ReviewsTab.vue'
 import CollectionsTab from './user/CollectionsTab.vue'
 import DialogsTab from './user/DialogsTab.vue'
@@ -30,7 +31,8 @@ onMounted(run)
 const router = useRouter()
 
 const tabs = [
-  { key: 'plan', label: 'План' },
+  { key: 'plan', label: 'План дня' },
+  { key: 'plans', label: 'Планы' },
   { key: 'reviews', label: 'Ревью' },
   { key: 'collections', label: 'Коллекции' },
   { key: 'modes', label: 'Тренажёры' },
@@ -53,7 +55,7 @@ const tab = computed({
 
 // Tabs whose content comes from the server and can change while the card is open. «Тренажёры» is
 // a settings screen with its own save flow — a refresh button there would just fight the operator.
-const LIVE_TABS = ['reviews', 'plan', 'dialogs', 'collections', 'generations', 'logs']
+const LIVE_TABS = ['reviews', 'plan', 'plans', 'dialogs', 'collections', 'generations', 'logs']
 const refreshKey = ref(0)
 const refreshing = ref(false)
 
@@ -199,6 +201,7 @@ async function confirmToggle() {
         fetch. One mechanism for every tab, instead of an imperative refresh method on each.
       -->
       <PlanTab v-if="tab === 'plan'" :key="`plan-${refreshKey}`" :user-id="user.id" :timezone="user.timezone" />
+      <PlansTab v-else-if="tab === 'plans'" :key="`plans-${refreshKey}`" :user-id="user.id" />
       <ReviewsTab v-else-if="tab === 'reviews'" :key="`rev-${refreshKey}`" :user-id="user.id" />
       <CollectionsTab v-else-if="tab === 'collections'" :key="`col-${refreshKey}`" :collections="user.collections" />
       <ModesTab v-else-if="tab === 'modes'" :user-id="user.id" />

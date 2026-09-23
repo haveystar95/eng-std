@@ -1,7 +1,8 @@
 # wt_admin — WordTrainer admin console
 
 Read-only data console for the app (users, collections, terms, spend, logs, a user's
-SRS plan for a chosen day, review feed, dialogs). One mutation: the Premium toggle.
+SRS plan for a chosen day, review feed, dialogs, and the learner's plan page — `/plans/:code`,
+`docs/admin-plan.md` at the repository root). One mutation: the Premium toggle.
 Built in the app's **paper/ink** design system — light theme only.
 
 Stack: **Vue 3 + Vite + TypeScript + Pinia + vue-router**, no heavy UI kit — a small
@@ -87,7 +88,7 @@ src/
   stores/       # auth (Pinia)
   styles/       # tokens.css (paper/ink vars), base.css, fonts.css
   utils/        # format (relative dates, money 4dp), labels, languages
-  views/        # Dashboard, Users(+user/*tabs), Collections, Terms, Logs, Login
+  views/        # Dashboard, Users(+user/*tabs), Collections, Terms, Logs, Login, Plan (+plan/* sections)
 ```
 
 ## v1 scope (per brief)

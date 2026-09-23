@@ -28,6 +28,16 @@ snake_case ↔ camelCase and the `{data, meta:{total,page,per_page}}` envelope (
 | `api.listLogs` | `GET /request-logs?user_id=&status=&path=` |
 | `api.listDialogs` / `api.getDialog` | `GET /practice-dialogs?user_id=` / `GET /practice-dialogs/{id}` |
 | `api.listGenerations` | `GET /generations?user_id=&status=` |
+| `api.listLearnerPlans` | `GET /users/{id}/plans` |
+| `api.getPlan` | `GET /plans/{code}` |
+| `api.getPlanSection` | `GET /plans/{code}/{issues\|days\|pipeline\|lesson\|passage\|conversations\|money}?day=` |
+| `api.getPlanCalls` | `GET /plans/{code}/calls?day=&source=&limit=&cursor=` |
+| `api.getPlanAudio` | `GET /plans/{code}/audio/{audioId}` (blob — `<audio src>` cannot carry the token) |
+
+**The plan page (ADM-1) is the one place that does NOT camelize.** Its calls go through `httpGetRaw`, and its types
+(`src/api/planTypes.ts`) mirror the wire in snake_case: every block of the page shows «JSON» — the endpoint's answer as it
+came — and much of it is foreign JSON (the served lesson, a card's payload, the judge's ruling) whose keys must not be
+rewritten on the way to the screen (the lesson of `OPAQUE_VALUES`, taken whole).
 
 Per-user **Collections** tab is served from the embedded `UserDetail.collections` (no
 separate endpoint needed). Per-user **Logs / Dialogs / Generations** tabs reuse the global

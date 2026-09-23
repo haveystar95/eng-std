@@ -39,11 +39,14 @@ export const router = createRouter({
           redirect: (to) => ({ name: 'user', params: { id: to.params.id, tab: 'plan' } }),
         },
         {
-          path: 'users/:id/:tab(plan|reviews|collections|modes|dialogs|generations|logs)',
+          path: 'users/:id/:tab(plan|plans|reviews|collections|modes|dialogs|generations|logs)',
           name: 'user',
           component: () => import('@/views/UserDetailView.vue'),
           props: true,
         },
+
+        // A learner's plan (ADM-1): by its code (`NKKGFF`) or full id; the day filter is `?day=N`.
+        { path: 'plans/:code', name: 'plan', component: () => import('@/views/PlanView.vue'), props: true },
 
         // The live ladder. Its whole state (learner, filters, page) lives in the query string, so a
         // view of one session is a link like any other page here.

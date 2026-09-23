@@ -16,7 +16,7 @@ import type {
   TriageVerdict,
 } from '@/api/types'
 
-type Tone = 'neutral' | 'known' | 'unsure' | 'unknown'
+export type Tone = 'neutral' | 'known' | 'unsure' | 'unknown'
 
 export const GRADE_LABEL: Record<Grade, string> = {
   again: 'снова',

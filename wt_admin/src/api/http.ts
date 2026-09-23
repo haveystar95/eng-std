@@ -66,6 +66,21 @@ export async function httpGet<T>(path: string, params?: object): Promise<T> {
   return camelizeKeys<T>(res.data)
 }
 
+// GET whose body is shown as the endpoint answered it — no camelizing. The plan page (ADM-1) prints
+// the raw response under every block («JSON»), and most of it is foreign JSON anyway (the served
+// lesson, a card's payload, the judge's ruling), so its types mirror the wire in snake_case.
+export async function httpGetRaw<T>(path: string, params?: object): Promise<T> {
+  const res = await instance.get(path, { params: cleanParams(snakeizeParams(params)) })
+  return res.data as T
+}
+
+// GET of a binary body (a line's sound) — fetched with the token, played from an object URL,
+// because an <audio src> cannot carry the Authorization header.
+export async function httpGetBlob(path: string): Promise<Blob> {
+  const res = await instance.get(path, { responseType: 'blob' })
+  return res.data as Blob
+}
+
 // Paginated GET: map the { data, meta } envelope and derive totalPages.
 export async function httpGetPage<T>(path: string, params?: object): Promise<Paginated<T>> {
   const res = await instance.get(path, { params: cleanParams(snakeizeParams(params)) })
