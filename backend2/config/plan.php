@@ -243,4 +243,16 @@ return [
         'quota_store' => env('PLAN_SLOT_JUDGE_QUOTA_STORE', 'redis'),
         'timeout' => (int) env('PLAN_SLOT_JUDGE_TIMEOUT', 8),
     ],
+
+    /*
+     * THE MONEY CANON OF THE ADMIN'S PLAN PAGE (наряд ADM-1, «Что не так» и «Деньги»): a day ≈ $0.16 — generation ≈ $0.08
+     * (lesson, repairs, seam judge) plus voice ≈ $0.08 — and the repairs at most 10 % of the day's generation (DECISIONS
+     * п. 323). Read by the page only; nothing is stopped or bought by it.
+     */
+    'inspection' => [
+        'day_usd' => (float) env('PLAN_CANON_DAY_USD', 0.16),
+        'generation_usd' => (float) env('PLAN_CANON_GENERATION_USD', 0.08),
+        'voice_usd' => (float) env('PLAN_CANON_VOICE_USD', 0.08),
+        'repair_share' => (float) env('PLAN_CANON_REPAIR_SHARE', 0.10),
+    ],
 ];

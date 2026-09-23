@@ -9,6 +9,11 @@ use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Plan\Application\Dto\PlanConfig;
+use App\Modules\Plan\Application\Inspection\InspectionCanon;
+use App\Modules\Plan\Application\Port\PlanCallJournal;
+use App\Modules\Plan\Application\Port\PlanInspectionReader;
+use App\Modules\Plan\Infrastructure\Adapter\ObservabilityPlanCallJournal;
+use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanInspectionReader;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\ConversationAudioStore;
@@ -119,6 +124,16 @@ final class PlanServiceProvider extends ServiceProvider
         $this->app->bind(PlanAccountEraser::class, EloquentPlanAccountEraser::class);
         $this->app->bind(PlanDispatcher::class, QueuedPlanDispatcher::class);
         $this->app->bind(PlanCollectionWriter::class, VocabularyPlanCollectionWriter::class);
+
+        // The admin's plan page (наряд ADM-1): the rows as stored, the call journal through Observability, the money canon.
+        $this->app->bind(PlanInspectionReader::class, EloquentPlanInspectionReader::class);
+        $this->app->bind(PlanCallJournal::class, ObservabilityPlanCallJournal::class);
+        $this->app->singleton(InspectionCanon::class, static fn (): InspectionCanon => new InspectionCanon(
+            dayUsd: (float) config('plan.inspection.day_usd', 0.16),
+            generationUsd: (float) config('plan.inspection.generation_usd', 0.08),
+            voiceUsd: (float) config('plan.inspection.voice_usd', 0.08),
+            repairShare: (float) config('plan.inspection.repair_share', 0.10),
+        ));
 
         // The journal, the letters and the door to the phone (PLAN-UI-3).
         $this->app->bind(PlanEventRepository::class, EloquentPlanEventRepository::class);
