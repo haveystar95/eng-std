@@ -347,7 +347,34 @@ value_target}`, `turns[].phrases_used` — `{scene_id, ref}`, `hints.native` —
 task_clause_native`, `speech.number_joiners` и правило сложения чисел, `minutes_estimate` разговора 5/6/4, `turns_left`
 = целей + 2, `understood: null` у обрывка; сняты `window.talk_again`, `allowed_action = again`.
 
-### Порядок выката (НЕ выполнялся — по команде Дена после сборки (20))
+### Выкат — ВЫПОЛНЕН 23.09 (команда Дена после сборки (20))
+
+Порядок ниже пройден целиком, кроме п. 9 (переозвучка — не запускалась, покупок нет).
+
+| шаг | результат |
+|---|---|
+| 1. `DB=wordtrainer scripts/db-backup.sh --safety` | `storage/db-backups/wordtrainer-20260923-125853.sql.gz` (21M), ничего не подчищено |
+| 2. `git -C ../backend2-fix3 rebase main` | 12 коммитов легли на `bec5a435` («mp3», канва серии 38) |
+| 3. `migrate` боя кодом ветки (сайдкар `wt_fix3`, `-e DB_DATABASE=wordtrainer`) | три миграции, пачка 60: `add_pace_to_plans` (13,9 мс), `add_opens_target_to_conversation_turns` (1,3 мс), `drop_partner_line_of_old_echo_cards` (10,2 мс) |
+| 4. `git merge --ff-only fix-3` в `main` | **`866cdce9`** |
+| 5. `docker compose restart horizon` | `horizon:status` — running, `failed_jobs` за час — 0 |
+| 6. `plan:repace --all` | `--dry`: планов 3, записано 0; прогон: **планов 3 · записано 3** (день 2 плана `01M2H3556…` 37 → 31 мин, день 2 плана `01M2WSW1H…` 39 → 33, день 3 плана Дена `01M32DX8…` 14 → 11); повтор — записано 0, «уже с нынешним прейскурантом: 3» |
+| 7. сайдкар `wt_app_e2e` | пересоздан на `main` (`-w /app`, `-t /app/public`, база `wordtrainer_e2e_test`), health ok |
+| 8. worktree и стенд ветки | `../backend2-fix3` снесён, контейнер `wt_fix3` снят, база `wordtrainer_fix3_test` удалена, `wordtrainer_test` догнан теми же тремя миграциями |
+| — | `scripts/stamp-build.sh` — `/health` отвечает `866cdce9` (было `bca543ce`) |
+
+**Данные боя после миграций:** `plans.pace` заполнен у 9 планов из 9; `conversation_turns.opens_target` — колонка
+есть, непустых 0 (поле пишут только новые разговоры); карточек `speak_echo` с `partner_line` — **0** (было 10).
+
+**Чтение дня зала на аккаунте Дена** (`GET /plans/01M32DX8…/days/2` собственным путём чтения приложения, сессия
+`READ ONLY`, ничего не записано): день `passed`, действия нет; ряды — у всех шести `again: true`, у пяти этапов
+карточек `summary` (`{"done":8,"total":8,"first_try":8,"returns":0}` у «Слов», `{"done":14,…,"first_try":8}` у
+«Говорю сам»), у разговора `targets` — **7 конструкций**; вкладка «Диалог» — 15 реплик, из них **7 вернулось** из
+«Ресепшен зала» (день 1), `summary.returns` 7; первая цель разговора —
+`{"frame_target":"I'm working on ___.","example_target":"general fitness","said":true,"value_target":"general fitness"}`;
+карточек в ответе 85.
+
+### Порядок выката (исполнен 23.09)
 
 1. `DB=wordtrainer scripts/db-backup.sh --safety`.
 2. `git -C ../backend2-fix3 rebase main` (ветка `fix-3`).
