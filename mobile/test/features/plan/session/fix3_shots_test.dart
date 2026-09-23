@@ -716,7 +716,7 @@ void main() {
     await shoot(tester, '27-37-2-review-repetition-sources');
   });
 
-  testWidgets('28 37-1 репетиция пройдена — «ещё раз» у обоих рядов', (tester) async {
+  testWidgets('28 37-1c репетиция пройдена — «ещё раз» у обоих рядов, внизу «Итог»', (tester) async {
     // The fixtures carry no walked rehearsal: the reply of day-rehearsal.json, passed, as the server writes one — with
     // `again` on both rows (наряд FIX-3 §5: карточки — всегда, разговор — пока лимит дня не исчерпан).
     final json = dayJson('day-rehearsal');
@@ -727,13 +727,20 @@ void main() {
     }
     await pumpWindowShot(tester, PlanDayRoom.fromJson(json));
     expect(find.text('ещё раз'), findsNWidgets(2));
-    await shoot(tester, '28-37-1-passed-rows-again');
+    // Кадр 37-1c: у дня-системы внизу «Итог», а не «Итог дня» — тот остаётся дню плана (23-0c).
+    expect(find.text('Итог'), findsOneWidget);
+    expect(find.text('Итог дня'), findsNothing);
+    await shoot(tester, '28-37-1c-passed-rows-again');
   });
 
-  testWidgets('29 23-0a день пройден — «ещё раз» у рядов, «Итог дня» внизу', (tester) async {
+  testWidgets('29 23-0a день пройден — «ещё раз» у шести рядов, «Итог дня» внизу', (tester) async {
+    // Фикстура окна — день БЕЗ разговора (пять рядов); ряд разговора дописан сюда, чтобы кадр показал пройденный день
+    // дня-сцены целиком: шесть рядов, у каждого «ещё раз» (приёмка окна 2, п. 4).
     final json = planFixture('room_window_passed');
+    final data = (json['data'] as Map<String, dynamic>?) ?? json;
+    rows(data).add({...rows(data).first, 'stage': 'conversation', 'again': true, 'summary': null});
     await pumpWindowShot(tester, PlanDayRoom.fromJson(json), of: planFrom('plan_window'));
-    expect(find.text('ещё раз'), findsWidgets);
+    expect(find.text('ещё раз'), findsNWidgets(6));
     expect(find.text('Итог дня'), findsOneWidget);
     await shoot(tester, '29-23-0a-passed-rows-again');
   });

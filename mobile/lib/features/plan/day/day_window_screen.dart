@@ -251,10 +251,12 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
           // A review and the rehearsal (37-1, 37-2) are the same window with other rows and, in place of the tabs,
           // the list of what the day is made of.
           final system = WindowTexts.system(l, window.day, planTitle: _plan.shortTitle ?? _plan.displayTitle, slot: r.day.slot);
-          // ОДНА КНОПКА ДНЯ (кадры 23-0a…0c, наряд FIX-3 §5): «Начать» / «Продолжить», у пройденного дня — «Итог дня»
-          // (30-7); повтора дня целиком нет, «ещё раз» живёт у каждого ряда этапа.
+          // ОДНА КНОПКА ДНЯ (кадры 23-0a…0c, 37-1c; наряд FIX-3 §5, приёмка окна 2 п. 3): «Начать» / «Продолжить», у
+          // пройденного дня — его итог: «Итог дня» (30-7) у дня плана и «Итог» у дня-системы, как на 37-1c. Повтора
+          // дня целиком нет, «ещё раз» живёт у каждого ряда этапа.
           final passed = window.day.status == WindowDayStatus.passed;
-          final barLabel = action != null ? WindowTexts.action(l, action) : (passed ? l.planWindowDaySummary : null);
+          final summary = system != null ? l.planWindowSummary : l.planWindowDaySummary;
+          final barLabel = action != null ? WindowTexts.action(l, action) : (passed ? summary : null);
           final cover = barLabel != null ? WindowActionBar.coverOf(context) : 0.0;
 
           return Stack(

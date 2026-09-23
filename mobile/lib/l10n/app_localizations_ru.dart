@@ -4456,5 +4456,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planWindowDaySummary => 'Итог дня';
 
   @override
+  String get planWindowSummary => 'Итог';
+
+  @override
   String get planWindowTalkReplayLimit => 'Разговор сегодня уже повторяли — вернись завтра';
 }

@@ -6435,6 +6435,12 @@ abstract class AppLocalizations {
   /// **'Итог дня'**
   String get planWindowDaySummary;
 
+  /// Окно пройденного дня-системы (37-1c, 37-2): кнопка внизу — итог репетиции или повторения; «Итог дня» остаётся дню плана (23-0c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Итог'**
+  String get planWindowSummary;
+
   /// Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан.
   ///
   /// In ru, this message translates to:

@@ -4246,6 +4246,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planWindowDaySummary => 'Day summary';
 
   @override
+  String get planWindowSummary => 'Summary';
+
+  @override
   String get planWindowTalkReplayLimit =>
       'The talk was already replayed today — come back tomorrow';
 }

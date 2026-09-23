@@ -7,6 +7,7 @@ import 'package:eng_std/features/plan/day/window/window_stage_row.dart';
 import 'package:eng_std/features/plan/day/window/window_words.dart';
 
 import '../../support/day_window_harness.dart';
+import '../../support/server_fixtures.dart';
 import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 
@@ -94,6 +95,30 @@ void main() {
       for (final row in current) {
         expect(find.descendant(of: find.byWidget(row), matching: find.text('ещё раз')), findsNothing);
       }
+    });
+  });
+
+  group('§5 · итог пройденного дня — свой у дня плана и у дня-системы', () {
+    // ПРАВИЛО (кадры 23-0c и 37-1c; приёмка окна 2, п. 3): у пройденного дня внизу его итог — «Итог дня» у дня плана и
+    // «Итог» у репетиции и повторения. Повтора дня целиком нет ни там, ни там.
+    // ЛОВИТ: «Итог дня» на репетиции (её итог — не день плана) и вернувшуюся кнопку «Ещё раз».
+    testWidgets('день плана — «Итог дня»', (tester) async {
+      await pumpDayWindow(tester, windowRoom('passed'));
+      expect(find.text('Итог дня'), findsOneWidget);
+      expect(find.text('Ещё раз'), findsNothing);
+    });
+
+    testWidgets('репетиция — «Итог»', (tester) async {
+      final json = serverFixtureJson('day-rehearsal');
+      final window = json['window'] as Map<String, dynamic>;
+      (window['day'] as Map<String, dynamic>)['status'] = 'passed';
+      window['allowed_action'] = null;
+      for (final row in (window['stages'] as List).cast<Map<String, dynamic>>()) {
+        row['state'] = 'done';
+      }
+      await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: planFrom('plan_rehearsal'));
+      expect(find.text('Итог'), findsOneWidget);
+      expect(find.text('Итог дня'), findsNothing);
     });
   });
 

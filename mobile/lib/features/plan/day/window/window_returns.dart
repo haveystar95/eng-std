@@ -62,9 +62,11 @@ class WindowReturnHeading extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Приглушённый серый капитель вкладки (23-0d), а не латунь плиты: заголовок группы — та же бровь, что и
+          // «СЛОВА · 8 · 6 ПРОЙДЕНО» над лентой (приёмка окна 2, п. 5).
           Text(
             (day == null ? l.planWindowReturnedFrom : l.planWindowReturnedFromDay(day)).toUpperCase(),
-            style: AppTextWindow.brow,
+            style: AppTextWindow.tabBrow,
           ),
           if (title != null) ...[
             const SizedBox(height: 10),

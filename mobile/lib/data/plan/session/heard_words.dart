@@ -39,4 +39,26 @@ abstract final class HeardWords {
     }
     return out;
   }
+
+  /// EVERY WORD OF [line] THAT THE CONSTRUCTION SAYS (приёмка окна 2 FIX-3, п. 1) — the words of its immovable part and
+  /// of the value the learner put in its window, both the server's. A SET, not a budget: a word the construction says
+  /// once is underlined wherever the line says it, so «Can I take my laptop bag onboard?» underlines the «I» of «can I
+  /// take» too, and not only the first «I» of the line.
+  ///
+  /// Compared in the canonical form of speech coverage ([SpeechMatch.words]) — letter case aside, contractions spelt
+  /// out, and with [rules] the day's own foldings (abbreviations, numbers in words).
+  static List<WordRange> wordsIn(String line, Iterable<String?> parts, [SpeechRules rules = SpeechRules.none]) {
+    final vocabulary = <String>{
+      for (final part in parts)
+        if (part != null) ...SpeechMatch.words(part, rules),
+    };
+    if (vocabulary.isEmpty) return const [];
+
+    return [
+      for (final m in _word.allMatches(line))
+        if (SpeechMatch.words(m[0]!, rules) case final tokens
+            when tokens.isNotEmpty && tokens.every(vocabulary.contains))
+          (start: m.start, end: m.end),
+    ];
+  }
 }

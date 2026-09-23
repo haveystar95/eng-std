@@ -10,6 +10,7 @@ import '../../../data/plan/conversation/conversation_models.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/heard_words.dart';
 import '../../../data/plan/session/live_line.dart';
+import '../../../data/plan/session/speech_match.dart' show SpeechRules;
 import '../../../data/speech/speech_turn.dart';
 import '../session/cards/card_kit.dart' show CardLayout;
 import '../session/parts/session_bits.dart';
@@ -35,6 +36,7 @@ class TalkView extends StatefulWidget {
     required this.makeMic,
     required this.onSummary,
     required this.onClose,
+    this.speech = SpeechRules.none,
     this.openSettings,
     this.sceneById,
   });
@@ -54,6 +56,10 @@ class TalkView extends StatefulWidget {
   /// «Итог» on the end sheet (37-11).
   final VoidCallback onSummary;
   final VoidCallback onClose;
+
+  /// The day's speech rules — the same foldings the cards grade by; they say what «39» and «thirty nine», «p.m.» and
+  /// «pm» are when the own bubble's underline reads the construction's words.
+  final SpeechRules speech;
 
   /// iOS Settings — the only way left once the system will not ask for the microphone again.
   final Future<void> Function()? openSettings;
@@ -307,19 +313,21 @@ class _TalkViewState extends State<TalkView> {
   }
 
   /// The ranges of the learner's line the SERVER matched to constructions of the day — WHICH construction it heard is
-  /// the server's (`phrases_used`, a pair since FIX-3 §6), and the words of that construction are read from `targets[]`
-  /// as it said them: the frame with what went into its window. A pair the list does not hold is not marked — the phone
-  /// does not guess the words behind a ref.
+  /// the server's (`phrases_used`, a pair since FIX-3 §6), and its words are read from `targets[]`: THE IMMOVABLE PART
+  /// OF THE FRAME AND THE VALUE the learner put in its window, both the server's fields (приёмка окна 2, п. 1). Letter
+  /// case aside and through the day's own foldings, so «can I take» of a line is the «Can I take ___ onboard?» of the
+  /// lesson. A pair the list does not hold is not marked — the phone does not guess the words behind a ref.
   List<({int start, int end})> _marksOf(TalkTurn turn) {
     final text = turn.textTarget ?? '';
-    final marks = <({int start, int end})>[];
+    // Одно слово — одна линия: две конструкции одного хода часто делят слова («I»), и метка у них общая.
+    final marks = <({int start, int end})>{};
     for (final used in turn.phrasesUsed) {
       final target = _targetOf(used.sceneId, used.ref);
       if (target == null) continue;
-      marks.addAll(HeardWords.matched(text, target.saidWith(target.valueTarget)));
+      marks.addAll(HeardWords.wordsIn(text, [target.frameFixed, target.valueTarget], widget.speech));
     }
-    marks.sort((a, b) => a.start.compareTo(b.start));
-    return marks;
+
+    return marks.toList()..sort((a, b) => a.start.compareTo(b.start));
   }
 
   Widget _dock(AppLocalizations l, PlanConversation talk) {

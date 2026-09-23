@@ -2511,5 +2511,6 @@
   "@planWindowDaySummary": {
     "description": "Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет."
   },
+  "planWindowSummary": "Summary",
   "planWindowTalkReplayLimit": "The talk was already replayed today — come back tomorrow"
 }

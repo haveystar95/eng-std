@@ -5620,6 +5620,10 @@
   "@planWindowDaySummary": {
     "description": "Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет."
   },
+  "planWindowSummary": "Итог",
+  "@planWindowSummary": {
+    "description": "Окно пройденного дня-системы (37-1c, 37-2): кнопка внизу — итог репетиции или повторения; «Итог дня» остаётся дню плана (23-0c)."
+  },
   "planWindowTalkReplayLimit": "Разговор сегодня уже повторяли — вернись завтра",
   "@planWindowTalkReplayLimit": {
     "description": "Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан."

@@ -197,6 +197,10 @@ class TalkTarget {
   /// Окно каркаса на проводе.
   static const window = '___';
 
+  /// НЕПОДВИЖНАЯ ЧАСТЬ КАРКАСА — «I have pain in my ___.» → «I have pain in my .»: слова, которые в реплике ученика
+  /// принадлежат конструкции, что бы он ни вставил в окно (приёмка окна 2, п. 1).
+  String get frameFixed => frameTarget.replaceAll(window, ' ');
+
   /// Каркас, сказанный значением: «I have pain in my ___.» + «lower back» → «I have pain in my lower back.»
   /// Нет значения — каркас как есть.
   String saidWith(String? value) => _with(frameTarget, value);

@@ -316,6 +316,29 @@ void main() {
       await settleTalk(tester);
     });
 
+    // ПРАВИЛО (приёмка окна 2, п. 1): подчёркиваются слова НЕПОДВИЖНОЙ ЧАСТИ каркаса и значения ученика — оба поля
+    // сервера, регистр не важен, нормализация та же, что у покрытия речи. Слово, которое конструкция говорит один раз,
+    // подчёркнуто везде, где его говорит реплика.
+    // ЛОВИТ: «can I take» без подчерка из-за заглавной «Can» в каркасе (снимок 37-7d приёмки) и второе «I» реплики,
+    // оставшееся без линии, когда бюджет слова съел первый такой же.
+    testWidgets('подчерк по словам каркаса и значения — регистр не важен, каждое вхождение', (tester) async {
+      final probe = TalkProbe()..documents.add(open);
+      await pumpTalk(tester, probe);
+      // Ход, которому сервер засчитал две конструкции, одна из них — «Can I take ___ onboard?» с заглавной.
+      final turn = open.turns.firstWhere((t) => t.phrasesUsed.length > 1);
+      final capital = open.targets.firstWhere((t) => t.ref == turn.phrasesUsed.last.ref);
+      expect(capital.frameTarget.startsWith('Can'), isTrue, reason: 'каркас с заглавной буквы');
+      final line = tester.widget<TalkSageUnderline>(
+        find.descendant(of: find.byKey(ValueKey('turn-${turn.index}')), matching: find.byType(TalkSageUnderline)),
+      );
+      final marked = [for (final m in line.marks) line.text.substring(m.start, m.end).toLowerCase()];
+      for (final word in ['can', 'take', 'onboard', 'laptop', 'bag']) {
+        expect(marked, contains(word), reason: '«$word» — слово конструкции');
+      }
+      expect(marked.where((w) => w == 'i').length, 2, reason: 'оба «I» реплики — слова конструкций');
+      await settleTalk(tester);
+    });
+
     // ПРАВИЛО (наряд FIX-3 §6): `phrases_used` называет конструкцию ПАРОЙ, а слов у неё в ходе нет — их клиент берёт
     // из `targets[]`. Пары, которой в списке нет, он не подчёркивает: гадать, что именно услышал сервер, нечем.
     // ЛОВИТ: подчерк по своему совпадению слов там, где сервер цель не назвал.
