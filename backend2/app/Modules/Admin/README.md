@@ -36,6 +36,7 @@ scoped to `admin/api/*` for the `ADMIN_ORIGIN` browser origin (config/cors.php).
 | `Learning` | Service `LadderStepResolver` | the ladder rung on the live progress screen — derived by `LearningLadder`, never re-expressed in SQL |
 | `Identity` | Port `UserTierWriter` / `UserTierReader` | the tier mutation goes through the tier's owner (same path as `practice:grant-premium`) |
 | `Generation` | Service `PlaygroundRuns` (start / find a run), Port `PlaygroundModelCatalog`; Service `DistractorDryRun`; Command handler `BuildTermEnrichmentsHandler` | the playground — a run is queued and polled (`POST /playground/generate` → 202, `GET /playground/runs/{id}`, наряд GEN-3), its providers; the distractor dry run; the content top-up |
+| `Plan` | Query `GetCheckCounters`; Service `Inspection\PlanInspection` | the check counters (`/plans/checks`); the learner's plan page (наряд ADM-1, `docs/admin-plan.md`): `/users/{id}/plans` and `/plans/{code}[/issues\|days\|pipeline\|lesson\|passage\|conversations\|money\|calls\|audio/{id}]` — put together by Plan, the panel only asks (`GetPlanPage`, `GetPlanCalls`, `GetPlanAudio`, `ListLearnerPlans`) and adds the learner's name |
 
 ## Ports (outbound interfaces)
 

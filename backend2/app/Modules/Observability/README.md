@@ -60,6 +60,12 @@ on the call; `model-calls:sweep-lost` marks it `lost`. A failing journal write i
 the call. Writers: Generation's `VendorCall` — every `ContentModelPort` adapter (OpenAI, Anthropic, Gemini) and the
 playground adapters; the older direct OpenAI adapters of the first generation are not journaled yet (ROADMAP GEN-3).
 
+**Read back** (наряд ADM-1): `Application/Port/CallLogReader` (`Eloquent/EloquentCallLogReader`) — the journal's calls in a
+window by purpose, each with its outbound log row when the vendor's usage there equals the journal's tokens inside the
+call's own window (else none — never a neighbour's body), the outbound text-to-speech calls (voice, text, audio size), the
+inbound calls by path prefix or exact path (cursor-paged, counted; `api_request_logs_inbound_path_idx`), and when a document
+was first served. The module still writes both tables alone; the admin's plan page reads them through Plan.
+
 Money itself is **not** counted from this table — the spend ledgers (`generation_requests`,
 `practice_dialogs`, `term_enrichments`, `example_regenerations`) are the financial record and
 cover the whole history. The log is forensics: which call, with what body, how long, how much did

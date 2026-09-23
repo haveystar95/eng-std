@@ -158,6 +158,13 @@ the event date, `event_today` not before 08:00), `NotificationRules` (which fact
 ## Public surface (what other modules may call)
 
 - Queries: `GetCheckCounters` → `list<CheckCounterRow>` (Admin reads it through its own handler).
+- `Application/Inspection/PlanInspection` (наряд ADM-1, `docs/admin-plan.md`): the learner's plan page for the admin panel —
+  read-only documents, one per section (header, issues, days, pipeline, lesson, passage, conversations, money, calls) and a
+  plan's own sound. It reads the plan's rows (`PlanInspectionReader`), the aggregate for statuses and served lessons, and the
+  call journal through `PlanCallJournal` (Infrastructure: `ObservabilityPlanCallJournal` over Observability's
+  `CallLogReader`). «Что не так» — eleven pure checks in `Domain/Inspection/Check`, each with a canon test; the money canon
+  is `plan.inspection`. A model call is read as the plan's by the window of a build or a talk it started in (`model_calls`
+  names no plan) — the windows other plans overlap are flagged, never guessed.
 - Port fulfilled for Identity: `PlanAccountEraser` (the account eraser).
 
 Nothing else. The HTTP surface is the client's. Admin reads `plans.cost_usd_plan` and

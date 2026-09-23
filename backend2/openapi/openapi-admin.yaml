@@ -42,6 +42,13 @@ tags:
   - name: Curation
   - name: Practice
   - name: Generation
+  - name: Plan page
+    description: >
+      The learner's plan page (наряд ADM-1). Read-only — no route here writes, buys or queues. The plan is
+      named by its code (characters 5–10 of its ULID, upper-case Crockford — `NKKGFF`) or its full id; a
+      code two plans share is 409. Every section takes `day` and narrows to that day. The page is put
+      together by the Plan module (`PlanInspection`); what the database does not hold is null / listed
+      under `not_stored`, never estimated.
 
 paths:
   /login:
@@ -1207,6 +1214,210 @@ paths:
                       data: { type: array, items: { $ref: '#/components/schemas/Generation' } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /users/{id}/plans:
+    get:
+      tags: [Plan page]
+      summary: A learner's plans («Планы» tab)
+      description: Newest first, deleted ones included. Not paginated — `{data:[…]}`.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/LearnerPlanRow' } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}:
+    get:
+      tags: [Plan page]
+      summary: The plan's header
+      description: >
+        Code, title, learner, languages, level, event date, status (the plan's effective status; the
+        stored one beside it), progress, the prompt versions and the server build it was made with, and
+        its total $. A version that is not stored (P2R, the seam judge) is null.
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanHeader' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/issues:
+    get:
+      tags: [Plan page]
+      summary: «Что не так» — the page's automatic checks
+      description: >
+        Findings of eleven checks (sound ≠ text, voice not by gender, line without sound, day failed,
+        scheduled day not ready, build out of line, lost model call, day cost over canon / P2R share,
+        passed without summary, talk without openers, talk ended by limit), errors first; `checks` —
+        every check with its count; `healthy` — nothing found; `not_checked` — what the checks cannot see.
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }, { $ref: '#/components/parameters/PlanDay' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanIssues' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/days:
+    get:
+      tags: [Plan page]
+      summary: «Обзор» — the plan's days
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }, { $ref: '#/components/parameters/PlanDay' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/PlanDayRow' } }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/pipeline:
+    get:
+      tags: [Plan page]
+      summary: «Конвейер генерации» — the plan's job and each day's stages
+      description: >
+        Stages `lesson`, `validator`, `repair`, `seam_judge`, `images`, `voice`, `served`. Model calls are
+        the journal's calls started inside the plan's / scene's build window under that window's purposes
+        (`model_calls` names no plan); `window.others` counts other plans' builds overlapping it, and
+        `certain` is false when any does. `log_id` — the outbound log row matched to the call by its usage
+        (its request and answer via `/logs/{id}`), null when none matches exactly.
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }, { $ref: '#/components/parameters/PlanDay' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanPipeline' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/lesson:
+    get:
+      tags: [Plan page]
+      summary: «Урок и голос» — the served lesson of each day and every spoken line's voice
+      description: >
+        `lesson` is the served lesson (the one the day's cards are dealt from), not the model's raw answer.
+        Each line of `voice.lines` carries the voice its cast gives it (keys from the language pack's
+        config), the rule it was chosen by, the stored file in that voice with its bill, and `status`
+        voiced / phone (no file in the cast's voice) / none (the pack has no voice).
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }, { $ref: '#/components/parameters/PlanDay' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [days]
+                properties:
+                  days: { type: array, items: { $ref: '#/components/schemas/PlanLessonDay' } }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/passage:
+    get:
+      tags: [Plan page]
+      summary: «Прохождение» — card by card, and what the client says about itself
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }, { $ref: '#/components/parameters/PlanDay' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanPassage' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/conversations:
+    get:
+      tags: [Plan page]
+      summary: «Разговоры» — each talk with its constructions and transcript
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }, { $ref: '#/components/parameters/PlanDay' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/PlanTalk' } }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/money:
+    get:
+      tags: [Plan page]
+      summary: «Деньги» — by stage and by day, against the canon
+      parameters: [{ $ref: '#/components/parameters/PlanCode' }, { $ref: '#/components/parameters/PlanDay' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanMoney' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/calls:
+    get:
+      tags: [Plan page]
+      summary: «Вызовы API» — one journal of the plan, newest first
+      description: >
+        Model calls (by build and talk windows), voice purchases (scene lines and talk lines), slot judges
+        and the client's calls to the plan's routes. Paged by an opaque cursor: send `meta.next_cursor`
+        back as `cursor`; null — the last page. `meta.total` counts the whole filtered journal.
+      parameters:
+        - { $ref: '#/components/parameters/PlanCode' }
+        - { $ref: '#/components/parameters/PlanDay' }
+        - { name: source, in: query, schema: { type: string, enum: [model, voice, judge, client] } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanCalls' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /plans/{code}/audio/{audioId}:
+    get:
+      tags: [Plan page]
+      summary: A sound of the plan — a scene's line or a talk's line
+      description: 404 for any id that is not one of this plan's sounds.
+      parameters:
+        - { $ref: '#/components/parameters/PlanCode' }
+        - { name: audioId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The file
+          content:
+            audio/mpeg: { schema: { type: string, format: binary } }
+            audio/wav: { schema: { type: string, format: binary } }
+        '404': { $ref: '#/components/responses/Problem' }
+
 components:
   securitySchemes:
     adminBearer:
@@ -1239,6 +1450,17 @@ components:
       in: path
       required: true
       schema: { type: string }
+    PlanCode:
+      name: code
+      in: path
+      required: true
+      description: The plan's code (characters 5–10 of its ULID) or its full id.
+      schema: { type: string, pattern: '^([0-9A-HJKMNP-TV-Z]{6}|[0-9A-HJKMNP-TV-Z]{26})$' }
+    PlanDay:
+      name: day
+      in: query
+      description: 'Narrow the section to one day of the plan (1..10); absent — the whole plan.'
+      schema: { type: integer, minimum: 1, maximum: 10 }
 
   responses:
     Problem:
@@ -2294,6 +2516,362 @@ components:
                   role: { type: string, enum: [user, assistant] }
                   text: { type: string }
                   ts: { type: integer }
+
+    PlanProgress:
+      type: object
+      required: [current_day, days_total, days_closed, days_opened]
+      properties:
+        current_day: { type: [integer, 'null'], description: 'the first day not closed; null — all closed' }
+        days_total: { type: integer }
+        days_closed: { type: integer }
+        days_opened: { type: integer }
+
+    LearnerPlanRow:
+      type: object
+      required: [id, code, status, progress, cost_usd]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        title_native: { type: [string, 'null'] }
+        title_target: { type: [string, 'null'] }
+        status: { type: string }
+        event_date: { type: [string, 'null'], format: date }
+        created_at: { type: string, format: date-time }
+        progress: { $ref: '#/components/schemas/PlanProgress' }
+        cost_usd: { type: number, description: 'the plan build + every day (lesson, voice, talks, slot judges), from stored bills' }
+
+    PlanHeader:
+      type: object
+      required: [id, code, user_id, status, stored_status, progress, versions, build_versions, cost_usd, not_stored]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        user_id: { type: string }
+        user:
+          type: [object, 'null']
+          properties:
+            id: { type: string }
+            name: { type: string }
+            email: { type: [string, 'null'] }
+        title_native: { type: [string, 'null'] }
+        title_target: { type: [string, 'null'] }
+        goal_text: { type: string }
+        target_lang: { type: string }
+        native_lang: { type: string }
+        level: { type: string }
+        event_date: { type: [string, 'null'], format: date }
+        status: { type: string, description: 'effective (overdue derived)' }
+        stored_status: { type: string }
+        created_at: { type: string, format: date-time }
+        started_at: { type: [string, 'null'], format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }
+        today: { type: string, format: date, description: "the learner's today, in their zone" }
+        cover_image_url: { type: [string, 'null'] }
+        progress: { $ref: '#/components/schemas/PlanProgress' }
+        versions:
+          type: object
+          properties:
+            plan: { type: [string, 'null'] }
+            lesson: { type: array, items: { type: string } }
+            repair: { type: 'null', description: 'not stored' }
+            seam_judge: { type: 'null', description: 'not stored' }
+            slot_judge: { type: array, items: { type: string } }
+            conversation: { type: array, items: { type: string } }
+        models:
+          type: object
+          properties:
+            plan: { type: [string, 'null'] }
+            lesson: { type: array, items: { type: string } }
+        build_versions:
+          type: object
+          properties:
+            plan: { type: [string, 'null'] }
+            lessons: { type: array, items: { type: string } }
+        cost_usd: { type: number }
+        not_stored: { type: array, items: { type: string } }
+
+    PlanIssues:
+      type: object
+      required: [data, checks, healthy, not_checked]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required: [check, severity, place_kind, place, message]
+            properties:
+              check: { type: string }
+              title: { type: string }
+              severity: { type: string, enum: [error, warning] }
+              day: { type: [integer, 'null'] }
+              place_kind: { type: string, enum: [day, line, card, turn, talk, call] }
+              place: { type: string }
+              message: { type: string }
+              detail: { type: object, additionalProperties: true }
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              title: { type: string }
+              count: { type: integer }
+        healthy: { type: boolean }
+        not_checked: { type: array, items: { type: string } }
+
+    PlanDayRow:
+      type: object
+      required: [number, type, status, stored_status, cost_usd]
+      properties:
+        number: { type: integer }
+        type: { type: string, enum: [scene, review, rehearsal] }
+        scene_id: { type: [string, 'null'] }
+        scene_title_native: { type: [string, 'null'] }
+        scene_title_target: { type: [string, 'null'] }
+        opens_on: { type: [string, 'null'], format: date }
+        stored_status: { type: string, enum: [locked, open, in_progress, closed] }
+        status: { type: string, description: "as the client is told today: `building` while the next day's lesson is awaited" }
+        lesson_status: { type: [string, 'null'], enum: [pending, building, illustrating, ready, failed, null] }
+        opened_at: { type: [string, 'null'], format: date-time }
+        closed_at: { type: [string, 'null'], format: date-time }
+        cards_total: { type: integer }
+        cards_done: { type: integer }
+        minutes_spent: { type: integer }
+        has_conversation: { type: boolean }
+        stages_passed: { type: array, items: { type: object, additionalProperties: true } }
+        passed_at: { type: [string, 'null'], format: date-time, description: 'the `day_passed` line of the journal' }
+        cost_usd:
+          type: object
+          properties:
+            generation: { type: [number, 'null'] }
+            voice: { type: number }
+            conversation: { type: number }
+            slot_judge: { type: number }
+            total: { type: number }
+
+    PlanModelCall:
+      type: object
+      required: [id, status, model, started_at, certain]
+      properties:
+        id: { type: string }
+        purpose: { type: [string, 'null'] }
+        status: { type: string, enum: [started, completed, failed, lost] }
+        provider: { type: string }
+        model: { type: string }
+        answered_model: { type: [string, 'null'] }
+        started_at: { type: string, format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }
+        latency_ms: { type: [integer, 'null'] }
+        estimated_tokens_in: { type: integer }
+        tokens_in: { type: [integer, 'null'] }
+        cached_tokens: { type: [integer, 'null'] }
+        tokens_out: { type: [integer, 'null'] }
+        cost_usd: { type: [string, 'null'] }
+        http_status: { type: [integer, 'null'] }
+        error: { type: [string, 'null'] }
+        log_id: { type: [string, 'null'] }
+        day: { type: [integer, 'null'] }
+        window:
+          type: object
+          properties:
+            kind: { type: string, enum: [plan, scene, talk] }
+            subject_id: { type: string }
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
+            others: { type: integer }
+        certain: { type: boolean }
+
+    PlanPipelineStage:
+      type: object
+      required: [key, title, status, facts, calls, not_stored]
+      properties:
+        key: { type: string, enum: [plan, lesson, validator, repair, seam_judge, images, voice, served] }
+        title: { type: string }
+        status: { type: string }
+        started_at: { type: [string, 'null'], format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }
+        duration_ms: { type: [integer, 'null'] }
+        facts: { type: object, additionalProperties: true }
+        calls: { type: array, items: { $ref: '#/components/schemas/PlanModelCall' } }
+        tokens_in: { type: [integer, 'null'] }
+        tokens_out: { type: [integer, 'null'] }
+        calls_cost_usd: { type: [number, 'null'] }
+        not_stored: { type: array, items: { type: string } }
+
+    PlanPipeline:
+      type: object
+      required: [plan_build, days]
+      properties:
+        plan_build: { $ref: '#/components/schemas/PlanPipelineStage' }
+        days:
+          type: array
+          items:
+            type: object
+            properties:
+              number: { type: integer }
+              type: { type: string }
+              scene_id: { type: [string, 'null'] }
+              stages: { type: array, items: { $ref: '#/components/schemas/PlanPipelineStage' } }
+              note: { type: string }
+
+    PlanVoiceLine:
+      type: object
+      required: [ref, kind, speaker, text, gender, rule, status]
+      properties:
+        ref: { type: string }
+        kind: { type: string, enum: [partner_line, learner_line, phrase, filler, word] }
+        speaker: { type: string, enum: [partner, learner] }
+        text: { type: string }
+        gender: { type: string, enum: [female, male] }
+        rule: { type: string }
+        voice: { type: [object, 'null'], additionalProperties: true }
+        status: { type: string, enum: [voiced, phone, none] }
+        audio: { type: [object, 'null'], additionalProperties: true }
+        voiced_text: { type: [string, 'null'], description: 'the text the vendor was sent, when the request log names it exactly' }
+        other_voices: { type: array, items: { type: object, additionalProperties: true } }
+
+    PlanLessonDay:
+      type: object
+      required: [number, type, voice]
+      properties:
+        number: { type: integer }
+        type: { type: string }
+        scene: { type: [object, 'null'], additionalProperties: true }
+        lesson: { type: [object, 'null'], additionalProperties: true, description: 'the served lesson, foreign JSON' }
+        scenes_covered: { type: array, items: { type: object, additionalProperties: true } }
+        returns: { type: array, items: { type: object, additionalProperties: true } }
+        voice:
+          type: object
+          properties:
+            lines: { type: array, items: { $ref: '#/components/schemas/PlanVoiceLine' } }
+            voiced: { type: integer }
+            phone: { type: integer }
+            none: { type: integer }
+
+    PlanPassage:
+      type: object
+      required: [client, days, not_stored]
+      properties:
+        client:
+          type: object
+          properties:
+            user_agent: { type: [string, 'null'] }
+            last_sync_at: { type: [string, 'null'], format: date-time }
+            last_path: { type: [string, 'null'] }
+            build: { type: 'null', description: 'the client sends no build' }
+            device: { type: 'null', description: 'the client sends no device' }
+        days:
+          type: array
+          items:
+            type: object
+            properties:
+              number: { type: integer }
+              type: { type: string }
+              status: { type: string }
+              opened_at: { type: [string, 'null'], format: date-time }
+              closed_at: { type: [string, 'null'], format: date-time }
+              summary: { type: object, additionalProperties: true }
+              cards:
+                type: array
+                items:
+                  type: object
+                  required: [id, stage, kind, attempts]
+                  properties:
+                    id: { type: string }
+                    stage: { type: string }
+                    position: { type: integer }
+                    kind: { type: string }
+                    unit_kind: { type: string }
+                    unit_ref: { type: string }
+                    source: { type: string, enum: [today, returned] }
+                    from_day: { type: [integer, 'null'] }
+                    retry_of: { type: [string, 'null'] }
+                    expected: { type: [string, 'null'] }
+                    answer: { type: [object, 'null'], additionalProperties: true }
+                    heard: { type: [string, 'null'] }
+                    judge: { type: [object, 'null'], additionalProperties: true }
+                    result: { type: [string, 'null'], enum: [passed, hinted, failed, skipped, null] }
+                    attempts: { type: integer }
+                    answered_at: { type: [string, 'null'], format: date-time }
+                    returns: { type: boolean }
+                    payload: { type: object, additionalProperties: true }
+        not_stored: { type: array, items: { type: string } }
+
+    PlanTalk:
+      type: object
+      required: [id, day, type, state, targets, turns]
+      properties:
+        id: { type: string }
+        day: { type: integer }
+        type: { type: string, enum: [day, rehearsal, review] }
+        state: { type: string, enum: [agent_turn, your_turn, ended] }
+        ended_reason: { type: [string, 'null'], enum: [natural, limit, declined, replayed, null] }
+        ended_label: { type: [string, 'null'] }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: [string, 'null'], format: date-time }
+        turn_limit: { type: integer }
+        hints_enabled: { type: boolean }
+        cost_usd: { type: number }
+        scenes: { type: array, items: { type: object, additionalProperties: true } }
+        checkpoints_done: { type: array, items: { type: string } }
+        targets:
+          type: array
+          items:
+            type: object
+            properties:
+              scene_id: { type: string }
+              ref: { type: string }
+              frame_target: { type: string }
+              frame_native: { type: string }
+              example_target: { type: [string, 'null'] }
+              status: { type: string, enum: [said, partial, none] }
+              said_turn: { type: [integer, 'null'] }
+              key_words: { type: object, additionalProperties: true }
+              opened_on_turn: { type: [integer, 'null'] }
+        turns: { type: array, items: { type: object, additionalProperties: true } }
+        not_stored: { type: array, items: { type: string } }
+
+    PlanMoney:
+      type: object
+      required: [canon, plan_build, days, totals, not_stored]
+      properties:
+        canon:
+          type: object
+          properties:
+            day_usd: { type: number }
+            generation_usd: { type: number }
+            voice_usd: { type: number }
+            repair_share: { type: number }
+        plan_build: { type: object, additionalProperties: true }
+        days: { type: array, items: { type: object, additionalProperties: true } }
+        totals: { type: object, additionalProperties: true }
+        not_stored: { type: array, items: { type: string } }
+
+    PlanCalls:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required: [id, source, at, stage, status, is_error]
+            properties:
+              id: { type: string }
+              source: { type: string, enum: [model, voice, judge, client] }
+              at: { type: string, format: date-time }
+              day: { type: [integer, 'null'] }
+              stage: { type: string }
+              status: { type: string }
+              is_error: { type: boolean }
+            additionalProperties: true
+        meta:
+          type: object
+          properties:
+            total: { type: integer }
+            per_page: { type: integer }
+            next_cursor: { type: [string, 'null'] }
+            not_stored: { type: array, items: { type: string } }
 
     Generation:
       type: object
