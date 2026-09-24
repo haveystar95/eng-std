@@ -8,6 +8,7 @@ use App\Modules\Plan\Application\Dto\Inspection\InspectedAudio;
 use App\Modules\Plan\Application\Dto\Inspection\JournalSpeechCall;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\PlanCallJournal;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
@@ -30,6 +31,7 @@ final readonly class VoiceTable
     public function __construct(
         private LineSpeaker $speaker,
         private PlanCallJournal $journal,
+        private LanguagePacks $packs,
     ) {}
 
     /** @return list<VoiceLine> */
@@ -53,8 +55,9 @@ final readonly class VoiceTable
         foreach (SpokenLines::terms($terms, true) as $phrase) {
             $wanted[] = [$phrase['ref'], VoiceLine::PHRASE, Speaker::Learner, $phrase['text']];
         }
+        $ends = $this->packs->for($lang)->sentenceEnds();
         foreach ($terms as $term) {
-            foreach (SpokenLines::fillers($term) as $filler) {
+            foreach (SpokenLines::fillers($term, $ends) as $filler) {
                 if ($filler['voicedAs'] === $filler['ref']) {
                     $wanted[] = [$filler['ref'], VoiceLine::FILLER, Speaker::Learner, $filler['text']];
                 }

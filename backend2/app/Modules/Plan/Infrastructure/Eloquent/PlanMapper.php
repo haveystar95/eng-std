@@ -146,6 +146,7 @@ final class PlanMapper
             generatedAt: self::instant($row->generated_at),
             targetPack: $this->packs->for($targetLang),
             partnerVoiceGender: VoiceGender::tryFromAny($row->partner_voice_gender),
+            builtAt: self::instant($row->built_at),
         );
     }
 
@@ -259,6 +260,7 @@ final class PlanMapper
             'fail_reason' => $scene->failReason(),
             'build_started_at' => $scene->buildStartedAt()?->format(DATE_ATOM),
             'generated_at' => $scene->generatedAt()?->format(DATE_ATOM),
+            'built_at' => $scene->builtAt()?->format(DATE_ATOM),
             'partner_voice_gender' => $scene->partnerVoiceGender()?->value,
         ];
     }

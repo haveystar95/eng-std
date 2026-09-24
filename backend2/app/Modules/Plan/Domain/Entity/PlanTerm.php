@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Entity;
 
+use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Lesson\Phrase;
@@ -59,12 +60,14 @@ final class PlanTerm
      * frame with the filler of its first dialogue line — or, for a frame no line says, its first
      * in-dialogue filler, then its first filler; the translation and the reading are put together the
      * same way; the line lends the phrase its speaking key, variants and example — and its closing mark
-     * to a frame written without one (доработка GEN-2b: «I'd like a ___, please» said «…, please.»).
+     * to a frame written without one (доработка GEN-2b: «I'd like a ___, please» said «…, please.»). A filler that ends
+     * with an abbreviation's dot keeps the one dot of the sentence, in each language by its own rule of sentence ends
+     * ({@see FrameText::fill()}, наряд FIX-4 §6).
      *
      * @param  callable(): PlanTermId  $ids
      * @return list<self>
      */
-    public static function fromLesson(PlanSceneId $sceneId, Lesson $lesson, callable $ids): array
+    public static function fromLesson(PlanSceneId $sceneId, Lesson $lesson, callable $ids, ?SentenceEnds $targetEnds, ?SentenceEnds $nativeEnds): array
     {
         $out = [];
         $position = 0;
@@ -82,7 +85,7 @@ final class PlanTerm
 
         foreach ($lesson->phrases as $phrase) {
             $line = $lesson->linesOf($phrase->id)[0]['message'] ?? null;
-            [$text, $native, $reading] = self::said($phrase, $line);
+            [$text, $native, $reading] = self::said($phrase, $line, $targetEnds, $nativeEnds);
             $out[] = new self(
                 $ids(), $sceneId, TermKind::Phrase, $phrase->id, $position++, $text, $native,
                 self::orNull($reading), null, $line?->textTarget, $line?->textNative,
@@ -99,9 +102,9 @@ final class PlanTerm
      *
      * @return array{0: string, 1: string, 2: string}
      */
-    private static function said(Phrase $phrase, ?Message $line): array
+    private static function said(Phrase $phrase, ?Message $line, ?SentenceEnds $targetEnds, ?SentenceEnds $nativeEnds): array
     {
-        [$text, $native, $reading] = self::filled($phrase, $line);
+        [$text, $native, $reading] = self::filled($phrase, $line, $targetEnds, $nativeEnds);
         if ($line === null) {
             return [$text, $native, $reading];
         }
@@ -110,7 +113,7 @@ final class PlanTerm
     }
 
     /** @return array{0: string, 1: string, 2: string} */
-    private static function filled(Phrase $phrase, ?Message $line): array
+    private static function filled(Phrase $phrase, ?Message $line, ?SentenceEnds $targetEnds, ?SentenceEnds $nativeEnds): array
     {
         if (! FrameText::hasSlot($phrase->frameTarget)) {
             return [trim($phrase->frameTarget), trim($phrase->frameNative), trim($phrase->pronunciationNative)];
@@ -132,8 +135,8 @@ final class PlanTerm
         }
 
         return [
-            FrameText::fill($phrase->frameTarget, $filler->target),
-            FrameText::fill($phrase->frameNative, $filler->native),
+            FrameText::fill($phrase->frameTarget, $filler->target, $targetEnds),
+            FrameText::fill($phrase->frameNative, $filler->native, $nativeEnds),
             FrameText::fill($phrase->pronunciationNative, $filler->pronunciationNative),
         ];
     }

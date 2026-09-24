@@ -105,7 +105,7 @@ final readonly class PipelineReport
             'type' => $day->type()->value,
             'scene_id' => $scene->id,
             'stages' => [
-                self::stage('lesson', 'Урок дня', $scene->lessonStatus, $scene->buildStartedAt, $data->sceneReadyAt($scene->id), [
+                self::stage('lesson', 'Урок дня', $scene->lessonStatus, $scene->buildStartedAt, $scene->builtAt, [
                     'model' => $scene->model,
                     'prompt_version' => $scene->promptVersion,
                     'build_version' => $scene->buildVersion,
@@ -116,7 +116,7 @@ final readonly class PipelineReport
                     'fail_reason' => $scene->failReason,
                 ], $lessonCalls, [
                     'окно вызовов — только последняя сборка сцены (build_started_at перезаписывается)',
-                    'время конца урока: plan_scenes.generated_at пишется моментом НАЧАЛА сборки — конец берётся из строки day_ready; у сцен без неё окна нет',
+                    'время конца урока — plan_scenes.built_at (сцена стала ready, фото на месте); generated_at — момент НАЧАЛА сборки; у сцен без built_at окна нет',
                 ]),
                 self::stage('validator', 'Валидатор', $scene->failReason === null ? ($findings === [] ? 'clean' : 'warnings') : 'failed', null, null, [
                     'findings' => $findings,

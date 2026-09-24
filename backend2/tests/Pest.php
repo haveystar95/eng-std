@@ -577,7 +577,7 @@ function planWriteLessons(App\Modules\Plan\Domain\Entity\Plan $plan): void
             [],
             new DateTimeImmutable('2026-09-10T09:00:00Z'),
         );
-        $scene->finishIllustration();
+        $scene->finishIllustration(new DateTimeImmutable('2026-09-10T09:05:00Z'));
     }
 }
 
@@ -637,9 +637,25 @@ function planLiveDoctorScene(string $sceneId = '01M2H13KSAS23K4YPF1M65SJQD', arr
     $packs = lessonPacks();
     $payload = json_decode((string) file_get_contents(__DIR__.'/Fixtures/plan-lesson/doctor-e2e-v4.4.json'), true, flags: JSON_THROW_ON_ERROR);
     $lesson = App\Modules\Plan\Domain\Lesson\LessonAssembly::serve((new App\Modules\Plan\Domain\Lesson\LessonParser)->parse($payload), $id->value, $packs->for('en'));
-    $terms = App\Modules\Plan\Domain\Entity\PlanTerm::fromLesson($id, $lesson, static fn (): App\Modules\Plan\Domain\ValueObject\PlanTermId => App\Modules\Plan\Domain\ValueObject\PlanTermId::generate());
+    $terms = planTermsOf($id, $lesson);
 
     return new App\Modules\Plan\Domain\Assembly\SceneMaterial($id, $lesson, $terms, $packs->for('en'), $packs->for('ru'), $unreadable);
+}
+
+/**
+ * THE UNITS OF A SERVED LESSON as the server writes them for an English scene of a Russian learner — each sentence put
+ * together by its language's rule of sentence ends (наряд FIX-4 §6: «3 p.m.» closes «I can come at ___.» with one dot).
+ *
+ * @return list<App\Modules\Plan\Domain\Entity\PlanTerm>
+ */
+function planTermsOf(App\Modules\Plan\Domain\ValueObject\PlanSceneId $sceneId, App\Modules\Plan\Domain\Lesson\Lesson $lesson): array
+{
+    $packs = lessonPacks();
+
+    return App\Modules\Plan\Domain\Entity\PlanTerm::fromLesson(
+        $sceneId, $lesson, static fn (): App\Modules\Plan\Domain\ValueObject\PlanTermId => App\Modules\Plan\Domain\ValueObject\PlanTermId::generate(),
+        $packs->for('en')->sentenceEnds(), $packs->for('ru')->sentenceEnds(),
+    );
 }
 
 /**

@@ -206,21 +206,6 @@ final class PlanInspectionData
         return null;
     }
 
-    /**
-     * When a scene's build was done — its `day_ready` line (the lesson, its repairs, the seam judge and the photos all
-     * finished). `plan_scenes.generated_at` is NOT that: it is stamped with the moment the build began.
-     */
-    public function sceneReadyAt(string $sceneId): ?\DateTimeImmutable
-    {
-        foreach ($this->events() as $event) {
-            if ($event->kind === PlanEventKind::DayReady && ($event->payload['scene_id'] ?? null) === $sceneId) {
-                return $event->occurredAt;
-            }
-        }
-
-        return null;
-    }
-
     /** @return list<PlanTerm> */
     public function termsOf(string $sceneId): array
     {

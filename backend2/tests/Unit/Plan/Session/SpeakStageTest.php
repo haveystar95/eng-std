@@ -22,7 +22,6 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
@@ -55,7 +54,7 @@ function s1spScene(int $n = 1, ?callable $edit = null, ?callable $keepTerm = nul
     $sceneId = s1spSceneId($n);
     $packs = lessonPacks();
     $lesson = s1spLesson($sceneId);
-    $terms = PlanTerm::fromLesson($sceneId, $lesson, static fn (): PlanTermId => PlanTermId::generate());
+    $terms = planTermsOf($sceneId, $lesson);
     if ($keepTerm !== null) {
         $terms = array_values(array_filter($terms, $keepTerm));
     }

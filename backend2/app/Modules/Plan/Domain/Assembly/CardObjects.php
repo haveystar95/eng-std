@@ -199,7 +199,7 @@ final class CardObjects
             return [];
         }
         $voiced = [];
-        foreach (SpokenLines::fillers($phrase) as $line) {
+        foreach (SpokenLines::fillers($phrase, $scene->target->sentenceEnds()) as $line) {
             $voiced[$line['index']] = $line['voicedAs'];
         }
 
@@ -218,7 +218,7 @@ final class CardObjects
                 'native_line' => FrameText::capitalized($hidden
                     ? $filler->native
                     : ($scene->nativeLineOf($phrase->ref(), $index)
-                        ?? FrameText::nativeSentence($frame->frameNative, $filler->native, $phrase->textNative()))),
+                        ?? FrameText::nativeSentence($frame->frameNative, $filler->native, $phrase->textNative(), $scene->native->sentenceEnds()))),
                 'audio' => isset($voiced[$index]) ? Audio::of($voiced[$index]) : null,
             ];
         }
@@ -307,7 +307,7 @@ final class CardObjects
 
         return [
             'filler_index' => $index,
-            'text_target' => FrameText::withEndMarkOf(FrameText::fill($frame->frameTarget, $filler['target']), $phrase->textTarget()),
+            'text_target' => FrameText::withEndMarkOf(FrameText::fill($frame->frameTarget, $filler['target'], $scene->target->sentenceEnds()), $phrase->textTarget()),
             'text_native' => $filler['native_line'],
             'pronunciation_native' => trim($reading) === '' ? null : $reading,
             'audio' => $filler['audio'],

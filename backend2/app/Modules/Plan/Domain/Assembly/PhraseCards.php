@@ -309,7 +309,7 @@ final class PhraseCards
             }
             $rounds[] = [
                 'filler_index' => $filler['index'],
-                'expected_text' => FrameText::withEndMarkOf(FrameText::fill($frame->frameTarget, $filler['target']), $phrase->textTarget()),
+                'expected_text' => FrameText::withEndMarkOf(FrameText::fill($frame->frameTarget, $filler['target'], $scene->target->sentenceEnds()), $phrase->textTarget()),
                 'task_native' => $filler['native_line'],
             ];
         }

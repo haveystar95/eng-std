@@ -43,11 +43,15 @@ final readonly class ReviseLessonHandler
                 }
             }
 
-            $scene->reviseLesson($command->answer, $this->packs->for($plan->targetLang()->value), $command->findings, $command->repairCostUsd);
+            $targetPack = $this->packs->for($plan->targetLang()->value);
+            $scene->reviseLesson($command->answer, $targetPack, $command->findings, $command->repairCostUsd);
             $this->plans->saveScene($scene);
             $served = $scene->lesson();
             if ($served !== null) {
-                $this->terms->rewriteTexts($scene->id(), PlanTerm::fromLesson($scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate()));
+                $this->terms->rewriteTexts($scene->id(), PlanTerm::fromLesson(
+                    $scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate(),
+                    $targetPack->sentenceEnds(), $this->packs->for($plan->nativeLang()->value)->sentenceEnds(),
+                ));
             }
         });
     }

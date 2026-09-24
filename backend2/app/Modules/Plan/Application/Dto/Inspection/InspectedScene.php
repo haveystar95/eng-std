@@ -40,5 +40,7 @@ final readonly class InspectedScene
         public ?string $imageAuthor,
         public ?string $imageTone,
         public ?string $partnerVoiceGender,
+        /** When the build ENDED — the scene went ready, its photos in (`built_at`, наряд FIX-4 §6); `generatedAt` is its start. */
+        public ?DateTimeImmutable $builtAt = null,
     ) {}
 }

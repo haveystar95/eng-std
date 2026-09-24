@@ -21,7 +21,6 @@ use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
@@ -53,7 +52,7 @@ function s1hScene(): SceneMaterial
     $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
 
     return new SceneMaterial(
-        $sceneId, $lesson, PlanTerm::fromLesson($sceneId, $lesson, static fn (): PlanTermId => PlanTermId::generate()),
+        $sceneId, $lesson, planTermsOf($sceneId, $lesson),
         $packs->for('en'), $packs->for('ru'),
     );
 }

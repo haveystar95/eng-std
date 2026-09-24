@@ -12,6 +12,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use DateTimeImmutable;
 
 /**
  * The plan aggregate — plan row, scenes and days together.
@@ -81,11 +82,12 @@ interface PlanRepository
     public function attachSceneImageTone(PlanSceneId $id, string $imageUrl, string $tone): bool;
 
     /**
-     * The scene's photos are in: `illustrating` → `ready`, in one conditional write (DAY-UI-3).
+     * The scene's photos are in: `illustrating` → `ready`, in one conditional write (DAY-UI-3) — the build over at `$at`
+     * (`built_at`, наряд FIX-4 §6).
      *
      * @return bool whether THIS call made the scene ready (false: it was not illustrating — another worker was first)
      */
-    public function finishIllustration(PlanSceneId $id): bool;
+    public function finishIllustration(PlanSceneId $id, DateTimeImmutable $at): bool;
 
     public function save(Plan $plan): void;
 }

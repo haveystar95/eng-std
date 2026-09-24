@@ -10,6 +10,8 @@ use App\Modules\Plan\Application\Dto\SceneVoiceDebt;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\SceneLocator;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
+use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
@@ -37,6 +39,7 @@ final readonly class SceneVoiceQueue
         private LineSpeaker $speaker,
         private LineAudioStore $store,
         private VoiceCasts $casts,
+        private LanguagePacks $packs,
     ) {}
 
     public function owed(PlanSceneId $sceneId): ?SceneVoiceDebt
@@ -78,8 +81,9 @@ final readonly class SceneVoiceQueue
                 $count['phrases']++;
             }
         }
+        $ends = $this->packs->for($lang)->sentenceEnds();
         foreach ($terms as $term) {
-            foreach (self::fillersOf($term) as $filler) {
+            foreach (self::fillersOf($term, $ends) as $filler) {
                 if ($filler['voicedAs'] === $filler['ref'] && $missing($filler['ref'], Speaker::Learner)) {
                     $lines[] = $learnerLine($filler['ref'], $filler['text']);
                     $count['fillers']++;
@@ -139,8 +143,8 @@ final readonly class SceneVoiceQueue
     }
 
     /** @return list<array{index: int, ref: string, text: string, voicedAs: string}> */
-    private static function fillersOf(PlanTerm $term): array
+    private static function fillersOf(PlanTerm $term, ?SentenceEnds $ends): array
     {
-        return $term->kind() === TermKind::Phrase ? SpokenLines::fillers($term) : [];
+        return $term->kind() === TermKind::Phrase ? SpokenLines::fillers($term, $ends) : [];
     }
 }

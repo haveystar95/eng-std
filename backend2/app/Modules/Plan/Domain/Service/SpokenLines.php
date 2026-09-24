@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Service;
 
+use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
@@ -101,11 +102,12 @@ final class SpokenLines
      * it — with the phrase's closing mark when the frame is written without one, the mark the phrase took from its
      * line. The phrase itself already IS its frame said with one filler — that filler is voiced as the phrase
      * (`voicedAs` names the phrase's own ref) and not bought twice; every other filler is its own file. A filler the
-     * frame cannot be said with (no slot, a second slot left) has no sound.
+     * frame cannot be said with (no slot, a second slot left) has no sound. The sentence is put together by the target
+     * language's rule of sentence ends (`$ends`), as the phrase's own text was ({@see FrameText::fill()}, наряд FIX-4 §6).
      *
      * @return list<array{index: int, ref: string, text: string, voicedAs: string}>
      */
-    public static function fillers(PlanTerm $phrase): array
+    public static function fillers(PlanTerm $phrase, ?SentenceEnds $ends): array
     {
         $frame = $phrase->frame();
         if ($phrase->kind() !== TermKind::Phrase || $frame === null || ! FrameText::hasSlot($frame->frameTarget)) {
@@ -113,7 +115,7 @@ final class SpokenLines
         }
         $out = [];
         foreach ($frame->fillers() as $index => $filler) {
-            $text = FrameText::fill($frame->frameTarget, $filler->target);
+            $text = FrameText::fill($frame->frameTarget, $filler->target, $ends);
             if ($text === '' || FrameText::hasSlot($text)) {
                 continue;
             }

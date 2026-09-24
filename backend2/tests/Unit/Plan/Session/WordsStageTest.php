@@ -24,7 +24,6 @@ use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -61,7 +60,7 @@ function s1wScene(?callable $edit = null, ?array $only = null, string $sceneId =
         $payload = $edit($payload);
     }
     $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $id->value, $packs->for('en'));
-    $terms = PlanTerm::fromLesson($id, $lesson, static fn (): PlanTermId => PlanTermId::generate());
+    $terms = planTermsOf($id, $lesson);
     if ($only !== null) {
         $terms = array_values(array_filter($terms, static fn (PlanTerm $t): bool => in_array($t->ref(), $only, true)));
     }

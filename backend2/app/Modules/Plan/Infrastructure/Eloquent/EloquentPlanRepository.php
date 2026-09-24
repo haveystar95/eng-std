@@ -21,6 +21,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanStatus;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
+use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -165,11 +166,11 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             ->update(['image_tone' => $tone, 'updated_at' => now()]) > 0;
     }
 
-    public function finishIllustration(PlanSceneId $id): bool
+    public function finishIllustration(PlanSceneId $id, DateTimeImmutable $at): bool
     {
         return PlanSceneModel::query()->whereKey($id->value)
             ->where('lesson_status', LessonStatus::Illustrating->value)
-            ->update(['lesson_status' => LessonStatus::Ready->value, 'updated_at' => now()]) > 0;
+            ->update(['lesson_status' => LessonStatus::Ready->value, 'built_at' => $at->format(DATE_ATOM), 'updated_at' => now()]) > 0;
     }
 
     public function voicesOf(array $sceneIds): array

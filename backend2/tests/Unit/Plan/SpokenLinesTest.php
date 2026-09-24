@@ -13,7 +13,6 @@ use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\VoiceCast;
@@ -87,12 +86,12 @@ it('finds the line a word is said in by where the lesson says it, and places the
 it('says a phrase with each of its other fillers — the frame with the filler in its slot — and the phrase’s own filler as the phrase', function () {
     $scene = PlanSceneId::fromString('01M2TTS2SCENE0000000000001');
     $phrases = array_values(array_filter(
-        PlanTerm::fromLesson($scene, slLesson(), static fn (): PlanTermId => PlanTermId::generate()),
+        planTermsOf($scene, slLesson()),
         static fn (PlanTerm $t): bool => $t->kind() === TermKind::Phrase,
     ));
     $byRef = [];
     foreach ($phrases as $phrase) {
-        $byRef[$phrase->ref()] = SpokenLines::fillers($phrase);
+        $byRef[$phrase->ref()] = SpokenLines::fillers($phrase, lessonPacks()->for('en')->sentenceEnds());
     }
 
     expect(array_column($byRef['p1'], 'text'))->toBe(['It hurts in his lower back.', 'It hurts in his neck.', 'It hurts in his shoulder.'])

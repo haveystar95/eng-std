@@ -63,6 +63,7 @@ use App\Modules\Plan\Infrastructure\Adapter\RedisSlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyNativeDistractorSource;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyPlanCollectionWriter;
+use App\Modules\Plan\Infrastructure\Console\PlanRebuildCardTextsCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanReconcileScenesCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRepaceCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRevoiceLearnerCommand;
@@ -346,6 +347,9 @@ final class PlanServiceProvider extends ServiceProvider
         // The price list of a plan's days taken again from the config (наряд FIX-3 §2), and the learner's voice bought in the
         // gender of the profile for a plan voiced before it (§1) — both written beside the rule they serve.
         $this->commands([PlanRepaceCommand::class, PlanRevoiceLearnerCommand::class]);
+        // The texts of dealt cards that doubled an abbreviation's dot, rebuilt from the frame and its filler (наряд FIX-4
+        // §6) — dry-run unless `--apply`.
+        $this->commands([PlanRebuildCardTextsCommand::class]);
 
         $routes = __DIR__.'/../../Presentation/Http/routes.php';
         if (is_file($routes)) {

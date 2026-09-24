@@ -76,12 +76,12 @@ final readonly class CallAttribution
             if ($scene->buildStartedAt === null) {
                 continue;
             }
-            // The build ends with the scene's `day_ready` line — written once the lesson, its repairs, the seam judge and the
-            // photos are all done. NOT `generated_at`: it is stamped with the moment the build began. A failed build ends
-            // with the row's last change; one still being written is open until now. A ready scene with no `day_ready`
-            // line (built before the journal) has no known end — no window: its row's last change may be days later, and
-            // the slot judges of its passage are journaled as `judge` too.
-            $to = $data->sceneReadyAt($scene->id) ?? match ($scene->lessonStatus) {
+            // The build ends when the scene went ready (`built_at`, наряд FIX-4 §6) — the lesson, its repairs, the seam judge
+            // and the photos all done. NOT `generated_at`: it is stamped with the moment the build began. A failed build ends
+            // with the row's last change; one still being written is open until now. A ready scene with no `built_at`
+            // (built before the journal of events) has no known end — no window: its row's last change may be days later,
+            // and the slot judges of its passage are journaled as `judge` too.
+            $to = $scene->builtAt ?? match ($scene->lessonStatus) {
                 'building', 'illustrating' => $this->clock->now(),
                 'failed' => $scene->updatedAt ?? $scene->buildStartedAt,
                 default => null,

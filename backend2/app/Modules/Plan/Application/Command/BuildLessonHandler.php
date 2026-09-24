@@ -93,7 +93,8 @@ final readonly class BuildLessonHandler
         }
 
         $targetPack = $this->packs->for($plan->targetLang()->value);
-        $this->tx->run(function () use ($scene, $outcome, $now, $targetPack): void {
+        $nativePack = $this->packs->for($plan->nativeLang()->value);
+        $this->tx->run(function () use ($scene, $outcome, $now, $targetPack, $nativePack): void {
             if ($outcome->lesson === null || $outcome->call === null) {
                 $scene->failLesson($outcome->failReason ?? 'unknown', $outcome->call, $outcome->findings);
                 $this->plans->saveScene($scene);
@@ -106,7 +107,7 @@ final readonly class BuildLessonHandler
             if ($served !== null) {
                 $this->terms->replaceForScene(
                     $scene->id(),
-                    PlanTerm::fromLesson($scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate()),
+                    PlanTerm::fromLesson($scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate(), $targetPack->sentenceEnds(), $nativePack->sentenceEnds()),
                 );
             }
         });

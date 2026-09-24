@@ -11,7 +11,6 @@ use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Lesson\ListeningExchange;
-use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
@@ -21,7 +20,6 @@ use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\CardSource;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
@@ -50,7 +48,7 @@ function s1lScene(?Closure $payload = null, ?Closure $lesson = null, string $nat
     }
 
     return new SceneMaterial(
-        $sceneId, $served, PlanTerm::fromLesson($sceneId, $served, static fn (): PlanTermId => PlanTermId::generate()),
+        $sceneId, $served, planTermsOf($sceneId, $served),
         $packs->for('en'), $native === 'none' ? LanguagePack::none('xx') : $packs->for($native),
     );
 }

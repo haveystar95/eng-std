@@ -165,13 +165,8 @@ it('pages the journal without losing or repeating a row, and keeps a day to its 
 it('reads a model call in the window of a scene\'s build as that day\'s, and flags it when lost', function () {
     $scene = DB::table('plan_scenes')->where('plan_id', $this->planId)->orderBy('order')->first();
     $started = new DateTimeImmutable((string) $scene->build_started_at);
-    // The build ends with the scene's `day_ready` line (`generated_at` is stamped with the build's start).
-    DB::table('plan_events')->insert([
-        'id' => Ulid::generate(), 'user_id' => (string) $this->learner->id, 'plan_id' => $this->planId,
-        'day_id' => DB::table('plan_days')->where('plan_id', $this->planId)->where('number', 1)->value('id'),
-        'day_number' => 1, 'kind' => 'day_ready', 'payload' => json_encode(['scene_id' => $scene->id]),
-        'occurred_at' => $started->modify('+2 minutes'), 'created_at' => now(),
-    ]);
+    // The build ends when the scene went ready — `built_at` (наряд FIX-4 §6); `generated_at` is stamped with its start.
+    DB::table('plan_scenes')->where('id', $scene->id)->update(['built_at' => $started->modify('+2 minutes')]);
     // A slot judge of the passage, long after the build: `judge` too, and NOT the seam judge of the build.
     DB::table('model_calls')->insert([
         'id' => Ulid::generate(), 'status' => 'completed', 'provider' => 'openai', 'model' => 'gpt-5.4-mini', 'purpose' => 'judge',
@@ -191,7 +186,27 @@ it('reads a model call in the window of a scene\'s build as that day\'s, and fla
         ->and($lesson['calls'])->toHaveCount(1)
         ->and($lesson['calls'][0]['status'])->toBe('lost')
         ->and($lesson['calls'][0]['certain'])->toBeTrue()
-        ->and($stages->firstWhere('key', 'seam_judge')['calls'])->toBe([]);
+        ->and($stages->firstWhere('key', 'seam_judge')['calls'])->toBe([])
+        // «Конвейер» reads the end of the build off `built_at`, not off the journal of events.
+        ->and($lesson['finished_at'])->toBe($started->modify('+2 minutes')->format(DATE_ATOM));
+});
+
+/**
+ * Canon (наряд FIX-4 §6): «plan_scenes.built_at — момент КОНЦА сборки урока; generated_at не трогать». The scene is
+ * stamped when it goes `illustrating` → `ready` — its photos in, its `day_ready` line written in the same transaction.
+ * CATCHES the end read off `generated_at` (the build's start) and a ready scene left without its end.
+ */
+it('stamps the end of a scene\'s build when it goes ready, and leaves the start where it was', function () {
+    [, $token] = planLearner();
+    $id = planCreate($this, $token)['id'];
+    $scene = DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->first();
+    $ready = DB::table('plan_events')->where('plan_id', $id)->where('kind', 'day_ready')->whereRaw("payload->>'scene_id' = ?", [$scene->id])->value('occurred_at');
+
+    expect($scene->lesson_status)->toBe('ready')
+        ->and($scene->built_at)->not->toBeNull()
+        ->and($scene->generated_at)->not->toBeNull()
+        ->and(strtotime((string) $scene->built_at))->toBeGreaterThanOrEqual(strtotime((string) $scene->generated_at))
+        ->and(strtotime((string) $scene->built_at))->toBe(strtotime((string) $ready));
 });
 
 it('checks «звук ≠ текст» on the answer the client gets: a card whose line is not what its file says', function () {

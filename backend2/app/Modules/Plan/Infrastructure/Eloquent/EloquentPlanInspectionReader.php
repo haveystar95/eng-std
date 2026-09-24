@@ -99,6 +99,7 @@ final class EloquentPlanInspectionReader implements PlanInspectionReader
                 imageAuthor: self::str($r['image_author']),
                 imageTone: self::str($r['image_tone']),
                 partnerVoiceGender: self::str($r['partner_voice_gender']),
+                builtAt: self::at($r['built_at']),
             );
         }
 
@@ -254,9 +255,10 @@ final class EloquentPlanInspectionReader implements PlanInspectionReader
 
         // Every other plan's window that touches the span of this plan's windows, ended by the same rule as this plan's
         // own ({@see \App\Modules\Plan\Application\Inspection\CallAttribution}): a plan build at its `plan_ready` line (a
-        // failed or unclear one at the row's last change, one still building — now), a scene lesson at its `day_ready`
-        // line (a failed one at the row's last change, one being written — now), a talk at its end (an open one — now).
-        // A build whose end is unknown has no window here either: a row's last change can be days after its build.
+        // failed or unclear one at the row's last change, one still building — now), a scene lesson at the end of its
+        // build (`built_at`, наряд FIX-4 §6; a failed one at the row's last change, one being written — now), a talk at its
+        // end (an open one — now). A build whose end is unknown has no window here either: a row's last change can be days
+        // after its build.
         $spans = DB::select(<<<'SQL'
             SELECT f, t FROM (
                 SELECT COALESCE(p.build_started_at, p.created_at) AS f,
@@ -266,7 +268,7 @@ final class EloquentPlanInspectionReader implements PlanInspectionReader
                  WHERE p.id <> ?
                 UNION ALL
                 SELECT s.build_started_at,
-                       COALESCE((SELECT MIN(e.occurred_at) FROM plan_events e WHERE e.plan_id = s.plan_id AND e.kind = 'day_ready' AND e.payload->>'scene_id' = s.id),
+                       COALESCE(s.built_at,
                                 CASE WHEN s.lesson_status = 'failed' THEN s.updated_at WHEN s.lesson_status IN ('building', 'illustrating') THEN now() END)
                   FROM plan_scenes s
                  WHERE s.plan_id <> ? AND s.build_started_at IS NOT NULL

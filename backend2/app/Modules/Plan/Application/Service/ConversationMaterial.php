@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\ConversationMaterialView;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
+use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Entity\PlanScene;
@@ -37,7 +39,7 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  */
 final readonly class ConversationMaterial
 {
-    public function __construct(private PlanTermRepository $terms) {}
+    public function __construct(private PlanTermRepository $terms, private LanguagePacks $packs) {}
 
     public function for(Plan $plan, PlanDay $day): ConversationMaterialView
     {
@@ -47,6 +49,7 @@ final readonly class ConversationMaterial
         }
 
         $terms = $this->terms->forScenes(array_map(static fn (PlanScene $s): PlanSceneId => $s->id(), $scenes));
+        $ends = $this->packs->for($plan->targetLang()->value)->sentenceEnds();
 
         $checkpoints = [];
         $phrases = [];
@@ -66,7 +69,7 @@ final readonly class ConversationMaterial
                     continue;
                 }
                 $frame = $term->frame();
-                $example = self::example($term);
+                $example = self::example($term, $ends);
                 $phrases[] = new ConversationPhrase(
                     sceneId: $scene->id()->value,
                     ref: $term->ref(),
@@ -168,14 +171,14 @@ final readonly class ConversationMaterial
      * THE LESSON'S VALUE OF A CONSTRUCTION — the filler the phrase itself is said with (its own file, `voicedAs`), grey in
      * the window on the screen; a frame without a window has none.
      */
-    private static function example(PlanTerm $term): ?Filler
+    private static function example(PlanTerm $term, ?SentenceEnds $ends): ?Filler
     {
         $frame = $term->frame();
         $fillers = $frame?->fillers() ?? [];
         if ($frame === null || $fillers === [] || ! FrameText::hasSlot($frame->frameTarget)) {
             return null;
         }
-        foreach (SpokenLines::fillers($term) as $filler) {
+        foreach (SpokenLines::fillers($term, $ends) as $filler) {
             if ($filler['voicedAs'] === $term->ref() && isset($fillers[$filler['index']])) {
                 return $fillers[$filler['index']];
             }

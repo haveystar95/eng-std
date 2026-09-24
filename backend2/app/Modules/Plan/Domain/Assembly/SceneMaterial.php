@@ -104,7 +104,7 @@ final readonly class SceneMaterial
      */
     public function saidIndex(PlanTerm $phrase): ?int
     {
-        foreach (SpokenLines::fillers($phrase) as $filler) {
+        foreach (SpokenLines::fillers($phrase, $this->target->sentenceEnds()) as $filler) {
             if ($filler['voicedAs'] === $phrase->ref()) {
                 return $filler['index'];
             }

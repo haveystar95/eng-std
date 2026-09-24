@@ -10,7 +10,6 @@ use App\Modules\Plan\Domain\Assembly\ReturnedUnit;
 use App\Modules\Plan\Domain\Assembly\RecallStage;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Entity\DayCard;
-use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\DayMetricsCalculator;
@@ -21,7 +20,6 @@ use App\Modules\Plan\Domain\ValueObject\DayCardId;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -50,7 +48,7 @@ function s1daScene(PlanLevel $level = PlanLevel::Intermediate, int $n = 1): Scen
     $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', $level, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
     $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
 
-    return new SceneMaterial($sceneId, $lesson, PlanTerm::fromLesson($sceneId, $lesson, static fn (): PlanTermId => PlanTermId::generate()), $packs->for('en'), $packs->for('ru'));
+    return new SceneMaterial($sceneId, $lesson, planTermsOf($sceneId, $lesson), $packs->for('en'), $packs->for('ru'));
 }
 
 /** An id generator that gives the same ids in the same order every time it is made. */

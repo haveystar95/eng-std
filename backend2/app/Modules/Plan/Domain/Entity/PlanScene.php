@@ -70,6 +70,7 @@ final class PlanScene
         private ?DateTimeImmutable $generatedAt,
         private ?VoiceGender $partnerVoiceGender,
         ?LanguagePack $targetPack,
+        private ?DateTimeImmutable $builtAt = null,
     ) {
         $this->lesson = $answer === null || $targetPack === null ? null : LessonAssembly::serve($answer, $id->value, $targetPack);
     }
@@ -116,12 +117,13 @@ final class PlanScene
         ?DateTimeImmutable $generatedAt,
         LanguagePack $targetPack,
         ?VoiceGender $partnerVoiceGender = null,
+        ?DateTimeImmutable $builtAt = null,
     ): self {
         return new self(
             $id, $planId, $order, $kind, $priority, $titleNative, $titleTarget, $teachesNative, $goalsNative,
             $learnerRoleTarget, $learnerRoleNative, $partnerRoleTarget, $partnerRoleNative, $topicDescription,
             $imagePrompt, $image, $answer, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
-            $partnerVoiceGender, $targetPack,
+            $partnerVoiceGender, $targetPack, $builtAt,
         );
     }
 
@@ -167,11 +169,15 @@ final class PlanScene
         $this->lessonCall = $this->lessonCall?->plusCost($repairCostUsd);
     }
 
-    /** The photos are in (or every search came back empty and the slots got their tones): the day is ready. */
-    public function finishIllustration(): void
+    /**
+     * The photos are in (or every search came back empty and the slots got their tones): the day is ready — and the build
+     * is over, at `$now` (наряд FIX-4 §6: `built_at`, the END of the build; `generated_at` is its beginning).
+     */
+    public function finishIllustration(DateTimeImmutable $now): void
     {
         if ($this->lessonStatus === LessonStatus::Illustrating) {
             $this->lessonStatus = LessonStatus::Ready;
+            $this->builtAt = $now;
         }
     }
 
@@ -393,5 +399,11 @@ final class PlanScene
     public function generatedAt(): ?DateTimeImmutable
     {
         return $this->generatedAt;
+    }
+
+    /** When the build ended — the scene went ready, its photos in (наряд FIX-4 §6); null before that. */
+    public function builtAt(): ?DateTimeImmutable
+    {
+        return $this->builtAt;
     }
 }

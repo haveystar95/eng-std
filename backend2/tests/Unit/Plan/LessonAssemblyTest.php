@@ -8,7 +8,6 @@ use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
-use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
@@ -20,7 +19,6 @@ use App\Modules\Plan\Domain\Service\SpeakingKey;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
@@ -116,7 +114,7 @@ it('leaves the closing mark out of the comparison, serves the model\'s own mark 
     $p['phrases'][3]['frame_target'] = 'He doesn\'t have a fever';
     $sceneId = PlanSceneId::generate();
     $terms = [];
-    foreach (PlanTerm::fromLesson($sceneId, laServe(laLesson($p), $sceneId->value), static fn (): PlanTermId => PlanTermId::generate()) as $term) {
+    foreach (planTermsOf($sceneId, laServe(laLesson($p), $sceneId->value)) as $term) {
         $terms[$term->ref()] = $term;
     }
 
@@ -256,7 +254,7 @@ it('moves every right answer off the place the model put it, keeping which optio
 
 it('writes a phrase as its frame said with the dialogue filler, and keeps the frame itself', function () {
     $sceneId = PlanSceneId::generate();
-    $terms = PlanTerm::fromLesson($sceneId, laServe(laLesson(laPayload()), $sceneId->value), static fn (): PlanTermId => PlanTermId::generate());
+    $terms = planTermsOf($sceneId, laServe(laLesson(laPayload()), $sceneId->value));
     $byRef = [];
     foreach ($terms as $term) {
         $byRef[$term->ref()] = $term;

@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $fail_reason
  * @property string|null $build_started_at
  * @property string|null $generated_at
+ * @property string|null $built_at
  * @property string|null $partner_voice_gender
  */
 final class PlanSceneModel extends Model

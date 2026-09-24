@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Service;
 
+use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Phrase;
 
@@ -37,17 +38,36 @@ final class FrameText
      * The frame with the filler in its slot; a frame without a slot, or no filler, is the frame itself.
      * A space the frame keeps between its slot and the closing mark («I work ___ .») is typography, not
      * a word: the sentence said with a filler has none («I work from home.»).
+     *
+     * A FILLER THAT ENDS WITH AN ABBREVIATION'S DOT CLOSES THE SENTENCE WITH IT (наряд FIX-4 §6): «I can come at ___.» said
+     * with «3 p.m.» is «I can come at 3 p.m.», not «…3 p.m..» (the vet's day 1 had five cards so). One dot is left when
+     * the language's rule of sentence ends (`$ends`, its pack's `abbreviations`) reads the filler's last dot as an
+     * abbreviation's and the frame has nothing after its window but its full stop. Without `$ends` — a language whose
+     * pack says nothing of its sentence ends — no dot is taken as an abbreviation's, and the frame is filled as written.
      */
-    public static function fill(string $frame, ?string $filler): string
+    public static function fill(string $frame, ?string $filler, ?SentenceEnds $ends = null): string
     {
         $said = $filler === null || ! self::hasSlot($frame)
             ? $frame
             : (string) preg_replace(self::SLOT_PATTERN, addcslashes($filler, '\\$'), $frame, 1);
         if ($filler !== null && self::hasSlot($frame)) {
             $said = (string) preg_replace('/\s+([.,!?;:…])/u', '$1', $said);
+            if ($ends !== null && self::closedByAbbreviation($frame, $filler, $ends)) {
+                $said = mb_substr(rtrim($said), 0, -1);
+            }
         }
 
         return trim($said);
+    }
+
+    /** Does the filler end with an abbreviation's dot where the frame has only its full stop after the window? */
+    private static function closedByAbbreviation(string $frame, string $filler, SentenceEnds $ends): bool
+    {
+        $parts = preg_split(self::SLOT_PATTERN, $frame, 2);
+        $filler = trim($filler);
+
+        return is_array($parts) && count($parts) === 2 && trim($parts[1]) === '.'
+            && str_ends_with($filler, '.') && $ends->closesText($filler) && ! $ends->carriesSentence($filler);
     }
 
     /**
@@ -147,9 +167,9 @@ final class FrameText
      * live day exactly like that (проход 20.09, п. 1). Wherever a native sentence is assembled it is assembled
      * here, so the next card cannot get it wrong on its own.
      */
-    public static function nativeSentence(string $frameNative, string $fillerNative, string $endLike): string
+    public static function nativeSentence(string $frameNative, string $fillerNative, string $endLike, ?SentenceEnds $ends = null): string
     {
-        return self::capitalized(self::withEndMarkOf(self::fill($frameNative, $fillerNative), $endLike));
+        return self::capitalized(self::withEndMarkOf(self::fill($frameNative, $fillerNative, $ends), $endLike));
     }
 
     /** `$text` with its first letter upper-cased; a text that starts with something else is left alone. */

@@ -9,7 +9,6 @@ use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\CardObjects;
 use App\Modules\Plan\Domain\Assembly\DialogueStage;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
-use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\CheckOption;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\ExchangeCheck;
@@ -19,7 +18,6 @@ use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\ValueObject\CardSource;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\PlanTermId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
@@ -40,7 +38,7 @@ function s1dlgScene(?callable $edit = null): SceneMaterial
     $packs = lessonPacks();
     $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
     $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
-    $terms = PlanTerm::fromLesson($sceneId, $lesson, static fn (): PlanTermId => PlanTermId::generate());
+    $terms = planTermsOf($sceneId, $lesson);
     if ($edit !== null) {
         $lesson = $lesson->withExchanges($edit($lesson->exchanges));
     }

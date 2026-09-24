@@ -91,6 +91,12 @@ final readonly class LanguagePack
         return isset($this->data[$key]);
     }
 
+    /** Where a sentence of this language ends ({@see SentenceEnds}) — null for a language whose pack does not say. */
+    public function sentenceEnds(): ?SentenceEnds
+    {
+        return $this->has('sentence_ends') ? new SentenceEnds($this) : null;
+    }
+
     /**
      * «НЕ ПОНЯЛ» IN THIS LANGUAGE (наряд CONV-2, п. 4а) — what a rescue move of the talk says in the learner's own
      * bubble: en «Sorry?». Null for a language nobody has written it for — the move then carries no words, as before.

@@ -20,6 +20,8 @@ use App\Modules\Plan\Application\Dto\WindowStageView;
 use App\Modules\Plan\Application\Dto\WindowSummaryView;
 use App\Modules\Plan\Application\Dto\WindowUsageView;
 use App\Modules\Plan\Application\Dto\WindowWordView;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
+use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
@@ -86,6 +88,7 @@ final readonly class DayWindowViews
         private ConversationRules $rules,
         private VoiceCasts $voiceCasts,
         private ConversationViews $talks,
+        private LanguagePacks $packs,
     ) {}
 
     /**
@@ -159,7 +162,7 @@ final readonly class DayWindowViews
         // the day of the route it stands on.
         $scenesOf = self::sceneNames($plan);
         [$words, $wordStates] = $this->words($plan, $day, $cards, $states, $sceneTones, $termsByRef, $audio, $scenesOf);
-        [$phrases, $phraseStates] = $this->phrases($cards, $states, $termsByRef, $audio, $scenesOf);
+        [$phrases, $phraseStates] = $this->phrases($cards, $states, $termsByRef, $audio, $scenesOf, $this->packs->for($plan->targetLang()->value)->sentenceEnds());
         [$dialogue, $lineStates] = $this->dialogue($plan, $cards === [] ? null : $ownScene, $cards, $states, $audio, $scenesOf);
 
         return new DayWindowView(
@@ -302,14 +305,14 @@ final readonly class DayWindowViews
      * The frame behind a phrase, each filler with the voice of the frame said with it (TTS-2): its own file, or the
      * phrase's when the phrase already is the frame said with that filler.
      */
-    private static function frame(?PlanTerm $term, string $sceneId, SceneAudioIndex $audio): ?WindowFrameView
+    private static function frame(?PlanTerm $term, string $sceneId, SceneAudioIndex $audio, ?SentenceEnds $ends): ?WindowFrameView
     {
         $frame = $term?->frame();
         if ($term === null || $frame === null) {
             return null;
         }
         $voiced = [];
-        foreach (SpokenLines::fillers($term) as $filler) {
+        foreach (SpokenLines::fillers($term, $ends) as $filler) {
             $voiced[$filler['index']] = $audio->idOf($sceneId, $filler['voicedAs']);
         }
 
@@ -414,7 +417,7 @@ final readonly class DayWindowViews
      * @param  array<string, WindowSourceView>  $scenesOf
      * @return array{0: list<WindowPhraseView>, 1: list<UnitState>}
      */
-    private function phrases(array $cards, array $states, array $termsByRef, SceneAudioIndex $audio, array $scenesOf): array
+    private function phrases(array $cards, array $states, array $termsByRef, SceneAudioIndex $audio, array $scenesOf, ?SentenceEnds $ends): array
     {
         $out = [];
         $unitStates = [];
@@ -436,7 +439,7 @@ final readonly class DayWindowViews
                 state: $state->value,
                 pronunciation: $term?->pronunciationNative(),
                 audioId: $audio->idOf($sceneId, $card->unitRef()),
-                frame: self::frame($term, $sceneId, $audio),
+                frame: self::frame($term, $sceneId, $audio, $ends),
                 source: self::sourceOf($card),
                 scene: $scenesOf[$sceneId] ?? null,
             );
