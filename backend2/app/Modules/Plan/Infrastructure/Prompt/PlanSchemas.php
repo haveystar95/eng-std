@@ -162,10 +162,11 @@ final class PlanSchemas
     }
 
     /**
-     * ONE MOVE OF THE AGENT (`conversation_agent.v3.1`, наряд CONV-1; FIX-3 §7; FIX-4 §3): its line in both languages, what
-     * it judged about the move it answers, the target its line opens the door to — by the short id of its scene's target
-     * (`T3`) — and whether the talk is over. `phrases_used` and `checkpoint_done` stay in the shape the prompt asks for and
-     * are read by nobody: the constructions are the code's judge's, the scenes the server's.
+     * ONE MOVE OF THE AGENT (`conversation_agent.v3.2`, наряд CONV-1; FIX-3 §7; FIX-4 §3; FIX-4b §3): its line in both
+     * languages, what it judged about the move it answers, the target its line opens the door to — by the short id of its
+     * scene's target (`T3`) — and whether the talk is over. Which constructions the learner said and when a scene is over are
+     * not asked at all (v3.2 took `phrases_used` and `checkpoint_done` out): the first is the code's judge's, the second the
+     * server's.
      *
      * `end` is an enum and not a boolean because the two ways a talk ends by itself are not the
      * same fact: «the scene is finished» and «the learner pushed a refused subject twice» read
@@ -181,17 +182,11 @@ final class PlanSchemas
      */
     public static function conversationAgent(array $targetIds): array
     {
-        $refs = $targetIds === []
-            ? ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 0]
-            : ['type' => 'array', 'items' => ['type' => 'string', 'enum' => $targetIds]];
-
         return self::object([
             'reply_target' => ['type' => 'string'],
             'reply_native' => ['type' => 'string'],
             'understood' => ['type' => ['boolean', 'null']],
-            'phrases_used' => $refs,
             'off_topic' => ['type' => 'boolean'],
-            'checkpoint_done' => ['type' => ['string', 'null']],
             'opens' => $targetIds === [] ? ['type' => 'null'] : ['type' => ['string', 'null'], 'enum' => [...$targetIds, null]],
             'end' => ['type' => 'string', 'enum' => ['no', 'natural', 'declined']],
         ]);

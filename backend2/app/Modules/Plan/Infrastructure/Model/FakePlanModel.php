@@ -147,7 +147,7 @@ final class FakePlanModel implements PlanModelPort
             ? ($this->conversation)($request, $this->conversationCalls)
             : self::conversationPayload($request, $this->conversationCalls);
 
-        return new ModelReply($payload, 'conversation_agent.v3.1', self::MODEL, 900, 90, '0.000000', 2, '', callId: sprintf('01J8FAKEM0DE1CA11%09d', $this->conversationCalls));
+        return new ModelReply($payload, 'conversation_agent.v3.2', self::MODEL, 900, 90, '0.000000', 2, '', callId: sprintf('01J8FAKEM0DE1CA11%09d', $this->conversationCalls));
     }
 
     /** @var list<array{0: string, 1: string}> the fake role's lines, one per move, none of them said twice in a talk */
@@ -198,9 +198,7 @@ final class FakePlanModel implements PlanModelPort
                 default => $line[1],
             },
             'understood' => $request->turn === 'said' ? true : null,
-            'phrases_used' => [],
             'off_topic' => false,
-            'checkpoint_done' => null,
             'opens' => $ending || $request->sceneEnd ? null : $request->leadTo,
             'end' => $ending ? 'natural' : 'no',
         ];
@@ -228,7 +226,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function conversationPromptVersion(): string
     {
-        return 'conversation_agent.v3.1';
+        return 'conversation_agent.v3.2';
     }
 
     public function lessonPromptVersion(): string

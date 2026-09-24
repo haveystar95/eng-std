@@ -187,19 +187,12 @@ it('asks the role to repeat itself without spending a move of the scene', functi
 });
 
 /**
- * Canon (наряд BACK-TAILS-2 §2, п. г; наряд FIX-4 §2 — «судья остаётся детерминированным»): the COUNT is the code's, and
- * the model's own `phrases_used` is read by nobody. Catches a summary that trusts the model — a role naming every phrase
- * on every move credits only what was actually said.
+ * Canon (наряд BACK-TAILS-2 §2, п. г; наряд FIX-4 §2 — «судья остаётся детерминированным»; наряд FIX-4b §3 — the model is
+ * not even asked, `phrases_used` left its answer): the COUNT is the code's. Catches a count that credits anything but what
+ * the learner's own line said — the role's line crediting a phrase, or a line that says none of them.
  */
-it('counts the phrases of the plan by the server\'s own rule, not by the model\'s answer', function () {
+it('counts the phrases of the plan by the server\'s own rule, off the learner\'s line alone', function () {
     [$token, $id] = convDay($this);
-    // The role claims every phrase sounded on every turn; the code hears only what was actually said.
-    convAgentSays(static function (ConversationAgentRequest $request): array {
-        $payload = FakePlanModel::conversationPayload($request);
-        $payload['phrases_used'] = $request->targetIds();
-
-        return $payload;
-    });
 
     $talk = convStart($this, $token, $id);
     $after = convTurn($this, $token, $id, $talk['id'], 'said', 'It started three days ago.');
@@ -368,17 +361,13 @@ function convTargetsOf(array $talk, string $sceneId): array
  * Canon (наряд FIX-4 §4): «бюджет сцены = целей+1 ходов ученика; сцена закрывается, когда все её цели сказаны ИЛИ бюджет
  * исчерпан; закрытие = следующая реплика роли: короткое прощание в роли этой сцены, без открытия, scene_event=end,
  * checkpoint ставится здесь; следующая реплика роли = НОВАЯ роль … здоровается первой, scene_event=start, открывает первую
- * цель новой сцены»; «прощание последней сцены = конец». The model's own `checkpoint_done` is read by nobody. CATCHES a
- * scene closed by the model (the owner's rehearsal, where the checkpoints smeared), a scene that does not close when its
- * targets are said, a new role that answers instead of greeting, a door opened on a goodbye, and a talk that ends on
- * anything but the last scene's goodbye.
+ * цель новой сцены»; «прощание последней сцены = конец». The model is not asked whether its scene is over (наряд FIX-4b
+ * §3: `checkpoint_done` left its answer). CATCHES a scene that does not close when its targets are said (or closes before),
+ * a new role that answers instead of greeting, a door opened on a goodbye, and a talk that ends on anything but the last
+ * scene's goodbye.
  */
 it('closes a scene by its rule with the role\'s goodbye, and the next role greets the learner and opens its first door', function () {
-    // A role that closes its scene on every move, as v3 asked — the server does not listen.
-    convAgentSays(static fn (ConversationAgentRequest $request, int $call): array => [
-        ...FakePlanModel::conversationPayload($request, $call),
-        'checkpoint_done' => $request->currentCheckpoint,
-    ]);
+    convAgentSays(static fn (ConversationAgentRequest $request, int $call): array => FakePlanModel::conversationPayload($request, $call));
     [$token, $id] = convRehearsal($this);
 
     $talk = convStart($this, $token, $id, 3);
@@ -393,7 +382,7 @@ it('closes a scene by its rule with the role\'s goodbye, and the next role greet
         ->and(array_column($talk['scenes'], 'state'))->toBe(['current', 'locked'])
         ->and($talk['turns'][0])->toMatchArray(['scene_id' => $first, 'scene_event' => 'start']);
 
-    // Three targets of the first scene said: it goes on, whatever the role says of its checkpoint.
+    // Three targets of the first scene said: it goes on.
     foreach (array_slice($ofFirst, 0, 3) as $target) {
         $after = convTurn($this, $token, $id, $talk['id'], 'said', convLine($target));
         $last = $after['turns'][count($after['turns']) - 1];
@@ -727,7 +716,7 @@ function convDayId(string $planId, int $number = 1): string
 /** @return int the hits of one check of the role's prompt, as the admin panel reads them */
 function convHits(string $code): int
 {
-    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3.1')
+    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3.2')
         ->where('check_name', $code)->where('action', 'counted')->value('hits');
 }
 
@@ -1034,19 +1023,13 @@ function convSaid(array $talk): array
  * Canon (наряд FIX-4 §2): «каркас = префикс + окно (≥1 слово) + суффикс; СКАЗАНО, если префикс подряд в начале фразы или
  * сразу после вводных слов; ПОЧТИ = одно расхождение слова (замена/вставка/выпуск, включая словоформу); «почти» не
  * закрывает»; §5: «после «почти» по X: следующий ход hint_target = точная английская строка X, hint_ref = X; иначе
- * hint_target null». The role's own word is read by nobody. «It hurts in his ___.»: «his back hurts» is the construction's
- * words in another order — none; «It hurts in her lower back» is one word off — almost, and the next hint is its exact
- * line; said, it is said once. CATCHES the old keyword judge (half the key words, any order), the role trusted, an almost
- * that closes the target, and an exact line offered without an almost or kept after one.
+ * hint_target null». The role is not asked (наряд FIX-4b §3). «It hurts in his ___.»: «his back hurts» is the
+ * construction's words in another order — none; «It hurts in her lower back» is one word off — almost, and the next hint is
+ * its exact line; said, it is said once. CATCHES the old keyword judge (half the key words, any order), an almost that
+ * closes the target, and an exact line offered without an almost or kept after one.
  */
 it('reads a move for the construction as a phrase: said, one word off, or not — and prompts an almost with its exact line', function () {
-    convAgentSays(static function (ConversationAgentRequest $request): array {
-        $payload = FakePlanModel::conversationPayload($request);
-        // The role «hears» p1 on every move, whatever was said.
-        $payload['phrases_used'] = [$request->targetIds()[0] ?? 'T1'];
-
-        return $payload;
-    });
+    convAgentSays(static fn (ConversationAgentRequest $request): array => FakePlanModel::conversationPayload($request));
     [$token, $id] = convDay($this);
     $talk = convStart($this, $token, $id);
     $p1 = static fn (array $talk): array => $talk['targets'][0];

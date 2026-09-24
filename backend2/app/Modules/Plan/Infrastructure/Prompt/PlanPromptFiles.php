@@ -46,9 +46,12 @@ final class PlanPromptFiles
      * v2.1 — BACK-TAILS-2 §9: ECHO; v3 — наряд FIX-3 §7: the targets are constructions, the role opens a door to each in
      * turn, one question a reply, an unfinished line is no misunderstanding, the talk ends on a goodbye or a cap; v3.1 —
      * наряд FIX-4 §§3–4: the role is told only the scene it plays now and its targets under short ids, the server closes
-     * a scene and the role says goodbye in it, the next role greets the learner first).
+     * a scene and the role says goodbye in it, the next role greets the learner first; v3.2 — наряд FIX-4b §3: what the
+     * learner says is true and the prepared visit only fills what they have not said, the role keeps to its own job, asks
+     * nothing HISTORY or EARLIER already holds, a new role repeats no line of the one before, and the answer no longer
+     * carries `phrases_used` and `checkpoint_done`).
      */
-    public const CONVERSATION_FILE = 'conversation_agent.v3.1.md';
+    public const CONVERSATION_FILE = 'conversation_agent.v3.2.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their

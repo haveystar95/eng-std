@@ -12,9 +12,10 @@ use App\Modules\Plan\Domain\ValueObject\TurnCost;
  * not a turn — the ribbon keeps its place and the learner is offered «Повторить» (кадр 37-10).
  *
  * `opens` is the door as the role NAMED it — a short id of a target (`T3`), or anything else a model may say: which
- * target it stands for, and whether that is a door of the scene at all, is the server's to decide (наряд FIX-4 §3). What
- * the model judged of the constructions (`phrases_used`) and of the scenes (`checkpoint_done`) is not read: the judge is
- * the code's (наряд FIX-4 §2) and so are the scenes (§4). `callId` is the row of `model_calls` the answer came from.
+ * target it stands for, and whether that is a door of the scene at all, is the server's to decide (наряд FIX-4 §3). The
+ * role is not asked which constructions were said nor whether its scene is over (`conversation_agent.v3.2`, наряд FIX-4b
+ * §3): the judge is the code's (наряд FIX-4 §2) and so are the scenes (§4). `callId` is the row of `model_calls` the
+ * answer came from.
  */
 final readonly class ConversationAgentReply
 {

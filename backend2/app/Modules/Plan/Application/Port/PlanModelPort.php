@@ -41,9 +41,10 @@ interface PlanModelPort
     public function judgeSlot(SlotJudgeRequest $request): ModelReply;
 
     /**
-     * ONE MOVE OF THE CONVERSATION AGENT (`conversation_agent.v3.1`, наряд CONV-1; v2 — CONV-2; v2.1 — BACK-TAILS-2 §9;
-     * v3 — FIX-3 §7; v3.1 — FIX-4 §§3–4): the role's reply in both languages, what it judged about the learner's move,
-     * the target its line opens the door to and whether the talk is over — and the row of `model_calls` it came from.
+     * ONE MOVE OF THE CONVERSATION AGENT (`conversation_agent.v3.2`, наряд CONV-1; v2 — CONV-2; v2.1 — BACK-TAILS-2 §9;
+     * v3 — FIX-3 §7; v3.1 — FIX-4 §§3–4; v3.2 — FIX-4b §3): the role's reply in both languages, what it judged about the
+     * learner's move, the target its line opens the door to and whether the talk is over — and the row of `model_calls` it
+     * came from.
      * Synchronous, inside the learner's request, ONE attempt — a retry would only lengthen a wait the learner is sitting
      * through; a silence throws.
      */
