@@ -101,7 +101,7 @@ final readonly class ConversationViews
     {
         $pack = $this->packs->for($material->targetLang);
 
-        return array_map(fn (ConversationPhrase $target): array => $this->construction($target, $talk, $pack) + [
+        return array_map(fn (ConversationPhrase $target): array => $this->construction($target, $talk, $material, $pack) + [
             'state' => $talk === null ? 'none' : ConversationOutcomes::stateOf($talk, $target->id())->value,
         ], $material->targets);
     }
@@ -119,7 +119,7 @@ final readonly class ConversationViews
         foreach (ConversationOutcomes::of($talk, $material->targets)->extraSaid as $id) {
             $phrase = $material->phrase($id);
             if ($phrase !== null) {
-                $out[] = $this->construction($phrase, $talk, $pack);
+                $out[] = $this->construction($phrase, $talk, $material, $pack);
             }
         }
 
@@ -191,7 +191,7 @@ final readonly class ConversationViews
      *
      * @return array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}
      */
-    private function construction(ConversationPhrase $phrase, ?Conversation $talk, LanguagePack $pack): array
+    private function construction(ConversationPhrase $phrase, ?Conversation $talk, ConversationMaterialView $material, LanguagePack $pack): array
     {
         $said = $talk !== null && isset(ConversationOutcomes::heard($talk)[$phrase->id()]);
 
@@ -203,19 +203,23 @@ final readonly class ConversationViews
             'example_target' => $phrase->exampleTarget,
             'example_native' => $phrase->exampleNative,
             'said' => $said,
-            'value_target' => $said ? $this->valueIn($talk, $phrase, $pack) : null,
+            'value_target' => $said ? $this->valueIn($talk, $phrase, $material, $pack) : null,
         ];
     }
 
     /**
      * What the learner put in the window of a construction they said — read again off the move that said it, by the judge
-     * that heard it ({@see FrameJudge}); the journal keeps the words, not a second copy of them.
+     * that heard it ({@see FrameJudge}); the journal keeps the words, not a second copy of them. The move is read with
+     * every construction it said, as it was judged: a window ends where the next construction glued to it begins (наряд
+     * FIX-4b §1 — «This is ___» of «this is my first visit and I have about a year of experience» is «my first visit»).
      */
-    private function valueIn(Conversation $talk, ConversationPhrase $phrase, LanguagePack $pack): ?string
+    private function valueIn(Conversation $talk, ConversationPhrase $phrase, ConversationMaterialView $material, LanguagePack $pack): ?string
     {
         foreach ($talk->turns() as $turn) {
             if ($turn->kind === TurnKind::Said && in_array($phrase->id(), $turn->phrasesUsed, true)) {
-                return $this->judge->move((string) $turn->textTarget, [$phrase], $pack)->values[$phrase->id()] ?? null;
+                $said = array_values(array_filter(array_map($material->phrase(...), $turn->phrasesUsed)));
+
+                return $this->judge->move((string) $turn->textTarget, $said, $pack)->values[$phrase->id()] ?? null;
             }
         }
 

@@ -160,11 +160,12 @@ return [
     'neutral_reply' => 'Понятно. Продолжайте, пожалуйста.',
 
     // THE JUDGE OF THE TALK'S CONSTRUCTIONS (наряд FIX-4 §2; en has them written): Russian has no contractions to spell
-    // out, and nobody has written its opening words, negation or partitive yet — empty, so a talk held in Russian is
-    // judged by the frame's own words and nothing is forgiven.
+    // out, and nobody has written its opening words, the words its clauses open with (FIX-4b §1), negation or partitive
+    // yet — empty, so a talk held in Russian is judged by the frame's own words and nothing is forgiven.
     'contractions' => [],
     'contractions_before' => [],
     'intro_words' => [],
+    'clause_starters' => [],
     'negation' => [],
     'partitive' => [],
 ];

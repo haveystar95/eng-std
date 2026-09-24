@@ -105,8 +105,10 @@ by the rollout switch), `ConversationRules` (turns, minutes, the money cap and t
 targets and one more), `ConversationOutcomes` (the talk's summary read off its journal: said · almost · none per target,
 «ещё вспомнил», `ended_by_limit`), `FrameJudge` + `FrameWords` + `WordBases` (FIX-4 §2: which constructions of the scene
 the talk is in a move SAID or said ALMOST — a coherent phrase: the frame's part before its window where a sentence
-begins or after its opening words, a word of the learner's own in the window, the part after straight after it; a
-negative the same construction, contractions spelt out and articles left out by the pack; the model is not asked),
+begins, after its opening words or — FIX-4b §1 — straight after a conjunction that opens a clause (`clause_starters`), a
+word of the learner's own in the window, the part after straight after it; a window with nothing after it ends before
+the conjunction of the next construction the move says; a negative the same construction, contractions spelt out and
+articles left out by the pack; the model is not asked),
 `LineShare` (the share of a line the move had already said, which the echo guard reads — BACK-TAILS-2 §9),
 `ConversationLead` (FIX-3 §7, FIX-4 §§3, 5: the door to lead the role to within its scene — a target said almost first
 — and the hint: the whole sentence of the target just opened, else the first not said, with its exact line after an

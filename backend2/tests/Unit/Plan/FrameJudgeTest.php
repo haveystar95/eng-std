@@ -104,11 +104,13 @@ it('spells contractions out, leaves articles out, and counts another form of a w
 });
 
 // Canon (§2): «префикс стоит в начале высказывания или сразу после вступительных слов» — a sentence of the move is an
-// utterance of its own; the opening words are only the ones the move begins with. CATCHES a frame found in the middle of
-// a sentence, and a frame of the second sentence missed.
-it('finds a frame where a sentence begins or after its opening words, and nowhere else', function () {
+// utterance of its own; the opening words are only the ones the move begins with; (FIX-4b §1) and a clause begins after
+// a conjunction — «the machine and how do I use it» says «How do I use ___?» now (DECISIONS «Спорное» п. 3 named this very
+// line). CATCHES a frame found in the middle of a sentence with no conjunction before it, and a frame of the second
+// sentence missed.
+it('finds a frame where a sentence begins, after its opening words or after a conjunction, and nowhere else', function () {
     expect(fjJudge('Hello. What kind of memberships do you have?', fjReception())->said)->toBe(['s1:p2'])
-        ->and(fjJudge('the machine and how do I use it', fjTrainer()))->toEqual(new MoveVerdict)
+        ->and(fjJudge('the machine and how do I use it', fjTrainer()))->toEqual(new MoveVerdict(['s2:p4'], [], ['s2:p4' => 'it']))
         ->and(fjJudge('I\'m working on general fitness. I have about a year of experience.', fjTrainer())->said)->toBe(['s2:p1', 's2:p2'])
         ->and(fjJudge('where are the changing rooms', fjReception())->said)->toBe(['s1:p5'])
         ->and(fjJudge('the changing rooms where are', fjReception()))->toEqual(new MoveVerdict)
@@ -119,12 +121,36 @@ it('finds a frame where a sentence begins or after its opening words, and nowher
         ->and((new FrameJudge)->breaksOff('I have a shoulder pain', fjTrainer(), lessonPacks()->for('en')))->toBeFalse();
 });
 
-// Canon (§2, «для ru/uk/ro — пустой»): a language whose pack writes no opening words and no contractions is judged by the
-// frame's own words alone. CATCHES English lists borrowed for another language.
+// Canon (§2, «для ru/uk/ro — пустой»; FIX-4b §1, «ru/uk/ro — пусто, без находки»): a language whose pack writes no
+// opening words, no conjunctions and no contractions is judged by the frame's own words alone. CATCHES English lists
+// borrowed for another language.
 it('forgives nothing in a language whose pack writes no opening words', function () {
     $ru = lessonPacks()->for('ru');
     $frame = [new ConversationPhrase('r', 'p1', 'Это ___.', '', null, null)];
 
     expect((new FrameJudge)->move('это мой первый визит', $frame, $ru)->said)->toBe(['r:p1'])
-        ->and((new FrameJudge)->move('да это мой первый визит', $frame, $ru))->toEqual(new MoveVerdict([], ['r:p1']));
+        ->and((new FrameJudge)->move('да это мой первый визит', $frame, $ru))->toEqual(new MoveVerdict([], ['r:p1']))
+        ->and((new FrameJudge)->move('я здесь и это мой первый визит', $frame, $ru))->toEqual(new MoveVerdict([], ['r:p1']));
+});
+
+// Canon (наряд FIX-4b §1): «префикс каркаса может стоять в середине высказывания сразу после союза из ключа пакета
+// clause_starters — en: and, but, so, then, or; запятая перед союзом допустима», the order's four lines word for word —
+// two constructions glued into one sentence are both said, a frame with no conjunction before it still is not. The window
+// of the first construction ends before the conjunction of the second (its value is «my first visit», not the clause
+// after it), and a window with no construction after its «and» keeps it («a fever and a sore throat»). CATCHES the second
+// of two glued constructions lost (FIX-4: only a sentence's start counted), a conjunction read as an opening word anywhere
+// («do you have» after «memberships»), and the first construction's value swallowing the second one.
+it('reads a construction after a conjunction as the start of a clause', function () {
+    $both = [...fjReception(), ...fjTrainer()];
+    $fever = [new ConversationPhrase('d', 'p1', 'He has ___.', 'У него ___.', null, null)];
+    $glued = new MoveVerdict(['s1:p3', 's2:p2'], [], ['s1:p3' => 'my first visit', 's2:p2' => 'about a year']);
+
+    expect(fjJudge('Yes, this is my first visit and I have about a year of experience.', $both))->toEqual($glued)
+        ->and(fjJudge('Yes, this is my first visit, and I have about a year of experience.', $both))->toEqual($glued)
+        ->and(fjJudge('I have a fever and I have some shoulder pain.', fjTrainer()))->toEqual(new MoveVerdict(['s2:p3'], [], ['s2:p3' => 'shoulder pain']))
+        ->and(fjJudge('Hello what kind of memberships do you have', fjReception()))->toEqual(new MoveVerdict(['s1:p2'], [], ['s1:p2' => 'kind of memberships']))
+        ->and(fjJudge('Weekdays works for me', fjReception()))->toEqual(new MoveVerdict)
+        // A conjunction opens a clause wherever it stands — at the start of a sentence too.
+        ->and(fjJudge('But I have some shoulder pain', fjTrainer()))->toEqual(new MoveVerdict(['s2:p3'], [], ['s2:p3' => 'shoulder pain']))
+        ->and(fjJudge('He has a fever and a sore throat.', $fever)->values)->toBe(['d:p1' => 'a fever and a sore throat']);
 });

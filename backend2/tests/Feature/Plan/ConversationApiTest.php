@@ -1075,6 +1075,27 @@ it('reads a move for the construction as a phrase: said, one word off, or not �
 });
 
 /**
+ * Canon (наряд FIX-4b §1): «ученики склеивают фразы … сейчас засчитывается только первый каркас»; «префикс каркаса может
+ * стоять в середине высказывания сразу после союза». Two targets glued with «and» in one move are both said, on that move,
+ * and each window is its own — the first ends before the «and», whenever the talk is read back. CATCHES the second
+ * construction of a glued move lost, and the first one's value swallowing it on the wire (the window read back off the
+ * move with its own frame alone).
+ */
+it('hears two constructions glued with a conjunction in one move, each with a window of its own', function () {
+    [$token, $id] = convDay($this);
+    $talk = convStart($this, $token, $id);
+    $byRef = static fn (array $talk): array => array_column($talk['targets'], null, 'ref');
+
+    $glued = convTurn($this, $token, $id, $talk['id'], 'said', 'It started three days ago and it hurts in his lower back.');
+    $read = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/conversation/{$talk['id']}")->assertOk()->json('data');
+
+    expect(array_column($glued['turns'][1]['phrases_used'], 'ref'))->toBe(['p1', 'p2'])
+        ->and($byRef($glued)['p1'])->toMatchArray(['state' => 'said', 'value_target' => 'lower back'])
+        ->and($byRef($glued)['p2'])->toMatchArray(['state' => 'said', 'value_target' => 'three days ago'])
+        ->and($byRef($read)['p2']['value_target'])->toBe('three days ago');
+});
+
+/**
  * Canon (§2, п. д; наряд FIX-3 §6; наряд FIX-4 §2): «засчитанное не снимается; повторно сказанное не засчитывается повторно;
  * судим только каркасы текущей сцены». A rehearsal over two scenes asks for p1…p4 of the first and p1…p3 of the second —
  * the fake's second lesson is the first one with the first word of each frame marked «-2». CATCHES a target unticked by a

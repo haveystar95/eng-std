@@ -53,10 +53,11 @@ return [
     // Please go on.»).
     'neutral_reply' => 'Зрозуміло. Продовжуйте, будь ласка.',
 
-    // THE JUDGE OF THE TALK'S CONSTRUCTIONS (наряд FIX-4 §2; en has them written): empty — nothing forgiven.
+    // THE JUDGE OF THE TALK'S CONSTRUCTIONS (наряд FIX-4 §2, FIX-4b §1; en has them written): empty — nothing forgiven.
     'contractions' => [],
     'contractions_before' => [],
     'intro_words' => [],
+    'clause_starters' => [],
     'negation' => [],
     'partitive' => [],
 ];

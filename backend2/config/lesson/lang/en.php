@@ -307,6 +307,12 @@ return [
         'thank you', 'please', 'and', 'um', 'uh',
     ],
 
+    // THE WORDS A NEW CLAUSE OPENS WITH (наряд FIX-4b §1): a learner glues two constructions into one sentence — «Yes, this
+    // is my first visit and I have about a year of experience» — and the second one starts straight after one of these,
+    // a comma before it or not. A frame is said there too; nowhere else in the middle of a sentence («Hello what kind of
+    // memberships do you have» is still no «Do you have ___?»: no conjunction stands before «do»).
+    'clause_starters' => ['and', 'but', 'so', 'then', 'or'],
+
     // A CONSTRUCTION SAID IN THE NEGATIVE IS THE SAME CONSTRUCTION (канон владельца, DECISIONS п. 395; наряд FIX-4 §2):
     // «I don't have any experience» says «I have ___ of experience», «he doesn't have a fever» says «He has ___». Inside
     // the frame's own words the judge does not count as a difference `word` after one of `after` (be, a modal, the

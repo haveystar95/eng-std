@@ -23,6 +23,14 @@ use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
  *   pack says a move may open with (`intro_words`: «hello», «yes», «ok», «thank you»…). A frame without a window is said
  *   when its words stand so. So «what kind of memberships do you have» says «What ___ do you have?» and not «Do you have
  *   ___?»: that one's part before stands after «memberships».
+ * - A CONJUNCTION BEGINS A CLAUSE (наряд FIX-4b §1): learners glue their constructions into one sentence, and speech
+ *   recognition sends it without a full stop — so a frame may also start straight after a word the pack says a clause
+ *   opens with (`clause_starters`: «and», «but», «so», «then», «or»; a comma before it or not), wherever it stands:
+ *   «Yes, this is my first visit and I have about a year of experience» says «This is ___» and «I have ___ of
+ *   experience», «I have a fever and I have some shoulder pain» says «I have some ___». Nowhere else in the middle of a
+ *   sentence: there is no conjunction before «do» in «what kind of memberships do you have». A window with nothing of its
+ *   frame after it, which runs to the end of its sentence, ends before the conjunction another construction of the move
+ *   is said after — «my first visit», not the clause of the next construction ({@see self::windowOf()}).
  * - It is said ALMOST when the same holds with ONE difference of words in its parts before and after the window — a
  *   word replaced, added or left out, another form of a word counted as another word («works»/«work»): «I have a
  *   shoulder pain» is «I have some ___» almost, «Yes it is my first visit» is «This is ___» almost. Two differences are
@@ -74,13 +82,48 @@ final readonly class FrameJudge
         foreach ($matches as $id => $match) {
             if ($match['cost'] === 0) {
                 $said[] = $id;
-                $values[$id] = $match['value'];
+                $sentence = $sentences[$match['sentence']];
+                $values[$id] = $match['window'] === null ? null : self::value($sentence, ...self::windowOf($id, $matches, $sentence, $pack));
             } elseif (! isset($saying[$match['sentence'].':'.$match['start']])) {
                 $almost[] = $id;
             }
         }
 
         return new MoveVerdict($said, $almost, $values);
+    }
+
+    /**
+     * THE WINDOW OF A CONSTRUCTION SAID, AS FAR AS IT GOES (наряд FIX-4b §1). A window with nothing of its frame after it
+     * runs to the end of its sentence — unless another construction the move says starts inside it straight after a
+     * conjunction: then it ends before that conjunction, and what follows is the other construction's. «this is my first
+     * visit and I have about a year of experience» puts «my first visit» in the window of «This is ___»; «He has a fever
+     * and a sore throat», with no construction after «and», keeps «a fever and a sore throat». What is left must still be
+     * the learner's own, else the window runs on as it was. Only what went into the window is read here — whether the
+     * construction is said is not.
+     *
+     * @param  array<string, array{cost: int, sentence: int, start: int, window: array{0: int, 1: int}|null, open: bool, frameWords: list<string>}>  $matches
+     * @param  array{words: list<string>, at: list<int>, written: list<string>}  $sentence
+     * @return array{0: int, 1: int}
+     */
+    private static function windowOf(string $id, array $matches, array $sentence, LanguagePack $pack): array
+    {
+        $match = $matches[$id];
+        [$from, $to] = $match['window'] ?? [0, 0];
+        if (! $match['open']) {
+            return [$from, $to];
+        }
+        $clauses = self::clauseStarts($sentence['words'], $pack);
+        foreach ($matches as $other => $there) {
+            $conjunction = $clauses[$there['start']] ?? null;
+            if ($other === $id || $there['cost'] !== 0 || $there['sentence'] !== $match['sentence'] || $conjunction === null) {
+                continue;
+            }
+            if ($conjunction > $from && $conjunction < $to && array_diff(array_slice($sentence['words'], $from, $conjunction - $from), $match['frameWords']) !== []) {
+                $to = $conjunction;
+            }
+        }
+
+        return [$from, $to];
     }
 
     /**
@@ -112,10 +155,12 @@ final readonly class FrameJudge
     }
 
     /**
-     * The best reading of one frame in the move — the fewest differences, then the earliest sentence, start, window.
+     * The best reading of one frame in the move — the fewest differences, then the earliest sentence, start, window: where
+     * it starts, the words of its window (null for a frame without one), whether that window runs to the end of the
+     * sentence (nothing of the frame after it) and the frame's own words.
      *
      * @param  list<array{words: list<string>, at: list<int>, written: list<string>}>  $sentences
-     * @return array{cost: int, sentence: int, start: int, value: string|null}|null
+     * @return array{cost: int, sentence: int, start: int, window: array{0: int, 1: int}|null, open: bool, frameWords: list<string>}|null
      */
     private function match(array $sentences, ConversationPhrase $frame, LanguagePack $pack): ?array
     {
@@ -131,7 +176,10 @@ final readonly class FrameJudge
                     ? $this->withWindow($before, $after, $sentence, $start, $pack)
                     : $this->whole($before, $sentence['words'], $start, $pack);
                 if ($found !== null && ($best === null || $found['cost'] < $best['cost'])) {
-                    $best = ['cost' => $found['cost'], 'sentence' => $n, 'start' => $start, 'value' => $found['value']];
+                    $best = [
+                        'cost' => $found['cost'], 'sentence' => $n, 'start' => $start, 'window' => $found['window'],
+                        'open' => $window && $after === [], 'frameWords' => [...$before, ...$after],
+                    ];
                 }
                 if ($best !== null && $best['cost'] === 0) {
                     return $best;
@@ -147,7 +195,7 @@ final readonly class FrameJudge
      *
      * @param  list<string>  $frame
      * @param  list<string>  $words
-     * @return array{cost: int, value: null}|null
+     * @return array{cost: int, window: null}|null
      */
     private function whole(array $frame, array $words, int $start, LanguagePack $pack): ?array
     {
@@ -156,7 +204,7 @@ final readonly class FrameJudge
         }
         $cost = min([self::NEVER, ...$this->costs($frame, $words, $start, $pack)]);
 
-        return $cost <= self::ALMOST ? ['cost' => $cost, 'value' => null] : null;
+        return $cost <= self::ALMOST ? ['cost' => $cost, 'window' => null] : null;
     }
 
     /**
@@ -167,7 +215,7 @@ final readonly class FrameJudge
      * @param  list<string>  $before
      * @param  list<string>  $after
      * @param  array{words: list<string>, at: list<int>, written: list<string>}  $sentence
-     * @return array{cost: int, value: string}|null
+     * @return array{cost: int, window: array{0: int, 1: int}}|null
      */
     private function withWindow(array $before, array $after, array $sentence, int $start, LanguagePack $pack): ?array
     {
@@ -203,7 +251,7 @@ final readonly class FrameJudge
                 }
                 $cost = $costBefore + $costAfter;
                 if ($best === null || $cost < $best['cost']) {
-                    $best = ['cost' => $cost, 'value' => self::value($sentence, $from, $to)];
+                    $best = ['cost' => $cost, 'window' => [$from, $to]];
                 }
             }
         }
@@ -305,21 +353,17 @@ final readonly class FrameJudge
     }
 
     /**
-     * Where a frame may start in a sentence: at its first word, and after each run of the pack's opening words from there
-     * («ok», «thank you» — «OK thank you how do I use this machine» starts «How do I use ___?» at its fourth word).
+     * Where a frame may start in a sentence: at its first word, after each run of the pack's opening words from there
+     * («ok», «thank you» — «OK thank you how do I use this machine» starts «How do I use ___?» at its fourth word), and
+     * straight after each word of the pack a clause opens with, wherever it stands (наряд FIX-4b §1: «… my first visit
+     * and I have about a year of experience» starts «I have ___ of experience» after «and»). In order, each once.
      *
      * @param  list<string>  $words
      * @return list<int>
      */
     private static function starts(array $words, LanguagePack $pack): array
     {
-        $openers = [];
-        foreach ($pack->has('intro_words') ? $pack->words('intro_words') : [] as $opener) {
-            $said = FrameWords::of($opener, $pack, articles: true);
-            if ($said !== []) {
-                $openers[] = $said;
-            }
-        }
+        $openers = self::entries('intro_words', $pack);
         $out = [0];
         $at = 0;
         while (true) {
@@ -335,8 +379,50 @@ final readonly class FrameJudge
             $at += $step;
             $out[] = $at;
         }
+        $out = array_filter(array_unique([...$out, ...array_keys(self::clauseStarts($words, $pack))]), static fn (int $start): bool => $start < count($words));
+        sort($out);
 
-        return array_values(array_filter($out, static fn (int $start): bool => $start < count($words)));
+        return $out;
+    }
+
+    /**
+     * WHERE A CLAUSE OF THE SENTENCE BEGINS (наряд FIX-4b §1): the place straight after each of the pack's `clause_starters`
+     * («and», «but», «so», «then», «or»), with the place of that word — where a window before it may end.
+     *
+     * @param  list<string>  $words
+     * @return array<int, int> the place a clause starts at => the place of the word it starts after
+     */
+    private static function clauseStarts(array $words, LanguagePack $pack): array
+    {
+        $out = [];
+        foreach (self::entries('clause_starters', $pack) as $starter) {
+            for ($at = 0; $at + count($starter) <= count($words); $at++) {
+                if (array_slice($words, $at, count($starter)) === $starter) {
+                    $out[$at + count($starter)] = $at;
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * A list of the pack's words as the move's words are read — each entry its words («thank you» is two); an empty entry
+     * or a key the pack does not write gives nothing.
+     *
+     * @return list<list<string>>
+     */
+    private static function entries(string $key, LanguagePack $pack): array
+    {
+        $out = [];
+        foreach ($pack->has($key) ? $pack->words($key) : [] as $entry) {
+            $said = FrameWords::of($entry, $pack, articles: true);
+            if ($said !== []) {
+                $out[] = $said;
+            }
+        }
+
+        return $out;
     }
 
     /**
