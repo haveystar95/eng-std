@@ -274,4 +274,54 @@ return [
         'i' => 'you', 'me' => 'you', 'my' => 'your', 'mine' => 'yours', 'am' => 'are',
         'you' => 'i', 'your' => 'my', 'yours' => 'mine', 'are' => 'am',
     ],
+
+    // ─── THE JUDGE OF THE TALK'S CONSTRUCTIONS (наряд FIX-4 §2): a frame is said as a COHERENT PHRASE — its part before
+    // the window as an unbroken run of words where the move begins, a window of its own, its part after the window
+    // straight after it ({@see \App\Modules\Plan\Domain\Service\FrameJudge}). What the judge may forgive of English is here.
+
+    // A CONTRACTION IS ITS WORDS: both sides spelt out before the words are compared — «I'm working on» is «i am working
+    // on», «I don't have» is «i do not have». Read as a whole word, a typographic apostrophe as a plain one.
+    'contractions' => [
+        "i'm" => 'i am', "i'll" => 'i will', "i've" => 'i have', "i'd" => 'i would',
+        "you're" => 'you are', "you'll" => 'you will', "you've" => 'you have', "you'd" => 'you would',
+        "he's" => 'he is', "she's" => 'she is', "it's" => 'it is', "he'll" => 'he will', "she'll" => 'she will',
+        "it'll" => 'it will', "he'd" => 'he would', "she'd" => 'she would',
+        "we're" => 'we are', "we'll" => 'we will', "we've" => 'we have', "we'd" => 'we would',
+        "they're" => 'they are', "they'll" => 'they will', "they've" => 'they have', "they'd" => 'they would',
+        "that's" => 'that is', "there's" => 'there is', "here's" => 'here is', "what's" => 'what is',
+        "where's" => 'where is', "who's" => 'who is', "how's" => 'how is', "let's" => 'let us',
+        "don't" => 'do not', "doesn't" => 'does not', "didn't" => 'did not', "isn't" => 'is not', "aren't" => 'are not',
+        "wasn't" => 'was not', "weren't" => 'were not', "haven't" => 'have not', "hasn't" => 'has not', "hadn't" => 'had not',
+        "can't" => 'can not', 'cannot' => 'can not', "won't" => 'will not', "wouldn't" => 'would not',
+        "couldn't" => 'could not', "shouldn't" => 'should not', "mustn't" => 'must not',
+    ],
+
+    // …AND ONE THE NEXT WORD DECIDES: before «been», «'s» is «has» and «'d» is «had» — «he's been sick» is «he has been
+    // sick», never «he is been» (the rule the kernel's canonical form reads forward too).
+    'contractions_before' => ['been' => ["'s" => 'has', "'d" => 'had']],
+
+    // THE WORDS A MOVE MAY OPEN WITH before its construction: «Hello, what kind of memberships do you have», «OK thank
+    // you, how do I use this machine». A frame is said where the move begins or straight after a run of these.
+    'intro_words' => [
+        'hello', 'hi', 'hey', 'yes', 'no', 'okay', 'ok', 'oh', 'well', 'so', 'sure', 'great', 'nice', 'thanks',
+        'thank you', 'please', 'and', 'um', 'uh',
+    ],
+
+    // A CONSTRUCTION SAID IN THE NEGATIVE IS THE SAME CONSTRUCTION (канон владельца, DECISIONS п. 395; наряд FIX-4 §2):
+    // «I don't have any experience» says «I have ___ of experience», «he doesn't have a fever» says «He has ___». Inside
+    // the frame's own words the judge does not count as a difference `word` after one of `after` (be, a modal, the
+    // auxiliary have), nor `do_support` + `word` before a verb — and that verb is read by its base (has = have).
+    'negation' => [
+        'word' => 'not',
+        'do_support' => ['do', 'does', 'did'],
+        'after' => ['am', 'is', 'are', 'was', 'were', 'be', 'been', 'will', 'would', 'shall', 'should', 'can', 'could', 'may', 'might', 'must', 'have', 'has', 'had'],
+    ],
+
+    // THE PARTITIVE «OF» GOES WITH A QUANTITY, NOT WITH A DETERMINER: «I have ___ of experience» is said as «I have no
+    // experience», «I don't have any experience», «I have some experience» — a window of one of `determiners` takes the
+    // frame's `word` after it or leaves it out (канон владельца, наряд FIX-4 §2: «I have no experience» — said).
+    'partitive' => [
+        'word' => 'of',
+        'determiners' => ['no', 'any', 'some', 'much', 'little', 'enough', 'more', 'less'],
+    ],
 ];

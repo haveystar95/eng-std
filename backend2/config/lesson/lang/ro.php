@@ -52,4 +52,11 @@ return [
     // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9) — the same line as every pack's, in this language (en «I see.
     // Please go on.»).
     'neutral_reply' => 'Înțeleg. Continuați, vă rog.',
+
+    // THE JUDGE OF THE TALK'S CONSTRUCTIONS (наряд FIX-4 §2; en has them written): empty — nothing forgiven.
+    'contractions' => [],
+    'contractions_before' => [],
+    'intro_words' => [],
+    'negation' => [],
+    'partitive' => [],
 ];

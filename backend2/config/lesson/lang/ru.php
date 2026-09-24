@@ -158,4 +158,13 @@ return [
     // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9) — the same line as every pack's, in this language: said by the role
     // in a talk held in Russian, or the translation of the target's line for a Russian learner (en «I see. Please go on.»).
     'neutral_reply' => 'Понятно. Продолжайте, пожалуйста.',
+
+    // THE JUDGE OF THE TALK'S CONSTRUCTIONS (наряд FIX-4 §2; en has them written): Russian has no contractions to spell
+    // out, and nobody has written its opening words, negation or partitive yet — empty, so a talk held in Russian is
+    // judged by the frame's own words and nothing is forgiven.
+    'contractions' => [],
+    'contractions_before' => [],
+    'intro_words' => [],
+    'negation' => [],
+    'partitive' => [],
 ];
