@@ -898,7 +898,8 @@ PLAYGROUND, «Журнал вызовов модели»; решения — DEC
 
 Отчёт — `docs/research/fix-4b/README.md`; канон — `docs/plan-v2.md` §11 («Правила роли v3.2»); контракт —
 `docs/plan-api.md` (`hints.sentence`, раздел «Для CLIENT-FIX-4») + `openapi/openapi.yaml`; решения — DECISIONS пп.
-**410–413**, четыре записи в «Отменено», «Спорное» пп. 3–5 закрыты. Работа — worktree `../backend2-fix4b`, ветка `fix-4b`.
+**410–413**, четыре записи в «Отменено», «Спорное» пп. 3–5 закрыты. Работа — worktree `../backend2-fix4b`, ветка `fix-4b`;
+влито в `main` fast-forward, **выкачено 24.09** (миграций нет).
 
 - [x] **§1 Союз начинает клаузу** — каркас засчитывается и сразу после and / but / so / then / or (`clause_starters`);
   окно первой конструкции кончается перед союзом второй.
@@ -907,6 +908,9 @@ PLAYGROUND, «Журнал вызовов модели»; решения — DEC
   повторяет прежнюю; `phrases_used`/`checkpoint_done` сняты из ответа.
 - [x] **Приёмка Б** (3 разговора 2DX8QC, без модели) — 37 из 37 как в FIX-4 · **В** (живая репетиция на e2e) — четыре
   ожидания держат, отбраковок 0, $0.0376.
+- [x] **Ворота и выкат 24.09** — `composer check` (Pest 2 501, PHPStan 0, deptrac 0), `flutter analyze` чисто,
+  invariant-reviewer CLEAN → `db-backup --safety` → ff `main` → `restart horizon` → бой читает v3.2 → стенд снесён →
+  `stamp-build`.
 - [ ] **CLIENT-FIX-4** — чип подсказки: `hints.sentence` без рамки «Скажи, что …»; потом снять `hints.native` на сервере.
 
 **Хвосты FIX-4b (найдено, в работу НЕ бралось):**
