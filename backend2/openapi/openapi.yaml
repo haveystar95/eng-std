@@ -3330,9 +3330,10 @@ components:
         in the talk's document (`PlanConversation.targets`), its summary (`PlanConversationSummary.phrases`) and on the day
         window's talk row (`PlanWindowStage.targets`). A target is SAID when a move says it as a COHERENT PHRASE (наряд
         FIX-4 §2): the frame's part before the window as an unbroken run where a sentence of the move begins (or right
-        after its opening words), a word of the learner's own in the window, the part after straight after it — a
-        negative is the same construction; ALMOST when one word is off (replaced, added, left out, another form). Only
-        the frames of the scene the talk is in are judged, only the unsaid ones; said stays said, and counts once.
+        after its opening words, or — наряд FIX-4b §1 — right after a conjunction that opens a clause: and, but, so,
+        then, or), a word of the learner's own in the window, the part after straight after it — a negative is the same
+        construction; ALMOST when one word is off (replaced, added, left out, another form). Only the frames of the scene
+        the talk is in are judged, only the unsaid ones; said stays said, and counts once.
       required: [scene_id, ref, frame_target, frame_native, example_target, example_native, said, value_target, state]
       properties:
         scene_id: { type: string }
@@ -3342,7 +3343,7 @@ components:
         example_target: { type: [string, 'null'], description: 'The value the lesson says the frame with — «London»; null for a frame without a window' }
         example_native: { type: [string, 'null'] }
         said: { type: boolean, description: 'The same as `state == said` — kept for build (20)' }
-        value_target: { type: [string, 'null'], description: 'What the learner put into the window, as heard — «Lisbon»; null until said, and for a frame without a window' }
+        value_target: { type: [string, 'null'], description: 'What the learner put into the window, as heard — «Lisbon»; null until said, and for a frame without a window. A window with nothing after it ends before the conjunction of the next construction the same move said (наряд FIX-4b §1: «my first visit», not «my first visit and I have about a year of experience»)' }
         state:
           type: string
           enum: [none, almost, said]
@@ -4717,7 +4718,10 @@ components:
         FIX-4 (every field added, none changed): where each target stands (`targets[].state`), the constructions said
         beside the targets (`extra_said`), the hint whole with its exact line after an «almost» (`hints.target`, `ref`),
         and the scenes' border kept by the server — each line's scene and the greeting and goodbye of a scene
-        (`turns[].scene_id`, `scene_event`).
+        (`turns[].scene_id`, `scene_event`). Since наряд FIX-4b (added, none changed): the hint as the lesson's own
+        sentence (`hints.sentence`) — the one the client shows, with no «Скажи, что …» around it; a construction is
+        also heard straight after a conjunction that opens a clause («… my first visit and I have about a year of
+        experience»).
       required: [id, plan_id, day, type, state, replay, talk_title_native, partner, scene, scenes, minutes_estimate, turns_left, targets, extra_said, hints, turns, summary]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
@@ -4788,25 +4792,34 @@ components:
           items: { $ref: '#/components/schemas/PlanConversationTarget' }
         hints:
           type: object
-          required: [enabled, delay_ms, native, target, scene_id, ref]
+          required: [enabled, delay_ms, native, target, scene_id, ref, sentence]
           properties:
             enabled: { type: boolean, description: 'False — «Без подсказок»: no chip and no «Подсказать» on the screen' }
             delay_ms: { type: integer, description: 'How long the silence is before the chip comes up by itself (кадр 37-7)' }
             native:
               type: [string, 'null']
+              deprecated: true
               description: >-
-                The target to offer for the next move WHOLE — the lesson's own sentence of it, its value in it («у него
-                болит поясница», never «у него болит …», наряд FIX-4 §5) — in the learner's language AS A CLAUSE: no
-                capital, no closing full stop, because the client prints it inside its own «Скажи, что …». Which target:
-                the one the role's last line has just opened, else the first target of the scene not said yet; after a
-                move that said a target ALMOST, that target. It changes with every line of the role. Null when hints are
-                off, when the move is not the learner's, when every target of the scene is said, and when the talk has
-                ended.
+                TO GO AFTER CLIENT-FIX-4 (наряд FIX-4b §2; снять после CLIENT-FIX-4) — `sentence` as a clause, for the
+                build (20). The target to offer for the next move WHOLE — the lesson's own sentence of it, its value in
+                it («у него болит поясница», never «у него болит …», наряд FIX-4 §5) — in the learner's language AS A
+                CLAUSE: no capital, no closing full stop, because the build (20) prints it inside its own «Скажи, что …».
+                Which target: the one the role's last line has just opened, else the first target of the scene not said
+                yet; after a move that said a target ALMOST, that target. It changes with every line of the role. Null
+                when hints are off, when the move is not the learner's, when every target of the scene is said, and when
+                the talk has ended.
             target:
               type: [string, 'null']
               description: 'The target''s exact line in the language of the talk («The pain is sharp when he bends.») — only on the move right after one that said it almost (наряд FIX-4 §5); else null'
             scene_id: { type: [string, 'null'], description: 'Which target the hint is — its scene…' }
             ref: { type: [string, 'null'], description: '…and its ref: `targets[]` by these two' }
+            sentence:
+              type: [string, 'null']
+              description: >-
+                The hint AS THE CLIENT SHOWS IT (наряд FIX-4b §2): the same target's sentence in the learner's language
+                exactly as the lesson has it — its capital and its closing mark («У него болит поясница.», «Мне сказать
+                вам его температуру?») — with no «Скажи, что …» around it: the frame read crooked for a question. The
+                same target and the same nulls as `native`.
         turns:
           type: array
           description: 'The whole ribbon, oldest first — the talk is a dozen short lines, so it travels whole'

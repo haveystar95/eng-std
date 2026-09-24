@@ -1,0 +1,39 @@
+разговор 01M39DK2G736PG45CTA2ZCHDQB · ходов 9
+ 1 РОЛЬ  [начало «Запись к врачу»] Hello. What hurts — his upper back or his lower back?
+   подсказка: «У него болит поясница.» (придаточное: «у него болит поясница») · цель p1 · целая фраза ✓
+   цели: p1=none p2=none p3=none p4=none p1=none p2=none p3=none
+ 2 УЧЕНИК It hurts in his lower back. · сказано: p1
+ 3 РОЛЬ  That sounds painful. Did it start today, or earlier this week?
+   подсказка: «Началось три дня назад.» (придаточное: «началось три дня назад») · цель p2 · целая фраза ✓
+   цели: p1=said p2=none p3=none p4=none p1=none p2=none p3=none
+ 4 УЧЕНИК It started two days ago. · сказано: p2
+ 5 РОЛЬ  That's helpful. Is the pain sharp, or more of a dull ache when he bends?
+   подсказка: «Боль острая, когда он наклоняется.» (придаточное: «боль острая, когда он наклоняется») · цель p3 · целая фраза ✓
+   цели: p1=said p2=said p3=none p4=none p1=none p2=none p3=none
+ 6 УЧЕНИК The pain is sharp when she bends.
+ 7 РОЛЬ  Is it your son who has the pain?
+   подсказка: «Боль острая, когда он наклоняется.» (придаточное: «боль острая, когда он наклоняется») · точная строка: «The pain is sharp when he bends.» · цель p3 · целая фраза ✓
+   цели: p1=said p2=said p3=almost p4=none p1=none p2=none p3=none
+ 8 УЧЕНИК The pain is sharp when he bends. · сказано: p3
+ 9 РОЛЬ  It sounds like a muscle strain. Does he have a fever?
+   подсказка: «Температуры у него нет.» (придаточное: «температуры у него нет») · цель p4 · целая фраза ✓
+   цели: p1=said p2=said p3=said p4=none p1=none p2=none p3=none
+10 УЧЕНИК He doesn't have a fever. · сказано: p4
+11 РОЛЬ  [прощание «Запись к врачу»] Thank you. Goodbye.
+12 РОЛЬ  [начало «Приём у врача»] Good morning. What seems to be the problem with your son today?
+   подсказка: «У него температура и болит горло.» (придаточное: «у него температура и болит горло») · цель p1 · целая фраза ✓
+   цели: p1=said p2=said p3=said p4=said p1=none p2=none p3=none
+13 УЧЕНИК He has a fever and a sore throat. · сказано: p1
+14 РОЛЬ  How long has he had these symptoms?
+   подсказка: «Он болеет уже три дня.» (придаточное: «он болеет уже три дня») · цель p2 · целая фраза ✓
+   цели: p1=said p2=said p3=said p4=said p1=said p2=none p3=none
+15 УЧЕНИК He's been sick for three days. I gave him paracetamol. · сказано: p2 · ещё вспомнил: p4
+16 РОЛЬ  What is the highest temperature you’ve measured?
+   подсказка: «Мне сказать вам его температуру?» (придаточное: «мне сказать вам его температуру?») · цель p3 · целая фраза ✓
+   цели: p1=said p2=said p3=said p4=said p1=said p2=said p3=none
+17 УЧЕНИК Should I tell you his temperature? · сказано: p3
+18 РОЛЬ  [прощание «Приём у врача»] Yes, please tell me the highest reading. Goodbye.
+
+итог: ended · {"ended_reason":"natural","ended_by_limit":false,"phrases_used":7,"phrases_total":7,"extra_said":["p4"]}
+hints.sentence — целая фраза с заглавной и знаком: 8 из 8
+wrote live/live-rehearsal.json

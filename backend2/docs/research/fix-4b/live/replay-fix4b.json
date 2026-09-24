@@ -1,0 +1,1301 @@
+[
+    {
+        "talk": "01M32FJ5FQNRNSQH6PNC7DP5E0",
+        "day": 1,
+        "scenes": [
+            "01M32DXHYG50H7SWQEMD33A39F"
+        ],
+        "targets": [
+            {
+                "short_id": "T1",
+                "id": "s1 p1",
+                "frame": "Do you have ___?"
+            },
+            {
+                "short_id": "T2",
+                "id": "s1 p2",
+                "frame": "What ___ do you have?"
+            },
+            {
+                "short_id": "T3",
+                "id": "s1 p3",
+                "frame": "This is ___."
+            },
+            {
+                "short_id": "T4",
+                "id": "s1 p4",
+                "frame": "That works for me on ___."
+            },
+            {
+                "short_id": "T5",
+                "id": "s1 p5",
+                "frame": "Where are ___?"
+            },
+            {
+                "short_id": "T6",
+                "id": "s1 p6",
+                "frame": "I'll return ___."
+            },
+            {
+                "short_id": "T7",
+                "id": "s1 p7",
+                "frame": "Can I pay ___?"
+            }
+        ],
+        "turns": [
+            {
+                "index": 1,
+                "kind": "agent",
+                "text": "Hello! Welcome to the gym. How can I help you today?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 2,
+                "kind": "said",
+                "text": "Hello I need daily training",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 3,
+                "kind": "agent",
+                "text": "Do you have a day pass?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 4,
+                "kind": "said",
+                "text": "No I want to buy monthly membership",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 5,
+                "kind": "agent",
+                "text": "We have a few monthly memberships. This is your first visit, right?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 6,
+                "kind": "said",
+                "text": "Yes it is my first visit",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 7,
+                "kind": "agent",
+                "text": "Great, then I can show you the monthly options. What monthly memberships do you have in mind, and do you need weekdays only?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 8,
+                "kind": "said",
+                "text": "Weekdays works for me",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 9,
+                "kind": "agent",
+                "text": "Great, that works. Where are the changing rooms?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": "s1"
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "talk": "01M34HXHP05JY8NVF1305NRY5N",
+        "day": 2,
+        "scenes": [
+            "01M32DXHYGYMK0E1DBR01PYDHA"
+        ],
+        "targets": [
+            {
+                "short_id": "T1",
+                "id": "s1 p1",
+                "frame": "I'm working on ___."
+            },
+            {
+                "short_id": "T2",
+                "id": "s1 p2",
+                "frame": "I have ___ of experience."
+            },
+            {
+                "short_id": "T3",
+                "id": "s1 p3",
+                "frame": "I have some ___."
+            },
+            {
+                "short_id": "T4",
+                "id": "s1 p4",
+                "frame": "How do I use ___?"
+            },
+            {
+                "short_id": "T5",
+                "id": "s1 p5",
+                "frame": "How heavy should ___ be?"
+            },
+            {
+                "short_id": "T6",
+                "id": "s1 p6",
+                "frame": "I'll rest for ___."
+            },
+            {
+                "short_id": "T7",
+                "id": "s1 p7",
+                "frame": "Should I keep ___ down?"
+            }
+        ],
+        "turns": [
+            {
+                "index": 1,
+                "kind": "agent",
+                "text": "Hi. What are you training for today?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 2,
+                "kind": "said",
+                "text": "Hi I am working on general fitness",
+                "was": {
+                    "phrases_used": [
+                        "s1 p1"
+                    ]
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p1"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p1": "general fitness"
+                        }
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p1"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p1": "general fitness"
+                        }
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p1"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p1": "general fitness"
+                        }
+                    }
+                }
+            },
+            {
+                "index": 3,
+                "kind": "agent",
+                "text": "That sounds good. How much gym experience do you have?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 4,
+                "kind": "said",
+                "text": "I don't have any experience",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p2"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p2": "any"
+                        }
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p2"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p2": "any"
+                        }
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p2"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p2": "any"
+                        }
+                    }
+                }
+            },
+            {
+                "index": 5,
+                "kind": "agent",
+                "text": "Okay, we’ll keep it simple. Do you have any injuries or pain right now?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 6,
+                "kind": "said",
+                "text": "Yes my",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 7,
+                "kind": "agent",
+                "text": "What kind of pain is it?",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 8,
+                "kind": "said",
+                "text": "I have lower back pain",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 9,
+                "kind": "agent",
+                "text": "Thanks for telling me. We should avoid anything that bothers your back today, and I’ll keep the plan simple.",
+                "was": {
+                    "opens": null,
+                    "checkpoint": "s1"
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "talk": "01M36X3W5QBB8TDYF3N3D519FG",
+        "day": 3,
+        "scenes": [
+            "01M32DXHYG50H7SWQEMD33A39F",
+            "01M32DXHYGYMK0E1DBR01PYDHA"
+        ],
+        "targets": [
+            {
+                "short_id": "T1",
+                "id": "s1 p1",
+                "frame": "Do you have ___?"
+            },
+            {
+                "short_id": "T2",
+                "id": "s1 p2",
+                "frame": "What ___ do you have?"
+            },
+            {
+                "short_id": "T3",
+                "id": "s1 p3",
+                "frame": "This is ___."
+            },
+            {
+                "short_id": "T4",
+                "id": "s1 p4",
+                "frame": "That works for me on ___."
+            },
+            {
+                "short_id": "T5",
+                "id": "s2 p1",
+                "frame": "I'm working on ___."
+            },
+            {
+                "short_id": "T6",
+                "id": "s2 p2",
+                "frame": "I have ___ of experience."
+            },
+            {
+                "short_id": "T7",
+                "id": "s2 p3",
+                "frame": "I have some ___."
+            }
+        ],
+        "turns": [
+            {
+                "index": 1,
+                "kind": "agent",
+                "text": "Hello! Welcome to the gym. How can I help you today?",
+                "was": {
+                    "opens": "s1 p1",
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    }
+                }
+            },
+            {
+                "index": 2,
+                "kind": "said",
+                "text": "Hello what kind of memberships do you have",
+                "was": {
+                    "phrases_used": [
+                        "s1 p1",
+                        "s1 p2"
+                    ]
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p2"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYG50H7SWQEMD33A39F:p2": "kind of memberships"
+                        }
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p2"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYG50H7SWQEMD33A39F:p2": "kind of memberships"
+                        }
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [
+                            "s1 p2"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYG50H7SWQEMD33A39F:p2": "kind of memberships"
+                        }
+                    }
+                }
+            },
+            {
+                "index": 3,
+                "kind": "agent",
+                "text": "We have a basic plan and an unlimited plan. Is this your first visit here?",
+                "was": {
+                    "opens": "s1 p3",
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    }
+                }
+            },
+            {
+                "index": 4,
+                "kind": "said",
+                "text": "Yes it is my first visit",
+                "was": {
+                    "phrases_used": [
+                        "s1 p3"
+                    ]
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [
+                            "s1 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 5,
+                "kind": "agent",
+                "text": "Great, thanks. We open at six and close at ten on weekdays.",
+                "was": {
+                    "opens": "s1 p4",
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    }
+                }
+            },
+            {
+                "index": 6,
+                "kind": "said",
+                "text": "Nice work days work for me",
+                "was": {
+                    "phrases_used": [
+                        "s1 p4",
+                        "s2 p1"
+                    ]
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 7,
+                "kind": "agent",
+                "text": "That sounds good. What kind of experience do you have with gym workouts?",
+                "was": {
+                    "opens": "s1 p4",
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "already_said"
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "already_said"
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "already_said"
+                    }
+                }
+            },
+            {
+                "index": 8,
+                "kind": "said",
+                "text": "I have about one year of experience",
+                "was": {
+                    "phrases_used": [
+                        "s2 p2"
+                    ]
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "said": [
+                            "s2 p2"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p2": "about one year"
+                        }
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 9,
+                "kind": "agent",
+                "text": "Thanks. Do you have any injuries or pain right now?",
+                "was": {
+                    "opens": "s1 p3",
+                    "checkpoint": "s1"
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "door": "foreign_scene",
+                        "door_by_old_credit": "foreign_scene"
+                    },
+                    "stored": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "already_said"
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "door": "принято",
+                        "door_by_old_credit": "already_said"
+                    }
+                }
+            },
+            {
+                "index": 10,
+                "kind": "said",
+                "text": "Yes I have a shoulder pain",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [
+                            "s2 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [
+                            "s2 p3"
+                        ],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s1",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": [],
+                        "closes_scene": true
+                    }
+                }
+            },
+            {
+                "index": 11,
+                "kind": "agent",
+                "text": "Thanks, I’ll keep that in mind. Use light weights today and stop if it hurts.",
+                "was": {
+                    "opens": "s1 p3",
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "door": "foreign_scene",
+                        "door_by_old_credit": "foreign_scene"
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "door": "foreign_scene",
+                        "door_by_old_credit": "foreign_scene"
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "door": "foreign_scene",
+                        "door_by_old_credit": "foreign_scene"
+                    }
+                }
+            },
+            {
+                "index": 12,
+                "kind": "said",
+                "text": "OK thank you how do I use this machine",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [
+                            "s2 p4"
+                        ],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p4": "this machine"
+                        }
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [
+                            "s2 p4"
+                        ],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p4": "this machine"
+                        }
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [
+                            "s2 p4"
+                        ],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p4": "this machine"
+                        }
+                    }
+                }
+            },
+            {
+                "index": 13,
+                "kind": "agent",
+                "text": "Sit tall, keep your back flat, and push through your heels.",
+                "was": {
+                    "opens": "s2 p3",
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "door": "принято",
+                        "door_by_old_credit": "принято"
+                    }
+                }
+            },
+            {
+                "index": 14,
+                "kind": "said",
+                "text": "OK thank you I will rest for 45 seconds",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [
+                            "s2 p6"
+                        ],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p6": "45 seconds"
+                        }
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [
+                            "s2 p6"
+                        ],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p6": "45 seconds"
+                        }
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [
+                            "s2 p6"
+                        ],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p6": "45 seconds"
+                        }
+                    }
+                }
+            },
+            {
+                "index": 15,
+                "kind": "agent",
+                "text": "Great. Keep your shoulders down and relax your neck.",
+                "was": {
+                    "opens": null,
+                    "checkpoint": "s2"
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 16,
+                "kind": "said",
+                "text": "I have some shoulder pain",
+                "was": {
+                    "phrases_used": [
+                        "s2 p3"
+                    ]
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "said": [
+                            "s2 p3"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p3": "shoulder pain"
+                        }
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "said": [
+                            "s2 p3"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p3": "shoulder pain"
+                        }
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "said": [
+                            "s2 p3"
+                        ],
+                        "almost": [],
+                        "extra": [],
+                        "values": {
+                            "01M32DXHYGYMK0E1DBR01PYDHA:p3": "shoulder pain"
+                        }
+                    }
+                }
+            },
+            {
+                "index": 17,
+                "kind": "agent",
+                "text": "That makes sense. Keep the weight light today, and if the pain gets worse, stop right away.",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            },
+            {
+                "index": 18,
+                "kind": "said",
+                "text": "OK great",
+                "was": {
+                    "phrases_used": []
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "said": [],
+                        "almost": [],
+                        "extra": [],
+                        "values": []
+                    }
+                }
+            },
+            {
+                "index": 19,
+                "kind": "agent",
+                "text": "Good. Have a good workout, and let me know if you need anything else.",
+                "was": {
+                    "opens": null,
+                    "checkpoint": null
+                },
+                "now": {
+                    "acceptance": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "stored": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    },
+                    "rule": {
+                        "scene": "s2",
+                        "door": null,
+                        "door_by_old_credit": null
+                    }
+                }
+            }
+        ]
+    }
+]

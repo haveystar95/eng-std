@@ -2860,7 +2860,10 @@ components:
             The transcript. Since FIX-4 each turn also has `scene_id`, `scene_event` (start | end | null),
             `phrases_almost`, `extra_said` and `rejections[]` — `{attempt, kind: rejected_answer | dropped_opening, reason,
             model_call_id, detail}`: each refused attempt of the model on that line and each door dropped, with the row of
-            `model_calls` it came from.
+            `model_calls` it came from. Since FIX-4b a line's `prompt_version` is `conversation_agent.v3.2`, whose answer no
+            longer carries `phrases_used` or `checkpoint_done`: a turn's `phrases_used`, `phrases_almost` and
+            `checkpoint_done` are the server's (its judge and its border of scenes), as they were since FIX-4; `hint_native`
+            of a role line is the lesson's whole sentence of the hint — the client's `hints.sentence`.
           items: { type: object, additionalProperties: true }
         not_stored: { type: array, items: { type: string } }
 
