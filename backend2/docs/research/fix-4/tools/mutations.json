@@ -1,0 +1,218 @@
+[
+  {
+    "name": "1.1 звук «Вспомнить» по сцене карточки",
+    "rule": "§1: файл — по сцене узла, текст записи = текст строки",
+    "defect": "свой scene_id узла не читается",
+    "file": "app/Modules/Plan/Application/Service/CardViews.php",
+    "find": "$own = $value['scene_id'] ?? null;",
+    "replace": "$own = null;",
+    "tests": [{"path": "tests/Feature/Plan/RecallPageSoundTest.php"}]
+  },
+  {
+    "name": "2.1 каркас где угодно в предложении",
+    "rule": "§2: префикс подряд в начале фразы или после вводных слов",
+    "defect": "начало каркаса — любое слово",
+    "file": "app/Modules/Plan/Domain/Service/FrameJudge.php",
+    "find": "return array_values(array_filter($out, static fn (int $start): bool => $start < count($words)));",
+    "replace": "return range(0, max(0, count($words) - 1));",
+    "tests": [{"path": "tests/Unit/Plan/FrameJudgeTest.php"}]
+  },
+  {
+    "name": "2.2 «почти» — два расхождения",
+    "rule": "§2: ПОЧТИ = одно расхождение слова",
+    "defect": "порог почти 2",
+    "file": "app/Modules/Plan/Domain/Service/FrameJudge.php",
+    "find": "public const ALMOST = 1;",
+    "replace": "public const ALMOST = 2;",
+    "tests": [{"path": "tests/Unit/Plan/FrameJudgeTest.php"}]
+  },
+  {
+    "name": "2.3 not после be/модального — расхождение",
+    "rule": "§2, п. 395: отрицание — та же конструкция",
+    "defect": "свободного not нет",
+    "file": "app/Modules/Plan/Domain/Service/FrameJudge.php",
+    "find": "return ($negation['word'] ?? null) === $words[$at] && $at > 0 && in_array($words[$at - 1], $after, true);",
+    "replace": "return false;",
+    "tests": [{"path": "tests/Unit/Plan/FrameJudgeTest.php"}]
+  },
+  {
+    "name": "2.4 do not + глагол — расхождение",
+    "rule": "§2, п. 395: do/does/did not, глагол по основе",
+    "defect": "do-support не прощается",
+    "file": "app/Modules/Plan/Domain/Service/FrameJudge.php",
+    "find": "return in_array($words[$at], $support, true)",
+    "replace": "return false && in_array($words[$at], $support, true)",
+    "tests": [{"path": "tests/Unit/Plan/FrameJudgeTest.php"}]
+  },
+  {
+    "name": "2.5 окно из слов каркаса",
+    "rule": "§2: окно ≥ 1 своё слово («I'm working on» — обрыв)",
+    "defect": "окно без своего слова принимается",
+    "file": "app/Modules/Plan/Domain/Service/FrameJudge.php",
+    "find": "if (array_diff(array_slice($words, $from, $to - $from), array_keys($own)) === []) {",
+    "replace": "if (false) {",
+    "tests": [{"path": "tests/Unit/Plan/FrameJudgeTest.php"}]
+  },
+  {
+    "name": "2.6 артикли в сравнении",
+    "rule": "§2: артикли a/an/the — вне сравнения",
+    "defect": "артикли остаются",
+    "file": "app/Modules/Plan/Domain/Service/FrameWords.php",
+    "find": "$drop = $articles || ! $pack->has('articles') ? [] : array_fill_keys($pack->words('articles'), true);",
+    "replace": "$drop = [];",
+    "tests": [{"path": "tests/Unit/Plan/FrameJudgeTest.php"}]
+  },
+  {
+    "name": "2.7 ход судится по всем сценам",
+    "rule": "§2: судим только каркасы текущей сцены",
+    "defect": "все каркасы разговора",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "array_filter($material->phrasesOf($scene), static fn (ConversationPhrase $p): bool => ! isset($said[$p->id()]))",
+    "replace": "array_filter($material->phrases, static fn (ConversationPhrase $p): bool => ! isset($said[$p->id()]))",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "judges a move by the constructions of the scene"}]
+  },
+  {
+    "name": "2.8 сказанное засчитывается повторно",
+    "rule": "§2: повторно сказанное не засчитываем",
+    "defect": "сказанные каркасы судятся снова",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "array_filter($material->phrasesOf($scene), static fn (ConversationPhrase $p): bool => ! isset($said[$p->id()]))",
+    "replace": "array_filter($material->phrasesOf($scene), static fn (ConversationPhrase $p): bool => true)",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "reads a move for the construction as a phrase"}]
+  },
+  {
+    "name": "3.1 открытие чужой сцены принимается",
+    "rule": "§3: открытие — только цель текущей сцены",
+    "defect": "проверки сцены нет",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "$target->sceneId !== $scene->sceneId => ConversationRejection::FOREIGN_SCENE,",
+    "replace": "",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "drops a door the role names outside its scene"}]
+  },
+  {
+    "name": "3.2 открытие сказанной цели принимается",
+    "rule": "§3: открытие — только несказанная цель",
+    "defect": "проверки «уже сказана» нет",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "isset($said[$target->id()]) => ConversationRejection::ALREADY_SAID,",
+    "replace": "",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "drops a door the role names outside its scene"}]
+  },
+  {
+    "name": "3.3 модели — длинные id",
+    "rule": "§3: цели — короткими id T1…T7",
+    "defect": "id цели — <scene>:<ref>",
+    "file": "app/Modules/Plan/Application/Service/ConversationAgent.php",
+    "find": "'id' => (string) $material->shortId($t),",
+    "replace": "'id' => $t->id(),",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "tells the role only its scene"}]
+  },
+  {
+    "name": "4.1 бюджет сцены — целей + 2",
+    "rule": "§4: бюджет сцены = целей + 1",
+    "defect": "запас сцены 2",
+    "file": "app/Modules/Plan/Domain/Service/ConversationRules.php",
+    "find": "public const SCENE_SPARE_TURNS = 1;",
+    "replace": "public const SCENE_SPARE_TURNS = 2;",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "closes a scene by its rule"}]
+  },
+  {
+    "name": "4.2 сцена не закрывается, когда цели сказаны",
+    "rule": "§4: сцена закрыта, когда все её цели сказаны ИЛИ бюджет исчерпан",
+    "defect": "только бюджет",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "return ($targets !== [] && $unsaid === [])",
+    "replace": "return (false && $unsaid === [])",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "closes a scene by its rule"}]
+  },
+  {
+    "name": "4.3 прощания сцены нет",
+    "rule": "§4: закрытие = прощание роли этой сцены, scene_event end",
+    "defect": "вместо прощания — обычный ответ",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "$this->farewell($plan, $talk, $material, $scene, $turn, $heard, $final ? 0 : $turnsLeft, $over);",
+    "replace": "$this->reply($plan, $talk, $material, $scene, $turn, $heard, $final ? 0 : $turnsLeft, false);",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "closes a scene by its rule"}]
+  },
+  {
+    "name": "4.4 голос не по полу роли сцены",
+    "rule": "§4, §6: голос по полу роли, меняется ходом start",
+    "defect": "голос всегда женский",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "$reply->replyTarget, $scene->partnerGender);",
+    "replace": "$reply->replyTarget, \\App\\Modules\\Shared\\Domain\\ValueObject\\VoiceGender::Female);",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "changes the voice on the next role"}]
+  },
+  {
+    "name": "4.5 ended_by_limit не видит непройденных сцен",
+    "rule": "§4: лимит раньше — ended_by_limit = true",
+    "defect": "только ended_reason limit",
+    "file": "app/Modules/Plan/Domain/Service/ConversationOutcomes.php",
+    "find": "|| ($reason === ConversationEnd::Natural->value && $lastRoleEvent === SceneEvent::End->value && ! $scenesWalked);",
+    "replace": "|| false;",
+    "tests": [{"path": "tests/Unit/Plan/ConversationTest.php", "filter": "knows a talk the limit ended"}]
+  },
+  {
+    "name": "5.1 подсказка не по открытой двери",
+    "rule": "§5: ближайшая = только что открытая, иначе первая несказанная",
+    "defect": "только что открытая пропущена",
+    "file": "app/Modules/Plan/Domain/Service/ConversationLead.php",
+    "find": "if ($target->id() === $opened && ! isset($said[$target->id()])) {",
+    "replace": "if (false) {",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "takes the door the role names"}]
+  },
+  {
+    "name": "5.2 после «почти» нет точной строки",
+    "rule": "§5: после «почти» по X — hint_target = точная строка X",
+    "defect": "target всегда null",
+    "file": "app/Modules/Plan/Application/Service/ConversationViews.php",
+    "find": "target: $hint['exact'] ? $target->lineTarget : null,",
+    "replace": "target: null,",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "reads a move for the construction as a phrase"}]
+  },
+  {
+    "name": "5.3 подсказка — каркас с многоточием",
+    "rule": "§5: hint_native = ПОЛНАЯ фраза с наполнением урока",
+    "defect": "каркас, окно — многоточием",
+    "file": "app/Modules/Plan/Application/Service/ConversationViews.php",
+    "find": "native: IntentClause::of($target->lineNative),",
+    "replace": "native: IntentClause::of(str_replace('___', '…', $target->frameNative)),",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "opens with the role"}]
+  },
+  {
+    "name": "6.1 отброшенное открытие не в журнале",
+    "rule": "§3, §6: отбросить + журнал с причиной",
+    "defect": "запись в журнал выпала",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "$talk->reject(new ConversationRejection(Ulid::generate(), $index, $attempt, RejectionKind::DroppedOpening,",
+    "replace": "(new ConversationRejection(Ulid::generate(), $index, $attempt, RejectionKind::DroppedOpening,",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "drops a door the role names outside its scene"}]
+  },
+  {
+    "name": "6.2 вторая попытка записана первой",
+    "rule": "§6: каждая попытка — своя запись с номером попытки",
+    "defect": "номер попытки 1",
+    "file": "app/Modules/Plan/Application/Service/ConversationMoves.php",
+    "find": "$index, 2, RejectionKind::RejectedAnswer",
+    "replace": "$index, 1, RejectionKind::RejectedAnswer",
+    "tests": [{"path": "tests/Feature/Plan/ConversationApiTest.php", "filter": "takes the second answer whatever it says"}]
+  },
+  {
+    "name": "6.3 «p.m..» снова",
+    "rule": "§6: правило «p.m..» — одна точка",
+    "defect": "сокращение не узнаётся",
+    "file": "app/Modules/Plan/Domain/Service/FrameText.php",
+    "find": "&& str_ends_with($filler, '.') && $ends->closesText($filler) && ! $ends->carriesSentence($filler);",
+    "replace": "&& false;",
+    "tests": [{"path": "tests/Unit/Plan/FrameFillEndsTest.php"}, {"path": "tests/Feature/Plan/RebuildCardTextsTest.php"}]
+  },
+  {
+    "name": "6.4 built_at не пишется",
+    "rule": "§6: plan_scenes.built_at = конец сборки урока",
+    "defect": "конец сборки не записан",
+    "file": "app/Modules/Plan/Infrastructure/Eloquent/EloquentPlanRepository.php",
+    "find": "'built_at' => $at->format(DATE_ATOM), ",
+    "replace": "",
+    "tests": [{"path": "tests/Feature/Admin/AdminPlanPageTest.php", "filter": "stamps the end of a scene"}]
+  }
+]

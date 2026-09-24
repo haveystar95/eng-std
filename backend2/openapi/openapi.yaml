@@ -3328,9 +3328,12 @@ components:
         One target of «Скажи в разговоре» — a CONSTRUCTION, not a sentence (наряд FIX-3 §6): the frame with its window
         `___`, the value the lesson says it with, and — once said — what the learner put into the window. The same shape
         in the talk's document (`PlanConversation.targets`), its summary (`PlanConversationSummary.phrases`) and on the day
-        window's talk row (`PlanWindowStage.targets`). A target is SAID when the frame's key words sounded and something
-        of the learner's own went into its window; a question is said only with its opening word.
-      required: [scene_id, ref, frame_target, frame_native, example_target, example_native, said, value_target]
+        window's talk row (`PlanWindowStage.targets`). A target is SAID when a move says it as a COHERENT PHRASE (наряд
+        FIX-4 §2): the frame's part before the window as an unbroken run where a sentence of the move begins (or right
+        after its opening words), a word of the learner's own in the window, the part after straight after it — a
+        negative is the same construction; ALMOST when one word is off (replaced, added, left out, another form). Only
+        the frames of the scene the talk is in are judged, only the unsaid ones; said stays said, and counts once.
+      required: [scene_id, ref, frame_target, frame_native, example_target, example_native, said, value_target, state]
       properties:
         scene_id: { type: string }
         ref: { type: string, description: 'The phrase — `p3`' }
@@ -3338,8 +3341,12 @@ components:
         frame_native: { type: string, description: '«Я лечу в ___.»' }
         example_target: { type: [string, 'null'], description: 'The value the lesson says the frame with — «London»; null for a frame without a window' }
         example_native: { type: [string, 'null'] }
-        said: { type: boolean }
+        said: { type: boolean, description: 'The same as `state == said` — kept for build (20)' }
         value_target: { type: [string, 'null'], description: 'What the learner put into the window, as heard — «Lisbon»; null until said, and for a frame without a window' }
+        state:
+          type: string
+          enum: [none, almost, said]
+          description: 'Where the construction stands in the talk (наряд FIX-4 §2): `said`; `almost` — a move said it one word off, which does not close it; `none`. Added last — build (20) reads the keys before it as they were'
 
     PlanWindowWord:
       type: object
@@ -4706,8 +4713,12 @@ components:
         THE TALK WITH THE AGENT (наряд CONV-1, кадры 37-5…37-12) — the sixth stage of a day, whole:
         the ribbon, whose move it is, the intention offered for the next one and, once it is over,
         the summary. Everything countable is counted here; the client words nothing. Since наряд CONV-2:
-        the entry title, the TARGETS the talk is for (ticked off turn by turn) and whether it is a replay.
-      required: [id, plan_id, day, type, state, replay, talk_title_native, partner, scene, scenes, minutes_estimate, turns_left, targets, hints, turns, summary]
+        the entry title, the TARGETS the talk is for (ticked off turn by turn) and whether it is a replay. Since наряд
+        FIX-4 (every field added, none changed): where each target stands (`targets[].state`), the constructions said
+        beside the targets (`extra_said`), the hint whole with its exact line after an «almost» (`hints.target`, `ref`),
+        and the scenes' border kept by the server — each line's scene and the greeting and goodbye of a scene
+        (`turns[].scene_id`, `scene_event`).
+      required: [id, plan_id, day, type, state, replay, talk_title_native, partner, scene, scenes, minutes_estimate, turns_left, targets, extra_said, hints, turns, summary]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
         plan_id: { type: string }
@@ -4759,7 +4770,7 @@ components:
               lines: { type: integer, description: 'How many lines of their own the learner is preparing there' }
               state: { type: string, enum: [current, done, locked] }
         minutes_estimate: { type: integer, description: '«около N минут» — the talk''s own, by its kind: 5 on a scene day, 6 on the rehearsal, 4 on a review (`plan.conversation.minutes`, наряд FIX-3 §7). It is also the talk''s HARD STOP: once the time the talk was talked reaches it, the role''s next line is its last (`ended_reason: limit`)' }
-        turns_left: { type: integer, minimum: 0, description: 'The learner''s moves left — a move per target and two more (наряд FIX-3 §7: 7 targets → 9 moves); a rescue spends none of them. Every target said is no end: the talk goes on to its last move or the learner''s goodbye' }
+        turns_left: { type: integer, minimum: 0, description: 'The learner''s moves left — a move per target and two more (наряд FIX-3 §7: 7 targets → 9 moves); over several scenes, each scene''s moves together — a move per target of the scene and one more (наряд FIX-4 §4: 4 + 1 and 3 + 1). A rescue spends none of them. Every target said is no end of a day''s talk; a scene of a rehearsal closes on it (see `turns[].scene_event`)' }
         targets:
           type: array
           description: >-
@@ -4771,21 +4782,31 @@ components:
             led to them one by one (наряд FIX-3 §7).
           maxItems: 7
           items: { $ref: '#/components/schemas/PlanConversationTarget' }
+        extra_said:
+          type: array
+          description: '«Ещё вспомнил» (наряд FIX-4 §2): the constructions of the talk''s scenes said that are no target — never in «X из Y»'
+          items: { $ref: '#/components/schemas/PlanConversationTarget' }
         hints:
           type: object
-          required: [enabled, delay_ms, native]
+          required: [enabled, delay_ms, native, target, scene_id, ref]
           properties:
             enabled: { type: boolean, description: 'False — «Без подсказок»: no chip and no «Подсказать» on the screen' }
             delay_ms: { type: integer, description: 'How long the silence is before the chip comes up by itself (кадр 37-7)' }
             native:
               type: [string, 'null']
               description: >-
-                The construction to offer for the next move, in the learner's language, AS A CLAUSE — no capital, no
-                closing full stop, its window an ellipsis («я лечу в …», наряд FIX-3 §6) — because the client prints it
-                inside its own «Скажи, что …». It is the target the role's last line opened the door to (the answer to
-                its question, the question it gave a reason for); after a line that opened none, the door of the line
-                before it while that is unsaid; else the next target the talk leads to (наряд FIX-3 §7). Null when hints
-                are off, when the move is not the learner's, when every target is said, and when the talk has ended.
+                The target to offer for the next move WHOLE — the lesson's own sentence of it, its value in it («у него
+                болит поясница», never «у него болит …», наряд FIX-4 §5) — in the learner's language AS A CLAUSE: no
+                capital, no closing full stop, because the client prints it inside its own «Скажи, что …». Which target:
+                the one the role's last line has just opened, else the first target of the scene not said yet; after a
+                move that said a target ALMOST, that target. It changes with every line of the role. Null when hints are
+                off, when the move is not the learner's, when every target of the scene is said, and when the talk has
+                ended.
+            target:
+              type: [string, 'null']
+              description: 'The target''s exact line in the language of the talk («The pain is sharp when he bends.») — only on the move right after one that said it almost (наряд FIX-4 §5); else null'
+            scene_id: { type: [string, 'null'], description: 'Which target the hint is — its scene…' }
+            ref: { type: [string, 'null'], description: '…and its ref: `targets[]` by these two' }
         turns:
           type: array
           description: 'The whole ribbon, oldest first — the talk is a dozen short lines, so it travels whole'
@@ -4798,7 +4819,7 @@ components:
     PlanConversationTurn:
       type: object
       description: 'One line of the ribbon, written once and never changed'
-      required: [index, speaker, kind, text_target, text_native, audio, understood, phrases_used, off_topic, created_at]
+      required: [index, speaker, kind, text_target, text_native, audio, understood, phrases_used, extra_said, off_topic, created_at, scene_id, scene_event]
       properties:
         index: { type: integer, minimum: 1, description: 'Its place in the journal — the server''s, not the client''s' }
         speaker: { type: string, enum: [partner, learner] }
@@ -4817,10 +4838,10 @@ components:
         phrases_used:
           type: array
           description: >-
-            The targets the learner's line said — by the SERVER's rule of the construction (наряд FIX-3 §6: the frame's
-            key words and a value in its window; the role's word only as a second support) — named by scene and ref;
-            their frames and values are the talk's `targets` (наряд FIX-3 §6: the construction, not a text of its
-            own). Empty on the role's own lines.
+            The targets the learner's line said — by the SERVER's judge of the construction (наряд FIX-4 §2: a coherent
+            phrase in the scene the talk is in; the model's word is not read) — named by scene and ref; their frames
+            and values are the talk's `targets` (наряд FIX-3 §6: the construction, not a text of its own). Empty on the
+            role's own lines.
           items:
             type: object
             additionalProperties: false
@@ -4828,13 +4849,32 @@ components:
             properties:
               scene_id: { type: string }
               ref: { type: string, description: 'The phrase — `p3`' }
+        extra_said:
+          type: array
+          description: 'The constructions of the scene the line said that are no target (наряд FIX-4 §2) — by scene and ref, their frames in `extra_said` of the talk'
+          items:
+            type: object
+            additionalProperties: false
+            required: [scene_id, ref]
+            properties:
+              scene_id: { type: string }
+              ref: { type: string }
         off_topic: { type: [boolean, 'null'], description: 'Did the move go where this person would not go' }
         created_at: { type: string, format: date-time }
+        scene_id: { type: [string, 'null'], description: 'The scene the line was said in (наряд FIX-4 §4); null on a line written before it' }
+        scene_event:
+          type: [string, 'null']
+          enum: [start, end, null]
+          description: >-
+            In a talk over several scenes (наряд FIX-4 §4): `start` — the role of a scene greets the learner first (a new
+            person, its own voice — the voice changes on this line) and opens the first target of its scene; `end` — the
+            role's short goodbye when the server closed its scene (its targets said or its moves spent) — no door. Null
+            on every other line and on every line of a day's talk.
 
     PlanConversationSummary:
       type: object
       description: 'THE SUMMARY (кадр 37-12) — a projection of the journal, never a second count kept beside it'
-      required: [said_count, phrases_used, phrases_total, phrases, understood_all, not_understood, rescues, ended_reason, minutes, returns_tomorrow]
+      required: [said_count, phrases_used, phrases_total, phrases, understood_all, not_understood, rescues, ended_reason, ended_by_limit, minutes, returns_tomorrow, extra_said]
       properties:
         said_count: { type: integer, description: '«Сказал сам N реплик» — moves with words of the learner''s own in them' }
         phrases_used: { type: integer, description: 'How many of the talk''s targets sounded' }
@@ -4854,6 +4894,15 @@ components:
             said», наряд FIX-3 §7); `limit` — the talk reached the money or the minutes the plan allows it and the
             role closed it on its next move; `declined` — a refused subject pushed twice;
             `replayed` — «Ещё раз» closed it to make room for a new one.
+        ended_by_limit:
+          type: boolean
+          description: >-
+            A limit ended the talk (наряд FIX-4 §4): `limit`, or the role's goodbye when the learner's moves ran out
+            before the talk's scenes were walked. A flag beside `ended_reason`, whose values do not change.
+        extra_said:
+          type: array
+          description: '«Ещё вспомнил» (наряд FIX-4 §2): the constructions said beside the targets, with their values'
+          items: { $ref: '#/components/schemas/PlanConversationTarget' }
         minutes: { type: [integer, 'null'], description: '«Разговор окончен · 3 минуты» — the time the talk was TALKED: the gaps between its neighbouring lines, each counted up to 60 s (наряд CONV-2, п. 3); a talk left open for five hours is two minutes, not three hundred' }
         returns_tomorrow:
           type: boolean

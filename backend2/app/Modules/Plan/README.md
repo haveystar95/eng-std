@@ -9,7 +9,11 @@ Tables: `plans`, `plan_scenes`, `plan_days`, `day_cards`, `plan_terms`, `plan_li
 `plan_check_counters`, and — since наряд CONV-1 — `conversations` + `conversation_turns`: the talk with the agent
 that is the SIXTH stage of a day, and its append-only journal of lines (`docs/plan-v2.md` §11); since наряд CONV-2 —
 `plan_stage_passages`, the append-only journal of walked stages (one row per day and stage, never changed; its first
-user is the talk: the first talk of a day that ended of its own walks the sixth stage, and «Ещё раз» after it is a replay). A `day_cards` row carries one kind of the registry of day trainers (наряд SESSION-1a:
+user is the talk: the first talk of a day that ended of its own walks the sixth stage, and «Ещё раз» after it is a replay); since наряд FIX-4 —
+`conversation_rejections`, the append-only journal of what the server refused of a talk's role (an answer asked again, a
+door dropped — its line, attempt, reason and `model_calls` id), and on the lines themselves the scene each was said in
+and a scene's greeting or goodbye (`conversation_turns.scene_id`, `scene_event`) and the constructions a move said
+almost (`phrases_almost`); `plan_scenes.built_at` — the end of a scene's lesson build. A `day_cards` row carries one kind of the registry of day trainers (наряд SESSION-1a:
 29 values in the enum, 28 dealt, `listen_pairs` reserved), its unit (`word`/`phrase`/`exchange`/`day`) and
 `response` — what came with the attempt: what was heard, the slot's value, whether the frame was shown, the
 client's mode, and the judge's ruling with its call. Photo tones (PLAN-UI-3): `plan_scenes.image_tone`, `plans.cover_image_tone`
@@ -97,8 +101,16 @@ carries until it is read), `PartnerLines` (the pace line of `listen_pace` and th
 stands — from card tallies, the dealer's outline or the day type, plus the talk's own node, which has no cards — `TalkStage`: ahead / open / passed, read off the journal of walked stages, CONV-2),
 `DayStages` (the six stages a day walks, by type, by what the day was dealt with and — for a day not dealt yet —
 by the rollout switch), `ConversationRules` (turns, minutes, the money cap and the rollout switch of a talk, from
-`plan.conversation`; since BACK-TAILS-2 also the replays a day allows a calendar day), `ConversationOutcomes` + `PhraseUse` (the talk's
-summary read off its journal, and which of its targets the SERVER credits — BACK-TAILS-2 §2: a target's key words by their bases, in any order, one forgiven from four, the role's `phrases_used` a second support only; the share of a line the move had already said, which the echo guard reads — §9), `ConversationTargets` (CONV-2: the up to seven phrases a talk is FOR, over its checkpoints in order — one list for the entry card, the ribbon's strip, the summary and — BACK-TAILS-2 §4 — the talk's row of the day window), `RoleLines` (CONV-2: the role's reply that says a learner line, or a rescue that says the rescued line again; BACK-TAILS-2: a sentence that says the learner's last move back — the guards `ConversationMoves` asks once more on, cuts, and replaces with the pack's neutral line), `IntentClause` (the hint as the clause after «Скажи, что …»), `InstrumentalRole` (the role in the instrumental for «Поговори с врачом», ru/uk, null where the ending hangs on stress),
+`plan.conversation`; since BACK-TAILS-2 also the replays a day allows a calendar day; since FIX-4 a scene's moves — its
+targets and one more), `ConversationOutcomes` (the talk's summary read off its journal: said · almost · none per target,
+«ещё вспомнил», `ended_by_limit`), `FrameJudge` + `FrameWords` + `WordBases` (FIX-4 §2: which constructions of the scene
+the talk is in a move SAID or said ALMOST — a coherent phrase: the frame's part before its window where a sentence
+begins or after its opening words, a word of the learner's own in the window, the part after straight after it; a
+negative the same construction, contractions spelt out and articles left out by the pack; the model is not asked),
+`LineShare` (the share of a line the move had already said, which the echo guard reads — BACK-TAILS-2 §9),
+`ConversationLead` (FIX-3 §7, FIX-4 §§3, 5: the door to lead the role to within its scene — a target said almost first
+— and the hint: the whole sentence of the target just opened, else the first not said, with its exact line after an
+almost), `ConversationTargets` (CONV-2: the up to seven phrases a talk is FOR, over its checkpoints in order — one list for the entry card, the ribbon's strip, the summary and — BACK-TAILS-2 §4 — the talk's row of the day window), `RoleLines` (CONV-2: the role's reply that says a learner line, or a rescue that says the rescued line again; BACK-TAILS-2: a sentence that says the learner's last move back — the guards `ConversationMoves` asks once more on, cuts, and replaces with the pack's neutral line), `IntentClause` (the hint as the clause after «Скажи, что …»), `InstrumentalRole` (the role in the instrumental for «Поговори с врачом», ru/uk, null where the ending hangs on stress),
 `DayHighlights` («Что было хорошо», кадр 37-13), `BlueprintChecker` (the plan
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
 card's address, `LessonCodes`), `Check/Language` — the rules' languages: `LanguagePack` (one language's words, marks
@@ -185,7 +197,7 @@ reads plan tables.
 
 | Port | Implementations |
 |---|---|
-| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v3` since FIX-3, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
+| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v3.1` since FIX-4, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; the role is told its scene only, its targets by the talk's short ids `T1…T7`, the learner's earlier lines as facts (`EARLIER`) and — on a scene's goodbye — `SCENE_END`; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn, and every refused attempt is journaled in `conversation_rejections` with its `model_calls` id) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `NextDayAccess` | `EveryNextDayAllowed` — may the learner have the next day; asked by `CloseDayHandler` before the next day's lesson is queued (GEN-3 §11). Always yes until PAY-1, whose paywall is this one method |
@@ -215,7 +227,7 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3`; `lesson_day.v4.6`
+  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.1`; `lesson_day.v4.6`
   and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
@@ -238,7 +250,7 @@ reads plan tables.
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
-  conversation's guards count there too, under `conversation_agent.v3` (`conversation.learner_line`, `…_cut`, `…_kept`,
+  conversation's guards count there too, under `conversation_agent.v3.1` (`conversation.learner_line`, `…_cut`, `…_kept`,
   `conversation.rescue_same_words`, `…_kept` — CONV-2; `conversation.learner_echo`, `…_cut`, `…_neutral`, `…_kept` —
   BACK-TAILS-2 §9, against every move since FIX-3 §11; `conversation.own_line`, `…_kept` and `conversation.early_end`,
   `…_kept` — FIX-3 §7).

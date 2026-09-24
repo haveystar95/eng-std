@@ -1,0 +1,38 @@
+разговор 01M3958HM2X2V4XP0CCQXWTHXR · ходов 9
+ 1 РОЛЬ  [начало «Запись к врачу»] Hello. What seems to be the problem today?
+   подсказка: «Скажи, что у него болит поясница» · цель p1
+   цели: p1=none p2=none p3=none p4=none p1=none p2=none p3=none
+ 2 УЧЕНИК It hurts in his lower back. · сказано: p1
+ 3 РОЛЬ  When did it start?
+   подсказка: «Скажи, что началось три дня назад» · цель p2
+   цели: p1=said p2=none p3=none p4=none p1=none p2=none p3=none
+ 4 УЧЕНИК It started two days ago. · сказано: p2
+ 5 РОЛЬ  You said two days ago, but earlier you said three days ago. Is the pain sharp when he bends?
+   подсказка: «Скажи, что боль острая, когда он наклоняется» · цель p3
+   цели: p1=said p2=said p3=none p4=none p1=none p2=none p3=none
+ 6 УЧЕНИК The pain is sharp when she bends.
+ 7 РОЛЬ  That sounds like a muscle strain. He should rest and use a heating pad.
+   подсказка: «Скажи, что боль острая, когда он наклоняется» · точная строка: «The pain is sharp when he bends.» · цель p3
+   цели: p1=said p2=said p3=almost p4=none p1=none p2=none p3=none
+ 8 УЧЕНИК The pain is sharp when he bends. · сказано: p3
+ 9 РОЛЬ  Is there a fever too?
+   подсказка: «Скажи, что температуры у него нет» · цель p4
+   цели: p1=said p2=said p3=said p4=none p1=none p2=none p3=none
+10 УЧЕНИК He doesn't have a fever. · сказано: p4
+11 РОЛЬ  [прощание «Запись к врачу»] Good. Then it sounds like a muscle strain. Goodbye.
+12 РОЛЬ  [начало «Приём у врача»] Hello. What symptoms does your son have today?
+   подсказка: «Скажи, что у него температура и болит горло» · цель p1
+   цели: p1=said p2=said p3=said p4=said p1=none p2=none p3=none
+13 УЧЕНИК He has a fever and a sore throat. · сказано: p1
+14 РОЛЬ  How long has he been sick?
+   подсказка: «Скажи, что он болеет уже три дня» · цель p2
+   цели: p1=said p2=said p3=said p4=said p1=said p2=none p3=none
+15 УЧЕНИК He's been sick for three days. I gave him paracetamol. · сказано: p2 · ещё вспомнил: p4
+16 РОЛЬ  Thank you. Did you give him any medicine for the fever?
+   подсказка: «Скажи, что мне сказать вам его температуру?» · цель p3
+   цели: p1=said p2=said p3=said p4=said p1=said p2=said p3=none
+17 УЧЕНИК Should I tell you his temperature? · сказано: p3
+18 РОЛЬ  [прощание «Приём у врача»] Yes, please tell me the highest reading. Goodbye.
+
+итог: ended · {"ended_reason":"natural","ended_by_limit":false,"phrases_used":7,"phrases_total":7,"extra_said":["p4"]}
+wrote live/live-rehearsal.json

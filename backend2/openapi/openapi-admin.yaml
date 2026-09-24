@@ -2818,6 +2818,7 @@ components:
         type: { type: string, enum: [day, rehearsal, review] }
         state: { type: string, enum: [agent_turn, your_turn, ended] }
         ended_reason: { type: [string, 'null'], enum: [natural, limit, declined, replayed, null] }
+        ended_by_limit: { type: boolean, description: 'A limit ended the talk — `limit`, or the role''s goodbye when the moves ran out before its scenes were walked (FIX-4 §4); the page marks it «лимит»' }
         ended_label: { type: [string, 'null'] }
         started_at: { type: string, format: date-time }
         ended_at: { type: [string, 'null'], format: date-time }
@@ -2834,14 +2835,33 @@ components:
             properties:
               scene_id: { type: string }
               ref: { type: string }
+              short_id: { type: [string, 'null'], description: 'What the role knows it by — `T3` (FIX-4 §3)' }
               frame_target: { type: string }
               frame_native: { type: string }
               example_target: { type: [string, 'null'] }
-              status: { type: string, enum: [said, partial, none] }
+              line_target: { type: string, description: 'The lesson''s own sentence of the construction' }
+              status: { type: string, enum: [said, almost, none], description: 'As the judge of the moves wrote it (FIX-4 §2)' }
               said_turn: { type: [integer, 'null'] }
-              key_words: { type: object, additionalProperties: true }
+              almost_turn: { type: [integer, 'null'] }
               opened_on_turn: { type: [integer, 'null'] }
-        turns: { type: array, items: { type: object, additionalProperties: true } }
+        extra_said:
+          type: array
+          description: '«Ещё вспомнил» — the frames of the talk''s scenes said that are no target (FIX-4 §2)'
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              frame_target: { type: [string, 'null'] }
+              said_turn: { type: integer }
+        rejections: { type: integer, description: 'How many things the server refused of the role in the talk (FIX-4 §§3, 6)' }
+        turns:
+          type: array
+          description: >-
+            The transcript. Since FIX-4 each turn also has `scene_id`, `scene_event` (start | end | null),
+            `phrases_almost`, `extra_said` and `rejections[]` — `{attempt, kind: rejected_answer | dropped_opening, reason,
+            model_call_id, detail}`: each refused attempt of the model on that line and each door dropped, with the row of
+            `model_calls` it came from.
+          items: { type: object, additionalProperties: true }
         not_stored: { type: array, items: { type: string } }
 
     PlanMoney:
