@@ -90,7 +90,7 @@ final readonly class AnthropicPlaygroundModel implements PlaygroundModelPort
                 ->timeout($this->timeoutSeconds)
                 ->post(rtrim($this->baseUrl, '/') . '/messages', $payload)),
             fn (Response $r): ModelCallUsage => $this->usage($r),
-        );
+        )->response;
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
         if ($response->failed()) {

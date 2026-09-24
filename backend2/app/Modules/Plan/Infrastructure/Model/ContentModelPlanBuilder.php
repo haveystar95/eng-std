@@ -250,6 +250,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
             latencyMs: $answer->latencyMs,
             raw: $answer->raw,
             cachedTokensIn: $answer->cachedTokensIn,
+            callId: $answer->callId,
         );
     }
 }

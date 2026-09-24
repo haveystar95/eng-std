@@ -94,7 +94,10 @@ it('writes a model call down before it is made and finishes it with the usage, t
         ->and($row['http_status'])->toBe(200)
         ->and($row['finished_at'])->not->toBeNull()
         ->and($answer->cachedTokensIn)->toBe(6912)
-        ->and($answer->costUsd)->toBe('0.064448');
+        ->and($answer->costUsd)->toBe('0.064448')
+        // The answer names its row (наряд FIX-4 §6): a caller that keeps something of the call beside it — the talk's
+        // journal of refusals — points at the call, never copies it.
+        ->and($answer->callId)->toBe($row['id']);
 });
 
 // Addendum C: «найденный дефект: адаптер OpenAI обрывает ожидание на 60 с (cURL error 28, 0 bytes received), модель досчитывает,

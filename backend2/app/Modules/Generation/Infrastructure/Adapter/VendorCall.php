@@ -55,13 +55,13 @@ final readonly class VendorCall
     }
 
     /**
-     * Send the request, journalled.
+     * Send the request, journalled — the response and the journal's row for it.
      *
      * @param  array<string, mixed>  $body  the request body — its size is the estimate of the input tokens
      * @param  Closure(): Response  $send  the HTTP call itself (with its retries)
      * @param  Closure(Response): ModelCallUsage  $usage  what a successful answer says it spent
      */
-    public function send(ProviderId $provider, string $model, ?string $purpose, int $timeoutSeconds, array $body, Closure $send, Closure $usage): Response
+    public function send(ProviderId $provider, string $model, ?string $purpose, int $timeoutSeconds, array $body, Closure $send, Closure $usage): SentCall
     {
         $id = $this->journal->started(new ModelCallStart($provider->value, $model, $purpose, ModelCallStart::estimateTokens($body), $timeoutSeconds));
         $startedAt = hrtime(true);
@@ -81,7 +81,7 @@ final readonly class VendorCall
             $this->journal->completed($id, $usage($response), $response->status(), $latencyMs);
         }
 
-        return $response;
+        return new SentCall($response, $id);
     }
 
     private static function since(int|float $startedAt): int

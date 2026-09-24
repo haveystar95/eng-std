@@ -25,6 +25,8 @@ final readonly class ModelAnswer
      * @param  string  $raw  the answer text, truncated — enough to diagnose a malformed reply
      * @param  int|null  $cachedTokensIn  of `tokensIn`, what the vendor served from its prompt cache (and billed at its
      *                                    cached rate — `costUsd` already counts it so); null when the vendor did not say
+     * @param  string|null  $callId  the row of the journal of model calls (`model_calls.id`) this answer was written
+     *                               under — null when the journal could not write it
      */
     public function __construct(
         public array $payload,
@@ -35,5 +37,6 @@ final readonly class ModelAnswer
         public ?string $costUsd,
         public string $raw = '',
         public ?int $cachedTokensIn = null,
+        public ?string $callId = null,
     ) {}
 }

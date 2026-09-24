@@ -85,7 +85,7 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
             ],
         ];
 
-        $response = $this->calls->send(
+        $sent = $this->calls->send(
             $this->provider,
             $this->model,
             $this->journalPurpose ?? $this->purpose,
@@ -99,6 +99,7 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
                 ->post(rtrim($this->baseUrl, '/') . '/chat/completions', $body)),
             fn (Response $r): ModelCallUsage => $this->usage($r),
         );
+        $response = $sent->response;
 
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
@@ -130,6 +131,7 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
             costUsd: $usage->costUsd,
             raw: mb_substr($content, 0, 4000),
             cachedTokensIn: $usage->cachedTokensIn,
+            callId: $sent->callId,
         );
     }
 

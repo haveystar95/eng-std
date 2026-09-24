@@ -87,7 +87,7 @@ final readonly class AnthropicContentModel implements ContentModelPort
         ];
 
         // The same call policy as every adapter of the module — journal, timeouts, what is retried: {@see VendorCall}.
-        $response = $this->calls->send(
+        $sent = $this->calls->send(
             ProviderId::Anthropic,
             $this->model,
             $this->journalPurpose ?? $this->purpose,
@@ -103,6 +103,7 @@ final readonly class AnthropicContentModel implements ContentModelPort
                 ->post(rtrim($this->baseUrl, '/') . '/messages', $body)),
             fn (Response $r): ModelCallUsage => $this->usage($r),
         );
+        $response = $sent->response;
 
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
@@ -138,6 +139,7 @@ final readonly class AnthropicContentModel implements ContentModelPort
             tokensOut: $usage->tokensOut,
             costUsd: $usage->costUsd,
             raw: mb_substr($content, 0, 4000),
+            callId: $sent->callId,
         );
     }
 

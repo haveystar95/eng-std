@@ -20,5 +20,7 @@ final readonly class ModelReply
         public string $raw = '',
         /** Of `tokensIn`, what the vendor served from its prompt cache (already priced so in `costUsd`); null when unsaid. */
         public ?int $cachedTokensIn = null,
+        /** The row of the journal of model calls (`model_calls.id`) this answer came from — null when it was not written. */
+        public ?string $callId = null,
     ) {}
 }

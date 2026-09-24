@@ -79,7 +79,7 @@ final readonly class OpenAiCompatiblePlaygroundModel implements PlaygroundModelP
                 ->timeout($this->timeoutSeconds)
                 ->post(rtrim($this->baseUrl, '/') . '/chat/completions', $payload)),
             fn (Response $r): ModelCallUsage => $this->usage($r),
-        );
+        )->response;
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
         if ($response->failed()) {

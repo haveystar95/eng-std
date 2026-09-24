@@ -83,7 +83,7 @@ final readonly class GeminiContentModel implements ContentModelPort
 
         // The same call policy as every adapter of the module — journal, timeouts, what is retried: {@see VendorCall}.
         // Google adds 503 UNAVAILABLE under load to the usual 429; both are among the retried statuses.
-        $response = $this->calls->send(
+        $sent = $this->calls->send(
             ProviderId::Gemini,
             $this->model,
             $this->journalPurpose ?? $this->purpose,
@@ -96,6 +96,7 @@ final readonly class GeminiContentModel implements ContentModelPort
                 ->post(rtrim($this->baseUrl, '/') . '/models/' . $this->model . ':generateContent', $body)),
             fn (Response $r): ModelCallUsage => $this->usage($r),
         );
+        $response = $sent->response;
 
         $latencyMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
 
@@ -138,6 +139,7 @@ final readonly class GeminiContentModel implements ContentModelPort
             costUsd: $usage->costUsd,
             raw: mb_substr($content, 0, 4000),
             cachedTokensIn: $usage->cachedTokensIn,
+            callId: $sent->callId,
         );
     }
 
