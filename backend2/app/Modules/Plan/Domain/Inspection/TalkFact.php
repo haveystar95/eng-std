@@ -8,7 +8,8 @@ namespace App\Modules\Plan\Domain\Inspection;
  * A talk as the checks see it: its role's lines and how many of them opened a construction (`opens_target`), how it ended,
  * and every voiced line of the role with the voice it was said in against the voice its cast gives it. `openersRecorded`
  * — the talk began once `opens_target` was being written (23.09, FIX-3 §7); before that a role line carries none, and its
- * absence says nothing.
+ * absence says nothing. `endedByLimit` — a limit ended it (наряд FIX-4 §4): `limit`, or a goodbye the turns forced before
+ * the last scene was through.
  */
 final readonly class TalkFact
 {
@@ -23,5 +24,6 @@ final readonly class TalkFact
         public int $openers,
         public array $voicedLines,
         public bool $openersRecorded = true,
+        public bool $endedByLimit = false,
     ) {}
 }

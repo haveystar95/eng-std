@@ -134,10 +134,10 @@ final class FakePlanModel implements PlanModelPort
     }
 
     /**
-     * The role, played deterministically (наряд CONV-1): it asks, walks one checkpoint per move,
-     * hears every phrase the learner said, says a rescue in other words (наряд CONV-2, п. 4б), and says
-     * goodbye when the turns run out — enough for the whole suite to walk a talk end to end without a
-     * network.
+     * The role, played deterministically (наряд CONV-1): it asks, opens the door it is led to, says a rescue in other words
+     * (наряд CONV-2, п. 4б), greets as the person of its scene, says goodbye when the server closes its scene or the turns
+     * run out (наряд FIX-4 §4) — enough for the whole suite to walk a talk end to end without a network. Each reply of a
+     * talk is a line of its own (the n-th call's), so the guard against a line said twice never fires on the fake.
      */
     public function conversationTurn(ConversationAgentRequest $request): ModelReply
     {
@@ -145,9 +145,9 @@ final class FakePlanModel implements PlanModelPort
         $this->conversationRequests[] = $request;
         $payload = $this->conversation !== null
             ? ($this->conversation)($request, $this->conversationCalls)
-            : self::conversationPayload($request);
+            : self::conversationPayload($request, $this->conversationCalls);
 
-        return new ModelReply($payload, 'conversation_agent.v3', self::MODEL, 900, 90, '0.000000', 2, '');
+        return new ModelReply($payload, 'conversation_agent.v3.1', self::MODEL, 900, 90, '0.000000', 2, '', callId: sprintf('01J8FAKEM0DE1CA11%09d', $this->conversationCalls));
     }
 
     /** @var list<array{0: string, 1: string}> the fake role's lines, one per move, none of them said twice in a talk */
@@ -165,30 +165,43 @@ final class FakePlanModel implements PlanModelPort
         ['One moment, please. I am checking the schedule.', 'Минутку, пожалуйста. Я смотрю расписание.'],
     ];
 
-    /** @return array<string, mixed> */
-    public static function conversationPayload(ConversationAgentRequest $request): array
+    /**
+     * The fake role's answer to one request — `$call` is the call's number in the test (a test's own closure may pass its
+     * own): the n-th line of the role, so no line is said twice in a talk; without it, by the lines of the scene so far.
+     *
+     * @return array<string, mixed>
+     */
+    public static function conversationPayload(ConversationAgentRequest $request, ?int $call = null): array
     {
         $ending = $request->turnsLeft <= 0;
-        $checkpoint = $request->turn === 'rescue' ? null : $request->currentCheckpoint;
-        // A role that behaves: a new line every move (RoleLines guard 4) — the n-th of its lines by how many it has said.
-        $line = self::ROLE_LINES[count(array_filter($request->history, static fn (array $h): bool => $h['speaker'] === 'you')) % count(self::ROLE_LINES)];
+        $greeting = $request->turn === 'start';
+        $said = $call ?? count(array_filter($request->history, static fn (array $h): bool => $h['speaker'] === 'you'));
+        $line = self::ROLE_LINES[$said % count(self::ROLE_LINES)];
+        $role = trim($request->roleTarget) === '' ? 'person' : mb_strtolower($request->roleTarget);
 
         return [
             'reply_target' => match (true) {
+                $request->sceneEnd && ! $ending => "Thank you, that is all here. The {$role} says goodbye.",
                 $ending => 'Take care. See you next week.',
                 $request->turn === 'rescue' => 'What is wrong today?',
+                // The next scene's role meets the learner as somebody new — in other words than the first one's.
+                $greeting && $request->earlier !== [] => "Good day, I am the {$role} you will see next. ".$line[0],
+                $greeting => "Hello, I am your {$role} today. ".$line[0],
                 default => $line[0],
             },
             'reply_native' => match (true) {
+                $request->sceneEnd && ! $ending => 'Спасибо, здесь всё. До свидания.',
                 $ending => 'Берегите себя. До встречи на следующей неделе.',
                 $request->turn === 'rescue' => 'Что сегодня не так?',
+                $greeting && $request->earlier !== [] => 'Добрый день. '.$line[1],
+                $greeting => 'Здравствуйте. '.$line[1],
                 default => $line[1],
             },
             'understood' => $request->turn === 'said' ? true : null,
             'phrases_used' => [],
             'off_topic' => false,
-            'checkpoint_done' => $ending ? $checkpoint : null,
-            'opens' => $ending ? null : $request->leadTo,
+            'checkpoint_done' => null,
+            'opens' => $ending || $request->sceneEnd ? null : $request->leadTo,
             'end' => $ending ? 'natural' : 'no',
         ];
     }
@@ -215,7 +228,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function conversationPromptVersion(): string
     {
-        return 'conversation_agent.v3';
+        return 'conversation_agent.v3.1';
     }
 
     public function lessonPromptVersion(): string

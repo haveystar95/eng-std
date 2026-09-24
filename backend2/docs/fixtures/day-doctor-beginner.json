@@ -7902,7 +7902,8 @@
                         "example_target": "lower back",
                         "example_native": "поясница",
                         "said": false,
-                        "value_target": null
+                        "value_target": null,
+                        "state": "none"
                     },
                     {
                         "scene_id": "ulid-0003",
@@ -7912,7 +7913,8 @@
                         "example_target": "three days ago",
                         "example_native": "три дня назад",
                         "said": false,
-                        "value_target": null
+                        "value_target": null,
+                        "state": "none"
                     },
                     {
                         "scene_id": "ulid-0003",
@@ -7922,7 +7924,8 @@
                         "example_target": "sharp",
                         "example_native": "острая",
                         "said": false,
-                        "value_target": null
+                        "value_target": null,
+                        "state": "none"
                     },
                     {
                         "scene_id": "ulid-0003",
@@ -7932,7 +7935,8 @@
                         "example_target": null,
                         "example_native": null,
                         "said": false,
-                        "value_target": null
+                        "value_target": null,
+                        "state": "none"
                     },
                     {
                         "scene_id": "ulid-0003",
@@ -7942,7 +7946,8 @@
                         "example_target": "at home",
                         "example_native": "дома",
                         "said": false,
-                        "value_target": null
+                        "value_target": null,
+                        "state": "none"
                     },
                     {
                         "scene_id": "ulid-0003",
@@ -7952,7 +7957,8 @@
                         "example_target": "an X-ray",
                         "example_native": "сделать рентген",
                         "said": false,
-                        "value_target": null
+                        "value_target": null,
+                        "state": "none"
                     }
                 ],
                 "again": false,

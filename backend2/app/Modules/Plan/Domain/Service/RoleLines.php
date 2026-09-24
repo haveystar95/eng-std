@@ -37,8 +37,8 @@ use App\Modules\Plan\Domain\Check\Language\LanguageWords;
  *    talk, not only the last one). Guard 1 reads the reply against the lines the PLAN gives the learner, and lets an
  *    echo of the talk through — so on the owner's gym replay the receptionist answered «Weekdays works for me» with «That
  *    works for me on weekdays» in its own first person, and the words could not tell it from listening. The second
- *    reading is against every MOVE of the learner as heard, by the rule the talk reads the learner by
- *    ({@see PhraseUse::share()}): a sentence of the reply whose key words a move had already said — {@see ECHO} of them
+ *    reading is against every MOVE of the learner as heard, by the share of a line's key words a move holds
+ *    ({@see LineShare::share()}): a sentence of the reply whose key words a move had already said — {@see ECHO} of them
  *    or more, by their bases, in any order; as said, or with the first and second person swapped («My son has a fever»
  *    → «Your son has a fever») — is that move said back. Read as a share of the SENTENCE, not an overlap of the two:
  *    «It started three days ago.» after «His lower back hurts, and three days ago it started.» is all of it the
@@ -209,7 +209,7 @@ final class RoleLines
      *
      * @param  list<string>  $moves  what the learner has said in this talk, as heard, the move being answered included
      */
-    public static function echoIn(string $reply, array $moves, LanguagePack $pack, PhraseUse $words = new PhraseUse): ?string
+    public static function echoIn(string $reply, array $moves, LanguagePack $pack, LineShare $words = new LineShare): ?string
     {
         foreach (self::sentences($reply) as $sentence) {
             if (self::isEcho($sentence, $moves, $pack, $words)) {
@@ -228,7 +228,7 @@ final class RoleLines
      * @param  list<string>  $moves
      * @return array{target: string, native: string}|null
      */
-    public static function withoutEcho(string $reply, string $native, array $moves, LanguagePack $pack, PhraseUse $words = new PhraseUse): ?array
+    public static function withoutEcho(string $reply, string $native, array $moves, LanguagePack $pack, LineShare $words = new LineShare): ?array
     {
         $targets = self::sentences($reply);
         $natives = self::sentences($native);
@@ -255,7 +255,7 @@ final class RoleLines
      *
      * @param  list<string>  $moves
      */
-    private static function isEcho(string $sentence, array $moves, LanguagePack $pack, PhraseUse $words): bool
+    private static function isEcho(string $sentence, array $moves, LanguagePack $pack, LineShare $words): bool
     {
         if (Words::count($sentence) < self::MIN_WORDS) {
             return false;

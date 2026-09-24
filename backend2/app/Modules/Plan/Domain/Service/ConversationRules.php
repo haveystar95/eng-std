@@ -29,6 +29,13 @@ final readonly class ConversationRules
     public const SPARE_TURNS = 2;
 
     /**
+     * THE MOVES A SCENE HAS beyond one per target of its own, in a talk over several scenes (наряд FIX-4 §4): the scene
+     * closes when its targets are said or these moves are spent — 4 + 1 and 3 + 1 moves on the seven targets of a
+     * rehearsal over two scenes, the talk's own 7 + 2.
+     */
+    public const SCENE_SPARE_TURNS = 1;
+
+    /**
      * THE ROLE DOES NOT CLOSE THE TALK BEFORE ITS MOVES ARE SPENT (наряд FIX-3 §7: «„цели покрыты" концом не является»).
      * Both day talks of the live run were closed by the role with a move to go, once every target was said, on a line
      * that was no goodbye. An answer that ends the talk while moves are left is asked for once more with the reason; an
@@ -83,6 +90,24 @@ final readonly class ConversationRules
     public function turnsFor(int $targets): int
     {
         return max(1, $targets) + self::SPARE_TURNS;
+    }
+
+    /** The learner's moves in one scene of a talk over several, the scene having `$targets` targets of its own. */
+    public function sceneTurnsFor(int $targets): int
+    {
+        return max(1, $targets) + self::SCENE_SPARE_TURNS;
+    }
+
+    /**
+     * The learner's moves in a talk over several scenes: its scenes' moves together, so the last scene has the moves its
+     * own targets give it (наряд FIX-4 §4) — on two scenes the talk's own `turnsFor()` (4 + 1 and 3 + 1 = 7 + 2), on
+     * three one more.
+     *
+     * @param  list<int>  $targetsPerScene
+     */
+    public function turnsForScenes(array $targetsPerScene): int
+    {
+        return array_sum(array_map($this->sceneTurnsFor(...), $targetsPerScene));
     }
 
     public function minutesFor(ConversationType $type): int

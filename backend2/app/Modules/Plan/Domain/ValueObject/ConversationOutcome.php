@@ -18,6 +18,7 @@ final readonly class ConversationOutcome
     /**
      * @param  list<string>  $phrasesUsed  scene-qualified ids ({@see ConversationPhrase::id()})
      * @param  list<string>  $notSaid  the ids of the plan's phrases that did not sound
+     * @param  list<string>  $extraSaid  the constructions said that are no target — «ещё вспомнил» (наряд FIX-4 §2)
      */
     public function __construct(
         public int $saidCount,
@@ -29,6 +30,7 @@ final readonly class ConversationOutcome
         public int $rescues,
         public ?ConversationEnd $endedReason,
         public ?int $minutes,
+        public array $extraSaid = [],
     ) {}
 
     public function phrasesUsedCount(): int

@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\ValueObject\ConversationId;
 use App\Modules\Plan\Domain\ValueObject\ConversationTurnId;
+use App\Modules\Plan\Domain\ValueObject\SceneEvent;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\TurnAudio;
 use App\Modules\Plan\Domain\ValueObject\TurnCost;
@@ -18,12 +19,13 @@ use DateTimeImmutable;
  * Both speakers keep their lines in the same list, in the order they were said, because that is
  * what the ribbon (кадры 37-6…37-12) draws and what the next model call is shown.
  *
- * EACH LINE HOLDS WHAT ITS AUTHOR SAID. The learner's line holds the targets of the talk the SERVER
- * heard in it ({@see \App\Modules\Plan\Domain\Service\PhraseUse} — the code's rule first, the model's
- * word only as its second support). The role's reply holds what the ROLE judged about the move it answers — «понял ли он
- * вопрос», «увело ли в сторону» — because the role is who judged it, and the checkpoint it closed.
- * The hint is written on the line that OFFERS it: it is the intention the learner is shown for
- * their next move. A rescue and a skip are judged by nobody.
+ * EACH LINE HOLDS WHAT ITS AUTHOR SAID, AND THE SCENE IT WAS SAID IN (`sceneId`, наряд FIX-4 §4). The learner's line holds
+ * the constructions of its scene the SERVER heard in it — said (`phrasesUsed`: the talk's targets and the scene's other
+ * frames, «ещё вспомнил») and said almost (`phrasesAlmost`) — by the judge ({@see \App\Modules\Plan\Domain\Service\FrameJudge}),
+ * which reads the move alone: it is judged before it is written, whole. The role's reply holds what the ROLE judged about
+ * the move it answers — «понял ли он вопрос», «увело ли в сторону» — the door it opened (`opensTarget`, as the server
+ * accepted it), the hint it offers the learner for their next move, the checkpoint it closed, and — in a talk over several
+ * scenes — whether it begins its scene or ends it (`sceneEvent`). A rescue and a skip are judged by nobody.
  *
  * Immutable on purpose, and WITHOUT `with…()` copies as well: a turn is an append-only journal row,
  * so there is no way — not even a well-meant one — to hand somebody a rewritten copy of a line that
@@ -32,7 +34,10 @@ use DateTimeImmutable;
  */
 final readonly class ConversationTurn
 {
-    /** @param list<string> $phrasesUsed refs of the plan's phrases heard in this line (`p3`) */
+    /**
+     * @param  list<string>  $phrasesUsed  the ids (`<scene>:<ref>`) of the constructions this line said
+     * @param  list<string>  $phrasesAlmost  the ids of those it said almost
+     */
     private function __construct(
         public ConversationTurnId $id,
         public ConversationId $conversationId,
@@ -49,15 +54,16 @@ final readonly class ConversationTurn
         public TurnCost $cost,
         public DateTimeImmutable $createdAt,
         public ?string $opensTarget = null,
+        public ?string $sceneId = null,
+        public ?SceneEvent $sceneEvent = null,
+        public array $phrasesAlmost = [],
     ) {}
 
     /**
-     * The role's line: the opening one, an answer, the farewell. What the model judged about the
-     * move it answers travels with it — the model is asked once and says both things at once — and so does the
-     * target the line OPENS THE DOOR TO (`$opensTarget`, наряд FIX-3 §7): the one the learner could say next in answer
-     * to it, which is how the talk knows which doors it has opened and which target it leads to next.
-     *
-     * @param  list<string>  $phrasesUsed
+     * The role's line: the opening one, an answer, a scene's goodbye and the next role's greeting. What the model judged
+     * about the move it answers travels with it — the model is asked once and says both things at once — and so does the
+     * target the line OPENS THE DOOR TO (`$opensTarget`, наряд FIX-3 §7; accepted by the server, наряд FIX-4 §3): the one
+     * the learner could say next in answer to it.
      */
     public static function agent(
         ConversationTurnId $id,
@@ -71,21 +77,23 @@ final readonly class ConversationTurn
         TurnCost $cost,
         DateTimeImmutable $now,
         ?bool $understood = null,
-        array $phrasesUsed = [],
         ?bool $offTopic = null,
         ?string $opensTarget = null,
+        ?string $sceneId = null,
+        ?SceneEvent $sceneEvent = null,
     ): self {
         return new self(
             $id, $conversationId, $index, TurnKind::Agent, $textTarget, $textNative, $audio,
-            $understood, $phrasesUsed, $offTopic, $checkpointDone, $hintNative, $cost, $now, $opensTarget,
+            $understood, [], $offTopic, $checkpointDone, $hintNative, $cost, $now, $opensTarget, $sceneId, $sceneEvent,
         );
     }
 
     /**
-     * The learner's move. `said` carries what the recogniser heard; `rescue` and `skip` carry
-     * nothing to judge — and nothing is judged on them ({@see TurnKind::isJudged()}).
+     * The learner's move. `said` carries what the recogniser heard and what the server heard in it; `rescue` and `skip`
+     * carry nothing to judge — and nothing is judged on them ({@see TurnKind::isJudged()}).
      *
-     * @param  list<string>  $phrasesUsed  what the SERVER heard by {@see \App\Modules\Plan\Domain\Service\PhraseUse} — the model's opinion alone never
+     * @param  list<string>  $phrasesUsed  the constructions of its scene the move said, by the judge
+     * @param  list<string>  $phrasesAlmost  those it said almost
      */
     public static function learner(
         ConversationTurnId $id,
@@ -95,14 +103,19 @@ final readonly class ConversationTurn
         ?string $heard,
         array $phrasesUsed,
         DateTimeImmutable $now,
+        array $phrasesAlmost = [],
+        ?string $sceneId = null,
     ): self {
         return new self(
             $id, $conversationId, $index, $kind, $heard, null, null,
-            null, $phrasesUsed, null, null, null, new TurnCost, $now,
+            null, $phrasesUsed, null, null, null, new TurnCost, $now, null, $sceneId, null, $phrasesAlmost,
         );
     }
 
-    /** @param list<string> $phrasesUsed */
+    /**
+     * @param  list<string>  $phrasesUsed
+     * @param  list<string>  $phrasesAlmost
+     */
     public static function reconstitute(
         ConversationTurnId $id,
         ConversationId $conversationId,
@@ -119,10 +132,14 @@ final readonly class ConversationTurn
         TurnCost $cost,
         DateTimeImmutable $createdAt,
         ?string $opensTarget = null,
+        ?string $sceneId = null,
+        ?SceneEvent $sceneEvent = null,
+        array $phrasesAlmost = [],
     ): self {
         return new self(
             $id, $conversationId, $index, $kind, $textTarget, $textNative, $audio,
             $understood, $phrasesUsed, $offTopic, $checkpointDone, $hintNative, $cost, $createdAt, $opensTarget,
+            $sceneId, $sceneEvent, $phrasesAlmost,
         );
     }
 
@@ -135,5 +152,11 @@ final readonly class ConversationTurn
     public function isSpokenByLearner(): bool
     {
         return $this->kind === TurnKind::Said && trim((string) $this->textTarget) !== '';
+    }
+
+    /** Is this a move of the learner that spends one of the talk's moves — said or let go; a rescue spends none. */
+    public function isMove(): bool
+    {
+        return $this->kind === TurnKind::Said || $this->kind === TurnKind::Skip;
     }
 }

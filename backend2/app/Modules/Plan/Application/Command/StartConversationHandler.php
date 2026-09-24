@@ -101,8 +101,10 @@ final readonly class StartConversationHandler
             dayNumber: $day->number(),
             type: $type,
             sceneIds: $material->sceneIds(),
-            // One move per target and two more (наряд FIX-3 §7).
-            turnLimit: $this->rules->turnsFor(count($material->targets)),
+            // One move per target and two more (наряд FIX-3 §7); over several scenes, one more in each (FIX-4 §4).
+            turnLimit: $material->walksScenes()
+                ? $this->rules->turnsForScenes(array_map(static fn (string $scene): int => count($material->targetsOf($scene)), $material->sceneIds()))
+                : $this->rules->turnsFor(count($material->targets)),
             hintsEnabled: $command->hints,
             now: $now,
         );

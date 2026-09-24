@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Dto\Inspection\InspectedAudio;
 use App\Modules\Plan\Application\Dto\Inspection\InspectedCard;
 use App\Modules\Plan\Application\Dto\Inspection\InspectedPassage;
 use App\Modules\Plan\Application\Dto\Inspection\InspectedPlan;
+use App\Modules\Plan\Application\Dto\Inspection\InspectedRejection;
 use App\Modules\Plan\Application\Dto\Inspection\InspectedScene;
 use App\Modules\Plan\Application\Dto\Inspection\InspectedTalk;
 use App\Modules\Plan\Application\Dto\Inspection\InspectedTurn;
@@ -207,6 +208,24 @@ final class EloquentPlanInspectionReader implements PlanInspectionReader
                 latencyMs: self::int($r['latency_ms']),
                 opensTarget: self::str($r['opens_target']),
                 createdAt: self::at($r['created_at']) ?? new DateTimeImmutable('@0'),
+                sceneId: self::str($r['scene_id']),
+                sceneEvent: self::str($r['scene_event']),
+                phrasesAlmost: self::strings($r['phrases_almost']),
+            );
+        }
+
+        // What the server refused of each talk's role (наряд FIX-4 §§3, 6) — by the journal's own index.
+        $rejections = [];
+        foreach (DB::table('conversation_rejections')->whereIn('conversation_id', $talks->pluck('id')->all())->orderBy('conversation_id')->orderBy('turn_index')->orderBy('attempt')->get() as $row) {
+            $r = (array) $row;
+            $detail = json_decode((string) $r['detail'], true);
+            $rejections[(string) $r['conversation_id']][] = new InspectedRejection(
+                turnIndex: (int) $r['turn_index'],
+                attempt: (int) $r['attempt'],
+                kind: (string) $r['kind'],
+                reason: (string) $r['reason'],
+                modelCallId: self::str($r['model_call_id']),
+                detail: is_array($detail) ? $detail : [],
             );
         }
 
@@ -228,6 +247,7 @@ final class EloquentPlanInspectionReader implements PlanInspectionReader
                 startedAt: self::at($r['started_at']) ?? new DateTimeImmutable('@0'),
                 endedAt: self::at($r['ended_at']),
                 turns: $turns[(string) $r['id']] ?? [],
+                rejections: $rejections[(string) $r['id']] ?? [],
             );
         }
 

@@ -26,11 +26,11 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * ONE MOVE OF THE TALK (наряд CONV-1, п. 3): the learner's line, the role's answer to it, and what
  * the server itself decided about both.
  *
- * WHAT IS THE SERVER'S AND WHAT IS THE MODEL'S. Which of the talk's targets the move said is the
- * server's rule ({@see \App\Modules\Plan\Domain\Service\PhraseUse}, наряд BACK-TAILS-2 §2), applied
- * once the role has answered — the role's own `phrases_used` is the rule's second support and never
- * counts alone ({@see ConversationMoves}). «Понял ли вопрос» is the model's, because that is a judgement
- * about meaning and only the role was asked it.
+ * WHAT IS THE SERVER'S AND WHAT IS THE MODEL'S. Which constructions of its scene the move said — or said almost — is the
+ * server's judge alone ({@see \App\Modules\Plan\Domain\Service\FrameJudge}, наряд FIX-4 §2), and the move is judged
+ * before the role is asked, so it is written whole and the role answering it is told what it said. «Понял ли вопрос» is
+ * the model's, because that is a judgement about meaning and only the role was asked it. The scene the move is made in
+ * is the talk's current one, and it travels with the line.
  *
  * THE ORDER, and why it is this one: the move is checked, the model and the voice are called with
  * nothing locked, and only then is the row locked, re-checked and written (the pattern
@@ -80,6 +80,7 @@ final readonly class TakeConversationTurnHandler
         $pack = $this->packs->for($plan->targetLang()->value);
 
         $before = count($talk->turns());
+        ['scene' => $scene, 'verdict' => $verdict] = $this->moves->judged($plan, $talk, $material, $command->kind, $heard);
         $talk->recordLearnerTurn(ConversationTurn::learner(
             id: ConversationTurnId::generate(),
             conversationId: $talk->id(),
@@ -90,9 +91,10 @@ final readonly class TakeConversationTurnHandler
                 TurnKind::Rescue => $pack->rescueLine(),
                 default => null,
             },
-            // The targets this move said are credited once the role has answered it (наряд BACK-TAILS-2 §2).
-            phrasesUsed: [],
+            phrasesUsed: $verdict->said,
             now: $this->clock->now(),
+            phrasesAlmost: $verdict->almost,
+            sceneId: $scene,
         ));
 
         // The model and the voice: outside every transaction, nothing of the learner's locked.

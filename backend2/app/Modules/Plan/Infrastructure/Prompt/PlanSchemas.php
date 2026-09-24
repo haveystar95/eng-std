@@ -162,17 +162,19 @@ final class PlanSchemas
     }
 
     /**
-     * ONE MOVE OF THE AGENT (`conversation_agent.v3`, наряд CONV-1; FIX-3 §7): its line in both languages, what it judged
-     * about the move it answers, the checkpoint it closed, the target its line opens the door to, and whether the talk
-     * is over.
+     * ONE MOVE OF THE AGENT (`conversation_agent.v3.1`, наряд CONV-1; FIX-3 §7; FIX-4 §3): its line in both languages, what
+     * it judged about the move it answers, the target its line opens the door to — by the short id of its scene's target
+     * (`T3`) — and whether the talk is over. `phrases_used` and `checkpoint_done` stay in the shape the prompt asks for and
+     * are read by nobody: the constructions are the code's judge's, the scenes the server's.
      *
      * `end` is an enum and not a boolean because the two ways a talk ends by itself are not the
      * same fact: «the scene is finished» and «the learner pushed a refused subject twice» read
      * differently in the summary and in the report. The third way — the money cap — is the
      * server's, never the model's.
      *
-     * The target ids are an enum of what was actually sent: a ref the talk does not carry is not a
-     * target of this talk, and a strict schema is cheaper than checking it afterwards.
+     * The target ids are an enum of what was actually sent — the targets of the scene the role is in: an id the scene does
+     * not carry is not a door of this scene. The server checks the door all the same (a target said, a model that does not
+     * keep a schema): the enum is the first fence, not the only one.
      *
      * @param  list<string>  $targetIds
      * @return array<string, mixed>

@@ -5,52 +5,50 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Service;
 
 use App\Modules\Plan\Domain\Entity\Conversation;
+use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\TurnKind;
 
 /**
- * WHERE THE ROLE LEADS AND WHAT THE LEARNER IS PROMPTED WITH (наряд FIX-3 §7) — the server's, not the model's.
+ * WHERE THE ROLE LEADS AND WHAT THE LEARNER IS PROMPTED WITH — the server's, not the model's, and within the scene the
+ * talk is in (наряды FIX-3 §7, FIX-4 §§3, 5).
  *
- * The role opens the door to every target of the talk, ONE BY ONE, in the targets' order ({@see ConversationTargets}):
- * each move it is told the next target whose door no line of its has opened yet and which the learner has not said
- * (`LEAD_TO`). A door is opened once — a target the learner let pass comes back only after every other door has been
- * opened, and a target said is never led to again. The role names the target its line leads to itself (`opens`), which
- * is how the doors are counted; the gym talk of 22.09 asked about «experience» three moves running because nothing said
- * that door had been opened.
+ * THE LEAD (`LEAD_TO`): the role opens the door to the targets of its scene one by one, in their order. A target the move
+ * being answered said ALMOST is led to again at once — «Открытие „почти"-цели — допустимо и желательно»: the learner was
+ * one word from it. Otherwise the first target not said whose door no line of the role has opened yet, and when every
+ * door has been opened, the first not said. The targets of other scenes are no business of this role: the ones behind
+ * were its predecessor's, the ones ahead are its successor's (the gym receptionist asked the trainer's question on move 7
+ * of the owner's rehearsal).
  *
- * The scenes a talk has left behind come last: a rehearsal whose role closed a scene before every door of it was opened
- * (the airport check-in of the FIX-3 live run closed its scene with three doors to go) is led on through the scene it is
- * in now and those after it, and back to the scene left behind only when nothing ahead is left — never the doctor asked
- * to open the reception's doors while the reception is behind.
- *
- * THE HINT of the learner's next move is the target the role's last line opened the door to — the answer to the
- * question it just asked, or the question it just gave a reason for. A line that opened none keeps the door of the line
- * before it while that is not said: «Yes? Go on.» after «I'm flying to» still waits for «I'm flying to ___» (the check-in
- * of the FIX-3 live run was prompted with the next target there). Otherwise — a greeting, an answer to the learner —
- * the target the role leads to next. So the hint changes with the move: «У меня около года опыта» hung under three
- * questions of the trainer. Nothing left unsaid — no hint.
+ * THE HINT of the learner's next move is ONE target of the scene, offered WHOLE — the lesson's own sentence of it, «У меня
+ * есть боль в плече.», not «у меня есть …» (наряд FIX-4 §5): the one the move before said almost — then with its exact
+ * line as well («I have some shoulder pain.»), for one move —, else the one the role's line has just opened, else the
+ * first target of the scene not said. So the hint changes with the move, and stays the same two moves running only for the
+ * same target with no «almost» between. Nothing left unsaid in the scene — no hint.
  */
 final class ConversationLead
 {
     /**
      * The target to open the door to now.
      *
-     * @param  list<ConversationPhrase>  $targets  the talk's targets, in order
-     * @param  list<string>  $saidNow  the targets the move being answered says, not in the journal's credit yet
+     * @param  list<ConversationPhrase>  $targets  the targets of the scene the talk is in, in order
+     * @param  array<string, true>  $said  every construction said so far, the move being answered included
+     * @param  list<string>  $almost  the targets the move being answered said almost
      */
-    public static function next(Conversation $talk, array $targets, array $saidNow = []): ?ConversationPhrase
+    public static function next(Conversation $talk, array $targets, array $said, array $almost = []): ?ConversationPhrase
     {
-        $said = [...ConversationOutcomes::heard($talk), ...array_fill_keys($saidNow, true)];
+        foreach ($targets as $target) {
+            if (in_array($target->id(), $almost, true) && ! isset($said[$target->id()])) {
+                return $target;
+            }
+        }
         $opened = array_fill_keys($talk->openedDoors(), true);
-        $behind = array_fill_keys($talk->checkpointsDone(), true);
-        $ahead = array_values(array_filter($targets, static fn (ConversationPhrase $t): bool => ! isset($behind[$t->sceneId])));
-        $left = array_values(array_filter($targets, static fn (ConversationPhrase $t): bool => isset($behind[$t->sceneId])));
-        foreach ([...$ahead, ...$left] as $target) {
+        foreach ($targets as $target) {
             if (! isset($said[$target->id()]) && ! isset($opened[$target->id()])) {
                 return $target;
             }
         }
-        foreach ([...$ahead, ...$left] as $target) {
+        foreach ($targets as $target) {
             if (! isset($said[$target->id()])) {
                 return $target;
             }
@@ -60,33 +58,50 @@ final class ConversationLead
     }
 
     /**
-     * The target the learner is prompted with after the role's line that opened `$opens` (null: none).
+     * The target the learner is prompted with after the role's line, and whether its exact line goes with it (after an
+     * almost).
      *
-     * @param  list<ConversationPhrase>  $targets
+     * @param  list<ConversationPhrase>  $targets  the targets of the scene the line is said in, in order
+     * @param  array<string, true>  $said  every construction said so far
+     * @param  list<string>  $almost  the targets the move this line answers said almost — none when it answers no move
+     * @param  string|null  $opened  the target the line opened the door to, as the server accepted it
+     * @return array{target: ConversationPhrase, exact: bool}|null
      */
-    public static function hint(Conversation $talk, array $targets, ?string $opens): ?ConversationPhrase
+    public static function hint(array $targets, array $said, array $almost, ?string $opened): ?array
     {
-        $said = ConversationOutcomes::heard($talk);
-        $door = $opens ?? self::lastDoor($talk);
         foreach ($targets as $target) {
-            if ($target->id() === $door && ! isset($said[$target->id()])) {
-                return $target;
+            if (in_array($target->id(), $almost, true) && ! isset($said[$target->id()])) {
+                return ['target' => $target, 'exact' => true];
+            }
+        }
+        foreach ($targets as $target) {
+            if ($target->id() === $opened && ! isset($said[$target->id()])) {
+                return ['target' => $target, 'exact' => false];
+            }
+        }
+        foreach ($targets as $target) {
+            if (! isset($said[$target->id()])) {
+                return ['target' => $target, 'exact' => false];
             }
         }
 
-        return self::next($talk, $targets);
+        return null;
     }
 
-    /** The door the role's last line in the journal opened — null when it opened none, or when the role has said nothing. */
-    private static function lastDoor(Conversation $talk): ?string
+    /**
+     * The learner's move a line of the role answers — the line right before it, when that is the learner's. A new role's
+     * greeting follows its predecessor's goodbye and answers no move.
+     */
+    public static function moveBefore(Conversation $talk, ConversationTurn $line): ?ConversationTurn
     {
-        $door = null;
+        $before = null;
         foreach ($talk->turns() as $turn) {
-            if ($turn->kind === TurnKind::Agent) {
-                $door = $turn->opensTarget;
+            if ($turn->index === $line->index) {
+                return $before !== null && $before->kind !== TurnKind::Agent ? $before : null;
             }
+            $before = $turn;
         }
 
-        return $door;
+        return null;
     }
 }

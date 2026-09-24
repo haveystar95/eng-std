@@ -29,6 +29,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $checkpoint_done
  * @property string|null $hint_native
  * @property string|null $opens_target
+ * @property string|null $scene_id
+ * @property string|null $scene_event
+ * @property list<string> $phrases_almost
  * @property string|null $model
  * @property string|null $prompt_version
  * @property int|null $tokens_in
@@ -55,6 +58,7 @@ final class ConversationTurnModel extends Model
 
     protected $casts = [
         'phrases_used' => 'array',
+        'phrases_almost' => 'array',
         'turn_index' => 'int',
         'understood' => 'bool',
         'off_topic' => 'bool',

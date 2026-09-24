@@ -146,7 +146,7 @@ it('takes a rescue for the same line when it says the same words, and a rephrasi
  */
 it('catches the learner\'s last move said back — in other forms, any order, or with the persons swapped', function () {
     $en = lessonPacks()->for('en');
-    $words = new App\Modules\Plan\Domain\Service\PhraseUse;
+    $words = new App\Modules\Plan\Domain\Service\LineShare;
     $gym = 'That works for me on weekdays. Please note that we open at six and close at ten on weekdays.';
     $back = 'His lower back hurts, and three days ago it started.';
 

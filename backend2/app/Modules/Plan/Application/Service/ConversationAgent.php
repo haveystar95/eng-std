@@ -9,11 +9,8 @@ use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
 use App\Modules\Plan\Application\Dto\ConversationMaterialView;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Entity\Conversation;
-use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Exception\ConversationUnavailable;
-use App\Modules\Plan\Domain\Service\ConversationLead;
-use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\ValueObject\ConversationCheckpoint;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\TurnCost;
@@ -26,11 +23,11 @@ use Throwable;
  * when it does not answer. Whether the answer is the role's own is asked by the caller
  * ({@see ConversationMoves}, наряд CONV-2) — here a call is a call.
  *
- * It is shown the scene it is in, the scenes still ahead with the lines the learner is preparing,
- * the talk's targets — constructions, each said or not yet — and the one to open the door to now (`LEAD_TO`, the
- * server's choice, {@see ConversationLead}; наряд FIX-3 §7), everything said so far and the learner's speech in a field
- * of its own. `TURNS_LEFT` is the only lever on how long the talk runs: at nought the prompt says «say goodbye», and the
- * role closes the talk itself — nothing here cuts a learner off mid-word.
+ * It is told ONE scene — the one it plays now (наряд FIX-4 §4): who it is there, the visit as prepared there, the targets
+ * of that scene under the talk's short ids, each said or not yet, and the one to open the door to now (`LEAD_TO`, the
+ * server's choice); the lines said in that scene; of the scenes before, what the learner told there, as facts; and the
+ * learner's speech in a field of its own. `TURNS_LEFT` is the lever on how long the talk runs — at nought the prompt says
+ * «say goodbye» — and `SCENE_END` on how long the scene does: the server closes the scene, the role says goodbye in it.
  *
  * A model that is silent, slow or off the shape is NOT a turn: it throws, nothing is written, and
  * the learner repeats the move (кадр 37-10 «Врач не отвечает — попробуй ещё раз»). That is the
@@ -42,40 +39,51 @@ final readonly class ConversationAgent
     public function __construct(private PlanModelPort $model) {}
 
     /**
-     * What the role is told before one move.
+     * What the role is told before one line of its scene.
      *
-     * @param  'start'|'said'|'rescue'|'skip'  $turn
-     * @param  list<string>  $saidNow  the targets the move being answered says by the code's rule — said already for the role answering it
+     * @param  'start'|'said'|'rescue'|'skip'  $turn  `start` — the role speaks first in its scene: the talk's opening, or a new role after the one before said goodbye
+     * @param  array<string, true>  $said  every construction said so far, the move being answered included
      */
     public function request(
         Plan $plan,
         Conversation $talk,
         ConversationMaterialView $material,
+        ConversationCheckpoint $scene,
         string $turn,
         string $heard,
         int $turnsLeft,
-        array $saidNow = [],
+        array $said,
+        ?ConversationPhrase $leadTo,
+        bool $sceneEnd = false,
     ): ConversationAgentRequest {
-        $current = $material->checkpoint($talk->currentCheckpoint());
-        $said = [...ConversationOutcomes::heard($talk), ...array_fill_keys($saidNow, true)];
+        $targets = $material->targetsOf($scene->sceneId);
 
         return new ConversationAgentRequest(
             targetLanguage: LanguageName::of($plan->targetLang()->value),
             nativeLanguage: LanguageName::of($plan->nativeLang()->value),
             level: $plan->level()->value,
-            roleTarget: $current->roleTarget ?? '',
-            roleNative: $current->roleNative ?? '',
+            roleTarget: $scene->roleTarget,
+            roleNative: $scene->roleNative,
             learnerRoleTarget: $plan->titles()->learnerRoleTarget ?? '',
             learnerRoleNative: $plan->titles()->learnerRoleNative ?? '',
-            checkpoints: array_map(static fn (ConversationCheckpoint $c): array => self::checkpoint($c, $said), $material->checkpoints),
-            currentCheckpoint: $current?->sceneId,
-            targets: array_map(static fn (ConversationPhrase $t): array => self::target($t, isset($said[$t->id()])), $material->targets),
-            history: self::history($talk),
+            checkpoints: [self::checkpoint($scene, $said)],
+            currentCheckpoint: $scene->sceneId,
+            targets: array_map(static fn (ConversationPhrase $t): array => [
+                'id' => (string) $material->shortId($t),
+                'kind' => $t->kind->value,
+                'frame_target' => $t->frameTarget,
+                'frame_native' => $t->frameNative,
+                'example_target' => $t->exampleTarget,
+                'said' => isset($said[$t->id()]),
+            ], $targets),
+            history: self::history($talk, $scene->sceneId),
             turn: $turn,
             heard: $heard,
             turnsLeft: max(0, $turnsLeft),
             offTopicStreak: $talk->offTopicStreak(),
-            leadTo: ConversationLead::next($talk, $material->targets, $saidNow)?->id(),
+            leadTo: $leadTo === null ? null : $material->shortId($leadTo),
+            earlier: self::earlier($talk, $scene->sceneId),
+            sceneEnd: $sceneEnd,
         );
     }
 
@@ -88,21 +96,18 @@ final readonly class ConversationAgent
             throw ConversationUnavailable::model(mb_substr($e->getMessage(), 0, 200));
         }
 
-        return self::parse($reply->payload, $request->targetIds(), new TurnCost(
+        return self::parse($reply->payload, new TurnCost(
             modelCostUsd: $reply->costUsd,
             modelLatencyMs: $reply->latencyMs,
             model: $reply->model,
             promptVersion: $reply->promptVersion,
             tokensIn: $reply->tokensIn,
             tokensOut: $reply->tokensOut,
-        ));
+        ), $reply->callId);
     }
 
-    /**
-     * @param  array<string, mixed>  $payload
-     * @param  list<string>  $targetIds  what `opens` may name — anything else is no door of this talk
-     */
-    private static function parse(array $payload, array $targetIds, TurnCost $cost): ConversationAgentReply
+    /** @param array<string, mixed> $payload */
+    private static function parse(array $payload, TurnCost $cost, ?string $callId): ConversationAgentReply
     {
         $target = $payload['reply_target'] ?? null;
         $native = $payload['reply_native'] ?? null;
@@ -115,30 +120,26 @@ final readonly class ConversationAgent
         }
 
         $understood = $payload['understood'] ?? null;
-        $checkpoint = $payload['checkpoint_done'] ?? null;
         $opens = $payload['opens'] ?? null;
-        /** @var list<string> $phrases */
-        $phrases = array_values(array_filter(is_array($payload['phrases_used'] ?? null) ? $payload['phrases_used'] : [], is_string(...)));
 
         return new ConversationAgentReply(
             replyTarget: trim($target),
             replyNative: trim($native),
             understood: is_bool($understood) ? $understood : null,
-            phrasesUsed: $phrases,
             offTopic: ($payload['off_topic'] ?? null) === true,
-            checkpointDone: is_string($checkpoint) && trim($checkpoint) !== '' ? $checkpoint : null,
-            opens: is_string($opens) && in_array($opens, $targetIds, true) ? $opens : null,
+            opens: is_string($opens) && trim($opens) !== '' ? trim($opens) : null,
             end: $end,
             cost: $cost,
+            callId: $callId,
         );
     }
 
     /**
-     * A scene of the talk as the role is told it: the visit as prepared, exchange by exchange — each one DONE once the
-     * learner has said its target in this talk (наряд FIX-3 §7, the live run: told «his lower back», the receptionist
-     * asked the prepared «upper back or lower back?» all the same, three runs of three).
+     * The scene as the role is told it: the visit as prepared, exchange by exchange — each one DONE once the learner has
+     * said its target in this talk (наряд FIX-3 §7, the live run: told «his lower back», the receptionist asked the
+     * prepared «upper back or lower back?» all the same, three runs of three).
      *
-     * @param  array<string, true>  $said  the targets said so far
+     * @param  array<string, true>  $said  the constructions said so far
      * @return array{id: string, title_native: string, about_native: string, role_target: string, role_native: string, key_lines: list<array{target: string, native: string, kind: string, partner: string, done: bool}>}
      */
     private static function checkpoint(ConversationCheckpoint $checkpoint, array $said): array
@@ -162,34 +163,40 @@ final readonly class ConversationAgent
         ];
     }
 
-    /** @return array{id: string, kind: string, frame_target: string, frame_native: string, example_target: string|null, said: bool} */
-    private static function target(ConversationPhrase $target, bool $said): array
-    {
-        return [
-            'id' => $target->id(),
-            'kind' => $target->kind->value,
-            'frame_target' => $target->frameTarget,
-            'frame_native' => $target->frameNative,
-            'example_target' => $target->exampleTarget,
-            'said' => $said,
-        ];
-    }
-
     /**
-     * Everything said so far, oldest first — the role's lines as it said them, the learner's as they
-     * were heard. A move with no words (a skip) leaves no line to show.
+     * Every line said so far in the scene, oldest first — the role's lines as it said them, the learner's as they were
+     * heard. A move with no words (a skip) leaves no line to show; a line written before the lines knew their scene belongs
+     * to the scene the talk is in.
      *
      * @return list<array{speaker: string, text: string}>
      */
-    private static function history(Conversation $talk): array
+    private static function history(Conversation $talk, string $sceneId): array
     {
         $out = [];
         foreach ($talk->turns() as $turn) {
             $text = trim((string) $turn->textTarget);
-            if ($text === '') {
+            if ($text === '' || ($turn->sceneId !== null && $turn->sceneId !== $sceneId)) {
                 continue;
             }
             $out[] = ['speaker' => $turn->kind === TurnKind::Agent ? 'you' : 'learner', 'text' => $text];
+        }
+
+        return $out;
+    }
+
+    /**
+     * WHAT THE LEARNER TOLD IN THE SCENES BEFORE (наряд FIX-4 §4) — the facts of the story, not a dialogue to go on: the
+     * learner's own lines as heard, oldest first; the lines of the roles before are not the new role's.
+     *
+     * @return list<string>
+     */
+    private static function earlier(Conversation $talk, string $sceneId): array
+    {
+        $out = [];
+        foreach ($talk->turns() as $turn) {
+            if ($turn->isSpokenByLearner() && $turn->sceneId !== null && $turn->sceneId !== $sceneId) {
+                $out[] = trim((string) $turn->textTarget);
+            }
         }
 
         return $out;

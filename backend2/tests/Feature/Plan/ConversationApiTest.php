@@ -5,9 +5,12 @@ declare(strict_types=1);
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
 use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
+use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\Clock;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Artisan;
@@ -122,9 +125,17 @@ it('opens with the role\'s own line, and carries on the same talk when asked aga
         ->and($talk['scenes'][0]['state'])->toBe('current')
         ->and($talk['summary'])->toBeNull()
         ->and($talk['replay'])->toBeFalse()
-        // The hint is the CONSTRUCTION the role's opening line leads to (наряд FIX-3 §6–7), in the learner's language and
-        // as a CLAUSE — the client prints «Скажи, что …» around it; the window is the learner's to fill.
-        ->and($talk['hints']['native'])->toBe('у него болит …');
+        // The hint is the construction the role's opening line leads to, WHOLE — the lesson's sentence of it, its value in
+        // it, not «у него болит …» (наряд FIX-4 §5) — in the learner's language and as a CLAUSE: the client prints
+        // «Скажи, что …» around it. Its exact line only after an «almost»; which target it is, by scene and ref.
+        ->and($talk['hints']['native'])->toBe('у него болит поясница')
+        ->and($talk['hints']['target'])->toBeNull()
+        ->and($talk['hints']['ref'])->toBe($talk['targets'][0]['ref'])
+        ->and($talk['hints']['scene_id'])->toBe($talk['targets'][0]['scene_id'])
+        // A day's talk has one scene and no borders: its lines carry the scene, and no greeting or goodbye of one.
+        ->and($talk['turns'][0]['scene_id'])->toBe($talk['scenes'][0]['scene_id'])
+        ->and($talk['turns'][0]['scene_event'])->toBeNull()
+        ->and($talk['extra_said'])->toBe([]);
 
     // Asked again: the same talk, not a second one — a phone coming back from the background carries on.
     $again = convStart($this, $token, $id);
@@ -174,9 +185,9 @@ it('asks the role to repeat itself without spending a move of the scene', functi
 });
 
 /**
- * Canon (наряд BACK-TAILS-2 §2, п. г): the COUNT is the code's — the model's own `phrases_used` is only the rule's second
- * support, for a target the move holds half the key words of, and never counts alone. Catches a summary that trusts the
- * model — a role naming every phrase on every move credits only what was actually said.
+ * Canon (наряд BACK-TAILS-2 §2, п. г; наряд FIX-4 §2 — «судья остаётся детерминированным»): the COUNT is the code's, and
+ * the model's own `phrases_used` is read by nobody. Catches a summary that trusts the model — a role naming every phrase
+ * on every move credits only what was actually said.
  */
 it('counts the phrases of the plan by the server\'s own rule, not by the model\'s answer', function () {
     [$token, $id] = convDay($this);
@@ -322,37 +333,238 @@ it('ends the talk on the second push off the scene, whatever the role answers', 
 });
 
 /**
- * Canon (п. 4): the role is led through the scenes IN ORDER, and a scene it closes stays closed. Catches a rehearsal
- * that walks its three scenes in the model's order instead of the plan's, and a checkpoint reopened by a later turn.
+ * A three-day plan walked to its rehearsal, day 3 open. Bind the role (`convAgentSays`) BEFORE calling it: the walk holds
+ * talks of its own, and the route keeps the controller it first built.
+ *
+ * @return array{0: string, 1: string} token and plan id
  */
-it('walks the scenes of a rehearsal in the plan\'s order', function () {
-    [$token, $id] = convDay($this, days: 3);
-    // The role closes the checkpoint it is on whenever the learner says something — bound BEFORE the days are walked,
-    // because the walk holds talks of its own and the route keeps the controller it first built.
-    convAgentSays(static fn (ConversationAgentRequest $request): array => [
-        ...FakePlanModel::conversationPayload($request),
-        'checkpoint_done' => $request->turn === 'said' ? $request->currentCheckpoint : null,
-        'end' => 'no',
+function convRehearsal(object $ctx): array
+{
+    [$token, $id] = convDay($ctx, days: 3);
+    planWalkDay($ctx, $token, $id, 1);
+    planShiftDay($id);
+    planWalkDay($ctx, $token, $id, 2);
+    planShiftDay($id);
+    planOpenDay($ctx, $token, $id, 3);
+
+    return [$token, $id];
+}
+
+/** The line that says a target — its frame with the lesson's value in the window. */
+function convLine(array $target): string
+{
+    return str_replace('___', (string) $target['example_target'], $target['frame_target']);
+}
+
+/** @return list<array<string, mixed>> the talk's targets of one scene, in order */
+function convTargetsOf(array $talk, string $sceneId): array
+{
+    return array_values(array_filter($talk['targets'], static fn (array $t): bool => $t['scene_id'] === $sceneId));
+}
+
+/**
+ * Canon (наряд FIX-4 §4): «бюджет сцены = целей+1 ходов ученика; сцена закрывается, когда все её цели сказаны ИЛИ бюджет
+ * исчерпан; закрытие = следующая реплика роли: короткое прощание в роли этой сцены, без открытия, scene_event=end,
+ * checkpoint ставится здесь; следующая реплика роли = НОВАЯ роль … здоровается первой, scene_event=start, открывает первую
+ * цель новой сцены»; «прощание последней сцены = конец». The model's own `checkpoint_done` is read by nobody. CATCHES a
+ * scene closed by the model (the owner's rehearsal, where the checkpoints smeared), a scene that does not close when its
+ * targets are said, a new role that answers instead of greeting, a door opened on a goodbye, and a talk that ends on
+ * anything but the last scene's goodbye.
+ */
+it('closes a scene by its rule with the role\'s goodbye, and the next role greets the learner and opens its first door', function () {
+    // A role that closes its scene on every move, as v3 asked — the server does not listen.
+    convAgentSays(static fn (ConversationAgentRequest $request, int $call): array => [
+        ...FakePlanModel::conversationPayload($request, $call),
+        'checkpoint_done' => $request->currentCheckpoint,
     ]);
-    planWalkDay($this, $token, $id, 1);
-    planShiftDay($id);
-    planWalkDay($this, $token, $id, 2);
-    planShiftDay($id);
-    planOpenDay($this, $token, $id, 3);
+    [$token, $id] = convRehearsal($this);
 
     $talk = convStart($this, $token, $id, 3);
-    $scenes = array_column($talk['scenes'], 'scene_id');
+    [$first, $second] = array_column($talk['scenes'], 'scene_id');
+    $ofFirst = convTargetsOf($talk, $first);
+    $ofSecond = convTargetsOf($talk, $second);
 
     expect($talk['type'])->toBe('rehearsal')
-        ->and($talk['turns_left'])->toBe(count($talk['targets']) + 2)
-        ->and(count($scenes))->toBe(2)
-        ->and(array_column($talk['scenes'], 'state'))->toBe(['current', 'locked']);
+        ->and([count($ofFirst), count($ofSecond)])->toBe([4, 3])
+        // 4 + 1 and 3 + 1 moves — the talk's own 7 + 2.
+        ->and($talk['turns_left'])->toBe(9)
+        ->and(array_column($talk['scenes'], 'state'))->toBe(['current', 'locked'])
+        ->and($talk['turns'][0])->toMatchArray(['scene_id' => $first, 'scene_event' => 'start']);
 
-    // One move: the role closes the first scene, the talk moves to the second and the first stays walked.
-    $after = convTurn($this, $token, $id, $talk['id']);
+    // Three targets of the first scene said: it goes on, whatever the role says of its checkpoint.
+    foreach (array_slice($ofFirst, 0, 3) as $target) {
+        $after = convTurn($this, $token, $id, $talk['id'], 'said', convLine($target));
+        $last = $after['turns'][count($after['turns']) - 1];
+        expect(array_column($after['scenes'], 'state'))->toBe(['current', 'locked'])
+            ->and($last['scene_event'])->toBeNull()
+            ->and($last['scene_id'])->toBe($first);
+    }
 
-    expect(array_column($after['scenes'], 'state'))->toBe(['done', 'current'])
-        ->and($after['turns'][2]['understood'])->toBeTrue();
+    // The fourth: every target of the scene said — the role says goodbye in it, and the next one greets the learner.
+    $closed = convTurn($this, $token, $id, $talk['id'], 'said', convLine($ofFirst[3]));
+    [$move, $goodbye, $greeting] = array_slice($closed['turns'], -3);
+    $rows = DB::table('conversation_turns')->where('conversation_id', $talk['id'])->where('kind', 'agent')->orderBy('turn_index')->get();
+
+    expect($move)->toMatchArray(['speaker' => 'learner', 'scene_id' => $first, 'scene_event' => null])
+        ->and($goodbye)->toMatchArray(['speaker' => 'partner', 'scene_id' => $first, 'scene_event' => 'end'])
+        ->and($greeting)->toMatchArray(['speaker' => 'partner', 'scene_id' => $second, 'scene_event' => 'start'])
+        ->and($greeting['text_target'])->toStartWith('Good day, I am the ')
+        ->and(array_column($closed['scenes'], 'state'))->toBe(['done', 'current'])
+        ->and($closed['state'])->toBe('your_turn')
+        ->and($closed['turns_left'])->toBe(5)
+        // The checkpoint is marked on the goodbye, and on nothing else.
+        ->and($rows->pluck('checkpoint_done')->filter()->values()->all())->toBe([$first])
+        ->and($rows[count($rows) - 2]->checkpoint_done)->toBe($first)
+        // The goodbye opens no door; the greeting opens the first of its scene, and the hint is that target.
+        ->and(clDoors($talk['id']))->toBe([...array_map(static fn (array $t): string => $first.':'.$t['ref'], $ofFirst), null, $second.':'.$ofSecond[0]['ref']])
+        ->and($closed['hints'])->toMatchArray(['scene_id' => $second, 'ref' => $ofSecond[0]['ref'], 'target' => null]);
+
+    // The second scene's moves spent (3 + 1) without a word of its targets: the last scene's goodbye ends the talk.
+    for ($i = 0; $i < 4; $i++) {
+        $after = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello.');
+    }
+    $end = $after['turns'][count($after['turns']) - 1];
+
+    expect($after['state'])->toBe('ended')
+        ->and($end)->toMatchArray(['speaker' => 'partner', 'scene_id' => $second, 'scene_event' => 'end'])
+        ->and(array_column($after['scenes'], 'state'))->toBe(['done', 'done'])
+        ->and($after['summary']['ended_reason'])->toBe('natural')
+        ->and($after['summary']['ended_by_limit'])->toBeFalse()
+        ->and($after['summary']['phrases_used'])->toBe(4)
+        // Eight moves (the first scene closed on its fourth, its targets said), two greetings, two goodbyes and a reply
+        // to every other move: 18 lines — 20 when both scenes spend their moves (4 + 1 and 3 + 1).
+        ->and($after['turns'])->toHaveCount(18);
+});
+
+/**
+ * Canon (наряд FIX-4 §4): «голос по полу роли, меняется ходом start» — the owner's decision for the live run: the voice
+ * changes exactly on the new role's greeting, and a rehearsal of two women would not show it. CATCHES a greeting said in
+ * the voice of the role before, and a goodbye said in the voice of the role after.
+ */
+it('says the goodbye in the voice of its scene\'s role and changes the voice on the next role\'s greeting', function () {
+    config(['generation.speech.enabled' => true, 'generation.speech.driver' => 'fake']);
+    app()->instance(SpeechSynthesizerPort::class, new FakeSpeechSynthesizer);
+    [$token, $id] = convRehearsal($this);
+    $scenes = DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->pluck('id')->all();
+    DB::table('plan_scenes')->where('id', $scenes[0])->update(['partner_voice_gender' => 'female']);
+    DB::table('plan_scenes')->where('id', $scenes[1])->update(['partner_voice_gender' => 'male']);
+    $voice = static fn (VoiceGender $gender): string => app(LineSpeaker::class)->voiceKeyFor('en', Speaker::Partner, $gender);
+
+    $talk = convStart($this, $token, $id, 3);
+    foreach (convTargetsOf($talk, $scenes[0]) as $target) {
+        convTurn($this, $token, $id, $talk['id'], 'said', convLine($target));
+    }
+    $voices = DB::table('conversation_turns')->where('conversation_id', $talk['id'])->where('kind', 'agent')->orderBy('turn_index')
+        ->get(['scene_event', 'scene_id', 'audio_voice_key'])->map(static fn ($r): array => [$r->scene_id, $r->scene_event, $r->audio_voice_key])->all();
+
+    expect($voice(VoiceGender::Female))->not->toBe($voice(VoiceGender::Male))
+        ->and(array_slice($voices, -2))->toBe([
+            [$scenes[0], 'end', $voice(VoiceGender::Female)],
+            [$scenes[1], 'start', $voice(VoiceGender::Male)],
+        ])
+        ->and(array_unique(array_column(array_slice($voices, 0, -1), 2)))->toBe([$voice(VoiceGender::Female)]);
+});
+
+/**
+ * Canon (наряд FIX-4 §4): «если лимит ходов ученика кончается раньше — последняя реплика роли всё равно прощание,
+ * ended_by_limit=true (значения ended_reason не меняются)». The money runs out in the first scene: the role says goodbye
+ * in it — marking no checkpoint — and the talk ends `limit`, flagged. CATCHES a talk cut without a goodbye, a goodbye that
+ * walks the scene it cut, and a flag the phone cannot read.
+ */
+it('says goodbye in the scene the limit cut, marks it not walked, and flags the talk ended by the limit', function () {
+    config(['plan.conversation.cost_cap_usd' => 0.000001]);
+    config(['generation.speech.enabled' => true, 'generation.speech.driver' => 'fake']);
+    app()->instance(SpeechSynthesizerPort::class, new FakeSpeechSynthesizer);
+    [$token, $id] = convRehearsal($this);
+
+    $talk = convStart($this, $token, $id, 3);
+    $after = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello.');
+    $end = $after['turns'][count($after['turns']) - 1];
+
+    expect($after['state'])->toBe('ended')
+        ->and($end)->toMatchArray(['speaker' => 'partner', 'scene_id' => $talk['scenes'][0]['scene_id'], 'scene_event' => 'end'])
+        ->and($after['summary']['ended_reason'])->toBe('limit')
+        ->and($after['summary']['ended_by_limit'])->toBeTrue()
+        ->and(DB::table('conversations')->where('id', $talk['id'])->value('checkpoints_done'))->toBe('[]')
+        ->and(clDoors($talk['id'])[1])->toBeNull();
+});
+
+/**
+ * Canon (наряд FIX-4 §3): «валидировать каждое открытие (текущая сцена и не сказана), иначе отбросить + журнал с причиной
+ * (чужая сцена / уже сказана / неизвестный id)». The role knows the targets by the talk's short ids, and only those of its
+ * scene. CATCHES the owner's rehearsal — the receptionist opening the trainer's p3 —, a door opened to a target said, and
+ * an id nobody gave the role taken at its word.
+ */
+it('drops a door the role names outside its scene, to a target said or by an id the talk does not have, and journals why', function () {
+    $fake = convAgentSays(static function (ConversationAgentRequest $request, int $call): array {
+        $payload = FakePlanModel::conversationPayload($request, $call);
+        if ($request->currentCheckpoint !== null && str_contains(implode(' ', $request->targetIds()), 'T1')) {
+            $payload['opens'] = match ($request->heard) {
+                '' => 'T5',                          // the greeting: the second scene's first target
+                'It hurts in his lower back.' => 'T1', // said on this very move
+                'Hello.' => 'T9',                     // no target of the talk
+                default => $payload['opens'],
+            };
+        }
+
+        return $payload;
+    });
+    [$token, $id] = convRehearsal($this);
+
+    $talk = convStart($this, $token, $id, 3);
+    $first = $talk['scenes'][0]['scene_id'];
+    $requests = array_slice($fake->conversationRequests, -1);
+    $said = convTurn($this, $token, $id, $talk['id'], 'said', 'It hurts in his lower back.');
+    $stranger = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello.');
+    $rows = DB::table('conversation_rejections')->where('conversation_id', $talk['id'])->orderBy('turn_index')->get();
+
+    expect($requests[0]->targetIds())->toBe(['T1', 'T2', 'T3', 'T4'])
+        ->and($requests[0]->leadTo)->toBe('T1')
+        ->and(clDoors($talk['id']))->toBe([null, null, null])
+        ->and($rows->map(static fn ($r): array => [(int) $r->turn_index, (int) $r->attempt, $r->kind, $r->reason])->all())->toBe([
+            [1, 1, 'dropped_opening', 'foreign_scene'],
+            [3, 1, 'dropped_opening', 'already_said'],
+            [5, 1, 'dropped_opening', 'unknown_id'],
+        ])
+        ->and(json_decode((string) $rows[0]->detail, true))->toBe(['opens' => 'T5', 'target' => $talk['scenes'][1]['scene_id'].':p1'])
+        ->and($rows[0]->model_call_id)->not->toBeNull()
+        // The line stays: a door dropped is not a line refused — and the hint is the talk's own.
+        ->and($said['hints']['scene_id'])->toBe($first)
+        ->and($stranger['hints']['ref'])->toBe('p2');
+});
+
+/**
+ * Canon (наряд FIX-4 §2): «судим только каркасы текущей сцены (цели + прочие реплики ученика сцены → extra_said)». A
+ * construction of the scene that is no target of the talk is «ещё вспомнил» — on the turn, in the talk and in the
+ * summary, never among the targets; a construction of the scene ahead is not judged while the talk stands in this one.
+ * CATCHES a move credited to a scene the talk is not in (the owner's rehearsal ticked the trainer's p1 at the reception),
+ * and an extra counted into «X из Y».
+ */
+it('judges a move by the constructions of the scene the talk is in, and says the ones that are no target as extra', function () {
+    [$token, $id] = convRehearsal($this);
+    $talk = convStart($this, $token, $id, 3);
+    [$first, $second] = array_column($talk['scenes'], 'scene_id');
+
+    // «He will rest ___.» is the first scene's p5 — a construction of it, and no target of the rehearsal.
+    $extra = convTurn($this, $token, $id, $talk['id'], 'said', 'He will rest at home.');
+    // The second scene's p1, said while the talk stands in the first: not judged there — and the first scene's p1 is one
+    // word off it («It-2» reads «it 2»).
+    $ahead = convTurn($this, $token, $id, $talk['id'], 'said', 'It-2 hurts in his neck.');
+    $state = static fn (array $talk, string $scene, string $ref): string => collect($talk['targets'])->first(static fn (array $t): bool => $t['scene_id'] === $scene && $t['ref'] === $ref)['state'];
+
+    expect($extra['turns'][1]['phrases_used'])->toBe([])
+        ->and($extra['turns'][1]['extra_said'])->toBe([['scene_id' => $first, 'ref' => 'p5']])
+        ->and(array_column($extra['extra_said'], 'ref'))->toBe(['p5'])
+        ->and($extra['extra_said'][0]['value_target'])->toBe('at home')
+        ->and(convSaid($extra))->toBe([])
+        ->and($state($ahead, $second, 'p1'))->toBe('none')
+        ->and($state($ahead, $first, 'p1'))->toBe('almost')
+        ->and($ahead['turns'][3]['phrases_used'])->toBe([]);
+
+    // The talk walked to its end: the summary counts the targets, and says the extra beside them.
+    $ended = planTalkThrough($this, $token, $id, 3);
+    expect(array_column($ended['summary']['extra_said'], 'ref'))->toBe(['p5'])
+        ->and($ended['summary']['phrases_total'])->toBe(7);
 });
 
 /**
@@ -513,7 +725,7 @@ function convDayId(string $planId, int $number = 1): string
 /** @return int the hits of one check of the role's prompt, as the admin panel reads them */
 function convHits(string $code): int
 {
-    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3')
+    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3.1')
         ->where('check_name', $code)->where('action', 'counted')->value('hits');
 }
 
@@ -542,9 +754,19 @@ it('asks the role again when it says the learner\'s line, once, with the reason,
         ->and($second->turn)->toBe($fake->conversationRequests[0]->turn)
         ->and(convHits('conversation.learner_line'))->toBe(1)
         ->and(convHits('conversation.learner_line_kept'))->toBe(0)
-        // Two calls, one line: the turn carries both calls' tokens.
-        ->and((int) DB::table('conversation_turns')->where('conversation_id', $talk['id'])->value('tokens_in'))->toBe(2 * 900);
+        // Two calls, one line: the turn carries both calls' tokens — the honest price of the line —, and the journal of
+        // refusals says which call was refused and why (наряд FIX-4 §6: the doubled tokens of turns 7 and 17).
+        ->and((int) DB::table('conversation_turns')->where('conversation_id', $talk['id'])->value('tokens_in'))->toBe(2 * 900)
+        ->and(convRejections($talk['id']))->toBe([[1, 1, 'rejected_answer', 'learner_line', '01J8FAKEM0DE1CA11000000001', ['line' => 'Do we need an X-ray?']]]);
 });
+
+/** @return list<array{0: int, 1: int, 2: string, 3: string, 4: string|null, 5: array<string, mixed>}> the talk's journal of refusals */
+function convRejections(string $talkId): array
+{
+    return DB::table('conversation_rejections')->where('conversation_id', $talkId)->orderBy('turn_index')->orderBy('attempt')->get()
+        ->map(static fn ($r): array => [(int) $r->turn_index, (int) $r->attempt, $r->kind, $r->reason, $r->model_call_id, json_decode((string) $r->detail, true)])
+        ->all();
+}
 
 /**
  * Canon (п. 1): ONE attempt — the learner is waiting. A second answer that says a learner line too is taken as it is and
@@ -571,7 +793,14 @@ it('takes the second answer whatever it says, and keeps the first when the secon
         ->and($after['turns'][2]['text_target'])->toBe('Do we need an X-ray?')
         ->and($fake->conversationCalls)->toBe(4)
         ->and(convHits('conversation.learner_line'))->toBe(2)
-        ->and(convHits('conversation.learner_line_kept'))->toBe(2);
+        ->and(convHits('conversation.learner_line_kept'))->toBe(2)
+        // Each attempt on its own row: the opening's second answer refused too (kept as it came); the move's second call
+        // never came, and its first answer stood.
+        ->and(convRejections($talk['id']))->toBe([
+            [1, 1, 'rejected_answer', 'learner_line', '01J8FAKEM0DE1CA11000000001', ['line' => 'Do we need an X-ray?']],
+            [1, 2, 'rejected_answer', 'learner_line', '01J8FAKEM0DE1CA11000000002', ['outcome' => 'kept']],
+            [3, 1, 'rejected_answer', 'learner_line', '01J8FAKEM0DE1CA11000000003', ['line' => 'Do we need an X-ray?', 'second' => 'unavailable', 'outcome' => 'kept']],
+        ]);
 });
 
 /**
@@ -606,7 +835,9 @@ it('asks for other words when a rescue says the line again, and counts it', func
     $fake = convAgentSays(static function (ConversationAgentRequest $request): array {
         $payload = FakePlanModel::conversationPayload($request);
         if ($request->turn === 'rescue') {
-            $payload['reply_target'] = $request->redo === null ? 'And what brings you in today?' : 'Why are you here?';
+            // The rescued line said again word for word — the role's last line of the scene.
+            $mine = array_values(array_filter($request->history, static fn (array $h): bool => $h['speaker'] === 'you'));
+            $payload['reply_target'] = $request->redo === null ? $mine[count($mine) - 1]['text'] : 'Why are you here?';
         }
 
         return $payload;
@@ -618,7 +849,7 @@ it('asks for other words when a rescue says the line again, and counts it', func
 
     expect($after['turns'][2]['text_target'])->toBe('Why are you here?')
         ->and($fake->conversationCalls)->toBe(3)
-        ->and($fake->conversationRequests[2]->redo)->toBe(['reason' => 'same_words', 'said' => 'And what brings you in today?', 'line' => null])
+        ->and($fake->conversationRequests[2]->redo)->toBe(['reason' => 'same_words', 'said' => $talk['turns'][0]['text_target'], 'line' => null])
         ->and(convHits('conversation.rescue_same_words'))->toBe(1)
         ->and($after['turns_left'])->toBe($talk['turns_left']);
 });
@@ -705,13 +936,16 @@ it('carries the talk\'s targets, ticks them off turn by turn, and names the hear
         ->and(count($talk['targets']))->toBeLessThanOrEqual(7)
         ->and(array_unique(array_column($talk['targets'], 'said')))->toBe([false])
         // A target is a CONSTRUCTION (наряд FIX-3 §6): the frame with its window, the lesson's value grey in it, said or not,
-        // and what the learner put in the window — null until they have.
-        ->and(array_keys($talk['targets'][0]))->toBe(['scene_id', 'ref', 'frame_target', 'frame_native', 'example_target', 'example_native', 'said', 'value_target'])
-        ->and(array_unique(array_column($talk['targets'], 'value_target')))->toBe([null]);
+        // what the learner put in the window — null until they have — and, since FIX-4 §2, where it stands: none · almost ·
+        // said (the key added last: the phone of build (20) reads the others as they were).
+        ->and(array_keys($talk['targets'][0]))->toBe(['scene_id', 'ref', 'frame_target', 'frame_native', 'example_target', 'example_native', 'said', 'value_target', 'state'])
+        ->and(array_unique(array_column($talk['targets'], 'value_target')))->toBe([null])
+        ->and(array_unique(array_column($talk['targets'], 'state')))->toBe(['none']);
 
     $after = convTurn($this, $token, $id, $talk['id'], 'said', 'It started last week, I think.');
     $said = array_values(array_filter($after['targets'], static fn (array $t): bool => $t['said']));
     expect(array_column($said, 'ref'))->toBe(['p2'])
+        ->and($said[0]['state'])->toBe('said')
         ->and($said[0]['frame_target'])->toBe('It started ___.')
         ->and($said[0]['example_target'])->toBe('three days ago')
         // The learner's own value — not the lesson's — is what went into the window.
@@ -795,50 +1029,60 @@ function convSaid(array $talk): array
 }
 
 /**
- * Canon (наряд FIX-3 §6, пп. в–г): the move is read by the code's rule first; the role's own `phrases_used` counts only for
- * a target the move holds half the key words of, its window filled. «It hurts in his ___.» has three key words (it,
- * hurts, his): «his back hurts» holds two and puts «back» in the window — not the construction by the rule, the
- * construction by the rule and the role's word together. CATCHES the role's opinion ignored, the role trusted alone, and a
- * target ticked on the move after.
+ * Canon (наряд FIX-4 §2): «каркас = префикс + окно (≥1 слово) + суффикс; СКАЗАНО, если префикс подряд в начале фразы или
+ * сразу после вводных слов; ПОЧТИ = одно расхождение слова (замена/вставка/выпуск, включая словоформу); «почти» не
+ * закрывает»; §5: «после «почти» по X: следующий ход hint_target = точная английская строка X, hint_ref = X; иначе
+ * hint_target null». The role's own word is read by nobody. «It hurts in his ___.»: «his back hurts» is the construction's
+ * words in another order — none; «It hurts in her lower back» is one word off — almost, and the next hint is its exact
+ * line; said, it is said once. CATCHES the old keyword judge (half the key words, any order), the role trusted, an almost
+ * that closes the target, and an exact line offered without an almost or kept after one.
  */
-it('credits a target the role named only when the move holds half of its key words', function () {
+it('reads a move for the construction as a phrase: said, one word off, or not — and prompts an almost with its exact line', function () {
     convAgentSays(static function (ConversationAgentRequest $request): array {
         $payload = FakePlanModel::conversationPayload($request);
-        // The role «hears» the first scene's p1 on every move, whatever was said.
-        $payload['phrases_used'] = array_values(array_filter($request->targetIds(), static fn (string $id): bool => str_ends_with($id, ':p1')));
+        // The role «hears» p1 on every move, whatever was said.
+        $payload['phrases_used'] = [$request->targetIds()[0] ?? 'T1'];
 
         return $payload;
     });
     [$token, $id] = convDay($this);
     $talk = convStart($this, $token, $id);
+    $p1 = static fn (array $talk): array => $talk['targets'][0];
 
-    // Nothing of p1 in the move: the role's word alone credits nothing.
     $nothing = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
-    expect(convSaid($nothing))->toBe([])->and($nothing['turns'][1]['phrases_used'])->toBe([]);
+    $shuffled = convTurn($this, $token, $id, $talk['id'], 'said', 'his back hurts');
+    expect(convSaid($nothing))->toBe([])->and($p1($nothing)['state'])->toBe('none')
+        ->and($p1($shuffled)['state'])->toBe('none')
+        ->and($shuffled['hints']['target'])->toBeNull();
 
-    // Three of five: the role's word is the second support, and the move carries it.
-    $half = convTurn($this, $token, $id, $talk['id'], 'said', 'his back hurts');
-    expect(convSaid($half))->toBe(['p1'])
-        ->and(array_column($half['turns'][3]['phrases_used'], 'ref'))->toBe(['p1'])
+    $almost = convTurn($this, $token, $id, $talk['id'], 'said', 'It hurts in her lower back.');
+    expect($p1($almost))->toMatchArray(['ref' => 'p1', 'state' => 'almost', 'said' => false, 'value_target' => null])
+        ->and($almost['turns'][5]['phrases_used'])->toBe([])
+        // The role is led back to it, and the hint gives its exact line — once.
+        ->and($almost['hints'])->toMatchArray(['ref' => 'p1', 'native' => 'у него болит поясница', 'target' => 'It hurts in his lower back.']);
+
+    $said = convTurn($this, $token, $id, $talk['id'], 'said', 'It hurts in his lower back.');
+    expect($p1($said))->toMatchArray(['state' => 'said', 'said' => true, 'value_target' => 'lower back'])
+        ->and(array_column($said['turns'][7]['phrases_used'], 'ref'))->toBe(['p1'])
         // …on the learner's own line, never on the role's.
-        ->and($half['turns'][4]['phrases_used'])->toBe([]);
+        ->and($said['turns'][8]['phrases_used'])->toBe([])
+        ->and($said['hints']['target'])->toBeNull()
+        ->and($said['hints']['ref'])->not->toBe('p1');
+
+    // Said again: credited once, on the move that said it first.
+    $again = convTurn($this, $token, $id, $talk['id'], 'said', 'It hurts in his neck.');
+    expect($again['turns'][9]['phrases_used'])->toBe([])->and($p1($again)['value_target'])->toBe('lower back');
 });
 
 /**
- * Canon (§2, п. д; наряд FIX-3 §6): «засчитанное не снимается; на каждом ходу проверяются только несказанные; проверять по
- * всем targets, не только по фразе сцены хода; одна цель — один раз». A rehearsal over two scenes asks for p1…p4 of the
- * first and p1…p3 of the second — the fake's second lesson is the first one with the first word of each frame marked
- * «-2», one key word of four or five, which the rule may miss: its constructions are the first scene's. A move made while
- * the talk stands in the FIRST scene ticks the second scene's construction as well. CATCHES a target unticked by a later
- * move, a target credited twice, and a move read only for the scene it stands in.
+ * Canon (§2, п. д; наряд FIX-3 §6; наряд FIX-4 §2): «засчитанное не снимается; повторно сказанное не засчитывается повторно;
+ * судим только каркасы текущей сцены». A rehearsal over two scenes asks for p1…p4 of the first and p1…p3 of the second —
+ * the fake's second lesson is the first one with the first word of each frame marked «-2». CATCHES a target unticked by a
+ * later move, a target credited twice, and a move read for a scene the talk is not in (the old judge ticked «The pain is
+ * sharp when he bends.» in both scenes).
  */
-it('keeps a said target said, credits it once, and reads a move for the targets of every scene', function () {
-    [$token, $id] = convDay($this, days: 3);
-    planWalkDay($this, $token, $id, 1);
-    planShiftDay($id);
-    planWalkDay($this, $token, $id, 2);
-    planShiftDay($id);
-    planOpenDay($this, $token, $id, 3);
+it('keeps a said target said, credits it once, and reads a move for the scene the talk is in', function () {
+    [$token, $id] = convRehearsal($this);
 
     $talk = convStart($this, $token, $id, 3);
     $first = $talk['scenes'][0]['scene_id'];
@@ -848,20 +1092,21 @@ it('keeps a said target said, credits it once, and reads a move for the targets 
         ->and(array_column($talk['targets'], 'frame_target', 'ref'))->toMatchArray(['p3' => 'The-2 pain is ___ when he bends.'])
         ->and(array_column($talk['scenes'], 'state'))->toBe(['current', 'locked']);
 
-    // In the first scene, a construction both scenes have: ticked in both, on this move.
+    // In the first scene: the first scene's construction, and nothing of the second's.
     $sharp = convTurn($this, $token, $id, $talk['id'], 'said', 'The pain is sharp when he bends.');
-    expect($ticked($sharp))->toBe(['s1:p3', 's2:p3'])
-        ->and(array_map($name, $sharp['turns'][1]['phrases_used']))->toBe(['s1:p3', 's2:p3']);
+    expect($ticked($sharp))->toBe(['s1:p3'])
+        ->and(array_map($name, $sharp['turns'][1]['phrases_used']))->toBe(['s1:p3']);
 
-    // Said again with another one: only the new one is credited to this line — once said is said once.
-    $other = convTurn($this, $token, $id, $talk['id'], 'said', 'The pain is dull when he bends, and it hurts in his neck.');
+    // Said again with another one: only the new one is credited to this line — once said is said once. (Each where its
+    // sentence begins: «…, and it hurts in his neck» in one sentence is a frame in the middle of it — nothing, §2.)
+    $other = convTurn($this, $token, $id, $talk['id'], 'said', 'The pain is dull when he bends. It hurts in his neck.');
     expect($other['scenes'][0]['state'])->toBe('current')
-        ->and($ticked($other))->toBe(['s1:p1', 's1:p3', 's2:p1', 's2:p3'])
-        ->and(array_map($name, $other['turns'][3]['phrases_used']))->toBe(['s1:p1', 's2:p1']);
+        ->and($ticked($other))->toBe(['s1:p1', 's1:p3'])
+        ->and(array_map($name, $other['turns'][3]['phrases_used']))->toBe(['s1:p1']);
 
     // A move that says none of them takes nothing back.
     $nothing = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
-    expect($ticked($nothing))->toBe(['s1:p1', 's1:p3', 's2:p1', 's2:p3'])
+    expect($ticked($nothing))->toBe(['s1:p1', 's1:p3'])
         ->and($nothing['turns'][5]['phrases_used'])->toBe([]);
 });
 
@@ -1069,16 +1314,16 @@ it('leads the role to the targets one by one, and prompts every move with the do
     [$token, $id] = convDay($this);
     $talk = convStart($this, $token, $id);
     $order = array_map(static fn (array $t): string => $t['scene_id'].':'.$t['ref'], $talk['targets']);
-    $hintOf = static fn (array $t): string => mb_strtolower(mb_substr($t['frame_native'], 0, 1)).str_replace('___', '…', rtrim(mb_substr($t['frame_native'], 1), '.'));
 
-    // The opening line opens the first target, and the chip names it.
-    expect($fake->conversationRequests[0]->leadTo)->toBe($order[0])
-        ->and($talk['hints']['native'])->toBe($hintOf($talk['targets'][0]));
+    // The opening line opens the first target — named to the role by its short id (наряд FIX-4 §3) — and the chip gives
+    // its sentence whole (§5).
+    expect($fake->conversationRequests[0]->leadTo)->toBe('T1')
+        ->and($talk['hints'])->toMatchArray(['ref' => $talk['targets'][0]['ref'], 'native' => 'у него болит поясница', 'target' => null]);
 
     // The learner says something else: the first door was opened all the same — the lead moves on, and so does the hint.
     $moved = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
-    expect($fake->conversationRequests[1]->leadTo)->toBe($order[1])
-        ->and($moved['hints']['native'])->toBe($hintOf($talk['targets'][1]))
+    expect($fake->conversationRequests[1]->leadTo)->toBe('T2')
+        ->and($moved['hints'])->toMatchArray(['ref' => $talk['targets'][1]['ref'], 'native' => 'началось три дня назад', 'target' => null])
         ->and(clDoors($talk['id']))->toBe([$order[0], $order[1]]);
 });
 
@@ -1106,54 +1351,56 @@ it('marks the exchange of a target the learner said as done in what the role is 
 });
 
 /**
- * Canon (§7): the doors are opened in the order of the scenes the talk walks — a rehearsal whose role has closed a scene
- * is led through the scene it is in now, and back to the one behind only when nothing ahead is left. CATCHES the doctor
- * told to open the reception's doors while the reception is behind (the check-in of the live run closed its scene with
- * three doors to go).
+ * Canon (наряд FIX-4 §§3–4): «модели отдаём только цели текущей сцены с короткими id T1…T7»; «промпт новой сцены: кто
+ * модель СЕЙЧАС, предыдущая сцена окончена, факты — что ученик сказал раньше (кратко, как факты, не диалог), цели только
+ * этой сцены». The role is told its scene only, the scene's goodbye is asked for with no door, and the next role is told
+ * what the learner told the one before as facts. CATCHES the doctor told the reception's targets (and the reception's
+ * lines as a dialogue to go on), a goodbye led to a door, and a new role told nothing of the story.
  */
-it('leads a rehearsal through the scene it is in, and back to a scene left behind only at the end', function () {
-    [$token, $id] = convDay($this, days: 3);
-    // The role closes the first scene on the learner's first move, two of its doors opened.
-    $fake = convAgentSays(static fn (ConversationAgentRequest $request): array => [
-        ...FakePlanModel::conversationPayload($request),
-        'checkpoint_done' => $request->turn === 'said' && count($request->history) < 3 ? $request->currentCheckpoint : null,
-        'end' => 'no',
-    ]);
-    planWalkDay($this, $token, $id, 1);
-    planShiftDay($id);
-    planWalkDay($this, $token, $id, 2);
-    planShiftDay($id);
-    planOpenDay($this, $token, $id, 3);
+it('tells the role only its scene, and the next role what the learner told the one before, as facts', function () {
+    $fake = convAgentSays(static fn (ConversationAgentRequest $request, int $call): array => FakePlanModel::conversationPayload($request, $call));
+    [$token, $id] = convRehearsal($this);
 
-    $talk = convStart($this, $token, $id, 3);
-    $ids = array_map(static fn (array $t): string => $t['scene_id'].':'.$t['ref'], $talk['targets']);
-    [$first, $second] = array_column($talk['scenes'], 'scene_id');
-    $ofFirst = array_values(array_filter($ids, static fn (string $t): bool => str_starts_with($t, $first.':')));
-    $ofSecond = array_values(array_filter($ids, static fn (string $t): bool => str_starts_with($t, $second.':')));
     $asked = count($fake->conversationRequests);
-    convTurn($this, $token, $id, $talk['id'], 'said', 'Hello.');
-    convTurn($this, $token, $id, $talk['id'], 'said', 'Hello again.');
-    $leads = array_map(static fn (ConversationAgentRequest $r): ?string => $r->leadTo, array_slice($fake->conversationRequests, $asked - 1));
+    $talk = convStart($this, $token, $id, 3);
+    [$first, $second] = array_column($talk['scenes'], 'scene_id');
+    foreach (convTargetsOf($talk, $first) as $target) {
+        convTurn($this, $token, $id, $talk['id'], 'said', convLine($target));
+    }
+    $requests = array_slice($fake->conversationRequests, $asked);
+    [$goodbye, $greeting] = array_slice($requests, -2);
 
-    expect(count($ofFirst))->toBeGreaterThan(2)
-        // Start and the first move lead through the first scene; the first move closes it — the second leads into the next.
-        ->and($leads)->toBe([$ofFirst[0], $ofFirst[1], $ofSecond[0]]);
+    expect(array_map(static fn (ConversationAgentRequest $r): array => $r->targetIds(), array_slice($requests, 0, -1)))->each->toBe(['T1', 'T2', 'T3', 'T4'])
+        ->and(array_map(static fn (ConversationAgentRequest $r): ?string => $r->leadTo, array_slice($requests, 0, 4)))->toBe(['T1', 'T2', 'T3', 'T4'])
+        ->and(array_column(array_merge(...array_map(static fn (ConversationAgentRequest $r): array => $r->checkpoints, $requests)), 'id'))->each->toBeIn([$first, $second])
+        // The goodbye: the first scene's role, its scene closed, no door to lead to.
+        ->and($goodbye->sceneEnd)->toBeTrue()
+        ->and($goodbye->leadTo)->toBeNull()
+        ->and($goodbye->currentCheckpoint)->toBe($first)
+        ->and($goodbye->earlier)->toBe([])
+        // The greeting: the second scene's role, its targets only, the first door of it, and the story so far as facts.
+        ->and($greeting->turn)->toBe('start')
+        ->and($greeting->sceneEnd)->toBeFalse()
+        ->and($greeting->currentCheckpoint)->toBe($second)
+        ->and(array_column($greeting->checkpoints, 'id'))->toBe([$second])
+        ->and($greeting->targetIds())->toBe(['T5', 'T6', 'T7'])
+        ->and($greeting->leadTo)->toBe('T5')
+        ->and($greeting->history)->toBe([])
+        ->and($greeting->earlier)->toBe(array_map(static fn (array $t): string => convLine($t), convTargetsOf($talk, $first)));
 });
 
 /**
- * Canon (§7): «подсказка = цель, отвечающая на последний вопрос роли, иначе следующая несказанная» — the target the role's
- * line opened, the one it named and not the one it was told to lead to; a line that opens none («Yes? Go on.») keeps the
- * door of the line before it while that is unsaid, and after that the next target the talk leads to. CATCHES a hint read
- * off LEAD_TO blindly, the question still waiting dropped for the next target (the live check-in run), and a door that is
- * not the talk's own.
+ * Canon (наряд FIX-4 §5): «ближайшая = только что открытая, иначе первая несказанная по порядку; подсказка меняется каждый
+ * ход» — the target the role's line opened, the one it named and not the one it was told to lead to; a line that opens
+ * none prompts with the first target not said; an id the talk does not have opens nothing. CATCHES a hint read off
+ * LEAD_TO blindly, a hint that keeps the door of an older line, and a door that is not the talk's own.
  */
-it('takes the door the role names, and a line that opens none prompts with the next lead', function () {
+it('takes the door the role names, and a line that opens none prompts with the first target not said', function () {
     convAgentSays(static function (ConversationAgentRequest $request): array {
         $payload = FakePlanModel::conversationPayload($request);
-        $ids = $request->targetIds();
         // The role opens the THIRD target on the opening line, and nothing — then a stranger's id — after it.
         $payload['opens'] = match (true) {
-            $request->turn === 'start' => $ids[2],
+            $request->turn === 'start' => 'T3',
             count($request->history) < 4 => null,
             default => 'nowhere:p9',
         };
@@ -1164,16 +1411,17 @@ it('takes the door the role names, and a line that opens none prompts with the n
     $talk = convStart($this, $token, $id);
     $third = $talk['targets'][2];
 
-    expect($talk['hints']['native'])->toBe(mb_strtolower(mb_substr($third['frame_native'], 0, 1)).str_replace('___', '…', rtrim(mb_substr($third['frame_native'], 1), '.')));
+    expect($talk['hints'])->toMatchArray(['ref' => $third['ref'], 'native' => 'боль острая, когда он наклоняется']);
 
+    // Nothing opened: the first target not said.
     $none = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
-    // Nothing opened: the question of the line before still waits — the third target again.
-    expect($none['hints']['native'])->toBe($talk['hints']['native']);
+    expect($none['hints'])->toMatchArray(['ref' => $talk['targets'][0]['ref'], 'native' => 'у него болит поясница']);
 
-    // Nothing opened twice running: no question waits — the next lead, the first target, whose door is not opened yet.
+    // A stranger's id opens nothing either — dropped, and journaled.
     $again = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello again.');
-    expect($again['hints']['native'])->toStartWith(mb_strtolower(mb_substr($talk['targets'][0]['frame_native'], 0, 1)))
-        ->and(clDoors($talk['id']))->toBe([$third['scene_id'].':'.$third['ref'], null, null]);
+    expect($again['hints']['ref'])->toBe($talk['targets'][0]['ref'])
+        ->and(clDoors($talk['id']))->toBe([$third['scene_id'].':'.$third['ref'], null, null])
+        ->and(DB::table('conversation_rejections')->where('conversation_id', $talk['id'])->pluck('reason')->all())->toBe(['unknown_id']);
 });
 
 /**

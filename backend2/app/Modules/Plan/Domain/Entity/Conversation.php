@@ -6,8 +6,10 @@ namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\Exception\ConversationEnded;
 use App\Modules\Plan\Domain\Exception\ConversationNotYourTurn;
+use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\ValueObject\ConversationEnd;
 use App\Modules\Plan\Domain\ValueObject\ConversationId;
+use App\Modules\Plan\Domain\ValueObject\ConversationRejection;
 use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\ConversationType;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
@@ -39,17 +41,19 @@ use LogicException;
  * and a voice, so it is spent from the money — but it is NOT one of the day's three or four turns:
  * asking the role to repeat itself is not a move of the scene, and «переспросы всегда нейтральны»
  * (кадр 37-12). A skip is a move: the learner let it go, the scene carries on.
+ *
+ * THE SCENES ARE THE SERVER'S (наряд FIX-4 §4): every line carries the scene it was said in, and in a talk over several
+ * scenes the scene closes by the server's rule — its moves counted here ({@see movesIn()}), its checkpoint marked on the
+ * role's goodbye. What the server refused of the role's answers on the way is kept too ({@see reject()}): a journal of its
+ * own, append-only, written with the move.
  */
 final class Conversation
 {
     /** The most one gap between two lines counts for in the talk's minutes (наряд CONV-2, п. 3). */
     public const MAX_GAP_SECONDS = 60;
 
-    /**
-     * The learner's move recorded by THIS process and not answered yet — the one line of the journal that has not been
-     * written and may still be completed ({@see creditMove()}). A talk read from storage never has one.
-     */
-    private bool $moveInHand = false;
+    /** @var list<ConversationRejection> what the server refused of the role's answers in THIS process — written with the move */
+    private array $rejections = [];
 
     /**
      * @param  list<string>  $sceneIds  the checkpoints, in the order the talk walks them
@@ -134,42 +138,27 @@ final class Conversation
         return count($this->turns) + 1;
     }
 
-    /** The learner's move: refused unless it IS their move, and refused outright once the talk is over. */
+    /**
+     * The learner's move, complete — its words and what the server heard in them: refused unless it IS their move, and
+     * refused outright once the talk is over.
+     */
     public function recordLearnerTurn(ConversationTurn $turn): void
     {
         $this->assertOpen();
         if ($this->state !== ConversationState::YourTurn) {
             throw ConversationNotYourTurn::state($this->state);
         }
+        if ($turn->kind === TurnKind::Agent) {
+            throw new LogicException('A line of the role is not a move of the learner.');
+        }
         $this->turns[] = $turn;
         $this->state = ConversationState::AgentTurn;
-        $this->moveInHand = true;
     }
 
     /**
-     * WHICH TARGETS THE MOVE SAID IS KNOWN ONCE THE ROLE HAS ANSWERED IT (наряд BACK-TAILS-2 §2): the code's rule reads the
-     * move, and the role's own `phrases_used` is its second support ({@see \App\Modules\Plan\Domain\Service\PhraseUse}). So
-     * the learner's move is completed with them between the answer and the write — it is still in hand, not written, and
-     * nothing that has been stored is changed. A line is still written once and complete.
-     *
-     * @param  list<string>  $phraseIds  scene-qualified ids ({@see \App\Modules\Plan\Domain\ValueObject\ConversationPhrase::id()})
+     * The role's line. It leaves the move with the learner — unless the talk is closed after it; a scene's goodbye and the
+     * next role's greeting are two lines in a row, and the learner answers the second.
      */
-    public function creditMove(array $phraseIds): void
-    {
-        $last = $this->lastTurn();
-        if (! $this->moveInHand || $last === null || $last->kind === TurnKind::Agent) {
-            throw new LogicException('Only the learner\'s move in hand, not yet answered, can be credited with phrases.');
-        }
-        if ($phraseIds === []) {
-            return;
-        }
-        $this->turns = [...array_slice($this->turns, 0, -1), ConversationTurn::learner(
-            $last->id, $last->conversationId, $last->index, $last->kind, $last->textTarget,
-            array_values(array_unique([...$last->phrasesUsed, ...$phraseIds])), $last->createdAt,
-        )];
-    }
-
-    /** The role's line. It always leaves the move with the learner — unless the talk is closed after it. */
     public function recordAgentTurn(ConversationTurn $turn): void
     {
         $this->assertOpen();
@@ -178,7 +167,61 @@ final class Conversation
             $this->markCheckpoint($turn->checkpointDone);
         }
         $this->state = ConversationState::YourTurn;
-        $this->moveInHand = false;
+    }
+
+    /** Something the server refused of an answer of the role on this move — journaled with it. */
+    public function reject(ConversationRejection $rejection): void
+    {
+        $this->rejections[] = $rejection;
+    }
+
+    /** @return list<ConversationRejection> what was refused in this process, not yet written */
+    public function rejections(): array
+    {
+        return $this->rejections;
+    }
+
+    /**
+     * HOW MANY MOVES THE LEARNER HAS MADE IN A SCENE (наряд FIX-4 §4) — what the scene's budget is spent by: a move said or
+     * let go in it; a rescue is no move.
+     */
+    public function movesIn(string $sceneId): int
+    {
+        $moves = 0;
+        foreach ($this->turns as $turn) {
+            if ($turn->isMove() && $turn->sceneId === $sceneId) {
+                $moves++;
+            }
+        }
+
+        return $moves;
+    }
+
+    /**
+     * DID THE TALK END BECAUSE A LIMIT RAN OUT (наряд FIX-4 §4) — its money or its minutes (`ended_reason: limit`), or its
+     * moves before its scenes were walked: the last line of the role was a scene's goodbye the server asked for, and a
+     * scene of the talk has no checkpoint. `ended_reason` keeps its values (the phone's build (20) reads them): this is a
+     * flag beside it. A talk that has not ended — false.
+     */
+    public function endedByLimit(): bool
+    {
+        return ConversationOutcomes::endedByLimit(
+            $this->state === ConversationState::Ended,
+            $this->endedReason?->value,
+            $this->lastAgentTurn()?->sceneEvent?->value,
+            array_diff($this->sceneIds, $this->checkpointsDone) === [],
+        );
+    }
+
+    public function lastAgentTurn(): ?ConversationTurn
+    {
+        for ($i = count($this->turns) - 1; $i >= 0; $i--) {
+            if ($this->turns[$i]->kind === TurnKind::Agent) {
+                return $this->turns[$i];
+            }
+        }
+
+        return null;
     }
 
     public function end(ConversationEnd $reason, DateTimeImmutable $now): void
@@ -218,14 +261,14 @@ final class Conversation
     }
 
     /**
-     * How many moves of the scene are left. A rescue is not one of them (see the class note), so
+     * How many moves of the talk are left. A rescue is not one of them (see the class note), so
      * only what the learner SAID or let go counts against the limit.
      */
     public function turnsLeft(): int
     {
         $spent = 0;
         foreach ($this->turns as $turn) {
-            if ($turn->kind === TurnKind::Said || $turn->kind === TurnKind::Skip) {
+            if ($turn->isMove()) {
                 $spent++;
             }
         }
@@ -289,14 +332,10 @@ final class Conversation
         return $this->turns === [] ? null : $this->turns[count($this->turns) - 1];
     }
 
-    /** The intention the learner is shown for their next move — written on the role's last line. */
-    public function hintNative(): ?string
+    /** Is it the learner's move now — the talk open and waiting for them? */
+    public function awaitsLearner(): bool
     {
-        if (! $this->hintsEnabled || $this->state !== ConversationState::YourTurn) {
-            return null;
-        }
-
-        return $this->lastTurn()?->hintNative;
+        return $this->state === ConversationState::YourTurn;
     }
 
     public function isEnded(): bool

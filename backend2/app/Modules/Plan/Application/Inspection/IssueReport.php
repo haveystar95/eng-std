@@ -177,6 +177,7 @@ final readonly class IssueReport
             openers: count(array_filter($talk->turns, static fn ($t): bool => $t->kind === 'agent' && $t->opensTarget !== null)),
             voicedLines: $this->talks->voicedRoleLines($data, $talk),
             openersRecorded: $talk->startedAt >= $this->canon->openersSince,
+            endedByLimit: $talk->endedByLimit(),
         ), $data->talks());
 
         $callFacts = array_map(static fn (AttributedCall $c): CallFact => new CallFact($c->call->id, $c->day, $c->call->purpose, $c->call->status, $c->call->error), $calls);

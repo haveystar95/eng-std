@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\ValueObject;
 
 use App\Modules\Plan\Domain\Service\FrameText;
-use App\Modules\Plan\Domain\Service\IntentClause;
 
 /**
- * ONE TARGET OF A TALK — A CONSTRUCTION, NOT A SENTENCE (наряд FIX-3 §6): the frame with its window («I have ___ of
+ * ONE CONSTRUCTION OF A TALK — A FRAME, NOT A SENTENCE (наряд FIX-3 §6): the frame with its window («I have ___ of
  * experience.»), the value the lesson says it with (`example`, grey in the window on the screen: «about a year»), which
  * scene it belongs to, its ref (`p2`), and whether the learner opens it (`ask`) or answers with it (`answer`).
  *
  * The learner is not asked to say the lesson's sentence — «I have about a year of experience» is somebody else's year.
- * They are asked to say the CONSTRUCTION with a value of their own, and the talk ticks it when the frame's words and
- * something in its window are heard ({@see \App\Modules\Plan\Domain\Service\PhraseUse}). A frame with no window is said
- * as it is: its example is null.
+ * They are asked to say the CONSTRUCTION with a value of their own, and the talk ticks it when they say it as a phrase
+ * ({@see \App\Modules\Plan\Domain\Service\FrameJudge}, наряд FIX-4 §2). A frame with no window is said as it is: its
+ * example is null.
+ *
+ * `line` is the lesson's own sentence of the construction — the frame said with its value, in both languages («I have
+ * some shoulder pain.» / «У меня есть боль в плече.»): the hint of the talk offers it whole (наряд FIX-4 §5).
  *
  * The id is scene-qualified on purpose: `p3` means nothing on its own in a rehearsal that walks three scenes.
  */
@@ -29,6 +31,8 @@ final readonly class ConversationPhrase
         public ?string $exampleTarget,
         public ?string $exampleNative,
         public ExchangeKind $kind = ExchangeKind::Answer,
+        public string $lineTarget = '',
+        public string $lineNative = '',
     ) {}
 
     public function id(): string
@@ -40,14 +44,5 @@ final readonly class ConversationPhrase
     public function hasWindow(): bool
     {
         return FrameText::hasSlot($this->frameTarget);
-    }
-
-    /**
-     * THE HINT FOR THIS TARGET — the construction in the learner's language as the clause of «Скажи, что …» (наряд FIX-3
-     * §6; {@see IntentClause}): «я работаю над …». The window is an ellipsis — what goes in it is the learner's to say.
-     */
-    public function hintNative(): string
-    {
-        return IntentClause::of((string) preg_replace(FrameText::SLOT_PATTERN, '…', $this->frameNative));
     }
 }

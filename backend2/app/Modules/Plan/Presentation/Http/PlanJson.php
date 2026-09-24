@@ -264,10 +264,21 @@ final class PlanJson
             'minutes_estimate' => $c->minutesEstimate,
             'turns_left' => $c->turnsLeft,
             // «Скажи в разговоре» (37-5) and the plates over the microphone (37-7…37-11): the constructions the talk is
-            // for, each with whether the server has heard it yet and what went into its window — the same list the summary
-            // counts (наряд CONV-2, п. 10; FIX-3 §6).
+            // for, each with whether the server has heard it yet, what went into its window and where it stands (`state`
+            // none · almost · said) — the same list the summary counts (наряд CONV-2, п. 10; FIX-3 §6; FIX-4 §2).
             'targets' => $c->targets,
-            'hints' => ['enabled' => $c->hintsEnabled, 'delay_ms' => $c->hintDelayMs, 'native' => $c->hintNative],
+            // «Ещё вспомнил» (наряд FIX-4 §2): the constructions of the talk's scenes said that are no target.
+            'extra_said' => $c->extraSaid,
+            // The hint whole (наряд FIX-4 §5): `native` — the target's sentence as the clause of «Скажи, что …»; `target`
+            // — its exact line after an «almost», else null; `scene_id` + `ref` — which target it is.
+            'hints' => [
+                'enabled' => $c->hintsEnabled,
+                'delay_ms' => $c->hintDelayMs,
+                'native' => $c->hint?->native,
+                'target' => $c->hint?->target,
+                'scene_id' => $c->hint?->sceneId,
+                'ref' => $c->hint?->ref,
+            ],
             'turns' => array_map(static fn (ConversationTurnView $t): array => [
                 'index' => $t->index,
                 'speaker' => $t->speaker,
@@ -282,8 +293,13 @@ final class PlanJson
                 ],
                 'understood' => $t->understood,
                 'phrases_used' => $t->phrasesUsed,
+                'extra_said' => $t->extraSaid,
                 'off_topic' => $t->offTopic,
                 'created_at' => $t->createdAt,
+                // The scene the line was said in, and — in a talk over several — the greeting (`start`) and the goodbye
+                // (`end`) of a scene (наряд FIX-4 §4).
+                'scene_id' => $t->sceneId,
+                'scene_event' => $t->sceneEvent,
             ], $c->turns),
             'summary' => $c->summary === null ? null : self::conversationSummary($c->summary),
         ];
@@ -302,8 +318,13 @@ final class PlanJson
             'not_understood' => $s->notUnderstood,
             'rescues' => $s->rescues,
             'ended_reason' => $s->endedReason,
+            // A limit ended the talk (its moves, minutes or money) before its last scene said goodbye (наряд FIX-4 §4):
+            // a flag beside `ended_reason`, whose values do not change.
+            'ended_by_limit' => $s->endedByLimit,
             'minutes' => $s->minutes,
             'returns_tomorrow' => $s->returnsTomorrow,
+            // «Ещё вспомнил» — the constructions said that are no target (наряд FIX-4 §2).
+            'extra_said' => $s->extraSaid,
         ];
     }
 

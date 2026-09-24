@@ -9,8 +9,9 @@ use App\Modules\Plan\Domain\Inspection\PlanFacts;
 use App\Modules\Plan\Domain\Inspection\PlanIssue;
 
 /**
- * РАЗГОВОР КОНЧИЛСЯ ПО ЛИМИТУ: a talk should end with a goodbye (`natural`); `limit` — it ran out of turns, minutes or
- * money before it got there.
+ * РАЗГОВОР КОНЧИЛСЯ ПО ЛИМИТУ: a talk should end with its last scene through; `limit` — it ran out of turns, minutes or
+ * money before it got there. Since наряд FIX-4 §4 the turns running out mid-scene still end on the role's goodbye
+ * (`natural`) — that talk is the talk's `ended_by_limit` too, and is flagged the same.
  */
 final class TalkEndedByLimit implements PlanCheck
 {
@@ -25,12 +26,14 @@ final class TalkEndedByLimit implements PlanCheck
     {
         $out = [];
         foreach ($facts->talks as $talk) {
-            if ($talk->endedReason !== 'limit') {
+            if ($talk->endedReason !== 'limit' && ! $talk->endedByLimit) {
                 continue;
             }
             $out[] = new PlanIssue(self::CODE, PlanIssue::WARNING, $talk->day, 'talk', $talk->id,
-                "Разговор дня {$talk->day} закончился по лимиту, а не прощанием",
-                ['conversation_id' => $talk->id],
+                $talk->endedReason === 'limit'
+                    ? "Разговор дня {$talk->day} закончился по лимиту, а не прощанием"
+                    : "Разговор дня {$talk->day}: ходы кончились раньше сцен — роль попрощалась по лимиту",
+                ['conversation_id' => $talk->id, 'ended_reason' => $talk->endedReason],
             );
         }
 

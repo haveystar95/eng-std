@@ -14,12 +14,15 @@ use App\Modules\Plan\Domain\ValueObject\ConversationTurnId;
 use App\Modules\Plan\Domain\ValueObject\ConversationType;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
+use App\Modules\Plan\Domain\ValueObject\SceneEvent;
 use App\Modules\Plan\Domain\ValueObject\TurnAudio;
 use App\Modules\Plan\Domain\ValueObject\TurnCost;
 use App\Modules\Plan\Domain\ValueObject\TurnKind;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 use DateTimeZone;
+use Illuminate\Support\Facades\DB;
+use stdClass;
 
 /**
  * The talks and their lines. The row of the talk is written whole every time (its state, its money,
@@ -180,6 +183,9 @@ final class EloquentConversationRepository implements ConversationRepository
                 'checkpoint_done' => $turn->checkpointDone,
                 'hint_native' => $turn->hintNative,
                 'opens_target' => $turn->opensTarget,
+                'scene_id' => $turn->sceneId,
+                'scene_event' => $turn->sceneEvent?->value,
+                'phrases_almost' => $turn->phrasesAlmost,
                 'model' => $turn->cost->model,
                 'prompt_version' => $turn->cost->promptVersion,
                 'tokens_in' => $turn->cost->tokensIn,
@@ -191,6 +197,22 @@ final class EloquentConversationRepository implements ConversationRepository
                 'speech_latency_ms' => $turn->cost->speechLatencyMs,
                 'latency_ms' => $turn->cost->latencyMs,
                 'created_at' => $turn->createdAt,
+            ]);
+        }
+
+        // What the server refused of the role's answers on the way — inserted once, with the move, never changed.
+        $now = $conversation->lastTurn()->createdAt ?? $conversation->startedAt();
+        foreach ($conversation->rejections() as $rejection) {
+            DB::table('conversation_rejections')->insertOrIgnore([
+                'id' => $rejection->id,
+                'conversation_id' => $conversation->id()->value,
+                'turn_index' => $rejection->turnIndex,
+                'attempt' => $rejection->attempt,
+                'kind' => $rejection->kind->value,
+                'reason' => $rejection->reason,
+                'model_call_id' => $rejection->modelCallId,
+                'detail' => json_encode($rejection->detail === [] ? new stdClass : $rejection->detail, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+                'created_at' => $now->format(DATE_ATOM),
             ]);
         }
     }
@@ -221,6 +243,8 @@ final class EloquentConversationRepository implements ConversationRepository
 
         /** @var list<string> $phrases */
         $phrases = array_values(array_filter($row->phrases_used ?? [], is_string(...)));
+        /** @var list<string> $almost */
+        $almost = array_values(array_filter($row->phrases_almost ?? [], is_string(...)));
 
         return ConversationTurn::reconstitute(
             id: ConversationTurnId::fromString($row->id),
@@ -248,6 +272,9 @@ final class EloquentConversationRepository implements ConversationRepository
             ),
             createdAt: new DateTimeImmutable($row->created_at),
             opensTarget: $row->opens_target,
+            sceneId: $row->scene_id === null ? null : trim($row->scene_id),
+            sceneEvent: $row->scene_event === null ? null : SceneEvent::from($row->scene_event),
+            phrasesAlmost: $almost,
         );
     }
 

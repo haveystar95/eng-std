@@ -6,15 +6,19 @@ use App\Modules\Plan\Domain\Entity\Conversation;
 use App\Modules\Plan\Domain\Entity\ConversationTurn;
 use App\Modules\Plan\Domain\Exception\ConversationEnded;
 use App\Modules\Plan\Domain\Exception\ConversationNotYourTurn;
+use App\Modules\Plan\Domain\Service\ConversationLead;
 use App\Modules\Plan\Domain\Service\ConversationOutcomes;
+use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\ValueObject\ConversationEnd;
 use App\Modules\Plan\Domain\ValueObject\ConversationId;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\ConversationState;
 use App\Modules\Plan\Domain\ValueObject\ConversationTurnId;
 use App\Modules\Plan\Domain\ValueObject\ConversationType;
+use App\Modules\Plan\Domain\ValueObject\FrameState;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
+use App\Modules\Plan\Domain\ValueObject\SceneEvent;
 use App\Modules\Plan\Domain\ValueObject\TurnCost;
 use App\Modules\Plan\Domain\ValueObject\TurnKind;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -39,8 +43,16 @@ function convTalk(ConversationType $type = ConversationType::Day, int $turns = 4
     );
 }
 
-function convAgent(Conversation $talk, ?string $checkpoint = null, ?string $hint = 'скажи, что болит', string $cost = '0.010000', ?bool $offTopic = false): void
-{
+function convAgent(
+    Conversation $talk,
+    ?string $checkpoint = null,
+    ?string $hint = 'скажи, что болит',
+    string $cost = '0.010000',
+    ?bool $offTopic = false,
+    ?string $opens = null,
+    ?string $scene = null,
+    ?SceneEvent $event = null,
+): void {
     $talk->recordAgentTurn(ConversationTurn::agent(
         id: ConversationTurnId::generate(),
         conversationId: $talk->id(),
@@ -54,11 +66,18 @@ function convAgent(Conversation $talk, ?string $checkpoint = null, ?string $hint
         now: new DateTimeImmutable('2026-09-21T10:00:05Z'),
         understood: true,
         offTopic: $offTopic,
+        opensTarget: $opens,
+        sceneId: $scene,
+        sceneEvent: $event,
     ));
     $talk->spend($cost);
 }
 
-function convLearner(Conversation $talk, TurnKind $kind = TurnKind::Said, array $phrases = [], string $at = '2026-09-21T10:00:10Z'): void
+/**
+ * @param  list<string>  $phrases
+ * @param  list<string>  $almost
+ */
+function convLearner(Conversation $talk, TurnKind $kind = TurnKind::Said, array $phrases = [], string $at = '2026-09-21T10:00:10Z', array $almost = [], ?string $scene = null): void
 {
     $talk->recordLearnerTurn(ConversationTurn::learner(
         id: ConversationTurnId::generate(),
@@ -68,7 +87,15 @@ function convLearner(Conversation $talk, TurnKind $kind = TurnKind::Said, array 
         heard: $kind === TurnKind::Said ? 'It started three days ago.' : null,
         phrasesUsed: $phrases,
         now: new DateTimeImmutable($at),
+        phrasesAlmost: $almost,
+        sceneId: $scene,
     ));
+}
+
+/** A construction of scene `s1` whose lesson sentence is known — what the hint offers whole (наряд FIX-4 §5). */
+function convPhrase(string $ref, string $frame, string $native, string $lineTarget, string $lineNative, string $scene = 's1'): ConversationPhrase
+{
+    return new ConversationPhrase($scene, $ref, $frame, $native, null, null, lineTarget: $lineTarget, lineNative: $lineNative);
 }
 
 /** The role's line said at a given moment — the gaps between lines are what the talk's minutes are made of. */
@@ -235,19 +262,143 @@ it('walks its scenes forward and ignores a scene that is not its own', function 
     expect($talk->currentCheckpoint())->toBeNull();
 });
 
-// Canon (кадр 37-7): «в режиме „Без подсказок" нет ни чипа, ни кнопки». Catches a hint that travels anyway and a hint
-// shown while the role is still speaking.
-it('offers the next intention only when hints are on and the move is the learner\'s', function () {
-    $talk = convTalk();
-    convAgent($talk, hint: 'скажи, что болит уже три дня');
-    expect($talk->hintNative())->toBe('скажи, что болит уже три дня');
+/**
+ * Canon (наряд FIX-4 §5): «hint_native = ПОЛНАЯ родная фраза ближайшей несказанной цели текущей сцены с наполнением урока
+ * («У меня есть боль в плече.»); ближайшая = только что открытая, иначе первая несказанная по порядку. После «почти» по X:
+ * следующий ход hint_target = точная английская строка X, hint_ref = X; иначе hint_target null. Подсказка меняется каждый
+ * ход.» CATCHES a hint of the first target whatever the role opened, a hint left on a target said, the exact line offered
+ * with no almost before it, and an almost that the next hint forgets.
+ */
+it('prompts the learner with the target just opened, else the first not said — and with its exact line after an almost', function () {
+    $p1 = convPhrase('p1', 'I have ___.', 'У меня есть ___.', 'I have some shoulder pain.', 'У меня есть боль в плече.');
+    $p2 = convPhrase('p2', 'It started ___.', 'Началось ___.', 'It started two days ago.', 'Началось два дня назад.');
+    $p3 = convPhrase('p3', 'Can I ___?', 'Можно мне ___?', 'Can I keep training?', 'Можно мне продолжать тренироваться?');
+    $targets = [$p1, $p2, $p3];
 
-    convLearner($talk);
-    expect($talk->hintNative())->toBeNull();
+    expect(ConversationLead::hint($targets, [], [], 's1:p2'))->toBe(['target' => $p2, 'exact' => false])
+        ->and(ConversationLead::hint($targets, [], [], null))->toBe(['target' => $p1, 'exact' => false])
+        ->and(ConversationLead::hint($targets, ['s1:p1' => true], [], null))->toBe(['target' => $p2, 'exact' => false])
+        // A door opened to a target said already is no door: the first one not said.
+        ->and(ConversationLead::hint($targets, ['s1:p2' => true], [], 's1:p2'))->toBe(['target' => $p1, 'exact' => false])
+        // After an almost the target said almost, with its exact line — whatever the role's line opened.
+        ->and(ConversationLead::hint($targets, [], ['s1:p3'], 's1:p3'))->toBe(['target' => $p3, 'exact' => true])
+        ->and(ConversationLead::hint($targets, [], ['s1:p3'], 's1:p1'))->toBe(['target' => $p3, 'exact' => true])
+        ->and(ConversationLead::hint($targets, ['s1:p1' => true, 's1:p2' => true, 's1:p3' => true], [], null))->toBeNull()
+        ->and($p1->lineNative)->toBe('У меня есть боль в плече.');
+});
 
-    $silent = convTalk(hints: false);
-    convAgent($silent, hint: 'скажи, что болит');
-    expect($silent->hintNative())->toBeNull();
+/**
+ * Canon (наряд FIX-4 §3): «открытие «почти»-цели — допустимо и желательно». The role is led to the target the move said
+ * almost at once; otherwise to the first target of the scene not said whose door is not opened yet, and when every door
+ * has been opened, to the first not said. CATCHES a lead that walks on past a target one word from being said, and one
+ * that opens the same door twice while another stands unopened.
+ */
+it('leads the role to a target said almost first, then to the doors not opened yet', function () {
+    $p1 = convPhrase('p1', 'I have ___.', 'У меня есть ___.', 'I have some shoulder pain.', 'У меня есть боль в плече.');
+    $p2 = convPhrase('p2', 'It started ___.', 'Началось ___.', 'It started two days ago.', 'Началось два дня назад.');
+    $p3 = convPhrase('p3', 'Can I ___?', 'Можно мне ___?', 'Can I keep training?', 'Можно мне продолжать тренироваться?');
+    $talk = convTalk(scenes: ['s1']);
+    convAgent($talk, opens: 's1:p1', scene: 's1');
+
+    expect(ConversationLead::next($talk, [$p1, $p2, $p3], [], ['s1:p3']))->toBe($p3)
+        ->and(ConversationLead::next($talk, [$p1, $p2, $p3], []))->toBe($p2)
+        ->and(ConversationLead::next($talk, [$p1, $p2, $p3], ['s1:p2' => true, 's1:p3' => true]))->toBe($p1)
+        ->and(ConversationLead::next($talk, [$p1, $p2, $p3], ['s1:p1' => true, 's1:p2' => true, 's1:p3' => true]))->toBeNull();
+});
+
+/**
+ * Canon (наряд FIX-4 §4): «бюджет сцены = целей+1 ходов ученика»; a move is counted in the scene it was made in, and a
+ * rescue is no move. CATCHES a budget spent by the talk's moves in the scenes before, and a «Не понял» that eats one.
+ */
+it('counts the learner\'s moves scene by scene, and none for a rescue', function () {
+    $talk = convTalk(ConversationType::Rehearsal, turns: 9);
+    convAgent($talk, scene: 's1', event: SceneEvent::Start);
+    convLearner($talk, scene: 's1');
+    convAgent($talk, scene: 's1');
+    convLearner($talk, TurnKind::Rescue, scene: 's1');
+    convAgent($talk, scene: 's1');
+    convLearner($talk, TurnKind::Skip, scene: 's1');
+    convAgent($talk, checkpoint: 's1', scene: 's1', event: SceneEvent::End);
+    convAgent($talk, scene: 's2', event: SceneEvent::Start);
+    convLearner($talk, scene: 's2');
+
+    expect($talk->movesIn('s1'))->toBe(2)
+        ->and($talk->movesIn('s2'))->toBe(1)
+        ->and($talk->currentCheckpoint())->toBe('s2')
+        ->and((new ConversationRules)->sceneTurnsFor(4))->toBe(5)
+        // The rehearsal of 4 + 3 targets: 5 + 4 moves, the talk's own 7 + 2; over three scenes the last keeps its own.
+        ->and((new ConversationRules)->turnsForScenes([4, 3]))->toBe((new ConversationRules)->turnsFor(7))
+        ->and((new ConversationRules)->turnsForScenes([3, 2, 2]))->toBe(10);
+});
+
+/**
+ * Canon (наряд FIX-4 §4): «если лимит ходов ученика кончается раньше — последняя реплика роли всё равно прощание,
+ * ended_by_limit=true (значения ended_reason не меняются)». A talk over several scenes ended by the role's goodbye with a
+ * scene of it not walked ran out of moves; one whose every scene is walked ended by itself; `limit` is a limit whatever
+ * the last line; a day's talk has no goodbyes of scenes and ends on its moves. CATCHES a flag that reads only
+ * `ended_reason`, one that forgets the scenes after a scene closed on the talk's last move, and one raised on a talk
+ * still going.
+ */
+it('knows a talk the limit ended from one that walked its scenes', function () {
+    $at = new DateTimeImmutable('2026-09-21T10:09:00Z');
+
+    $cut = convTalk(ConversationType::Rehearsal);
+    convAgent($cut, scene: 's1', event: SceneEvent::Start);
+    convLearner($cut, scene: 's1');
+    convAgent($cut, scene: 's1', event: SceneEvent::End);
+    expect($cut->endedByLimit())->toBeFalse();
+    $cut->end(ConversationEnd::Natural, $at);
+
+    // The talk's last move closed scene 1 by its rule — and scene 2 was never walked.
+    $closedLast = convTalk(ConversationType::Rehearsal);
+    convAgent($closedLast, scene: 's1', event: SceneEvent::Start);
+    convLearner($closedLast, scene: 's1');
+    convAgent($closedLast, checkpoint: 's1', scene: 's1', event: SceneEvent::End);
+    $closedLast->end(ConversationEnd::Natural, $at);
+
+    $walked = convTalk(ConversationType::Rehearsal);
+    convAgent($walked, scene: 's1', event: SceneEvent::Start);
+    convLearner($walked, scene: 's1');
+    convAgent($walked, checkpoint: 's1', scene: 's1', event: SceneEvent::End);
+    convAgent($walked, scene: 's2', event: SceneEvent::Start);
+    convLearner($walked, scene: 's2');
+    convAgent($walked, checkpoint: 's2', scene: 's2', event: SceneEvent::End);
+    $walked->end(ConversationEnd::Natural, $at);
+
+    $money = convTalk(ConversationType::Rehearsal);
+    convAgent($money, scene: 's1', event: SceneEvent::Start);
+    $money->end(ConversationEnd::Limit, $at);
+
+    $day = convTalk(scenes: ['s1']);
+    convAgent($day, scene: 's1');
+    convLearner($day, scene: 's1');
+    convAgent($day, checkpoint: 's1', scene: 's1');
+    $day->end(ConversationEnd::Natural, $at);
+
+    expect($cut->endedByLimit())->toBeTrue()
+        ->and($cut->endedReason())->toBe(ConversationEnd::Natural)
+        ->and($closedLast->endedByLimit())->toBeTrue()
+        ->and($walked->endedByLimit())->toBeFalse()
+        ->and($money->endedByLimit())->toBeTrue()
+        ->and($day->endedByLimit())->toBeFalse();
+});
+
+/**
+ * Canon (наряд FIX-4 §2): «состояние none|almost|said; «почти» не закрывает; повторно сказанное не засчитывается повторно».
+ * CATCHES an almost that outranks a said, and a said forgotten because a later move said it almost.
+ */
+it('reads a construction\'s state off the journal: said beats almost, almost beats none', function () {
+    $talk = convTalk(scenes: ['s1']);
+    convAgent($talk, scene: 's1');
+    convLearner($talk, almost: ['s1:p1'], scene: 's1');
+    convAgent($talk, scene: 's1');
+    convLearner($talk, phrases: ['s1:p2'], scene: 's1');
+    convAgent($talk, scene: 's1');
+    convLearner($talk, almost: ['s1:p2'], scene: 's1');
+
+    expect(ConversationOutcomes::stateOf($talk, 's1:p1'))->toBe(FrameState::Almost)
+        ->and(ConversationOutcomes::stateOf($talk, 's1:p2'))->toBe(FrameState::Said)
+        ->and(ConversationOutcomes::stateOf($talk, 's1:p3'))->toBe(FrameState::None);
 });
 
 /**
@@ -278,6 +429,7 @@ it('reads the summary off the journal: said, rescues, understood, and which targ
     expect($outcome->saidCount)->toBe(1)
         ->and($outcome->rescues)->toBe(1)
         ->and($outcome->phrasesUsed)->toBe(['s1:p2'])
+        ->and($outcome->extraSaid)->toBe(['s1:p9'])
         ->and($outcome->phrasesTotal)->toBe(3)
         ->and(array_values($outcome->notSaid))->toBe(['s1:p1', 's2:p1'])
         ->and($outcome->understoodAll)->toBeTrue()

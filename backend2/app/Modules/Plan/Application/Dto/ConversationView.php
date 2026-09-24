@@ -14,14 +14,17 @@ namespace App\Modules\Plan\Application\Dto;
  *
  * Since наряд CONV-2: the entry title («Поговори с врачом»), the talk's TARGETS — the constructions it is for (наряд
  * FIX-3 §6), each with whether it has been said and what the learner put in its window — and `replay`: the day's sixth
- * stage was already walked by an earlier talk, so this one is «Ещё раз» on top of a walked day.
+ * stage was already walked by an earlier talk, so this one is «Ещё раз» on top of a walked day. Since наряд FIX-4: each
+ * target's `state` (none · almost · said), the constructions said that are no target («ещё вспомнил», `extraSaid`), and
+ * the hint whole — its target, and after an «almost» its exact line.
  */
 final readonly class ConversationView
 {
     /**
      * @param  list<ConversationSceneView>  $scenes
      * @param  list<ConversationTurnView>  $turns
-     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}>  $targets
+     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, state: string}>  $targets
+     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}>  $extraSaid
      */
     public function __construct(
         public string $id,
@@ -38,11 +41,12 @@ final readonly class ConversationView
         public int $turnsLeft,
         public bool $hintsEnabled,
         public int $hintDelayMs,
-        public ?string $hintNative,
+        public ?ConversationHintView $hint,
         public array $turns,
         public ?ConversationSummaryView $summary,
         public ?string $talkTitleNative = null,
         public array $targets = [],
         public bool $replay = false,
+        public array $extraSaid = [],
     ) {}
 }

@@ -32,10 +32,10 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  * - the rehearsal: every ready scene of the plan, in the plan's order — «Разговор целиком · 3 сцены»;
  * - a review day: the scenes of the two scene days it repeats.
  *
- * The phrases are the plan's own phrases of those scenes as CONSTRUCTIONS (наряд FIX-3 §6): the frame with its window
- * and the value the lesson says it with — the learner came to say the frame with a value of their own, and the talk
- * ticks it by {@see \App\Modules\Plan\Domain\Service\PhraseUse}. Four to seven of them are the talk's targets (наряд
- * CONV-2, п. 10), and its entry title is «Поговори с …» the role it opens with (п. 12).
+ * The phrases are the plan's own phrases of those scenes as CONSTRUCTIONS (наряд FIX-3 §6): the frame with its window,
+ * the value the lesson says it with and the lesson's sentence of it — the learner came to say the frame with a value of
+ * their own, and the talk ticks it by {@see \App\Modules\Plan\Domain\Service\FrameJudge} (наряд FIX-4 §2). Four to seven
+ * of them are the talk's targets (наряд CONV-2, п. 10), and its entry title is «Поговори с …» the role it opens with (п. 12).
  */
 final readonly class ConversationMaterial
 {
@@ -78,6 +78,9 @@ final readonly class ConversationMaterial
                     exampleTarget: $example?->target,
                     exampleNative: $example?->native,
                     kind: $frame->kind ?? ExchangeKind::Answer,
+                    // The lesson's own sentence of the construction — what the hint offers whole (наряд FIX-4 §5).
+                    lineTarget: $term->textTarget(),
+                    lineNative: $term->textNative(),
                 );
             }
         }

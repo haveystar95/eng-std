@@ -264,4 +264,14 @@ describe('вызовы и разговоры', function () {
         expect(checkCodes($check->find(new PlanFacts(talks: [new TalkFact('T1', 1, 'day', true, 'limit', 6, 2, [])]))))->toBe([TalkEndedByLimit::CODE])
             ->and($check->find(new PlanFacts(talks: [new TalkFact('T1', 1, 'day', true, 'natural', 6, 2, [])])))->toBe([]);
     });
+
+    // Canon (наряд FIX-4 §4): the moves ran out before the scenes did — the role said goodbye (`natural`), and it is a limit.
+    it('flags a rehearsal whose moves ran out before its scenes, though the role said goodbye', function () {
+        $check = new TalkEndedByLimit;
+        $issues = $check->find(new PlanFacts(talks: [new TalkFact('T1', 5, 'rehearsal', true, 'natural', 11, 7, [], endedByLimit: true)]));
+
+        expect(checkCodes($issues))->toBe([TalkEndedByLimit::CODE])
+            ->and($issues[0]->message)->toBe('Разговор дня 5: ходы кончились раньше сцен — роль попрощалась по лимиту')
+            ->and($check->find(new PlanFacts(talks: [new TalkFact('T1', 5, 'rehearsal', true, 'natural', 11, 7, [], endedByLimit: false)])))->toBe([]);
+    });
 });
