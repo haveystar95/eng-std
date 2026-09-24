@@ -153,9 +153,10 @@ final readonly class ConversationViews
     /**
      * THE HINT OF THE LEARNER'S NEXT MOVE (наряд FIX-4 §5), read off the journal by the rule the line was written with
      * ({@see ConversationLead::hint()}): one target of the scene the role's last line is said in — the one the move before
-     * it said almost, then with its exact line; else the one the line opened; else the first not said. `native` is its
-     * sentence in the learner's language as the clause of «Скажи, что …» («у меня есть боль в плече»). None in «Без
-     * подсказок», when it is not the learner's move, when the scene has nothing left to say, when the talk is over.
+     * it said almost, then with its exact line; else the one the line opened; else the first not said. `sentence` is its
+     * sentence in the learner's language as the lesson has it («У меня есть боль в плече.», наряд FIX-4b §2); `native` —
+     * the same as the clause of «Скажи, что …» («у меня есть боль в плече») for the build (20). None in «Без подсказок»,
+     * when it is not the learner's move, when the scene has nothing left to say, when the talk is over.
      */
     private function hint(Conversation $talk, ConversationMaterialView $material): ?ConversationHintView
     {
@@ -179,6 +180,7 @@ final readonly class ConversationViews
         $target = $hint['target'];
 
         return new ConversationHintView(
+            sentence: trim($target->lineNative),
             native: IntentClause::of($target->lineNative),
             target: $hint['exact'] ? $target->lineTarget : null,
             sceneId: $target->sceneId,

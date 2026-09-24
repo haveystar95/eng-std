@@ -126,8 +126,10 @@ it('opens with the role\'s own line, and carries on the same talk when asked aga
         ->and($talk['summary'])->toBeNull()
         ->and($talk['replay'])->toBeFalse()
         // The hint is the construction the role's opening line leads to, WHOLE — the lesson's sentence of it, its value in
-        // it, not «у него болит …» (наряд FIX-4 §5) — in the learner's language and as a CLAUSE: the client prints
-        // «Скажи, что …» around it. Its exact line only after an «almost»; which target it is, by scene and ref.
+        // it, not «у него болит …» (наряд FIX-4 §5) — in the learner's language: as the lesson has it (наряд FIX-4b §2),
+        // and as a CLAUSE the build (20) prints «Скажи, что …» around. Its exact line only after an «almost»; which target
+        // it is, by scene and ref.
+        ->and($talk['hints']['sentence'])->toBe('У него болит поясница.')
         ->and($talk['hints']['native'])->toBe('у него болит поясница')
         ->and($talk['hints']['target'])->toBeNull()
         ->and($talk['hints']['ref'])->toBe($talk['targets'][0]['ref'])
@@ -1059,7 +1061,7 @@ it('reads a move for the construction as a phrase: said, one word off, or not �
     expect($p1($almost))->toMatchArray(['ref' => 'p1', 'state' => 'almost', 'said' => false, 'value_target' => null])
         ->and($almost['turns'][5]['phrases_used'])->toBe([])
         // The role is led back to it, and the hint gives its exact line — once.
-        ->and($almost['hints'])->toMatchArray(['ref' => 'p1', 'native' => 'у него болит поясница', 'target' => 'It hurts in his lower back.']);
+        ->and($almost['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'У него болит поясница.', 'native' => 'у него болит поясница', 'target' => 'It hurts in his lower back.']);
 
     $said = convTurn($this, $token, $id, $talk['id'], 'said', 'It hurts in his lower back.');
     expect($p1($said))->toMatchArray(['state' => 'said', 'said' => true, 'value_target' => 'lower back'])
@@ -1443,6 +1445,30 @@ it('takes the door the role names, and a line that opens none prompts with the f
     expect($again['hints']['ref'])->toBe($talk['targets'][0]['ref'])
         ->and(clDoors($talk['id']))->toBe([$third['scene_id'].':'.$third['ref'], null, null])
         ->and(DB::table('conversation_rejections')->where('conversation_id', $talk['id'])->pluck('reason')->all())->toBe(['unknown_id']);
+});
+
+/**
+ * Canon (наряд FIX-4b §2): «hints.sentence — целая родная фраза строки урока, как она есть в уроке (с заглавной и знаком
+ * конца): «У него болит поясница.», «Мне сказать вам его температуру?»; поле аддитивное; hints.native (придаточное под
+ * рамку сборки (20)) остаётся до перехода клиента». On the clean «врач»: an answer and a question the learner asks, each
+ * as the lesson writes it, beside the clause. CATCHES the sentence sent as the clause (a small letter, no full stop), a
+ * question's mark lost, and the clause the build (20) reads changed under it.
+ */
+it('offers the hint as the lesson\'s whole sentence, beside the clause the build (20) prints', function () {
+    convAgentSays(static function (ConversationAgentRequest $request): array {
+        $payload = FakePlanModel::conversationPayload($request);
+        // The opening line leads where it is told; the next one opens the question the learner asks («Do we need ___?»).
+        $question = array_values(array_filter($request->targets, static fn (array $t): bool => $t['kind'] === 'ask'))[0]['id'] ?? null;
+        $payload['opens'] = $request->turn === 'start' ? $request->leadTo : $question;
+
+        return $payload;
+    });
+    [$token, $id] = convDay($this);
+    $talk = convStart($this, $token, $id);
+    $asked = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
+
+    expect($talk['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'У него болит поясница.', 'native' => 'у него болит поясница', 'target' => null])
+        ->and($asked['hints'])->toMatchArray(['ref' => 'p6', 'sentence' => 'Нам нужно сделать рентген?', 'native' => 'нам нужно сделать рентген?', 'target' => null]);
 });
 
 /**
