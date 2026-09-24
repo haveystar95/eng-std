@@ -43,7 +43,7 @@ const CHIPS: Record<string, Chip> = {
   bought: { label: 'куплено', tone: 'known' },
   // construction of a talk
   said: { label: 'сказана', tone: 'known' },
-  partial: { label: 'частично', tone: 'unsure' },
+  almost: { label: 'почти', tone: 'unsure' },
   // talk
   ended: { label: 'окончен', tone: 'neutral' },
   agent_turn: { label: 'ход роли', tone: 'unsure' },
@@ -76,6 +76,25 @@ export const TALK_TYPE_LABEL: Record<string, string> = {
   day: 'день',
   rehearsal: 'репетиция',
   review: 'повторение',
+}
+
+/** Why the server refused an answer of the role or dropped the door it named (FIX-4 §§3, 6). */
+export const REJECTION_REASON_LABEL: Record<string, string> = {
+  learner_line: 'сказала реплику ученика',
+  learner_echo: 'повторила слова ученика',
+  same_words: 'переспрос теми же словами',
+  own_line: 'повторила свою реплику',
+  early_end: 'закончила раньше времени',
+  foreign_scene: 'цель чужой сцены',
+  already_said: 'цель уже сказана',
+  unknown_id: 'неизвестный id',
+}
+
+/** What became of an answer refused twice: its learner line or echo cut out, the pack's neutral line, or said as it came. */
+export const REJECTION_OUTCOME_LABEL: Record<string, string> = {
+  cut: 'вырезано',
+  neutral: 'нейтральная реплика',
+  kept: 'сказано как есть',
 }
 
 export const SOURCE_LABEL: Record<string, string> = {

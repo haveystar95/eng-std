@@ -266,12 +266,23 @@ export interface TalkTurn {
     credits: number | null
     cost_usd: string | null
   } | null
+  /** the scene the line was said in (FIX-4 §4); null on a line of before it */
+  scene_id: string | null
+  /** a new role's greeting (`start`) or a scene's goodbye (`end`) in a talk over several scenes */
+  scene_event: 'start' | 'end' | null
   understood: boolean | null
   off_topic: boolean | null
+  /** the constructions the move said, `<scene>:<ref>` — targets and extras alike */
   phrases_used: string[]
+  /** …and the ones it said almost (one word off, FIX-4 §2) */
+  phrases_almost: string[]
+  /** of `phrases_used`, the ones that are no target of the talk — «ещё вспомнил» */
+  extra_said: string[]
   opens_target: string | null
   checkpoint_done: string | null
   hint_native: string | null
+  /** what the server refused of the role on this line: each refused attempt of the model, each door dropped (FIX-4 §§3, 6) */
+  rejections: TalkRejection[]
   model: string | null
   prompt_version: string | null
   tokens_in: number | null
@@ -284,16 +295,33 @@ export interface TalkTurn {
   speech_latency_ms: number | null
   created_at: string
 }
+export interface TalkRejection {
+  attempt: number
+  kind: 'rejected_answer' | 'dropped_opening'
+  /** learner_line · learner_echo · same_words · own_line · early_end | foreign_scene · already_said · unknown_id */
+  reason: string
+  /** the row of `model_calls` the refused answer came from */
+  model_call_id: string | null
+  detail: Record<string, unknown>
+}
 export interface TalkTarget {
   scene_id: string
   ref: string
+  /** what the role knows it by — `T3` (FIX-4 §3) */
+  short_id: string | null
   frame_target: string
   frame_native: string
   example_target: string | null
-  status: 'said' | 'partial' | 'none'
+  line_target: string
+  status: 'said' | 'almost' | 'none'
   said_turn: number | null
-  key_words: { found: number; total: number; turn: number | null }
+  almost_turn: number | null
   opened_on_turn: number | null
+}
+export interface TalkExtra {
+  id: string
+  frame_target: string | null
+  said_turn: number
 }
 export interface PlanTalk {
   id: string
@@ -301,6 +329,8 @@ export interface PlanTalk {
   type: string
   state: string
   ended_reason: string | null
+  /** a limit ended the talk — `limit`, or a goodbye the moves forced before its scenes were walked (FIX-4 §4) */
+  ended_by_limit: boolean
   ended_label: string | null
   started_at: string
   ended_at: string | null
@@ -312,6 +342,10 @@ export interface PlanTalk {
   /** false — begun before `opens_target` was recorded (23.09): its openings are not judged */
   openers_checked: boolean
   targets: TalkTarget[]
+  /** the constructions of the talk's scenes said that are no target (FIX-4 §2) */
+  extra_said: TalkExtra[]
+  /** how many things the server refused of the role in the talk */
+  rejections: number
   turns: TalkTurn[]
   not_stored: string[]
 }

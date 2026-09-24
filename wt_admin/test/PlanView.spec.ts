@@ -140,6 +140,25 @@ describe('⌘K by a plan code', () => {
     w.unmount()
   })
 
+  // FIX-4: a construction said almost, one said beside the targets, each refusal of the server with its attempt and call,
+  // and the greeting and goodbye of a scene — on the talk as the endpoint gives them.
+  it('shows a talk\'s «почти», «ещё вспомнил» and the server\'s refusals turn by turn', async () => {
+    const { w } = await mountPlan()
+    await w.find('#conversations .toggle').trigger('click')
+    const text = w.find('#conversations').text()
+
+    expect(text).toContain('почти ходом 1')
+    expect(text).toContain('ещё вспомнил: p5 «He will rest ___.»')
+    expect(text).toContain('отбраковок: 2')
+    expect(text).toContain('попытка 1 отбракована: сказала реплику ученика')
+    expect(text).toContain('вызов 01M2K7M9JJ0000000000000001')
+    expect(text).toContain('открытие T6 отброшено: цель чужой сцены')
+    expect(text).toContain('почти: p1 «My ___ hurts.»')
+    expect(text).not.toContain('лимит')
+    expect(chip('almost')).toEqual({ label: 'почти', tone: 'unsure' })
+    w.unmount()
+  })
+
   it('also takes the full id, and asks nothing for words that cannot be a code', async () => {
     expect((await mock.getPlan(MOCK_PLAN_ID)).code).toBe(MOCK_PLAN_CODE)
     await expect(mock.getPlan('ZZZZZZ')).rejects.toThrow()
