@@ -87,11 +87,14 @@ it('reads a construction said in the negative as the construction', function () 
 });
 
 // Canon (§2): «I'm» is «I am», «he's been» is «he has been», articles take no part, marks split nothing; a form of a word
-// is a difference — «almost». CATCHES a contraction read as another word, and «work» for «works» called said.
+// is a difference — «almost». CATCHES a contraction read as another word, an article dropped or added in the frame's own
+// words counted as a difference, and «work» for «works» called said.
 it('spells contractions out, leaves articles out, and counts another form of a word as a difference', function () {
     $sick = [new ConversationPhrase('d', 'p2', 'He\'s been sick ___.', '', null, null)];
 
-    expect(fjJudge('I am working on general fitness', fjTrainer())->said)->toBe(['s2:p1'])
+    expect(fjJudge('Pain is sharp when he bends', [new ConversationPhrase('d', 'p3', 'The pain is ___ when he bends.', '', null, null)])->said)->toBe(['d:p3'])
+        ->and(fjJudge('He does not have the fever.', [new ConversationPhrase('d', 'p4', 'He doesn\'t have a fever.', '', null, null)])->said)->toBe(['d:p4'])
+        ->and(fjJudge('I am working on general fitness', fjTrainer())->said)->toBe(['s2:p1'])
         ->and(fjJudge('Hi, I\'m working on the general fitness.', fjTrainer())->values)->toBe(['s2:p1' => 'the general fitness'])
         ->and(fjJudge('he has been sick for two days', $sick)->said)->toBe(['d:p2'])
         ->and(fjJudge('He\'s been sick for two days.', $sick)->said)->toBe(['d:p2'])
