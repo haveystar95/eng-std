@@ -23,6 +23,11 @@ use App\Modules\Shared\Domain\ValueObject\Ulid;
  * `listen_review`) its length when every line of it has one. Found wherever they stand in the payload, not at named
  * places: a new kind with a sound in a new spot is resolved without a line here. Three queries for any number of
  * cards.
+ *
+ * A SOUND IS LOOKED UP IN THE SCENE IT STANDS IN (наряд FIX-4 §1): the scene of the nearest node around it that names
+ * one (`scene_id`) — the card's own for most kinds, a page's for a card of several scenes. «Вспомнить» of the owner's
+ * rehearsal played the files of «Ресепшен зала» on every line of its page «С тренером»: the lines' refs (`x1b`…) are
+ * the same in both scenes, and the card's scene was the only one asked.
  */
 final readonly class CardViews
 {
@@ -45,11 +50,10 @@ final readonly class CardViews
         $sceneIds = [];
         $wordScenes = [];
         foreach ($cards as $card) {
-            $sceneId = self::sceneOf($card);
-            if ($sceneId === '') {
-                continue;
+            foreach (self::scenesIn($card->payload()) as $sceneId) {
+                $sceneIds[$sceneId] = true;
             }
-            $sceneIds[$sceneId] = true;
+            $sceneId = self::sceneOf($card);
             if ($card->unitKind() === UnitKind::Word && Ulid::isValid($sceneId)) {
                 $wordScenes[$sceneId] = PlanSceneId::fromString($sceneId);
             }
@@ -79,9 +83,8 @@ final readonly class CardViews
      */
     private function card(DayCard $card, array $termsByRef, SceneAudioIndex $audio, array $dayNumbers): CardView
     {
-        $sceneId = self::sceneOf($card);
-        $term = $card->unitKind() === UnitKind::Word ? ($termsByRef[$sceneId][$card->unitRef()] ?? null) : null;
-        $payload = self::resolve($card->payload(), $sceneId, $card->unitKind() === UnitKind::Word, $term, $audio);
+        $term = $card->unitKind() === UnitKind::Word ? ($termsByRef[self::sceneOf($card)][$card->unitRef()] ?? null) : null;
+        $payload = self::resolve($card->payload(), '', $card->unitKind() === UnitKind::Word, $term, $audio);
         if (in_array($card->kind(), self::WHOLE_VISIT, true) && array_key_exists('total_ms', $payload)) {
             $payload['total_ms'] = self::totalMs($payload['lines'] ?? null);
         }
@@ -108,8 +111,9 @@ final readonly class CardViews
     }
 
     /**
-     * Every audio stub of a payload with its file's id and length, and — on a word card — every photo slot with the
-     * word's photo and tone. Nothing else is touched.
+     * Every audio stub of a payload with its file's id and length — in the scene of the nearest node that names one,
+     * `$sceneId` being the scene named above this node — and, on a word card, every photo slot with the word's photo and
+     * tone. Nothing else is touched.
      *
      * @template K of array-key
      *
@@ -118,6 +122,10 @@ final readonly class CardViews
      */
     private static function resolve(array $value, string $sceneId, bool $wordCard, ?PlanTerm $term, SceneAudioIndex $audio): array
     {
+        $own = $value['scene_id'] ?? null;
+        if (is_string($own) && $own !== '') {
+            $sceneId = $own;
+        }
         if (self::isAudioStub($value)) {
             $row = $sceneId === '' ? null : $audio->rowOf($sceneId, (string) $value['ref']);
             $value['duration_ms'] = $row?->durationMs;
@@ -182,10 +190,33 @@ final readonly class CardViews
         return $keys === ['tone', 'url'];
     }
 
+    /** The card's own scene — whose words a word card's photo is looked up among. */
     private static function sceneOf(DayCard $card): string
     {
         $sceneId = $card->payload()['scene_id'] ?? null;
 
         return is_string($sceneId) ? $sceneId : '';
+    }
+
+    /**
+     * Every scene a payload names, at any depth — the card's own and each page's: the voices and files of all of them
+     * are read in one query.
+     *
+     * @param  array<array-key, mixed>  $value
+     * @return list<string>
+     */
+    private static function scenesIn(array $value): array
+    {
+        $out = [];
+        if (is_string($value['scene_id'] ?? null) && $value['scene_id'] !== '') {
+            $out[] = $value['scene_id'];
+        }
+        foreach ($value as $item) {
+            if (is_array($item)) {
+                $out = [...$out, ...self::scenesIn($item)];
+            }
+        }
+
+        return array_values(array_unique($out));
     }
 }
