@@ -23,7 +23,6 @@ use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
 use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
-use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayStages;
 use App\Modules\Plan\Domain\ValueObject\TalkStage;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
@@ -54,7 +53,6 @@ final readonly class PlanViews
         private LearnerHabits $habits,
         private ConversationRepository $conversations,
         private StagePassageRepository $passages,
-        private ConversationRules $rules,
         private LearnerGender $learners,
     ) {}
 
@@ -83,7 +81,7 @@ final readonly class PlanViews
         $started = $this->conversations->latestForDays($dayIds);
         $talks = [];
         foreach ($dayIds as $dayId) {
-            $talks[$dayId->value] = TalkStage::of(isset($passed[$dayId->value]), isset($started[$dayId->value]));
+            $talks[$dayId->value] = TalkStage::of($passed[$dayId->value] ?? null, isset($started[$dayId->value]));
         }
 
         $cost = $plan->planCall()->costUsd ?? '0.000000';
@@ -212,7 +210,7 @@ final readonly class PlanViews
         }
 
         $talk = TalkStage::of(
-            $this->passages->of($day->id(), Stage::Conversation) !== null,
+            $this->passages->of($day->id(), Stage::Conversation),
             $this->conversations->latestForDay($day->id()) !== null,
         );
 
@@ -255,7 +253,7 @@ final readonly class PlanViews
                 static fn (RouteStage $s): RouteStageView => new RouteStageView($s->stage->value, $s->state->value),
                 RouteStages::of(
                     $day->type(), $tallies, $day->isClosed(), $availableToday, $outline,
-                    DayStages::walksConversation($day, $this->rules->enabled), $talk,
+                    DayStages::walksTalk($talk), $talk,
                 ),
             ),
         );

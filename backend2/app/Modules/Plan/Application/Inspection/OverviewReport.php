@@ -121,7 +121,7 @@ final readonly class OverviewReport
                 'cards_total' => $day->metrics()->cardsTotal,
                 'cards_done' => $day->metrics()->cardsDone,
                 'minutes_spent' => $day->metrics()->minutesSpent,
-                'has_conversation' => $day->hasConversation(),
+                // A day whose sixth stage is skipped (наряд ACC-1 §3) has its conversation passage with no talk here.
                 'stages_passed' => array_values(array_map(static fn (InspectedPassage $p): array => [
                     'stage' => $p->stage,
                     'passed_at' => $p->passedAt->format(DATE_ATOM),

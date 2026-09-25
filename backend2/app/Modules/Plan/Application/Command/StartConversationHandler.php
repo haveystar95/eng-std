@@ -70,8 +70,10 @@ final readonly class StartConversationHandler
         if ($day->status() !== DayStatus::InProgress && ! $replayable) {
             throw PlanDayNotOpen::day($command->number, $day->status());
         }
-        if (! $day->hasConversation()) {
-            throw ConversationNotInDay::day($command->number, 'the day was dealt before the conversation existed');
+        // A skipped sixth stage has no talk, first or again (наряд ACC-1 §3): the day was dealt with nothing to talk
+        // about, or on the five stages of before the talk existed.
+        if ($walked?->skipsTalk() === true) {
+            throw ConversationNotInDay::day($command->number, 'the sixth stage of this day is skipped: it was dealt without a talk');
         }
 
         $open = $this->conversations->openForDay($day->id());

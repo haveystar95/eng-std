@@ -95,7 +95,6 @@ export interface PlanDayRow {
   cards_total: number
   cards_done: number
   minutes_spent: number
-  has_conversation: boolean
   stages_passed: { stage: string; passed_at: string; conversation_id: string | null }[]
   passed_at: string | null
   cost_usd: { generation: number | null; voice: number; conversation: number; slot_judge: number; total: number }

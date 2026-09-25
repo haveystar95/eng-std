@@ -2649,8 +2649,13 @@ components:
         cards_total: { type: integer }
         cards_done: { type: integer }
         minutes_spent: { type: integer }
-        has_conversation: { type: boolean }
-        stages_passed: { type: array, items: { type: object, additionalProperties: true } }
+        stages_passed:
+          type: array
+          items: { type: object, additionalProperties: true }
+          description: >-
+            the day's walked stages, one row each; a `conversation` row with `conversation_id` null is the sixth
+            stage SKIPPED (наряд ACC-1 §3) — the day was dealt with nothing to talk about, or on five stages before
+            the talk existed (`has_conversation` was dropped with that наряд)
         passed_at: { type: [string, 'null'], format: date-time, description: 'the `day_passed` line of the journal' }
         cost_usd:
           type: object

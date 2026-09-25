@@ -202,21 +202,11 @@ return [
      * `model` is a `mini` class on purpose: a move has six seconds to come back and a talk is a
      * dozen of them. `timeout` is the seconds of its ONE attempt — a retry would double a wait the
      * learner is sitting through.
+     *
+     * No switch: the talk is part of every day (наряд ACC-1 §3 took down `PLAN_CONVERSATION_ENABLED`
+     * with `plan_days.has_conversation`); a day with nothing to talk about has its sixth stage skipped.
      */
     'conversation' => [
-        /*
-         * РУБИЛЬНИК РАЗДАЧИ (хвост наряда CONV-1). Выключенный — день раздаётся БЕЗ шестого этапа:
-         * `has_conversation = false`, пять этапов на экране, закрытие дня без 409, `POST …/conversation`
-         * отвечает 422 — ровно тот же путь, которым живут дни, розданные до наряда.
-         *
-         * Это про РАЗДАЧУ, а не про чтение: день, уже розданный с разговором, остаётся с ним —
-         * состав дня фиксируется при первом открытии (FIX-2 §7), и рубильник его не переписывает.
-         * На бою ВКЛЮЧЁН с 21.09 — клиент сдан (CLIENT-CONV-1a), решение владельца подтверждено
-         * нарядом CONV-2. Кэша конфига на бою нет: читают `.env` веб-запрос при каждом старте и
-         * воркер при своём старте — поэтому после правки `.env` нужен `docker compose restart
-         * horizon`. Как включать и выключать надёжно — отчёт CONV-2 §7.
-         */
-        'enabled' => (bool) env('PLAN_CONVERSATION_ENABLED', true),
         'minutes' => [
             'day' => (int) env('PLAN_CONVERSATION_MINUTES_DAY', 5),
             'rehearsal' => (int) env('PLAN_CONVERSATION_MINUTES_REHEARSAL', 6),

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Domain\Entity\Conversation;
+use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\StagePassage;
+use DateTimeImmutable;
 
 /**
  * THE SIXTH STAGE IS WALKED WHEN A TALK COMES TO AN END OF ITS OWN (наряд CONV-2, п. 2) — written here, inside the
@@ -43,5 +45,15 @@ final readonly class ConversationPassing
         if ($this->passages->of($talk->dayId(), Stage::Conversation)?->conversationId?->equals($talk->id()) === true) {
             $this->plans->saveDayMetrics($talk->dayId(), $this->metrics->withTalk($this->cards->forDay($talk->dayId()), $talk));
         }
+    }
+
+    /**
+     * THE SIXTH STAGE SKIPPED (наряд ACC-1 §3): the day is dealt with nothing to talk about — no scene of it has a written
+     * lesson — so the stage is behind it from the moment it opens, walked by no talk. Call inside the transaction that
+     * deals the day; the same one writer as {@see mark()}, the same one row per day and stage.
+     */
+    public function skip(PlanDay $day, DateTimeImmutable $at): void
+    {
+        $this->passages->record(StagePassage::skippedTalk($day->planId(), $day->id(), $at));
     }
 }

@@ -39,7 +39,8 @@ final readonly class CloseStageHandler
         }
 
         if ($command->stage === Stage::Conversation) {
-            if ($day->hasConversation() && $this->passages->of($day->id(), Stage::Conversation) === null) {
+            // Walked by a talk, or skipped — a day with nothing to talk about (наряд ACC-1 §3).
+            if ($this->passages->of($day->id(), Stage::Conversation) === null) {
                 throw StageIncomplete::stage(Stage::Conversation, 1);
             }
 

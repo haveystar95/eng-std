@@ -72,7 +72,7 @@ final readonly class GetDayRoomHandler
         // is the day's result — a replay started after it changes neither.
         $talk = $dealt ? $this->conversations->latestForDay($day->id()) : null;
         $passage = $dealt ? $this->passages->of($day->id(), Stage::Conversation) : null;
-        $talkStage = $dealt ? TalkStage::of($passage !== null, $talk !== null) : null;
+        $talkStage = $dealt ? TalkStage::of($passage, $talk !== null) : null;
         $walkedId = $passage?->conversationId;
         $walked = $walkedId === null
             ? null
@@ -92,7 +92,7 @@ final readonly class GetDayRoomHandler
             stages: $this->stages(
                 $cards,
                 $dealt ? $this->cardViews->forCards($cards, $plan->targetLang()->value, self::dayNumbers($plan->days())) : [],
-                DayStages::walksConversation($day, $this->rules->enabled),
+                DayStages::walksTalk($talkStage),
                 $talkStage,
             ),
             // The numbers of a day that is being walked, not only of one that is over: they are

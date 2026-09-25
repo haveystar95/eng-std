@@ -36,7 +36,7 @@ final class DayWindowStages
     /**
      * @param  list<DayCard>  $cards  the day's cards — dealt, or the dealer's outline of a day not opened
      * @param  list<Stage>  $withoutCards  what the day's type deals, for a day with no card yet
-     * @param  bool  $hasConversation  does the day walk the sixth stage ({@see DayStages::walksConversation()})
+     * @param  bool  $walksTalk  does the day walk the sixth stage ({@see DayStages::walksTalk()})
      * @param  TalkStage|null  $talk  where the sixth stage stands; null — nothing of it yet
      * @param  int  $conversationMinutes  how long the talk is reckoned to take ({@see DayBudget::talkMinutes()})
      * @param  array{title: string|null, scenes: int}|null  $talkRow  what the talk's row says besides its state: «Поговори с врачом» and how many scenes it walks
@@ -48,7 +48,7 @@ final class DayWindowStages
         array $withoutCards,
         WindowStatus $status,
         DayPace $pace,
-        bool $hasConversation = false,
+        bool $walksTalk = false,
         ?TalkStage $talk = null,
         int $conversationMinutes = 0,
         ?array $talkRow = null,
@@ -77,7 +77,7 @@ final class DayWindowStages
             $out[] = $row->planned(DayPace::minutes($pace->secondsOf($ofStage)))->walkable(true, StageSummaries::of($stage, $ofStage));
         }
 
-        if (! $hasConversation) {
+        if (! $walksTalk) {
             return $out;
         }
 

@@ -33,7 +33,7 @@ final class RouteStages
     /**
      * @param  array<string, array{total: int, answered: int}>  $tallies  by stage value; empty when no card is dealt
      * @param  list<Stage>  $outline  the stages the day will deal, when that is known; empty = go by the type
-     * @param  bool  $hasConversation  does this day walk the sixth stage ({@see DayStages::walksConversation()})
+     * @param  bool  $walksTalk  does this day walk the sixth stage ({@see DayStages::walksTalk()})
      * @param  TalkStage|null  $talk  where its sixth stage stands; null — nothing of it yet
      * @return list<RouteStage>
      */
@@ -43,7 +43,7 @@ final class RouteStages
         bool $closed,
         bool $availableToday,
         array $outline = [],
-        bool $hasConversation = false,
+        bool $walksTalk = false,
         ?TalkStage $talk = null,
     ): array {
         $dealt = [];
@@ -53,7 +53,7 @@ final class RouteStages
             }
         }
         if ($dealt !== []) {
-            return self::withTalk(self::walk($dealt, $tallies, $closed), $closed, $hasConversation, $talk);
+            return self::withTalk(self::walk($dealt, $tallies, $closed), $closed, $walksTalk, $talk);
         }
 
         $stages = $outline !== [] ? self::inWalkingOrder($outline) : self::dealtBy($type);
@@ -66,7 +66,7 @@ final class RouteStages
             });
         }
 
-        return self::withTalk($out, $closed, $hasConversation, $talk);
+        return self::withTalk($out, $closed, $walksTalk, $talk);
     }
 
     /**
@@ -77,9 +77,9 @@ final class RouteStages
      * @param  list<RouteStage>  $stages
      * @return list<RouteStage>
      */
-    private static function withTalk(array $stages, bool $closed, bool $hasConversation, ?TalkStage $talk): array
+    private static function withTalk(array $stages, bool $closed, bool $walksTalk, ?TalkStage $talk): array
     {
-        if (! $hasConversation) {
+        if (! $walksTalk) {
             return $stages;
         }
         $cardsDone = true;

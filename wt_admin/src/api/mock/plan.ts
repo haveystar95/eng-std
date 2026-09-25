@@ -145,7 +145,6 @@ function days(day: number | null): PlanDays {
     cards_total: n < 3 ? 64 : 0,
     cards_done: n === 1 ? 64 : n === 2 ? 20 : 0,
     minutes_spent: n === 1 ? 31 : 0,
-    has_conversation: n < 3,
     stages_passed: n === 1 ? [{ stage: 'words', passed_at: at(29), conversation_id: null }] : [],
     passed_at: null,
     cost_usd: { generation: n < 3 ? 0.0842 : null, voice: n < 3 ? 0.052 : 0, conversation: n === 1 ? 0.011 : 0, slot_judge: 0.002, total: n < 3 ? 0.1492 : 0 },

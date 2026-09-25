@@ -6,11 +6,11 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Service\ConversationMaterial;
+use App\Modules\Plan\Application\Service\ConversationPassing;
 use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\PlanAccess;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
-use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\ValueObject\DayMetrics;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -30,7 +30,7 @@ final readonly class OpenDayHandler
         private DayCardRepository $cards,
         private DayDealer $dealer,
         private ConversationMaterial $material,
-        private ConversationRules $rules,
+        private ConversationPassing $passing,
         private LearnerCalendar $calendar,
         private Clock $clock,
         private TransactionManager $tx,
@@ -49,13 +49,11 @@ final readonly class OpenDayHandler
                 $cards = $this->dealer->deal($plan, $day);
                 $this->cards->insertAll($cards);
                 $day->updateMetrics(new DayMetrics(count($cards), 0, 0));
-                // THE COMPOSITION IS FIXED HERE, and since наряд CONV-1 it includes the sixth stage.
-                // Only when there IS something to talk about: a day whose scenes have no written
-                // lesson gets no talk, and therefore is not held shut waiting for one. And only
-                // while the talk is switched on ({@see ConversationRules::ENABLED}) — off, the day
-                // is dealt the five stages of before the наряд and closes on them.
-                if ($this->rules->enabled && $this->material->for($plan, $day)->checkpoints !== []) {
-                    $day->dealWithConversation();
+                // THE COMPOSITION IS FIXED HERE, and every day has the sixth stage (наряд ACC-1 §3). A day whose
+                // scenes have no written lesson has nothing to talk about: its sixth stage is skipped as it is dealt,
+                // so the day is not held shut waiting for a talk nobody can start.
+                if ($this->material->for($plan, $day)->checkpoints === []) {
+                    $this->passing->skip($day, $now);
                 }
             }
             $this->plans->save($plan);

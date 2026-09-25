@@ -50,10 +50,10 @@ final readonly class DayBudget
         )));
     }
 
-    /** Минуты разговора этого дня — по его виду; 0 у дня, который разговора не несёт. */
-    public function talkMinutes(DayType $type, bool $hasConversation): int
+    /** Минуты разговора этого дня — по его виду; 0 у дня, чей шестой этап пропущен (наряд ACC-1 §3). */
+    public function talkMinutes(DayType $type, bool $walksTalk): int
     {
-        return $hasConversation ? $this->rules->minutesFor(ConversationType::forDay($type)) : 0;
+        return $walksTalk ? $this->rules->minutesFor(ConversationType::forDay($type)) : 0;
     }
 
     /**
@@ -61,9 +61,9 @@ final readonly class DayBudget
      *
      * @param  list<DayCard>  $cards
      */
-    public function dayMinutes(array $cards, DayType $type, bool $hasConversation): int
+    public function dayMinutes(array $cards, DayType $type, bool $walksTalk): int
     {
-        return $this->cardsMinutes($cards) + $this->talkMinutes($type, $hasConversation);
+        return $this->cardsMinutes($cards) + $this->talkMinutes($type, $walksTalk);
     }
 
     /**

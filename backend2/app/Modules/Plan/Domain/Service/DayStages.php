@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Service;
 
-use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\Stage;
+use App\Modules\Plan\Domain\ValueObject\TalkStage;
 
 /**
  * WHICH STAGES A DAY HAS (наряд CONV-1) — the one place the six of a scene day are written down.
  *
  * Until the talk with the agent, a day's stages could be read off its cards: a stage with a card is
- * a stage the day has. The sixth stage has no cards at all, so that reading stops working — and it
- * cannot be «whatever the type deals» either, because a day OPENED before the talk existed keeps the
- * composition it was dealt with ({@see \App\Modules\Plan\Domain\Entity\PlanDay::hasConversation()},
- * the same rule FIX-2 §7 wrote for the cards). Hence one function, asked with both facts.
+ * a stage the day has. The sixth stage has no cards at all, so it is read off the journal of stages
+ * instead: EVERY day has it (наряд ACC-1 §3 — the column `plan_days.has_conversation` and the rollout
+ * switch that dealt five stages are gone), and a day that has nothing to talk about has it SKIPPED
+ * ({@see TalkStage::Skipped}): behind the day, not drawn.
  *
  * - scene day: слова → фразы → диалог → слушаю и отвечаю → говорю сам → РАЗГОВОР;
  * - rehearsal: вспомнить → разговор (кадр 37-1);
@@ -44,16 +44,14 @@ final class DayStages
     }
 
     /**
-     * WILL THIS DAY WALK THE TALK? A day already dealt says so itself — it keeps the composition it
-     * was given ({@see PlanDay::hasConversation()}). A day not dealt yet will be dealt with today's
-     * composition: the route and the window draw the future of a plan, not its past — and what
-     * today's composition is, the switch says ({@see ConversationRules::ENABLED}), so it is asked
-     * for and never assumed.
+     * WILL THIS DAY WALK THE TALK? Every day does, but the one whose sixth stage is skipped — dealt with nothing to talk
+     * about, or on five stages before the talk existed (наряд ACC-1 §3). A day not dealt yet has nothing in the journal
+     * and walks it.
      *
-     * @param  bool  $dealsTalk  does today's dealing include the sixth stage
+     * @param  TalkStage|null  $talk  where the day's sixth stage stands; null — nothing of it yet
      */
-    public static function walksConversation(PlanDay $day, bool $dealsTalk): bool
+    public static function walksTalk(?TalkStage $talk): bool
     {
-        return $day->openedAt() === null ? $dealsTalk : $day->hasConversation();
+        return $talk !== TalkStage::Skipped;
     }
 }

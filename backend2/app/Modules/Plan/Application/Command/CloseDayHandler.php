@@ -80,11 +80,11 @@ final readonly class CloseDayHandler
                     )));
                 }
             }
-            // «День пройден» = every stage walked, and since наряд CONV-1 a day dealt with the talk
-            // has six. The talk has no cards to count: the journal of stages says whether it was
-            // walked (наряд CONV-2, п. 2) — by the FIRST talk that came to an end of its own, so a
-            // «Ещё раз» still going on does not hold a walked day shut.
-            if ($day->hasConversation() && $this->passages->of($day->id(), Stage::Conversation) === null) {
+            // «День пройден» = every stage walked, and every day has six (наряд ACC-1 §3). The talk has
+            // no cards to count: the journal of stages says whether it was walked (наряд CONV-2, п. 2) —
+            // by the FIRST talk that came to an end of its own, so a «Ещё раз» still going on does not
+            // hold a walked day shut — or skipped, when the day had nothing to talk about.
+            if ($this->passages->of($day->id(), Stage::Conversation) === null) {
                 throw StageIncomplete::stage(Stage::Conversation, 1);
             }
 

@@ -9,6 +9,8 @@ namespace App\Modules\Plan\Domain\ValueObject;
  * second, never the other way round:
  *
  * - `passed` — the day has a passage for the talk ({@see StagePassage}); a replay going on beside it changes nothing;
+ * - `skipped` — the day has a passage with no talk (наряд ACC-1 §3, {@see StagePassage::skipsTalk()}): nothing to talk
+ *   about, or dealt on five stages before the talk existed — the stage does not hold the day shut and is not drawn;
  * - `open` — a talk was started and the stage is not walked yet;
  * - `ahead` — nothing was started.
  *
@@ -19,12 +21,14 @@ enum TalkStage: string
     case Ahead = 'ahead';
     case Open = 'open';
     case Passed = 'passed';
+    case Skipped = 'skipped';
 
     /** @param bool $started is there any talk of the day at all */
-    public static function of(bool $passed, bool $started): self
+    public static function of(?StagePassage $passage, bool $started): self
     {
         return match (true) {
-            $passed => self::Passed,
+            $passage?->skipsTalk() === true => self::Skipped,
+            $passage !== null => self::Passed,
             $started => self::Open,
             default => self::Ahead,
         };

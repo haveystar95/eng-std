@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Exception;
 
 /**
- * A talk asked of a day that has no talk in it. Days opened before наряд CONV-1 keep the five
- * stages they were dealt with (`plan_days.has_conversation`), and a day whose scenes have no
- * written lesson has nothing for the role to lead with.
+ * A talk asked of a day that has no talk in it: its sixth stage is skipped (наряд ACC-1 §3) — the day was dealt with
+ * nothing for the role to lead with (no scene of it has a written lesson), or on the five stages of before наряд
+ * CONV-1 — or, at the moment of asking, none of its scenes has a written lesson.
  */
 final class ConversationNotInDay extends PlanProblem
 {

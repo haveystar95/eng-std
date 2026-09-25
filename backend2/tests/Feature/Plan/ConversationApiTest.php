@@ -644,47 +644,66 @@ it('buys the role\'s voice for the turn and bills it to the turn', function () {
         ->assertOk()->assertHeader('Content-Type', 'audio/mpeg');
 });
 
-// A day dealt before наряд CONV-1 keeps the five stages it was dealt with: nothing is re-dealt, and it closes on them.
-it('gives no talk to a day dealt before the talk existed', function () {
+/**
+ * Canon (наряд ACC-1 §3): a day whose sixth stage is SKIPPED — a passage of the talk with no talk, what the migration
+ * that dropped `plan_days.has_conversation` wrote for the days dealt on five stages before the talk existed — has no
+ * talk (422, first or again), draws no talk row anywhere, and closes on its cards. Catches a day of six stages held shut
+ * by a talk nobody can start, and a skipped stage shown as a talk to walk.
+ */
+it('gives no talk to a day whose sixth stage is skipped, draws none, and closes the day on its cards', function () {
     [$token, $id] = convDay($this);
-    DB::table('plan_days')->where('plan_id', $id)->where('number', 1)->update(['has_conversation' => false]);
+    DB::table('plan_stage_passages')->insert([
+        'id' => '01M3ACC1SK1PPED0000000000A', 'plan_id' => $id, 'day_id' => convDayId($id), 'stage' => 'conversation',
+        'conversation_id' => null, 'passed_at' => now(), 'created_at' => now(),
+    ]);
 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/conversation")
         ->assertStatus(422)->assertJsonPath('code', 'plan_conversation_not_in_day');
-
-    $cards = planOpenDay($this, $token, $id, 1)['cards'];
-    foreach ($cards as $card) {
-        planAnswer($this, $token, $id, 1, $card['id'], planWalkResult($card['kind']));
-    }
-    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")->assertOk();
-});
-
-/**
- * Canon (рубильник раздачи): `plan.conversation.enabled = false` — the day is dealt WITHOUT the sixth stage. The
- * switch is how the server ships before the client that speaks: a day dealt while it is off has the five stages of
- * before the наряд, walks them, closes on them, and has no talk to open. Catches a switch that only hides the stage
- * from the screens while `close` goes on holding the day shut, waiting for a talk nobody can start.
- */
-it('deals five stages while the talk is switched off, and closes the day on them', function () {
-    config(['plan.conversation.enabled' => false]);
-    [$token, $id] = convDay($this);
-
     $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
     expect(array_column($room['stages'], 'stage'))->not->toContain('conversation')
         ->and(array_column($room['day']['stages'], 'stage'))->not->toContain('conversation')
         ->and(array_column($room['window']['stages'], 'stage'))->not->toContain('conversation');
 
-    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/conversation")
-        ->assertStatus(422)->assertJsonPath('code', 'plan_conversation_not_in_day');
-
     foreach (planOpenDay($this, $token, $id, 1)['cards'] as $card) {
         planAnswer($this, $token, $id, 1, $card['id'], planWalkResult($card['kind']));
     }
-
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/stages/conversation/close")->assertOk();
     $closed = $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/close")
         ->assertOk()->json('data');
+
     expect($closed['day']['status'])->toBe('closed')
-        ->and(array_column($closed['window']['stages'], 'state'))->toBe(['done', 'done', 'done', 'done', 'done']);
+        ->and(array_column($closed['window']['stages'], 'state'))->toBe(['done', 'done', 'done', 'done', 'done'])
+        ->and($closed['window']['highlights'])->not->toContain('Понял все вопросы')
+        ->and(DB::table('conversations')->where('plan_id', $id)->count())->toBe(0);
+    // A closed day with its talk skipped has no «Ещё раз» of a talk either.
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/1/conversation", ['again' => true])
+        ->assertStatus(422)->assertJsonPath('code', 'plan_conversation_not_in_day');
+});
+
+/**
+ * Canon (наряд ACC-1 §3): every day is dealt with the sixth stage — there is no switch any more — and a day with nothing
+ * to talk about (no scene of it has a written lesson) has it skipped as it is dealt, so it is not held shut waiting for
+ * a talk. Catches the rollout switch come back, and a day with no material that can never be closed.
+ */
+it('deals every day with the talk, and skips it on a day with nothing to talk about', function () {
+    [$token, $id] = convDay($this, days: 3);
+    $room = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/1")->assertOk()->json('data');
+    expect(array_column($room['stages'], 'stage'))->toContain('conversation')
+        ->and(DB::table('plan_stage_passages')->where('plan_id', $id)->count())->toBe(0);
+
+    // Day 3 of three is the rehearsal of the plan's scenes; the two days before it closed, and no scene ready — it has
+    // nothing to talk about.
+    DB::table('plan_days')->where('plan_id', $id)->whereIn('number', [1, 2])->update(['status' => 'closed', 'opened_at' => now(), 'closed_at' => now()]);
+    DB::table('plan_days')->where('plan_id', $id)->where('number', 3)->update(['status' => 'locked', 'opens_on' => now()->toDateString()]);
+    DB::table('plan_scenes')->where('plan_id', $id)->update(['lesson_status' => 'failed']);
+    planOpenDay($this, $token, $id, 3);
+
+    $passage = DB::table('plan_stage_passages')->where('day_id', convDayId($id, 3))->first();
+    expect($passage?->stage)->toBe('conversation')
+        ->and($passage?->conversation_id)->toBeNull();
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/3/conversation")
+        ->assertStatus(422)->assertJsonPath('code', 'plan_conversation_not_in_day');
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/days/3/close")->assertOk();
 });
 
 /** A clock the test moves by hand — bound before the first request to the conversation routes, so their handlers read it. */

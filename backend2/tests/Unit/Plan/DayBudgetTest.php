@@ -65,7 +65,7 @@ it('keeps the clean doctor day under the ceiling — the talk is not counted int
     $budget = dbBudget();
 
     $cardsMinutes = $budget->cardsMinutes($cards);
-    $talkMinutes = $budget->talkMinutes(DayType::Scene, hasConversation: true);
+    $talkMinutes = $budget->talkMinutes(DayType::Scene, walksTalk: true);
 
     // By the prices measured on the phone (наряд FIX-3 §2), with the «Фразы» ceiling at 900 s (приёмка окна 1: every
     // frame of three values keeps its third recognition), the clean «врач» is 25 minutes of cards at beginner and 27 at
@@ -75,8 +75,8 @@ it('keeps the clean doctor day under the ceiling — the talk is not counted int
         ->and($cardsMinutes)->toBe($minutes)
         ->and($talkMinutes)->toBe(5)
         // Длительность дня на экране — карточки ПЛЮС разговор, и она может быть больше потолка карточек.
-        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: true))->toBe($minutes + 5)
-        ->and($budget->dayMinutes($cards, DayType::Scene, hasConversation: false))->toBe($minutes);
+        ->and($budget->dayMinutes($cards, DayType::Scene, walksTalk: true))->toBe($minutes + 5)
+        ->and($budget->dayMinutes($cards, DayType::Scene, walksTalk: false))->toBe($minutes);
 })->with([[PlanLevel::Beginner, 25], [PlanLevel::Intermediate, 27]]);
 
 /**
@@ -102,7 +102,7 @@ it('counts the day that carries yesterday\'s unsaid phrases back with them, and 
 
     expect($budget->cardsMinutes($day))->toBe(26)
         ->and($budget->overCardsCeiling($day))->toBeFalse()
-        ->and($budget->dayMinutes($day, DayType::Scene, hasConversation: true))->toBe(31);
+        ->and($budget->dayMinutes($day, DayType::Scene, walksTalk: true))->toBe(31);
 });
 
 /**

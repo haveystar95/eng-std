@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $cards_total
  * @property int $cards_done
  * @property int $minutes_spent
- * @property bool $has_conversation
  */
 final class PlanDayModel extends Model
 {
@@ -32,5 +31,5 @@ final class PlanDayModel extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['number' => 'int', 'cards_total' => 'int', 'cards_done' => 'int', 'minutes_spent' => 'int', 'has_conversation' => 'bool'];
+    protected $casts = ['number' => 'int', 'cards_total' => 'int', 'cards_done' => 'int', 'minutes_spent' => 'int'];
 }

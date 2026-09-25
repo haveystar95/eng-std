@@ -26,13 +26,6 @@ final class PlanDay
         private ?DateTimeImmutable $openedAt,
         private ?DateTimeImmutable $closedAt,
         private DayMetrics $metrics,
-        /**
-         * Was the day dealt WITH the talk (наряд CONV-1)? The composition of a day is fixed when it
-         * is first opened, and the talk is part of it: a day opened before the talk existed keeps
-         * its five stages and closes on them, exactly as FIX-2 §7 left the cards of such a day.
-         * Nothing is re-dealt; the new shape starts with the next day opened.
-         */
-        private bool $hasConversation = false,
     ) {}
 
     public static function planned(PlanDayId $id, PlanId $planId, int $number, DayType $type): self
@@ -51,9 +44,8 @@ final class PlanDay
         ?DateTimeImmutable $openedAt,
         ?DateTimeImmutable $closedAt,
         DayMetrics $metrics,
-        bool $hasConversation = false,
     ): self {
-        return new self($id, $planId, $number, $type, $sceneId, $status, $opensOn, $openedAt, $closedAt, $metrics, $hasConversation);
+        return new self($id, $planId, $number, $type, $sceneId, $status, $opensOn, $openedAt, $closedAt, $metrics);
     }
 
     public function assignScene(PlanSceneId $sceneId): void
@@ -125,22 +117,6 @@ final class PlanDay
     public function updateMetrics(DayMetrics $metrics): void
     {
         $this->metrics = $metrics;
-    }
-
-    /**
-     * The day is dealt, and it is dealt with the talk in it — written once, when its cards are
-     * ({@see \App\Modules\Plan\Application\Command\OpenDayHandler}). It is the day's own record
-     * of which composition it was given, so nothing has to guess it back from a date later.
-     */
-    public function dealWithConversation(): void
-    {
-        $this->hasConversation = true;
-    }
-
-    /** Does this day walk the sixth stage — «Разговор» (наряд CONV-1)? */
-    public function hasConversation(): bool
-    {
-        return $this->hasConversation;
     }
 
     public function id(): PlanDayId

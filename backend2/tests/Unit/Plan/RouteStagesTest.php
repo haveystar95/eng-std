@@ -66,7 +66,7 @@ it('a dealt day is read off its cards, not off its type', function () {
 it('the rehearsal has «Вспомнить», and the talk after it', function () {
     expect(routeStagesOf(RouteStages::of(DayType::Rehearsal, [], closed: false, availableToday: false)))
         ->toBe([['recall', 'locked']])
-        ->and(routeStagesOf(RouteStages::of(DayType::Rehearsal, [], closed: false, availableToday: false, hasConversation: true)))
+        ->and(routeStagesOf(RouteStages::of(DayType::Rehearsal, [], closed: false, availableToday: false, walksTalk: true)))
         ->toBe([['recall', 'locked'], ['conversation', 'locked']]);
 });
 
@@ -79,23 +79,23 @@ it('the rehearsal has «Вспомнить», and the talk after it', function (
 it('draws the talk as the last node and never as a second current one', function () {
     $walked = ['words' => ['total' => 2, 'answered' => 2], 'speak' => ['total' => 2, 'answered' => 1]];
 
-    expect(routeStagesOf(RouteStages::of(DayType::Scene, $walked, closed: false, availableToday: true, hasConversation: true)))
+    expect(routeStagesOf(RouteStages::of(DayType::Scene, $walked, closed: false, availableToday: true, walksTalk: true)))
         ->toBe([['words', 'done'], ['speak', 'current'], ['conversation', 'locked']])
         ->and(routeStagesOf(RouteStages::of(
             DayType::Scene,
             ['words' => ['total' => 2, 'answered' => 2], 'speak' => ['total' => 2, 'answered' => 2]],
-            closed: false, availableToday: true, hasConversation: true,
+            closed: false, availableToday: true, walksTalk: true,
         )))->toBe([['words', 'done'], ['speak', 'done'], ['conversation', 'current']])
         // A walked talk is a walked node even when a card stage is not: the learner may start it
         // early, and the route says what each stage is, not what order they were walked in.
         ->and(routeStagesOf(RouteStages::of(
             DayType::Scene, $walked, closed: false, availableToday: true,
-            hasConversation: true, talk: TalkStage::Passed,
+            walksTalk: true, talk: TalkStage::Passed,
         )))->toBe([['words', 'done'], ['speak', 'current'], ['conversation', 'done']])
         // A talk going with its stage not walked is the stage being walked — and it takes «current» from the cards.
         ->and(routeStagesOf(RouteStages::of(
             DayType::Scene, $walked, closed: false, availableToday: true,
-            hasConversation: true, talk: TalkStage::Open,
+            walksTalk: true, talk: TalkStage::Open,
         )))->toBe([['words', 'done'], ['speak', 'done'], ['conversation', 'current']]);
 });
 
