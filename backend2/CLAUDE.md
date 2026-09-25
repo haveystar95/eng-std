@@ -24,7 +24,7 @@ Then, depending on the task:
 | Module | Owns |
 |---|---|
 | `Shared` | kernel: ValueObjects, `DomainEvent`, `Clock`, ULID generation, `Result` |
-| `Identity` | users, auth tokens, devices, user settings |
+| `Identity` | users, auth tokens, devices, user settings, the rights to the paid plan (`entitlements`), the account's deletion |
 | `Vocabulary` | terms (word or phrase), translations, examples, dedup |
 | `Collections` | collections (system/shared/custom), items, subscriptions, forks |
 | `Learning` | progress, SRS scheduling, sessions, reviews, statistics |

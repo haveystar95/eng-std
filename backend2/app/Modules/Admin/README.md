@@ -35,6 +35,7 @@ scoped to `admin/api/*` for the `ADMIN_ORIGIN` browser origin (config/cors.php).
 | `Learning` | Query `GetUserStats` | mastered/learned/due/streak (Mastery is the single source of «усвоено») |
 | `Learning` | Service `LadderStepResolver` | the ladder rung on the live progress screen — derived by `LearningLadder`, never re-expressed in SQL |
 | `Identity` | Port `UserTierWriter` / `UserTierReader` | the tier mutation goes through the tier's owner (same path as `practice:grant-premium`) |
+| `Identity` | Queries `GetAccess`, `GetEntitlements`; Port `UserReader` | a learner's access to the paid plan (наряд ACC-1 §2): `GET /users/{id}/access` — the access as the client is told it, every right behind it, the paywall's switch (`PaywallSwitch`, `access.paywall_enabled`); read only, for the page ADM-2 |
 | `Generation` | Service `PlaygroundRuns` (start / find a run), Port `PlaygroundModelCatalog`; Service `DistractorDryRun`; Command handler `BuildTermEnrichmentsHandler` | the playground — a run is queued and polled (`POST /playground/generate` → 202, `GET /playground/runs/{id}`, наряд GEN-3), its providers; the distractor dry run; the content top-up |
 | `Plan` | Query `GetCheckCounters`; Service `Inspection\PlanInspection` | the check counters (`/plans/checks`); the learner's plan page (наряд ADM-1, `docs/admin-plan.md`): `/users/{id}/plans` and `/plans/{code}[/issues\|days\|pipeline\|lesson\|passage\|conversations\|money\|calls\|audio/{id}]` — put together by Plan, the panel only asks (`GetPlanPage`, `GetPlanCalls`, `GetPlanAudio`, `ListLearnerPlans`) and adds the learner's name |
 
@@ -43,7 +44,8 @@ scoped to `admin/api/*` for the `ADMIN_ORIGIN` browser origin (config/cors.php).
 Reader ports (implemented by `Eloquent*` projections in Infrastructure): `AdminMetricsReader`,
 `AdminCostReader`, `AdminUserReader`, `AdminReviewReader`, `AdminCollectionReader`, `AdminTermReader`,
 `AdminRequestLogReader`, `AdminDialogReader`, `AdminGenerationReader`, `AdminLadderReader`. Auth/audit ports: `AdminLogin`,
-`AdminRegistrar`, `AdminReader`, `AdminSignOut`, `AdminAuditRecorder`.
+`AdminRegistrar`, `AdminReader`, `AdminSignOut`, `AdminAuditRecorder`. Fulfilled for Identity's account eraser:
+`AdminAuditAnonymizer` — a deleted learner's audit rows lose their `target_user_id` and keep the change (наряд ACC-1 §1).
 
 ## Notes / deliberate decisions
 

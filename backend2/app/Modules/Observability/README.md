@@ -33,6 +33,12 @@ Metadata (method, path/host, status, duration, user, byte sizes, transport error
 request/response **bodies and headers, redacted**. Non-JSON bodies are stored truncated as
 `{ "raw": … }`. There is no HTTP surface — this module only writes.
 
+**Account deletion** (`RequestLogAnonymizer`, наряд ACC-1 §1): the deleted learner's inbound rows stay — method, path,
+status, duration, sizes — but lose `user_id` AND their bodies and headers: a body is the learner's own speech (`heard`),
+their goal, their name and email in `GET /auth/me`. The request of the deletion itself forgets its user before the row is
+written (`AuthController::deleteAccount`). Outbound rows (the vendors' calls) name no user and are not touched — the retention
+prune is what takes them.
+
 ## Labelling outbound spend (`purpose` / `collection_id`)
 
 The row is written by an Http-client event listener, far from the code that decided to call
