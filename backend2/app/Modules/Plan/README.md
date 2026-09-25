@@ -25,7 +25,12 @@ phrase's frame said with its third filler, `v5` — a word or chunk), each with 
 `credits` — the vendor's `character-cost`, `cost_usd`, `request_id`). Since DAY-UI-3 the server voices
 everything a day says (with TTS-2, on ElevenLabs), in the voices of two people of different gender per
 scene: the partner's gender is `plan_scenes.partner_voice_gender` (from the lesson's `role_gender`), the
-learner's lines, phrases, fillers and words take the other; the voice is picked by role and gender. A lesson written is
+learner's lines, phrases, fillers and words take the other; the voice is picked by role and gender. The partner has TWO
+voices of each gender (FIX-4c §1): the scene's own is `plan_scenes.partner_voice_id`, cast ONCE when its lesson is
+accepted (`BuildLessonHandler` → `Application/Service/PartnerVoices` → `Domain/Service/PartnerVoiceRota`: the other voice of
+the nearest earlier scene of its gender, the plan's scene rows locked in order first), and every partner line of the scene —
+lesson, recall, talk — speaks in it (`VoiceCast::voiceOf`, `LineToSay::$voice`); the scenes there before were given theirs by
+the migration's `Infrastructure/Eloquent/PartnerVoiceBackfill`. A lesson written is
 `illustrating` (the wire says `building`) until its photos are found, then `ready`. Files on disks, not tables:
 spoken lines (`plan.audio_disk`, `plan-audio/…`) and the square copies of scene photos
 (`plan.image_disk`, `plan-images/<scene>/<112|448>.jpg`).
@@ -199,7 +204,7 @@ reads plan tables.
 
 | Port | Implementations |
 |---|---|
-| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v3.2` since FIX-4b, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; the role is told its scene only, its targets by the talk's short ids `T1…T7`, the learner's earlier lines as facts (`EARLIER`) and — on a scene's goodbye — `SCENE_END`; it answers its line, `understood`, `off_topic`, `opens` and `end` — which constructions were said and when a scene is over are not its to say; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn, and every refused attempt is journaled in `conversation_rejections` with its `model_calls` id) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
+| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v3.3` since FIX-4c, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; the role is told its scene only, its targets by the talk's short ids `T1…T7`, the learner's earlier lines as facts (`EARLIER`) and — on a scene's goodbye — `SCENE_END`; it answers its line, `understood`, `off_topic`, `opens` and `end` — which constructions were said and when a scene is over are not its to say; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn, and every refused attempt is journaled in `conversation_rejections` with its `model_calls` id) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `NextDayAccess` | `EveryNextDayAllowed` — may the learner have the next day; asked by `CloseDayHandler` before the next day's lesson is queued (GEN-3 §11). Always yes until PAY-1, whose paywall is this one method |
@@ -229,7 +234,7 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.2`; `lesson_day.v4.6`
+  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.3`; `lesson_day.v4.6`
   and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
@@ -252,10 +257,11 @@ reads plan tables.
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
-  conversation's guards count there too, under `conversation_agent.v3.2` (`conversation.learner_line`, `…_cut`, `…_kept`,
+  conversation's guards count there too, under `conversation_agent.v3.3` (`conversation.learner_line`, `…_cut`, `…_kept`,
   `conversation.rescue_same_words`, `…_kept` — CONV-2; `conversation.learner_echo`, `…_cut`, `…_neutral`, `…_kept` —
   BACK-TAILS-2 §9, against every move since FIX-3 §11; `conversation.own_line`, `…_kept` and `conversation.early_end`,
-  `…_kept` — FIX-3 §7).
+  `…_kept` — FIX-3 §7; `conversation.native_missing`, `…_blanked` — FIX-4c §6, `Domain/Service/ReplyNative`: a
+  translation empty, the same words or not in the learner's letters is asked for again, and a second one said with none).
 - The day's build log (BACK-TAILS-2 §1, port `DayBuildLog`, adapter `LogDayBuildLog`): a scene day whose «Фразы» the
   ladder could not fit under their ceiling writes `plan.phrases_over_ceiling` (warning) with the rungs and the frames —
   the stop signal, not a failure; the day is dealt anyway.
