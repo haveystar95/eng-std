@@ -1,0 +1,718 @@
+{
+    "topic": {
+        "title_native": "Запись к врачу",
+        "title_target": "Programare la medic",
+        "description_native": "Запишитесь к врачу, кратко объясните проблему и выберите удобное время.",
+        "description_target": "Book a doctor's appointment, explain the main problem, and choose a convenient time."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "записаться на приём",
+                        "target": "o programare",
+                        "in_dialogue": true,
+                        "pronunciation_native": "о програмаре"
+                    },
+                    {
+                        "native": "консультацию",
+                        "target": "o consultație",
+                        "in_dialogue": false,
+                        "pronunciation_native": "о консултацие"
+                    }
+                ],
+                "hint_native": "что вам нужно"
+            },
+            "frame_native": "Я хочу ___.",
+            "frame_target": "Vreau ___.",
+            "pronunciation_native": "Вряу ___."
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "терапевт",
+                        "target": "medicul de familie",
+                        "in_dialogue": true,
+                        "pronunciation_native": "медикул дэ фамилие"
+                    },
+                    {
+                        "native": "лор",
+                        "target": "un ORL",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ун орээл"
+                    }
+                ],
+                "hint_native": "какой врач нужен"
+            },
+            "frame_native": "Мне нужен ___.",
+            "frame_target": "Am nevoie de ___.",
+            "pronunciation_native": "Ам невоее дэ ___."
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "горло",
+                        "target": "gâtul",
+                        "in_dialogue": true,
+                        "pronunciation_native": "гытул"
+                    },
+                    {
+                        "native": "голова",
+                        "target": "capul",
+                        "in_dialogue": false,
+                        "pronunciation_native": "капул"
+                    }
+                ],
+                "hint_native": "что болит"
+            },
+            "frame_native": "У меня болит ___.",
+            "frame_target": "Mă doare ___.",
+            "pronunciation_native": "Мэ доаре ___."
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "уже три дня",
+                        "target": "de trei zile",
+                        "in_dialogue": true,
+                        "pronunciation_native": "дэ трей зиле"
+                    },
+                    {
+                        "native": "со вчерашнего дня",
+                        "target": "de ieri",
+                        "in_dialogue": false,
+                        "pronunciation_native": "дэ йерь"
+                    }
+                ],
+                "hint_native": "сколько времени"
+            },
+            "frame_native": "У меня симптомы ___.",
+            "frame_target": "Am simptome ___.",
+            "pronunciation_native": "Ам симптоме ___."
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "в десять",
+                        "target": "la zece",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ла зече"
+                    },
+                    {
+                        "native": "в два",
+                        "target": "la două",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ла доуэ"
+                    }
+                ],
+                "hint_native": "удобное время"
+            },
+            "frame_native": "Я могу завтра ___.",
+            "frame_target": "Pot mâine ___.",
+            "pronunciation_native": "Пот мыйне ___."
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "Какие документы",
+                        "target": "Ce documente",
+                        "in_dialogue": true,
+                        "pronunciation_native": "че докумЕнте"
+                    },
+                    {
+                        "native": "Какие документы",
+                        "target": "Ce acte",
+                        "in_dialogue": false,
+                        "pronunciation_native": "че акте"
+                    }
+                ],
+                "hint_native": "что принести"
+            },
+            "frame_native": "___ мне нужно принести?",
+            "frame_target": "___ trebuie să aduc?",
+            "pronunciation_native": "___ трэбуе сэ адУк?"
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "консультация",
+                        "target": "consultația",
+                        "in_dialogue": true,
+                        "pronunciation_native": "консултация"
+                    },
+                    {
+                        "native": "анализ",
+                        "target": "analiza",
+                        "in_dialogue": false,
+                        "pronunciation_native": "анализа"
+                    }
+                ],
+                "hint_native": "что сколько стоит"
+            },
+            "frame_native": "Сколько стоит ___?",
+            "frame_target": "Cât costă ___?",
+            "pronunciation_native": "Кыт костэ ___?"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "ask",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "О нужной специальности врача",
+                        "text_target": "About the medical field needed"
+                    },
+                    {
+                        "text_native": "Об адресе клиники",
+                        "text_target": "About the clinic address"
+                    },
+                    {
+                        "text_native": "О страховой компании",
+                        "text_target": "About the insurance company"
+                    }
+                ],
+                "text_native": "О каком враче спрашивает администратор?",
+                "text_target": "What kind of doctor does the receptionist ask about?",
+                "explanation_native": "Администратор уточняет, к врачу какой специальности нужна запись.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "o programare",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "Я хочу записаться на приём.",
+                    "text_target": "Vreau o programare.",
+                    "speaking_key": "Vreau",
+                    "simplified_variants": [
+                        "Am nevoie de o programare."
+                    ],
+                    "pronunciation_native": "Вряу о програмаре."
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Конечно. К какому специалисту?",
+                    "text_target": "Sigur. Pentru ce specialitate?"
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "На следующий день",
+                        "text_target": "The next day"
+                    },
+                    {
+                        "text_native": "Сегодня вечером",
+                        "text_target": "This evening"
+                    },
+                    {
+                        "text_native": "Через три дня",
+                        "text_target": "In three days"
+                    }
+                ],
+                "text_native": "Когда есть свободная запись?",
+                "text_target": "When is the available appointment?",
+                "explanation_native": "Администратор говорит, что свободное место есть завтра.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "К терапевту есть место завтра.",
+                    "text_target": "La medicul de familie avem loc mâine."
+                },
+                {
+                    "filler": "medicul de familie",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "Мне нужен терапевт.",
+                    "text_target": "Am nevoie de medicul de familie.",
+                    "speaking_key": "Am nevoie de",
+                    "simplified_variants": [
+                        "Pentru medicul de familie."
+                    ],
+                    "pronunciation_native": "Ам невоее дэ медикул дэ фамилие."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Главную причину визита",
+                        "text_target": "The main reason for the visit"
+                    },
+                    {
+                        "text_native": "Домашний адрес пациента",
+                        "text_target": "The patient's home address"
+                    },
+                    {
+                        "text_native": "Фамилию врача",
+                        "text_target": "The doctor's last name"
+                    }
+                ],
+                "text_native": "Что хочет узнать администратор?",
+                "text_target": "What does the receptionist want to know?",
+                "explanation_native": "Администратор спрашивает об основной проблеме.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Какая у вас основная проблема?",
+                    "text_target": "Care este problema principală?"
+                },
+                {
+                    "filler": "gâtul",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "У меня болит горло.",
+                    "text_target": "Mă doare gâtul.",
+                    "speaking_key": "Mă doare",
+                    "simplified_variants": [
+                        "Am durere în gât."
+                    ],
+                    "pronunciation_native": "Мэ доаре гытул."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Сколько времени длится проблема",
+                        "text_target": "How long the problem has lasted"
+                    },
+                    {
+                        "text_native": "Во сколько начинается температура",
+                        "text_target": "What hour the fever starts"
+                    },
+                    {
+                        "text_native": "В какой день пациент работает",
+                        "text_target": "Which day the patient works"
+                    }
+                ],
+                "text_native": "Какую информацию о времени спрашивает администратор?",
+                "text_target": "What time detail does the receptionist ask for?",
+                "explanation_native": "Вопрос касается продолжительности симптомов.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Как долго у вас эти симптомы?",
+                    "text_target": "De când aveți simptomele?"
+                },
+                {
+                    "filler": "de trei zile",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "У меня симптомы уже три дня.",
+                    "text_target": "Am simptome de trei zile.",
+                    "speaking_key": "Am simptome",
+                    "simplified_variants": [
+                        "De trei zile."
+                    ],
+                    "pronunciation_native": "Ам симптоме дэ трей зиле."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Десять утра и два часа дня",
+                        "text_target": "Ten in the morning and two in the afternoon"
+                    },
+                    {
+                        "text_native": "Девять утра и час дня",
+                        "text_target": "Nine in the morning and one in the afternoon"
+                    },
+                    {
+                        "text_native": "Одиннадцать утра и три часа дня",
+                        "text_target": "Eleven in the morning and three in the afternoon"
+                    }
+                ],
+                "text_native": "Какие два времени предлагает администратор?",
+                "text_target": "Which two appointment times does the receptionist offer?",
+                "explanation_native": "Администратор предлагает два варианта: в 10:00 и в 14:00.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "У нас есть завтра в десять или в два. Возьмите документ и приходите за десять минут раньше.",
+                    "text_target": "Avem mâine la zece sau la două. Mai veniți cu actul și ajungeți cu zece minute înainte."
+                },
+                {
+                    "filler": "la zece",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "Я могу завтра в десять.",
+                    "text_target": "Pot mâine la zece.",
+                    "speaking_key": "Pot mâine la",
+                    "simplified_variants": [
+                        "Mâine la zece merge."
+                    ],
+                    "pronunciation_native": "Пот мыйне ла зече."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "rescue",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "На пятнадцать минут раньше",
+                        "text_target": "A quarter of an hour early"
+                    },
+                    {
+                        "text_native": "За десять минут до приёма",
+                        "text_target": "Ten minutes before the visit"
+                    },
+                    {
+                        "text_native": "Ровно ко времени приёма",
+                        "text_target": "Right at the appointment time"
+                    }
+                ],
+                "text_native": "Насколько раньше нужно прийти?",
+                "text_target": "How early should the patient come?",
+                "explanation_native": "Администратор просит прийти за десять минут до приёма.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": null,
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "Повторите, пожалуйста, помедленнее.",
+                    "text_target": "Puteți repeta mai rar, vă rog?",
+                    "speaking_key": "repeta mai rar",
+                    "simplified_variants": [
+                        "Mai rar, vă rog."
+                    ],
+                    "pronunciation_native": "Путець репета май рар, вэ рог?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "В десять или в два. Возьмите документ и приходите за десять минут раньше.",
+                    "text_target": "La zece sau la două. Aduceți actul și veniți cu zece minute înainte."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Фотографию на документы",
+                        "text_target": "A passport-sized photo"
+                    },
+                    {
+                        "text_native": "Удостоверение личности",
+                        "text_target": "An ID card"
+                    },
+                    {
+                        "text_native": "Результат анализа",
+                        "text_target": "A medical test result"
+                    }
+                ],
+                "text_native": "Какой документ, по словам администратора, достаточно принести?",
+                "text_target": "Which document does the receptionist say is enough?",
+                "explanation_native": "Администратор говорит, что достаточно удостоверения личности.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "ce documente",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "Какие документы мне нужно принести?",
+                    "text_target": "Ce documente trebuie să aduc?",
+                    "speaking_key": "trebuie să aduc",
+                    "simplified_variants": [
+                        "Ce acte aduc?"
+                    ],
+                    "pronunciation_native": "Че докумЕнте трэбуе сэ адУк?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Достаточно только удостоверения личности.",
+                    "text_target": "Doar buletinul este suficient."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Сто пятьдесят леев",
+                        "text_target": "One hundred fifty lei"
+                    },
+                    {
+                        "text_native": "Это 200 леев",
+                        "text_target": "It is 200 lei"
+                    },
+                    {
+                        "text_native": "Двести пятьдесят леев",
+                        "text_target": "Two hundred fifty lei"
+                    }
+                ],
+                "text_native": "Какую цену называет администратор?",
+                "text_target": "What price does the receptionist give?",
+                "explanation_native": "Администратор называет цену в 200 леев.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "consultația",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Пациент",
+                    "role_target": "Pacient",
+                    "text_native": "Сколько стоит консультация?",
+                    "text_target": "Cât costă consultația?",
+                    "speaking_key": "Cât costă",
+                    "simplified_variants": [
+                        "Prețul consultației?"
+                    ],
+                    "pronunciation_native": "Кыт костэ консултация?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Консультация стоит двести леев.",
+                    "text_target": "Consultația costă două sute de lei."
+                }
+            ],
+            "initiator": "B"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "К какому врачу записывается пациент?",
+                "options_native": [
+                    "К терапевту",
+                    "К стоматологу",
+                    "К хирургу"
+                ],
+                "explanation_native": "Пациенту нужен терапевт.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Сколько дней у пациента симптомы?",
+                "options_native": [
+                    "Один день",
+                    "Три дня",
+                    "Неделю"
+                ],
+                "explanation_native": "Пациент говорит, что симптомы уже три дня.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Какое время выбирает пациент?",
+                "options_native": [
+                    "Завтра в десять",
+                    "Завтра в два",
+                    "Сегодня вечером"
+                ],
+                "explanation_native": "Пациент выбирает запись на завтра в десять.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Что нужно принести на приём?",
+                "options_native": [
+                    "Результаты анализов",
+                    "Полис и фотографию",
+                    "Удостоверение личности"
+                ],
+                "explanation_native": "Администратор говорит, что достаточно удостоверения личности.",
+                "correct_option_index": 2
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p1"
+            ],
+            "term_target": "programare",
+            "image_prompt": "clinic reception desk with appointment book and computer",
+            "definition_target": "an arranged time to see a doctor",
+            "translation_native": "запись на приём",
+            "pronunciation_native": "програмаре"
+        },
+        {
+            "id": "v2",
+            "kind": "chunk",
+            "used_in": [
+                "p2",
+                "A2"
+            ],
+            "term_target": "medicul de familie",
+            "image_prompt": "family doctor sitting in a clinic office",
+            "definition_target": "the general doctor you visit first",
+            "translation_native": "терапевт",
+            "pronunciation_native": "медикул дэ фамилие"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "p3"
+            ],
+            "term_target": "gât",
+            "image_prompt": "person touching their throat at home",
+            "definition_target": "the front part of the neck used for swallowing and speaking",
+            "translation_native": "горло",
+            "pronunciation_native": "гыт"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "A4"
+            ],
+            "term_target": "simptome",
+            "image_prompt": null,
+            "definition_target": "signs that show you are ill",
+            "translation_native": "симптомы",
+            "pronunciation_native": "симптоме"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "A5",
+                "A6",
+                "p6"
+            ],
+            "term_target": "act",
+            "image_prompt": "identity card on a clinic counter",
+            "definition_target": "an official identity document",
+            "translation_native": "документ",
+            "pronunciation_native": "акт"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "A7"
+            ],
+            "term_target": "buletin",
+            "image_prompt": "romanian ID card held in a hand at reception",
+            "definition_target": "an ID card used for identification",
+            "translation_native": "удостоверение личности",
+            "pronunciation_native": "булетин"
+        },
+        {
+            "id": "v7",
+            "kind": "word",
+            "used_in": [
+                "p1",
+                "p7",
+                "A8"
+            ],
+            "term_target": "consultație",
+            "image_prompt": "doctor talking with a patient in an exam room",
+            "definition_target": "a visit to a doctor for advice or examination",
+            "translation_native": "консультация",
+            "pronunciation_native": "консултацие"
+        },
+        {
+            "id": "v8",
+            "kind": "word",
+            "used_in": [
+                "A5",
+                "A6"
+            ],
+            "term_target": "înainte",
+            "image_prompt": null,
+            "definition_target": "earlier than a set time",
+            "translation_native": "заранее",
+            "pronunciation_native": "ынынте"
+        }
+    ],
+    "role_gender": "female",
+    "learner_role": {
+        "role_native": "Пациент",
+        "role_target": "Pacient"
+    }
+}

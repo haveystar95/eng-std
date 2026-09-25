@@ -1,0 +1,1448 @@
+{
+    "pair": "ro-en",
+    "native": "ro",
+    "target": "en",
+    "level": "beginner",
+    "goal": "Mă programez la medic: de trei zile mă doare gâtul și am febră. Trebuie să aleg o oră potrivită și să explic ce mă supără",
+    "run_suffix": "-0925",
+    "database": "wordtrainer_e2e_test",
+    "driver": "openai",
+    "models": {
+        "plan": "gpt-5.4",
+        "lesson": "gpt-5.4",
+        "repair": "gpt-5.4",
+        "judge": "gpt-5.4-mini"
+    },
+    "prompt_versions": {
+        "plan": "plan-builder-v2",
+        "lesson": "lesson_day.v4.7",
+        "repair": "lesson_card_repair.v1.3",
+        "judge": "lesson_seam_judge.v1.1"
+    },
+    "packs": [
+        "en",
+        "ro",
+        "ru",
+        "uk"
+    ],
+    "started_at": "2026-09-25T21:04:17+00:00",
+    "error": null,
+    "email": "qa-lang1-ro-en-0925@wt.test",
+    "user_id": "01M3D646VR3TD95WN4HFVM64MX",
+    "plan_id": "01M3D646W24FXJ1ZBTHZ0J3VFG",
+    "plan": {
+        "status": "ready",
+        "fail_reason": null,
+        "unclear_reason": null,
+        "native_lang": "ro",
+        "target_lang": "en",
+        "prompt_version": "plan-builder-v2",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.011974",
+        "cost_usd": "0.011974",
+        "wall_s": 10.2,
+        "started_at": "2026-09-25T21:04:17+00:00",
+        "finished_at": "2026-09-25T21:04:28+00:00",
+        "calls": [
+            {
+                "call": "plan",
+                "at": "2026-09-25T21:04:17+00:00",
+                "prompt_version": "plan-builder-v2",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 3028,
+                "cached_tokens": 2816,
+                "tokens_out": 716,
+                "cost_usd": "0.011974",
+                "latency_ms": 10200,
+                "call_id": "01M3D646WEWN3GKDFNGQTPXEV5",
+                "asked": {
+                    "scenes": 2,
+                    "goal": "Mă programez la medic: de trei zile mă doare gâtul și am febră. Trebuie să aleg o oră potrivită și să explic ce mă supără",
+                    "target_language": "English",
+                    "native_language": "Romanian",
+                    "level": "beginner",
+                    "violations": []
+                },
+                "payload": {
+                    "status": "ok",
+                    "unclear_reason": null,
+                    "plan": {
+                        "title_native": "Programare medic",
+                        "title_target": "Doctor's appointment",
+                        "event_native": "Consultație",
+                        "until_phrase_native": "Până la consultație",
+                        "overdue_native": "Consultația a fost ieri",
+                        "cover_image_prompt": "reception desk of a local medical clinic, realistic photo, warm indoor light, no text, no logos, no faces in close-up",
+                        "learner_role_target": "Patient",
+                        "learner_role_native": "Pacient"
+                    },
+                    "scenes": [
+                        {
+                            "order": 1,
+                            "kind": "situation",
+                            "priority": 2,
+                            "title_native": "Programare",
+                            "title_target": "Booking",
+                            "teaches_native": "a cere o oră și a da detalii",
+                            "goals_native": [
+                                "a spune motivul vizitei",
+                                "a alege o oră potrivită",
+                                "a spune de când durează",
+                                "a întreba ce acte trebuie"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Pacient",
+                            "partner_role_target": "Receptionist",
+                            "partner_role_native": "Recepționer",
+                            "topic_description": "Situation: The learner calls or speaks at the front desk of a clinic to book a doctor's appointment. It is for the learner, who has had a sore throat and fever for three days and needs a suitable time soon.\nLearner: the learner's role is the patient. Partner: the partner's role is the receptionist.\nLearner must be able to: say they want to book an appointment; briefly explain the problem and how long it has lasted; choose between available times; ask what documents or details are needed.\nPartner will: offer times or days; ask for the reason for the visit and basic details; explain what to bring or when to arrive.\nNot in this scene: describing symptoms in detail, answering the doctor's medical questions, diagnosis, treatment, medicine.",
+                            "image_prompt": "realistic photo of a clinic reception desk with appointment calendar and computer, warm light, no text, no logos, no faces in close-up"
+                        },
+                        {
+                            "order": 2,
+                            "kind": "situation",
+                            "priority": 1,
+                            "title_native": "Consultație",
+                            "title_target": "Consultation",
+                            "teaches_native": "a descrie durerea și febra",
+                            "goals_native": [
+                                "a descrie ce te doare",
+                                "a spune de când ai febră",
+                                "a răspunde la întrebări",
+                                "a înțelege indicațiile"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Pacient",
+                            "partner_role_target": "Doctor",
+                            "partner_role_native": "Medic",
+                            "topic_description": "Situation: The learner is in the doctor's office for the appointment. It is a simple first consultation about a sore throat and fever that started three days ago.\nLearner: the learner's role is the patient. Partner: the partner's role is the doctor.\nLearner must be able to: say that their throat hurts and they have a fever; say how long the symptoms have lasted; answer simple questions about pain, temperature, and other symptoms; understand basic advice and what to do next.\nPartner will: ask where it hurts and for how many days; ask about fever and other symptoms; give simple advice, instructions, or a prescription.\nNot in this scene: booking the appointment, choosing a time, giving personal details to reception, paying at the desk, buying medicine.",
+                            "image_prompt": "realistic photo of a doctor's office during a basic consultation, desk and chair, stethoscope and medical chart visible, no text, no logos, no faces in close-up"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "scene_ids": [
+        "01M3D64GVA7RHB2ACK8GW0ZJX2",
+        "01M3D64GVA1EKCCN8V6XGCAQEB"
+    ],
+    "scene_id": "01M3D64GVA7RHB2ACK8GW0ZJX2",
+    "scenes": [
+        {
+            "order": 1,
+            "kind": "situation",
+            "title_native": "Programare",
+            "title_target": "Booking",
+            "partner_target": "Receptionist",
+            "partner_native": "Recepționer",
+            "brief": "Situation: The learner calls or speaks at the front desk of a clinic to book a doctor's appointment. It is for the learner, who has had a sore throat and fever for three days and needs a suitable time soon.\nLearner: the learner's role is the patient. Partner: the partner's role is the receptionist.\nLearner must be able to: say they want to book an appointment; briefly explain the problem and how long it has lasted; choose between available times; ask what documents or details are needed.\nPartner will: offer times or days; ask for the reason for the visit and basic details; explain what to bring or when to arrive.\nNot in this scene: describing symptoms in detail, answering the doctor's medical questions, diagnosis, treatment, medicine."
+        },
+        {
+            "order": 2,
+            "kind": "situation",
+            "title_native": "Consultație",
+            "title_target": "Consultation",
+            "partner_target": "Doctor",
+            "partner_native": "Medic",
+            "brief": "Situation: The learner is in the doctor's office for the appointment. It is a simple first consultation about a sore throat and fever that started three days ago.\nLearner: the learner's role is the patient. Partner: the partner's role is the doctor.\nLearner must be able to: say that their throat hurts and they have a fever; say how long the symptoms have lasted; answer simple questions about pain, temperature, and other symptoms; understand basic advice and what to do next.\nPartner will: ask where it hurts and for how many days; ask about fever and other symptoms; give simple advice, instructions, or a prescription.\nNot in this scene: booking the appointment, choosing a time, giving personal details to reception, paying at the desk, buying medicine."
+        }
+    ],
+    "learner_role": {
+        "target": "Patient",
+        "native": "Pacient"
+    },
+    "plan_title": {
+        "native": "Programare medic",
+        "target": "Doctor's appointment"
+    },
+    "request": {
+        "topic": "Programare",
+        "topic_description": "Situation: The learner calls or speaks at the front desk of a clinic to book a doctor's appointment. It is for the learner, who has had a sore throat and fever for three days and needs a suitable time soon.\nLearner: the learner's role is the patient. Partner: the partner's role is the receptionist.\nLearner must be able to: say they want to book an appointment; briefly explain the problem and how long it has lasted; choose between available times; ask what documents or details are needed.\nPartner will: offer times or days; ask for the reason for the visit and basic details; explain what to bring or when to arrive.\nNot in this scene: describing symptoms in detail, answering the doctor's medical questions, diagnosis, treatment, medicine.\n\nAbout the learner, in their own words: Mă programez la medic: de trei zile mă doare gâtul și am febră. Trebuie să aleg o oră potrivită și să explic ce mă supără",
+        "target_language": "English",
+        "native_language": "Romanian",
+        "target_lang_code": "en",
+        "native_lang_code": "ro",
+        "level": "beginner",
+        "learner_gender": null,
+        "vocabulary_count": 8,
+        "dialogue_count": 8,
+        "roles": {
+            "learnerTarget": "Patient",
+            "learnerNative": "Pacient",
+            "partnerTarget": "Receptionist",
+            "partnerNative": "Recepționer"
+        },
+        "earlier_days": 0
+    },
+    "day1": {
+        "status": "failed",
+        "fail_reason": "fatal: options.form_mismatch",
+        "prompt_version": "lesson_day.v4.7",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_lesson": "0.089774",
+        "latency_ms_lesson": 42659,
+        "attempts": 1,
+        "findings": [
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«I'd like to book ___» ends with no mark",
+                "address": "p1"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«I have ___» ends with no mark",
+                "address": "p2"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«I've had it ___» ends with no mark",
+                "address": "p3"
+            },
+            {
+                "code": "frame.unresolved_pronoun",
+                "detail": "«I've had it ___» leans on «it», and nothing in the frame is what it stands for",
+                "address": "p3"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«___ works for me» ends with no mark",
+                "address": "p4"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«See you ___» ends with no mark",
+                "address": "p8"
+            },
+            {
+                "code": "variant.longer",
+                "detail": "the variant «Do I need to come early?» has 6 words, the line 4",
+                "address": "B6"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «The reason for the appointment» repeats «the reason» of the partner's line",
+                "address": "x1.check"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «How long the problem has lasted» repeats «how long» of the partner's line",
+                "address": "x3.check"
+            },
+            {
+                "code": "options.form_mismatch",
+                "detail": "the option «Exact la timp» is 11 letters against 24 of the right «Cu un sfert de oră mai devreme»",
+                "address": "x6.check"
+            },
+            {
+                "code": "vocab.everyday_word",
+                "detail": "«book» is a plain everyday word or a word of the STOP LIST",
+                "address": "v6"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«arrive early» is not in frame p6 or its fillers",
+                "address": "v8"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«arrive early» is not in the partner's line of exchange 6",
+                "address": "v8"
+            }
+        ],
+        "spent": {
+            "lesson": "0.061842",
+            "repair": "0.027932",
+            "judge": "0.000000",
+            "total": "0.089774"
+        },
+        "tokens": {
+            "in": 19648,
+            "cached": 10752,
+            "out": 4323
+        },
+        "wall_s": 42.7,
+        "started_at": "2026-09-25T21:04:28+00:00",
+        "finished_at": "2026-09-25T21:05:10+00:00",
+        "calls": [
+            {
+                "call": "lesson",
+                "at": "2026-09-25T21:04:28+00:00",
+                "prompt_version": "lesson_day.v4.7",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 8347,
+                "cached_tokens": 7936,
+                "tokens_out": 3922,
+                "cost_usd": "0.061842",
+                "latency_ms": 38183,
+                "call_id": "01M3D64GW9FCVQY84X5CRMH3PF",
+                "asked": {
+                    "topic": "Programare",
+                    "target_language": "English",
+                    "native_language": "Romanian",
+                    "target_code": "en",
+                    "native_code": "ro",
+                    "violations": [],
+                    "earlier_days": 0,
+                    "roles": {
+                        "learnerTarget": "Patient",
+                        "learnerNative": "Pacient",
+                        "partnerTarget": "Receptionist",
+                        "partnerNative": "Recepționer"
+                    }
+                },
+                "payload": {
+                    "topic": {
+                        "title_target": "Booking a doctor's appointment",
+                        "title_native": "Programare la medic",
+                        "description_target": "Book an appointment, say the reason briefly, choose a time, and ask what to bring.",
+                        "description_native": "Fă o programare, spune pe scurt motivul, alege o oră și întreabă ce trebuie să aduci."
+                    },
+                    "learner_role": {
+                        "role_target": "Patient",
+                        "role_native": "Pacient"
+                    },
+                    "role_gender": "female",
+                    "dialogue": [
+                        {
+                            "step": 1,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p1",
+                                    "filler": "an appointment",
+                                    "text_target": "I'd like to book an appointment.",
+                                    "text_native": "Aș vrea să fac o programare.",
+                                    "pronunciation_native": "aid laik tu buc ăn ăpointmănt",
+                                    "speaking_key": "like to book",
+                                    "simplified_variants": [
+                                        "I want to book an appointment."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "Of course. What is the visit for?",
+                                    "text_native": "Sigur. Pentru ce este consultația?"
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist ask about?",
+                                "text_native": "Despre ce întreabă recepționera?",
+                                "options": [
+                                    {
+                                        "text_target": "The reason for the appointment",
+                                        "text_native": "Motivul programării"
+                                    },
+                                    {
+                                        "text_target": "The patient's address",
+                                        "text_native": "Adresa pacientului"
+                                    },
+                                    {
+                                        "text_target": "The payment method",
+                                        "text_native": "Metoda de plată"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepționera întreabă de ce vrei programarea."
+                            }
+                        },
+                        {
+                            "step": 2,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "What seems to be the problem?",
+                                    "text_native": "Care pare să fie problema?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p2",
+                                    "filler": "a sore throat",
+                                    "text_target": "I have a sore throat.",
+                                    "text_native": "Mă doare gâtul.",
+                                    "pronunciation_native": "ai hv ə sor throuăt",
+                                    "speaking_key": "have a",
+                                    "simplified_variants": [
+                                        "My throat hurts."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What problem does the receptionist ask about?",
+                                "text_native": "Despre ce problemă întreabă recepționera?",
+                                "options": [
+                                    {
+                                        "text_target": "The patient's symptoms",
+                                        "text_native": "Simptomele pacientului"
+                                    },
+                                    {
+                                        "text_target": "The doctor's schedule",
+                                        "text_native": "Programul medicului"
+                                    },
+                                    {
+                                        "text_target": "The clinic address",
+                                        "text_native": "Adresa clinicii"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Ea întreabă ce problemă medicală ai."
+                            }
+                        },
+                        {
+                            "step": 3,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "How long have you had it?",
+                                    "text_native": "De cât timp o ai?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p3",
+                                    "filler": "for three days",
+                                    "text_target": "I've had it for three days.",
+                                    "text_native": "O am de trei zile.",
+                                    "pronunciation_native": "aiv had it for thrii deiz",
+                                    "speaking_key": "for three days",
+                                    "simplified_variants": [
+                                        "It started three days ago."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What time period does the receptionist ask about?",
+                                "text_native": "Despre ce perioadă întreabă recepționera?",
+                                "options": [
+                                    {
+                                        "text_target": "How long the problem has lasted",
+                                        "text_native": "Cât timp a durat problema"
+                                    },
+                                    {
+                                        "text_target": "How long the visit will take",
+                                        "text_native": "Cât va dura consultația"
+                                    },
+                                    {
+                                        "text_target": "How long the patient waited",
+                                        "text_native": "Cât a așteptat pacientul"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Întrebarea este despre durata problemei."
+                            }
+                        },
+                        {
+                            "step": 4,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "We have today at four or tomorrow at nine.",
+                                    "text_native": "Avem azi la patru sau mâine la nouă."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p4",
+                                    "filler": "today at four",
+                                    "text_target": "Today at four works for me.",
+                                    "text_native": "Azi la patru este bine pentru mine.",
+                                    "pronunciation_native": "tădei ăt for uărks for mi",
+                                    "speaking_key": "works for me",
+                                    "simplified_variants": [
+                                        "Today at four is fine."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which time is available today?",
+                                "text_native": "Ce oră este disponibilă azi?",
+                                "options": [
+                                    {
+                                        "text_target": "Four in the afternoon",
+                                        "text_native": "Patru după-amiaza"
+                                    },
+                                    {
+                                        "text_target": "Nine in the morning",
+                                        "text_native": "Nouă dimineața"
+                                    },
+                                    {
+                                        "text_target": "Six in the evening",
+                                        "text_native": "Șase seara"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepționera oferă azi ora patru."
+                            }
+                        },
+                        {
+                            "step": 5,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p5",
+                                    "filler": "bring",
+                                    "text_target": "What do I need to bring?",
+                                    "text_native": "Ce trebuie să aduc?",
+                                    "pronunciation_native": "uăt du ai niid tu bring",
+                                    "speaking_key": "need to bring",
+                                    "simplified_variants": [
+                                        "What should I bring?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "Please bring your ID and insurance card.",
+                                    "text_native": "Te rog să aduci actul de identitate și cardul de asigurare."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which two things should the patient bring?",
+                                "text_native": "Ce două lucruri trebuie să aducă pacientul?",
+                                "options": [
+                                    {
+                                        "text_target": "An ID and a health card",
+                                        "text_native": "Un act de identitate și un card de asigurare"
+                                    },
+                                    {
+                                        "text_target": "A passport and cash",
+                                        "text_native": "Un pașaport și bani cash"
+                                    },
+                                    {
+                                        "text_target": "Test results and medicine",
+                                        "text_native": "Rezultate de analize și medicamente"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Ea spune să aduci actul de identitate și cardul de asigurare."
+                            }
+                        },
+                        {
+                            "step": 6,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p6",
+                                    "filler": "early",
+                                    "text_target": "Should I come early?",
+                                    "text_native": "Ar trebui să vin mai devreme?",
+                                    "pronunciation_native": "șud ai cam ărli",
+                                    "speaking_key": "come early",
+                                    "simplified_variants": [
+                                        "Do I need to come early?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "Yes, please come fifteen minutes early.",
+                                    "text_native": "Da, te rog să vii cu cincisprezece minute mai devreme."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "How much earlier should the patient arrive?",
+                                "text_native": "Cu cât mai devreme trebuie să ajungă pacientul?",
+                                "options": [
+                                    {
+                                        "text_target": "A quarter of an hour earlier",
+                                        "text_native": "Cu un sfert de oră mai devreme"
+                                    },
+                                    {
+                                        "text_target": "Half an hour earlier",
+                                        "text_native": "Cu o jumătate de oră mai devreme"
+                                    },
+                                    {
+                                        "text_target": "Exactly on time",
+                                        "text_native": "Exact la timp"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepționera spune să vii cu cincisprezece minute mai devreme."
+                            }
+                        },
+                        {
+                            "step": 7,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "I also need your phone number for the booking.",
+                                    "text_native": "Mai am nevoie și de numărul tău de telefon pentru programare."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p7",
+                                    "filler": "my phone number",
+                                    "text_target": "Here is my phone number.",
+                                    "text_native": "Iată numărul meu de telefon.",
+                                    "pronunciation_native": "hir iz mai foun nămbăr",
+                                    "speaking_key": "Here is my",
+                                    "simplified_variants": [
+                                        "My phone number is here."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What extra detail does the receptionist need?",
+                                "text_native": "Ce detaliu suplimentar are nevoie recepționera?",
+                                "options": [
+                                    {
+                                        "text_target": "A contact number",
+                                        "text_native": "Un număr de contact"
+                                    },
+                                    {
+                                        "text_target": "A home address",
+                                        "text_native": "O adresă de acasă"
+                                    },
+                                    {
+                                        "text_target": "An email password",
+                                        "text_native": "O parolă de email"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Ea cere un număr de telefon pentru programare."
+                            }
+                        },
+                        {
+                            "step": 8,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepționer",
+                                    "text_target": "You're booked for today at four with Dr. Lee.",
+                                    "text_native": "Ești programat azi la patru la doamna doctor Lee."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacient",
+                                    "phrase_id": "p8",
+                                    "filler": "today at four",
+                                    "text_target": "Okay, see you today at four.",
+                                    "text_native": "Bine, ne vedem azi la patru.",
+                                    "pronunciation_native": "oukei, sii iu tădei ăt for",
+                                    "speaking_key": "see you",
+                                    "simplified_variants": [
+                                        "Okay, today at four."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "When is the appointment confirmed for?",
+                                "text_native": "Pentru când este confirmată programarea?",
+                                "options": [
+                                    {
+                                        "text_target": "This afternoon at four",
+                                        "text_native": "Azi după-amiază la patru"
+                                    },
+                                    {
+                                        "text_target": "Tomorrow morning at nine",
+                                        "text_native": "Mâine dimineață la nouă"
+                                    },
+                                    {
+                                        "text_target": "Today at noon",
+                                        "text_native": "Azi la prânz"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Programarea este confirmată pentru azi la patru."
+                            }
+                        }
+                    ],
+                    "phrases": [
+                        {
+                            "id": "p1",
+                            "kind": "ask",
+                            "frame_target": "I'd like to book ___",
+                            "frame_native": "Aș vrea să fac ___",
+                            "pronunciation_native": "aid laik tu buc ___",
+                            "slot": {
+                                "hint_native": "ce vrei să rezervi",
+                                "fillers": [
+                                    {
+                                        "target": "an appointment",
+                                        "native": "o programare",
+                                        "pronunciation_native": "ăn ăpointmănt",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a checkup",
+                                        "native": "un control",
+                                        "pronunciation_native": "ă cek-ăp",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p2",
+                            "kind": "answer",
+                            "frame_target": "I have ___",
+                            "frame_native": "Am ___",
+                            "pronunciation_native": "ai hv ___",
+                            "slot": {
+                                "hint_native": "ce problemă ai",
+                                "fillers": [
+                                    {
+                                        "target": "a sore throat",
+                                        "native": "durere în gât",
+                                        "pronunciation_native": "ă sor throuăt",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a fever",
+                                        "native": "febră",
+                                        "pronunciation_native": "ă fiivăr",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "a cough",
+                                        "native": "tuse",
+                                        "pronunciation_native": "ă cof",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p3",
+                            "kind": "answer",
+                            "frame_target": "I've had it ___",
+                            "frame_native": "O am ___",
+                            "pronunciation_native": "aiv had it ___",
+                            "slot": {
+                                "hint_native": "de când ai problema",
+                                "fillers": [
+                                    {
+                                        "target": "for three days",
+                                        "native": "de trei zile",
+                                        "pronunciation_native": "for thrii deiz",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "since Monday",
+                                        "native": "de luni",
+                                        "pronunciation_native": "sins mandei",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p4",
+                            "kind": "answer",
+                            "frame_target": "___ works for me",
+                            "frame_native": "___ este bine pentru mine",
+                            "pronunciation_native": "___ uărks for mi",
+                            "slot": {
+                                "hint_native": "ce oră îți convine",
+                                "fillers": [
+                                    {
+                                        "target": "today at four",
+                                        "native": "azi la patru",
+                                        "pronunciation_native": "tădei ăt for",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "tomorrow at nine",
+                                        "native": "mâine la nouă",
+                                        "pronunciation_native": "tămorou ăt nain",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p5",
+                            "kind": "ask",
+                            "frame_target": "What do I need to ___?",
+                            "frame_native": "Ce trebuie să ___?",
+                            "pronunciation_native": "uăt du ai niid tu ___",
+                            "slot": {
+                                "hint_native": "ce acțiune trebuie să faci",
+                                "fillers": [
+                                    {
+                                        "target": "bring",
+                                        "native": "aduc",
+                                        "pronunciation_native": "bring",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "fill out",
+                                        "native": "completez",
+                                        "pronunciation_native": "fil aut",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p6",
+                            "kind": "ask",
+                            "frame_target": "Should I come ___?",
+                            "frame_native": "Ar trebui să vin ___?",
+                            "pronunciation_native": "șud ai cam ___",
+                            "slot": {
+                                "hint_native": "când să vii",
+                                "fillers": [
+                                    {
+                                        "target": "early",
+                                        "native": "mai devreme",
+                                        "pronunciation_native": "ărli",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "tomorrow",
+                                        "native": "mâine",
+                                        "pronunciation_native": "tămorou",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p7",
+                            "kind": "answer",
+                            "frame_target": "Here is my ___",
+                            "frame_native": "Iată ___",
+                            "pronunciation_native": "hir iz mai ___",
+                            "slot": {
+                                "hint_native": "ce informație dai",
+                                "fillers": [
+                                    {
+                                        "target": "my phone number",
+                                        "native": "numărul meu de telefon",
+                                        "pronunciation_native": "mai foun nămbăr",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "my insurance card",
+                                        "native": "cardul meu de asigurare",
+                                        "pronunciation_native": "mai inșurănț card",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p8",
+                            "kind": "answer",
+                            "frame_target": "See you ___",
+                            "frame_native": "Ne vedem ___",
+                            "pronunciation_native": "sii iu ___",
+                            "slot": {
+                                "hint_native": "când ne vedem",
+                                "fillers": [
+                                    {
+                                        "target": "today at four",
+                                        "native": "azi la patru",
+                                        "pronunciation_native": "tădei ăt for",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "tomorrow morning",
+                                        "native": "mâine dimineață",
+                                        "pronunciation_native": "tămorou mornin",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "listening": {
+                        "questions": [
+                            {
+                                "text_native": "Pentru ce problemă vrea pacientul programarea?",
+                                "options_native": [
+                                    "Pentru o durere în gât",
+                                    "Pentru dureri de spate",
+                                    "Pentru o rețetă nouă"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Pacientul spune că are durere în gât."
+                            },
+                            {
+                                "text_native": "Ce oră a ales pacientul?",
+                                "options_native": [
+                                    "Azi la patru",
+                                    "Mâine la nouă",
+                                    "Azi la șase"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Pacientul alege ora de azi, la patru."
+                            },
+                            {
+                                "text_native": "Ce trebuie să aducă pacientul la clinică?",
+                                "options_native": [
+                                    "Actul de identitate și cardul de asigurare",
+                                    "Pașaportul și bani cash",
+                                    "Rezultate medicale vechi"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepționera spune să aducă actul de identitate și cardul de asigurare."
+                            },
+                            {
+                                "text_native": "Cu cât mai devreme trebuie să vină pacientul?",
+                                "options_native": [
+                                    "Cu 15 minute",
+                                    "Cu 30 de minute",
+                                    "Exact la oră"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepționera cere să vină cu cincisprezece minute mai devreme."
+                            }
+                        ]
+                    },
+                    "vocabulary": [
+                        {
+                            "id": "v1",
+                            "term_target": "appointment",
+                            "translation_native": "programare",
+                            "pronunciation_native": "ăpointmănt",
+                            "definition_target": "a planned time to see a doctor or another professional",
+                            "kind": "word",
+                            "image_prompt": "appointment card on a clinic reception desk",
+                            "used_in": [
+                                "p1"
+                            ]
+                        },
+                        {
+                            "id": "v2",
+                            "term_target": "sore throat",
+                            "translation_native": "durere în gât",
+                            "pronunciation_native": "sor throuăt",
+                            "definition_target": "pain or irritation in the throat",
+                            "kind": "chunk",
+                            "image_prompt": "person holding their throat in a clinic waiting room",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v3",
+                            "term_target": "fever",
+                            "translation_native": "febră",
+                            "pronunciation_native": "fiivăr",
+                            "definition_target": "a body temperature that is higher than normal",
+                            "kind": "word",
+                            "image_prompt": "digital thermometer showing a high temperature on a bedside table",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v4",
+                            "term_target": "insurance card",
+                            "translation_native": "card de asigurare",
+                            "pronunciation_native": "inșurănț card",
+                            "definition_target": "a card that shows your health insurance information",
+                            "kind": "chunk",
+                            "image_prompt": "health insurance card next to an ID card on a reception counter",
+                            "used_in": [
+                                "A5",
+                                "p7"
+                            ]
+                        },
+                        {
+                            "id": "v5",
+                            "term_target": "phone number",
+                            "translation_native": "număr de telefon",
+                            "pronunciation_native": "foun nămbăr",
+                            "definition_target": "the number used to call someone",
+                            "kind": "chunk",
+                            "image_prompt": "smartphone screen with a contact number open",
+                            "used_in": [
+                                "p7",
+                                "A7"
+                            ]
+                        },
+                        {
+                            "id": "v6",
+                            "term_target": "book",
+                            "translation_native": "a programa",
+                            "pronunciation_native": "buc",
+                            "definition_target": "to arrange a time for a visit or service",
+                            "kind": "word",
+                            "image_prompt": "receptionist writing an appointment into a schedule book",
+                            "used_in": [
+                                "p1",
+                                "A8"
+                            ]
+                        },
+                        {
+                            "id": "v7",
+                            "term_target": "checkup",
+                            "translation_native": "control",
+                            "pronunciation_native": "cek-ăp",
+                            "definition_target": "a routine medical examination",
+                            "kind": "word",
+                            "image_prompt": "doctor's office with an exam table and stethoscope",
+                            "used_in": [
+                                "p1"
+                            ]
+                        },
+                        {
+                            "id": "v8",
+                            "term_target": "arrive early",
+                            "translation_native": "a veni mai devreme",
+                            "pronunciation_native": "ăraiv ărli",
+                            "definition_target": "to come before the planned time",
+                            "kind": "chunk",
+                            "image_prompt": "wall clock at a clinic reception showing time before an appointment",
+                            "used_in": [
+                                "p6",
+                                "A6"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-25T21:05:06+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 4813,
+                "cached_tokens": 2816,
+                "tokens_out": 124,
+                "cost_usd": "0.007557",
+                "latency_ms": 1692,
+                "call_id": "01M3D65P6R889RTVEQQX23ANWW",
+                "asked": {
+                    "address": "p7",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "frame.no_end_punct",
+                            "detail": "p7: «Here is my ___» ends with no mark"
+                        },
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p7.f1: «Here is my my phone number»: a word is doubled at the seam"
+                        },
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p7.f2: «Here is my my insurance card»: a word is doubled at the seam"
+                        },
+                        {
+                            "code": "filler.one_in_dialogue",
+                            "detail": "p7.f1: «my phone number» is marked in_dialogue, but no line says it"
+                        }
+                    ],
+                    "card": {
+                        "id": "p7",
+                        "kind": "answer",
+                        "frame_target": "Here is my ___",
+                        "frame_native": "Iată ___",
+                        "pronunciation_native": "hir iz mai ___",
+                        "slot": {
+                            "hint_native": "ce informație dai",
+                            "fillers": [
+                                {
+                                    "target": "my phone number",
+                                    "native": "numărul meu de telefon",
+                                    "pronunciation_native": "mai foun nămbăr",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "my insurance card",
+                                    "native": "cardul meu de asigurare",
+                                    "pronunciation_native": "mai inșurănț card",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "id": "p7",
+                        "kind": "answer",
+                        "frame_target": "Here is ___.",
+                        "frame_native": "Iată ___.",
+                        "pronunciation_native": "hir iz ___",
+                        "slot": {
+                            "hint_native": "ce informație dai",
+                            "fillers": [
+                                {
+                                    "target": "my phone number",
+                                    "native": "numărul meu de telefon",
+                                    "pronunciation_native": "mai foun nămbăr",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "my insurance card",
+                                    "native": "cardul meu de asigurare",
+                                    "pronunciation_native": "mai inșurănț card",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-25T21:05:07+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 6488,
+                "cached_tokens": 0,
+                "tokens_out": 277,
+                "cost_usd": "0.020375",
+                "latency_ms": 2784,
+                "call_id": "01M3D65QVWW7FTPTA52J5DQX5A",
+                "asked": {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "findings": [
+                        {
+                            "code": "exchange.second_question",
+                            "detail": "x1: the closing message of A «Of course. What is the visit for?» ends with a question mark"
+                        }
+                    ],
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Patient",
+                                "role_native": "Pacient",
+                                "phrase_id": "p1",
+                                "filler": "an appointment",
+                                "text_target": "I'd like to book an appointment.",
+                                "text_native": "Aș vrea să fac o programare.",
+                                "pronunciation_native": "aid laik tu buc ăn ăpointmănt",
+                                "speaking_key": "I'd like to book",
+                                "simplified_variants": [
+                                    "I want to book an appointment."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Receptionist",
+                                "role_native": "Recepționer",
+                                "text_target": "Of course. What is the visit for?",
+                                "text_native": "Sigur. Pentru ce este consultația?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the receptionist ask about?",
+                            "text_native": "Despre ce întreabă recepționera?",
+                            "options": [
+                                {
+                                    "text_target": "The reason for the appointment",
+                                    "text_native": "Motivul programării"
+                                },
+                                {
+                                    "text_target": "The patient's address",
+                                    "text_native": "Adresa pacientului"
+                                },
+                                {
+                                    "text_target": "The payment method",
+                                    "text_native": "Metoda de plată"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Recepționera întreabă de ce vrei programarea."
+                        }
+                    },
+                    "neighbours": {
+                        "before": null,
+                        "after": {
+                            "step": 2,
+                            "kind": "answer",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "text_target": "What seems to be the problem?",
+                                    "text_native": "Care pare să fie problema?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "text_target": "I have a sore throat.",
+                                    "text_native": "Mă doare gâtul.",
+                                    "phrase_id": "p2",
+                                    "filler": "a sore throat"
+                                }
+                            ],
+                            "check": "What problem does the receptionist ask about?"
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Patient",
+                                "role_native": "Pacient",
+                                "phrase_id": "p1",
+                                "filler": "an appointment",
+                                "text_target": "I'd like to book an appointment.",
+                                "text_native": "Aș vrea să fac o programare.",
+                                "pronunciation_native": "aid laik tu buc ăn ăpointmănt",
+                                "speaking_key": "I'd like to book",
+                                "simplified_variants": [
+                                    "I want to book an appointment."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Receptionist",
+                                "role_native": "Recepționer",
+                                "text_target": "Of course. Tell me the reason for the visit.",
+                                "text_native": "Sigur. Spune-mi motivul vizitei."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the receptionist ask about?",
+                            "text_native": "Despre ce întreabă recepționera?",
+                            "options": [
+                                {
+                                    "text_target": "The reason for the appointment",
+                                    "text_native": "Motivul programării"
+                                },
+                                {
+                                    "text_target": "The patient's address",
+                                    "text_native": "Adresa pacientului"
+                                },
+                                {
+                                    "text_target": "The payment method",
+                                    "text_native": "Metoda de plată"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Recepționera întreabă de ce vrei programarea."
+                        }
+                    },
+                    "frame_update": null
+                }
+            }
+        ]
+    },
+    "raw_check": {
+        "violations": [
+            {
+                "code": "exchange.second_question",
+                "address": "x1",
+                "detail": "the closing message of A «Of course. What is the visit for?» ends with a question mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p1",
+                "detail": "«I'd like to book ___» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p2",
+                "detail": "«I have ___» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p3",
+                "detail": "«I've had it ___» ends with no mark"
+            },
+            {
+                "code": "frame.unresolved_pronoun",
+                "address": "p3",
+                "detail": "«I've had it ___» leans on «it», and nothing in the frame is what it stands for"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p4",
+                "detail": "«___ works for me» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p7",
+                "detail": "«Here is my ___» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p8",
+                "detail": "«See you ___» ends with no mark"
+            },
+            {
+                "code": "filler.ungrammatical",
+                "address": "p7.f1",
+                "detail": "«Here is my my phone number»: a word is doubled at the seam"
+            },
+            {
+                "code": "filler.ungrammatical",
+                "address": "p7.f2",
+                "detail": "«Here is my my insurance card»: a word is doubled at the seam"
+            },
+            {
+                "code": "filler.one_in_dialogue",
+                "address": "p7.f1",
+                "detail": "«my phone number» is marked in_dialogue, but no line says it"
+            },
+            {
+                "code": "variant.longer",
+                "address": "B6",
+                "detail": "the variant «Do I need to come early?» has 6 words, the line 4"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B7",
+                "detail": "«Here is my phone number.» is not «Here is my ___» with any of its fillers («my phone number», «my insurance card»)"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x3.check",
+                "detail": "the right option «How long the problem has lasted» repeats «how long» of the partner's line"
+            },
+            {
+                "code": "options.form_mismatch",
+                "address": "x6.check",
+                "detail": "the option «Exact la timp» is 11 letters against 24 of the right «Cu un sfert de oră mai devreme»"
+            },
+            {
+                "code": "vocab.everyday_word",
+                "address": "v6",
+                "detail": "«book» is a plain everyday word or a word of the STOP LIST"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v8",
+                "detail": "«arrive early» is not in frame p6 or its fillers"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v8",
+                "detail": "«arrive early» is not in the partner's line of exchange 6"
+            }
+        ],
+        "fatal": 5,
+        "skips": [
+            {
+                "code": "pronunciation.script",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "script"
+                ]
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "script_letters"
+                ]
+            },
+            {
+                "code": "frame.no_end_punct",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_punct",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_agreement",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "agreement"
+                ]
+            },
+            {
+                "code": "listening.same_exchange",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.no_learner_value",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.distractor_not_filler",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "function_words",
+                    "word_forms",
+                    "number_pattern",
+                    "time_pattern"
+                ]
+            },
+            {
+                "code": "native.gendered_past",
+                "side": "native",
+                "language": "ro",
+                "keys": [
+                    "gendered_past_pattern"
+                ]
+            }
+        ],
+        "skips_known": true,
+        "parse_error": null,
+        "native_code": "ro",
+        "target_code": "en"
+    },
+    "finished_at": "2026-09-25T21:05:10+00:00"
+}

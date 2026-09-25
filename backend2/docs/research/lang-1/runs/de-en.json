@@ -1,0 +1,1322 @@
+{
+    "pair": "de-en",
+    "native": "de",
+    "target": "en",
+    "level": "beginner",
+    "goal": "Ich mache einen Termin beim Arzt: Seit drei Tagen habe ich Halsschmerzen und Fieber. Ich muss einen passenden Termin wählen und erklären, was mir fehlt",
+    "run_suffix": "-0925",
+    "database": "wordtrainer_e2e_test",
+    "driver": "openai",
+    "models": {
+        "plan": "gpt-5.4",
+        "lesson": "gpt-5.4",
+        "repair": "gpt-5.4",
+        "judge": "gpt-5.4-mini"
+    },
+    "prompt_versions": {
+        "plan": "plan-builder-v2",
+        "lesson": "lesson_day.v4.7",
+        "repair": "lesson_card_repair.v1.3",
+        "judge": "lesson_seam_judge.v1.1"
+    },
+    "packs": [
+        "en",
+        "ro",
+        "ru",
+        "uk"
+    ],
+    "started_at": "2026-09-25T21:07:12+00:00",
+    "error": null,
+    "email": "qa-lang1-de-en-0925@wt.test",
+    "user_id": "01M3D69HSK7F948S9MAA46QDEA",
+    "plan_id": "01M3D69HSXNQMKKRZH671DZ6NT",
+    "plan": {
+        "status": "ready",
+        "fail_reason": null,
+        "unclear_reason": null,
+        "native_lang": "de",
+        "target_lang": "en",
+        "prompt_version": "plan-builder-v2",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.011457",
+        "cost_usd": "0.011457",
+        "wall_s": 9.5,
+        "started_at": "2026-09-25T21:07:12+00:00",
+        "finished_at": "2026-09-25T21:07:22+00:00",
+        "calls": [
+            {
+                "call": "plan",
+                "at": "2026-09-25T21:07:12+00:00",
+                "prompt_version": "plan-builder-v2",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 3019,
+                "cached_tokens": 2816,
+                "tokens_out": 683,
+                "cost_usd": "0.011457",
+                "latency_ms": 9500,
+                "call_id": "01M3D69HTE8PTY0BW0P69B3MQG",
+                "asked": {
+                    "scenes": 2,
+                    "goal": "Ich mache einen Termin beim Arzt: Seit drei Tagen habe ich Halsschmerzen und Fieber. Ich muss einen passenden Termin wählen und erklären, was mir fehlt",
+                    "target_language": "English",
+                    "native_language": "German",
+                    "level": "beginner",
+                    "violations": []
+                },
+                "payload": {
+                    "status": "ok",
+                    "unclear_reason": null,
+                    "plan": {
+                        "title_native": "Arzttermin",
+                        "title_target": "Doctor's Appointment",
+                        "event_native": "Termin",
+                        "until_phrase_native": "Bis zum Termin",
+                        "overdue_native": "Der Termin war gestern",
+                        "cover_image_prompt": "reception desk of a local medical clinic, realistic interior, warm light, no text, no logos, no faces in close-up",
+                        "learner_role_target": "Patient",
+                        "learner_role_native": "Patient"
+                    },
+                    "scenes": [
+                        {
+                            "order": 1,
+                            "kind": "situation",
+                            "priority": 2,
+                            "title_native": "Anmeldung",
+                            "title_target": "Reception",
+                            "teaches_native": "einen Termin wählen, Beschwerden nennen",
+                            "goals_native": [
+                                "einen Termin vereinbaren",
+                                "Uhrzeit und Datum wählen",
+                                "Halsschmerzen nennen",
+                                "Fieber kurz erwähnen"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Patient",
+                            "partner_role_target": "Receptionist",
+                            "partner_role_native": "Empfangskraft",
+                            "topic_description": "Situation: At the reception desk or on the phone with a clinic receptionist, the learner wants to make a doctor's appointment because they have had a sore throat and fever for three days. They need to choose a suitable time and briefly say what is wrong.\nLearner: The learner is a patient. Partner: The partner is a receptionist.\nLearner must be able to: ask for an appointment; say they have had a sore throat and fever for three days; choose between available times or dates; give simple personal details if asked.\nPartner will: ask what the problem is; offer possible appointment times; ask for the learner's name, phone number, or preferred time.\nNot in this scene: detailed symptoms, answering medical questions, diagnosis, treatment instructions, medicine.",
+                            "image_prompt": "clinic reception desk with appointment schedule and counter, realistic photo, no text, no logos, no faces in close-up"
+                        },
+                        {
+                            "order": 2,
+                            "kind": "situation",
+                            "priority": 1,
+                            "title_native": "Beim Arzt",
+                            "title_target": "At the Doctor's",
+                            "teaches_native": "Beschwerden einfach beschreiben",
+                            "goals_native": [
+                                "Halsschmerzen beschreiben",
+                                "sagen, seit wann es so ist",
+                                "Fieber erwähnen",
+                                "einfache Fragen verstehen"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Patient",
+                            "partner_role_target": "Doctor",
+                            "partner_role_native": "Arzt",
+                            "topic_description": "Situation: In the doctor's office, the learner has the appointment and speaks to the doctor about a sore throat and fever that started three days ago. This is the main medical interaction where they need to explain the problem clearly in simple English.\nLearner: The learner is a patient. Partner: The partner is a doctor.\nLearner must be able to: say where it hurts and that their throat is sore; say they have had fever for three days; answer simple questions about how they feel; understand basic advice such as rest, fluids, or taking medicine.\nPartner will: ask about symptoms and how long they have lasted; ask simple yes or no questions; give a basic explanation and simple advice.\nNot in this scene: making the appointment, choosing a time, giving contact details, buying medicine at a pharmacy.",
+                            "image_prompt": "doctor's office during a basic consultation, desk and chair, realistic medical room, no text, no logos, no faces in close-up"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "scene_ids": [
+        "01M3D69V3FFNNPZRHVSYVV3879",
+        "01M3D69V3F2GNSKS2WVGBZG6P5"
+    ],
+    "scene_id": "01M3D69V3FFNNPZRHVSYVV3879",
+    "scenes": [
+        {
+            "order": 1,
+            "kind": "situation",
+            "title_native": "Anmeldung",
+            "title_target": "Reception",
+            "partner_target": "Receptionist",
+            "partner_native": "Empfangskraft",
+            "brief": "Situation: At the reception desk or on the phone with a clinic receptionist, the learner wants to make a doctor's appointment because they have had a sore throat and fever for three days. They need to choose a suitable time and briefly say what is wrong.\nLearner: The learner is a patient. Partner: The partner is a receptionist.\nLearner must be able to: ask for an appointment; say they have had a sore throat and fever for three days; choose between available times or dates; give simple personal details if asked.\nPartner will: ask what the problem is; offer possible appointment times; ask for the learner's name, phone number, or preferred time.\nNot in this scene: detailed symptoms, answering medical questions, diagnosis, treatment instructions, medicine."
+        },
+        {
+            "order": 2,
+            "kind": "situation",
+            "title_native": "Beim Arzt",
+            "title_target": "At the Doctor's",
+            "partner_target": "Doctor",
+            "partner_native": "Arzt",
+            "brief": "Situation: In the doctor's office, the learner has the appointment and speaks to the doctor about a sore throat and fever that started three days ago. This is the main medical interaction where they need to explain the problem clearly in simple English.\nLearner: The learner is a patient. Partner: The partner is a doctor.\nLearner must be able to: say where it hurts and that their throat is sore; say they have had fever for three days; answer simple questions about how they feel; understand basic advice such as rest, fluids, or taking medicine.\nPartner will: ask about symptoms and how long they have lasted; ask simple yes or no questions; give a basic explanation and simple advice.\nNot in this scene: making the appointment, choosing a time, giving contact details, buying medicine at a pharmacy."
+        }
+    ],
+    "learner_role": {
+        "target": "Patient",
+        "native": "Patient"
+    },
+    "plan_title": {
+        "native": "Arzttermin",
+        "target": "Doctor's Appointment"
+    },
+    "request": {
+        "topic": "Anmeldung",
+        "topic_description": "Situation: At the reception desk or on the phone with a clinic receptionist, the learner wants to make a doctor's appointment because they have had a sore throat and fever for three days. They need to choose a suitable time and briefly say what is wrong.\nLearner: The learner is a patient. Partner: The partner is a receptionist.\nLearner must be able to: ask for an appointment; say they have had a sore throat and fever for three days; choose between available times or dates; give simple personal details if asked.\nPartner will: ask what the problem is; offer possible appointment times; ask for the learner's name, phone number, or preferred time.\nNot in this scene: detailed symptoms, answering medical questions, diagnosis, treatment instructions, medicine.\n\nAbout the learner, in their own words: Ich mache einen Termin beim Arzt: Seit drei Tagen habe ich Halsschmerzen und Fieber. Ich muss einen passenden Termin wählen und erklären, was mir fehlt",
+        "target_language": "English",
+        "native_language": "German",
+        "target_lang_code": "en",
+        "native_lang_code": "de",
+        "level": "beginner",
+        "learner_gender": null,
+        "vocabulary_count": 8,
+        "dialogue_count": 8,
+        "roles": {
+            "learnerTarget": "Patient",
+            "learnerNative": "Patient",
+            "partnerTarget": "Receptionist",
+            "partnerNative": "Empfangskraft"
+        },
+        "earlier_days": 0
+    },
+    "day1": {
+        "status": "failed",
+        "fail_reason": "fatal: options.form_mismatch",
+        "prompt_version": "lesson_day.v4.7",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_lesson": "0.109519",
+        "latency_ms_lesson": 56962,
+        "attempts": 1,
+        "findings": [
+            {
+                "code": "frame.unresolved_pronoun",
+                "detail": "«I've had it for ___.» leans on «it», and nothing in the frame is what it stands for",
+                "address": "p3"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «How long it has lasted» repeats «how long» of the partner's line",
+                "address": "x3.check"
+            },
+            {
+                "code": "options.form_mismatch",
+                "detail": "the option «Queen Street 40» is 13 letters against 36 of the right «Das Gebäude ist in der King Street, Nummer 14.»",
+                "address": "x8.check"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«address» is not in the partner's line of exchange 8",
+                "address": "v8"
+            }
+        ],
+        "spent": {
+            "lesson": "0.086557",
+            "repair": "0.022962",
+            "judge": "0.000000",
+            "total": "0.109519"
+        },
+        "tokens": {
+            "in": 17778,
+            "cached": 10752,
+            "out": 5951
+        },
+        "wall_s": 57.0,
+        "started_at": "2026-09-25T21:07:22+00:00",
+        "finished_at": "2026-09-25T21:08:19+00:00",
+        "calls": [
+            {
+                "call": "lesson",
+                "at": "2026-09-25T21:07:22+00:00",
+                "prompt_version": "lesson_day.v4.7",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 8333,
+                "cached_tokens": 7936,
+                "tokens_out": 5572,
+                "cost_usd": "0.086557",
+                "latency_ms": 51432,
+                "call_id": "01M3D69V4AWMVCNY2YE7XMK4J0",
+                "asked": {
+                    "topic": "Anmeldung",
+                    "target_language": "English",
+                    "native_language": "German",
+                    "target_code": "en",
+                    "native_code": "de",
+                    "violations": [],
+                    "earlier_days": 0,
+                    "roles": {
+                        "learnerTarget": "Patient",
+                        "learnerNative": "Patient",
+                        "partnerTarget": "Receptionist",
+                        "partnerNative": "Empfangskraft"
+                    }
+                },
+                "payload": {
+                    "topic": {
+                        "title_target": "Making a doctor's appointment",
+                        "title_native": "Einen Arzttermin vereinbaren",
+                        "description_target": "Make an appointment, say what is wrong, choose a time, and give simple details.",
+                        "description_native": "Einen Termin machen, kurz sagen, was los ist, eine Zeit wählen und einfache Angaben machen."
+                    },
+                    "learner_role": {
+                        "role_target": "Patient",
+                        "role_native": "Patient"
+                    },
+                    "role_gender": "female",
+                    "dialogue": [
+                        {
+                            "step": 1,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p1",
+                                    "filler": "a doctor's appointment",
+                                    "text_target": "I'd like a doctor's appointment.",
+                                    "text_native": "Ich hätte gern einen Arzttermin.",
+                                    "pronunciation_native": "айд лайк э докторс эпойнтмэнт",
+                                    "speaking_key": "I'd like",
+                                    "simplified_variants": [
+                                        "I need an appointment."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "Of course. What seems to be the problem?",
+                                    "text_native": "Natürlich. Was ist denn das Problem?"
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist want to know?",
+                                "text_native": "Was möchte die Empfangskraft wissen?",
+                                "options": [
+                                    {
+                                        "text_target": "Your health issue",
+                                        "text_native": "Welches gesundheitliche Problem du hast"
+                                    },
+                                    {
+                                        "text_target": "Your home address",
+                                        "text_native": "Wie deine Adresse ist"
+                                    },
+                                    {
+                                        "text_target": "Your insurance company",
+                                        "text_native": "Bei welcher Versicherung du bist"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Die Empfangskraft fragt nach dem Grund für den Termin."
+                            }
+                        },
+                        {
+                            "step": 2,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "What symptoms do you have?",
+                                    "text_native": "Welche Beschwerden haben Sie?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p2",
+                                    "filler": "a sore throat and fever",
+                                    "text_target": "I have a sore throat and fever.",
+                                    "text_native": "Ich habe Halsschmerzen und Fieber.",
+                                    "pronunciation_native": "ай хэв э сор сроут энд фивэр",
+                                    "speaking_key": "I have",
+                                    "simplified_variants": [
+                                        "I have throat pain and fever."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist ask about?",
+                                "text_native": "Wonach fragt die Empfangskraft?",
+                                "options": [
+                                    {
+                                        "text_target": "Your current complaints",
+                                        "text_native": "Nach deinen aktuellen Beschwerden"
+                                    },
+                                    {
+                                        "text_target": "Your next vacation",
+                                        "text_native": "Nach deinem nächsten Urlaub"
+                                    },
+                                    {
+                                        "text_target": "Your previous doctor",
+                                        "text_native": "Nach deinem früheren Arzt"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Sie fragt, welche Symptome du hast."
+                            }
+                        },
+                        {
+                            "step": 3,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "How long have you had that?",
+                                    "text_native": "Wie lange haben Sie das schon?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p3",
+                                    "filler": "three days",
+                                    "text_target": "I've had it for three days.",
+                                    "text_native": "Ich habe das seit drei Tagen.",
+                                    "pronunciation_native": "айв хэд ит фо сри дэйз",
+                                    "speaking_key": "had it for",
+                                    "simplified_variants": [
+                                        "For three days."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What information does the receptionist ask for?",
+                                "text_native": "Welche Information fragt die Empfangskraft ab?",
+                                "options": [
+                                    {
+                                        "text_target": "How long it has lasted",
+                                        "text_native": "Wie lange es schon dauert"
+                                    },
+                                    {
+                                        "text_target": "How often it happens",
+                                        "text_native": "Wie oft es passiert"
+                                    },
+                                    {
+                                        "text_target": "How strong it feels",
+                                        "text_native": "Wie stark es ist"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Sie möchte wissen, seit wann du die Beschwerden hast."
+                            }
+                        },
+                        {
+                            "step": 4,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "We have appointments at ten or at two today.",
+                                    "text_native": "Wir haben heute Termine um zehn oder um zwei."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p4",
+                                    "filler": "two o'clock",
+                                    "text_target": "Two o'clock is better for me.",
+                                    "text_native": "Zwei Uhr passt mir besser.",
+                                    "pronunciation_native": "tu oklokk is better fo ми",
+                                    "speaking_key": "is better for",
+                                    "simplified_variants": [
+                                        "Two is better."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which two times does the receptionist offer?",
+                                "text_native": "Welche zwei Uhrzeiten bietet die Empfangskraft an?",
+                                "options": [
+                                    {
+                                        "text_target": "Nine and one",
+                                        "text_native": "Neun Uhr und ein Uhr"
+                                    },
+                                    {
+                                        "text_target": "Ten and two",
+                                        "text_native": "Zehn Uhr und zwei Uhr"
+                                    },
+                                    {
+                                        "text_target": "Eleven and three",
+                                        "text_native": "Elf Uhr und drei Uhr"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Angeboten werden Termine um zehn und um zwei."
+                            }
+                        },
+                        {
+                            "step": 5,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p5",
+                                    "filler": "your name",
+                                    "text_target": "What do you need for your name?",
+                                    "text_native": "Was brauchen Sie für den Namen?",
+                                    "pronunciation_native": "уот ду ю нид фо йор нэйм",
+                                    "speaking_key": "do you need",
+                                    "simplified_variants": [
+                                        "What name do you need?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "I need your full name, please.",
+                                    "text_native": "Ich brauche bitte Ihren vollständigen Namen."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist need?",
+                                "text_native": "Was braucht die Empfangskraft?",
+                                "options": [
+                                    {
+                                        "text_target": "Your complete name",
+                                        "text_native": "Deinen vollständigen Namen"
+                                    },
+                                    {
+                                        "text_target": "Your date of birth",
+                                        "text_native": "Dein Geburtsdatum"
+                                    },
+                                    {
+                                        "text_target": "Your street name",
+                                        "text_native": "Deinen Straßennamen"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Sie bittet um den vollständigen Namen."
+                            }
+                        },
+                        {
+                            "step": 6,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "And what is your phone number?",
+                                    "text_native": "Und wie ist Ihre Telefonnummer?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p6",
+                                    "filler": "0176 234567",
+                                    "text_target": "My phone number is 0176 234567.",
+                                    "text_native": "Meine Telefonnummer ist 0176 234567.",
+                                    "pronunciation_native": "май фоун намбэр из оу уан сэвэн сикс ту сри фор файв сикс сэвэн",
+                                    "speaking_key": "phone number is",
+                                    "simplified_variants": [
+                                        "It's 0176 234567."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What personal detail does the receptionist ask for?",
+                                "text_native": "Nach welcher persönlichen Angabe fragt die Empfangskraft?",
+                                "options": [
+                                    {
+                                        "text_target": "A contact number",
+                                        "text_native": "Nach einer Telefonnummer"
+                                    },
+                                    {
+                                        "text_target": "An email address",
+                                        "text_native": "Nach einer E-Mail-Adresse"
+                                    },
+                                    {
+                                        "text_target": "A passport number",
+                                        "text_native": "Nach einer Passnummer"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Sie fragt nach deiner Telefonnummer."
+                            }
+                        },
+                        {
+                            "step": 7,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "Please come fifteen minutes early for the form.",
+                                    "text_native": "Bitte kommen Sie fünfzehn Minuten früher wegen des Formulars."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p7",
+                                    "filler": "fifteen minutes early",
+                                    "text_target": "I'll come fifteen minutes early.",
+                                    "text_native": "Ich komme fünfzehn Minuten früher.",
+                                    "pronunciation_native": "айл кам фифтин минитс ёрли",
+                                    "speaking_key": "I'll come",
+                                    "simplified_variants": [
+                                        "I can come early."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "When should the patient arrive?",
+                                "text_native": "Wann soll der Patient kommen?",
+                                "options": [
+                                    {
+                                        "text_target": "A quarter hour before",
+                                        "text_native": "Eine Viertelstunde vorher"
+                                    },
+                                    {
+                                        "text_target": "Exactly on time",
+                                        "text_native": "Genau pünktlich"
+                                    },
+                                    {
+                                        "text_target": "Half an hour later",
+                                        "text_native": "Eine halbe Stunde später"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Die Empfangskraft sagt, du sollst fünfzehn Minuten früher kommen."
+                            }
+                        },
+                        {
+                            "step": 8,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Patient",
+                                    "phrase_id": "p8",
+                                    "filler": "the address",
+                                    "text_target": "Could you give me the address?",
+                                    "text_native": "Könnten Sie mir die Adresse geben?",
+                                    "pronunciation_native": "куд ю гив ми зи эдрэс",
+                                    "speaking_key": "give me the",
+                                    "simplified_variants": [
+                                        "What's the address?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Empfangskraft",
+                                    "text_target": "Yes, it's 14 King Street.",
+                                    "text_native": "Ja, das ist King Street 14."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What address does the receptionist give?",
+                                "text_native": "Welche Adresse nennt die Empfangskraft?",
+                                "options": [
+                                    {
+                                        "text_target": "14 King Street",
+                                        "text_native": "King Street 14"
+                                    },
+                                    {
+                                        "text_target": "40 Queen Street",
+                                        "text_native": "Queen Street 40"
+                                    },
+                                    {
+                                        "text_target": "18 Market Road",
+                                        "text_native": "Market Road 18"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Genannt wird die Adresse King Street 14."
+                            }
+                        }
+                    ],
+                    "phrases": [
+                        {
+                            "id": "p1",
+                            "kind": "ask",
+                            "frame_target": "I'd like ___.",
+                            "frame_native": "Ich hätte gern ___.",
+                            "pronunciation_native": "айд лайк ___",
+                            "slot": {
+                                "hint_native": "was du möchtest",
+                                "fillers": [
+                                    {
+                                        "target": "a doctor's appointment",
+                                        "native": "einen Arzttermin",
+                                        "pronunciation_native": "э докторс эпойнтмэнт",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "an appointment today",
+                                        "native": "einen Termin heute",
+                                        "pronunciation_native": "эн эпойнтмэнт тудэй",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p2",
+                            "kind": "answer",
+                            "frame_target": "I have ___.",
+                            "frame_native": "Ich habe ___.",
+                            "pronunciation_native": "ай хэв ___",
+                            "slot": {
+                                "hint_native": "Beschwerden",
+                                "fillers": [
+                                    {
+                                        "target": "a sore throat and fever",
+                                        "native": "Halsschmerzen und Fieber",
+                                        "pronunciation_native": "э сор сроут энд фивэр",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a cough",
+                                        "native": "Husten",
+                                        "pronunciation_native": "э коф",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "a bad headache",
+                                        "native": "starke Kopfschmerzen",
+                                        "pronunciation_native": "э бэд хэдэйк",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p3",
+                            "kind": "answer",
+                            "frame_target": "I've had it for ___.",
+                            "frame_native": "Ich habe das seit ___.",
+                            "pronunciation_native": "айв хэд ит фо ___",
+                            "slot": {
+                                "hint_native": "Dauer",
+                                "fillers": [
+                                    {
+                                        "target": "three days",
+                                        "native": "drei Tagen",
+                                        "pronunciation_native": "сри дэйз",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "two days",
+                                        "native": "zwei Tagen",
+                                        "pronunciation_native": "ту дэйз",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "a week",
+                                        "native": "einer Woche",
+                                        "pronunciation_native": "э уик",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p4",
+                            "kind": "answer",
+                            "frame_target": "___ is better for me.",
+                            "frame_native": "___ passt mir besser.",
+                            "pronunciation_native": "___ из better фо ми",
+                            "slot": {
+                                "hint_native": "passende Zeit",
+                                "fillers": [
+                                    {
+                                        "target": "two o'clock",
+                                        "native": "Zwei Uhr",
+                                        "pronunciation_native": "ту оклок",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "ten o'clock",
+                                        "native": "Zehn Uhr",
+                                        "pronunciation_native": "тэн оклок",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p5",
+                            "kind": "ask",
+                            "frame_target": "What do you need for ___?",
+                            "frame_native": "Was brauchen Sie für ___?",
+                            "pronunciation_native": "уот ду ю нид фо ___",
+                            "slot": {
+                                "hint_native": "Angabe",
+                                "fillers": [
+                                    {
+                                        "target": "your name",
+                                        "native": "den Namen",
+                                        "pronunciation_native": "йор нэйм",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "the number",
+                                        "native": "die Nummer",
+                                        "pronunciation_native": "зе намбэр",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p6",
+                            "kind": "answer",
+                            "frame_target": "My phone number is ___.",
+                            "frame_native": "Meine Telefonnummer ist ___.",
+                            "pronunciation_native": "май фоун намбэр из ___",
+                            "slot": {
+                                "hint_native": "Telefonnummer",
+                                "fillers": [
+                                    {
+                                        "target": "0176 234567",
+                                        "native": "0176 234567",
+                                        "pronunciation_native": "оу уан сэвэн сикс ту сри фор файв сикс сэвэн",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "030 445566",
+                                        "native": "030 445566",
+                                        "pronunciation_native": "зиро сри зиро фор фор файв файв сикс сикс",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p7",
+                            "kind": "answer",
+                            "frame_target": "I'll come ___.",
+                            "frame_native": "Ich komme ___.",
+                            "pronunciation_native": "айл кам ___",
+                            "slot": {
+                                "hint_native": "Zeit davor",
+                                "fillers": [
+                                    {
+                                        "target": "fifteen minutes early",
+                                        "native": "fünfzehn Minuten früher",
+                                        "pronunciation_native": "фифтин минитс ёрли",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "ten minutes early",
+                                        "native": "zehn Minuten früher",
+                                        "pronunciation_native": "тэн минитс ёрли",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p8",
+                            "kind": "ask",
+                            "frame_target": "Could you give me ___?",
+                            "frame_native": "Könnten Sie mir ___ geben?",
+                            "pronunciation_native": "куд ю гив ми ___",
+                            "slot": {
+                                "hint_native": "etwas, das du brauchst",
+                                "fillers": [
+                                    {
+                                        "target": "the address",
+                                        "native": "die Adresse",
+                                        "pronunciation_native": "зи эдрэс",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "the phone number",
+                                        "native": "die Telefonnummer",
+                                        "pronunciation_native": "зи фоун намбэр",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "listening": {
+                        "questions": [
+                            {
+                                "text_native": "Warum möchte der Patient einen Termin?",
+                                "options_native": [
+                                    "Wegen Halsschmerzen und Fieber",
+                                    "Wegen Rückenschmerzen",
+                                    "Wegen Bauchschmerzen"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Der Patient sagt, dass er Halsschmerzen und Fieber hat."
+                            },
+                            {
+                                "text_native": "Seit wann hat der Patient die Beschwerden?",
+                                "options_native": [
+                                    "Seit einem Tag",
+                                    "Seit drei Tagen",
+                                    "Seit einer Woche"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Der Patient sagt, dass es seit drei Tagen so ist."
+                            },
+                            {
+                                "text_native": "Welche Uhrzeit wählt der Patient?",
+                                "options_native": [
+                                    "Zehn Uhr",
+                                    "Zwölf Uhr",
+                                    "Zwei Uhr"
+                                ],
+                                "correct_option_index": 2,
+                                "explanation_native": "Der Patient sagt, dass zwei Uhr besser passt."
+                            },
+                            {
+                                "text_native": "Wann soll der Patient kommen?",
+                                "options_native": [
+                                    "Fünfzehn Minuten früher",
+                                    "Genau pünktlich",
+                                    "Zwanzig Minuten später"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Die Empfangskraft bittet darum, früher zu kommen."
+                            }
+                        ]
+                    },
+                    "vocabulary": [
+                        {
+                            "id": "v1",
+                            "term_target": "doctor's appointment",
+                            "translation_native": "Arzttermin",
+                            "pronunciation_native": "докторс эпойнтмэнт",
+                            "definition_target": "a planned time to see a doctor",
+                            "kind": "chunk",
+                            "image_prompt": "calendar on a desk with a clinic appointment card and a pen",
+                            "used_in": [
+                                "p1"
+                            ]
+                        },
+                        {
+                            "id": "v2",
+                            "term_target": "sore throat",
+                            "translation_native": "Halsschmerzen",
+                            "pronunciation_native": "сор сроут",
+                            "definition_target": "pain in the throat",
+                            "kind": "chunk",
+                            "image_prompt": "person touching their throat in a clinic waiting room",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v3",
+                            "term_target": "fever",
+                            "translation_native": "Fieber",
+                            "pronunciation_native": "фивэр",
+                            "definition_target": "a high body temperature",
+                            "kind": "word",
+                            "image_prompt": "digital thermometer on a bedside table next to tissues",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v4",
+                            "term_target": "symptoms",
+                            "translation_native": "Beschwerden",
+                            "pronunciation_native": "симптомз",
+                            "definition_target": "signs of illness that you feel or notice",
+                            "kind": "word",
+                            "image_prompt": null,
+                            "used_in": [
+                                "A2"
+                            ]
+                        },
+                        {
+                            "id": "v5",
+                            "term_target": "full name",
+                            "translation_native": "vollständiger Name",
+                            "pronunciation_native": "фул нэйм",
+                            "definition_target": "your first name and last name together",
+                            "kind": "chunk",
+                            "image_prompt": "registration form with a line for full name and a pen",
+                            "used_in": [
+                                "A5"
+                            ]
+                        },
+                        {
+                            "id": "v6",
+                            "term_target": "phone number",
+                            "translation_native": "Telefonnummer",
+                            "pronunciation_native": "фоун намбэр",
+                            "definition_target": "the number people use to call you",
+                            "kind": "chunk",
+                            "image_prompt": "smartphone screen showing a contact number",
+                            "used_in": [
+                                "p6",
+                                "p8"
+                            ]
+                        },
+                        {
+                            "id": "v7",
+                            "term_target": "form",
+                            "translation_native": "Formular",
+                            "pronunciation_native": "форм",
+                            "definition_target": "a paper you fill in with information",
+                            "kind": "word",
+                            "image_prompt": "clipboard with a medical form at a clinic reception desk",
+                            "used_in": [
+                                "A7"
+                            ]
+                        },
+                        {
+                            "id": "v8",
+                            "term_target": "address",
+                            "translation_native": "Adresse",
+                            "pronunciation_native": "эдрэс",
+                            "definition_target": "the place where a building is located",
+                            "kind": "word",
+                            "image_prompt": "street sign reading King Street on a city building corner",
+                            "used_in": [
+                                "p8",
+                                "A8"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-25T21:08:13+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 6482,
+                "cached_tokens": 2816,
+                "tokens_out": 263,
+                "cost_usd": "0.013814",
+                "latency_ms": 3535,
+                "call_id": "01M3D6BDBW7ACM2JVMKBKRV18N",
+                "asked": {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "findings": [
+                        {
+                            "code": "exchange.second_question",
+                            "detail": "x1: the closing message of A «Of course. What seems to be the problem?» ends with a question mark"
+                        }
+                    ],
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Patient",
+                                "role_native": "Patient",
+                                "phrase_id": "p1",
+                                "filler": "a doctor's appointment",
+                                "text_target": "I'd like a doctor's appointment.",
+                                "text_native": "Ich hätte gern einen Arzttermin.",
+                                "pronunciation_native": "айд лайк э докторс эпойнтмэнт",
+                                "speaking_key": "I'd like",
+                                "simplified_variants": [
+                                    "I need an appointment."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Receptionist",
+                                "role_native": "Empfangskraft",
+                                "text_target": "Of course. What seems to be the problem?",
+                                "text_native": "Natürlich. Was ist denn das Problem?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the receptionist want to know?",
+                            "text_native": "Was möchte die Empfangskraft wissen?",
+                            "options": [
+                                {
+                                    "text_target": "Your health issue",
+                                    "text_native": "Welches gesundheitliche Problem du hast"
+                                },
+                                {
+                                    "text_target": "Your home address",
+                                    "text_native": "Wie deine Adresse ist"
+                                },
+                                {
+                                    "text_target": "Your insurance company",
+                                    "text_native": "Bei welcher Versicherung du bist"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Die Empfangskraft fragt nach dem Grund für den Termin."
+                        }
+                    },
+                    "neighbours": {
+                        "before": null,
+                        "after": {
+                            "step": 2,
+                            "kind": "answer",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "text_target": "What symptoms do you have?",
+                                    "text_native": "Welche Beschwerden haben Sie?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "text_target": "I have a sore throat and fever.",
+                                    "text_native": "Ich habe Halsschmerzen und Fieber.",
+                                    "phrase_id": "p2",
+                                    "filler": "a sore throat and fever"
+                                }
+                            ],
+                            "check": "What does the receptionist ask about?"
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Patient",
+                                "role_native": "Patient",
+                                "phrase_id": "p1",
+                                "filler": "a doctor's appointment",
+                                "text_target": "I'd like a doctor's appointment.",
+                                "text_native": "Ich hätte gern einen Arzttermin.",
+                                "pronunciation_native": "айд лайк э докторс эпойнтмэнт",
+                                "speaking_key": "I'd like",
+                                "simplified_variants": [
+                                    "I need an appointment."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Receptionist",
+                                "role_native": "Empfangskraft",
+                                "text_target": "Of course. Tell me the problem.",
+                                "text_native": "Natürlich. Sagen Sie mir bitte, was das Problem ist."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the receptionist want to know?",
+                            "text_native": "Was möchte die Empfangskraft wissen?",
+                            "options": [
+                                {
+                                    "text_target": "Your health issue",
+                                    "text_native": "Welches gesundheitliche Problem du hast"
+                                },
+                                {
+                                    "text_target": "Your home address",
+                                    "text_native": "Wie deine Adresse ist"
+                                },
+                                {
+                                    "text_target": "Your insurance company",
+                                    "text_native": "Bei welcher Versicherung du bist"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Die Empfangskraft fragt nach dem Grund für den Termin."
+                        }
+                    },
+                    "frame_update": null
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-25T21:08:17+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 2963,
+                "cached_tokens": 0,
+                "tokens_out": 116,
+                "cost_usd": "0.009148",
+                "latency_ms": 1995,
+                "call_id": "01M3D6BGTJMVVN5NZWPFQTCNCV",
+                "asked": {
+                    "address": "x8.check",
+                    "kind": "check",
+                    "findings": [
+                        {
+                            "code": "options.form_mismatch",
+                            "detail": "x8.check: the option «King Street 14» is a piece of the partner's line «Ja, das ist King Street 14.»"
+                        }
+                    ],
+                    "card": {
+                        "text_target": "What address does the receptionist give?",
+                        "text_native": "Welche Adresse nennt die Empfangskraft?",
+                        "options": [
+                            {
+                                "text_target": "14 King Street",
+                                "text_native": "King Street 14"
+                            },
+                            {
+                                "text_target": "40 Queen Street",
+                                "text_native": "Queen Street 40"
+                            },
+                            {
+                                "text_target": "18 Market Road",
+                                "text_native": "Market Road 18"
+                            }
+                        ],
+                        "correct_option_index": 0,
+                        "explanation_native": "Genannt wird die Adresse King Street 14."
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "text_target": "What address does the receptionist give?",
+                        "text_native": "Welche Adresse nennt die Empfangskraft?",
+                        "options": [
+                            {
+                                "text_target": "The building is on King Street, number 14.",
+                                "text_native": "Das Gebäude ist in der King Street, Nummer 14."
+                            },
+                            {
+                                "text_target": "40 Queen Street",
+                                "text_native": "Queen Street 40"
+                            },
+                            {
+                                "text_target": "18 Market Road",
+                                "text_native": "Market Road 18"
+                            }
+                        ],
+                        "correct_option_index": 0,
+                        "explanation_native": "Genannt wird die Adresse King Street 14."
+                    }
+                }
+            }
+        ]
+    },
+    "raw_check": {
+        "violations": [
+            {
+                "code": "exchange.second_question",
+                "address": "x1",
+                "detail": "the closing message of A «Of course. What seems to be the problem?» ends with a question mark"
+            },
+            {
+                "code": "frame.unresolved_pronoun",
+                "address": "p3",
+                "detail": "«I've had it for ___.» leans on «it», and nothing in the frame is what it stands for"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x3.check",
+                "detail": "the right option «How long it has lasted» repeats «how long» of the partner's line"
+            },
+            {
+                "code": "options.form_mismatch",
+                "address": "x8.check",
+                "detail": "the option «King Street 14» is a piece of the partner's line «Ja, das ist King Street 14.»"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v8",
+                "detail": "«address» is not in the partner's line of exchange 8"
+            }
+        ],
+        "fatal": 2,
+        "skips": [
+            {
+                "code": "pronunciation.script",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "script"
+                ]
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "script_letters"
+                ]
+            },
+            {
+                "code": "frame.no_end_punct",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_punct",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_agreement",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "agreement"
+                ]
+            },
+            {
+                "code": "listening.same_exchange",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.no_learner_value",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "listening.distractor_not_filler",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "function_words",
+                    "word_forms",
+                    "number_pattern",
+                    "time_pattern"
+                ]
+            },
+            {
+                "code": "native.gendered_past",
+                "side": "native",
+                "language": "de",
+                "keys": [
+                    "gendered_past_pattern"
+                ]
+            }
+        ],
+        "skips_known": true,
+        "parse_error": null,
+        "native_code": "de",
+        "target_code": "en"
+    },
+    "finished_at": "2026-09-25T21:08:19+00:00"
+}

@@ -1,0 +1,18 @@
+database=wordtrainer_e2e_test plan.driver=openai provider=openai plan=gpt-5.4 lesson=gpt-5.4 repair=gpt-5.4 judge=gpt-5.4-mini timeout=180 plan.languages=en,de packs=en,ro,ru,uk
+NOTE: the REAL model (openai) — every call below is paid.
+writing to /wt/docs/research/lang-1
+20:56:19 ru-pl plan $0.017883 (10.3s) · day 1 failed (fatal: pronunciation.foreign_script, options.form_mismatch) · lesson $0.105178 · P2R 2 $0.022040 (p1,p3) · judge $0.000000 · raw fatal 8 / all 16 · pack_missing 0/17 · day $0.127218 (52.6s) · pair $0.1451
+20:57:26 ru-ro plan $0.012087 (9.7s) · day 1 illustrating · lesson $0.084439 · P2R 2 $0.016145 (p5,x8.check) · judge $0.001549 · raw fatal 4 / all 12 · pack_missing 0/17 · day $0.102133 (57.0s) · pair $0.1142
+20:58:26 ru-es plan $0.011876 (9.5s) · day 1 illustrating · lesson $0.084427 · P2R 2 $0.018065 (x6.check,x7.check) · judge $0.001630 · raw fatal 2 / all 3 · pack_missing 0/17 · day $0.104122 (50.4s) · pair $0.1160
+20:59:16 ru-it plan $0.011876 (8.9s) · day 1 failed (fatal: options.form_mismatch) · lesson $0.058946 · P2R 2 $0.019670 (p3,B3) · judge $0.000000 · raw fatal 5 / all 19 · pack_missing 0/17 · day $0.078616 (42.0s) · pair $0.0905
+21:00:09 ru-de plan $0.012251 (9.0s) · day 1 failed (fatal: options.form_mismatch) · lesson $0.061466 · P2R 2 $0.018408 (x5.check,x7.check) · judge $0.000000 · raw fatal 3 / all 7 · pack_missing 0/17 · day $0.079874 (43.1s) · pair $0.0921
+21:01:00 ru-fr plan $0.011577 (7.8s) · day 1 failed (fatal: pronunciation.foreign_script) · lesson $0.061371 · P2R 2 $0.018193 (x4.check,x6.check) · judge $0.000000 · raw fatal 3 / all 19 · pack_missing 0/17 · day $0.079564 (43.3s) · pair $0.0911
+21:02:00 uk-en plan $0.012159 (10.4s) · day 1 failed (fatal: options.form_mismatch) · lesson $0.066279 · P2R 2 $0.031416 (x1,x4.check) · judge $0.000000 · raw fatal 3 / all 7 · pack_missing 9/0 · day $0.097695 (49.4s) · pair $0.1099
+21:03:11 be-en plan $0.012296 (10.7s) · day 1 illustrating · lesson $0.065187 · P2R 2 $0.023685 (x1,x4.check) · judge $0.001765 · raw fatal 2 / all 12 · pack_missing 9/0 · day $0.090637 (60.5s) · pair $0.1029
+21:04:17 pl-en plan $0.012336 (10.6s) · day 1 illustrating · lesson $0.089064 · P2R 2 $0.023616 (x1,x7.check) · judge $0.001803 · raw fatal 2 / all 13 · pack_missing 9/0 · day $0.114483 (55.8s) · pair $0.1268
+21:05:10 ro-en plan $0.011974 (10.2s) · day 1 failed (fatal: options.form_mismatch) · lesson $0.061842 · P2R 2 $0.027932 (p7,x1) · judge $0.000000 · raw fatal 5 / all 18 · pack_missing 9/0 · day $0.089774 (42.7s) · pair $0.1017
+21:06:07 es-en plan $0.011489 (8.6s) · day 1 illustrating · lesson $0.059141 · P2R 2 $0.022574 (x1,x1.check) · judge $0.001772 · raw fatal 1 / all 13 · pack_missing 9/0 · day $0.083487 (47.8s) · pair $0.0950
+21:07:12 it-en plan $0.012227 (10.2s) · day 1 illustrating · lesson $0.086749 · P2R 1 $0.013884 (x1) · judge $0.001637 · raw fatal 1 / all 7 · pack_missing 9/0 · day $0.102270 (55.3s) · pair $0.1145
+21:08:19 de-en plan $0.011457 (9.5s) · day 1 failed (fatal: options.form_mismatch) · lesson $0.086557 · P2R 2 $0.022962 (x1,x8.check) · judge $0.000000 · raw fatal 2 / all 5 · pack_missing 9/0 · day $0.109519 (57.0s) · pair $0.1210
+21:09:25 fr-en plan $0.012092 (10.5s) · day 1 failed (fatal: options.form_mismatch) · lesson $0.087587 · P2R 2 $0.023427 (x1,x4.check) · judge $0.000000 · raw fatal 4 / all 5 · pack_missing 9/0 · day $0.111014 (55.6s) · pair $0.1231
+21:09:25 done: 14 pair(s), 0 with an error · $1.5440 · 848.5s

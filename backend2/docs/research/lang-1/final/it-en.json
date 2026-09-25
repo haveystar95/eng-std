@@ -1,0 +1,720 @@
+{
+    "topic": {
+        "title_native": "Prenotare una visita medica",
+        "title_target": "Booking a doctor's appointment",
+        "description_native": "Prenota una visita, spiega brevemente il motivo, chiedi gli orari disponibili e conferma un orario comodo.",
+        "description_target": "Book an appointment, say the reason briefly, ask about available times, and confirm a convenient slot."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "un appuntamento dal medico",
+                        "target": "a doctor's appointment",
+                        "in_dialogue": true,
+                        "pronunciation_native": "a dottorz appòintment"
+                    },
+                    {
+                        "native": "una visita urgente",
+                        "target": "an urgent visit",
+                        "in_dialogue": false,
+                        "pronunciation_native": "an èrdgent vìzit"
+                    }
+                ],
+                "hint_native": "cosa ti serve"
+            },
+            "frame_native": "Ho bisogno di ___.",
+            "frame_target": "I need ___.",
+            "pronunciation_native": "ai niid ___"
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "mal di gola e la febbre",
+                        "target": "a sore throat and fever",
+                        "in_dialogue": true,
+                        "pronunciation_native": "a sor thròut end fìiver"
+                    },
+                    {
+                        "native": "una brutta tosse",
+                        "target": "a bad cough",
+                        "in_dialogue": false,
+                        "pronunciation_native": "a bed kof"
+                    },
+                    {
+                        "native": "mal d'orecchio",
+                        "target": "an earache",
+                        "in_dialogue": false,
+                        "pronunciation_native": "an ììreik"
+                    }
+                ],
+                "hint_native": "sintomo o problema"
+            },
+            "frame_native": "Ho ___.",
+            "frame_target": "I have ___.",
+            "pronunciation_native": "ai hav ___"
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "da tre giorni",
+                        "target": "for three days",
+                        "in_dialogue": true,
+                        "pronunciation_native": "for thrii deiz"
+                    },
+                    {
+                        "native": "da ieri",
+                        "target": "since yesterday",
+                        "in_dialogue": false,
+                        "pronunciation_native": "sins ièsterdei"
+                    }
+                ],
+                "hint_native": "durata"
+            },
+            "frame_native": "Li ho ___.",
+            "frame_target": "I have had them ___.",
+            "pronunciation_native": "ai hav hed dem ___"
+        },
+        {
+            "id": "p4",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "orari disponibili",
+                        "target": "available times",
+                        "in_dialogue": true,
+                        "pronunciation_native": "avèilabol taimz"
+                    },
+                    {
+                        "native": "appuntamenti questa settimana",
+                        "target": "appointments this week",
+                        "in_dialogue": false,
+                        "pronunciation_native": "appòintments dhis uiik"
+                    }
+                ],
+                "hint_native": "tipo di disponibilità"
+            },
+            "frame_native": "Che ___ avete?",
+            "frame_target": "What ___ do you have?",
+            "pronunciation_native": "uòt ___ du iu hav"
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "le 3 di domani",
+                        "target": "3 p.m. tomorrow",
+                        "in_dialogue": true,
+                        "pronunciation_native": "thrii pii em tomòrou"
+                    },
+                    {
+                        "native": "le 10 di oggi",
+                        "target": "10 a.m. today",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ten ei em tudei"
+                    }
+                ],
+                "hint_native": "orario scelto"
+            },
+            "frame_native": "Posso prendere ___?",
+            "frame_target": "Can I take ___?",
+            "pronunciation_native": "ken ai teik ___"
+        },
+        {
+            "id": "p6",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "dieci minuti prima",
+                        "target": "ten minutes early",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ten mìnits èrli"
+                    },
+                    {
+                        "native": "puntuale",
+                        "target": "on time",
+                        "in_dialogue": false,
+                        "pronunciation_native": "on taim"
+                    }
+                ],
+                "hint_native": "anticipo o orario"
+            },
+            "frame_native": "Arriverò ___.",
+            "frame_target": "I'll arrive ___.",
+            "pronunciation_native": "ail aràiv ___"
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "domani alle 3",
+                        "target": "tomorrow at 3 p.m.",
+                        "in_dialogue": true,
+                        "pronunciation_native": "tomòrou at thrii pii em"
+                    },
+                    {
+                        "native": "venerdì mattina",
+                        "target": "Friday morning",
+                        "in_dialogue": false,
+                        "pronunciation_native": "fràidei mòrning"
+                    }
+                ],
+                "hint_native": "orario comodo"
+            },
+            "frame_native": "___ va bene.",
+            "frame_target": "___ works.",
+            "pronunciation_native": "___ uorks"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "ask",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Il motivo della visita",
+                        "text_target": "The reason for the visit"
+                    },
+                    {
+                        "text_native": "L'indirizzo del paziente",
+                        "text_target": "The patient's address"
+                    },
+                    {
+                        "text_native": "Il nome del medico",
+                        "text_target": "The doctor's name"
+                    }
+                ],
+                "text_native": "Che cosa chiede l'addetta?",
+                "text_target": "What does the receptionist ask about?",
+                "explanation_native": "L'addetta chiede quale sia il problema, cioè perché il paziente vuole la visita.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "a doctor's appointment",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Ho bisogno di un appuntamento dal medico.",
+                    "text_target": "I need a doctor's appointment.",
+                    "speaking_key": "I need",
+                    "simplified_variants": [
+                        "I need an appointment."
+                    ],
+                    "pronunciation_native": "ai niid a dottorz appòintment"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "Certo. Mi dica il problema.",
+                    "text_target": "Of course. Please tell me the problem."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Una breve descrizione dei sintomi",
+                        "text_target": "A short description of the symptoms"
+                    },
+                    {
+                        "text_native": "Un elenco di medicine",
+                        "text_target": "A list of medicines"
+                    },
+                    {
+                        "text_native": "Il numero dell'assicurazione",
+                        "text_target": "The insurance number"
+                    }
+                ],
+                "text_native": "Che cosa vuole che dica il paziente?",
+                "text_target": "What does the receptionist want the patient to give?",
+                "explanation_native": "L'addetta chiede di dire i sintomi in modo breve.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "Può dirmi brevemente i sintomi?",
+                    "text_target": "Can you tell me your symptoms briefly?"
+                },
+                {
+                    "filler": "a sore throat and fever",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Ho mal di gola e la febbre.",
+                    "text_target": "I have a sore throat and fever.",
+                    "speaking_key": "have a",
+                    "simplified_variants": [
+                        "I have a fever.",
+                        "I have a sore throat."
+                    ],
+                    "pronunciation_native": "ai hav a sor thròut end fìiver"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Da quanto durano i sintomi",
+                        "text_target": "How long the symptoms have lasted"
+                    },
+                    {
+                        "text_native": "Quanto durerà la visita",
+                        "text_target": "How long the visit will take"
+                    },
+                    {
+                        "text_native": "Da quanto il paziente aspetta fuori",
+                        "text_target": "How long the patient waited outside"
+                    }
+                ],
+                "text_native": "Su quale periodo di tempo chiede l'addetta?",
+                "text_target": "What time period does the receptionist ask about?",
+                "explanation_native": "La domanda riguarda la durata dei sintomi.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "Da quanto tempo ha questi sintomi?",
+                    "text_target": "How long have you had these symptoms?"
+                },
+                {
+                    "filler": "for three days",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Li ho da tre giorni.",
+                    "text_target": "I have had them for three days.",
+                    "speaking_key": "had them for",
+                    "simplified_variants": [
+                        "For three days."
+                    ],
+                    "pronunciation_native": "ai hav hed dem for thrii deiz"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Stamattina alle dieci oppure domani pomeriggio alle tre",
+                        "text_target": "This morning at ten or tomorrow afternoon at three"
+                    },
+                    {
+                        "text_native": "Oggi a mezzogiorno oppure domani alle cinque",
+                        "text_target": "Today at noon or tomorrow at five"
+                    },
+                    {
+                        "text_native": "Domani mattina alle dieci oppure venerdì alle tre",
+                        "text_target": "Tomorrow morning at ten or Friday at three"
+                    }
+                ],
+                "text_native": "Quali due opzioni di appuntamento offre l'addetta?",
+                "text_target": "Which two appointment options does the receptionist offer?",
+                "explanation_native": "Le due possibilità sono oggi alle 10 e domani alle 15.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "available times",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Che orari disponibili avete?",
+                    "text_target": "What available times do you have?",
+                    "speaking_key": "available times do",
+                    "simplified_variants": [
+                        "What times do you have?"
+                    ],
+                    "pronunciation_native": "uòt avèilabol taimz du iu hav"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "Abbiamo le 10 di oggi o le 3 di domani.",
+                    "text_target": "We have 10 a.m. today or 3 p.m. tomorrow."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "È già stato preso",
+                        "text_target": "It has already been taken"
+                    },
+                    {
+                        "text_native": "È ancora disponibile",
+                        "text_target": "It is still available"
+                    },
+                    {
+                        "text_native": "È solo per le urgenze",
+                        "text_target": "It is only for emergencies"
+                    }
+                ],
+                "text_native": "Che cosa dice l'addetta su quell'orario?",
+                "text_target": "What does the receptionist say about that time?",
+                "explanation_native": "L'addetta conferma che quell'orario è ancora libero.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "3 p.m. tomorrow",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Posso prendere le 3 di domani?",
+                    "text_target": "Can I take 3 p.m. tomorrow?",
+                    "speaking_key": "Can I take",
+                    "simplified_variants": [
+                        "Is 3 p.m. tomorrow okay?"
+                    ],
+                    "pronunciation_native": "ken ai teik thrii pii em tomòrou"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "Sì, quell'orario è ancora libero.",
+                    "text_target": "Yes, that slot is still free."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Un quarto d'ora prima",
+                        "text_target": "A quarter of an hour before"
+                    },
+                    {
+                        "text_native": "Dieci minuti prima della visita",
+                        "text_target": "Ten minutes before the visit"
+                    },
+                    {
+                        "text_native": "Esattamente all'ora dell'appuntamento",
+                        "text_target": "Right at the appointment time"
+                    }
+                ],
+                "text_native": "Con quanto anticipo deve arrivare il paziente?",
+                "text_target": "How early should the patient come?",
+                "explanation_native": "L'addetta chiede di arrivare dieci minuti prima.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "Per favore, arrivi dieci minuti prima per la registrazione.",
+                    "text_target": "Please arrive ten minutes early for registration."
+                },
+                {
+                    "filler": "ten minutes early",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Arriverò dieci minuti prima.",
+                    "text_target": "I'll arrive ten minutes early.",
+                    "speaking_key": "I'll arrive",
+                    "simplified_variants": [
+                        "I can arrive early."
+                    ],
+                    "pronunciation_native": "ail aràiv ten mìnits èrli"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "rescue",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Prima che apra la clinica",
+                        "text_target": "Before the clinic opens"
+                    },
+                    {
+                        "text_native": "Prima della pausa pranzo del medico",
+                        "text_target": "Before the doctor's lunch break"
+                    },
+                    {
+                        "text_native": "Prima della visita fissata",
+                        "text_target": "Before the scheduled visit"
+                    }
+                ],
+                "text_native": "Prima di che cosa deve arrivare in anticipo il paziente?",
+                "text_target": "Before what should the patient arrive early?",
+                "explanation_native": "La ripetizione chiarisce che deve arrivare prima dell'appuntamento.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": null,
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Può ripeterlo, per favore?",
+                    "text_target": "Could you repeat that, please?",
+                    "speaking_key": "repeat that",
+                    "simplified_variants": [
+                        "Please repeat that."
+                    ],
+                    "pronunciation_native": "kud iu ripìit det pliiz"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "Per favore, venga dieci minuti prima del suo appuntamento.",
+                    "text_target": "Please come ten minutes before your appointment."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Domani pomeriggio alle tre",
+                        "text_target": "Tomorrow afternoon at three"
+                    },
+                    {
+                        "text_native": "Oggi mattina alle dieci",
+                        "text_target": "Today morning at ten"
+                    },
+                    {
+                        "text_native": "Dopodomani alle tre",
+                        "text_target": "The day after tomorrow at three"
+                    }
+                ],
+                "text_native": "Per quando viene confermato l'appuntamento?",
+                "text_target": "When is the appointment confirmed for?",
+                "explanation_native": "L'appuntamento è confermato per domani alle 15.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Addetto alla reception",
+                    "role_target": "Receptionist",
+                    "text_native": "È prenotato per domani alle 3.",
+                    "text_target": "You're booked for tomorrow at 3 p.m."
+                },
+                {
+                    "filler": "tomorrow at 3 p.m.",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Paziente",
+                    "role_target": "Patient",
+                    "text_native": "Va bene, domani alle 3 va bene.",
+                    "text_target": "Okay, tomorrow at 3 p.m. works.",
+                    "speaking_key": "works",
+                    "simplified_variants": [
+                        "Okay, that's fine.",
+                        "Tomorrow at 3 p.m. is fine."
+                    ],
+                    "pronunciation_native": "okèi, tomòrou at thrii pii em uorks"
+                }
+            ],
+            "initiator": "A"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Perché il paziente vuole vedere il medico?",
+                "options_native": [
+                    "Ha mal di gola e la febbre",
+                    "Ha male a una gamba",
+                    "Deve ritirare una ricetta"
+                ],
+                "explanation_native": "Il paziente dice di avere mal di gola e febbre.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Da quanto tempo il paziente ha questi sintomi?",
+                "options_native": [
+                    "Da ieri",
+                    "Da tre giorni",
+                    "Da una settimana"
+                ],
+                "explanation_native": "Il paziente dice che i sintomi durano da tre giorni.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Quale orario sceglie il paziente?",
+                "options_native": [
+                    "Oggi alle 10",
+                    "Domani alle 3",
+                    "Venerdì mattina"
+                ],
+                "explanation_native": "Il paziente sceglie l'appuntamento di domani alle 15.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Con quanto anticipo deve arrivare il paziente?",
+                "options_native": [
+                    "Dieci minuti prima",
+                    "Mezz'ora prima",
+                    "All'ora esatta"
+                ],
+                "explanation_native": "L'addetta dice di arrivare dieci minuti prima.",
+                "correct_option_index": 0
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p1"
+            ],
+            "term_target": "appointment",
+            "image_prompt": "appointment card on a clinic reception desk",
+            "definition_target": "a planned time to see someone, especially a doctor",
+            "translation_native": "appuntamento",
+            "pronunciation_native": "appòintment"
+        },
+        {
+            "id": "v2",
+            "kind": "chunk",
+            "used_in": [
+                "p2"
+            ],
+            "term_target": "sore throat",
+            "image_prompt": "person touching their throat in a clinic waiting room",
+            "definition_target": "pain or irritation in the throat",
+            "translation_native": "mal di gola",
+            "pronunciation_native": "sor thròut"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "p2"
+            ],
+            "term_target": "fever",
+            "image_prompt": "digital thermometer on a bedside table",
+            "definition_target": "a body temperature that is higher than normal",
+            "translation_native": "febbre",
+            "pronunciation_native": "fìiver"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "A2",
+                "A3"
+            ],
+            "term_target": "symptoms",
+            "image_prompt": null,
+            "definition_target": "signs that show you are ill",
+            "translation_native": "sintomi",
+            "pronunciation_native": "sìmptoms"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "p4"
+            ],
+            "term_target": "available",
+            "image_prompt": null,
+            "definition_target": "free to use or choose",
+            "translation_native": "disponibile",
+            "pronunciation_native": "avèilabol"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "A5"
+            ],
+            "term_target": "slot",
+            "image_prompt": "appointment schedule on a computer screen at reception",
+            "definition_target": "an available time for an appointment",
+            "translation_native": "orario disponibile",
+            "pronunciation_native": "slot"
+        },
+        {
+            "id": "v7",
+            "kind": "word",
+            "used_in": [
+                "A6"
+            ],
+            "term_target": "registration",
+            "image_prompt": "patient filling out a form at clinic reception",
+            "definition_target": "the process of giving your details before a visit",
+            "translation_native": "registrazione",
+            "pronunciation_native": "redgistrèishon"
+        },
+        {
+            "id": "v8",
+            "kind": "chunk",
+            "used_in": [
+                "p6"
+            ],
+            "term_target": "arrive early",
+            "image_prompt": "wall clock and patient walking into a clinic early",
+            "definition_target": "to come before the planned time",
+            "translation_native": "arrivare prima",
+            "pronunciation_native": "aràiv èrli"
+        }
+    ],
+    "role_gender": "female",
+    "learner_role": {
+        "role_native": "Paziente",
+        "role_target": "Patient"
+    }
+}

@@ -1,0 +1,2822 @@
+{
+    "generated_at": "2026-09-25T21:09:35+00:00",
+    "packs_now": false,
+    "packs": [
+        "en",
+        "ro",
+        "ru",
+        "uk"
+    ],
+    "pairs": {
+        "ru-pl": {
+            "native": "ru",
+            "target": "pl",
+            "status": "failed",
+            "fail_reason": "fatal: pronunciation.foreign_script, options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 8,
+                "warnings": 8,
+                "codes": {
+                    "pronunciation.foreign_script": 6,
+                    "pronunciation.script": 6,
+                    "options.form_mismatch": 2,
+                    "listening.distractor_not_filler": 1,
+                    "vocab.used_in_wrong": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 17,
+                "native_code": "ru",
+                "target_code": "pl",
+                "skips": [
+                    {
+                        "code": "exchange.second_question",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "unresolved_pronouns",
+                            "function_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.ungrammatical",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends",
+                            "articles",
+                            "article_sound",
+                            "clause",
+                            "seam_repeatable_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.is_clause",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "clause"
+                        ]
+                    },
+                    {
+                        "code": "filler.article_seam",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "article_sound"
+                        ]
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "rescue.new_fact",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "partner.two_questions",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends",
+                            "second_question_pattern"
+                        ]
+                    },
+                    {
+                        "code": "partner.too_long",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "partner.closer",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "closers"
+                        ]
+                    },
+                    {
+                        "code": "check.verbatim",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "saying_verbs",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "check.listed_alternative_as_wrong",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "alternative_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.free_combination",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "ordinary_heads",
+                            "everyday_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.everyday_word",
+                        "side": "target",
+                        "language": "pl",
+                        "keys": [
+                            "everyday_words"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "p1",
+                    "kind": "frame",
+                    "codes": [
+                        "pronunciation.foreign_script",
+                        "pronunciation.script"
+                    ],
+                    "cost_usd": "0.013738"
+                },
+                {
+                    "address": "p3",
+                    "kind": "frame",
+                    "codes": [
+                        "pronunciation.foreign_script",
+                        "pronunciation.script"
+                    ],
+                    "cost_usd": "0.008302"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 12,
+                "codes": {
+                    "pronunciation.foreign_script": 4,
+                    "pronunciation.script": 4,
+                    "options.form_mismatch": 2,
+                    "listening.distractor_not_filler": 1,
+                    "vocab.used_in_wrong": 1
+                }
+            },
+            "usd": {
+                "plan": 0.017883,
+                "lesson": 0.105178,
+                "repair": 0.02204,
+                "judge": 0.0,
+                "day": 0.127218,
+                "all": 0.145101,
+                "cost_usd_lesson_stored": "0.127218"
+            },
+            "tokens_day": {
+                "in": 17901,
+                "cached": 2816,
+                "cached_share": 0.157
+            },
+            "seconds": {
+                "plan": 10.3,
+                "day": 52.6
+            },
+            "packs_now": null
+        },
+        "ru-ro": {
+            "native": "ru",
+            "target": "ro",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 4,
+                "warnings": 8,
+                "codes": {
+                    "vocab.used_in_wrong": 4,
+                    "filler.ungrammatical": 2,
+                    "variant.longer": 2,
+                    "frame.native_agreement": 1,
+                    "filler.one_in_dialogue": 1,
+                    "line.ne_frame": 1,
+                    "options.form_mismatch": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 17,
+                "native_code": "ru",
+                "target_code": "ro",
+                "skips": [
+                    {
+                        "code": "exchange.second_question",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "unresolved_pronouns",
+                            "function_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.ungrammatical",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends",
+                            "articles",
+                            "article_sound",
+                            "clause",
+                            "seam_repeatable_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.is_clause",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "clause"
+                        ]
+                    },
+                    {
+                        "code": "filler.article_seam",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "article_sound"
+                        ]
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "rescue.new_fact",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "partner.two_questions",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends",
+                            "second_question_pattern"
+                        ]
+                    },
+                    {
+                        "code": "partner.too_long",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "partner.closer",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "closers"
+                        ]
+                    },
+                    {
+                        "code": "check.verbatim",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "saying_verbs",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "check.listed_alternative_as_wrong",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "alternative_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.free_combination",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "ordinary_heads",
+                            "everyday_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.everyday_word",
+                        "side": "target",
+                        "language": "ro",
+                        "keys": [
+                            "everyday_words"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": true,
+                "sentences": 14,
+                "verdicts": 14,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "p5",
+                    "kind": "frame",
+                    "codes": [
+                        "filler.ungrammatical",
+                        "filler.one_in_dialogue"
+                    ],
+                    "cost_usd": "0.007252"
+                },
+                {
+                    "address": "x8.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.008893"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 7,
+                "codes": {
+                    "vocab.used_in_wrong": 4,
+                    "variant.longer": 2,
+                    "frame.native_agreement": 1
+                }
+            },
+            "usd": {
+                "plan": 0.012087,
+                "lesson": 0.084439,
+                "repair": 0.016145,
+                "judge": 0.001549,
+                "day": 0.102133,
+                "all": 0.11422,
+                "cost_usd_lesson_stored": "0.102133"
+            },
+            "tokens_day": {
+                "in": 17013,
+                "cached": 10752,
+                "cached_share": 0.632
+            },
+            "seconds": {
+                "plan": 9.7,
+                "day": 57.0
+            },
+            "packs_now": null
+        },
+        "ru-es": {
+            "native": "ru",
+            "target": "es",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 2,
+                "warnings": 1,
+                "codes": {
+                    "options.form_mismatch": 2,
+                    "listening.same_exchange": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 17,
+                "native_code": "ru",
+                "target_code": "es",
+                "skips": [
+                    {
+                        "code": "exchange.second_question",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "unresolved_pronouns",
+                            "function_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.ungrammatical",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends",
+                            "articles",
+                            "article_sound",
+                            "clause",
+                            "seam_repeatable_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.is_clause",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "clause"
+                        ]
+                    },
+                    {
+                        "code": "filler.article_seam",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "article_sound"
+                        ]
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "rescue.new_fact",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "partner.two_questions",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends",
+                            "second_question_pattern"
+                        ]
+                    },
+                    {
+                        "code": "partner.too_long",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "partner.closer",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "closers"
+                        ]
+                    },
+                    {
+                        "code": "check.verbatim",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "saying_verbs",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "check.listed_alternative_as_wrong",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "alternative_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.free_combination",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "ordinary_heads",
+                            "everyday_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.everyday_word",
+                        "side": "target",
+                        "language": "es",
+                        "keys": [
+                            "everyday_words"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": true,
+                "sentences": 15,
+                "verdicts": 15,
+                "no": [
+                    "p1.f1",
+                    "p1.f2"
+                ]
+            },
+            "repairs": [
+                {
+                    "address": "x6.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.008905"
+                },
+                {
+                    "address": "x7.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009160"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 3,
+                "codes": {
+                    "filler.native_seam": 2,
+                    "listening.same_exchange": 1
+                }
+            },
+            "usd": {
+                "plan": 0.011876,
+                "lesson": 0.084427,
+                "repair": 0.018065,
+                "judge": 0.00163,
+                "day": 0.104122,
+                "all": 0.115998,
+                "cost_usd_lesson_stored": "0.104122"
+            },
+            "tokens_day": {
+                "in": 15278,
+                "cached": 7936,
+                "cached_share": 0.519
+            },
+            "seconds": {
+                "plan": 9.5,
+                "day": 50.4
+            },
+            "packs_now": null
+        },
+        "ru-it": {
+            "native": "ru",
+            "target": "it",
+            "status": "failed",
+            "fail_reason": "fatal: options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 5,
+                "warnings": 14,
+                "codes": {
+                    "vocab.used_in_wrong": 6,
+                    "frame.no_end_punct": 5,
+                    "filler.ungrammatical": 2,
+                    "options.form_mismatch": 2,
+                    "frame.native_agreement": 1,
+                    "filler.one_in_dialogue": 1,
+                    "line.ne_frame": 1,
+                    "variant.longer": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 17,
+                "native_code": "ru",
+                "target_code": "it",
+                "skips": [
+                    {
+                        "code": "exchange.second_question",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "unresolved_pronouns",
+                            "function_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.ungrammatical",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends",
+                            "articles",
+                            "article_sound",
+                            "clause",
+                            "seam_repeatable_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.is_clause",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "clause"
+                        ]
+                    },
+                    {
+                        "code": "filler.article_seam",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "article_sound"
+                        ]
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "rescue.new_fact",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "partner.two_questions",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends",
+                            "second_question_pattern"
+                        ]
+                    },
+                    {
+                        "code": "partner.too_long",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "partner.closer",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "closers"
+                        ]
+                    },
+                    {
+                        "code": "check.verbatim",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "saying_verbs",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "check.listed_alternative_as_wrong",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "alternative_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.free_combination",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "ordinary_heads",
+                            "everyday_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.everyday_word",
+                        "side": "target",
+                        "language": "it",
+                        "keys": [
+                            "everyday_words"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "p3",
+                    "kind": "frame",
+                    "codes": [
+                        "frame.no_end_punct",
+                        "filler.ungrammatical",
+                        "filler.one_in_dialogue"
+                    ],
+                    "cost_usd": "0.007152"
+                },
+                {
+                    "address": "B3",
+                    "kind": "line",
+                    "codes": [
+                        "line.ne_frame",
+                        "variant.longer"
+                    ],
+                    "cost_usd": "0.012518"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 13,
+                "codes": {
+                    "vocab.used_in_wrong": 6,
+                    "frame.no_end_punct": 4,
+                    "options.form_mismatch": 2,
+                    "frame.native_agreement": 1
+                }
+            },
+            "usd": {
+                "plan": 0.011876,
+                "lesson": 0.058946,
+                "repair": 0.01967,
+                "judge": 0.0,
+                "day": 0.078616,
+                "all": 0.090492,
+                "cost_usd_lesson_stored": "0.078616"
+            },
+            "tokens_day": {
+                "in": 17597,
+                "cached": 10752,
+                "cached_share": 0.611
+            },
+            "seconds": {
+                "plan": 8.9,
+                "day": 42.0
+            },
+            "packs_now": null
+        },
+        "ru-de": {
+            "native": "ru",
+            "target": "de",
+            "status": "failed",
+            "fail_reason": "fatal: options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 3,
+                "warnings": 4,
+                "codes": {
+                    "options.form_mismatch": 3,
+                    "frame.native_agreement": 2,
+                    "variant.longer": 1,
+                    "vocab.used_in_wrong": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 17,
+                "native_code": "ru",
+                "target_code": "de",
+                "skips": [
+                    {
+                        "code": "exchange.second_question",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "unresolved_pronouns",
+                            "function_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.ungrammatical",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends",
+                            "articles",
+                            "article_sound",
+                            "clause",
+                            "seam_repeatable_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.is_clause",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "clause"
+                        ]
+                    },
+                    {
+                        "code": "filler.article_seam",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "article_sound"
+                        ]
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "rescue.new_fact",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "partner.two_questions",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends",
+                            "second_question_pattern"
+                        ]
+                    },
+                    {
+                        "code": "partner.too_long",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "partner.closer",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "closers"
+                        ]
+                    },
+                    {
+                        "code": "check.verbatim",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "saying_verbs",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "check.listed_alternative_as_wrong",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "alternative_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.free_combination",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "ordinary_heads",
+                            "everyday_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.everyday_word",
+                        "side": "target",
+                        "language": "de",
+                        "keys": [
+                            "everyday_words"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x5.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009425"
+                },
+                {
+                    "address": "x7.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.008983"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 6,
+                "codes": {
+                    "frame.native_agreement": 2,
+                    "options.form_mismatch": 2,
+                    "variant.longer": 1,
+                    "vocab.used_in_wrong": 1
+                }
+            },
+            "usd": {
+                "plan": 0.012251,
+                "lesson": 0.061466,
+                "repair": 0.018408,
+                "judge": 0.0,
+                "day": 0.079874,
+                "all": 0.092125,
+                "cost_usd_lesson_stored": "0.079874"
+            },
+            "tokens_day": {
+                "in": 14360,
+                "cached": 7936,
+                "cached_share": 0.553
+            },
+            "seconds": {
+                "plan": 9.0,
+                "day": 43.1
+            },
+            "packs_now": null
+        },
+        "ru-fr": {
+            "native": "ru",
+            "target": "fr",
+            "status": "failed",
+            "fail_reason": "fatal: pronunciation.foreign_script",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 3,
+                "warnings": 16,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "vocab.used_in_wrong": 3,
+                    "options.form_mismatch": 2,
+                    "native.gendered_past": 2,
+                    "pronunciation.foreign_script": 1,
+                    "pronunciation.script": 1,
+                    "frame.native_alternatives": 1,
+                    "frame.native_agreement": 1,
+                    "variant.longer": 1,
+                    "vocab.learner_share": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 17,
+                "native_code": "ru",
+                "target_code": "fr",
+                "skips": [
+                    {
+                        "code": "exchange.second_question",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "unresolved_pronouns",
+                            "function_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.ungrammatical",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends",
+                            "articles",
+                            "article_sound",
+                            "clause",
+                            "seam_repeatable_words"
+                        ]
+                    },
+                    {
+                        "code": "filler.is_clause",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "clause"
+                        ]
+                    },
+                    {
+                        "code": "filler.article_seam",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "article_sound"
+                        ]
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "rescue.new_fact",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "partner.two_questions",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends",
+                            "second_question_pattern"
+                        ]
+                    },
+                    {
+                        "code": "partner.too_long",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "partner.closer",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "closers"
+                        ]
+                    },
+                    {
+                        "code": "check.verbatim",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "saying_verbs",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "check.listed_alternative_as_wrong",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "alternative_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.free_combination",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "ordinary_heads",
+                            "everyday_words",
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "vocab.everyday_word",
+                        "side": "target",
+                        "language": "fr",
+                        "keys": [
+                            "everyday_words"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x4.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009040"
+                },
+                {
+                    "address": "x6.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009153"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 17,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "vocab.used_in_wrong": 3,
+                    "native.gendered_past": 2,
+                    "pronunciation.foreign_script": 1,
+                    "pronunciation.script": 1,
+                    "frame.native_alternatives": 1,
+                    "frame.native_agreement": 1,
+                    "variant.longer": 1,
+                    "vocab.learner_share": 1
+                }
+            },
+            "usd": {
+                "plan": 0.011577,
+                "lesson": 0.061371,
+                "repair": 0.018193,
+                "judge": 0.0,
+                "day": 0.079564,
+                "all": 0.091141,
+                "cost_usd_lesson_stored": "0.079564"
+            },
+            "tokens_day": {
+                "in": 14218,
+                "cached": 7936,
+                "cached_share": 0.558
+            },
+            "seconds": {
+                "plan": 7.8,
+                "day": 43.3
+            },
+            "packs_now": null
+        },
+        "uk-en": {
+            "native": "uk",
+            "target": "en",
+            "status": "failed",
+            "fail_reason": "fatal: options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 3,
+                "warnings": 4,
+                "codes": {
+                    "options.form_mismatch": 2,
+                    "vocab.used_in_wrong": 2,
+                    "exchange.second_question": 1,
+                    "variant.longer": 1,
+                    "vocab.abbreviation": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "uk",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "uk",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.021598"
+                },
+                {
+                    "address": "x4.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009818"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 6,
+                "codes": {
+                    "options.form_mismatch": 2,
+                    "vocab.used_in_wrong": 2,
+                    "variant.longer": 1,
+                    "vocab.abbreviation": 1
+                }
+            },
+            "usd": {
+                "plan": 0.012159,
+                "lesson": 0.066279,
+                "repair": 0.031416,
+                "judge": 0.0,
+                "day": 0.097695,
+                "all": 0.109854,
+                "cost_usd_lesson_stored": "0.097695"
+            },
+            "tokens_day": {
+                "in": 18062,
+                "cached": 7936,
+                "cached_share": 0.439
+            },
+            "seconds": {
+                "plan": 10.4,
+                "day": 49.4
+            },
+            "packs_now": null
+        },
+        "be-en": {
+            "native": "be",
+            "target": "en",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 2,
+                "warnings": 10,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "check.verbatim": 2,
+                    "exchange.second_question": 1,
+                    "options.form_mismatch": 1,
+                    "vocab.everyday_word": 1,
+                    "vocab.used_in_wrong": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "be",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "be",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": true,
+                "sentences": 16,
+                "verdicts": 16,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.014552"
+                },
+                {
+                    "address": "x4.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009133"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 10,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "check.verbatim": 2,
+                    "vocab.everyday_word": 1,
+                    "vocab.used_in_wrong": 1
+                }
+            },
+            "usd": {
+                "plan": 0.012296,
+                "lesson": 0.065187,
+                "repair": 0.023685,
+                "judge": 0.001765,
+                "day": 0.090637,
+                "all": 0.102933,
+                "cost_usd_lesson_stored": "0.090637"
+            },
+            "tokens_day": {
+                "in": 19018,
+                "cached": 10752,
+                "cached_share": 0.565
+            },
+            "seconds": {
+                "plan": 10.7,
+                "day": 60.5
+            },
+            "packs_now": null
+        },
+        "pl-en": {
+            "native": "pl",
+            "target": "en",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 2,
+                "warnings": 11,
+                "codes": {
+                    "frame.no_end_punct": 8,
+                    "vocab.used_in_wrong": 2,
+                    "exchange.second_question": 1,
+                    "options.form_mismatch": 1,
+                    "vocab.abbreviation": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "pl",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "pl",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": true,
+                "sentences": 17,
+                "verdicts": 17,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.014201"
+                },
+                {
+                    "address": "x7.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009415"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 11,
+                "codes": {
+                    "frame.no_end_punct": 8,
+                    "vocab.used_in_wrong": 2,
+                    "vocab.abbreviation": 1
+                }
+            },
+            "usd": {
+                "plan": 0.012336,
+                "lesson": 0.089064,
+                "repair": 0.023616,
+                "judge": 0.001803,
+                "day": 0.114483,
+                "all": 0.126819,
+                "cost_usd_lesson_stored": "0.114483"
+            },
+            "tokens_day": {
+                "in": 19077,
+                "cached": 10752,
+                "cached_share": 0.564
+            },
+            "seconds": {
+                "plan": 10.6,
+                "day": 55.8
+            },
+            "packs_now": null
+        },
+        "ro-en": {
+            "native": "ro",
+            "target": "en",
+            "status": "failed",
+            "fail_reason": "fatal: options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 5,
+                "warnings": 13,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "filler.ungrammatical": 2,
+                    "vocab.used_in_wrong": 2,
+                    "exchange.second_question": 1,
+                    "frame.unresolved_pronoun": 1,
+                    "filler.one_in_dialogue": 1,
+                    "variant.longer": 1,
+                    "line.ne_frame": 1,
+                    "check.verbatim": 1,
+                    "options.form_mismatch": 1,
+                    "vocab.everyday_word": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "ro",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "ro",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "p7",
+                    "kind": "frame",
+                    "codes": [
+                        "frame.no_end_punct",
+                        "filler.ungrammatical",
+                        "filler.one_in_dialogue"
+                    ],
+                    "cost_usd": "0.007557"
+                },
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.020375"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 13,
+                "codes": {
+                    "frame.no_end_punct": 5,
+                    "check.verbatim": 2,
+                    "vocab.used_in_wrong": 2,
+                    "frame.unresolved_pronoun": 1,
+                    "variant.longer": 1,
+                    "options.form_mismatch": 1,
+                    "vocab.everyday_word": 1
+                }
+            },
+            "usd": {
+                "plan": 0.011974,
+                "lesson": 0.061842,
+                "repair": 0.027932,
+                "judge": 0.0,
+                "day": 0.089774,
+                "all": 0.101748,
+                "cost_usd_lesson_stored": "0.089774"
+            },
+            "tokens_day": {
+                "in": 19648,
+                "cached": 10752,
+                "cached_share": 0.547
+            },
+            "seconds": {
+                "plan": 10.2,
+                "day": 42.7
+            },
+            "packs_now": null
+        },
+        "es-en": {
+            "native": "es",
+            "target": "en",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 1,
+                "warnings": 12,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "vocab.used_in_wrong": 2,
+                    "exchange.second_question": 1,
+                    "frame.unresolved_pronoun": 1,
+                    "variant.longer": 1,
+                    "vocab.free_combination": 1,
+                    "vocab.everyday_word": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "es",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "es",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": true,
+                "sentences": 17,
+                "verdicts": 17,
+                "no": [
+                    "p3.f2",
+                    "p4.f1",
+                    "p5.f1",
+                    "p5.f2"
+                ]
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.013589"
+                },
+                {
+                    "address": "x1.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.008985"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 17,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "filler.native_seam": 4,
+                    "vocab.used_in_wrong": 2,
+                    "frame.unresolved_pronoun": 1,
+                    "variant.longer": 1,
+                    "partner.closer": 1,
+                    "vocab.free_combination": 1,
+                    "vocab.everyday_word": 1
+                }
+            },
+            "usd": {
+                "plan": 0.011489,
+                "lesson": 0.059141,
+                "repair": 0.022574,
+                "judge": 0.001772,
+                "day": 0.083487,
+                "all": 0.094976,
+                "cost_usd_lesson_stored": "0.083487"
+            },
+            "tokens_day": {
+                "in": 18877,
+                "cached": 10752,
+                "cached_share": 0.57
+            },
+            "seconds": {
+                "plan": 8.6,
+                "day": 47.8
+            },
+            "packs_now": null
+        },
+        "it-en": {
+            "native": "it",
+            "target": "en",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 1,
+                "warnings": 6,
+                "codes": {
+                    "check.verbatim": 2,
+                    "exchange.second_question": 1,
+                    "learner.restates_partner": 1,
+                    "rescue.new_fact": 1,
+                    "check.about_learner": 1,
+                    "vocab.used_in_wrong": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "it",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "it",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": true,
+                "sentences": 15,
+                "verdicts": 15,
+                "no": [
+                    "p4.f1",
+                    "p4.f2"
+                ]
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.013884"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 8,
+                "codes": {
+                    "check.verbatim": 2,
+                    "filler.native_seam": 2,
+                    "learner.restates_partner": 1,
+                    "rescue.new_fact": 1,
+                    "check.about_learner": 1,
+                    "vocab.used_in_wrong": 1
+                }
+            },
+            "usd": {
+                "plan": 0.012227,
+                "lesson": 0.086749,
+                "repair": 0.013884,
+                "judge": 0.001637,
+                "day": 0.10227,
+                "all": 0.114497,
+                "cost_usd_lesson_stored": "0.102270"
+            },
+            "tokens_day": {
+                "in": 15927,
+                "cached": 10752,
+                "cached_share": 0.675
+            },
+            "seconds": {
+                "plan": 10.2,
+                "day": 55.3
+            },
+            "packs_now": null
+        },
+        "de-en": {
+            "native": "de",
+            "target": "en",
+            "status": "failed",
+            "fail_reason": "fatal: options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 2,
+                "warnings": 3,
+                "codes": {
+                    "exchange.second_question": 1,
+                    "frame.unresolved_pronoun": 1,
+                    "check.verbatim": 1,
+                    "options.form_mismatch": 1,
+                    "vocab.used_in_wrong": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "de",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "de",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.013814"
+                },
+                {
+                    "address": "x8.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009148"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 4,
+                "codes": {
+                    "frame.unresolved_pronoun": 1,
+                    "check.verbatim": 1,
+                    "options.form_mismatch": 1,
+                    "vocab.used_in_wrong": 1
+                }
+            },
+            "usd": {
+                "plan": 0.011457,
+                "lesson": 0.086557,
+                "repair": 0.022962,
+                "judge": 0.0,
+                "day": 0.109519,
+                "all": 0.120976,
+                "cost_usd_lesson_stored": "0.109519"
+            },
+            "tokens_day": {
+                "in": 17778,
+                "cached": 10752,
+                "cached_share": 0.605
+            },
+            "seconds": {
+                "plan": 9.5,
+                "day": 57.0
+            },
+            "packs_now": null
+        },
+        "fr-en": {
+            "native": "fr",
+            "target": "en",
+            "status": "failed",
+            "fail_reason": "fatal: options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.7",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 4,
+                "warnings": 1,
+                "codes": {
+                    "options.form_mismatch": 3,
+                    "exchange.second_question": 1,
+                    "frame.unresolved_pronoun": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 9,
+                "target": 0,
+                "native_code": "fr",
+                "target_code": "en",
+                "skips": [
+                    {
+                        "code": "pronunciation.script",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "script"
+                        ]
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "script_letters"
+                        ]
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_punct",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "sentence_ends"
+                        ]
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "agreement"
+                        ]
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.no_learner_value",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "function_words",
+                            "word_forms"
+                        ]
+                    },
+                    {
+                        "code": "listening.distractor_not_filler",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "function_words",
+                            "word_forms",
+                            "number_pattern",
+                            "time_pattern"
+                        ]
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "side": "native",
+                        "language": "fr",
+                        "keys": [
+                            "gendered_past_pattern"
+                        ]
+                    }
+                ]
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.014067"
+                },
+                {
+                    "address": "x4.check",
+                    "kind": "check",
+                    "codes": [
+                        "options.form_mismatch"
+                    ],
+                    "cost_usd": "0.009360"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 4,
+                "codes": {
+                    "options.form_mismatch": 3,
+                    "frame.unresolved_pronoun": 1
+                }
+            },
+            "usd": {
+                "plan": 0.012092,
+                "lesson": 0.087587,
+                "repair": 0.023427,
+                "judge": 0.0,
+                "day": 0.111014,
+                "all": 0.123106,
+                "cost_usd_lesson_stored": "0.111014"
+            },
+            "tokens_day": {
+                "in": 17836,
+                "cached": 10752,
+                "cached_share": 0.603
+            },
+            "seconds": {
+                "plan": 10.5,
+                "day": 55.6
+            },
+            "packs_now": null
+        }
+    },
+    "totals": {
+        "pairs": 14,
+        "ready": 6,
+        "failed": 8,
+        "other": 0,
+        "errors": 0,
+        "raw_fatal": 45,
+        "raw_warnings": 111,
+        "pack_missing_native": 72,
+        "pack_missing_target": 102,
+        "pack_missing_unknown": 0,
+        "judge_no": 8,
+        "judge_all": 94,
+        "repairs": 27,
+        "plan_usd": 0.17358,
+        "day_usd": 1.370406,
+        "all_usd": 1.543986,
+        "plan_s": 135.9,
+        "day_s": 712.5,
+        "now_fatal": 0,
+        "now_warnings": 0,
+        "now_pack_missing_native": 0,
+        "now_pack_missing_target": 0
+    }
+}

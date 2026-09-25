@@ -1,0 +1,733 @@
+{
+    "topic": {
+        "title_native": "Запіс на прыём да лекара",
+        "title_target": "Booking a doctor's appointment",
+        "description_native": "Запішыцеся на прыём, коратка скажыце пра праблему, спытайце пра бліжэйшы час і выберыце зручны варыянт.",
+        "description_target": "Book an appointment, say the problem briefly, ask about the nearest time, and choose a suitable slot."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "прыём да лекара",
+                        "target": "a doctor's appointment",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э докторз эпойнтмэнт"
+                    },
+                    {
+                        "native": "агляд",
+                        "target": "a checkup",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э чэк-ап"
+                    }
+                ],
+                "hint_native": "на што запісацца"
+            },
+            "frame_native": "Я хачу запісацца на ___",
+            "frame_target": "I'd like to book ___",
+            "pronunciation_native": "айд лайк ту бук ___"
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "баліць горла",
+                        "target": "a sore throat",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э сор сроут"
+                    },
+                    {
+                        "native": "кашаль",
+                        "target": "a cough",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э коф"
+                    },
+                    {
+                        "native": "баліць галава",
+                        "target": "a headache",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э хэдэйк"
+                    }
+                ],
+                "hint_native": "сімптом"
+            },
+            "frame_native": "У мяне ___",
+            "frame_target": "I have ___",
+            "pronunciation_native": "ай хэв ___"
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "тры дні",
+                        "target": "three days",
+                        "in_dialogue": true,
+                        "pronunciation_native": "сры дэйз"
+                    },
+                    {
+                        "native": "два дні",
+                        "target": "two days",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ту дэйз"
+                    },
+                    {
+                        "native": "тыдзень",
+                        "target": "a week",
+                        "in_dialogue": false,
+                        "pronunciation_native": "э уік"
+                    }
+                ],
+                "hint_native": "колькі часу"
+            },
+            "frame_native": "Ужо ___",
+            "frame_target": "For ___",
+            "pronunciation_native": "фор ___"
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "ёсць тэмпература",
+                        "target": "a fever",
+                        "in_dialogue": true,
+                        "pronunciation_native": "э фівер"
+                    },
+                    {
+                        "native": "боль у вуху",
+                        "target": "ear pain",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ір пэйн"
+                    }
+                ],
+                "hint_native": "дадатковы сімптом"
+            },
+            "frame_native": "У мяне таксама ___",
+            "frame_target": "I also have ___",
+            "pronunciation_native": "ай олсоу хэв ___"
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "бліжэйшы вольны час",
+                        "target": "the nearest available time",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ нірыст эвэйлэбл тайм"
+                    },
+                    {
+                        "native": "самы ранні прыём",
+                        "target": "the earliest appointment",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ ёрліэст эпойнтмэнт"
+                    }
+                ],
+                "hint_native": "пра які час спытаць"
+            },
+            "frame_native": "Які ___?",
+            "frame_target": "What is ___?",
+            "pronunciation_native": "уот из ___"
+        },
+        {
+            "id": "p6",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "чацвёртая",
+                        "target": "four o'clock",
+                        "in_dialogue": true,
+                        "pronunciation_native": "фор эклок"
+                    },
+                    {
+                        "native": "дзявятая",
+                        "target": "nine o'clock",
+                        "in_dialogue": false,
+                        "pronunciation_native": "найн эклок"
+                    }
+                ],
+                "hint_native": "зручны час"
+            },
+            "frame_native": "Мне падыходзіць ___",
+            "frame_target": "___ works for me",
+            "pronunciation_native": "___ уоркс фор мі"
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "сёння а чацвёртай",
+                        "target": "today at four",
+                        "in_dialogue": true,
+                        "pronunciation_native": "тудэй эт фор"
+                    },
+                    {
+                        "native": "заўтра а дзявятай",
+                        "target": "tomorrow at nine",
+                        "in_dialogue": false,
+                        "pronunciation_native": "туморау эт найн"
+                    }
+                ],
+                "hint_native": "час прыёму"
+            },
+            "frame_native": "Калі ласка, запішыце мяне на ___",
+            "frame_target": "Please book me for ___",
+            "pronunciation_native": "пліз бук мі фор ___"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "ask",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Прычына візіту",
+                        "text_target": "The reason for the visit"
+                    },
+                    {
+                        "text_native": "Адрас пацыента",
+                        "text_target": "The patient's address"
+                    },
+                    {
+                        "text_native": "Прозвішча лекара",
+                        "text_target": "The doctor's surname"
+                    }
+                ],
+                "text_native": "Пра што пытаецца рэгістратар?",
+                "text_target": "What does the receptionist ask about?",
+                "explanation_native": "Рэгістратар просіць коратка сказаць, што здарылася.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "a doctor's appointment",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "Я хачу запісацца на прыём да лекара.",
+                    "text_target": "I'd like to book a doctor's appointment.",
+                    "speaking_key": "I'd like to book",
+                    "simplified_variants": [
+                        "I want to book an appointment.",
+                        "I'd like an appointment."
+                    ],
+                    "pronunciation_native": "айд лайк ту бук э докторз эпойнтмэнт"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "Вядома. Скажыце, калі ласка, у чым праблема.",
+                    "text_target": "Of course. Please tell me the problem."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Якія сімптомы ў пацыента",
+                        "text_target": "Which symptoms the patient has"
+                    },
+                    {
+                        "text_native": "Якія лекі прымае пацыент",
+                        "text_target": "Which medicine the patient takes"
+                    },
+                    {
+                        "text_native": "Да якога лекара пацыент хадзіў раней",
+                        "text_target": "Which doctor the patient saw before"
+                    }
+                ],
+                "text_native": "Што хоча даведацца рэгістратар?",
+                "text_target": "What does the receptionist want to know?",
+                "explanation_native": "Рэгістратар пытаецца менавіта пра сімптомы.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "Якія ў вас сімптомы?",
+                    "text_target": "What symptoms do you have?"
+                },
+                {
+                    "filler": "a sore throat",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "У мяне баліць горла.",
+                    "text_target": "I have a sore throat.",
+                    "speaking_key": "I have",
+                    "simplified_variants": [
+                        "My throat hurts.",
+                        "I have throat pain."
+                    ],
+                    "pronunciation_native": "ай хэв э сор сроут"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Колькі доўжыцца праблема",
+                        "text_target": "How long the problem has lasted"
+                    },
+                    {
+                        "text_native": "Колькі будзе доўжыцца прыём",
+                        "text_target": "How long the visit will take"
+                    },
+                    {
+                        "text_native": "Колькі пацыент чакаў на вуліцы",
+                        "text_target": "How long the patient waited outside"
+                    }
+                ],
+                "text_native": "Пра які перыяд часу пытаецца рэгістратар?",
+                "text_target": "What time period does the receptionist ask about?",
+                "explanation_native": "Пытанне пра тое, колькі часу ўжо ёсць гэтая праблема.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "Як даўно гэта ў вас?",
+                    "text_target": "How long have you had it?"
+                },
+                {
+                    "filler": "three days",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "Ужо тры дні.",
+                    "text_target": "For three days.",
+                    "speaking_key": "For",
+                    "simplified_variants": [
+                        "Three days now."
+                    ],
+                    "pronunciation_native": "фор сры дэйз"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Высокая тэмпература",
+                        "text_target": "A high temperature"
+                    },
+                    {
+                        "text_native": "Моцны кашаль",
+                        "text_target": "A strong cough"
+                    },
+                    {
+                        "text_native": "Боль у вуху",
+                        "text_target": "Ear pain"
+                    }
+                ],
+                "text_native": "Які дадатковы сімптом называе рэгістратар?",
+                "text_target": "What extra symptom does the receptionist mention?",
+                "explanation_native": "Рэгістратар удакладняе, ці ёсць тэмпература.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "У вас таксама ёсць тэмпература?",
+                    "text_target": "Do you also have a fever?"
+                },
+                {
+                    "filler": "a fever",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "Так, у мяне таксама ёсць тэмпература.",
+                    "text_target": "Yes, I also have a fever.",
+                    "speaking_key": "also have",
+                    "simplified_variants": [
+                        "Yes, I have a fever too.",
+                        "Yes, also a fever."
+                    ],
+                    "pronunciation_native": "йес, ай олсоу хэв э фівер"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Сёння пад вечар і заўтра раніцай",
+                        "text_target": "Today in the late afternoon and tomorrow morning"
+                    },
+                    {
+                        "text_native": "Сёння раніцай і заўтра апоўдні",
+                        "text_target": "Today in the morning and tomorrow at noon"
+                    },
+                    {
+                        "text_native": "Сёння ўвечары і паслязаўтра",
+                        "text_target": "This evening and the day after tomorrow"
+                    }
+                ],
+                "text_native": "Які час прапануе рэгістратар?",
+                "text_target": "Which times does the receptionist offer?",
+                "explanation_native": "Рэгістратар прапануе сёння а 4-й і заўтра а 9-й.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "the nearest available time",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "Які бліжэйшы вольны час?",
+                    "text_target": "What is the nearest available time?",
+                    "speaking_key": "nearest available time",
+                    "simplified_variants": [
+                        "What's the nearest time?",
+                        "When is the next slot?"
+                    ],
+                    "pronunciation_native": "уот из зэ нірыст эвэйлэбл тайм"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "У нас ёсць сёння а чацвёртай і заўтра а дзявятай.",
+                    "text_target": "We have today at four and tomorrow at nine."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "rescue",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Той, што а дзявятай раніцы",
+                        "text_target": "The one at nine in the morning"
+                    },
+                    {
+                        "text_native": "Той, што а чацвёртай дня",
+                        "text_target": "The one at four in the afternoon"
+                    },
+                    {
+                        "text_native": "Той, што ўвечары",
+                        "text_target": "The one in the evening"
+                    }
+                ],
+                "text_native": "Які прыём на наступны дзень?",
+                "text_target": "Which appointment is on the next day?",
+                "explanation_native": "На наступны дзень прапанаваны час — а дзявятай.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": null,
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "Скажыце, калі ласка, павольней.",
+                    "text_target": "Could you say that more slowly, please?",
+                    "speaking_key": "say that more slowly",
+                    "simplified_variants": [
+                        "Please say it slowly.",
+                        "Could you repeat that, please?"
+                    ],
+                    "pronunciation_native": "куд ю сэй зэт мор слоўлі, пліз"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "Сёння а чацвёртай або заўтра а дзявятай.",
+                    "text_target": "Today at four, or tomorrow at nine."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Гэты час яшчэ вольны",
+                        "text_target": "It is still available"
+                    },
+                    {
+                        "text_native": "Яго толькі што адмянілі",
+                        "text_target": "It was just cancelled"
+                    },
+                    {
+                        "text_native": "Гэты час толькі для дзяцей",
+                        "text_target": "It is only for children"
+                    }
+                ],
+                "text_native": "Што рэгістратар кажа пра чацвёртую?",
+                "text_target": "What does the receptionist say about four o'clock?",
+                "explanation_native": "Рэгістратар кажа, што час а чацвёртай яшчэ даступны.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "Час а чацвёртай яшчэ вольны.",
+                    "text_target": "The four o'clock slot is still free."
+                },
+                {
+                    "filler": "four o'clock",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "Чацвёртая мне падыходзіць.",
+                    "text_target": "Four o'clock works for me.",
+                    "speaking_key": "works for me",
+                    "simplified_variants": [
+                        "Four is good for me.",
+                        "I can do four."
+                    ],
+                    "pronunciation_native": "фор эклок уоркс фор мі"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Прыём сёння днём а чацвёртай",
+                        "text_target": "An appointment this afternoon at four"
+                    },
+                    {
+                        "text_native": "Прыём заўтра раніцай а дзявятай",
+                        "text_target": "A visit tomorrow morning at nine"
+                    },
+                    {
+                        "text_native": "Тэлефонны званок сёння ўвечары",
+                        "text_target": "A phone call this evening"
+                    }
+                ],
+                "text_native": "Які запіс пацвярджае рэгістратар?",
+                "text_target": "What booking does the receptionist confirm?",
+                "explanation_native": "Рэгістратар пацвярджае запіс на сёння а чацвёртай.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "today at four",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Пацыент",
+                    "role_target": "Patient",
+                    "text_native": "Калі ласка, запішыце мяне на сёння а чацвёртай.",
+                    "text_target": "Please book me for today at four.",
+                    "speaking_key": "book me for",
+                    "simplified_variants": [
+                        "Please book today at four.",
+                        "Book me for four, please."
+                    ],
+                    "pronunciation_native": "пліз бук мі фор тудэй эт фор"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Рэгістратар",
+                    "role_target": "Receptionist",
+                    "text_native": "Гатова. Вы запісаны на сёння а чацвёртай.",
+                    "text_target": "Done. You are booked for today at four."
+                }
+            ],
+            "initiator": "B"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "З якой праблемай пацыент запісваецца да лекара?",
+                "options_native": [
+                    "З болем у горле",
+                    "З болем у жываце",
+                    "З болем у спіне"
+                ],
+                "explanation_native": "Пацыент кажа, што ў яго баліць горла.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Як доўга гэта працягваецца?",
+                "options_native": [
+                    "Тры дні",
+                    "Адзін дзень",
+                    "Тыдзень"
+                ],
+                "explanation_native": "Пацыент называе тэрмін — тры дні.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Якія два часы прапануе рэгістратар?",
+                "options_native": [
+                    "Сёння а чацвёртай і заўтра а дзявятай",
+                    "Сёння а дзявятай і заўтра а чацвёртай",
+                    "Заўтра а чацвёртай і паслязаўтра а дзявятай"
+                ],
+                "explanation_native": "Рэгістратар прапануе два варыянты: сёння а 4-й і заўтра а 9-й.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "На які час у выніку запісалі пацыента?",
+                "options_native": [
+                    "На сёння а чацвёртай",
+                    "На заўтра а дзявятай",
+                    "На сёння а шостай"
+                ],
+                "explanation_native": "У канцы рэгістратар пацвярджае запіс на сёння а чацвёртай.",
+                "correct_option_index": 0
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p1",
+                "p7"
+            ],
+            "term_target": "book",
+            "image_prompt": "person making a clinic appointment on a phone at home",
+            "definition_target": "to arrange a time for a visit or service",
+            "translation_native": "запісацца",
+            "pronunciation_native": "бук"
+        },
+        {
+            "id": "v2",
+            "kind": "word",
+            "used_in": [
+                "p1"
+            ],
+            "term_target": "appointment",
+            "image_prompt": "clinic reception desk with appointment cards and computer",
+            "definition_target": "a planned meeting with a doctor or other professional",
+            "translation_native": "прыём",
+            "pronunciation_native": "эпойнтмэнт"
+        },
+        {
+            "id": "v3",
+            "kind": "chunk",
+            "used_in": [
+                "p2"
+            ],
+            "term_target": "sore throat",
+            "image_prompt": "person touching their throat in a clinic waiting room",
+            "definition_target": "pain or irritation in the throat",
+            "translation_native": "боль у горле",
+            "pronunciation_native": "сор сроут"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "A4"
+            ],
+            "term_target": "fever",
+            "image_prompt": "digital thermometer showing elevated temperature on a bedside table",
+            "definition_target": "a body temperature that is higher than normal",
+            "translation_native": "тэмпература",
+            "pronunciation_native": "фівер"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "A2"
+            ],
+            "term_target": "symptom",
+            "image_prompt": null,
+            "definition_target": "a sign of illness that a person feels or notices",
+            "translation_native": "сімптом",
+            "pronunciation_native": "сімптом"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "p5",
+                "A7"
+            ],
+            "term_target": "available",
+            "image_prompt": "appointment schedule on a computer screen with free time slots",
+            "definition_target": "free to use or free to choose",
+            "translation_native": "вольны",
+            "pronunciation_native": "эвэйлэбл"
+        },
+        {
+            "id": "v7",
+            "kind": "word",
+            "used_in": [
+                "A7"
+            ],
+            "term_target": "slot",
+            "image_prompt": "clinic booking screen with one highlighted time slot",
+            "definition_target": "a particular time that is open for an appointment",
+            "translation_native": "час",
+            "pronunciation_native": "слот"
+        },
+        {
+            "id": "v8",
+            "kind": "chunk",
+            "used_in": [
+                "p6"
+            ],
+            "term_target": "works for me",
+            "image_prompt": null,
+            "definition_target": "is a suitable choice for me",
+            "translation_native": "мне падыходзіць",
+            "pronunciation_native": "уоркс фор мі"
+        }
+    ],
+    "role_gender": "female",
+    "learner_role": {
+        "role_native": "Пацыент",
+        "role_target": "Patient"
+    }
+}

@@ -1,0 +1,1418 @@
+{
+    "pair": "ru-it",
+    "native": "ru",
+    "target": "it",
+    "level": "beginner",
+    "goal": "Записываюсь к врачу: третий день болит горло и температура. Нужно выбрать удобное время и объяснить, что меня беспокоит",
+    "run_suffix": "-0925",
+    "database": "wordtrainer_e2e_test",
+    "driver": "openai",
+    "models": {
+        "plan": "gpt-5.4",
+        "lesson": "gpt-5.4",
+        "repair": "gpt-5.4",
+        "judge": "gpt-5.4-mini"
+    },
+    "prompt_versions": {
+        "plan": "plan-builder-v2",
+        "lesson": "lesson_day.v4.7",
+        "repair": "lesson_card_repair.v1.3",
+        "judge": "lesson_seam_judge.v1.1"
+    },
+    "packs": [
+        "en",
+        "ro",
+        "ru",
+        "uk"
+    ],
+    "started_at": "2026-09-25T20:58:26+00:00",
+    "error": null,
+    "email": "qa-lang1-ru-it-0925@wt.test",
+    "user_id": "01M3D5SFAWYWAW0CV87BZDYEY6",
+    "plan_id": "01M3D5SFB66C267VANSZHPRP7A",
+    "plan": {
+        "status": "ready",
+        "fail_reason": null,
+        "unclear_reason": null,
+        "native_lang": "ru",
+        "target_lang": "it",
+        "prompt_version": "plan-builder-v2",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.011876",
+        "cost_usd": "0.011876",
+        "wall_s": 8.9,
+        "started_at": "2026-09-25T20:58:26+00:00",
+        "finished_at": "2026-09-25T20:58:34+00:00",
+        "calls": [
+            {
+                "call": "plan",
+                "at": "2026-09-25T20:58:26+00:00",
+                "prompt_version": "plan-builder-v2",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 3019,
+                "cached_tokens": 2816,
+                "tokens_out": 711,
+                "cost_usd": "0.011876",
+                "latency_ms": 8900,
+                "call_id": "01M3D5SFBJ8CWMSR1VRQ6ASB18",
+                "asked": {
+                    "scenes": 2,
+                    "goal": "Записываюсь к врачу: третий день болит горло и температура. Нужно выбрать удобное время и объяснить, что меня беспокоит",
+                    "target_language": "Italian",
+                    "native_language": "Russian",
+                    "level": "beginner",
+                    "violations": []
+                },
+                "payload": {
+                    "status": "ok",
+                    "unclear_reason": null,
+                    "plan": {
+                        "title_native": "Приём у врача",
+                        "title_target": "Visita dal medico",
+                        "event_native": "Приём",
+                        "until_phrase_native": "До приёма",
+                        "overdue_native": "Приём был вчера",
+                        "cover_image_prompt": "reception desk of a local medical clinic, patient arranging an appointment, realistic photo, warm indoor light, no text, no logos, no faces in close-up",
+                        "learner_role_target": "Patient",
+                        "learner_role_native": "Пациент"
+                    },
+                    "scenes": [
+                        {
+                            "order": 1,
+                            "kind": "situation",
+                            "priority": 2,
+                            "title_native": "Запись к врачу",
+                            "title_target": "Prenotazione",
+                            "teaches_native": "выбрать время, сказать причину",
+                            "goals_native": [
+                                "сказать, что болит горло",
+                                "сказать, что есть температура",
+                                "выбрать удобное время",
+                                "спросить про запись"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Пациент",
+                            "partner_role_target": "Receptionist",
+                            "partner_role_native": "Администратор",
+                            "topic_description": "Situation: The learner is contacting a local clinic to book a doctor's appointment because they have had a sore throat and fever for three days. They need a convenient appointment time and must briefly explain what is wrong.\nLearner: the learner is a patient. Partner: the partner is a receptionist.\nLearner must be able to: say they want to make a doctor's appointment; briefly explain they have a sore throat and fever for three days; understand and choose between available times; ask how the appointment is arranged and what time to come.\nPartner will: ask what the problem is; offer available times or dates; give basic instructions about the appointment.\nNot in this scene: detailed symptom description, medical questions from the doctor, diagnosis, treatment, prescription.",
+                            "image_prompt": "clinic reception desk with appointment calendar and patient speaking to receptionist, realistic photo, soft indoor light, no text, no logos, no faces in close-up"
+                        },
+                        {
+                            "order": 2,
+                            "kind": "situation",
+                            "priority": 1,
+                            "title_native": "Приём у врача",
+                            "title_target": "Visita medica",
+                            "teaches_native": "описать симптомы, понять совет",
+                            "goals_native": [
+                                "сказать, как давно болит",
+                                "описать температуру и горло",
+                                "ответить на вопросы врача",
+                                "понять советы врача"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Пациент",
+                            "partner_role_target": "Doctor",
+                            "partner_role_native": "Врач",
+                            "topic_description": "Situation: The learner is at the doctor's appointment after booking it at the clinic. They have had a sore throat and fever for three days and need to explain the problem clearly in a simple way.\nLearner: the learner is a patient. Partner: the partner is a doctor.\nLearner must be able to: say where it hurts and for how many days; mention fever and other simple symptoms; answer basic questions from the doctor; understand simple advice about rest, medicine, or what to do next.\nPartner will: ask about symptoms and duration; ask simple follow-up questions such as temperature or cough; give a basic recommendation or treatment advice.\nNot in this scene: booking the appointment, choosing a time, front-desk arrangements, buying medicine at a pharmacy.",
+                            "image_prompt": "doctor's office during a general consultation, patient seated across from doctor, realistic photo, clean medical room, no text, no logos, no faces in close-up"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "scene_ids": [
+        "01M3D5SR1T78A4Y4HWSCMPPYW8",
+        "01M3D5SR1T6BV4Z1NDKGYZ8M8G"
+    ],
+    "scene_id": "01M3D5SR1T78A4Y4HWSCMPPYW8",
+    "scenes": [
+        {
+            "order": 1,
+            "kind": "situation",
+            "title_native": "Запись к врачу",
+            "title_target": "Prenotazione",
+            "partner_target": "Receptionist",
+            "partner_native": "Администратор",
+            "brief": "Situation: The learner is contacting a local clinic to book a doctor's appointment because they have had a sore throat and fever for three days. They need a convenient appointment time and must briefly explain what is wrong.\nLearner: the learner is a patient. Partner: the partner is a receptionist.\nLearner must be able to: say they want to make a doctor's appointment; briefly explain they have a sore throat and fever for three days; understand and choose between available times; ask how the appointment is arranged and what time to come.\nPartner will: ask what the problem is; offer available times or dates; give basic instructions about the appointment.\nNot in this scene: detailed symptom description, medical questions from the doctor, diagnosis, treatment, prescription."
+        },
+        {
+            "order": 2,
+            "kind": "situation",
+            "title_native": "Приём у врача",
+            "title_target": "Visita medica",
+            "partner_target": "Doctor",
+            "partner_native": "Врач",
+            "brief": "Situation: The learner is at the doctor's appointment after booking it at the clinic. They have had a sore throat and fever for three days and need to explain the problem clearly in a simple way.\nLearner: the learner is a patient. Partner: the partner is a doctor.\nLearner must be able to: say where it hurts and for how many days; mention fever and other simple symptoms; answer basic questions from the doctor; understand simple advice about rest, medicine, or what to do next.\nPartner will: ask about symptoms and duration; ask simple follow-up questions such as temperature or cough; give a basic recommendation or treatment advice.\nNot in this scene: booking the appointment, choosing a time, front-desk arrangements, buying medicine at a pharmacy."
+        }
+    ],
+    "learner_role": {
+        "target": "Patient",
+        "native": "Пациент"
+    },
+    "plan_title": {
+        "native": "Приём у врача",
+        "target": "Visita dal medico"
+    },
+    "request": {
+        "topic": "Запись к врачу",
+        "topic_description": "Situation: The learner is contacting a local clinic to book a doctor's appointment because they have had a sore throat and fever for three days. They need a convenient appointment time and must briefly explain what is wrong.\nLearner: the learner is a patient. Partner: the partner is a receptionist.\nLearner must be able to: say they want to make a doctor's appointment; briefly explain they have a sore throat and fever for three days; understand and choose between available times; ask how the appointment is arranged and what time to come.\nPartner will: ask what the problem is; offer available times or dates; give basic instructions about the appointment.\nNot in this scene: detailed symptom description, medical questions from the doctor, diagnosis, treatment, prescription.\n\nAbout the learner, in their own words: Записываюсь к врачу: третий день болит горло и температура. Нужно выбрать удобное время и объяснить, что меня беспокоит",
+        "target_language": "Italian",
+        "native_language": "Russian",
+        "target_lang_code": "it",
+        "native_lang_code": "ru",
+        "level": "beginner",
+        "learner_gender": null,
+        "vocabulary_count": 8,
+        "dialogue_count": 8,
+        "roles": {
+            "learnerTarget": "Patient",
+            "learnerNative": "Пациент",
+            "partnerTarget": "Receptionist",
+            "partnerNative": "Администратор"
+        },
+        "earlier_days": 0
+    },
+    "day1": {
+        "status": "failed",
+        "fail_reason": "fatal: options.form_mismatch",
+        "prompt_version": "lesson_day.v4.7",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_lesson": "0.078616",
+        "latency_ms_lesson": 41951,
+        "attempts": 1,
+        "findings": [
+            {
+                "code": "frame.no_end_punct",
+                "detail": "the native «Я хочу записаться на ___» ends with no mark",
+                "address": "p1"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "the native «У меня ___» ends with no mark",
+                "address": "p2"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "the native «Лучше ___» ends with no mark",
+                "address": "p4"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "the native «Я возьму с собой ___» ends with no mark",
+                "address": "p7"
+            },
+            {
+                "code": "frame.native_agreement",
+                "detail": "«Я возьму с собой ___»: «собой» agrees with the slot — it changes with the filler",
+                "address": "p7"
+            },
+            {
+                "code": "options.form_mismatch",
+                "detail": "the option «Снова позвонить в клинику» is 22 letters against 10 of the right «Ждать врача»",
+                "address": "x6.check"
+            },
+            {
+                "code": "options.form_mismatch",
+                "detail": "the option «Медицинскую карту» is a piece of the partner's line «Возьмите медицинскую карту и документ.»",
+                "address": "x8.check"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«registration» is not in the partner's line of exchange 5",
+                "address": "v5"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«registration» is not in the partner's line of exchange 6",
+                "address": "v5"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«wait for the doctor» is not in the partner's line of exchange 5",
+                "address": "v6"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«wait for the doctor» is not in the partner's line of exchange 6",
+                "address": "v6"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«fifteen minutes early» is not in the partner's line of exchange 7",
+                "address": "v7"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "detail": "«health card» is not in the partner's line of exchange 8",
+                "address": "v8"
+            }
+        ],
+        "spent": {
+            "lesson": "0.058946",
+            "repair": "0.019670",
+            "judge": "0.000000",
+            "total": "0.078616"
+        },
+        "tokens": {
+            "in": 17597,
+            "cached": 10752,
+            "out": 3921
+        },
+        "wall_s": 42.0,
+        "started_at": "2026-09-25T20:58:34+00:00",
+        "finished_at": "2026-09-25T20:59:16+00:00",
+        "calls": [
+            {
+                "call": "lesson",
+                "at": "2026-09-25T20:58:34+00:00",
+                "prompt_version": "lesson_day.v4.7",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 8335,
+                "cached_tokens": 7936,
+                "tokens_out": 3731,
+                "cost_usd": "0.058946",
+                "latency_ms": 38768,
+                "call_id": "01M3D5SR32A4ZB1B4NX4CF18F8",
+                "asked": {
+                    "topic": "Запись к врачу",
+                    "target_language": "Italian",
+                    "native_language": "Russian",
+                    "target_code": "it",
+                    "native_code": "ru",
+                    "violations": [],
+                    "earlier_days": 0,
+                    "roles": {
+                        "learnerTarget": "Patient",
+                        "learnerNative": "Пациент",
+                        "partnerTarget": "Receptionist",
+                        "partnerNative": "Администратор"
+                    }
+                },
+                "payload": {
+                    "topic": {
+                        "title_target": "Prenotare una visita medica",
+                        "title_native": "Запись на приём к врачу",
+                        "description_target": "Book a doctor's appointment, say what is wrong, and choose a suitable time.",
+                        "description_native": "Запишитесь на приём к врачу, коротко скажите, что вас беспокоит, и выберите удобное время."
+                    },
+                    "learner_role": {
+                        "role_target": "Patient",
+                        "role_native": "Пациент"
+                    },
+                    "role_gender": "female",
+                    "dialogue": [
+                        {
+                            "step": 1,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": "p1",
+                                    "filler": "a doctor's appointment",
+                                    "text_target": "I'd like to make a doctor's appointment.",
+                                    "text_native": "Я хочу записаться к врачу.",
+                                    "pronunciation_native": "Айд лайк ту мейк э докторз эпойнтмэнт.",
+                                    "speaking_key": "I'd like to make",
+                                    "simplified_variants": [
+                                        "I want to make a doctor's appointment."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Certo. Qual è il problema?",
+                                    "text_native": "Конечно. В чём проблема?"
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist ask about?",
+                                "text_native": "О чём спрашивает администратор?",
+                                "options": [
+                                    {
+                                        "text_target": "The reason for the visit",
+                                        "text_native": "О причине визита"
+                                    },
+                                    {
+                                        "text_target": "The patient's address",
+                                        "text_native": "Об адресе пациента"
+                                    },
+                                    {
+                                        "text_target": "The payment method",
+                                        "text_native": "О способе оплаты"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Администратор спрашивает, что именно беспокоит пациента."
+                            }
+                        },
+                        {
+                            "step": 2,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Mi dica pure.",
+                                    "text_native": "Скажите, пожалуйста."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": "p2",
+                                    "filler": "a sore throat and fever",
+                                    "text_target": "I have a sore throat and fever.",
+                                    "text_native": "У меня болит горло и температура.",
+                                    "pronunciation_native": "Ай хэв э сор сроут энд фивэр.",
+                                    "speaking_key": "I have",
+                                    "simplified_variants": [
+                                        "I have fever too."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist ask the patient to do?",
+                                "text_native": "Что администратор просит пациента сделать?",
+                                "options": [
+                                    {
+                                        "text_target": "Say what is wrong",
+                                        "text_native": "Сказать, что беспокоит"
+                                    },
+                                    {
+                                        "text_target": "Show an ID",
+                                        "text_native": "Показать документ"
+                                    },
+                                    {
+                                        "text_target": "Wait outside",
+                                        "text_native": "Подождать снаружи"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Фраза значит, что можно рассказать о проблеме."
+                            }
+                        },
+                        {
+                            "step": 3,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Da quanti giorni?",
+                                    "text_native": "Сколько дней это длится?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": "p3",
+                                    "filler": "for three days",
+                                    "text_target": "For three days.",
+                                    "text_native": "Уже три дня.",
+                                    "pronunciation_native": "Фор сри дэйз.",
+                                    "speaking_key": "For",
+                                    "simplified_variants": [
+                                        "It's been three days."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What time period does the receptionist ask about?",
+                                "text_native": "О каком периоде времени спрашивает администратор?",
+                                "options": [
+                                    {
+                                        "text_target": "How long the problem has lasted",
+                                        "text_native": "Как долго это продолжается"
+                                    },
+                                    {
+                                        "text_target": "When lunch break is",
+                                        "text_native": "Когда обеденный перерыв"
+                                    },
+                                    {
+                                        "text_target": "How long the visit will cost",
+                                        "text_native": "Сколько будет стоить приём"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Администратор уточняет длительность проблемы."
+                            }
+                        },
+                        {
+                            "step": 4,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Abbiamo posto oggi alle tre o domani alle nove.",
+                                    "text_native": "У нас есть место сегодня в три или завтра в девять."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": "p4",
+                                    "filler": "tomorrow at nine",
+                                    "text_target": "Tomorrow at nine is better.",
+                                    "text_native": "Лучше завтра в девять.",
+                                    "pronunciation_native": "Тумороу эт найн из бэтэр.",
+                                    "speaking_key": "is better",
+                                    "simplified_variants": [
+                                        "Tomorrow at nine, please."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which two appointment times does the receptionist offer?",
+                                "text_native": "Какие два времени предлагает администратор?",
+                                "options": [
+                                    {
+                                        "text_target": "Today at three and tomorrow at nine",
+                                        "text_native": "Сегодня в три и завтра в девять"
+                                    },
+                                    {
+                                        "text_target": "Today at nine and tomorrow at three",
+                                        "text_native": "Сегодня в девять и завтра в три"
+                                    },
+                                    {
+                                        "text_target": "This evening and early Monday",
+                                        "text_native": "Сегодня вечером и рано в понедельник"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Администратор предлагает два конкретных времени на выбор."
+                            }
+                        },
+                        {
+                            "step": 5,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": "p5",
+                                    "filler": "the appointment",
+                                    "text_target": "How does the appointment work?",
+                                    "text_native": "Как проходит приём?",
+                                    "pronunciation_native": "Хау даз зи эпойнтмэнт уорк?",
+                                    "speaking_key": "How does the",
+                                    "simplified_variants": [
+                                        "What happens at the appointment?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Prima fa l'accettazione, poi aspetta il medico.",
+                                    "text_native": "Сначала вы оформляетесь, потом ждёте врача."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What happens before seeing the doctor?",
+                                "text_native": "Что происходит до приёма у врача?",
+                                "options": [
+                                    {
+                                        "text_target": "Registration at the desk",
+                                        "text_native": "Оформление на стойке"
+                                    },
+                                    {
+                                        "text_target": "Blood test in the lab",
+                                        "text_native": "Анализ крови в лаборатории"
+                                    },
+                                    {
+                                        "text_target": "Payment at the pharmacy",
+                                        "text_native": "Оплата в аптеке"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Сначала нужно оформить приём, а потом ждать врача."
+                            }
+                        },
+                        {
+                            "step": 6,
+                            "kind": "rescue",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": null,
+                                    "filler": null,
+                                    "text_target": "Could you say that more slowly, please?",
+                                    "text_native": "Скажите, пожалуйста, помедленнее.",
+                                    "pronunciation_native": "Куд ю сэй зэт мор слоули, плиз?",
+                                    "speaking_key": "say that more slowly",
+                                    "simplified_variants": [
+                                        "Please say it more slowly."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Prima l'accettazione. Poi aspetta il medico.",
+                                    "text_native": "Сначала оформление. Потом ждёте врача."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What is the second step after registration?",
+                                "text_native": "Какой второй шаг после оформления?",
+                                "options": [
+                                    {
+                                        "text_target": "Wait for the doctor",
+                                        "text_native": "Ждать врача"
+                                    },
+                                    {
+                                        "text_target": "Go home immediately",
+                                        "text_native": "Сразу идти домой"
+                                    },
+                                    {
+                                        "text_target": "Call the clinic again",
+                                        "text_native": "Снова позвонить в клинику"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "После оформления нужно подождать врача."
+                            }
+                        },
+                        {
+                            "step": 7,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": "p6",
+                                    "filler": "I come",
+                                    "text_target": "What time should I come?",
+                                    "text_native": "К которому часу мне прийти?",
+                                    "pronunciation_native": "Уот тайм шуд ай кам?",
+                                    "speaking_key": "What time should",
+                                    "simplified_variants": [
+                                        "When should I come?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Venga quindici minuti prima.",
+                                    "text_native": "Приходите за пятнадцать минут до приёма."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "How early should the patient arrive?",
+                                "text_native": "Насколько заранее нужно прийти?",
+                                "options": [
+                                    {
+                                        "text_target": "A quarter of an hour earlier",
+                                        "text_native": "На пятнадцать минут раньше"
+                                    },
+                                    {
+                                        "text_target": "Exactly on time",
+                                        "text_native": "Ровно ко времени"
+                                    },
+                                    {
+                                        "text_target": "Half an hour later",
+                                        "text_native": "На полчаса позже"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Администратор просит прийти заранее, за 15 минут."
+                            }
+                        },
+                        {
+                            "step": 8,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Администратор",
+                                    "text_target": "Porti la tessera sanitaria e un documento.",
+                                    "text_native": "Возьмите медицинскую карту и документ."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Пациент",
+                                    "phrase_id": "p7",
+                                    "filler": "my health card",
+                                    "text_target": "I'll bring my health card.",
+                                    "text_native": "Я возьму с собой медицинскую карту.",
+                                    "pronunciation_native": "Айл бринг май хэлс кард.",
+                                    "speaking_key": "I'll bring",
+                                    "simplified_variants": [
+                                        "I'll bring it.",
+                                        "I can bring my card."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which document does the receptionist mention?",
+                                "text_native": "Какой документ упоминает администратор?",
+                                "options": [
+                                    {
+                                        "text_target": "A health insurance card",
+                                        "text_native": "Медицинскую карту"
+                                    },
+                                    {
+                                        "text_target": "A train ticket",
+                                        "text_native": "Билет на поезд"
+                                    },
+                                    {
+                                        "text_target": "A hotel booking",
+                                        "text_native": "Бронь отеля"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Администратор говорит взять медицинскую карту и документ."
+                            }
+                        }
+                    ],
+                    "phrases": [
+                        {
+                            "id": "p1",
+                            "kind": "ask",
+                            "frame_target": "I'd like to make ___",
+                            "frame_native": "Я хочу записаться на ___",
+                            "pronunciation_native": "Айд лайк ту мейк ___",
+                            "slot": {
+                                "hint_native": "что вы хотите оформить",
+                                "fillers": [
+                                    {
+                                        "target": "a doctor's appointment",
+                                        "native": "приём к врачу",
+                                        "pronunciation_native": "э докторз эпойнтмэнт",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "an eye exam",
+                                        "native": "осмотр у окулиста",
+                                        "pronunciation_native": "эн ай игзэм",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p2",
+                            "kind": "answer",
+                            "frame_target": "I have ___",
+                            "frame_native": "У меня ___",
+                            "pronunciation_native": "Ай хэв ___",
+                            "slot": {
+                                "hint_native": "что вас беспокоит",
+                                "fillers": [
+                                    {
+                                        "target": "a sore throat and fever",
+                                        "native": "болит горло и температура",
+                                        "pronunciation_native": "э сор сроут энд фивэр",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a bad cough",
+                                        "native": "сильный кашель",
+                                        "pronunciation_native": "э бэд коф",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "ear pain",
+                                        "native": "боль в ухе",
+                                        "pronunciation_native": "ир пэйн",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p3",
+                            "kind": "answer",
+                            "frame_target": "For ___",
+                            "frame_native": "Уже ___",
+                            "pronunciation_native": "Фор ___",
+                            "slot": {
+                                "hint_native": "сколько времени",
+                                "fillers": [
+                                    {
+                                        "target": "for three days",
+                                        "native": "три дня",
+                                        "pronunciation_native": "фор сри дэйз",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "for two days",
+                                        "native": "два дня",
+                                        "pronunciation_native": "фор ту дэйз",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p4",
+                            "kind": "answer",
+                            "frame_target": "___ is better",
+                            "frame_native": "Лучше ___",
+                            "pronunciation_native": "___ из бэтэр",
+                            "slot": {
+                                "hint_native": "подходящее время",
+                                "fillers": [
+                                    {
+                                        "target": "tomorrow at nine",
+                                        "native": "завтра в девять",
+                                        "pronunciation_native": "тумороу эт найн",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "today at three",
+                                        "native": "сегодня в три",
+                                        "pronunciation_native": "тудэй эт сри",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p5",
+                            "kind": "ask",
+                            "frame_target": "How does ___ work?",
+                            "frame_native": "Как проходит ___?",
+                            "pronunciation_native": "Хау даз ___ уорк",
+                            "slot": {
+                                "hint_native": "что вы хотите уточнить",
+                                "fillers": [
+                                    {
+                                        "target": "the appointment",
+                                        "native": "приём",
+                                        "pronunciation_native": "зи эпойнтмэнт",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "the check-in",
+                                        "native": "оформление",
+                                        "pronunciation_native": "зи чек-ин",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p6",
+                            "kind": "ask",
+                            "frame_target": "What time should ___?",
+                            "frame_native": "К которому часу ___?",
+                            "pronunciation_native": "Уот тайм шуд ___",
+                            "slot": {
+                                "hint_native": "что вам сделать",
+                                "fillers": [
+                                    {
+                                        "target": "I come",
+                                        "native": "мне прийти",
+                                        "pronunciation_native": "ай кам",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "I arrive",
+                                        "native": "мне подойти",
+                                        "pronunciation_native": "ай эрайв",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p7",
+                            "kind": "answer",
+                            "frame_target": "I'll bring ___",
+                            "frame_native": "Я возьму с собой ___",
+                            "pronunciation_native": "Айл бринг ___",
+                            "slot": {
+                                "hint_native": "что вы принесёте",
+                                "fillers": [
+                                    {
+                                        "target": "my health card",
+                                        "native": "медицинскую карту",
+                                        "pronunciation_native": "май хэлс кард",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "my passport",
+                                        "native": "паспорт",
+                                        "pronunciation_native": "май пасспорт",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "listening": {
+                        "questions": [
+                            {
+                                "text_native": "Что беспокоит пациента?",
+                                "options_native": [
+                                    "Болит горло и температура",
+                                    "Болит спина",
+                                    "Болит живот"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Пациент говорит, что у него болит горло и есть температура."
+                            },
+                            {
+                                "text_native": "Какое время пациент выбрал?",
+                                "options_native": [
+                                    "Сегодня в три",
+                                    "Завтра в девять",
+                                    "Послезавтра утром"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Пациент говорит, что лучше завтра в девять."
+                            },
+                            {
+                                "text_native": "Насколько заранее администратор просит прийти?",
+                                "options_native": [
+                                    "За 15 минут",
+                                    "Точно ко времени",
+                                    "За час"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Администратор просит прийти за пятнадцать минут до приёма."
+                            },
+                            {
+                                "text_native": "Что нужно взять с собой?",
+                                "options_native": [
+                                    "Только воду",
+                                    "Медицинскую карту и документ",
+                                    "Результаты рентгена"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "В конце администратор говорит взять медицинскую карту и документ."
+                            }
+                        ]
+                    },
+                    "vocabulary": [
+                        {
+                            "id": "v1",
+                            "term_target": "appointment",
+                            "translation_native": "приём",
+                            "pronunciation_native": "эпойнтмэнт",
+                            "definition_target": "a planned time to see a doctor or other professional",
+                            "kind": "word",
+                            "image_prompt": "clinic reception desk with an appointment schedule on a computer screen",
+                            "used_in": [
+                                "p1",
+                                "p5"
+                            ]
+                        },
+                        {
+                            "id": "v2",
+                            "term_target": "sore throat",
+                            "translation_native": "боль в горле",
+                            "pronunciation_native": "сор сроут",
+                            "definition_target": "pain or irritation in the throat",
+                            "kind": "chunk",
+                            "image_prompt": "person holding their throat at home",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v3",
+                            "term_target": "fever",
+                            "translation_native": "температура",
+                            "pronunciation_native": "фивэр",
+                            "definition_target": "a body temperature that is higher than normal",
+                            "kind": "word",
+                            "image_prompt": "digital thermometer showing a high temperature on a bedside table",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v4",
+                            "term_target": "three days",
+                            "translation_native": "три дня",
+                            "pronunciation_native": "сри дэйз",
+                            "definition_target": "a period of 72 hours",
+                            "kind": "chunk",
+                            "image_prompt": null,
+                            "used_in": [
+                                "p3"
+                            ]
+                        },
+                        {
+                            "id": "v5",
+                            "term_target": "registration",
+                            "translation_native": "оформление",
+                            "pronunciation_native": "рэджистрейшн",
+                            "definition_target": "the process of giving your details before an appointment",
+                            "kind": "word",
+                            "image_prompt": "patient filling out a form at a clinic reception desk",
+                            "used_in": [
+                                "A5",
+                                "A6"
+                            ]
+                        },
+                        {
+                            "id": "v6",
+                            "term_target": "wait for the doctor",
+                            "translation_native": "ждать врача",
+                            "pronunciation_native": "уэйт фор зэ доктор",
+                            "definition_target": "to stay until the doctor is ready to see you",
+                            "kind": "chunk",
+                            "image_prompt": "patient sitting in a clinic waiting area near a doctor's office door",
+                            "used_in": [
+                                "A5",
+                                "A6"
+                            ]
+                        },
+                        {
+                            "id": "v7",
+                            "term_target": "fifteen minutes early",
+                            "translation_native": "на пятнадцать минут раньше",
+                            "pronunciation_native": "фифтин минутс ёрли",
+                            "definition_target": "arriving a quarter of an hour before the scheduled time",
+                            "kind": "chunk",
+                            "image_prompt": "clock in a clinic lobby showing time before an appointment",
+                            "used_in": [
+                                "A7"
+                            ]
+                        },
+                        {
+                            "id": "v8",
+                            "term_target": "health card",
+                            "translation_native": "медицинская карта",
+                            "pronunciation_native": "хэлс кард",
+                            "definition_target": "a card used for medical identification or insurance",
+                            "kind": "chunk",
+                            "image_prompt": "health insurance card next to an ID card on a table",
+                            "used_in": [
+                                "p7",
+                                "A8"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-25T20:59:13+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 4735,
+                "cached_tokens": 2816,
+                "tokens_out": 110,
+                "cost_usd": "0.007152",
+                "latency_ms": 1728,
+                "call_id": "01M3D5TXZACP25TG0JQ7Y3B04E",
+                "asked": {
+                    "address": "p3",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "frame.no_end_punct",
+                            "detail": "p3: the native «Уже ___» ends with no mark"
+                        },
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p3.f1: «For for three days»: a word is doubled at the seam"
+                        },
+                        {
+                            "code": "filler.ungrammatical",
+                            "detail": "p3.f2: «For for two days»: a word is doubled at the seam"
+                        },
+                        {
+                            "code": "filler.one_in_dialogue",
+                            "detail": "p3.f1: «for three days» is marked in_dialogue, but no line says it"
+                        }
+                    ],
+                    "card": {
+                        "id": "p3",
+                        "kind": "answer",
+                        "frame_target": "For ___",
+                        "frame_native": "Уже ___",
+                        "pronunciation_native": "Фор ___",
+                        "slot": {
+                            "hint_native": "сколько времени",
+                            "fillers": [
+                                {
+                                    "target": "for three days",
+                                    "native": "три дня",
+                                    "pronunciation_native": "фор сри дэйз",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "for two days",
+                                    "native": "два дня",
+                                    "pronunciation_native": "фор ту дэйз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "id": "p3",
+                        "kind": "answer",
+                        "frame_target": "It's been ___",
+                        "frame_native": "Уже ___.",
+                        "pronunciation_native": "Итс бин ___",
+                        "slot": {
+                            "hint_native": "сколько времени",
+                            "fillers": [
+                                {
+                                    "target": "three days",
+                                    "native": "три дня",
+                                    "pronunciation_native": "сри дэйз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "two days",
+                                    "native": "два дня",
+                                    "pronunciation_native": "ту дэйз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-25T20:59:15+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 4527,
+                "cached_tokens": 0,
+                "tokens_out": 80,
+                "cost_usd": "0.012518",
+                "latency_ms": 1455,
+                "call_id": "01M3D5TZNMPGT4KHBDYVPXG7T5",
+                "asked": {
+                    "address": "B3",
+                    "kind": "line",
+                    "findings": [
+                        {
+                            "code": "line.ne_frame",
+                            "detail": "B3: «For three days.» is not «It's been ___» with any of its fillers («three days», «two days»)"
+                        },
+                        {
+                            "code": "variant.longer",
+                            "detail": "B3: the variant «It's been three days.» has 4 words, the line 3"
+                        }
+                    ],
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Patient",
+                        "role_native": "Пациент",
+                        "phrase_id": "p3",
+                        "filler": null,
+                        "text_target": "For three days.",
+                        "text_native": "Уже три дня.",
+                        "pronunciation_native": "Фор сри дэйз.",
+                        "speaking_key": "It's been",
+                        "simplified_variants": [
+                            "It's been three days."
+                        ]
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Patient",
+                        "role_native": "Пациент",
+                        "phrase_id": "p3",
+                        "filler": "three days",
+                        "text_target": "It's been three days.",
+                        "text_native": "Уже три дня.",
+                        "pronunciation_native": "Итс бин сри дэйз.",
+                        "speaking_key": "It's been",
+                        "simplified_variants": []
+                    }
+                }
+            }
+        ]
+    },
+    "raw_check": {
+        "violations": [
+            {
+                "code": "frame.no_end_punct",
+                "address": "p1",
+                "detail": "the native «Я хочу записаться на ___» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p2",
+                "detail": "the native «У меня ___» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p3",
+                "detail": "the native «Уже ___» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p4",
+                "detail": "the native «Лучше ___» ends with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p7",
+                "detail": "the native «Я возьму с собой ___» ends with no mark"
+            },
+            {
+                "code": "frame.native_agreement",
+                "address": "p7",
+                "detail": "«Я возьму с собой ___»: «собой» agrees with the slot — it changes with the filler"
+            },
+            {
+                "code": "filler.ungrammatical",
+                "address": "p3.f1",
+                "detail": "«For for three days»: a word is doubled at the seam"
+            },
+            {
+                "code": "filler.ungrammatical",
+                "address": "p3.f2",
+                "detail": "«For for two days»: a word is doubled at the seam"
+            },
+            {
+                "code": "filler.one_in_dialogue",
+                "address": "p3.f1",
+                "detail": "«for three days» is marked in_dialogue, but no line says it"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B3",
+                "detail": "«For three days.» is not «For ___» with any of its fillers («for three days», «for two days»)"
+            },
+            {
+                "code": "variant.longer",
+                "address": "B3",
+                "detail": "the variant «It's been three days.» has 4 words, the line 3"
+            },
+            {
+                "code": "options.form_mismatch",
+                "address": "x6.check",
+                "detail": "the option «Снова позвонить в клинику» is 22 letters against 10 of the right «Ждать врача»"
+            },
+            {
+                "code": "options.form_mismatch",
+                "address": "x8.check",
+                "detail": "the option «Медицинскую карту» is a piece of the partner's line «Возьмите медицинскую карту и документ.»"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v5",
+                "detail": "«registration» is not in the partner's line of exchange 5"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v5",
+                "detail": "«registration» is not in the partner's line of exchange 6"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v6",
+                "detail": "«wait for the doctor» is not in the partner's line of exchange 5"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v6",
+                "detail": "«wait for the doctor» is not in the partner's line of exchange 6"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v7",
+                "detail": "«fifteen minutes early» is not in the partner's line of exchange 7"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v8",
+                "detail": "«health card» is not in the partner's line of exchange 8"
+            }
+        ],
+        "fatal": 5,
+        "skips": [
+            {
+                "code": "exchange.second_question",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.no_end_punct",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.native_punct",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "frame.unresolved_pronoun",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "unresolved_pronouns",
+                    "function_words"
+                ]
+            },
+            {
+                "code": "filler.ungrammatical",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "sentence_ends",
+                    "articles",
+                    "article_sound",
+                    "clause",
+                    "seam_repeatable_words"
+                ]
+            },
+            {
+                "code": "filler.is_clause",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "clause"
+                ]
+            },
+            {
+                "code": "filler.article_seam",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "article_sound"
+                ]
+            },
+            {
+                "code": "learner.restates_partner",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "rescue.new_fact",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "partner.two_questions",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "sentence_ends",
+                    "second_question_pattern"
+                ]
+            },
+            {
+                "code": "partner.too_long",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "partner.closer",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "closers"
+                ]
+            },
+            {
+                "code": "check.verbatim",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "function_words",
+                    "word_forms",
+                    "number_pattern",
+                    "sentence_ends"
+                ]
+            },
+            {
+                "code": "check.about_learner",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "saying_verbs",
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "check.listed_alternative_as_wrong",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "alternative_words",
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "vocab.free_combination",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "ordinary_heads",
+                    "everyday_words",
+                    "function_words",
+                    "word_forms"
+                ]
+            },
+            {
+                "code": "vocab.everyday_word",
+                "side": "target",
+                "language": "it",
+                "keys": [
+                    "everyday_words"
+                ]
+            }
+        ],
+        "skips_known": true,
+        "parse_error": null,
+        "native_code": "ru",
+        "target_code": "it"
+    },
+    "finished_at": "2026-09-25T20:59:16+00:00"
+}

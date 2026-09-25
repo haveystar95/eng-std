@@ -1,0 +1,754 @@
+{
+    "topic": {
+        "title_target": "Booking a doctor’s appointment",
+        "title_native": "Запис до лікаря",
+        "description_target": "Book an appointment, say the reason briefly, choose a time, and ask for practical details.",
+        "description_native": "Запишіться на прийом, коротко поясніть причину, виберіть час і уточніть практичні деталі."
+    },
+    "learner_role": {
+        "role_target": "Patient",
+        "role_native": "Пацієнт"
+    },
+    "role_gender": "female",
+    "dialogue": [
+        {
+            "step": 1,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p1",
+                    "filler": "a doctor’s appointment",
+                    "text_target": "I’d like to book a doctor’s appointment.",
+                    "text_native": "Я б хотів записатися на прийом до лікаря.",
+                    "pronunciation_native": "Айд лайк ту бук е докторз епойнтмент.",
+                    "speaking_key": "like to book",
+                    "simplified_variants": [
+                        "I want to book a doctor’s appointment.",
+                        "Can I book a doctor’s appointment?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "Of course. What seems to be the problem?",
+                    "text_native": "Звісно. Що вас турбує?"
+                }
+            ],
+            "check": {
+                "text_target": "What does the receptionist ask about?",
+                "text_native": "Про що запитує адміністраторка?",
+                "options": [
+                    {
+                        "text_target": "Why the patient needs the visit",
+                        "text_native": "Чому пацієнту потрібен візит"
+                    },
+                    {
+                        "text_target": "Which doctor the patient saw before",
+                        "text_native": "До якого лікаря пацієнт ходив раніше"
+                    },
+                    {
+                        "text_target": "How the patient will pay",
+                        "text_native": "Як пацієнт буде платити"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Адміністраторка питає, яка проблема або причина візиту."
+            }
+        },
+        {
+            "step": 2,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "What seems to be the problem?",
+                    "text_native": "Що вас турбує?"
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p2",
+                    "filler": "a sore throat and a fever",
+                    "text_target": "I have a sore throat and a fever.",
+                    "text_native": "У мене болить горло і є температура.",
+                    "pronunciation_native": "Ай хев э сор сроут энд э фівер.",
+                    "speaking_key": "I have",
+                    "simplified_variants": [
+                        "I have a fever and sore throat.",
+                        "My throat hurts, and I have a fever."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What does the receptionist want to know?",
+                "text_native": "Що хоче дізнатися адміністраторка?",
+                "options": [
+                    {
+                        "text_target": "The patient’s address",
+                        "text_native": "Адресу пацієнта"
+                    },
+                    {
+                        "text_target": "The reason for the visit",
+                        "text_native": "Причину візиту"
+                    },
+                    {
+                        "text_target": "The patient’s insurance number",
+                        "text_native": "Номер страхування пацієнта"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "У цьому обміні адміністраторка питає про проблему пацієнта."
+            }
+        },
+        {
+            "step": 3,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "We have appointments at ten or three today.",
+                    "text_native": "Сьогодні є записи на десяту або на третю."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p3",
+                    "filler": "three",
+                    "text_target": "Three works better for me.",
+                    "text_native": "Третя мені підходить краще.",
+                    "pronunciation_native": "Срі воркс бетер фор мі.",
+                    "speaking_key": "works better for",
+                    "simplified_variants": [
+                        "Three is better for me.",
+                        "I can do three."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "Which times does the receptionist offer?",
+                "text_native": "Який час пропонує адміністраторка?",
+                "options": [
+                    {
+                        "text_target": "Nine or two",
+                        "text_native": "Дев’ята або друга"
+                    },
+                    {
+                        "text_target": "Ten or three",
+                        "text_native": "Десята або третя"
+                    },
+                    {
+                        "text_target": "Eleven or four",
+                        "text_native": "Одинадцята або четверта"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Адміністраторка пропонує два варіанти часу: десята або третя."
+            }
+        },
+        {
+            "step": 4,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p4",
+                    "filler": "the clinic address",
+                    "text_target": "Could you give me the clinic address?",
+                    "text_native": "Не могли б ви дати мені адресу клініки?",
+                    "pronunciation_native": "Куд ю гів мі зе клінік едрес?",
+                    "speaking_key": "give me the",
+                    "simplified_variants": [
+                        "What is the clinic address?",
+                        "Can I have the clinic address?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "Yes. It’s 18 Green Street.",
+                    "text_native": "Так. Це Грін-стріт, 18."
+                }
+            ],
+            "check": {
+                "text_target": "What address does the receptionist give?",
+                "text_native": "Яку адресу називає адміністраторка?",
+                "options": [
+                    {
+                        "text_target": "18 Green Street",
+                        "text_native": "Грін-стріт, 18"
+                    },
+                    {
+                        "text_target": "80 Green Street",
+                        "text_native": "Грін-стріт, 80"
+                    },
+                    {
+                        "text_target": "18 Queen Street",
+                        "text_native": "Квін-стріт, 18"
+                    }
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Адміністраторка називає адресу: Грін-стріт, 18."
+            }
+        },
+        {
+            "step": 5,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "Please arrive ten minutes early for check-in.",
+                    "text_native": "Будь ласка, прийдіть на десять хвилин раніше для реєстрації."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p5",
+                    "filler": "ten minutes early",
+                    "text_target": "I’ll arrive ten minutes early.",
+                    "text_native": "Я прийду на десять хвилин раніше.",
+                    "pronunciation_native": "Айл ерайв тен мінітс ерлі.",
+                    "speaking_key": "I’ll arrive",
+                    "simplified_variants": [
+                        "I’ll come ten minutes early.",
+                        "Okay, ten minutes early."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "When should the patient come?",
+                "text_native": "Коли пацієнту треба прийти?",
+                "options": [
+                    {
+                        "text_target": "A quarter of an hour before",
+                        "text_native": "За п’ятнадцять хвилин до"
+                    },
+                    {
+                        "text_target": "Exactly on time",
+                        "text_native": "Точно вчасно"
+                    },
+                    {
+                        "text_target": "Ten minutes before the visit",
+                        "text_native": "За десять хвилин до візиту"
+                    }
+                ],
+                "correct_option_index": 2,
+                "explanation_native": "Адміністраторка просить прийти за десять хвилин до прийому."
+            }
+        },
+        {
+            "step": 6,
+            "kind": "ask",
+            "initiator": "B",
+            "messages": [
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p6",
+                    "filler": "open tomorrow morning",
+                    "text_target": "Are you open tomorrow morning?",
+                    "text_native": "Ви працюєте завтра вранці?",
+                    "pronunciation_native": "Ар ю оупен туморо морнінг?",
+                    "speaking_key": "you open",
+                    "simplified_variants": [
+                        "Is the clinic open tomorrow morning?",
+                        "Do you open tomorrow morning?"
+                    ]
+                },
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "Yes, we open at eight tomorrow.",
+                    "text_native": "Так, завтра ми відчиняємося о восьмій."
+                }
+            ],
+            "check": {
+                "text_target": "What opening time does the receptionist give?",
+                "text_native": "Який час відкриття називає адміністраторка?",
+                "options": [
+                    {
+                        "text_target": "At seven in the morning",
+                        "text_native": "О сьомій ранку"
+                    },
+                    {
+                        "text_target": "At eight in the morning",
+                        "text_native": "О восьмій ранку"
+                    },
+                    {
+                        "text_target": "At nine in the morning",
+                        "text_native": "О дев’ятій ранку"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Адміністраторка каже, що клініка відчиняється о восьмій."
+            }
+        },
+        {
+            "step": 7,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "Your appointment is at three with Dr. Brown.",
+                    "text_native": "Ваш прийом о третій у лікаря Браун."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p7",
+                    "filler": "at three",
+                    "text_target": "That’s fine at three.",
+                    "text_native": "Добре, о третій мені підходить.",
+                    "pronunciation_native": "Зетс файн эт срі.",
+                    "speaking_key": "That’s fine",
+                    "simplified_variants": [
+                        "Three is fine.",
+                        "That time is fine."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "Who is the appointment with?",
+                "text_native": "До кого запис?",
+                "options": [
+                    {
+                        "text_target": "Dr. Green",
+                        "text_native": "До лікаря Грін"
+                    },
+                    {
+                        "text_target": "Dr. Brown",
+                        "text_native": "До лікаря Браун"
+                    },
+                    {
+                        "text_target": "Dr. White",
+                        "text_native": "До лікаря Вайт"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Адміністраторка каже, що прийом буде у лікаря Браун."
+            }
+        },
+        {
+            "step": 8,
+            "kind": "answer",
+            "initiator": "A",
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_target": "Receptionist",
+                    "role_native": "Адміністратор",
+                    "text_target": "Please bring an ID card to the front desk.",
+                    "text_native": "Будь ласка, принесіть посвідчення особи на стійку реєстрації."
+                },
+                {
+                    "speaker": "B",
+                    "role_target": "Patient",
+                    "role_native": "Пацієнт",
+                    "phrase_id": "p8",
+                    "filler": "my ID card",
+                    "text_target": "I’ll bring my ID card.",
+                    "text_native": "Я принесу своє посвідчення особи.",
+                    "pronunciation_native": "Айл брінг май ай ді кард.",
+                    "speaking_key": "I’ll bring",
+                    "simplified_variants": [
+                        "I’ll bring it.",
+                        "Okay, my ID card."
+                    ]
+                }
+            ],
+            "check": {
+                "text_target": "What should the patient bring?",
+                "text_native": "Що пацієнту треба принести?",
+                "options": [
+                    {
+                        "text_target": "A payment receipt",
+                        "text_native": "Квитанцію про оплату"
+                    },
+                    {
+                        "text_target": "An identity document",
+                        "text_native": "Документ, що посвідчує особу"
+                    },
+                    {
+                        "text_target": "A bottle of water",
+                        "text_native": "Пляшку води"
+                    }
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Адміністраторка просить принести документ, що посвідчує особу."
+            }
+        }
+    ],
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "frame_target": "I’d like to book ___.",
+            "frame_native": "Я б хотів записатися на ___.",
+            "pronunciation_native": "Айд лайк ту бук ___.",
+            "slot": {
+                "hint_native": "на що записатися",
+                "fillers": [
+                    {
+                        "target": "a doctor’s appointment",
+                        "native": "прийом до лікаря",
+                        "pronunciation_native": "э докторз епойнтмент",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a check-up",
+                        "native": "огляд",
+                        "pronunciation_native": "э чек-ап",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "frame_target": "I have ___.",
+            "frame_native": "У мене ___.",
+            "pronunciation_native": "Ай хев ___.",
+            "slot": {
+                "hint_native": "що вас турбує",
+                "fillers": [
+                    {
+                        "target": "a sore throat and a fever",
+                        "native": "болить горло і є температура",
+                        "pronunciation_native": "э сор сроут энд э фівер",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "a bad cough",
+                        "native": "сильний кашель",
+                        "pronunciation_native": "э бед коф",
+                        "in_dialogue": false
+                    },
+                    {
+                        "target": "ear pain",
+                        "native": "біль у вусі",
+                        "pronunciation_native": "ір пейн",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "frame_target": "___ works better for me.",
+            "frame_native": "___ мені підходить краще.",
+            "pronunciation_native": "___ воркс бетер фор мі.",
+            "slot": {
+                "hint_native": "зручний час",
+                "fillers": [
+                    {
+                        "target": "three",
+                        "native": "третя",
+                        "pronunciation_native": "срі",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "ten",
+                        "native": "десята",
+                        "pronunciation_native": "тен",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p4",
+            "kind": "ask",
+            "frame_target": "Could you give me ___?",
+            "frame_native": "Не могли б ви дати мені ___?",
+            "pronunciation_native": "Куд ю гів мі ___?",
+            "slot": {
+                "hint_native": "яку інформацію ви хочете",
+                "fillers": [
+                    {
+                        "target": "the clinic address",
+                        "native": "адресу клініки",
+                        "pronunciation_native": "зе клінік едрес",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "the phone number",
+                        "native": "номер телефону",
+                        "pronunciation_native": "зе фоун намбер",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "frame_target": "I’ll arrive ___.",
+            "frame_native": "Я прийду ___.",
+            "pronunciation_native": "Айл ерайв ___.",
+            "slot": {
+                "hint_native": "коли ви прийдете",
+                "fillers": [
+                    {
+                        "target": "ten minutes early",
+                        "native": "на десять хвилин раніше",
+                        "pronunciation_native": "тен мінітс ерлі",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "right on time",
+                        "native": "точно вчасно",
+                        "pronunciation_native": "райт он тайм",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "frame_target": "Are you open ___?",
+            "frame_native": "Ви працюєте ___?",
+            "pronunciation_native": "Ар ю оупен ___?",
+            "slot": {
+                "hint_native": "коли",
+                "fillers": [
+                    {
+                        "target": "tomorrow morning",
+                        "native": "завтра вранці",
+                        "pronunciation_native": "туморо морнінг",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "on Saturday",
+                        "native": "у суботу",
+                        "pronunciation_native": "он сетердей",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "frame_target": "That’s fine ___.",
+            "frame_native": "Добре, ___ мені підходить.",
+            "pronunciation_native": "Зетс файн ___.",
+            "slot": {
+                "hint_native": "час або варіант",
+                "fillers": [
+                    {
+                        "target": "at three",
+                        "native": "о третій",
+                        "pronunciation_native": "эт срі",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "for Friday",
+                        "native": "на п’ятницю",
+                        "pronunciation_native": "фор фрайдей",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": "p8",
+            "kind": "answer",
+            "frame_target": "I’ll bring ___.",
+            "frame_native": "Я принесу ___.",
+            "pronunciation_native": "Айл брінг ___.",
+            "slot": {
+                "hint_native": "що ви принесете",
+                "fillers": [
+                    {
+                        "target": "my ID card",
+                        "native": "своє посвідчення особи",
+                        "pronunciation_native": "май ай ді кард",
+                        "in_dialogue": true
+                    },
+                    {
+                        "target": "my insurance card",
+                        "native": "свою страхову картку",
+                        "pronunciation_native": "май іншуренс кард",
+                        "in_dialogue": false
+                    }
+                ]
+            }
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "На який час пацієнт обрав запис?",
+                "options_native": [
+                    "На десяту",
+                    "На третю",
+                    "На четверту"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Пацієнт обрав час на третю."
+            },
+            {
+                "text_native": "Яку адресу назвала адміністраторка?",
+                "options_native": [
+                    "Квін-стріт, 18",
+                    "Грін-стріт, 18",
+                    "Грін-стріт, 80"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "У розмові назвали адресу Грін-стріт, 18."
+            },
+            {
+                "text_native": "Що сказав пацієнт про свою проблему?",
+                "options_native": [
+                    "Болить спина",
+                    "Болить горло і є температура",
+                    "Болить живіт"
+                ],
+                "correct_option_index": 1,
+                "explanation_native": "Пацієнт сказав, що в нього болить горло і є температура."
+            },
+            {
+                "text_native": "На скільки раніше треба прийти?",
+                "options_native": [
+                    "На десять хвилин",
+                    "На двадцять хвилин",
+                    "Точно вчасно"
+                ],
+                "correct_option_index": 0,
+                "explanation_native": "Адміністраторка попросила прийти на десять хвилин раніше."
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "term_target": "appointment",
+            "translation_native": "запис на прийом",
+            "pronunciation_native": "епойнтмент",
+            "definition_target": "a arranged time to see a doctor or another professional",
+            "kind": "word",
+            "image_prompt": "appointment card on a clinic reception desk",
+            "used_in": [
+                "p1",
+                "A3",
+                "A7"
+            ]
+        },
+        {
+            "id": "v2",
+            "term_target": "sore throat",
+            "translation_native": "біль у горлі",
+            "pronunciation_native": "сор сроут",
+            "definition_target": "pain or irritation in the throat",
+            "kind": "chunk",
+            "image_prompt": "person touching their throat at home",
+            "used_in": [
+                "p2"
+            ]
+        },
+        {
+            "id": "v3",
+            "term_target": "fever",
+            "translation_native": "температура",
+            "pronunciation_native": "фівер",
+            "definition_target": "a high body temperature when you are ill",
+            "kind": "word",
+            "image_prompt": "digital thermometer showing a high temperature",
+            "used_in": [
+                "p2"
+            ]
+        },
+        {
+            "id": "v4",
+            "term_target": "clinic address",
+            "translation_native": "адреса клініки",
+            "pronunciation_native": "клінік едрес",
+            "definition_target": "the location details of a clinic",
+            "kind": "chunk",
+            "image_prompt": "clinic entrance on a city street with building number visible",
+            "used_in": [
+                "p4"
+            ]
+        },
+        {
+            "id": "v5",
+            "term_target": "check-in",
+            "translation_native": "реєстрація",
+            "pronunciation_native": "чек-ін",
+            "definition_target": "the process of arriving and registering before an appointment",
+            "kind": "chunk",
+            "image_prompt": "patient signing in at a clinic front desk",
+            "used_in": [
+                "A5"
+            ]
+        },
+        {
+            "id": "v6",
+            "term_target": "arrive early",
+            "translation_native": "прийти раніше",
+            "pronunciation_native": "ерайв ерлі",
+            "definition_target": "to come before the planned time",
+            "kind": "chunk",
+            "image_prompt": "wall clock in a clinic waiting room before appointment time",
+            "used_in": [
+                "p5",
+                "A5"
+            ]
+        },
+        {
+            "id": "v7",
+            "term_target": "open",
+            "translation_native": "працювати / бути відчиненим",
+            "pronunciation_native": "оупен",
+            "definition_target": "to be ready for people to come in and use a service",
+            "kind": "word",
+            "image_prompt": "clinic door open in the morning",
+            "used_in": [
+                "p6",
+                "A6"
+            ]
+        },
+        {
+            "id": "v8",
+            "term_target": "ID card",
+            "translation_native": "посвідчення особи",
+            "pronunciation_native": "ай ді кард",
+            "definition_target": "an official card that shows who you are",
+            "kind": "chunk",
+            "image_prompt": "national ID card on a reception counter",
+            "used_in": [
+                "p8",
+                "A8"
+            ]
+        }
+    ]
+}

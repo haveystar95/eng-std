@@ -1,0 +1,728 @@
+{
+    "topic": {
+        "title_native": "Запись к врачу",
+        "title_target": "Pedir cita con el médico",
+        "description_native": "Запишитесь к врачу, коротко объясните проблему и выберите удобное время.",
+        "description_target": "Book a doctor's appointment, explain the main problem, and choose a suitable time."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "запись",
+                        "target": "una cita",
+                        "in_dialogue": true,
+                        "pronunciation_native": "уна сита"
+                    },
+                    {
+                        "native": "консультация",
+                        "target": "una consulta",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уна консульта"
+                    }
+                ],
+                "hint_native": "что нужно"
+            },
+            "frame_native": "Мне нужно ___.",
+            "frame_target": "Necesito ___.",
+            "pronunciation_native": "Нэсэсито ___."
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "сегодня",
+                        "target": "hoy",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ой"
+                    },
+                    {
+                        "native": "завтра",
+                        "target": "mañana",
+                        "in_dialogue": false,
+                        "pronunciation_native": "маньяна"
+                    }
+                ],
+                "hint_native": "удобный день"
+            },
+            "frame_native": "Я предпочитаю ___.",
+            "frame_target": "Prefiero ___.",
+            "pronunciation_native": "Прэфьеро ___."
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "болит горло",
+                        "target": "dolor de garganta",
+                        "in_dialogue": true,
+                        "pronunciation_native": "долор дэ гарганта"
+                    },
+                    {
+                        "native": "кашель",
+                        "target": "tos",
+                        "in_dialogue": false,
+                        "pronunciation_native": "тос"
+                    },
+                    {
+                        "native": "температура",
+                        "target": "fiebre",
+                        "in_dialogue": false,
+                        "pronunciation_native": "фьебрэ"
+                    }
+                ],
+                "hint_native": "что беспокоит"
+            },
+            "frame_native": "У меня ___.",
+            "frame_target": "Tengo ___.",
+            "pronunciation_native": "Тэнго ___."
+        },
+        {
+            "id": "p4",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "температура",
+                        "target": "temperatura",
+                        "in_dialogue": true,
+                        "pronunciation_native": "тэмпэратура"
+                    },
+                    {
+                        "native": "кашель",
+                        "target": "tos",
+                        "in_dialogue": false,
+                        "pronunciation_native": "тос"
+                    }
+                ],
+                "hint_native": "дополнительный симптом"
+            },
+            "frame_native": "У меня ещё ___.",
+            "frame_target": "También tengo ___.",
+            "pronunciation_native": "Тамбьен тэнго ___."
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "Иван Петров",
+                        "target": "Ivan Petrov",
+                        "in_dialogue": true,
+                        "pronunciation_native": "Иван Петров"
+                    },
+                    {
+                        "native": "Анна Соколова",
+                        "target": "Anna Sokolova",
+                        "in_dialogue": false,
+                        "pronunciation_native": "Анна Соколова"
+                    }
+                ],
+                "hint_native": "имя и фамилия"
+            },
+            "frame_native": "Меня зовут ___.",
+            "frame_target": "Mi nombre es ___.",
+            "pronunciation_native": "Ми номбрэ эс ___."
+        },
+        {
+            "id": "p6",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "912 555 381",
+                        "target": "912 555 381",
+                        "in_dialogue": true,
+                        "pronunciation_native": "нуэвэ уно дос, синко синко синко, трэс очо уно"
+                    },
+                    {
+                        "native": "640 218 907",
+                        "target": "640 218 907",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сэйс куатро сэро, дос уно очо, нуэвэ сэро сьетэ"
+                    }
+                ],
+                "hint_native": "номер телефона"
+            },
+            "frame_native": "Мой номер — ___.",
+            "frame_target": "Mi número es ___.",
+            "pronunciation_native": "Ми нумэро эс ___."
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "четыре часа",
+                        "target": "a las cuatro",
+                        "in_dialogue": true,
+                        "pronunciation_native": "а лас куатро"
+                    },
+                    {
+                        "native": "десять часов",
+                        "target": "a las diez",
+                        "in_dialogue": false,
+                        "pronunciation_native": "а лас дьес"
+                    }
+                ],
+                "hint_native": "время записи"
+            },
+            "frame_native": "Запись на ___?",
+            "frame_target": "¿La cita es ___?",
+            "pronunciation_native": "Ла сита эс ___?"
+        },
+        {
+            "id": "p8",
+            "kind": "answer",
+            "slot": null,
+            "frame_native": "Большое спасибо.",
+            "frame_target": "Muchas gracias.",
+            "pronunciation_native": "Мучас грасьяс."
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "ask",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Про день приёма",
+                        "text_target": "About the date for the visit"
+                    },
+                    {
+                        "text_native": "Про адрес пациента",
+                        "text_target": "About the patient's address"
+                    },
+                    {
+                        "text_native": "Про специальность врача",
+                        "text_target": "About the doctor's specialty"
+                    }
+                ],
+                "text_native": "Про какой день спрашивает администратор?",
+                "text_target": "What day does the receptionist ask about?",
+                "explanation_native": "Администратор спрашивает, на какой день нужна запись.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "una cita",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "Мне нужна запись.",
+                    "text_target": "Necesito una cita.",
+                    "speaking_key": "Necesito",
+                    "simplified_variants": [
+                        "Quiero una cita."
+                    ],
+                    "pronunciation_native": "Нэсэсито уна сита."
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "Конечно. На какой день вам нужна запись?",
+                    "text_target": "Claro. ¿Para qué día la necesita?"
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "В четыре часа дня",
+                        "text_target": "At four in the afternoon"
+                    },
+                    {
+                        "text_native": "В десять утра",
+                        "text_target": "At ten in the morning"
+                    },
+                    {
+                        "text_native": "В семь вечера",
+                        "text_target": "At seven in the evening"
+                    }
+                ],
+                "text_native": "Какое время есть на сегодня?",
+                "text_target": "Which same-day time is available?",
+                "explanation_native": "На сегодня администратор предлагает время в четыре.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "У нас есть сегодня в четыре или завтра в десять.",
+                    "text_target": "Tenemos hoy a las cuatro o mañana a las diez."
+                },
+                {
+                    "filler": "hoy",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "Я предпочитаю сегодня.",
+                    "text_target": "Prefiero hoy.",
+                    "speaking_key": "Prefiero",
+                    "simplified_variants": [
+                        "Mejor hoy."
+                    ],
+                    "pronunciation_native": "Прэфьеро ой."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Причину визита",
+                        "text_target": "The reason for the visit"
+                    },
+                    {
+                        "text_native": "Страховую компанию",
+                        "text_target": "The insurance company"
+                    },
+                    {
+                        "text_native": "Домашний адрес",
+                        "text_target": "The home address"
+                    }
+                ],
+                "text_native": "Какую информацию хочет узнать администратор?",
+                "text_target": "What information does the receptionist want?",
+                "explanation_native": "Администратор спрашивает, что именно беспокоит пациента.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "Хорошо. В чём проблема?",
+                    "text_target": "Bien. ¿Cuál es el problema?"
+                },
+                {
+                    "filler": "dolor de garganta",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "У меня болит горло.",
+                    "text_target": "Tengo dolor de garganta.",
+                    "speaking_key": "Tengo",
+                    "simplified_variants": [
+                        "Me duele la garganta."
+                    ],
+                    "pronunciation_native": "Тэнго долор дэ гарганта."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Как обычный осмотр",
+                        "text_target": "As a routine check"
+                    },
+                    {
+                        "text_native": "Как срочную",
+                        "text_target": "As something urgent"
+                    },
+                    {
+                        "text_native": "Как онлайн-приём",
+                        "text_target": "As an online visit"
+                    }
+                ],
+                "text_native": "Как администратор описывает запись?",
+                "text_target": "How does the receptionist describe the appointment?",
+                "explanation_native": "Администратор говорит, что запись срочная.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "temperatura",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "У меня ещё температура.",
+                    "text_target": "También tengo temperatura.",
+                    "speaking_key": "También tengo",
+                    "simplified_variants": [
+                        "Y tengo fiebre."
+                    ],
+                    "pronunciation_native": "Тамбьен тэнго тэмпэратура."
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "Понимаю. Значит, это срочная запись.",
+                    "text_target": "Entiendo. Entonces es una cita urgente."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Контактный номер",
+                        "text_target": "A contact number"
+                    },
+                    {
+                        "text_native": "Имя и фамилию",
+                        "text_target": "The full name"
+                    },
+                    {
+                        "text_native": "Дату рождения",
+                        "text_target": "The date of birth"
+                    }
+                ],
+                "text_native": "Какую личную информацию просит администратор?",
+                "text_target": "What personal detail does the receptionist ask for?",
+                "explanation_native": "Администратор просит назвать полное имя.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "Мне нужны ваши имя и фамилия.",
+                    "text_target": "Necesito su nombre completo."
+                },
+                {
+                    "filler": "Ivan Petrov",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "Меня зовут Иван Петров.",
+                    "text_target": "Mi nombre es Ivan Petrov.",
+                    "speaking_key": "Mi nombre es",
+                    "simplified_variants": [
+                        "Soy Ivan Petrov."
+                    ],
+                    "pronunciation_native": "Ми номбрэ эс Иван Петров."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Адрес электронной почты",
+                        "text_target": "An email address"
+                    },
+                    {
+                        "text_native": "Контактный телефон",
+                        "text_target": "A telephone contact"
+                    },
+                    {
+                        "text_native": "Рабочий номер",
+                        "text_target": "A work number"
+                    }
+                ],
+                "text_native": "Какую контактную информацию просит администратор?",
+                "text_target": "What contact detail does the receptionist request?",
+                "explanation_native": "Администратор просит сообщить контактный телефон.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "Спасибо. Какой у вас номер телефона?",
+                    "text_target": "Gracias. ¿Cuál es su número de teléfono?"
+                },
+                {
+                    "filler": "912 555 381",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "Мой номер — 912 555 381.",
+                    "text_target": "Mi número es 912 555 381.",
+                    "speaking_key": "Mi número es",
+                    "simplified_variants": [
+                        "Es 912 555 381."
+                    ],
+                    "pronunciation_native": "Ми нумэро эс нуэвэ уно дос, синко синко синко, трэс очо уно."
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Сегодня позже, в 16:00",
+                        "text_target": "Later today, at 4 p.m."
+                    },
+                    {
+                        "text_native": "Завтра в десять утра",
+                        "text_target": "Tomorrow at ten in the morning"
+                    },
+                    {
+                        "text_native": "Сегодня в полдень",
+                        "text_target": "Today at noon"
+                    }
+                ],
+                "text_native": "На какое время администратор подтверждает запись?",
+                "text_target": "When does the receptionist confirm the appointment?",
+                "explanation_native": "Администратор подтверждает запись на сегодня на четыре часа дня.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "a las cuatro",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "Запись на четыре?",
+                    "text_target": "¿La cita es a las cuatro?",
+                    "speaking_key": "La cita es",
+                    "simplified_variants": [
+                        "¿Es a las cuatro?"
+                    ],
+                    "pronunciation_native": "Ла сита эс а лас куатро?"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "Да, сегодня в четыре часа дня.",
+                    "text_target": "Sí, hoy a las cuatro de la tarde."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Приём перенесли на следующую неделю",
+                        "text_target": "The visit was moved to next week"
+                    },
+                    {
+                        "text_native": "Запись теперь подтверждена",
+                        "text_target": "The booking is now confirmed"
+                    },
+                    {
+                        "text_native": "Врач задерживается",
+                        "text_target": "The doctor is running late"
+                    }
+                ],
+                "text_native": "Какой результат сообщает администратор?",
+                "text_target": "What result does the receptionist give?",
+                "explanation_native": "Администратор сообщает, что запись подтверждена.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepcionista",
+                    "text_native": "Отлично. Ваша запись на сегодня подтверждена.",
+                    "text_target": "Perfecto. Su cita está confirmada para hoy."
+                },
+                {
+                    "filler": "gracias",
+                    "speaker": "B",
+                    "phrase_id": "p8",
+                    "role_native": "Пациент",
+                    "role_target": "Paciente",
+                    "text_native": "Большое спасибо.",
+                    "text_target": "Muchas gracias.",
+                    "speaking_key": "Muchas gracias",
+                    "simplified_variants": [
+                        "Gracias."
+                    ],
+                    "pronunciation_native": "Мучас грасьяс."
+                }
+            ],
+            "initiator": "A"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Что беспокоит пациента?",
+                "options_native": [
+                    "Болит горло",
+                    "Болит спина",
+                    "Болит живот"
+                ],
+                "explanation_native": "Пациент говорит, что у него болит горло.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Какое время пациент выбрал?",
+                "options_native": [
+                    "Завтра в десять",
+                    "Сегодня в четыре",
+                    "Сегодня в семь"
+                ],
+                "explanation_native": "Пациент выбирает запись на сегодня в четыре.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Как администратор назвала эту запись?",
+                "options_native": [
+                    "Плановой",
+                    "Онлайн-записью",
+                    "Срочной"
+                ],
+                "explanation_native": "Администратор говорит, что запись срочная.",
+                "correct_option_index": 2
+            },
+            {
+                "text_native": "Что ещё есть у пациента кроме боли в горле?",
+                "options_native": [
+                    "Кашель",
+                    "Температура",
+                    "Насморк"
+                ],
+                "explanation_native": "Пациент добавляет, что у него температура.",
+                "correct_option_index": 1
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p1",
+                "p7",
+                "A4",
+                "A8"
+            ],
+            "term_target": "cita",
+            "image_prompt": "clinic reception desk with appointment cards and a patient speaking to staff",
+            "definition_target": "an arranged time to see a doctor or another professional",
+            "translation_native": "запись",
+            "pronunciation_native": "сита"
+        },
+        {
+            "id": "v2",
+            "kind": "word",
+            "used_in": [
+                "p2"
+            ],
+            "term_target": "prefiero",
+            "image_prompt": null,
+            "definition_target": "I choose one option as better or more convenient",
+            "translation_native": "предпочитаю",
+            "pronunciation_native": "прэфьеро"
+        },
+        {
+            "id": "v3",
+            "kind": "chunk",
+            "used_in": [
+                "p3"
+            ],
+            "term_target": "dolor de garganta",
+            "image_prompt": "person touching their throat in a clinic waiting area",
+            "definition_target": "pain or irritation in the throat",
+            "translation_native": "боль в горле",
+            "pronunciation_native": "долор дэ гарганта"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "p4"
+            ],
+            "term_target": "temperatura",
+            "image_prompt": "digital thermometer on a bedside table next to tissues",
+            "definition_target": "a fever or high body temperature",
+            "translation_native": "температура",
+            "pronunciation_native": "тэмпэратура"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "A4"
+            ],
+            "term_target": "urgente",
+            "image_prompt": null,
+            "definition_target": "needing attention soon, without delay",
+            "translation_native": "срочный",
+            "pronunciation_native": "урхэнтэ"
+        },
+        {
+            "id": "v6",
+            "kind": "chunk",
+            "used_in": [
+                "A5"
+            ],
+            "term_target": "nombre completo",
+            "image_prompt": "patient form on a clipboard with a full name field",
+            "definition_target": "a person's first name and surname together",
+            "translation_native": "полное имя",
+            "pronunciation_native": "номбрэ комплэто"
+        },
+        {
+            "id": "v7",
+            "kind": "chunk",
+            "used_in": [
+                "A6"
+            ],
+            "term_target": "número de teléfono",
+            "image_prompt": "smartphone screen showing a contact phone number",
+            "definition_target": "a phone contact number",
+            "translation_native": "номер телефона",
+            "pronunciation_native": "нумэро дэ тэлефоно"
+        },
+        {
+            "id": "v8",
+            "kind": "word",
+            "used_in": [
+                "A8"
+            ],
+            "term_target": "confirmada",
+            "image_prompt": "appointment confirmation note on a clinic desk",
+            "definition_target": "officially accepted and scheduled",
+            "translation_native": "подтверждена",
+            "pronunciation_native": "конфирмада"
+        }
+    ],
+    "role_gender": "female",
+    "learner_role": {
+        "role_native": "Пациент",
+        "role_target": "Paciente"
+    }
+}
