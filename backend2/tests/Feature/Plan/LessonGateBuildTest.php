@@ -25,7 +25,7 @@ beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 function lgCounters(): array
 {
     $out = [];
-    foreach (DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.7')->get() as $row) {
+    foreach (DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.8')->get() as $row) {
         $out["{$row->check_name}|{$row->action}"] = (int) $row->hits;
     }
     ksort($out);

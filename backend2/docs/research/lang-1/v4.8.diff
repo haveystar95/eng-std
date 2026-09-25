@@ -1,0 +1,11 @@
+--- app/Modules/Plan/Infrastructure/Prompt/lesson_day.v4.7.md
++++ app/Modules/Plan/Infrastructure/Prompt/lesson_day.v4.8.md
+@@ -329,7 +329,7 @@
+ - Frames: one ___ or none (≤ 1/3 without); frame part ≤ 7 words; the slot cut per language — article/possessive/case/preposition with the filler where they depend on it, no alternatives and no agreeing words in frame_native; 2–3 fillers of 1–3 words (values, not clauses), different in meaning, no word repeated across the seam, native fillers in the required case, in_dialogue: true exactly on the fillers the dialogue uses (one per use; two uses of one frame take two different fillers), every assembled pair grammatical in both languages; frame stands alone; frame_native reads like speech.
+ - Vocabulary: unique IDs, kind word/chunk (fixed collocations only, no plain everyday words, no abbreviation without an everyday NATIVE_LANGUAGE word), used_in non-empty and accurate, ≥ half in learner frames or fillers, no item inside another, STOP LIST respected, one translation, image_prompt present (null for abstract) and free of rule text.
+ - Text quality: every line in both languages and both roles is speech, not a definition or paperwork; the learner reacts, never restates A's instruction; learner gender per LEARNER_GENDER without parentheses; A's lines per role_gender.
+-- Pronunciation: present on frames, fillers, vocabulary, B messages; absent on A messages, checks, listening; Cyrillic only when NATIVE_LANGUAGE is Russian.
++- Pronunciation: present on frames, fillers, vocabulary, B messages; absent on A messages, checks, listening; only the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and Belarusian — each with its own letters; Latin for the others).
+ - Checks: one per exchange, always about A's message (never about the learner's line), 3 options, one correct, paraphrase (no 2+ consecutive words copied from A), same-kind distractors, both languages.
+ - Listening: 3–5 questions, NATIVE_LANGUAGE only, meaning not wording, different exchanges, ≥ 1 about the learner's own value, ≥ 1 about A's fact, 3 options each.
+ - role_gender: exactly "female" or "male"; the same as on an earlier day with the same partner role.

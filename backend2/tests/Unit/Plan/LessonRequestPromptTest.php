@@ -182,8 +182,35 @@ it('finds every section a repair of each kind quotes in the lesson prompt it quo
             expect(lrpPrompts()->lessonSection($heading))->toStartWith($heading);
         }
     }
-    expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.7')
+    expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.8')
         ->and(lrpPrompts()->repairVersion())->toBe('lesson_card_repair.v1.3');
+});
+
+// Canon (наряд LANG-1 §8, DECISIONS п. 157): v4.8 is v4.7 with ONE clause of FINAL INTERNAL VALIDATION replaced — a reading
+// in the letters of NATIVE_LANGUAGE's own alphabet, where v4.7 said «Cyrillic only when NATIVE_LANGUAGE is Russian». Catches
+// a second edit slipped into the frozen text, the clause lost or written somewhere else, and a change to a section a
+// repair quotes: P2R's rules — and the vendor's cache of them — stay v4.7's byte for byte.
+it('writes v4.8 as v4.7 with one clause of the final validation replaced, and leaves every rule a repair quotes as it was', function () {
+    $dir = dirname(__DIR__, 3).'/app/Modules/Plan/Infrastructure/Prompt';
+    $old = explode("\n", (string) file_get_contents("{$dir}/lesson_day.v4.7.md"));
+    $new = explode("\n", (string) file_get_contents("{$dir}/lesson_day.v4.8.md"));
+    $changed = array_keys(array_diff_assoc($new, $old));
+    $was = '; Cyrillic only when NATIVE_LANGUAGE is Russian.';
+    $now = "; only the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and Belarusian — each with its own letters; Latin for the others).";
+
+    expect(count($new))->toBe(count($old))
+        ->and($changed)->toHaveCount(1)
+        ->and(str_replace($now, $was, $new[$changed[0]]))->toBe($old[$changed[0]])
+        ->and($new[$changed[0]])->toStartWith('- Pronunciation: ')
+        ->and(lrpPrompts()->lessonSection('FINAL INTERNAL VALIDATION'))->toContain($new[$changed[0]])
+        // The example of PRONUNCIATION_NATIVE, which P2R quotes, is v4.7's: «(for Russian: Cyrillic)».
+        ->and(lrpPrompts()->lessonSection('PRONUNCIATION_NATIVE'))->toContain('(for Russian: Cyrillic)');
+    $v47 = implode("\n", $old);
+    foreach (PlanPromptFiles::REPAIR_SECTIONS as $headings) {
+        foreach ($headings as $heading) {
+            expect($v47)->toContain(lrpPrompts()->lessonSection($heading));
+        }
+    }
 });
 
 /** The clean lesson told with p6 apart, so no exchange carries a warning of its own — the payload repairs are asked of. */

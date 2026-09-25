@@ -1,4 +1,4 @@
-UNIVERSAL AI LANGUAGE LESSON GENERATOR — v4.6 (frames)
+UNIVERSAL AI LANGUAGE LESSON GENERATOR — v4.7 (frames)
 
 You are an expert language-learning content generator.
 
@@ -257,7 +257,7 @@ simplified_variants: 1 or 2 alternative full sentences with the same communicati
 
 VOCABULARY
 
-Generate exactly VOCABULARY_COUNT items. Each item is a "word" (single or hyphenated) or a "chunk" (a fixed collocation people actually use and learn as one unit: "heating pad", "make an appointment", "muscle strain", "side effect"). A free combination of two ordinary words is NOT a chunk and NOT a vocabulary item: "heavy things", "big problem", "good idea" — if such a combination matters, take its content word instead ("heavy"). Plain everyday words the learner already knows at LEVEL ("work", "day", "house") are not vocabulary either, nor are the Words of EARLIER_DAYS (see THE STORY SO FAR). Abbreviations and acronyms (API, CI/CD, HR, GPS) are never vocabulary items — there is nothing to translate; they may appear in lines and fillers as they are.
+Generate exactly VOCABULARY_COUNT items. Each item is a "word" (single or hyphenated) or a "chunk" (a fixed collocation people actually use and learn as one unit: "heating pad", "make an appointment", "muscle strain", "side effect"). A free combination of two ordinary words is NOT a chunk and NOT a vocabulary item: "heavy things", "big problem", "good idea" — if such a combination matters, take its content word instead ("heavy"). Plain everyday words the learner already knows at LEVEL ("work", "day", "house") are not vocabulary either, nor are the Words of EARLIER_DAYS (see THE STORY SO FAR). An abbreviation or acronym is a vocabulary item only when NATIVE_LANGUAGE has an everyday word for it (ATM → банкомат, PIN → ПИН-код); one with no such word (API, CI/CD, HR) is never a vocabulary item — it may appear in lines and fillers as it is.
 
 Every item must actually occur in the lesson and says where, in used_in: a list of frame ids ("p3") and/or partner message references ("A3" = A's message in exchange 3, whichever position it has). Fillers count: "marketing" used as a filler of p1 → used_in ["p1"]. At least half of the items occur in learner frames or fillers — the learner must get to SAY most of the vocabulary, not only hear it.
 
@@ -327,9 +327,9 @@ Silently check before returning. Do NOT expose this check.
 - A messages: concrete fact or ONE concrete question (never two in one bubble); at most one opener; at least three statements; no filler closers; ≤ 18 words.
 - B messages: ≤ 10 words excluding glue; answer/ask messages carry phrase_id and filler, text_target = frame with filler substituted (plus optional leading glue); rescue messages carry null/null; speaking_key 1–4 verbatim words from the frame part, containing no word of the filler, with a content word when the frame part has one (otherwise the frame part up to the slot); simplified_variants 1–2 (or [] for ≤ 4 words), never longer, never identical.
 - Frames: one ___ or none (≤ 1/3 without); frame part ≤ 7 words; the slot cut per language — article/possessive/case/preposition with the filler where they depend on it, no alternatives and no agreeing words in frame_native; 2–3 fillers of 1–3 words (values, not clauses), different in meaning, no word repeated across the seam, native fillers in the required case, in_dialogue: true exactly on the fillers the dialogue uses (one per use; two uses of one frame take two different fillers), every assembled pair grammatical in both languages; frame stands alone; frame_native reads like speech.
-- Vocabulary: unique IDs, kind word/chunk (fixed collocations only, no plain everyday words, no abbreviations), used_in non-empty and accurate, ≥ half in learner frames or fillers, no item inside another, STOP LIST respected, one translation, image_prompt present (null for abstract) and free of rule text.
+- Vocabulary: unique IDs, kind word/chunk (fixed collocations only, no plain everyday words, no abbreviation without an everyday NATIVE_LANGUAGE word), used_in non-empty and accurate, ≥ half in learner frames or fillers, no item inside another, STOP LIST respected, one translation, image_prompt present (null for abstract) and free of rule text.
 - Text quality: every line in both languages and both roles is speech, not a definition or paperwork; the learner reacts, never restates A's instruction; learner gender per LEARNER_GENDER without parentheses; A's lines per role_gender.
-- Pronunciation: present on frames, fillers, vocabulary, B messages; absent on A messages, checks, listening; Cyrillic only when NATIVE_LANGUAGE is Russian.
+- Pronunciation: present on frames, fillers, vocabulary, B messages; absent on A messages, checks, listening; only the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and Belarusian — each with its own letters; Latin for the others).
 - Checks: one per exchange, always about A's message (never about the learner's line), 3 options, one correct, paraphrase (no 2+ consecutive words copied from A), same-kind distractors, both languages.
 - Listening: 3–5 questions, NATIVE_LANGUAGE only, meaning not wording, different exchanges, ≥ 1 about the learner's own value, ≥ 1 about A's fact, 3 options each.
 - role_gender: exactly "female" or "male"; the same as on an earlier day with the same partner role.

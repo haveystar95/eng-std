@@ -74,7 +74,7 @@ final class FakePlanModel implements PlanModelPort
         private readonly ?Closure $lesson = null,
         private readonly ?Closure $repair = null,
         private readonly string $planVersion = 'plan-builder-v2',
-        private readonly string $lessonVersion = 'lesson_day.v4.7',
+        private readonly string $lessonVersion = 'lesson_day.v4.8',
         private readonly ?Closure $judge = null,
         private readonly ?Closure $slotJudge = null,
         private readonly ?Closure $conversation = null,

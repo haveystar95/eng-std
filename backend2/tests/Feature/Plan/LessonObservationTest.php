@@ -51,10 +51,10 @@ it('counts what a lesson breaks and gives the day all the same', function () {
 
     [, $admin] = adminActor();
     $rows = $this->withHeader('Authorization', "Bearer {$admin}")->getJson('/admin/api/plans/checks')->assertOk()->json('data');
-    expect(array_values(array_filter($rows, static fn (array $r): bool => $r['prompt_version'] === 'lesson_day.v4.7')))->toEqualCanonicalizing([
-        ['prompt_version' => 'lesson_day.v4.7', 'check' => 'frame.native_alternatives', 'action' => 'counted', 'hits' => 1],
-        ['prompt_version' => 'lesson_day.v4.7', 'check' => 'check.verbatim', 'action' => 'counted', 'hits' => 1],
-        ['prompt_version' => 'lesson_day.v4.7', 'check' => 'frame.no_end_punct', 'action' => 'counted', 'hits' => 1],
+    expect(array_values(array_filter($rows, static fn (array $r): bool => $r['prompt_version'] === 'lesson_day.v4.8')))->toEqualCanonicalizing([
+        ['prompt_version' => 'lesson_day.v4.8', 'check' => 'frame.native_alternatives', 'action' => 'counted', 'hits' => 1],
+        ['prompt_version' => 'lesson_day.v4.8', 'check' => 'check.verbatim', 'action' => 'counted', 'hits' => 1],
+        ['prompt_version' => 'lesson_day.v4.8', 'check' => 'frame.no_end_punct', 'action' => 'counted', 'hits' => 1],
     ]);
 });
 
@@ -75,7 +75,7 @@ it('asks once more only for an answer off the schema, fails the lesson on the se
     expect($plan['scenes'][0]['lesson_status'])->toBe('failed')
         ->and($plan['scenes'][0]['lesson_fail_reason'])->toContain('listening')
         ->and($fake->lessonCalls)->toBe(2)
-        ->and(DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.7')->count())->toBe(0);
+        ->and(DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.8')->count())->toBe(0);
 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$build['id']}/scenes/{$plan['scenes'][0]['id']}/lesson/retry")->assertStatus(202);
     expect($fake->lessonCalls)->toBe(4);
@@ -107,7 +107,7 @@ it('writes a lesson with the learner\'s gender as the profile says it now and th
         ->and(array_values(array_map(static fn (string $line): string => explode(':', $line, 2)[0], preg_grep('/^[A-Z_]+: /', explode("\n", $user)) ?: [])))
         ->toBe(['TOPIC', 'TOPIC_DESCRIPTION', 'TARGET_LANGUAGE', 'NATIVE_LANGUAGE', 'LEVEL', 'LEARNER_GENDER', 'LEARNER_ROLE', 'PARTNER_ROLE', 'VOCABULARY_COUNT', 'DIALOGUE_COUNT'])
         ->and($prompts->lessonUser($second))->toContain('LEARNER_GENDER: female')
-        ->and($prompts->lessonVersion())->toBe('lesson_day.v4.7')
+        ->and($prompts->lessonVersion())->toBe('lesson_day.v4.8')
         ->and($prompts->lessonSystem())->not->toContain('TEST INPUT')
         ->and($prompts->lessonSystem())->toContain('FINAL OUTPUT RULE');
 });
@@ -127,15 +127,15 @@ it('asks with a strict schema whose references are enums and whose lists have no
         ->and($json)->not->toContain('maxItems');
 });
 
-// P2R quotes the lesson prompt's own sections — of the prompt the day is written with now, v4.7: a repair never retells
+// P2R quotes the lesson prompt's own sections — of the prompt the day is written with now, v4.8: a repair never retells
 // a rule. Catches a wrapper quoting a prompt that is no longer the lesson's, an exchange repaired without the rules
 // of a turn of the visit, and (наряд GEN-3) a frame, an exchange or a word repaired without the story so far.
 it('gives a card repair the lesson prompt\'s own sections for that card, word for word', function () {
     $prompts = new PlanPromptFiles(app_path('Modules/Plan/Infrastructure/Prompt'));
-    $lesson = (string) file_get_contents(app_path('Modules/Plan/Infrastructure/Prompt/lesson_day.v4.7.md'));
+    $lesson = (string) file_get_contents(app_path('Modules/Plan/Infrastructure/Prompt/lesson_day.v4.8.md'));
 
     expect($prompts->repairVersion())->toBe('lesson_card_repair.v1.3')
-        ->and($prompts->lessonVersion())->toBe('lesson_day.v4.7')
+        ->and($prompts->lessonVersion())->toBe('lesson_day.v4.8')
         ->and($lesson)->toContain($prompts->lessonSection('CHECK PER EXCHANGE'))
         ->and($prompts->repairSystem('check'))->toContain($prompts->lessonSection('CHECK PER EXCHANGE'))
         ->and($prompts->repairSystem('frame'))->toContain($prompts->lessonSection('FRAMES'))
@@ -199,7 +199,7 @@ it('asks the seam judge once a day with every native sentence of the lesson, and
         ->and(array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", json_decode((string) $scene->checks_json, true)))->toBe(['filler.native_seam@p1.f2'])
         // Lesson 7 ms, two repairs 3 ms each, the judge 2 ms.
         ->and((int) $scene->latency_ms_lesson)->toBe(7 + 3 + 3 + 2)
-        ->and((int) DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.7')->where('check_name', 'filler.native_seam')->value('hits'))->toBe(1);
+        ->and((int) DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.8')->where('check_name', 'filler.native_seam')->value('hits'))->toBe(1);
 });
 
 // Canon GEN-2b: «код, для которого пакета нет, — пропуск проверки со счётчиком lang.pack_missing, НЕ находка». A learner
@@ -219,7 +219,7 @@ it('builds a day for a learner whose language has no rules yet, skipping and cou
 
     $id = planCreate($this, $token, ['days_total' => 1])['id'];
     $findings = json_decode((string) DB::table('plan_scenes')->where('plan_id', $id)->value('checks_json'), true);
-    $counters = DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.7')->pluck('hits', 'check_name')->all();
+    $counters = DB::table('plan_check_counters')->where('prompt_version', 'lesson_day.v4.8')->pluck('hits', 'check_name')->all();
 
     expect($fake->lessonRequests[0]->nativeLanguage)->toBe('Romanian')
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
