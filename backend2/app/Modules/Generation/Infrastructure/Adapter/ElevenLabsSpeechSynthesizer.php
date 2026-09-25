@@ -31,6 +31,14 @@ use Throwable;
  * по умолчанию вендора. Вендор отвечает самим mp3 — это и есть файл строки. Реплики диалога тоже говорятся по одной,
  * каждая голосом своего говорящего (решение архитектора TTS-2): диалог не собирается из одного звука и не режется.
  *
+ * ## Язык строки
+ *
+ * Строка, чей язык назван ({@see SpeechLine::$languageCode} — цель плана), уходит с `language_code` (ISO 639-1): одни и те
+ * же голоса говорят всеми целями плана, и v3 без кода угадывает язык по буквам (наряд LANG-1, п. 9). Живая проба 25.09 на
+ * `eleven_v3_conversational` — код принят на 12 строках из 12. Выключатель `generation.speech.language_code`
+ * (`SPEECH_LANGUAGE_CODE`, по умолчанию включён) снимает код со всех строк разом, если вендор начнёт отказывать модели в
+ * нём; строка без названного языка уходит без кода всегда. Ключ файла код не трогает (DECISIONS п. 248).
+ *
  * ## Сколько сразу
  *
  * Строки уходят раундами через `Http::pool` по числу одновременных запросов аккаунта: сначала по конфигу, дальше — по
@@ -74,6 +82,9 @@ final class ElevenLabsSpeechSynthesizer implements SpeechSynthesizerPort
 
     private int $concurrency;
 
+    /** Whether a line's named language goes to the vendor as `language_code` (наряд LANG-1, п. 9). */
+    private readonly bool $sendsLanguageCode;
+
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -83,8 +94,14 @@ final class ElevenLabsSpeechSynthesizer implements SpeechSynthesizerPort
         private readonly int $timeout = 60,
         private readonly string $baseUrl = 'https://api.elevenlabs.io',
         private readonly int $backoffMs = 1000,
+        /**
+         * Send the line's language (`language_code`)? Null — the switch `generation.speech.language_code` as the
+         * deployment has it (default on), so the container's binding reads it without an argument of its own.
+         */
+        ?bool $languageCode = null,
     ) {
         $this->concurrency = max(1, $concurrency);
+        $this->sendsLanguageCode = $languageCode ?? (bool) config('generation.speech.language_code', true);
     }
 
     public function speakLines(array $lines, callable $spoken): void
@@ -97,11 +114,7 @@ final class ElevenLabsSpeechSynthesizer implements SpeechSynthesizerPort
                 fn (Pool $pool): array => array_map(
                     fn (int $i): mixed => $this->client($pool->as((string) $i))->post(
                         rtrim($this->baseUrl, '/').'/v1/text-to-speech/'.rawurlencode($lines[$i]->voice->voice).'?output_format='.self::OUTPUT_FORMAT,
-                        [
-                            'text' => trim($lines[$i]->text),
-                            'model_id' => $lines[$i]->voice->model,
-                            'voice_settings' => ['stability' => $lines[$i]->voice->stability],
-                        ],
+                        $this->bodyOf($lines[$i]),
                     ),
                     $round,
                 ),
@@ -179,6 +192,26 @@ final class ElevenLabsSpeechSynthesizer implements SpeechSynthesizerPort
         }
 
         return new SpeechBalance($used, $limit, is_int($reset) ? $reset : null);
+    }
+
+    /**
+     * What one line asks for: its text, its voice's model and stability — and its language when the line names one and
+     * the switch lets it go (наряд LANG-1, п. 9). Nothing else: the vendor's defaults for the rest (TTS-2).
+     *
+     * @return array<string, mixed>
+     */
+    private function bodyOf(SpeechLine $line): array
+    {
+        $body = [
+            'text' => trim($line->text),
+            'model_id' => $line->voice->model,
+            'voice_settings' => ['stability' => $line->voice->stability],
+        ];
+        if ($this->sendsLanguageCode && $line->languageCode !== null) {
+            $body['language_code'] = $line->languageCode;
+        }
+
+        return $body;
     }
 
     private function client(PendingRequest $request): PendingRequest

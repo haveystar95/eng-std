@@ -29,6 +29,11 @@ use Throwable;
  * Switched off, or a language without the voice a line needs, means that line is not said — the client uses the phone's
  * voice. A refusal to read a text is the synthesizer's to skip; a transient error and a refusal of the vendor account
  * propagate.
+ *
+ * Every line is asked for in the language it is in — `$lang`, the plan's target, lower-cased (наряд LANG-1, п. 9): one set
+ * of voices speaks every target, and the vendor is told which one instead of guessing it from the letters. The language is
+ * the line's, not the voice's: the key a file is stored and found under ({@see self::key()}) does not carry it, so no file
+ * bought before LANG-1 goes unread (DECISIONS п. 248).
  */
 final readonly class GenerationLineSpeaker implements LineSpeaker
 {
@@ -49,7 +54,7 @@ final readonly class GenerationLineSpeaker implements LineSpeaker
             $voice = $this->voiceOf($lang, $line);
             if ($voice !== null) {
                 $said[] = $line;
-                $asked[] = new SpeechLine($line->text, $voice);
+                $asked[] = new SpeechLine($line->text, $voice, self::languageCode($lang));
             }
         }
         if ($asked === []) {
@@ -76,7 +81,7 @@ final readonly class GenerationLineSpeaker implements LineSpeaker
         foreach ($lines as $line) {
             $voice = $this->voiceOf($lang, $line);
             if ($voice !== null) {
-                $asked[] = new SpeechLine($line->text, $voice);
+                $asked[] = new SpeechLine($line->text, $voice, self::languageCode($lang));
             }
         }
 
@@ -105,6 +110,14 @@ final readonly class GenerationLineSpeaker implements LineSpeaker
     private function voiceOf(string $lang, LineToSay $line): ?LineVoice
     {
         return $this->voices->forLanguage($lang, VoiceRole::from($line->speaker->value), $line->gender, $line->voice);
+    }
+
+    /** The language a plan's line is in, as the vendor names it: the target, lower-case; none when there is none. */
+    private static function languageCode(string $lang): ?string
+    {
+        $code = strtolower(trim($lang));
+
+        return $code === '' ? null : $code;
     }
 
     private static function key(LineVoice $voice): string

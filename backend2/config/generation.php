@@ -59,6 +59,16 @@ return [
         'named_plans_only_databases' => ['wordtrainer_e2e_test'],
 
         /*
+         * ЯЗЫК СТРОКИ — ВЕНДОРУ (наряд LANG-1, п. 9). Включено — каждая строка плана уходит к ElevenLabs с
+         * `language_code` цели плана (ISO 639-1: `de`, `pl`, …), и v3 читает польскую строку польским произношением, а
+         * не угадывает язык по буквам. Живая проба 25.09 на `eleven_v3_conversational`: код принят на 12 строках из 12
+         * (`docs/research/lang-1/voices/samples.json`). Выключатель — на случай, если вендор начнёт отказывать модели
+         * в коде: строки тогда уходят без него, как до LANG-1. Ключ файла код не меняет — адрес файла по-прежнему
+         * голос, модель и стабильность (DECISIONS п. 248), и ни один купленный файл не становится непрочитанным.
+         */
+        'language_code' => (bool) env('SPEECH_LANGUAGE_CODE', true),
+
+        /*
          * ГОЛОСА ЯЗЫКОВОГО ПАКЕТА — язык обучения → роль → пол (TTS-2). Голоса ролей в сцене всегда разные, какого бы
          * пола ни была каждая роль: у собеседника и у ученика свой женский и свой мужской голос — четыре разных id.
          * Четыре голоса ниже Ден послушал и утвердил 15.09; сменить голос — одна строка `SPEECH_VOICE_EN_*` в `.env`,
@@ -76,50 +86,58 @@ return [
          * ней один раз, при приёме её урока (`plan_scenes.partner_voice_id`), и сцены одного пола по порядку плана
          * чередуют голос 1 и 2 — две соседние сцены одного пола всегда звучат разными людьми. Вторые голоса Ден выбрал по
          * образцам 25.09 (`docs/research/fix-4c/voices/`): Maisie и Caleb.
+         *
+         * КАЖДАЯ ЦЕЛЬ ПЛАНА — СО СВОИМИ ШЕСТЬЮ СТРОКАМИ (наряд LANG-1, п. 9; DECISIONS пп. 318, 414). Список целей ниже —
+         * тот же, что `LanguageRoles::planTargets()` (одно место языков плана в коде, DECISIONS п. 145); здесь он
+         * буквальный, потому что конфиг читается раньше приложения и не зовёт ни чужой конфиг, ни код модулей. Цель,
+         * добавленная туда, добавляется и сюда — иначе её строки звучат системным синтезом. Голос строки — первый
+         * непустой из трёх: `SPEECH_VOICE_<ЯЗЫК>_<СЛОТ>` (например `SPEECH_VOICE_DE_PARTNER_FEMALE`), затем
+         * `SPEECH_VOICE_EN_<СЛОТ>`, затем утверждённый Деном id ниже. Поэтому для `en` ничего не изменилось, а каждый
+         * новый язык говорит утверждёнными голосами (v3 многоязычен; образцы шести новых языков —
+         * `docs/research/lang-1/voices/`), пока `.env` не назовёт ему свой. Пустая строка в `.env` (`…=`) — то же, что
+         * её отсутствие: следующий по цепочке, а не «голоса нет».
          */
-        'voices' => [
-            'en' => [
+        'voices' => (static function (): array {
+            /** @var array<string, array<string, string>> $approved роль → слот → id, утверждённый Деном (15.09, 25.09) */
+            $approved = [
                 'partner' => [
-                    'female' => [
-                        'provider' => 'elevenlabs',
-                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_PARTNER_FEMALE', '4NejU5DwQjevnR6mh3mb'),
-                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
-                    ],
-                    'female_2' => [
-                        'provider' => 'elevenlabs',
-                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_PARTNER_FEMALE_2', 'QtY3JBOUKEB5xzrRfOKc'),
-                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
-                    ],
-                    'male' => [
-                        'provider' => 'elevenlabs',
-                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_PARTNER_MALE', 'EnjklPXGBMNldCJ7jqkE'),
-                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
-                    ],
-                    'male_2' => [
-                        'provider' => 'elevenlabs',
-                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_PARTNER_MALE_2', 'AaOhDHYJ1XLZk74lXhdE'),
-                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
-                    ],
+                    'female' => '4NejU5DwQjevnR6mh3mb',
+                    'female_2' => 'QtY3JBOUKEB5xzrRfOKc',
+                    'male' => 'EnjklPXGBMNldCJ7jqkE',
+                    'male_2' => 'AaOhDHYJ1XLZk74lXhdE',
                 ],
                 'learner' => [
-                    'female' => [
-                        'provider' => 'elevenlabs',
-                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_LEARNER_FEMALE', 'Nhs7eitvQWFTQBsf0yiT'),
-                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
-                    ],
-                    'male' => [
-                        'provider' => 'elevenlabs',
-                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
-                        'voice' => env('SPEECH_VOICE_EN_LEARNER_MALE', 'TWutjvRaJqAX89preB4e'),
-                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
-                    ],
+                    'female' => 'Nhs7eitvQWFTQBsf0yiT',
+                    'male' => 'TWutjvRaJqAX89preB4e',
                 ],
-            ],
-        ],
+            ];
+            // Первый непустой: `env()` отдаёт null для отсутствующей строки, '' для пустой, bool для `true`/`false`.
+            $first = static function (mixed ...$candidates): string {
+                foreach ($candidates as $candidate) {
+                    if (is_string($candidate) && trim($candidate) !== '') {
+                        return trim($candidate);
+                    }
+                }
+
+                return '';
+            };
+
+            $voices = [];
+            foreach (['en', 'pl', 'ro', 'es', 'it', 'de', 'fr'] as $lang) {
+                foreach ($approved as $role => $slots) {
+                    foreach ($slots as $slot => $id) {
+                        $name = strtoupper("{$role}_{$slot}");
+                        $voices[$lang][$role][$slot] = [
+                            'provider' => 'elevenlabs',
+                            'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
+                            'voice' => $first(env('SPEECH_VOICE_'.strtoupper($lang).'_'.$name), env('SPEECH_VOICE_EN_'.$name), $id),
+                            'stability' => (float) env('SPEECH_STABILITY', 0.5),
+                        ];
+                    }
+                }
+            }
+
+            return $voices;
+        })(),
     ],
 ];

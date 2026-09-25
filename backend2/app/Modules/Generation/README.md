@@ -203,6 +203,11 @@ plan (`app/Modules/Plan`), which buys the audio of everything a day says and sto
 The voices (by language, role and gender; the ids are `SPEECH_VOICE_EN_*` lines of `.env`), the model, the concurrency,
 the credit price, the credits cap of a run and the on/off switch are config (`generation.speech.*`,
 `services.elevenlabs.*`).
+Every plan target (en, pl, ro, es, it, de, fr — `LanguageRoles::planTargets()`) has the same six voice rows, each id
+`SPEECH_VOICE_<LANG>_<SLOT>`, else `SPEECH_VOICE_EN_<SLOT>`, else Den's approved id — so every language speaks with the
+approved voices until `.env` names its own (наряд LANG-1, п. 9). A line carries its language (`SpeechLine::$languageCode`,
+the plan's target) and goes to the vendor with `language_code` unless `SPEECH_LANGUAGE_CODE=false`; the file's voice key
+does not change with it (DECISIONS п. 248).
 
 ## Boundaries
 

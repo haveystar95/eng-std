@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Infrastructure\Adapter\ElevenLabsSpeechSynthesizer;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Shared\Domain\ValueObject\LineVoice;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
@@ -103,17 +104,31 @@ it('builds one synthesizer — ElevenLabs — and the double only when the drive
         ->and(app(SpeechSynthesizerPort::class))->toBeInstanceOf(ElevenLabsSpeechSynthesizer::class);
 });
 
+/**
+ * The plan's targets (наряд LANG-1; DECISIONS п. 145) — the one list of them in code, which the config's literal list of
+ * voiced languages must equal.
+ *
+ * @return list<string>
+ */
+function oneVoicePlanTargets(): array
+{
+    return LanguageRoles::planTargets();
+}
+
 // Canon (TTS-2, доработка): «в сцене голоса ролей всегда разные» — whatever gender each role has, the partner never speaks
-// in the learner's voice. Catches one woman's voice shared by both roles (the pack before this fix) or one man's.
-it('gives the two roles of a scene different voices, whatever gender each role has', function () {
+// in the learner's voice — in every language a plan is taught in (наряд LANG-1, п. 9). Catches one woman's voice shared by
+// both roles (the pack before this fix) or one man's, and a new language whose rows were copied with a role swapped.
+it('gives the two roles of a scene different voices, whatever gender each role has, in every plan target', function () {
     $catalog = new VoiceCatalog((array) config('generation.speech.voices'));
     $pairs = [];
-    foreach ([VoiceGender::Female, VoiceGender::Male] as $partner) {
-        foreach ([VoiceGender::Female, VoiceGender::Male] as $learner) {
-            $pairs["partner {$partner->value} · learner {$learner->value}"] = [
-                $catalog->forLanguage('en', VoiceRole::Partner, $partner)?->voice,
-                $catalog->forLanguage('en', VoiceRole::Learner, $learner)?->voice,
-            ];
+    foreach (oneVoicePlanTargets() as $lang) {
+        foreach ([VoiceGender::Female, VoiceGender::Male] as $partner) {
+            foreach ([VoiceGender::Female, VoiceGender::Male] as $learner) {
+                $pairs["{$lang}: partner {$partner->value} · learner {$learner->value}"] = [
+                    $catalog->forLanguage($lang, VoiceRole::Partner, $partner)?->voice,
+                    $catalog->forLanguage($lang, VoiceRole::Learner, $learner)?->voice,
+                ];
+            }
         }
     }
 
@@ -124,7 +139,11 @@ it('gives the two roles of a scene different voices, whatever gender each role h
     }
 });
 
-it('voices every language pack with ElevenLabs on eleven_v3_conversational, a man partner and a man learner apart', function () {
+// Canon (наряд LANG-1, п. 9; DECISIONS пп. 318, 414): «шесть строк голосов у каждой цели плана — en, pl, ro, es, it, de, fr;
+// по умолчанию — утверждённые Деном голоса». CATCHES a plan target left without rows (its lines on the phone's voice), a
+// target the plan does not teach given rows, a slot missing in one language, a second vendor or model slipped into a new
+// language's rows, and a new language that brought voices of its own nobody has heard (the ids stay the six approved).
+it('voices every plan target with the same six ElevenLabs rows on eleven_v3_conversational, a man partner and a man learner apart', function () {
     $voices = [];
     foreach ((array) config('generation.speech.voices') as $lang => $roles) {
         foreach ((array) $roles as $role => $genders) {
@@ -133,11 +152,25 @@ it('voices every language pack with ElevenLabs on eleven_v3_conversational, a ma
             }
         }
     }
+    // Two partner voices a gender since наряд FIX-4c §1 (scenes of one gender take turns) — six slots, every one apart.
+    $slots = ['partner.female', 'partner.female_2', 'partner.male', 'partner.male_2', 'learner.female', 'learner.male'];
+    $expected = [];
+    foreach (oneVoicePlanTargets() as $lang) {
+        foreach ($slots as $slot) {
+            $expected[] = "{$lang}.{$slot}";
+        }
+    }
 
-    // Two partner voices a gender since наряд FIX-4c §1 (scenes of one gender take turns) — six voices, every one apart.
-    expect(array_keys($voices))->toBe(['en.partner.female', 'en.partner.female_2', 'en.partner.male', 'en.partner.male_2', 'en.learner.female', 'en.learner.male'])
+    expect(array_keys((array) config('generation.speech.voices')))->toBe(oneVoicePlanTargets())
+        ->and(array_keys($voices))->toBe($expected)
         ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->provider, $voices)))->toBe(['en.partner.female' => 'elevenlabs'])
         ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->model, $voices)))->toBe(['en.partner.female' => 'eleven_v3_conversational'])
         ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $voices)))->toHaveCount(6)
-        ->and($voices['en.partner.female']->stability)->toBe(0.5);
+        ->and(array_unique(array_map(static fn (LineVoice $v): float => $v->stability, $voices)))->toBe(['en.partner.female' => 0.5]);
+    // Six apart WITHIN each language, too: six ids across all rows would still let one language say two of its slots in
+    // one voice (a slot copied over its neighbour) — the scene's two women, or the partner and the learner, as one person.
+    foreach (oneVoicePlanTargets() as $lang) {
+        $own = array_filter($voices, static fn (string $key): bool => str_starts_with($key, "{$lang}."), ARRAY_FILTER_USE_KEY);
+        expect(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $own)))->toHaveCount(6, $lang);
+    }
 });

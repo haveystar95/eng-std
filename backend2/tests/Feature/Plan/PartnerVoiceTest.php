@@ -2,14 +2,22 @@
 
 declare(strict_types=1);
 
+use App\Modules\Generation\Application\Dto\SpeechLine;
+use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
 use App\Modules\Plan\Application\Command\BuildLesson;
 use App\Modules\Plan\Application\Command\BuildLessonHandler;
 use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Application\Dto\LineToSay;
+use App\Modules\Plan\Application\Dto\SpokenAudio;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\Speaker;
+use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
 use App\Modules\Plan\Infrastructure\Eloquent\PartnerVoiceBackfill;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
+use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
@@ -34,14 +42,16 @@ function pvVoices(): array
 }
 
 /**
- * A plan of four scenes — its three and one spliced in fourth, a nurse — every lesson unwritten again.
+ * A plan of four scenes — its three and one spliced in fourth, a nurse — every lesson unwritten again. `$overrides` —
+ * what `POST /plans` is given besides the defaults: `target_lang` for a plan in another language (наряд LANG-1, п. 9).
  *
+ * @param  array<string, mixed>  $overrides
  * @return list<string> the scene ids in the plan's order
  */
-function pvFourScenes(object $ctx): array
+function pvFourScenes(object $ctx, array $overrides = []): array
 {
     [, $token] = planLearner();
-    $id = planCreate($ctx, $token)['id'];
+    $id = planCreate($ctx, $token, $overrides)['id'];
     $third = (string) DB::table('plan_scenes')->where('plan_id', $id)->where('order', 3)->value('id');
     $columns = array_values(array_filter(Schema::getColumnListing('plan_scenes'), static fn (string $c): bool => ! in_array($c, ['id', 'order', 'partner_role_target', 'partner_role_native'], true)));
     $quoted = implode(', ', array_map(static fn (string $c): string => '"'.$c.'"', $columns));
@@ -113,4 +123,83 @@ it('backfills the scenes that were there: voice 1 where the partner is voiced, t
     pvVoiced($scenes[1], $voices['F1']);
     app(PartnerVoiceBackfill::class)->run();
     expect($cast())->toBe([$voices['F1'], $voices['F1'], $voices['F2'], null]);
+});
+
+/**
+ * The pack's German partner rows told apart from the English ones — the deployment gives both the same ids until `.env`
+ * names German its own (наряд LANG-1, п. 9), and a cast from the wrong language's rows would look right. The catalog is a
+ * singleton built from the config, so it is built again.
+ *
+ * @return array{F1: string, F2: string, M1: string, M2: string}
+ */
+function pvGermanVoices(): array
+{
+    $ids = ['F1' => 'de-woman-1', 'F2' => 'de-woman-2', 'M1' => 'de-man-1', 'M2' => 'de-man-2'];
+    config([
+        'generation.speech.voices.de.partner.female.voice' => $ids['F1'],
+        'generation.speech.voices.de.partner.female_2.voice' => $ids['F2'],
+        'generation.speech.voices.de.partner.male.voice' => $ids['M1'],
+        'generation.speech.voices.de.partner.male_2.voice' => $ids['M2'],
+    ]);
+    app()->forgetInstance(VoiceCatalog::class);
+
+    return $ids;
+}
+
+// Canon (наряд LANG-1, п. 9; DECISIONS пп. 318, 414): «голоса — по языку обучения: шесть строк у каждой цели плана»; «план
+// на de получает голос сцены из строк de». CATCHES a scene of a German plan cast from the English rows (the catalog asked
+// in the account's language, or in a hard-wired `en`), and a German plan left without a voice because its pack has no rows.
+it('casts a German plan\'s partner voices from the German rows of the pack: roles F, F, M, F speak de F1, F2, M1, F1', function () {
+    $genders = ['Receptionist' => 'female', 'Doctor' => 'female', 'Pharmacist' => 'male', 'Nurse' => 'female'];
+    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: static function (LessonRequest $request) use ($genders): array {
+        return ['role_gender' => $genders[$request->roles->partnerTarget] ?? 'female'] + planCleanLesson($request);
+    }));
+    $voices = pvGermanVoices();
+    $scenes = pvFourScenes($this, ['target_lang' => 'de']);
+
+    foreach ($scenes as $scene) {
+        app(BuildLessonHandler::class)(new BuildLesson(PlanSceneId::fromString($scene)));
+    }
+
+    expect(DB::table('plans')->where('id', DB::table('plan_scenes')->where('id', $scenes[0])->value('plan_id'))->value('target_lang'))->toBe('de')
+        ->and(DB::table('plan_scenes')->whereIn('id', $scenes)->orderBy('order')->pluck('lesson_status')->all())->toBe(['ready', 'ready', 'ready', 'ready'])
+        ->and(DB::table('plan_scenes')->whereIn('id', $scenes)->orderBy('order')->pluck('partner_voice_id')->all())
+        ->toBe([$voices['F1'], $voices['F2'], $voices['M1'], $voices['F1']]);
+});
+
+// Canon (наряд LANG-1, п. 9): «GenerationLineSpeaker передаёт language_code = цель плана в каждой строке; ключ голоса не
+// меняется». CATCHES a German line bought without its language (the vendor guessing it from the letters), the language
+// taken from somewhere else than the plan's target, an upper-case code the vendor would refuse, and a voice key that
+// grew the language — which would leave every file bought before LANG-1 unread (DECISIONS п. 248).
+it('asks the vendor for a German plan\'s lines in German, in the German rows\' voices, under keys without the language', function () {
+    $voices = pvGermanVoices();
+    $fake = new FakeSpeechSynthesizer;
+    $speaker = new GenerationLineSpeaker($fake, app(VoiceCatalog::class), true);
+    $kept = [];
+
+    $speaker->sayEach('DE', [
+        new LineToSay('x1', 'Wo tut es weh?', Speaker::Partner, VoiceGender::Female, $voices['F2']),
+        new LineToSay('x1b', 'Hier, im unteren Rücken.', Speaker::Learner, VoiceGender::Male),
+    ], static function (string $ref, SpokenAudio $audio) use (&$kept): void {
+        $kept[$ref] = $audio->voiceKey;
+    });
+
+    $learner = (string) config('generation.speech.voices.de.learner.male.voice');
+    expect(array_map(static fn (SpeechLine $l): ?string => $l->languageCode, $fake->lines))->toBe(['de', 'de'])
+        ->and(array_map(static fn (SpeechLine $l): string => $l->voice->voice, $fake->lines))->toBe([$voices['F2'], $learner])
+        ->and($kept)->toBe([
+            'x1' => "elevenlabs:eleven_v3_conversational:{$voices['F2']}:s50",
+            'x1b' => "elevenlabs:eleven_v3_conversational:{$learner}:s50",
+        ])
+        ->and($speaker->voiceKeyFor('de', Speaker::Partner, VoiceGender::Female, $voices['F2']))->toBe($kept['x1']);
+
+    // An English line is said as it always was, only named: the same voice under the same key as before LANG-1.
+    $fake->lines = [];
+    $speaker->sayEach('en', [new LineToSay('x2', 'Where does it hurt?', Speaker::Partner, VoiceGender::Female)], static function (string $ref, SpokenAudio $audio) use (&$kept): void {
+        $kept[$ref] = $audio->voiceKey;
+    });
+    $english = (string) config('generation.speech.voices.en.partner.female.voice');
+    expect($fake->lines[0]->languageCode)->toBe('en')
+        ->and($fake->lines[0]->voice->voice)->toBe($english)
+        ->and($kept['x2'])->toBe("elevenlabs:eleven_v3_conversational:{$english}:s50");
 });

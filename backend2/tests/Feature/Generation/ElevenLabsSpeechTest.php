@@ -22,7 +22,8 @@ use Illuminate\Support\Facades\Http;
 // for good, and a serial run handed them to the log's own tests (наряд ACC-1 §4).
 uses(RefreshDatabase::class);
 
-function elevenVendor(int $concurrency = 3): ElevenLabsSpeechSynthesizer
+/** @param  bool|null  $languageCode  send the line's language; null — as `generation.speech.language_code` says */
+function elevenVendor(int $concurrency = 3, ?bool $languageCode = null): ElevenLabsSpeechSynthesizer
 {
     return new ElevenLabsSpeechSynthesizer(
         context: app(OutboundCallContext::class),
@@ -32,6 +33,7 @@ function elevenVendor(int $concurrency = 3): ElevenLabsSpeechSynthesizer
         timeout: 30,
         baseUrl: 'https://api.elevenlabs.test',
         backoffMs: 0,
+        languageCode: $languageCode,
     );
 }
 
@@ -186,4 +188,62 @@ it('reads the account’s balance as the vendor counts it, and nothing when the 
 
     expect($balance?->used)->toBe(776)->and($balance?->limit)->toBe(39224)->and($balance?->resetsAtUnix)->toBe(1792059247)
         ->and(elevenVendor()->balance())->toBeNull();
+});
+
+/**
+ * The bodies of every call sent, in the order sent — what the vendor was asked for, each line's own.
+ *
+ * @return list<array<string, mixed>>
+ */
+function elevenBodies(): array
+{
+    return array_values(array_map(static fn (array $pair): array => $pair[0]->data(), Http::recorded()->all()));
+}
+
+// Canon (наряд LANG-1, п. 9): «ElevenLabs получает language_code строки, когда он назван и флаг включён (по умолчанию
+// включён; живая проба — 12 из 12)». CATCHES a German line said without its language (the vendor guessing it from the
+// letters), a language sent that the line never named, the language taken from the first line for the whole round, and
+// the rest of the body changed by it (text, model, stability — the key of the file stays the voice's, DECISIONS п. 248).
+it('names each line\'s language to the vendor: language_code de for a German line, none for a line that names none', function () {
+    Http::fake(['api.elevenlabs.test/*' => Http::response('ID3-ok', 200, ['character-cost' => '4'])]);
+
+    elevenVendor(concurrency: 1)->speakLines([
+        new SpeechLine('Wo tut es weh?', elevenVoice('partner-woman'), 'de'),
+        new SpeechLine('Where does it hurt?', elevenVoice('partner-woman')),
+        new SpeechLine('Gdzie boli?', elevenVoice('learner-man'), 'PL'),
+    ], static fn () => null);
+
+    expect(elevenBodies())->toBe([
+        ['text' => 'Wo tut es weh?', 'model_id' => 'eleven_v3_conversational', 'voice_settings' => ['stability' => 0.5], 'language_code' => 'de'],
+        ['text' => 'Where does it hurt?', 'model_id' => 'eleven_v3_conversational', 'voice_settings' => ['stability' => 0.5]],
+        ['text' => 'Gdzie boli?', 'model_id' => 'eleven_v3_conversational', 'voice_settings' => ['stability' => 0.5], 'language_code' => 'pl'],
+    ]);
+});
+
+// Canon (наряд LANG-1, п. 9): «флаг generation.speech.language_code (SPEECH_LANGUAGE_CODE) — выключатель на случай отказа
+// вендора». CATCHES a switch the adapter ignores (the code sent though it is off), a switch read only from the constructor
+// (the deployment's config never reaching the container's adapter), and a constructor's word overruled by the config.
+// The config file's own default (on) is `tests/Unit/Shared/VoiceCatalogTest.php`'s to check.
+it('sends no language at all when the switch is off — in the config or in the constructor — and sends it when it is on', function () {
+    Http::fake(['api.elevenlabs.test/*' => Http::response('ID3-ok', 200, ['character-cost' => '4'])]);
+    $german = [new SpeechLine('Wo tut es weh?', elevenVoice('partner-woman'), 'de')];
+
+    config(['generation.speech.language_code' => false]);
+    elevenVendor()->speakLines($german, static fn () => null);
+    elevenVendor(languageCode: true)->speakLines($german, static fn () => null);
+    config(['generation.speech.language_code' => true]);
+    elevenVendor(languageCode: false)->speakLines($german, static fn () => null);
+    elevenVendor()->speakLines($german, static fn () => null);
+
+    expect(array_map(static fn (array $body): ?string => $body['language_code'] ?? null, elevenBodies()))->toBe([null, 'de', null, 'de']);
+});
+
+// Canon (наряд LANG-1, п. 9): the language is the plan's target, ISO 639-1. CATCHES a code sent as the plan stores it
+// («DE», « de ») that the vendor would refuse, an empty code sent as a language, and a language name taken for a code.
+it('keeps a line\'s language as a lower-case code, an empty one as none, and refuses what is not a code', function () {
+    expect((new SpeechLine('Hallo', elevenVoice('v'), ' DE '))->languageCode)->toBe('de')
+        ->and((new SpeechLine('Hallo', elevenVoice('v'), ''))->languageCode)->toBeNull()
+        ->and((new SpeechLine('Hallo', elevenVoice('v')))->languageCode)->toBeNull()
+        ->and(fn () => new SpeechLine('Hallo', elevenVoice('v'), 'Deutsch'))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => new SpeechLine('Hallo', elevenVoice('v'), 'de-DE'))->toThrow(InvalidArgumentException::class);
 });
