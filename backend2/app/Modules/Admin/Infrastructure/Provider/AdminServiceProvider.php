@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Infrastructure\Provider;
 
+use App\Modules\Admin\Application\Port\AdminAuditAnonymizer;
 use App\Modules\Admin\Application\Port\AdminAuditRecorder;
 use App\Modules\Admin\Application\Port\AdminCollectionReader;
 use App\Modules\Admin\Application\Port\AdminContentHealthReader;
@@ -20,6 +21,7 @@ use App\Modules\Admin\Application\Port\AdminReviewReader;
 use App\Modules\Admin\Application\Port\AdminSignOut;
 use App\Modules\Admin\Application\Port\AdminTermReader;
 use App\Modules\Admin\Application\Port\AdminUserReader;
+use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminAuditAnonymizer;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminAuditRecorder;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminCollectionReader;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminContentHealthReader;
@@ -48,6 +50,8 @@ final class AdminServiceProvider extends ServiceProvider
         $this->app->bind(AdminReader::class, EloquentAdminReader::class);
         $this->app->bind(AdminSignOut::class, SanctumAdminSignOut::class);
         $this->app->bind(AdminAuditRecorder::class, EloquentAdminAuditRecorder::class);
+        // Account deletion (наряд ACC-1 §1): the audit keeps the change and loses whom it was done to.
+        $this->app->bind(AdminAuditAnonymizer::class, EloquentAdminAuditAnonymizer::class);
 
         $this->app->bind(AdminMetricsReader::class, EloquentAdminMetricsReader::class);
         $this->app->bind(AdminCostReader::class, EloquentAdminCostReader::class);

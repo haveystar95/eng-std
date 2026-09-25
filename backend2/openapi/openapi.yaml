@@ -123,12 +123,21 @@ paths:
       tags: [Auth]
       summary: Delete the account and all of the user's data (App Store requirement)
       description: >
-        Irreversible. Cascades across every module (collections, subscriptions, progress, reviews,
-        triages, sessions, stats, generations), revokes all tokens, and nulls the user's authorship
-        on global terms — the terms themselves stay. Runs in one transaction.
+        Irreversible (наряд ACC-1 §1). Cascades across every module in one transaction — the plans with
+        everything on them (days, cards, answers, talks and their lines, walked stages, returns, the
+        journal and the letters) and their files (the voice of scenes and talks, the photo copies — deleted
+        once the transaction has committed), collections and the pool (progress, reviews, triages,
+        exposures, sessions, stats), subscriptions, generations, practice dialogs and their transcripts,
+        the profile, push addresses, visits, access rights — and revokes every token. What stays, unlinked:
+        the global terms (authorship nulled), the request log (the user and the bodies and headers of the
+        user's own rows nulled), the admin audit (its target nulled), the model call journal (it names no
+        user). One row of `account_deletions` counts it: an HMAC of the id, the moment, how many plans.
+        A repeat with the same token is 401 (the token is gone with the account); a repeat that passed the
+        door before the first deletion committed is 404 `account_not_found`.
       responses:
         '204': { description: Account deleted }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
 
   /auth/logout:
     post:

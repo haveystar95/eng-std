@@ -120,10 +120,12 @@ deptrac:
     SharedInfra: [SharedDomain, Framework]
     # Account deletion fans out to every module's own Application eraser (never a raw cross-table
     # query). This edge lives in Infrastructure, not Application, so no module-graph cycle forms
-    # with Collections/Generation Application → Identity Application.
+    # with Collections/Generation Application → Identity Application. AdminApplication joined it with
+    # наряд ACC-1 §1: the admin audit's target of a deleted learner is nulled through Admin's own port.
     IdentityInfrastructure:
       [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework,
-       CollectionsApplication, LearningApplication, GenerationApplication, VocabularyApplication, ObservabilityApplication, PlanApplication]
+       CollectionsApplication, LearningApplication, GenerationApplication, VocabularyApplication, ObservabilityApplication, PlanApplication,
+       AdminApplication]
     VocabularyInfrastructure: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
     LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework, IdentityApplication]

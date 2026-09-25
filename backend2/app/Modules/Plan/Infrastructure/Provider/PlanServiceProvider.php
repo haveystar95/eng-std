@@ -122,7 +122,12 @@ final class PlanServiceProvider extends ServiceProvider
         // What a dealing had to give up — the stop signal of «Фразы» (наряд BACK-TAILS-2 §1) — goes to the application log.
         $this->app->bind(DayBuildLog::class, LogDayBuildLog::class);
         $this->app->bind(NativeDistractorSource::class, VocabularyNativeDistractorSource::class);
-        $this->app->bind(PlanAccountEraser::class, EloquentPlanAccountEraser::class);
+        // The account's deletion takes the plan's files with its rows (наряд ACC-1 §1): the disks the voice and the photos live on.
+        $this->app->bind(PlanAccountEraser::class, fn (Container $app): PlanAccountEraser => new EloquentPlanAccountEraser(
+            $app->make(Disks::class),
+            (string) config('plan.audio_disk', 'local'),
+            (string) config('plan.image_disk', 'local'),
+        ));
         $this->app->bind(PlanDispatcher::class, QueuedPlanDispatcher::class);
         $this->app->bind(PlanCollectionWriter::class, VocabularyPlanCollectionWriter::class);
 

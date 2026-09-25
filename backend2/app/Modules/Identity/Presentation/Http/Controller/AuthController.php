@@ -97,10 +97,15 @@ final class AuthController
         return response()->noContent();
     }
 
-    /** Delete the account and every trace of the user across all modules (App Store requirement). */
+    /**
+     * Delete the account and every trace of the user across all modules (App Store requirement; наряд ACC-1 §1). 404
+     * `account_not_found` when it is gone already. The request forgets its user once the account is gone: the request log
+     * writes its row after the response (`LogApiRequests::terminate`), and it would have put the deleted id back.
+     */
     public function deleteAccount(Request $request): Response
     {
         $this->accountEraser->eraseFor($this->actorId($request));
+        $request->setUserResolver(static fn (): null => null);
 
         return response()->noContent();
     }

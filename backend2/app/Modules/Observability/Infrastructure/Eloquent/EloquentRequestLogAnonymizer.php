@@ -12,6 +12,12 @@ final class EloquentRequestLogAnonymizer implements RequestLogAnonymizer
 {
     public function anonymizeUser(UserId $userId): void
     {
-        DB::table('api_request_logs')->where('user_id', $userId->value)->update(['user_id' => null]);
+        // One write: the link and what the rows carried of the person go together (наряд ACC-1 §1).
+        DB::table('api_request_logs')->where('user_id', $userId->value)->update([
+            'user_id' => null,
+            'request_headers' => null,
+            'request_body' => null,
+            'response_body' => null,
+        ]);
     }
 }
