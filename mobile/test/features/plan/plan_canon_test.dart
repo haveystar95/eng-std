@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/api_client.dart';
+import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/plan/plan_languages.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
@@ -263,14 +265,15 @@ void main() {
 
   // ── ВХОД ──────────────────────────────────────────────────────────────────────────────────
   group('вход в план', () {
-    Widget entry() => planGoldenApp(
-      ProviderScope(
-        overrides: [
-          apiClientProvider.overrideWithValue(_LanguagesApi()),
-          connectivityProvider.overrideWith((ref) => Stream.value(true)),
-        ],
-        child: const PlanEntryScreen(),
-      ),
+    // ONE flat scope: the language lists are read through `planLanguagesProvider`, which depends on
+    // the api — in a nested scope it would be created at the root and ask the real network.
+    Widget entry() => ProviderScope(
+      overrides: [
+        authControllerProvider.overrideWith(_NoProfileAuth.new),
+        apiClientProvider.overrideWithValue(_LanguagesApi()),
+        connectivityProvider.overrideWith((ref) => Stream.value(true)),
+      ],
+      child: planGoldenShell(const PlanEntryScreen()),
     );
 
     // ПРАВИЛО (22-1): «Далее» неактивно при пустом поле и оживает от первого слова.
@@ -336,11 +339,18 @@ class _StubTab extends PlanTabController {
   Future<void> refresh({bool silent = true}) async {}
 }
 
-/// Сервер входа: только список языков — сегодня их два.
+/// The entry's server: only the language lists — two targets here, so it shows that the screen draws
+/// exactly the server's list and not the bundled reserve (which has seven).
 class _LanguagesApi implements ApiClient {
   @override
-  Future<List<String>> planLanguages() async => const ['en', 'de'];
+  Future<PlanLanguages> pairLanguages() async => PlanLanguages.fromJson(languagesFixture(targets: const ['en', 'de']));
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// The account as the plan snapshots have it — a name and no profile yet.
+class _NoProfileAuth extends AuthController {
+  @override
+  Future<AppUser?> build() async => AppUser(id: 'u1', name: 'Денис');
 }

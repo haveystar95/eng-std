@@ -1,6 +1,7 @@
 import 'dart:convert' show jsonEncode;
 import 'dart:io' show SocketException;
 import 'dart:math';
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -11,6 +12,7 @@ import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
 import 'plan/conversation/conversation_models.dart';
+import 'plan/plan_languages.dart';
 import 'plan/plan_models.dart';
 import 'plan/session/session_day.dart';
 import 'plan/session/session_outcomes.dart';
@@ -138,12 +140,27 @@ class ApiClient {
           }
           // Which build, on which kind of phone (наряд CLIENT-FIX-4 §6) — on every request, for the admin.
           options.headers.addAll(await AppIdentity.load());
+          // The phone's own language (LANG-1 §7): at the FIRST sign-in the server seeds the profile's
+          // native language from it when it names a plan native. Read per request — the setting can
+          // change while the app runs.
+          final language = deviceLanguageTag();
+          if (language != null) options.headers['Accept-Language'] = language;
           handler.next(options);
         },
       ),
     );
 
     return dio;
+  }
+
+  /// The `Accept-Language` value — the DEVICE's locale as a BCP-47 tag (`be-BY`, `uk-UA`), not the
+  /// app's interface language (ru/en), which would answer «ru» for a Belarusian phone. Null when the
+  /// platform names no language (`und`): a header that says nothing is not sent.
+  @visibleForTesting
+  static String? deviceLanguageTag([Locale? locale]) {
+    final tag = (locale ?? PlatformDispatcher.instance.locale).toLanguageTag();
+
+    return tag.isEmpty || tag == 'und' ? null : tag;
   }
 
   /// Unwrap the `{ "data": ... }` envelope backend2 uses for single resources/lists.
@@ -564,12 +581,25 @@ class ApiClient {
 
   /// The languages a plan may be built in — the SERVER's list (кадр 22-2, решение владельца 12.09:
   /// не константа клиента). `POST /plans` refuses anything outside it.
+  ///
+  /// Kept for compatibility (build (21) reads it); the app now reads [pairLanguages], which carries
+  /// the same targets and the natives beside them.
   Future<List<String>> planLanguages() async {
     final r = await _dio.get('/plans/languages');
     final data = _data(r);
     final targets = data is Map<String, dynamic> ? data['targets'] : null;
 
     return [for (final t in (targets as List?) ?? const []) if (t is String && t.isNotEmpty) t];
+  }
+
+  /// `GET /languages` — both sides of a plan's pair (наряд LANG-1 §7): what a plan may teach and what
+  /// it may be read in. Parsed defensively ([PlanLanguages.fromJson]); read through
+  /// `planLanguagesProvider`, which keeps the answer for the run and falls back to the bundle.
+  Future<PlanLanguages> pairLanguages() async {
+    final r = await _dio.get('/languages');
+    final body = r.data;
+
+    return PlanLanguages.fromJson(body is Map ? body['data'] : null);
   }
 
   /// Every plan the learner has run — the live one first, then the rest, newest first.

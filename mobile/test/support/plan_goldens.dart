@@ -155,6 +155,30 @@ Plan planFrom(String fixture, [Map<String, dynamic> Function(Map<String, dynamic
   return Plan.fromJson(edit == null ? json : edit(json));
 }
 
+/// `GET /languages` → `data` as backend2 answers it since LANG-1 §7: seven plan targets and nine
+/// natives, in the server's order, each with the endonym and flag of the server's catalogue
+/// (`LanguageCatalog::LANGUAGES`). [natives]/[targets] narrow it for a test that needs a shorter list.
+Map<String, Object?> languagesFixture({List<String>? targets, List<String>? natives}) {
+  const rows = {
+    'ru': ('Русский', '🇷🇺'),
+    'en': ('English', '🇬🇧'),
+    'uk': ('Українська', '🇺🇦'),
+    'be': ('Беларуская', '🇧🇾'),
+    'ro': ('Română', '🇷🇴'),
+    'es': ('Español', '🇪🇸'),
+    'de': ('Deutsch', '🇩🇪'),
+    'fr': ('Français', '🇫🇷'),
+    'it': ('Italiano', '🇮🇹'),
+    'pl': ('Polski', '🇵🇱'),
+  };
+  Map<String, String> row(String code) => {'code': code, 'endonym': rows[code]!.$1, 'flag': rows[code]!.$2};
+
+  return {
+    'targets': [for (final c in targets ?? const ['en', 'pl', 'ro', 'es', 'it', 'de', 'fr']) row(c)],
+    'natives': [for (final c in natives ?? const ['ru', 'uk', 'be', 'pl', 'ro', 'es', 'it', 'de', 'fr']) row(c)],
+  };
+}
+
 PlanDayRoom roomFrom(String fixture, [Map<String, dynamic> Function(Map<String, dynamic>)? edit]) {
   final json = planFixture(fixture);
 

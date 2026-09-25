@@ -25,38 +25,27 @@ const List<String> kCefrLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 /// A per-collection source language was the old shape and it is gone — two places to answer one
 /// question is how a learner ends up with folders in two «родных» and no way to tell which.
 ///
-/// The list is deliberately SHORTER than [kLanguages]: these are the languages the generator has
-/// been evaluated in as a support language. English is not among them on purpose — it is a language
-/// this product teaches, not one it explains in.
-const List<String> kNativeLanguageCodes = ['uk', 'ru', 'de', 'pl', 'fr', 'it', 'es', 'ro'];
+/// The list is deliberately SHORTER than [kLanguages]: these are the plan natives of LANG-1 — the
+/// languages a plan may be read in (the server's `LanguageRoles::PLAN_NATIVES`), in the server's
+/// order. English is not among them on purpose — it is a language this product teaches, not one it
+/// explains in.
+///
+/// This is the BUNDLED copy: the pickers draw the server's list (`GET /languages` → `natives`,
+/// `lib/data/plan/plan_languages.dart`) and fall back to this one only when the network does not
+/// answer. [defaultNativeLanguageFor] guesses from it too, so a Belarusian phone is offered `be`.
+const List<String> kNativeLanguageCodes = ['ru', 'uk', 'be', 'pl', 'ro', 'es', 'it', 'de', 'fr'];
 
 /// ИЗУЧАЕМЫЙ ЯЗЫК, as the UI offers it: English and German, and nothing else.
 ///
-/// The catalogue below still knows thirteen languages and the server still accepts them — this is a
+/// The catalogue below still knows fourteen languages and the server still accepts them — this is a
 /// PRODUCT decision about what is offered, not a capability claim. A profile that already studies
 /// something else keeps studying it; see [studyLanguagesFor], which adds whatever the account is
 /// actually on so a picker can never fail to show the current value.
 const List<String> kStudyLanguageCodes = ['en', 'de'];
 
-/// ФЛАГ ЯЗЫКА — эмодзи в кружке карточки выбора (кадр 22-2, канва PLAN-DES-3).
-///
-/// Флаг — примета языка, а не страны: английский узнаётся британским флагом. Какие языки вообще
-/// предлагать, решает СЕРВЕР (`GET /plans/languages`, решение владельца 12.09); здесь только
-/// картинка к коду. Кода без флага — null, и карточка берёт монограмму.
-const Map<String, String> kLanguageFlags = {
-  'en': '\u{1F1EC}\u{1F1E7}',
-  'de': '\u{1F1E9}\u{1F1EA}',
-  'es': '\u{1F1EA}\u{1F1F8}',
-  'fr': '\u{1F1EB}\u{1F1F7}',
-  'it': '\u{1F1EE}\u{1F1F9}',
-  'pl': '\u{1F1F5}\u{1F1F1}',
-  'ro': '\u{1F1F7}\u{1F1F4}',
-  'pt': '\u{1F1F5}\u{1F1F9}',
-  'uk': '\u{1F1FA}\u{1F1E6}',
-  'tr': '\u{1F1F9}\u{1F1F7}',
-};
-
-String? flagEmojiFor(String code) => kLanguageFlags[code.trim().toLowerCase()];
+// THE FLAG of a language is the catalogue's `Language.flag` (`lib/l10n/language_endonyms.dart`).
+// A second table of flag emoji used to live here for the plan's language cards (кадр 22-2); it was
+// a subset of the catalogue with the same values, and it was collapsed into it (LANG-1, HYG-1).
 
 /// ПРИВЕТСТВИЕ НА ЯЗЫКЕ — подпись под его названием в карточке выбора (кадр 22-2).
 ///
@@ -73,7 +62,7 @@ const Map<String, String> kLanguageGreetings = {
   'ro': 'Salut, ce faci?',
 };
 
-// Приветствий на кириллице здесь нет намеренно: `ru` и `uk` в этом продукте — языки, НА которых
+// Приветствий на кириллице здесь нет намеренно: `ru`, `uk` и `be` в этом продукте — языки, НА которых
 // объясняют, а не которые изучают, и в карточке выбора языка они не появляются. Если такой язык
 // когда-нибудь станет изучаемым, его приветствие поедет через ARB, а не сюда: гард
 // `no_cyrillic_outside_l10n_test` держит это правило.
@@ -89,10 +78,6 @@ String monogramFor(String code) {
 
   return c[0].toUpperCase() + c.substring(1, 2).toLowerCase();
 }
-
-/// The native-language rows, in the order the picker lists them.
-List<Language> get kNativeLanguages =>
-    kNativeLanguageCodes.map(languageByCode).toList(growable: false);
 
 /// The study-language rows for a learner whose account is on [current].
 ///
@@ -124,6 +109,10 @@ const Map<String, String> _ttsLocales = {
   'en': 'en-US',
   'ru': 'ru-RU',
   'uk': 'uk-UA',
+  // iOS has neither a Belarusian voice nor a Belarusian recognizer, so `be-BY` would silently get the
+  // default (English) voice and a recognizer that does not exist. Russian is the nearest language the
+  // phone CAN speak and hear — a stand-in, not a claim that the two are the same language.
+  'be': 'ru-RU',
   'ro': 'ro-RO',
   'es': 'es-ES',
   'de': 'de-DE',
@@ -170,7 +159,7 @@ Locale keyboardLocaleFor(String code) {
 /// failure, and a check that fires on a language nobody taught it about is a check that gets
 /// switched off.
 const Map<String, String> _scripts = {
-  'ru': r'\p{Script=Cyrillic}', 'uk': r'\p{Script=Cyrillic}',
+  'ru': r'\p{Script=Cyrillic}', 'uk': r'\p{Script=Cyrillic}', 'be': r'\p{Script=Cyrillic}',
   'en': r'\p{Script=Latin}', 'ro': r'\p{Script=Latin}', 'es': r'\p{Script=Latin}',
   'de': r'\p{Script=Latin}', 'fr': r'\p{Script=Latin}', 'it': r'\p{Script=Latin}',
   'pt': r'\p{Script=Latin}', 'pl': r'\p{Script=Latin}', 'tr': r'\p{Script=Latin}',

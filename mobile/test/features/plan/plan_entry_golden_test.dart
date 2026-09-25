@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/api_client.dart';
+import 'package:eng_std/data/plan/plan_languages.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
@@ -29,6 +30,9 @@ void main() {
     ProviderScope(
       overrides: [
         apiClientProvider.overrideWithValue(api),
+        // Overridden HERE and not only through the api: this scope is nested, and a provider that
+        // merely depends on the api above would be created in the root container with the real one.
+        planLanguagesProvider.overrideWith((ref) => loadPlanLanguages(api)),
         connectivityProvider.overrideWith((ref) => Stream.value(online)),
       ],
       child: PlanEntryScreen(now: () => DateTime(2026, 9, 12, 12)),
@@ -95,6 +99,24 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../goldens/plan/22-4b-ready.png'),
+    );
+  });
+
+  // LANG-1: the server's seven targets (minus the native) do not fit the 844 frame — the level goes
+  // below the fold. The step is shot whole, so the snapshot shows every language card and both level cards.
+  testWidgets('22-2 целиком — семь целей и уровень', (tester) async {
+    await expectPlanGolden(
+      tester,
+      entry(_Api()),
+      'plan/22-2-language-level-full',
+      size: const Size(390, 1240),
+      prime: (tester) async {
+        await tester.tap(find.text('Звонок арендодателю про залог'));
+        await tester.pump();
+        await tester.tap(find.text('Далее'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+      },
     );
   });
 
@@ -218,9 +240,9 @@ class _Api implements ApiClient {
   @override
   Future<Plan> plan(String planId) async => planFrom('plan_ready_preview');
 
-  /// Языки плана — список сервера (сегодня два).
+  /// Both sides of the pair — the server's lists since LANG-1: seven targets, nine natives.
   @override
-  Future<List<String>> planLanguages() async => const ['en', 'de'];
+  Future<PlanLanguages> pairLanguages() async => PlanLanguages.fromJson(languagesFixture());
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -1,3 +1,5 @@
+import 'dart:ui' show PictureRecorder;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -35,6 +37,36 @@ void main() {
       isEmpty,
       reason: 'these catalogue languages fall back to the neutral coded circle: $missing',
     );
+  });
+
+  // LANG-1: Belarusian is offered as a native (onboarding, the profile row) — it is drawn, not coded,
+  // and its face is not a plain red-green bicolour: the white hoist strip is there.
+  testWidgets('be draws the Belarusian flag with the white hoist strip', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: Center(child: MiniFlag(languageCode: 'be', size: 44)))),
+    );
+
+    expect(find.text('BE'), findsNothing);
+    final painter = tester
+        .widgetList<CustomPaint>(find.descendant(of: find.byType(MiniFlag), matching: find.byType(CustomPaint)))
+        .map((p) => p.painter)
+        .whereType<CustomPainter>()
+        .single;
+    final recorder = PictureRecorder();
+    painter.paint(Canvas(recorder), const Size.square(44));
+    final image = await tester.runAsync(() => recorder.endRecording().toImage(44, 44));
+    final bytes = (await tester.runAsync(() => image!.toByteData()))!;
+    // rawRgba: one byte per channel.
+    ({int r, int g, int b}) pixel(int x, int y) {
+      final i = (y * 44 + x) * 4;
+
+      return (r: bytes.getUint8(i), g: bytes.getUint8(i + 1), b: bytes.getUint8(i + 2));
+    }
+
+    expect(pixel(1, 22), (r: 255, g: 255, b: 255), reason: 'the hoist strip is white beside the ornament');
+    expect(pixel(5, 22).g, lessThan(pixel(5, 22).r), reason: 'the ornament is red');
+    expect(pixel(30, 10).r, greaterThan(pixel(30, 10).g), reason: 'red above');
+    expect(pixel(30, 40).g, greaterThan(pixel(30, 40).r), reason: 'green below, a third of the height');
   });
 
   testWidgets('a code outside the catalogue still gets the neutral circle', (tester) async {

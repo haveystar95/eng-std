@@ -12,8 +12,9 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/languages.dart'
-    show Language, kCefrLevels, kNativeLanguages, languageByCode, sttLocaleFor, studyLanguagesFor;
+    show Language, kCefrLevels, languageByCode, sttLocaleFor, studyLanguagesFor;
 import '../../data/app_settings.dart';
+import '../../data/plan/plan_languages.dart';
 import '../../data/config.dart';
 import '../../data/feature_flags.dart';
 import '../../data/locale_controller.dart';
@@ -303,15 +304,21 @@ class ProfileScreen extends ConsumerWidget {
   /// Confirmed before it is saved, because the honest description of what happens is a sentence and
   /// not a label: new material follows the new language, existing collections keep theirs. That is
   /// deliberate — re-writing a library would be a paid regeneration of every card in it.
+  ///
+  /// The rows are the server's natives (`GET /languages`, LANG-1: nine, Беларуская among them) minus
+  /// the account's target — a pair of a language with itself is not a pair. The run's cached answer
+  /// is used at once; the first tap of a run waits for the server briefly, then takes the bundle.
   Future<void> _editNativeLang(BuildContext context, WidgetRef ref, String current) async {
     final l = AppLocalizations.of(context);
     final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+    final languages = await _nativeLists(ref);
+    if (!context.mounted) return;
     final chosen = await showAppBottomSheet<String>(
       context: context,
       builder: (_) => _LanguageSheet(
         title: l.profileRowNativeLang,
         current: current,
-        options: kNativeLanguages.where((lang) => lang.code != target).toList(),
+        options: languages.nativesFor(target: target),
       ),
     );
     if (chosen == null || chosen == current || !context.mounted) return;
@@ -327,6 +334,19 @@ class ProfileScreen extends ConsumerWidget {
       await _saveProfile(context, ref, {'native_language': chosen});
     }
   }
+
+  /// The run's language lists for the native sheet: the cached server answer when there is one;
+  /// otherwise (never asked, or the last ask fell back to the bundle) one more ask, waited on for
+  /// [_listsWait] at most — a sheet that opens seconds after the tap reads as a dead row.
+  static Future<PlanLanguages> _nativeLists(WidgetRef ref) async {
+    final cached = ref.read(planLanguagesProvider).value;
+    if (cached != null && !cached.fromBundle) return cached;
+    if (cached != null) ref.invalidate(planLanguagesProvider);
+
+    return ref.read(planLanguagesProvider.future).timeout(_listsWait, onTimeout: () => PlanLanguages.bundled);
+  }
+
+  static const _listsWait = Duration(milliseconds: 1500);
 
   Future<void> _editUiLang(BuildContext context, WidgetRef ref, UiLanguageOption current) async {
     final chosen = await showAppBottomSheet<UiLanguageOption>(

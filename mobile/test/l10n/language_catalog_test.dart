@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/l10n/language_endonyms.dart';
+import 'package:eng_std/data/languages.dart';
 import 'package:eng_std/ui/mini_flag.dart';
 
 /// The catalogue's half of HYG-1: the app, backend2 and the admin console each hold one copy of the
@@ -11,7 +11,8 @@ import 'package:eng_std/ui/mini_flag.dart';
 void main() {
   const taught = ['en', 'ro', 'pl', 'de', 'es', 'it', 'fr'];
   const referenceOnly = ['zh', 'ja'];
-  const support = ['ru', 'uk', 'en'];
+  // `be` joined with LANG-1 as a plan native (the matrix's `be` row).
+  const support = ['ru', 'uk', 'be', 'en'];
 
   test('covers every language the capability matrix names', () {
     final codes = kLanguages.map((l) => l.code).toSet();
@@ -44,6 +45,34 @@ void main() {
 
     expect(ro.endonym, 'Română');
     expect(ro.flag, '🇷🇴');
+  });
+
+  test('names Belarusian by its endonym, with its flag, and in both interface languages', () {
+    final be = findLanguage('be');
+
+    expect(be, isNotNull, reason: 'a Belarusian native would be drawn as the first row, «Русский»');
+    expect(be!.endonym, 'Беларуская');
+    expect(be.nameRu, 'Белорусский');
+    expect(be.nameEn, 'Belarusian');
+    expect(be.flag, '🇧🇾');
+    expect(languageAdverbFor('be', 'ru'), 'по-белорусски');
+  });
+
+  test('Belarusian is spoken and heard through the Russian voice, and written in Cyrillic', () {
+    // iOS has no Belarusian voice or recognizer: the nearest one the phone has, not the English
+    // default an unmapped code would get.
+    expect(ttsLocaleFor('be'), 'ru-RU');
+    expect(sttLocaleFor('be'), 'ru_RU');
+    expect(looksLikeWrongKeyboard('be', 'dobry dzien'), isTrue);
+    expect(looksLikeWrongKeyboard('be', 'добры дзень'), isFalse);
+  });
+
+  test('findLanguage knows only the catalogue; resolveLanguage lets the server name the rest', () {
+    expect(findLanguage(' DE ')?.endonym, 'Deutsch');
+    expect(findLanguage('nl'), isNull);
+    expect(resolveLanguage('ro', endonym: 'România').endonym, 'Română');
+    expect(resolveLanguage('nl', endonym: 'Nederlands', flag: '🇳🇱').flag, '🇳🇱');
+    expect(resolveLanguage('nl').endonym, 'nl');
   });
 
   testWidgets('MiniFlag draws the Romanian flag instead of the neutral code circle', (

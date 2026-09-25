@@ -11,6 +11,7 @@ import 'package:eng_std/ui/dot_join.dart';
 import '../../../data/api_client.dart';
 import '../../../data/image_loader.dart';
 import '../../../data/languages.dart';
+import '../../../data/plan/plan_languages.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
 import '../plan_format.dart';
@@ -75,7 +76,26 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     // about «свободно говорю» stands under it (кадр 22-2).
     final level = _levelFor(profile?.cefrLevel);
     _s = _s.copyWith(targetLang: lang, level: level);
-    unawaited(_loadLanguages());
+
+    // THE LANGUAGE LIST (22-2) — the run's cached `GET /languages`, the bundle until it answers. The
+    // learner's target stays chosen only while it is offered; the list may arrive while the goal is
+    // still being typed.
+    final cached = ref.read(planLanguagesProvider).value;
+    _s = _s.copyWith(targetLang: _offeredTarget(cached ?? PlanLanguages.bundled));
+    ref.listenManual(planLanguagesProvider, (_, next) {
+      final languages = next.value;
+      if (languages == null || !mounted) return;
+      final target = _offeredTarget(languages);
+      if (target != _s.targetLang) setState(() => _s = _s.copyWith(targetLang: target));
+    });
+    // The last ask of this run failed and the bundle stood in: an entry that opens asks again (after
+    // the frame — a provider is not refreshed while the tree is being built).
+    if (cached?.fromBundle ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.invalidate(planLanguagesProvider);
+      });
+    }
+
     _goal.addListener(() {
       if (_goal.text != _s.goal) setState(() => _s = _s.copyWith(goal: _goal.text));
     });
@@ -90,21 +110,26 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     super.dispose();
   }
 
-  /// Языки, на которых сервер собирает план (22-2). Пока не пришли — на шаге стоит язык аккаунта.
-  List<String> _languages = const [];
+  /// THE NATIVE THE PAIR IS READ IN — the profile's (`POST /plans` takes no native: the server reads
+  /// the same column, DECISIONS items 159 and 180), or the device's guess when the profile has none
+  /// the plan can be read in. 22-2 only SUBTRACTS it; it is asked on the first screen and in the
+  /// profile.
+  String _native(PlanLanguages languages) => languages.nativeFor(
+    profileNative: ref.read(authControllerProvider).value?.profile?.nativeLanguage,
+    deviceLanguage: WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+  );
 
-  Future<void> _loadLanguages() async {
-    try {
-      final list = await ref.read(apiClientProvider).planLanguages();
-      if (!mounted || list.isEmpty) return;
-      setState(() {
-        _languages = list;
-        // Язык аккаунта, которого сервер для плана не предлагает, не остаётся выбранным молча.
-        if (!list.contains(_s.targetLang)) _s = _s.copyWith(targetLang: list.first);
-      });
-    } catch (e) {
-      debugPrint('[plan-entry] languages: $e');
-    }
+  /// The cards 22-2 offers: every target but the native — a pair of a language with itself is not
+  /// one, and the server refuses it (`language_pair_invalid`).
+  List<Language> _offered(PlanLanguages languages) => languages.targetsFor(_native(languages));
+
+  /// The chosen target when it is offered; otherwise the first card — a target the list no longer
+  /// offers (or the native itself) does not stay selected silently.
+  String _offeredTarget(PlanLanguages languages) {
+    final offered = _offered(languages);
+    if (offered.isEmpty || offered.any((l) => l.code == _s.targetLang)) return _s.targetLang;
+
+    return offered.first.code;
   }
 
   static PlanLevel _levelFor(String? cefr) => switch (cefr) {
@@ -379,7 +404,12 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
-    final languageName = languageNameFor(_s.targetLang, locale);
+    final offered = _offered(ref.watch(planLanguagesProvider).value ?? PlanLanguages.bundled);
+    // Named from the drawn row: a code only the server knows carries the server's name, not the
+    // catalogue's first row.
+    final languageName = offered
+        .firstWhere((lang) => lang.code == _s.targetLang, orElse: () => languageByCode(_s.targetLang))
+        .nameIn(locale);
     final levelName = switch (_s.level) {
       PlanLevel.beginner => l.planEntryLevelBeginner,
       PlanLevel.intermediate => l.planEntryLevelIntermediate,
@@ -397,9 +427,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       ),
       EntryStep.language => EntryLanguageStep(
         goal: goal,
-        languages: [
-          for (final code in {..._languages, if (_languages.isEmpty) _s.targetLang}) languageByCode(code),
-        ],
+        languages: offered,
         targetLang: _s.targetLang,
         level: _s.level,
         onLanguage: (code) => setState(() => _s = _s.copyWith(targetLang: code)),

@@ -7,7 +7,8 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/languages.dart'
-    show kCefrLevels, kNativeLanguages, defaultNativeLanguageFor, studyLanguagesFor;
+    show Language, kCefrLevels, defaultNativeLanguageFor, studyLanguagesFor;
+import '../../data/plan/plan_languages.dart';
 import '../../data/providers.dart';
 
 /// First-run setup (кадры 10b–10d + ONB-1): four steps, each already carrying a default so «Далее»
@@ -102,6 +103,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     key: ValueKey(_step),
                     child: switch (_step) {
                       0 => _NativeStep(
+                        // The server's natives (LANG-1: nine, Беларуская among them), the bundled
+                        // copy until it answers. Nothing is subtracted here: the target is asked on
+                        // the NEXT step, so no target has been chosen yet — the pair rule is kept by
+                        // the nudge below, and the target step drops the native.
+                        languages: (ref.watch(planLanguagesProvider).value ?? PlanLanguages.bundled).nativesFor(),
                         native: _native,
                         onPick: (c) => setState(() {
                           _native = c;
@@ -209,7 +215,8 @@ class _StepShell extends StatelessWidget {
 /// BUYS, because «родной язык» on its own reads as a setting rather than as the thing every
 /// translation, every plan and every generated set will be written in.
 class _NativeStep extends StatelessWidget {
-  const _NativeStep({required this.native, required this.onPick});
+  const _NativeStep({required this.languages, required this.native, required this.onPick});
+  final List<Language> languages;
   final String native;
   final ValueChanged<String> onPick;
 
@@ -220,7 +227,7 @@ class _NativeStep extends StatelessWidget {
       title: l.onbNativeTitle,
       subtitle: l.onbNativeSubtitle,
       children: [
-        for (final lang in kNativeLanguages)
+        for (final lang in languages)
           _SelectRow(
             selected: lang.code == native,
             onTap: () => onPick(lang.code),

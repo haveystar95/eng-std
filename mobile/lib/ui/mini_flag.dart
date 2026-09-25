@@ -7,8 +7,8 @@ import 'package:eng_std/theme/theme.dart';
 /// (список языков онбординга, дропдаун «Язык изучения», языковая пара в сторе).
 /// На карточках слов и коллекций флагов нет.
 ///
-/// ВСЕ ТРИНАДЦАТЬ языков справочника нарисованы: en, ru, uk, ro, es, de, fr,
-/// it, pt, pl, tr, zh, ja. Нейтральный кружок с кодом остаётся только для кода
+/// ВСЕ ЧЕТЫРНАДЦАТЬ языков справочника нарисованы: en, ru, uk, be, ro, es, de,
+/// fr, it, pt, pl, tr, zh, ja. Нейтральный кружок с кодом остаётся только для кода
 /// ВНЕ справочника — то есть для опечатки или для языка, который добавили в
 /// один рантайм и забыли в другом.
 ///
@@ -65,6 +65,7 @@ final Map<String, CustomPainter> _flagPainters = {
   'it': _ItPainter(),
   'ru': _RuPainter(),
   'uk': _UaPainter(),
+  'be': _ByPainter(),
   'tr': _TrPainter(),
   'zh': _CnPainter(),
   'ja': _JpPainter(),
@@ -258,6 +259,43 @@ class _UaPainter extends CustomPainter {
     final w = s.width, h = s.height;
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h / 2), Paint()..color = FlagPalette.uaBlue);
     canvas.drawRect(Rect.fromLTWH(0, h / 2, w, h / 2), Paint()..color = FlagPalette.uaYellow);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Belarus — the official flag, simplified: red over green 2:1, and the white hoist strip with the
+/// red ornament. At 22 px the ornament is a column of red diamonds rather than the woven pattern,
+/// and the strip is drawn wider than the flag's 1/9: the circle clips the hoist edge, and a strip at
+/// its true width would vanish behind the curve — the strip is what tells this flag from a plain
+/// red-green bicolour.
+///
+/// The colours reuse existing flag tokens (the Union Jack red, the Italian green): `FlagPalette`
+/// has no Belarusian entry yet, and a raw hex outside `lib/theme/` is refused by the drift guard.
+class _ByPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    final red = Paint()..color = FlagPalette.gbRed;
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h * 2 / 3), red);
+    canvas.drawRect(Rect.fromLTWH(0, h * 2 / 3, w, h / 3), Paint()..color = FlagPalette.itGreen);
+
+    final strip = w * 0.26;
+    canvas.drawRect(Rect.fromLTWH(0, 0, strip, h), Paint()..color = FlagPalette.gbWhite);
+    final cx = strip / 2, d = strip * 0.3;
+    for (var i = 0; i < 5; i++) {
+      final cy = h * (0.18 + i * 0.16);
+      canvas.drawPath(
+        Path()
+          ..moveTo(cx, cy - d)
+          ..lineTo(cx + d, cy)
+          ..lineTo(cx, cy + d)
+          ..lineTo(cx - d, cy)
+          ..close(),
+        red,
+      );
+    }
   }
 
   @override

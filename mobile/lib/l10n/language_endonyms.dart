@@ -35,6 +35,9 @@ class Language {
   final String nameEn;
   final String flag;
   const Language(this.code, this.endonym, this.nameRu, this.nameEn, this.flag);
+
+  /// The language NAMED in the interface language [uiLanguage] — see [languageNameFor].
+  String nameIn(String uiLanguage) => uiLanguage == 'ru' ? nameRu : nameEn;
 }
 
 /// The order here is the order the pickers list, and [languageByCode] falls back to the first row.
@@ -42,6 +45,8 @@ const List<Language> kLanguages = [
   Language('ru', 'Русский', 'Русский', 'Russian', '🇷🇺'),
   Language('en', 'English', 'Английский', 'English', '🇬🇧'),
   Language('uk', 'Українська', 'Украинский', 'Ukrainian', '🇺🇦'),
+  // Belarusian joined with LANG-1 as a plan NATIVE (the language a plan is read in), not as a taught one.
+  Language('be', 'Беларуская', 'Белорусский', 'Belarusian', '🇧🇾'),
   Language('ro', 'Română', 'Румынский', 'Romanian', '🇷🇴'),
   Language('es', 'Español', 'Испанский', 'Spanish', '🇪🇸'),
   Language('de', 'Deutsch', 'Немецкий', 'German', '🇩🇪'),
@@ -57,17 +62,40 @@ const List<Language> kLanguages = [
 Language languageByCode(String code) =>
     kLanguages.firstWhere((l) => l.code == code, orElse: () => kLanguages.first);
 
+/// The catalogue row of [code], or null when this build does not know the code.
+///
+/// [languageByCode] falls back to the first row, which is right for a value the account already
+/// holds and wrong for a list the SERVER sends: a new language there would be drawn as «Русский».
+Language? findLanguage(String code) {
+  final c = code.trim().toLowerCase();
+  for (final language in kLanguages) {
+    if (language.code == c) return language;
+  }
+
+  return null;
+}
+
+/// The row to DRAW for a language the server listed — this catalogue's, always, when it knows the
+/// code: names and flags have one table per runtime (HYG-1), and a server spelling that differs
+/// from it must not win on one screen and lose on the next. The server's [endonym] and [flag] only
+/// stand in for a code this build has never heard of; with neither, the code itself is the name and
+/// the flag is empty (a picker then draws its monogram or the neutral circle).
+Language resolveLanguage(String code, {String? endonym, String? flag}) {
+  final known = findLanguage(code);
+  if (known != null) return known;
+  final c = code.trim().toLowerCase();
+  final name = (endonym ?? '').trim().isEmpty ? c : endonym!.trim();
+
+  return Language(c, name, name, name, (flag ?? '').trim());
+}
+
 /// «Английский» / «English» — the language NAMED in the interface's language.
 ///
 /// Everywhere the app writes IN a language it uses the endonym (a picker that offers «Romanian» to
 /// a Romanian speaker names their language in someone else's). The entry of the plan writes ABOUT
 /// the pair — «Английский · Средний» in the tape and under «Маршрут» — and the canvas's text table
 /// spells those rows in the interface language (`entry.language.name`, кадр 22-2).
-String languageNameFor(String code, String uiLanguage) {
-  final language = languageByCode(code);
-
-  return uiLanguage == 'ru' ? language.nameRu : language.nameEn;
-}
+String languageNameFor(String code, String uiLanguage) => languageByCode(code).nameIn(uiLanguage);
 
 /// THE NAME OF A LANGUAGE AS A CARD'S INSTRUCTION NEEDS IT — «выбери итальянский эквивалент».
 ///
@@ -83,7 +111,7 @@ String languageNameFor(String code, String uiLanguage) {
 ///
 /// These are language DATA, not UI copy, which is why they live here beside the endonyms rather
 /// than in an ARB file: the Russian forms are DERIVED from `nameRu` by a rule, not translated one by
-/// one, and a thirteen-row table of hand-written adjectives is a thirteenth place to forget a
+/// one, and a fourteen-row table of hand-written adjectives is one more place to forget a
 /// language. Pinned by `test/l10n/instruction_language_test.dart`.
 
 /// «итальянский» / «Italian» — for «выбери … эквивалент».
