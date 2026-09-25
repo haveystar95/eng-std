@@ -141,6 +141,26 @@ it('refuses a plan read in a language no plan is read in', function () {
     $this->assertDatabaseCount('plans', 0);
 });
 
+// Наряд LANG-1 (валидатор): `PUT /profile` took any 2–5 characters as the native before §7, so a profile may still hold a
+// native that is no language code at all. CATCHES `POST /plans` answering 500 for it (the calendar's `LanguageCode`
+// thrown through), a plan built for such a learner in some default language, and the learner's plan list broken by the
+// same stored value (the zone and the day read with the native, and failing with it).
+it('refuses a plan read in a stored native that is no language code, as the pair it makes, and still lists the learner\'s plans', function (string $stored) {
+    [$user, $token] = planLearner();
+    DB::table('profiles')->where('user_id', $user->id)->update(['native_language' => $stored]);
+
+    planPost($this, $token, 'en')
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'language_pair_invalid')
+        ->assertJsonPath('meta', ['target' => 'en', 'native' => '']);
+    $this->assertDatabaseCount('plans', 0);
+
+    $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/plans')->assertOk()->assertJsonPath('data', []);
+})->with([
+    'a locale' => ['en_US'],
+    'three letters' => ['rus'],
+]);
+
 it('refuses a plan whose target is the learner\'s own language', function () {
     [$user, $token] = planLearner();
     DB::table('profiles')->where('user_id', $user->id)->update(['native_language' => 'de']);

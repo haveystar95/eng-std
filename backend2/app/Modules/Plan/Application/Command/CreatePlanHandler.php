@@ -19,6 +19,7 @@ use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use DateTimeImmutable;
+use InvalidArgumentException;
 
 /**
  * Creates the plan row with its calendar and queues the model call. The HTTP request never
@@ -29,6 +30,12 @@ use DateTimeImmutable;
  * deployment's plan targets ({@see PlanConfig::$languages}), the native is not one of
  * `LanguageRoles::planNatives()`, or the two are one language. Asked before the paywall and before anything
  * is written: a pair the product cannot build is not a plan the learner spent.
+ *
+ * A native that is no language code at all is the same 422, not a 500 (наряд LANG-1, валидатор): `PUT /profile` took
+ * any 2–5 characters before LANG-1 §7, so a profile may still hold «en_US» or «rus», and the calendar refuses to read
+ * it as a language ({@see LearnerCalendar::nativeLangFor()}). No plan is read in it; `meta.native` is then empty — the
+ * profile holds no language to name — and the learner sets theirs with `PUT /profile`, as for any native no plan is
+ * read in. The stored value goes to the log in the problem's message.
  *
  * While the paywall is on (наряд ACC-1 §2) the learner may be refused next — a plan beyond the free one without a
  * subscription is 402 `plan_subscription_required`, a subscriber's fourth plan in work is 409 `plan_active_limit` —
@@ -51,7 +58,7 @@ final readonly class CreatePlanHandler
     public function __invoke(CreatePlan $command): PlanId
     {
         $now = $this->clock->now();
-        $native = $this->calendar->nativeLangFor($command->actorId);
+        $native = $this->nativeOf($command);
         $this->assertPair($command->targetLang, $native);
 
         $plan = $this->tx->run(function () use ($command, $native, $now): Plan {
@@ -64,6 +71,23 @@ final readonly class CreatePlanHandler
         $this->dispatcher->buildPlan($plan->id());
 
         return $plan->id();
+    }
+
+    /**
+     * The learner's native, from the profile — a stored value that is no language code refused as the pair it makes.
+     *
+     * @throws LanguagePairInvalid
+     */
+    private function nativeOf(CreatePlan $command): LanguageCode
+    {
+        try {
+            return $this->calendar->nativeLangFor($command->actorId);
+        } catch (InvalidArgumentException $e) {
+            throw new LanguagePairInvalid(
+                "No plan is built into {$command->targetLang->value} from the profile's native: {$e->getMessage()}.",
+                ['target' => $command->targetLang->value, 'native' => ''],
+            );
+        }
     }
 
     /** @throws LanguagePairInvalid */

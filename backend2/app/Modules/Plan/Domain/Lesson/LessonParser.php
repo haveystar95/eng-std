@@ -16,15 +16,39 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
  * and the validator runs on the parsed lesson.
  *
- * TWO things are put right on the way, and only two. A frame — `frame_target` and `frame_native` — and a filler's
+ * THREE things are put right on the way, and only three. A frame — `frame_target` and `frame_native` — and a filler's
  * native text lose the space before the mark they end with (доработка GEN-3; both sides since наряд BACK-TAILS-1 §3.1,
  * {@see FrameText::withEndMarkClosed()}): «I work ___ .» is read as «I work ___.» by the validator, the seam judge, the
- * repair and every card, whatever the stored answer says. And a line, a frame or a filler that ends in TWO full stops
+ * repair and every card, whatever the stored answer says. A line, a frame or a filler that ends in TWO full stops
  * keeps one ({@see FrameText::withoutDoubledStop()}, хвост ROADMAP, наряд CONV-1): «I can come at 3 p.m..» is the
- * abbreviation's stop plus the sentence's, and the phone, the voice and the judge all read it as written.
+ * abbreviation's stop plus the sentence's, and the phone, the voice and the judge all read it as written. And a
+ * READING — every `pronunciation_native` the parser reads: a frame's, a filler's, a word's, a learner line's, in a
+ * whole lesson and in a repaired card alike — has the Latin letters drawn inside a Cyrillic word put back into
+ * Cyrillic ({@see self::reading()}, наряд LANG-1).
  */
 final class LessonParser
 {
+    /**
+     * The Latin letters a Cyrillic word may be written with by mistake, each with the Cyrillic letter it is drawn
+     * like — one shape in two tables of the alphabet (наряд LANG-1): lower-case a e o c p x y k, capital A E O C P X
+     * Y B H K M T.
+     */
+    private const CYRILLIC_TWINS = [
+        'a' => 'а', 'e' => 'е', 'o' => 'о', 'c' => 'с', 'p' => 'р', 'x' => 'х', 'y' => 'у', 'k' => 'к',
+        'A' => 'А', 'E' => 'Е', 'O' => 'О', 'C' => 'С', 'P' => 'Р', 'X' => 'Х', 'Y' => 'У',
+        'B' => 'В', 'H' => 'Н', 'K' => 'К', 'M' => 'М', 'T' => 'Т',
+    ];
+
+    /**
+     * A Latin vowel written with its acute in one character — the stress of a Cyrillic reading drawn from the Latin
+     * table («лекáжа») — as its canonical decomposition read through {@see self::CYRILLIC_TWINS}: the Cyrillic vowel,
+     * then the combining acute U+0301 the readings mark stress with («лека́жа»).
+     */
+    private const CYRILLIC_STRESSED = [
+        'á' => "а\u{0301}", 'é' => "е\u{0301}", 'ó' => "о\u{0301}", 'ý' => "у\u{0301}",
+        'Á' => "А\u{0301}", 'É' => "Е\u{0301}", 'Ó' => "О\u{0301}", 'Ý' => "У\u{0301}",
+    ];
+
     /** @param array<string, mixed> $payload */
     public function parse(array $payload): Lesson
     {
@@ -116,7 +140,7 @@ final class LessonParser
             id: $this->string($row, 'id', $path),
             termTarget: $this->string($row, 'term_target', $path),
             translationNative: $this->string($row, 'translation_native', $path),
-            pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
+            pronunciationNative: self::reading($this->stringOrEmpty($row, 'pronunciation_native')),
             definitionTarget: $this->stringOrEmpty($row, 'definition_target'),
             kind: $kind,
             imagePrompt: $this->nullableString($row, 'image_prompt'),
@@ -196,7 +220,7 @@ final class LessonParser
             roleNative: $this->stringOrEmpty($row, 'role_native'),
             textTarget: $text,
             textNative: $native,
-            pronunciationNative: $this->nullableString($row, 'pronunciation_native'),
+            pronunciationNative: self::reading($this->nullableString($row, 'pronunciation_native')),
             speakingKey: $this->nullableString($row, 'speaking_key'),
             simplifiedVariants: $this->stringList($row, 'simplified_variants'),
             phraseId: $this->nullableString($row, 'phrase_id'),
@@ -225,7 +249,7 @@ final class LessonParser
                 $fillers[] = new Filler(
                     target: $this->string($f, 'target', "{$path}.slot.fillers[{$index}]"),
                     native: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->stringOrEmpty($f, 'native'))),
-                    pronunciationNative: $this->stringOrEmpty($f, 'pronunciation_native'),
+                    pronunciationNative: self::reading($this->stringOrEmpty($f, 'pronunciation_native')),
                     inDialogue: $inDialogue,
                 );
             }
@@ -237,7 +261,7 @@ final class LessonParser
             kind: $kind,
             frameTarget: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->string($row, 'frame_target', $path))),
             frameNative: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->stringOrEmpty($row, 'frame_native'))),
-            pronunciationNative: $this->stringOrEmpty($row, 'pronunciation_native'),
+            pronunciationNative: self::reading($this->stringOrEmpty($row, 'pronunciation_native')),
             slot: $slot,
         );
     }
@@ -251,6 +275,47 @@ final class LessonParser
             correctOptionIndex: $this->int($row, 'correct_option_index', $path),
             explanationNative: $this->stringOrEmpty($row, 'explanation_native'),
         );
+    }
+
+    /**
+     * A READING WITH ITS CYRILLIC WORDS WRITTEN IN CYRILLIC (наряд LANG-1, валидатор): in every run of letters (and
+     * their combining marks) that holds at least one Cyrillic letter, a Latin letter drawn like a Cyrillic one becomes
+     * that Cyrillic letter ({@see self::CYRILLIC_TWINS}), and a Latin vowel with its acute becomes the Cyrillic vowel with
+     * the combining acute U+0301 ({@see self::CYRILLIC_STRESSED}): «до лекáжа» → «до лека́жа», «___ ми пасуe» → «___ ми
+     * пасуе», «нюмэро дё телефoн» → «нюмэро дё телефон». Nothing else changes.
+     *
+     * Why the parser mends it rather than the repair: `pronunciation.foreign_script` is FATAL (наряд BACK-TAILS-1 §3.2),
+     * and these are not letters of another writing — they are the same letter taken from the other table, drawn as the
+     * learner already reads it; only the code point is wrong. They were every one of the
+     * seven `foreign_script` findings of the LANG-1 scouting days (ru→pl: the Polish «pasuje» leaving its «e», the stress
+     * written with a Latin «á»; ru→fr: «телефoн») and four of the eleven of the ru→en days replayed
+     * (`docs/research/lang-1/baseline.md`) — a paid repair, or a failed day, for a letter a machine puts back.
+     *
+     * What it does NOT touch. A run with no Cyrillic letter in it stays as written: the Latin reading of a learner who
+     * reads Latin letters, and a Latin word among Cyrillic ones («SMS-ку» keeps its «SMS»; «X-рэй» its «X» — the hyphen
+     * ends a run) — those stay what the rule finds. A letter with no Cyrillic twin stays too («пасуje» keeps its «j»).
+     * Letters of OTHER writings — Georgian «პლ», Armenian «ֆ» and «պր», the Greek «θ» of the ru→en days — are not
+     * mended by any table and stay real findings of `foreign_script` for the repair to rewrite. Only the reading is
+     * read so: `text_target`, `text_native` and every other field are the model's as written. And a reading the pattern
+     * cannot read at all — bytes that are not UTF-8, which a hand-built payload can carry though a decoded JSON cannot —
+     * is kept as written, never emptied: the validator judges the model's text, and a card never loses its reading to
+     * the mending of it.
+     *
+     * @return ($reading is null ? null : string)
+     */
+    private static function reading(?string $reading): ?string
+    {
+        if ($reading === null) {
+            return null;
+        }
+
+        return preg_replace_callback(
+            '/[\p{L}\p{M}]+/u',
+            static fn (array $run): string => preg_match('/\p{Cyrillic}/u', $run[0]) === 1
+                ? strtr($run[0], self::CYRILLIC_STRESSED + self::CYRILLIC_TWINS)
+                : $run[0],
+            $reading,
+        ) ?? $reading;
     }
 
     /** @param array<string, mixed> $row */

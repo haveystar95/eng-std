@@ -139,38 +139,135 @@ it('gives the two roles of a scene different voices, whatever gender each role h
     }
 });
 
-// Canon (наряд LANG-1, п. 9; DECISIONS пп. 318, 414): «шесть строк голосов у каждой цели плана — en, pl, ro, es, it, de, fr;
-// по умолчанию — утверждённые Деном голоса». CATCHES a plan target left without rows (its lines on the phone's voice), a
-// target the plan does not teach given rows, a slot missing in one language, a second vendor or model slipped into a new
-// language's rows, and a new language that brought voices of its own nobody has heard (the ids stay the six approved).
-it('voices every plan target with the same six ElevenLabs rows on eleven_v3_conversational, a man partner and a man learner apart', function () {
+/** Two partner voices a gender since наряд FIX-4c §1 (scenes of one gender take turns) — six slots, every one apart. */
+const ONE_VOICE_SLOTS = ['partner.female', 'partner.female_2', 'partner.male', 'partner.male_2', 'learner.female', 'learner.male'];
+
+/**
+ * The pack's rows, `lang.role.slot` → the row.
+ *
+ * @param  array<array-key, mixed>  $pack  `generation.speech.voices` as the config holds it
+ * @return array<string, LineVoice>
+ */
+function oneVoiceRows(array $pack): array
+{
     $voices = [];
-    foreach ((array) config('generation.speech.voices') as $lang => $roles) {
+    foreach ($pack as $lang => $roles) {
         foreach ((array) $roles as $role => $genders) {
             foreach ((array) $genders as $gender => $voice) {
                 $voices["{$lang}.{$role}.{$gender}"] = LineVoice::fromArray((array) $voice);
             }
         }
     }
-    // Two partner voices a gender since наряд FIX-4c §1 (scenes of one gender take turns) — six slots, every one apart.
-    $slots = ['partner.female', 'partner.female_2', 'partner.male', 'partner.male_2', 'learner.female', 'learner.male'];
+
+    return $voices;
+}
+
+/**
+ * Has the deployment's `.env` named this language's slot a voice of its own — `SPEECH_VOICE_<LANG>_<ROLE>_<SLOT>`, not
+ * empty (`config/generation.php`: an empty line is no line)? Such a slot is Den's choice, supported by the config, and
+ * no longer the English one.
+ */
+function oneVoiceOverridden(string $lang, string $slot): bool
+{
+    $value = env('SPEECH_VOICE_'.strtoupper($lang).'_'.strtoupper(str_replace('.', '_', $slot)));
+
+    return is_string($value) && trim($value) !== '';
+}
+
+/**
+ * What is wrong with a pack's rows (наряд LANG-1, п. 9; DECISIONS пп. 318, 414) — nothing when they are right: every
+ * plan target and no other, each with the six slots; one vendor, one model, one stability; six different ids in English
+ * and six different ids within every language; and every slot `.env` has not named for its language on the English
+ * row's id — a language nobody chose a voice for speaks the approved six, never ids of its own nobody has heard.
+ *
+ * @param  array<array-key, mixed>  $pack
+ * @return list<string>
+ */
+function oneVoiceProblems(array $pack): array
+{
+    $voices = oneVoiceRows($pack);
     $expected = [];
     foreach (oneVoicePlanTargets() as $lang) {
-        foreach ($slots as $slot) {
+        foreach (ONE_VOICE_SLOTS as $slot) {
             $expected[] = "{$lang}.{$slot}";
         }
     }
-
-    expect(array_keys((array) config('generation.speech.voices')))->toBe(oneVoicePlanTargets())
-        ->and(array_keys($voices))->toBe($expected)
-        ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->provider, $voices)))->toBe(['en.partner.female' => 'elevenlabs'])
-        ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->model, $voices)))->toBe(['en.partner.female' => 'eleven_v3_conversational'])
-        ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $voices)))->toHaveCount(6)
-        ->and(array_unique(array_map(static fn (LineVoice $v): float => $v->stability, $voices)))->toBe(['en.partner.female' => 0.5]);
-    // Six apart WITHIN each language, too: six ids across all rows would still let one language say two of its slots in
-    // one voice (a slot copied over its neighbour) — the scene's two women, or the partner and the learner, as one person.
-    foreach (oneVoicePlanTargets() as $lang) {
-        $own = array_filter($voices, static fn (string $key): bool => str_starts_with($key, "{$lang}."), ARRAY_FILTER_USE_KEY);
-        expect(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $own)))->toHaveCount(6, $lang);
+    $problems = [];
+    if (array_keys($pack) !== oneVoicePlanTargets()) {
+        $problems[] = 'languages: '.implode(', ', array_keys($pack));
     }
+    if (array_keys($voices) !== $expected) {
+        $problems[] = 'slots: '.implode(', ', array_diff($expected, array_keys($voices)) ?: array_diff(array_keys($voices), $expected));
+    }
+    foreach (['provider' => ['elevenlabs'], 'model' => ['eleven_v3_conversational'], 'stability' => [0.5]] as $field => $one) {
+        $values = array_values(array_unique(array_map(static fn (LineVoice $v): string|float => $v->{$field}, $voices)));
+        if ($values !== $one) {
+            $problems[] = "{$field}: ".implode(', ', $values);
+        }
+    }
+    foreach (oneVoicePlanTargets() as $lang) {
+        // Six apart within each language: six ids across all rows would still let one language say two of its slots in
+        // one voice (a slot copied over its neighbour) — the scene's two women, or the partner and the learner, as one.
+        $own = array_filter($voices, static fn (string $key): bool => str_starts_with($key, "{$lang}."), ARRAY_FILTER_USE_KEY);
+        if (count(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $own))) !== count(ONE_VOICE_SLOTS)) {
+            $problems[] = "{$lang}: not six different voices";
+        }
+        foreach (ONE_VOICE_SLOTS as $slot) {
+            if ($lang === 'en' || oneVoiceOverridden($lang, $slot) || ! isset($voices["{$lang}.{$slot}"], $voices["en.{$slot}"])) {
+                continue;
+            }
+            if ($voices["{$lang}.{$slot}"]->voice !== $voices["en.{$slot}"]->voice) {
+                $problems[] = "{$lang}.{$slot}: «{$voices["{$lang}.{$slot}"]->voice}», not the English «{$voices["en.{$slot}"]->voice}»";
+            }
+        }
+    }
+
+    return $problems;
+}
+
+// Canon (наряд LANG-1, п. 9; DECISIONS пп. 318, 414): «шесть строк голосов у каждой цели плана — en, pl, ro, es, it, de, fr;
+// по умолчанию — утверждённые Деном голоса». CATCHES a plan target left without rows (its lines on the phone's voice), a
+// target the plan does not teach given rows, a slot missing in one language, a second vendor or model slipped into a new
+// language's rows, and a new language that brought voices of its own nobody has heard (the ids stay the six approved) —
+// and holds whatever `.env` says: a language Den named voices for is his choice, not a defect.
+it('voices every plan target with the six ElevenLabs slots on eleven_v3_conversational, the English ids unless .env names others', function () {
+    expect(oneVoiceProblems((array) config('generation.speech.voices')))->toBe([]);
+});
+
+// The check above is only worth its row if it holds on the day `.env` names a language its own voice — and still catches
+// a language whose rows moved off the English ids WITHOUT `.env` (наряд LANG-1, валидатор: the old «six ids across all 42
+// rows» failed the first time Den chose a German voice). The config is built again under the override, as the app would
+// boot with it; the line is taken back whatever happens.
+it('holds a language .env names its own voice, and still catches a language that moved off the English ids unasked', function () {
+    // The environment is read first from `$_SERVER`; whatever the deployment's own `.env` put there is given back.
+    $name = 'SPEECH_VOICE_DE_PARTNER_FEMALE';
+    $before = $_SERVER[$name] ?? null;
+    $_SERVER[$name] = 'de-own-woman';
+    try {
+        $overridden = (array) ((require base_path('config/generation.php'))['speech']['voices'] ?? []);
+        expect($overridden['de']['partner']['female']['voice'] ?? null)->toBe('de-own-woman')
+            ->and(oneVoiceProblems($overridden))->toBe([]);
+    } finally {
+        if ($before === null) {
+            unset($_SERVER[$name]);
+        } else {
+            $_SERVER[$name] = $before;
+        }
+    }
+
+    // A slot `.env` does not name, moved off the English id in the pack itself.
+    $free = null;
+    foreach (oneVoicePlanTargets() as $lang) {
+        foreach (ONE_VOICE_SLOTS as $slot) {
+            if ($lang !== 'en' && ! oneVoiceOverridden($lang, $slot)) {
+                $free ??= [$lang, ...explode('.', $slot)];
+            }
+        }
+    }
+    expect($free)->not->toBeNull();
+    [$lang, $role, $slot] = $free;
+    $unasked = (array) config('generation.speech.voices');
+    $unasked[$lang][$role][$slot]['voice'] = 'nobody-heard';
+
+    expect(oneVoiceProblems($unasked))->toBe(["{$lang}.{$role}.{$slot}: «nobody-heard», not the English «{$unasked['en'][$role][$slot]['voice']}»"]);
 });

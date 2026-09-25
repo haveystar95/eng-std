@@ -32,9 +32,20 @@ use App\Modules\Plan\Domain\Service\Words;
  *
  * THE OPTIONS OF ONE CHECK ARE OF ONE FORM WITH THE RIGHT ONE (наряд FIX-3 §5), read on the card's side — the learner's
  * language, which is what the card shows: each option is 0.5–2× the right one's length in letters, none starts with a
- * lower-case letter (a fragment is odd by its form, not by its meaning), and none is a piece of the partner's line in the
- * learner's language word for word (an option copied out of the translation is found by reading, not by hearing).
- * Otherwise `options.form_mismatch` at the check — fatal: the card a learner would get tests the form, not the meaning.
+ * lower-case letter where the right one starts with a capital (a fragment is odd by its form, not by its meaning), and
+ * none is a piece of the partner's line in the learner's language word for word (an option copied out of the translation
+ * is found by reading, not by hearing). Otherwise `options.form_mismatch` at the check — fatal: the card a learner would
+ * get tests the form, not the meaning.
+ *
+ * «Starts lower-case» is read on the FIRST CHARACTER, not on the first letter (наряд LANG-1, валидатор; baseline
+ * `docs/research/lang-1/baseline.md`): an option that opens with a digit, a quote, «¿» or «¡» does not start lower-case
+ * at all. The rule used to skip whatever came before the first letter, and so failed a day on «9 h du matin» against
+ * «10 h» and «11 h» — the French write the hour so, and the «h» after the digit is lower-case by the language's own
+ * spelling — and on «1050 евро» (ru→en, GEN-3 rent, day 1): the sub-rule's only two hits in 40 replayed days, both false.
+ * And it counts only AGAINST the right option: a first letter in lower case is a fragment's tell only when the right one
+ * opens with a capital — or the other way round, the right one in lower case against a wrong one's capital, the card's
+ * answer given away by its form. Options all in lower case, or a right one that opens with a digit, are of one form.
+ * The length and «piece of the partner's line» sub-rules are the architect's to change and are left as FIX-3 wrote them.
  */
 final class CheckRules implements LessonRule
 {
@@ -99,8 +110,9 @@ final class CheckRules implements LessonRule
 
     /**
      * What makes the options of an exchange's check not of one form with its right one, in the learner's language — or
-     * null when they are: the first option too short or too long against the right one, starting lower-case, or said
-     * word for word in the partner's line.
+     * null when they are: the first option too short or too long against the right one, starting lower-case where the
+     * right one starts with a capital (or the right one alone starting lower-case), or said word for word in the
+     * partner's line.
      */
     private static function formMismatch(Exchange $exchange): ?string
     {
@@ -110,16 +122,22 @@ final class CheckRules implements LessonRule
             return null;
         }
         $rightLength = self::letters($right->textNative);
+        $rightCase = self::initialCase($right->textNative);
         $partnerWords = Words::tokens($partner->textNative);
         foreach ($exchange->check->options as $index => $option) {
             $text = trim($option->textNative);
             $length = self::letters($text);
-            if ($index !== $exchange->check->correctOptionIndex && $rightLength > 0
+            $wrong = $index !== $exchange->check->correctOptionIndex;
+            if ($wrong && $rightLength > 0
                 && ($length < self::OPTION_LENGTH[0] * $rightLength || $length > self::OPTION_LENGTH[1] * $rightLength)) {
                 return "the option «{$text}» is {$length} letters against {$rightLength} of the right «{$right->textNative}»";
             }
-            if (preg_match('/^[^\p{L}]*\p{Ll}/u', $text) === 1) {
-                return "the option «{$text}» starts lower-case";
+            $case = $wrong ? self::initialCase($text) : null;
+            if ($case === self::LOWER && $rightCase === self::UPPER) {
+                return "the option «{$text}» starts lower-case against the right «{$right->textNative}»";
+            }
+            if ($case === self::UPPER && $rightCase === self::LOWER) {
+                return "the right option «{$right->textNative}» starts lower-case against «{$text}»";
             }
             $optionWords = Words::tokens($text);
             if ($optionWords !== [] && self::contains($partnerWords, $optionWords)) {
@@ -134,6 +152,29 @@ final class CheckRules implements LessonRule
     private static function letters(string $text): int
     {
         return mb_strlen((string) preg_replace('/[^\p{L}\p{N}]+/u', '', $text));
+    }
+
+    private const UPPER = 'upper';
+
+    private const LOWER = 'lower';
+
+    /**
+     * The case an option OPENS with — its first character, nothing skipped (наряд LANG-1): a capital or a title-case
+     * letter is {@see self::UPPER}, a lower-case letter {@see self::LOWER}, and anything else — a digit («9 h du
+     * matin», «1050 евро»), a quote, «¿», «¡», a dash, a letter of a writing without case — is no case, so never a
+     * fragment's tell.
+     *
+     * @return 'upper'|'lower'|null
+     */
+    private static function initialCase(string $text): ?string
+    {
+        $first = mb_substr(trim($text), 0, 1);
+
+        return match (true) {
+            preg_match('/^[\p{Lu}\p{Lt}]$/u', $first) === 1 => self::UPPER,
+            preg_match('/^\p{Ll}$/u', $first) === 1 => self::LOWER,
+            default => null,
+        };
     }
 
     private static function aboutLearner(Lesson $answer, Exchange $exchange, LanguageWords $words): bool

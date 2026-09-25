@@ -10,6 +10,7 @@ use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\LineToSay;
 use App\Modules\Plan\Application\Dto\SpokenAudio;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
@@ -149,11 +150,17 @@ function pvGermanVoices(): array
 // Canon (наряд LANG-1, п. 9; DECISIONS пп. 318, 414): «голоса — по языку обучения: шесть строк у каждой цели плана»; «план
 // на de получает голос сцены из строк de». CATCHES a scene of a German plan cast from the English rows (the catalog asked
 // in the account's language, or in a hard-wired `en`), and a German plan left without a voice because its pack has no rows.
+//
+// The row is about the VOICE, not about German: the fake's lesson is English text, and the real German pack (наряд LANG-1,
+// the language executors) would read it by German rules and fail the day before a voice is cast. So the German lessons
+// here are checked by the English pack under the code `de` — a binding of this test alone — and the build, the gate and
+// the cast run as production runs them; what German a German lesson must be is the German pack's own tests' business.
 it('casts a German plan\'s partner voices from the German rows of the pack: roles F, F, M, F speak de F1, F2, M1, F1', function () {
     $genders = ['Receptionist' => 'female', 'Doctor' => 'female', 'Pharmacist' => 'male', 'Nurse' => 'female'];
     app()->instance(PlanModelPort::class, new FakePlanModel(lesson: static function (LessonRequest $request) use ($genders): array {
         return ['role_gender' => $genders[$request->roles->partnerTarget] ?? 'female'] + planCleanLesson($request);
     }));
+    app()->instance(LanguagePacks::class, new LanguagePacks(['de' => config('lesson.lang.en')] + (array) config('lesson.lang', [])));
     $voices = pvGermanVoices();
     $scenes = pvFourScenes($this, ['target_lang' => 'de']);
 
