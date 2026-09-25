@@ -18,7 +18,7 @@ use App\Modules\Plan\Domain\Check\Language\LanguagePack;
  * language whose pack does not write its letters is judged by the first two only.
  *
  * What it cannot see is a translation that is Russian and wrong — «Please tell me his temperature» said back as «какая у
- * него самая высокая температура»: that one is the prompt's (v3.3, OUTPUT), not the code's.
+ * него самая высокая температура»: that one is the prompt's (v3.3 on, OUTPUT), not the code's.
  */
 final class ReplyNative
 {

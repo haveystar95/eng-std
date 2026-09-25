@@ -737,7 +737,7 @@ function convDayId(string $planId, int $number = 1): string
 /** @return int the hits of one check of the role's prompt, as the admin panel reads them */
 function convHits(string $code): int
 {
-    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3.3')
+    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3.4')
         ->where('check_name', $code)->where('action', 'counted')->value('hits');
 }
 

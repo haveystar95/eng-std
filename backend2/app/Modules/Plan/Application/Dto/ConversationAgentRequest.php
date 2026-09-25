@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Dto;
 
 /**
- * WHAT THE ROLE IS TOLD BEFORE ONE MOVE (`conversation_agent.v3.3`, наряд CONV-1, п. 4; наряд CONV-2, пп. 1, 4; наряд
+ * WHAT THE ROLE IS TOLD BEFORE ONE MOVE (`conversation_agent.v3.4`, наряд CONV-1, п. 4; наряд CONV-2, пп. 1, 4; наряд
  * FIX-3 §7; наряд FIX-4 §§3–4; наряд FIX-4b §3; наряд FIX-4c §6 — the rules changed, the data did not).
  *
  * Everything that changes from call to call — and NOTHING else: the prompt file itself is the

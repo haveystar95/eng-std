@@ -51,9 +51,11 @@ final class PlanPromptFiles
      * nothing HISTORY or EARLIER already holds, a new role repeats no line of the one before, and the answer no longer
      * carries `phrases_used` and `checkpoint_done`; v3.3 — наряд FIX-4c §6: v3.2 and one sentence in OUTPUT —
      * `reply_native` is `reply_target` translated into the learner's language, faithful to its meaning, never in the target
-     * language and never a retelling; a translation that is none is asked for again with REDO `native_missing`).
+     * language and never a retelling; a translation that is none is asked for again with REDO `native_missing`; v3.4 —
+     * наряд ACC-1 §6: v3.3 and one sentence in SCENES — on SCENE_END the role first accepts what the learner has just said
+     * or offered, or thanks them for it, never turns it down, and only then says goodbye in one sentence).
      */
-    public const CONVERSATION_FILE = 'conversation_agent.v3.3.md';
+    public const CONVERSATION_FILE = 'conversation_agent.v3.4.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
