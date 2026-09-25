@@ -226,12 +226,33 @@ abstract final class AppMotion {
   static const sessionDayPlate = Duration(milliseconds: 200);
   static const sessionDayPlateDelay = Duration(milliseconds: 80);
 
-  /// «The phrase strip · a phrase has sounded» (37-8b, SESSION-DES-4): the strip goes sage 15 % with a sage check left
-  /// of its chevron for 260 ms, then back to paper.
-  static const talkStripFlash = Duration(milliseconds: 260);
-
-  /// «The phrase sheet» (37-8d) rises and falls as the exit sheet does.
+  /// «The constructions sheet» (37-8d) rises and falls as the exit sheet does.
   static const talkPhraseSheet = sessionExitSheet;
+
+  // ── The talk across scenes and its plates (наряд CLIENT-FIX-4) — the captions of кадры 39-1, 37-8, 37-11.
+
+  /// «The transition card rides in from below — a 24 shift and a fade, 220 ms» (39-1).
+  static const talkSceneCardIn = Duration(milliseconds: 220);
+  static const talkSceneCardShift = 24.0;
+
+  /// «On „Продолжить“ it folds into the divider, 220 ms ease-out» (39-1).
+  static const talkSceneCardFold = Duration(milliseconds: 220);
+
+  /// «The scene strip changes with a 200 ms fade» (39-1).
+  static const talkSceneStripFade = Duration(milliseconds: 200);
+
+  /// «The doctor's first line — 300 ms later» (39-1): the breath between «Продолжить» and the next role's greeting.
+  static const talkSceneGreetingDelay = Duration(milliseconds: 300);
+
+  /// «Said — the plate gets a 15 % sage wash with a check for a moment and leaves to the left after 600 ms» (37-8).
+  static const talkPlateSaidHold = Duration(milliseconds: 600);
+
+  /// The plate leaving the row: it slides left while its width folds (the canvas names no duration — the card change's
+  /// 220 ms, ease-out).
+  static const talkPlateLeave = Duration(milliseconds: 220);
+
+  /// «The last plate left — the row folds, the dock goes down by 58» (37-11b), the same 220 ms.
+  static const talkRowFold = Duration(milliseconds: 220);
 
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);

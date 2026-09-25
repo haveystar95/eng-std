@@ -16,15 +16,17 @@ import '../session/cards/card_kit.dart' show CardLayout;
 import '../session/parts/session_bits.dart';
 import '../session/parts/session_chrome.dart';
 import '../session/session_mic.dart';
+import '../session/session_texts.dart';
 import '../session/session_voice.dart';
 import 'conversation_controller.dart';
 import 'talk_constructions.dart';
 import 'talk_ribbon.dart';
 
-/// THE TALK (кадры 37-6…37-11) — the ribbon, the microphone and the three ways a move can fail.
+/// THE TALK (кадры 37-6…37-11, 39-1) — the ribbon, the microphone, the three ways a move can fail and, on the rehearsal
+/// and a review, the walk from scene to scene.
 ///
 /// THE MICROPHONE OPENS ONLY ON A TAP. No state of this screen starts a recording by itself: not the
-/// end of the role's line, not the chip, not a failure (DECISIONS п. 299 — «Запись начинает
+/// end of the role's line, not the hint, not a failure (DECISIONS п. 299 — «Запись начинает
 /// человек»). A tap WHILE the role is speaking cuts the line off and starts listening at once
 /// (кадр 37-9) — that is still a tap.
 class TalkView extends StatefulWidget {
@@ -46,7 +48,7 @@ class TalkView extends StatefulWidget {
   /// The day's scene — the strip's photo when the talk's own scene is not found in the plan.
   final PlanScene? scene;
 
-  /// The plan's scene by id — the photo of the scene the talk is in NOW ([talkStripScene]).
+  /// The plan's scene by id — the photo of the scene the talk is in NOW and of the next one on its transition card.
   final PlanScene? Function(String sceneId)? sceneById;
   final SessionVoice voice;
 
@@ -112,7 +114,7 @@ class _TalkViewState extends State<TalkView> {
   /// A tap on the microphone: while the role speaks it cuts the line off AND starts listening; the
   /// rest of the time it is the ordinary tap of every microphone in the app.
   Future<void> _tapMic() async {
-    if (_talk.phase == TalkPhase.agentSpeaking) {
+    if (_talk.canInterrupt) {
       await _talk.interrupt();
       if (!mounted) return;
     }
@@ -130,32 +132,33 @@ class _TalkViewState extends State<TalkView> {
   /// already sounded in sage (37-7 «слушаю»). A frame is read with the lesson's own value in its window: that is the
   /// whole of what the server wrote for it.
   String get _expected {
-    final targets = _talk.talk?.targets ?? const <TalkTarget>[];
-    return targets.map((t) => t.saidWith(t.exampleTarget)).join(' ');
+    final talk = _talk.talk;
+    final targets = talk?.targetsOf(talk.currentSceneId) ?? const <TalkTarget>[];
+    return targets.map((t) => t.lessonLine).join(' ');
   }
 
-  /// THE CONSTRUCTIONS OVER THE MICROPHONE (наряд FIX-3 §3, кадры 37-7…37-11) — the plates off the latest answer's
-  /// `targets[]`, filled by the SERVER's `said`; a talk whose server sent none has no row. A tap opens the
-  /// construction's sheet (37-8d), and the sheet reads the list again while it is open.
-  Widget? _constructions(PlanConversation talk) => talk.targets.isEmpty
-      ? null
-      : TalkConstructionChips(
-          targets: talk.targets,
-          onTap: (target) => unawaited(
-            showTalkConstructionSheet(
-              context,
-              talk: _talk,
-              target: () => _targetOf(target.sceneId, target.ref),
-            ),
-          ),
-        );
-
-  /// The construction by its pair, as the talk has it NOW — null once it is no longer in the list.
-  TalkTarget? _targetOf(String sceneId, String ref) {
-    for (final t in _talk.talk?.targets ?? const <TalkTarget>[]) {
-      if (t.sceneId == sceneId && t.ref == ref) return t;
-    }
-    return null;
+  /// THE CONSTRUCTIONS OVER THE MICROPHONE (наряд CLIENT-FIX-4 §2, кадры 37-7…37-11) — the ones of the scene the talk
+  /// is in that are still to say, as the SERVER's judge left them; a talk whose server sent none has no row. A tap on the
+  /// row opens the sheet of the scene (37-8d), which reads the talk again while it is open. The row is keyed by its
+  /// scene: the next scene's row is a new one, and the plates of the scene left behind do not ride out of it.
+  Widget? _constructions(PlanConversation talk) {
+    final scene = talk.currentSceneId;
+    final targets = talk.targetsOf(scene);
+    if (targets.isEmpty) return null;
+    return TalkConstructionChips(
+      key: ValueKey('talk-constructions-of-$scene'),
+      targets: targets,
+      onTap: () => unawaited(
+        showTalkConstructionSheet(
+          context,
+          talk: _talk,
+          targets: () {
+            final now = _talk.talk;
+            return now == null ? const [] : now.targetsOf(now.currentSceneId);
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -181,26 +184,24 @@ class _TalkViewState extends State<TalkView> {
         ),
       );
     }
+    final ended = _talk.endSheetUp;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _header(l, talk),
-        // The scene the talk is in NOW — on the rehearsal it moves from scene to scene with the role.
-        SessionSceneStrip(
-          scene: talkStripScene(talk, sceneById: widget.sceneById) ?? widget.scene,
-          title: talk.partner.sceneNative,
-          role: talk.partner.roleNative,
-        ),
+        _strip(talk),
         Expanded(
           child: CardLayout(
             feed: true,
             bodyGap: 16,
             fadeStop: 0.30,
             task: null,
-            body: _ribbon(talk),
-            bottom: _talk.phase == TalkPhase.ended ? _endSheet(l, talk) : _dock(l, talk),
+            body: _ribbon(l, talk),
+            // THE END SHEET (37-11) takes the dock's place and runs the screen's width, gutter to gutter, on the ground.
+            bottom: ended ? null : _dock(l, talk),
           ),
         ),
+        if (ended) TalkEndSheet(minutes: talk.summary?.minutes, onSummary: widget.onSummary),
       ],
     );
   }
@@ -234,30 +235,89 @@ class _TalkViewState extends State<TalkView> {
     ),
   );
 
-  /// THE RIBBON — the server's `turns[]`, oldest first, and the three dots while a move is in flight.
-  Widget _ribbon(PlanConversation talk) {
+  /// THE SCENE THE TALK IS IN (30-2b) — on the rehearsal it moves from scene to scene with the role: while the
+  /// transition card stands it still names the scene that has just said goodbye, and on «Продолжить» it turns to the
+  /// next one with a 200 ms fade (39-1).
+  Widget _strip(PlanConversation talk) {
+    final id = _talk.stripSceneId;
+    final named = talk.sceneOf(id);
+    final strip = SessionSceneStrip(
+      key: ValueKey('talk-strip-${id ?? '-'}'),
+      scene: talkStripScene(talk, sceneId: id, sceneById: widget.sceneById) ?? widget.scene,
+      title: named?.titleNative ?? talk.partner.sceneNative,
+      role: named?.roleNative ?? talk.partner.roleNative,
+    );
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return strip;
+    return AnimatedSwitcher(
+      duration: AppMotion.talkSceneStripFade,
+      layoutBuilder: (current, previous) => Stack(alignment: Alignment.topLeft, children: [...previous, ?current]),
+      child: strip,
+    );
+  }
+
+  /// THE RIBBON — the server's `turns[]`, oldest first: every earlier boundary of scenes as its divider, the next
+  /// scene's greeting held back behind the transition card until «Продолжить» (39-1), the hint plate under the role's
+  /// last line while the move is the learner's (37-7), the judge's «Почти — скажи целиком» under the learner's line it
+  /// was about (37-8e), and the three dots while a move is in flight.
+  Widget _ribbon(AppLocalizations l, PlanConversation talk) {
     final rows = <Widget>[];
     TalkTurn? previous;
-    for (final turn in talk.turns) {
+    final held = _talk.heldStart;
+    final hint = _talk.hint;
+    final lastPartner = talk.lastPartnerTurn;
+    final lastOwn = talk.lastOwnTurn;
+
+    void gap(double height) {
+      if (rows.isNotEmpty) rows.add(SizedBox(height: height));
+    }
+
+    for (final (position, turn) in talk.turns.indexed) {
+      if (turn.index == held) break;
+      if (talk.opensScene(position)) {
+        gap(16);
+        rows.add(_boundary(l, talk, turn.sceneId, cardFor: null));
+        previous = null;
+      }
       final row = _turnRow(talk, turn);
       if (row == null) continue;
-      if (rows.isNotEmpty) {
-        // Inside one exchange the lines stand 8 apart, between exchanges 16 — an exchange starts
-        // with the role's line.
-        rows.add(SizedBox(height: !turn.isOwn && previous != null && previous.isOwn ? 16 : 8));
-      }
+      // Inside one exchange the lines stand 8 apart, between exchanges 16 — an exchange starts with the role's line.
+      gap(previous == null ? 16 : (!turn.isOwn && previous.isOwn ? 16 : 8));
       rows.add(row);
       previous = turn;
+      if (turn.isOwn && turn.index == _talk.almostAt && turn.index == lastOwn?.index) {
+        rows
+          ..add(const SizedBox(height: 8))
+          ..add(const TalkJudgeLine());
+      }
+      if (!turn.isOwn && turn.index == lastPartner?.index && hint != null) {
+        rows
+          ..add(const SizedBox(height: 8))
+          ..add(
+            TalkHintPlate(
+              sentence: hint.sentence,
+              line: hint.line,
+              open: hint.open,
+              onTap: hint.line == null ? null : _talk.toggleHint,
+            ),
+          );
+      }
+    }
+    // The boundary the ribbon stops at: the transition card while it stands, the divider it folds into after
+    // «Продолжить» while the next role draws breath.
+    if (held != null) {
+      final greeting = talk.turns.where((t) => t.index == held).firstOrNull;
+      gap(16);
+      rows.add(_boundary(l, talk, greeting?.sceneId, cardFor: _talk.phase == TalkPhase.sceneChange ? greeting : null));
     }
     // The move the server has not answered: what the learner said stays on screen while the role
     // «thinks» and after a failure (кадры 37-8, 37-10) — the phone's own words, until the server's
     // copy of them arrives with the answer.
     if (_pendingRow() case final row?) {
-      if (rows.isNotEmpty) rows.add(const SizedBox(height: 8));
+      gap(8);
       rows.add(row);
     }
     if (_talk.phase == TalkPhase.sending) {
-      if (rows.isNotEmpty) rows.add(const SizedBox(height: 16));
+      gap(16);
       rows.add(const TalkThinking());
     }
 
@@ -269,6 +329,41 @@ class _TalkViewState extends State<TalkView> {
     );
   }
 
+  /// A BOUNDARY OF SCENES: the transition card of [cardFor]'s scene while it stands (39-1), otherwise the divider
+  /// «Сцена N · название · роль» (39-1b). The card folds into the divider in 220 ms on «Продолжить».
+  Widget _boundary(AppLocalizations l, PlanConversation talk, String? sceneId, {required TalkTurn? cardFor}) {
+    final scene = talk.sceneOf(sceneId);
+    final number = talk.sceneNumberOf(sceneId);
+    final title = scene?.titleNative.trim() ?? '';
+    final role = SessionTexts.roleInline(scene?.roleNative.trim() ?? '');
+    final Widget child = cardFor == null
+        ? TalkSceneDivider(key: ValueKey('talk-scene-divider-$sceneId'), label: talkSceneLabel(l, number: number, title: title, role: role))
+        : TalkSceneCard(
+            key: ValueKey('talk-scene-card-$sceneId'),
+            number: number ?? 1,
+            total: talk.scenes.length,
+            title: title,
+            role: role,
+            targets: talk.targetsOf(sceneId),
+            photo: sceneId == null ? null : widget.sceneById?.call(sceneId)?.image,
+            onContinue: () => unawaited(_talk.continueScene()),
+          );
+    // Under «Уменьшение движения» the card is simply replaced by its divider.
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;
+    return AnimatedSize(
+      duration: AppMotion.talkSceneCardFold,
+      curve: AppMotion.sessionEaseOut,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: AppMotion.talkSceneCardFold,
+        switchInCurve: AppMotion.sessionEaseOut,
+        switchOutCurve: AppMotion.sessionEaseOut,
+        layoutBuilder: (current, previous) => Stack(alignment: Alignment.topCenter, children: [...previous, ?current]),
+        child: child,
+      ),
+    );
+  }
+
   Widget? _turnRow(PlanConversation talk, TalkTurn turn) {
     if (turn.isOwn) {
       final text = turn.textTarget;
@@ -277,7 +372,7 @@ class _TalkViewState extends State<TalkView> {
       // translation under it and no underline in it (кадр 37-7 «после „Не понял"»).
       if (text == null || text.trim().isEmpty) return null;
       if (turn.kind == TalkTurnKind.rescue) return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text);
-      return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text, marks: _marksOf(turn));
+      return TalkOwnBubble(key: ValueKey('turn-${turn.index}'), text: text, marks: _marksOf(talk, turn));
     }
     // THE ROLE'S TEXT IS OPEN WITH ITS VOICE (правка прохода 21.09, наряд CLIENT-CONV-1b): the words stand from the
     // first sound, «прослушать» in the corner, no «текст» to tap. Under «Без подсказок» each line stays closed until the
@@ -312,17 +407,18 @@ class _TalkViewState extends State<TalkView> {
     };
   }
 
-  /// The ranges of the learner's line the SERVER matched to constructions of the day — WHICH construction it heard is
-  /// the server's (`phrases_used`, a pair since FIX-3 §6), and its words are read from `targets[]`: THE IMMOVABLE PART
-  /// OF THE FRAME AND THE VALUE the learner put in its window, both the server's fields (приёмка окна 2, п. 1). Letter
-  /// case aside and through the day's own foldings, so «can I take» of a line is the «Can I take ___ onboard?» of the
-  /// lesson. A pair the list does not hold is not marked — the phone does not guess the words behind a ref.
-  List<({int start, int end})> _marksOf(TalkTurn turn) {
+  /// The ranges of the learner's line the SERVER matched to constructions of the talk — WHICH construction it heard is
+  /// the server's (`phrases_used` for the targets, `extra_said` for «Ещё вспомнил», pairs since FIX-3 §6 / FIX-4 §2), and
+  /// its words are read from the talk's lists: THE IMMOVABLE PART OF THE FRAME AND THE VALUE the learner put in its
+  /// window, both the server's fields (приёмка окна 2, п. 1). Letter case aside and through the day's own foldings, so
+  /// «can I take» of a line is the «Can I take ___ onboard?» of the lesson. A pair the lists do not hold is not marked —
+  /// the phone does not guess the words behind a ref.
+  List<({int start, int end})> _marksOf(PlanConversation talk, TalkTurn turn) {
     final text = turn.textTarget ?? '';
     // Одно слово — одна линия: две конструкции одного хода часто делят слова («I»), и метка у них общая.
     final marks = <({int start, int end})>{};
-    for (final used in turn.phrasesUsed) {
-      final target = _targetOf(used.sceneId, used.ref);
+    for (final used in [...turn.phrasesUsed, ...turn.extraSaid]) {
+      final target = talk.constructionOf(used.sceneId, used.ref);
       if (target == null) continue;
       marks.addAll(HeardWords.wordsIn(text, [target.frameFixed, target.valueTarget], widget.speech));
     }
@@ -340,7 +436,7 @@ class _TalkViewState extends State<TalkView> {
     final noMic = _mic.state == MicState.unavailable;
     final look = switch (phase) {
       TalkPhase.agentSpeaking => TalkMicLook.dimmed,
-      TalkPhase.sending || TalkPhase.opening || TalkPhase.openFailed || TalkPhase.ended => TalkMicLook.busy,
+      TalkPhase.sending || TalkPhase.opening || TalkPhase.openFailed || TalkPhase.sceneChange || TalkPhase.ended => TalkMicLook.busy,
       TalkPhase.yourTurn when noMic => TalkMicLook.busy,
       TalkPhase.yourTurn => listening ? TalkMicLook.listening : TalkMicLook.waiting,
     };
@@ -348,17 +444,20 @@ class _TalkViewState extends State<TalkView> {
     // «Не расслышал» is the move's again (37-10): «тап — говорить» over the button, the brass ring of
     // «твоя очередь» around it, and the reason under it.
     final caption = switch (phase) {
-      // «слушай» over the dimmed button while the role speaks and while it «thinks» (37-6, 37-8).
-      TalkPhase.agentSpeaking || TalkPhase.sending => l.planSessionListenCue,
+      // «слушай» over the dimmed button while the role speaks and while it «thinks» (37-6, 37-8) — the last scene's
+      // goodbye too, before the end sheet rises.
+      TalkPhase.agentSpeaking || TalkPhase.sending || TalkPhase.ended => l.planSessionListenCue,
       TalkPhase.yourTurn when noMic => null,
       TalkPhase.yourTurn => listening ? l.planSessionMicListening : l.planSessionMicTap,
+      // The transition card is the one thing to do (39-1): no caption over the dimmed button.
       _ => null,
     };
     final subCaption = listening ? l.planTalkSilenceEnds : (trouble == TalkTrouble.unheard ? l.planTalkUnheard : null);
 
     return TalkDock(
       debugMic: yourTurn ? _mic : null,
-      constructions: _constructions(talk),
+      // While the transition card stands the row hides — the next scene's constructions are on the card (39-1).
+      constructions: phase == TalkPhase.sceneChange ? null : _constructions(talk),
       notice: switch (trouble) {
         TalkTrouble.offline => TalkNotice(text: l.planTalkOffline, onAction: () => unawaited(_talk.retry())),
         TalkTrouble.agentSilent => TalkNotice(text: l.planTalkSilent, onAction: () => unawaited(_talk.retry())),
@@ -370,8 +469,6 @@ class _TalkViewState extends State<TalkView> {
         ),
         _ => null,
       },
-      // The intention comes as a clause (CONV-2 п. 11) and goes into «Скажи, что …» as it came.
-      chip: _talk.chipShown && _talk.hintNative != null ? TalkHintChip(text: l.planTalkHintChip(_talk.hintNative!)) : null,
       liveLine: listening && _mic.partial.trim().isNotEmpty
           ? _LiveLine(words: LiveLine.of(_mic.partial, _expected, listening: !_mic.closed))
           : null,
@@ -386,50 +483,28 @@ class _TalkViewState extends State<TalkView> {
               onTap: () => unawaited(_talk.rescue()),
             )
           : null,
-      // While it listens the dock holds «Не понял» and the button alone (37-7 «слушаю»): a hint is asked for
-      // before speaking, not in the middle of it.
+      // «Подсказать» — only under «Без подсказок» (37-7c); with hints on the plate already stands under the role's line.
+      // While it listens the dock holds «Не понял» and the button alone (37-7 «слушаю»): a hint is asked for before
+      // speaking, not in the middle of it.
       right: _talk.hintButtonShown && !listening
           ? TalkPill(key: const ValueKey('talk-hint'), label: l.planSessionHintAction, brass: true, onTap: _talk.showHint)
           : null,
       mic: TalkMicButton(
         look: look,
         label: l.planSessionMicTap,
-        onTap: phase == TalkPhase.agentSpeaking || (yourTurn && !noMic) ? () => unawaited(_tapMic()) : null,
+        onTap: _talk.canInterrupt || (yourTurn && !noMic) ? () => unawaited(_tapMic()) : null,
       ),
-    );
-  }
-
-  /// THE END (кадр 37-11): the role's goodbye stays in the ribbon and a sheet rises over it —
-  /// «Разговор окончен · N минут» and one button; the constructions stay over it as the talk left them.
-  Widget _endSheet(AppLocalizations l, PlanConversation talk) {
-    final minutes = talk.summary?.minutes;
-    final constructions = _constructions(talk);
-    return Column(
-      key: const ValueKey('talk-end-sheet'),
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (constructions != null) ...[constructions, const SizedBox(height: 14)],
-        SessionSheet(
-          child: Row(
-            children: [
-              Expanded(child: Text(l.planTalkEnded, style: AppTextSession.text15)),
-              if (minutes != null) Text(l.planMinutesCount(minutes), style: AppTextSession.meta),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        SessionDockButton(key: const ValueKey('talk-summary-action'), label: l.planTalkSummaryAction, onTap: widget.onSummary),
-      ],
     );
   }
 }
 
-/// THE PLAN'S SCENE THE TALK IS IN NOW — the photo of the strip (наряд CLIENT-CONV-1b). The document names the
-/// scene by its title (`scene.title_native`, the same as its `scenes[]` entry) and marks it `current`; an ended talk
-/// marks none, and then its last scene is the one named. Null — no such scene in the plan.
-PlanScene? talkStripScene(PlanConversation talk, {PlanScene? Function(String sceneId)? sceneById}) {
-  if (sceneById == null || talk.scenes.isEmpty) return null;
+/// THE PLAN'S SCENE THE STRIP NAMES — its photo (наряды CLIENT-CONV-1b, CLIENT-FIX-4). [sceneId] — the scene the
+/// screen names now ([ConversationController.stripSceneId]); without it the document's own scene, found by its title
+/// among `scenes[]`, or the one marked `current`, or the last. Null — no such scene in the plan.
+PlanScene? talkStripScene(PlanConversation talk, {String? sceneId, PlanScene? Function(String sceneId)? sceneById}) {
+  if (sceneById == null) return null;
+  if (sceneId != null) return sceneById(sceneId);
+  if (talk.scenes.isEmpty) return null;
   final named = talk.scenes.where((s) => s.titleNative == talk.partner.sceneNative).firstOrNull;
   final current = talk.scenes.where((s) => s.state == TalkSceneState.current).firstOrNull;
   final scene = named ?? current ?? talk.scenes.last;

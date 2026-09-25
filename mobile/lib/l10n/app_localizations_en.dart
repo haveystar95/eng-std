@@ -3954,7 +3954,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTalkReady => 'You are ready for the visit';
+  String get planTalkReady => 'You are ready for the event';
 
   @override
   String get planTalkHighlights => 'What went well';
@@ -4212,21 +4212,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkConstructions => 'Constructions in the talk';
 
   @override
-  String get planTalkConstruction => 'The construction';
-
-  @override
-  String get planTalkFromLesson => 'From the lesson';
-
-  @override
-  String get planTalkYouSaidLabel => 'You said';
-
-  @override
   String planTalkYouSaid(String said) {
     return 'you said: $said';
   }
 
   @override
   String get planTalkRepeatBefore => 'go over it before the event';
+
+  @override
+  String planTalkAlmostLine(String line) {
+    return 'almost — say it whole: $line';
+  }
+
+  @override
+  String planTalkFromLessonLine(String line) {
+    return 'from the lesson: $line';
+  }
+
+  @override
+  String get planTalkAlmostJudge => 'Almost — say it whole';
+
+  @override
+  String get planTalkExtraSaid => 'You also used';
+
+  @override
+  String get planTalkEndedByTime => 'The talk ran out of time — what you did not say comes back';
+
+  @override
+  String get planTalkEndedByTimeOnly => 'The talk ran out of time';
+
+  @override
+  String planTalkSceneNumber(int n) {
+    return 'Scene $n';
+  }
+
+  @override
+  String planTalkSceneOf(int n, int total) {
+    return 'Scene $n of $total';
+  }
+
+  @override
+  String get planTalkSceneContinue => 'Continue';
+
+  @override
+  String planTalkEntryRuleStartRole(String role) {
+    return '$role speaks first. Answer, and ask your own questions.';
+  }
+
+  @override
+  String get planTalkEntrySceneByScene => 'The talk goes scene by scene';
 
   @override
   String planWindowReturnedFromDay(int n) {

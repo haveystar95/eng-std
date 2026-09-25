@@ -10,7 +10,9 @@ import '../../../data/plan/plan_models.dart';
 import '../plan_stage_text.dart' show PlanDot;
 import '../session/parts/session_bits.dart';
 import '../session/parts/session_chrome.dart';
+import '../session/session_texts.dart';
 import 'talk_constructions.dart';
+import 'talk_ribbon.dart' show talkSceneLabel;
 
 /// THE WAY INTO THE TALK (кадр 37-5 серии 38) — the sixth stage's own entry, in place of 30-1: the scene strip with
 /// the role, the scene's photo band, the eyebrow, the title the server wrote («Поговори с врачом»), the minutes, THREE
@@ -25,6 +27,11 @@ import 'talk_constructions.dart';
 /// (`stages[].minutes_left`), the title and the scenes' count its talk row's (`talk_title_native`, `scenes_count`,
 /// CONV-2 п. 12), the constructions its `targets` (FIX-3 §6); each is simply absent when it did not come. «Без
 /// подсказок» is sent once, with the start, and is fixed for that talk — «Начать разговор» is the only call here.
+///
+/// A TALK THAT WALKS SEVERAL SCENES (the rehearsal, a review — 37-5b; наряд CLIENT-FIX-4 §5) lists its constructions
+/// by scene, in the scenes' order: «СЦЕНА 1 · ЗАПИСЬ К ВРАЧУ · РЕГИСТРАТОР» and its constructions, the grey line «Разговор
+/// идёт сцена за сценой», the next scene; the first rule names the first scene's role («Регистратор начнёт первым»), and
+/// the strip shows that scene ([scenes]).
 class TalkEntryView extends StatelessWidget {
   const TalkEntryView({
     super.key,
@@ -38,6 +45,7 @@ class TalkEntryView extends StatelessWidget {
     this.title,
     this.scenesCount,
     this.targets = const [],
+    this.scenes = const [],
     this.starting = false,
     this.failure,
   });
@@ -56,6 +64,9 @@ class TalkEntryView extends StatelessWidget {
   /// «Скажи в разговоре» — the talk row's `targets`, in the server's order; empty — no block.
   final List<TalkTarget> targets;
 
+  /// The same constructions BY SCENE when the talk walks more than one ([talkEntryScenes]); empty — one block.
+  final List<TalkEntryScene> scenes;
+
   /// The rehearsal talks the whole visit through, not one scene.
   final bool rehearsal;
   final bool noHints;
@@ -72,9 +83,9 @@ class TalkEntryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final scenes = scenesCount;
+    final count = scenesCount;
     final eyebrow = rehearsal
-        ? (scenes == null || scenes < 1 ? l.planTalkEntryWhole : l.planDot(l.planTalkEntryWhole, l.planTalkEntryScenes(scenes)))
+        ? (count == null || count < 1 ? l.planTalkEntryWhole : l.planDot(l.planTalkEntryWhole, l.planTalkEntryScenes(count)))
         : l.planDotPlain(l.planPlateStageTalk, scene?.titleNative.trim() ?? '');
     final title = this.title;
     return ClipRect(
@@ -118,14 +129,16 @@ class TalkEntryView extends StatelessWidget {
                         ],
                         const SizedBox(height: 24),
                         for (final (i, (icon, line)) in [
-                          (_RuleIcon.talk, l.planTalkEntryRuleStart),
+                          (_RuleIcon.talk, _firstRule(l)),
                           (_RuleIcon.rescue, l.planTalkEntryRuleRescue),
                           (_RuleIcon.counts, l.planTalkEntryRuleCounts),
                         ].indexed) ...[
                           if (i > 0) const SizedBox(height: 14),
                           _Rule(icon: icon, text: line),
                         ],
-                        if (targets.isNotEmpty) ...[
+                        if (scenes.length > 1)
+                          ..._byScene(l)
+                        else if (targets.isNotEmpty) ...[
                           const SizedBox(height: 24),
                           SessionEyebrow(l.planTalkEntrySay),
                           const SizedBox(height: 14),
@@ -170,6 +183,72 @@ class TalkEntryView extends StatelessWidget {
       ),
     );
   }
+}
+
+extension on TalkEntryView {
+  /// «Собеседник начнёт первым…» — or, on a talk of several scenes, the first scene's role as the plan names it:
+  /// «Регистратор начнёт первым…» (37-5b). The day keeps its line (наряд CLIENT-FIX-4 §5: «в дне — как было»).
+  String _firstRule(AppLocalizations l) {
+    final role = scenes.length > 1 ? scenes.first.role.trim() : '';
+    return role.isEmpty ? l.planTalkEntryRuleStart : l.planTalkEntryRuleStartRole(role);
+  }
+
+  /// 37-5b: a scene's caps and its constructions, 14 apart, the grey «Разговор идёт сцена за сценой» between two
+  /// scenes, 24 around it.
+  List<Widget> _byScene(AppLocalizations l) => [
+    for (final (i, s) in scenes.indexed) ...[
+      if (i > 0) ...[
+        const SizedBox(height: 24),
+        Text(l.planTalkEntrySceneByScene, key: const ValueKey('talk-entry-scene-by-scene'), style: AppTextSession.meta),
+      ],
+      const SizedBox(height: 24),
+      SessionEyebrow(
+        talkSceneLabel(l, number: i + 1, title: s.title.trim(), role: SessionTexts.roleInline(s.role.trim())),
+        key: ValueKey('talk-entry-scene-${s.sceneId}'),
+      ),
+      const SizedBox(height: 14),
+      for (final (j, t) in s.targets.indexed) ...[
+        if (j > 0) const SizedBox(height: 10),
+        TalkConstructionRow(target: t),
+      ],
+    ],
+  ];
+}
+
+/// A SCENE OF A TALK THAT WALKS SEVERAL (кадр 37-5b): its id, its name, its role in the nominative as the plan names it,
+/// and its constructions in the server's order.
+typedef TalkEntryScene = ({String sceneId, String title, String role, List<TalkTarget> targets});
+
+/// THE TALK ROW'S CONSTRUCTIONS BY SCENE (37-5b) — in the order the day names its scenes (`window.sources[]`,
+/// [order]); a scene that list does not name goes after them, in the order its constructions came. The name is the
+/// source's, else the plan's scene's; the role is the plan's scene's. Fewer than two scenes — no groups: the day's own
+/// talk lists its constructions as one block (37-5).
+List<TalkEntryScene> talkEntryScenes(
+  List<TalkTarget> targets, {
+  required List<({String sceneId, String title})> order,
+  required PlanScene? Function(String sceneId) sceneById,
+}) {
+  final byScene = <String, List<TalkTarget>>{};
+  for (final t in targets) {
+    byScene.putIfAbsent(t.sceneId, () => []).add(t);
+  }
+  if (byScene.length < 2) return const [];
+  final named = {for (final s in order) s.sceneId: s.title};
+  final ids = [
+    for (final s in order)
+      if (byScene.containsKey(s.sceneId)) s.sceneId,
+    for (final id in byScene.keys)
+      if (!named.containsKey(id)) id,
+  ];
+  return [
+    for (final id in ids)
+      (
+        sceneId: id,
+        title: named[id] ?? sceneById(id)?.titleNative ?? '',
+        role: sceneById(id)?.partnerRoleNative ?? '',
+        targets: byScene[id]!,
+      ),
+  ];
 }
 
 enum _EntrySlot { field, dock }

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/api_client.dart';
-import '../../../data/plan/conversation/conversation_models.dart' show TalkTarget;
+import '../../../data/plan/conversation/conversation_models.dart' show PlanConversation, TalkTarget;
 import '../../../data/plan/day_window.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/plan_store.dart';
@@ -113,6 +113,7 @@ class SessionController extends ChangeNotifier {
     required this.number,
     this.store,
     this.replayStage,
+    this.readTalk,
     Duration Function(int failures)? outboxBackoff,
     this.lessonPollEvery = const Duration(seconds: 3),
   }) {
@@ -133,6 +134,10 @@ class SessionController extends ChangeNotifier {
 
   /// Идёт повтор этапа: ничего не отправляется, судья не зовётся, день не меняется.
   bool get replay => replayStage != null;
+
+  /// Reads an ended talk back (`GET …/conversation/{cid}`) — the summary a session opened again still owes (наряд
+  /// CLIENT-FIX-4 §4). Null — no talk to read, and the owed summary is not shown.
+  final Future<PlanConversation> Function(String conversationId)? readTalk;
 
   /// How often the plan is asked about a lesson that is still being written.
   final Duration lessonPollEvery;
@@ -175,7 +180,15 @@ class SessionController extends ChangeNotifier {
   String? _failedScene;
   bool _retrying = false;
 
+  /// The ended talk whose summary the session opens on before the day's own (§4) — read back on [load].
+  PlanConversation? _owedTalk;
+
   SessionPhase get phase => _phase;
+
+  /// THE TALK'S SUMMARY STILL OWED — a session opened again between the talk's goodbye and «Дальше» on its summary
+  /// stands on that summary (37-12) before «День пройден» (30-7), with this talk read back from the server. Null — none
+  /// is owed, and the talk's summary is the talk screen's own document.
+  PlanConversation? get owedTalk => _owedTalk;
 
   /// The plan as the server last said it — [plan] until the session read it again.
   Plan get currentPlan => _freshPlan ?? plan;
@@ -326,6 +339,11 @@ class SessionController extends ChangeNotifier {
           // through, not five (409 `plan_stage_incomplete`, `meta.stage: conversation`).
           _stage = PlanStage.conversation;
           _phase = SessionPhase.talkEntry;
+        } else if (await _readOwedTalk(day) case final owed?) {
+          // The talk is over and its summary was never read to the end: it comes first, then the day's (§4).
+          _owedTalk = owed;
+          _stage = PlanStage.conversation;
+          _phase = SessionPhase.talkSummary;
         } else {
           _stage = _lastStageWithCards();
           _phase = day.dealt ? SessionPhase.daySummary : SessionPhase.entry;
@@ -592,6 +610,13 @@ class SessionController extends ChangeNotifier {
     _notify();
   }
 
+  /// THE ROLE HAS SAID GOODBYE (37-11): from now until «Дальше» on the talk's summary the session owes that summary —
+  /// the device remembers which talk it is, so a session opened again in between shows it before «День пройден» (§4).
+  Future<void> talkFinished(String conversationId) async {
+    if (replay) return;
+    await store?.setTalkSummaryOwed(plan.id, number, conversationId);
+  }
+
   /// «Итог» on the end sheet (37-11 → 37-12).
   void talkEnded() {
     _phase = SessionPhase.talkSummary;
@@ -599,12 +624,30 @@ class SessionController extends ChangeNotifier {
   }
 
   /// «Дальше» on the talk's summary — the day summary (30-7). The day is read again first: its sixth
-  /// row is now «пройден», and only the server knows that.
+  /// row is now «пройден», and only the server knows that. The summary has been read: nothing is owed any more.
   Future<void> afterTalk() async {
+    _owedTalk = null;
     _phase = SessionPhase.daySummary;
     _notify();
+    unawaited(store?.setTalkSummaryOwed(plan.id, number, null));
     unawaited(_readPlan());
     await _refreshAfterStage();
+  }
+
+  /// The ended talk the device still owes the summary of — read back, and only when it is this day's, over and
+  /// summed up; anything else (no id, no network, a talk still going) — none, and the session goes on as it would.
+  Future<PlanConversation?> _readOwedTalk(SessionDay day) async {
+    final read = readTalk;
+    if (read == null || !day.dealt || day.day.status == PlanDayStatus.closed) return null;
+    final id = await store?.talkSummaryOwed(plan.id, number);
+    if (id == null) return null;
+    try {
+      final talk = await read(id);
+      return talk.isEnded && talk.summary != null && talk.day == number ? talk : null;
+    } catch (e) {
+      debugPrint('[session] owed talk $id: $e');
+      return null;
+    }
   }
 
   /// «Close the day» (30-7): every deferred answer delivered first, then `POST …/close`. True — the day is closed

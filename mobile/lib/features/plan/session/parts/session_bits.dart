@@ -419,6 +419,10 @@ enum SlotLook {
   /// in ink: what stands in the window is the learner's own word, not a verdict on it.
   said,
 
+  /// SAID ALMOST (37-8e, лист 37-8d) — the empty window in brass, its `___` in brass too: the frame is one word off and
+  /// still waits.
+  almost,
+
   /// Mistake — ink outline (32-2c).
   wrong,
 }
@@ -562,13 +566,14 @@ class SessionFrameText extends StatelessWidget {
   Widget _window(BuildContext context) {
     final (border, fill, textColor) = onInk
         ? switch (look) {
-            SlotLook.empty => (AppColors.brassInk, AppColors.sessionWindowFillOnInk, AppColors.paper),
+            SlotLook.empty || SlotLook.almost => (AppColors.brassInk, AppColors.sessionWindowFillOnInk, AppColors.paper),
             SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.paper),
             SlotLook.sage || SlotLook.said => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.sessionSageOnInk),
             SlotLook.wrong => (AppColors.paper, Colors.transparent, AppColors.paper),
           }
         : switch (look) {
             SlotLook.empty || SlotLook.filled => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.ink),
+            SlotLook.almost => (AppColors.brassInk, AppColors.sessionWindowFill, AppColors.brassInk),
             SlotLook.sage => (AppColors.verdictKnown, AppColors.sessionSageWash, AppColors.verdictKnown),
             SlotLook.said => (AppColors.verdictKnown, AppColors.sessionSaidSlotFill, AppColors.ink),
             SlotLook.wrong => (AppColors.ink, Colors.transparent, AppColors.ink),

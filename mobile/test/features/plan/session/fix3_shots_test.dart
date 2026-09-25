@@ -395,13 +395,6 @@ void main() {
     await settleTalk(tester);
   });
 
-  testWidgets('06 37-7c подсказка после 5 с', (tester) async {
-    await pumpTalkShot(tester, beforeRescue);
-    await tester.pump(const Duration(seconds: 6));
-    await shoot(tester, '06-37-7c-hint-chip');
-    await settleTalk(tester);
-  });
-
   testWidgets('07 37-7d после «Не понял» — свой пузырь «Sorry?»', (tester) async {
     await pumpTalkShot(tester, openV2);
     await shoot(tester, '07-37-7d-after-rescue-sorry');
@@ -461,20 +454,6 @@ void main() {
     await settleTalk(tester);
   });
 
-  testWidgets('11 37-8d лист конструкции открыт', (tester) async {
-    await pumpTalkShot(tester, afterMove);
-    final said = afterMove.targets.firstWhere((t) => t.ref == 'p4');
-    final chip = find.byKey(ValueKey('talk-construction-${said.sceneId}-${said.ref}'));
-    await tester.dragUntilVisible(chip, find.byKey(const ValueKey('talk-constructions')), const Offset(-120, 0));
-    await tester.pump();
-    await tester.tap(chip);
-    await tester.pumpAndSettle();
-    await shoot(tester, '11-37-8d-construction-sheet');
-    await tester.tap(find.byKey(const ValueKey('talk-construction-sheet-close')));
-    await tester.pumpAndSettle();
-    await settleTalk(tester);
-  });
-
   testWidgets('12 37-9 перебил врача', (tester) async {
     await pumpTalkShot(tester, beforeRescue, speaking: true);
     await tester.tap(find.byKey(const ValueKey('talk-mic')));
@@ -517,7 +496,7 @@ void main() {
     await settleTalk(tester);
   });
 
-  testWidgets('16 37-11 прощание — плашки конструкций над листом конца', (tester) async {
+  testWidgets('16 37-11 прощание сказано — лист «Разговор окончен»', (tester) async {
     await pumpTalkShot(tester, endedDay);
     await shoot(tester, '16-37-11-goodbye');
     await settleTalk(tester);

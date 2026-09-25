@@ -1,17 +1,22 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../data/local/cached_image_provider.dart';
+import '../../../data/plan/conversation/conversation_models.dart';
+import '../../../data/plan/plan_models.dart' show PlanImage;
+import '../plan_stage_text.dart' show PlanDot;
 import '../session/parts/session_bits.dart';
 import '../session/parts/session_bubbles.dart';
 import '../session/parts/session_mic_panel.dart' show SessionDebugHeardField, SessionTextExit;
 import '../session/session_mic.dart';
+import 'talk_constructions.dart' show TalkConstructionRow;
 
 /// THE TALK RIBBON — the component of кадры 37-6…37-8, and the one «Ответь своими словами» stands on
 /// (35-2, «Лента: пузыри и микрофон — компонент „Лента разговора" 37-6…37-8»).
@@ -363,10 +368,272 @@ class _TalkThinkingState extends State<TalkThinking> with SingleTickerProviderSt
   );
 }
 
-/// THE HINT CHIP (37-7, 35-2) — a LIGHT plate with the intention on the learner's language. Never an
+/// THE HINT PLATE OF THE TALK (кадры 37-7, 37-7e, 37-8e, 39-1b; наряд CLIENT-FIX-4 §3) — a LIGHT plate under the role's
+/// last line, on the left where the role's words stand: the lesson's whole sentence in the learner's language, 15/20 in
+/// ink — «У меня есть боль в плече.», no «Скажи, что …» around it. [line] — the target's line in the target language,
+/// Literata 17/23 in ink, 4 under the sentence when [open]: after an «almost» it is open at once (37-8e), otherwise a
+/// tap opens it and a second tap folds it (37-7e). Paper, corners 16, 10 / 14 inside, the ribbon's shadow — the same
+/// plate as the card's hint of 35-2 ([TalkHintChip]), never an ink bubble: ink on the right is only what the learner
+/// said.
+class TalkHintPlate extends StatelessWidget {
+  const TalkHintPlate({super.key, required this.sentence, this.line, this.open = false, this.onTap});
+
+  final String sentence;
+  final String? line;
+  final bool open;
+
+  /// Opens or folds [line]; null — the plate has no second line to give.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final second = open ? line : null;
+    final plate = Container(
+      key: const ValueKey('talk-hint-plate'),
+      constraints: const BoxConstraints(maxWidth: kSessionBubbleMax),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), boxShadow: kTalkPlateShadow),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(sentence, key: const ValueKey('talk-hint-sentence'), style: AppTextSession.text15),
+          if (second != null) ...[
+            const SizedBox(height: 4),
+            Text(second, key: const ValueKey('talk-hint-line'), style: AppTextSession.phrase17.copyWith(color: AppColors.ink)),
+          ],
+        ],
+      ),
+    );
+    return SessionAppear(
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: onTap == null
+            ? plate
+            : Semantics(button: true, child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: plate)),
+      ),
+    );
+  }
+}
+
+/// THE JUDGE'S LINE AFTER AN «ALMOST» (кадр 37-8e) — «Почти — скажи целиком», 15/20 in ink at 500, under the learner's
+/// own line: the move was one word off a construction, which still waits. Only a line of the server's judge, never the
+/// phone's own reading of what was said.
+class TalkJudgeLine extends StatelessWidget {
+  const TalkJudgeLine({super.key});
+
+  @override
+  Widget build(BuildContext context) => Text(
+    AppLocalizations.of(context).planTalkAlmostJudge,
+    key: const ValueKey('talk-judge-almost'),
+    style: AppTextSession.text15.copyWith(fontWeight: FontWeight.w500),
+  );
+}
+
+/// «Сцена 2 · Приём у врача · врач» — a scene of a talk that walks several (the divider 39-1b, the groups of the entry
+/// 37-5b): its number, its name and its role in the nominative with the first letter lowered, as the strip writes it.
+/// A part the server did not name is left out, never printed empty.
+String talkSceneLabel(AppLocalizations l, {int? number, required String title, required String role}) {
+  final parts = [if (number != null) l.planTalkSceneNumber(number), if (title.isNotEmpty) title, if (role.isNotEmpty) role];
+  if (parts.isEmpty) return '';
+  return parts.skip(1).fold(parts.first, l.planDotPlain);
+}
+
+/// THE BOUNDARY OF TWO SCENES IN THE RIBBON (кадр 39-1b) — «СЦЕНА 2 · ПРИЁМ У ВРАЧА · ВРАЧ» in the eyebrow's grey caps
+/// (the group heading of 23-0d) and a 1 px line after it to the edge: the transition card folds into it on
+/// «Продолжить», and every earlier boundary of a talk read again stands as one.
+class TalkSceneDivider extends StatelessWidget {
+  const TalkSceneDivider({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (_, box) => Row(
+      children: [
+        ConstrainedBox(
+          // A long scene name wraps rather than pushing the line out: 40 is always left for the rule.
+          constraints: BoxConstraints(maxWidth: (box.maxWidth - 52).clamp(0, double.infinity)),
+          child: Text(label.toUpperCase(), style: AppTextSession.eyebrow.copyWith(height: 14 / 11)),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(child: SizedBox(height: 1, child: ColoredBox(color: AppColors.markerOutline))),
+      ],
+    ),
+  );
+}
+
+/// THE TRANSITION CARD (кадр 39-1; наряд CLIENT-FIX-4 §1) — the next scene, in the ribbon under the goodbye of the one
+/// just closed: the scene's photo 104 high under a scrim with «СЦЕНА 2 ИЗ 2», its name in Literata 26 and its role 13,
+/// all in paper; under it the scene's constructions as the rows of 37-5 (the frame with its window, the lesson's example
+/// grey) and the one dark button, «Продолжить». The ribbon's whole width, corners 22, the ribbon's two shadows. It rides
+/// in from below — a 24 shift and a fade, 220 ms.
+class TalkSceneCard extends StatelessWidget {
+  const TalkSceneCard({
+    super.key,
+    required this.number,
+    required this.total,
+    required this.title,
+    required this.role,
+    required this.targets,
+    required this.onContinue,
+    this.photo,
+  });
+
+  /// «Сцена N из M».
+  final int number;
+  final int total;
+  final String title;
+
+  /// The next role in the nominative, as the strip writes it («врач»); empty — no line.
+  final String role;
+  final List<TalkTarget> targets;
+  final VoidCallback onContinue;
+  final PlanImage? photo;
+
+  static const List<BoxShadow> _shadow = [
+    BoxShadow(color: AppColors.faintInk, blurRadius: 8, offset: Offset(0, 2)),
+    BoxShadow(color: AppColors.sessionSheetShadow, blurRadius: 24, offset: Offset(0, 10)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
+    final image = photo;
+    const onPhoto = AppColors.paper;
+    final card = Container(
+      key: const ValueKey('talk-scene-card'),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(22), boxShadow: _shadow),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 104,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: image == null ? AppColors.photoPlaceholder : (AppColors.wireTone(image.tone) ?? AppColors.photoPlaceholder),
+                    image: image == null ? null : DecorationImage(image: CachedNetworkImage(image.urlFor(342, dpr)), fit: BoxFit.cover),
+                  ),
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [AppColors.talkSceneScrimTop, AppColors.talkSceneScrimBottom],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  bottom: 16,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.planTalkSceneOf(number, total).toUpperCase(),
+                        key: const ValueKey('talk-scene-card-number'),
+                        style: AppTextSession.eyebrow.copyWith(color: onPhoto, height: 14 / 11),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        title,
+                        key: const ValueKey('talk-scene-card-title'),
+                        maxLines: 2,
+                        style: AppTextSession.stageTitle.copyWith(color: onPhoto, letterSpacing: 0),
+                      ),
+                      if (role.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(role, key: const ValueKey('talk-scene-card-role'), style: AppTextSession.sceneLine.copyWith(color: onPhoto)),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, t) in targets.indexed) ...[
+                  if (i > 0) const SizedBox(height: 8),
+                  TalkConstructionRow(target: t),
+                ],
+                if (targets.isNotEmpty) const SizedBox(height: 14),
+                SessionDockButton(key: const ValueKey('talk-scene-continue'), label: l.planTalkSceneContinue, onTap: onContinue),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return card;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: AppMotion.talkSceneCardIn,
+      curve: AppMotion.sessionEaseOut,
+      builder: (_, t, c) => Opacity(
+        opacity: t,
+        child: Transform.translate(offset: Offset(0, AppMotion.talkSceneCardShift * (1 - t)), child: c),
+      ),
+      child: card,
+    );
+  }
+}
+
+/// THE END OF THE TALK (кадр 37-11) — a sheet over the dock once the role's goodbye has been said: «Разговор окончен» in
+/// Literata 26, the talk's minutes 15 grey under it, and 24 below the one dark button, «Итог». The ground's colour,
+/// corners 22 on top, padding 24 and a soft shadow upwards; the ribbon stays visible above it.
+class TalkEndSheet extends StatelessWidget {
+  const TalkEndSheet({super.key, required this.minutes, required this.onSummary});
+
+  /// The talk's minutes as the server counted them; null — no line.
+  final int? minutes;
+  final VoidCallback onSummary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Container(
+      key: const ValueKey('talk-end-sheet'),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
+      decoration: const BoxDecoration(
+        color: AppColors.ground,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        boxShadow: [BoxShadow(color: AppColors.talkEndSheetShadow, blurRadius: 40, offset: Offset(0, -12))],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.planTalkEnded, key: const ValueKey('talk-end-title'), style: AppTextSession.stageTitle.copyWith(letterSpacing: 0)),
+          if (minutes case final m?) ...[
+            const SizedBox(height: 4),
+            Text(l.planMinutesCount(m), key: const ValueKey('talk-end-minutes'), style: AppTextSession.body),
+          ],
+          const SizedBox(height: 24),
+          SessionDockButton(key: const ValueKey('talk-summary-action'), label: l.planTalkSummaryAction, onTap: onSummary),
+        ],
+      ),
+    );
+  }
+}
+
+/// THE HINT CHIP OF A CARD (35-2) — a LIGHT plate with the intention on the learner's language. Never an
 /// ink bubble: an ink bubble on the right is only ever what the learner actually said (37-7,
 /// «Тёмный пузырь»). By the frame: paper, corners 16, 10 / 14 inside, 15/20 in ink, and the ribbon's own shadow
-/// `0 2px 8px` at 6 % — not the sheet's (отчёт client-conv-1a §1.7, наряд CLIENT-CONV-1b).
+/// `0 2px 8px` at 6 % — not the sheet's (отчёт client-conv-1a §1.7, наряд CLIENT-CONV-1b). The talk's own hint stands
+/// under the role's line ([TalkHintPlate]).
 class TalkHintChip extends StatelessWidget {
   const TalkHintChip({super.key, required this.text, this.alignEnd = false, this.stretch = false});
 
@@ -580,8 +847,8 @@ class _RingPainter extends CustomPainter {
 /// three — the left exit, the microphone 72 in the middle, the right exit.
 ///
 /// The two exits are the caller's: in the talk «Не понял» stands on the left in EVERY state of the
-/// learner's move, and «Подсказать» on the right until the chip is up; in 35-2 they are «Пропустить»
-/// and «Подсказать».
+/// learner's move, and «Подсказать» on the right only under «Без подсказок», until the plate is up (37-7c); in 35-2
+/// they are «Пропустить» and «Подсказать».
 class TalkDock extends StatelessWidget {
   const TalkDock({
     super.key,
@@ -603,11 +870,12 @@ class TalkDock extends StatelessWidget {
   /// dock, and the simulator has no other way to say anything (наряд SESSION-1b).
   final SessionMic? debugMic;
 
-  /// THE CONSTRUCTIONS OF THE TALK (наряд FIX-3 §3) — plates that scroll sideways, part of the dock in every state of
-  /// the ribbon, 14 over what stands under it; the ribbon rises by their height.
+  /// THE CONSTRUCTIONS OF THE TALK (наряды FIX-3 §3, CLIENT-FIX-4 §2) — the plates still to say, part of the dock while
+  /// the ribbon runs; the row brings the 14 under itself and folds to nothing once its last plate has left (37-11b), so
+  /// the ribbon gets that room back.
   final Widget? constructions;
 
-  /// The hint chip, under the constructions.
+  /// The hint chip of a card (35-2), over the caption; the talk's own hint stands in the ribbon ([TalkHintPlate]).
   final Widget? chip;
 
   /// «тап — говорить» / «слушай» / «говори, я слушаю».
@@ -626,13 +894,18 @@ class TalkDock extends StatelessWidget {
   /// A failure plate over the dock (37-10) — it replaces nothing, it stands above.
   final Widget? notice;
 
+  /// The debug build's «что услышал» field under the dock. A frame shot for the architect turns it off: the phone's
+  /// release build has none, and the frame must show the dock the learner sees (наряд CLIENT-FIX-4, снимки).
+  @visibleForTesting
+  static bool debugHeardField = true;
+
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (notice case final n?) ...[n, const SizedBox(height: 14)],
-      if (constructions case final row?) ...[row, const SizedBox(height: 14)],
+      ?constructions,
       if (chip case final c?) ...[c, const SizedBox(height: 14)],
       if (liveLine case final line?) ...[line, const SizedBox(height: 14)],
       // The frame's order (37-7 «слушаю», 37-10): the caption over the button, the button's 88 box, and what
@@ -669,7 +942,7 @@ class TalkDock extends StatelessWidget {
         const SizedBox(height: 14),
         Text(text, key: const ValueKey('talk-sub-caption'), textAlign: TextAlign.center, style: AppTextSession.meta),
       ],
-      if (kDebugMode && debugMic != null) ...[
+      if (kDebugMode && debugHeardField && debugMic != null) ...[
         const SizedBox(height: 10),
         SessionDebugHeardField(mic: debugMic!),
       ],

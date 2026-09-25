@@ -8,6 +8,10 @@
 /// THE PARSE IS CLOSED, like the day window's: a missing field or a word this build has no meaning
 /// for is a [PlanContractError], and the screen says the talk could not be read. The client words
 /// nothing the server did not send — not a count, not a minute, not «what probably happened».
+///
+/// The fields of FIX-4 and FIX-4b (наряд CLIENT-FIX-4) are ADDITIVE and read leniently: a target without `state` is
+/// read off its `said`, a line without `scene_id` / `scene_event` is a line of a talk from before them, and a hint
+/// without `sentence` is no hint — none of them makes a talk unreadable.
 library;
 
 import '../plan_models.dart';
@@ -85,6 +89,39 @@ enum TalkSceneState {
   };
 }
 
+/// WHERE A LINE STANDS BETWEEN TWO SCENES (`turns[].scene_event`, FIX-4 §4) — the rehearsal and a review talk walk
+/// several scenes: the role of the scene says goodbye ([end]) and, in the same answer, the next scene's role greets the
+/// learner first ([start]). The talk's very first line is a [start] too. A day talk has one scene and no boundaries.
+enum TalkSceneEvent {
+  start,
+  end;
+
+  /// Null — an ordinary line, a line of a talk from before FIX-4, or a word this build has no meaning for: the line is
+  /// drawn as an ordinary one rather than the talk refused.
+  static TalkSceneEvent? fromWire(Object? s) => switch (s) {
+    'start' => start,
+    'end' => end,
+    _ => null,
+  };
+}
+
+/// WHERE A CONSTRUCTION STANDS IN THE TALK (`targets[].state`, FIX-4 §2) — the server's judge of whole frames decides it
+/// on every move: not yet ([none]), one word off ([almost] — the target still waits), said ([said]).
+enum TalkTargetState {
+  none,
+  almost,
+  said;
+
+  /// A target without `state` (a talk from before FIX-4) or with a word this build does not know is read off its
+  /// `said`, which the server keeps sending.
+  static TalkTargetState fromWire(Object? s, {required bool said}) => switch (s) {
+    'said' => TalkTargetState.said,
+    'almost' => TalkTargetState.almost,
+    'none' => TalkTargetState.none,
+    _ => said ? TalkTargetState.said : TalkTargetState.none,
+  };
+}
+
 /// Why the talk ended. Nothing on the screens of серия 37 reads it, so an unfamiliar reason is
 /// [unknown] rather than a refusal to draw the summary the learner earned.
 enum TalkEnd {
@@ -132,23 +169,30 @@ class TalkScene {
   final TalkSceneState state;
 }
 
-/// The policy of hints for THIS talk, fixed when it started (кадр 37-7).
+/// THE HINT OF THE LEARNER'S NEXT MOVE (кадры 37-7, 37-8e; FIX-4 §5, FIX-4b §2) — the policy fixed when the talk
+/// started, and the server's hint for the move, which changes with every line of the role.
+///
+/// The phone prints the lesson's own sentence as it came — no «Скажи, что …» around it any more (DECISIONS п. 412):
+/// the frame turned a question into «Скажи, что мне сказать вам его температуру?». `hints.native` (the same sentence
+/// as a clause, for the build (20)) and `delay_ms` (the silence that raised the old chip) are not read.
 class TalkHints {
-  const TalkHints({required this.enabled, required this.delayMs, this.native});
+  const TalkHints({required this.enabled, this.sentence, this.target, this.sceneId, this.ref});
 
-  /// False — «Без подсказок»: no chip and no «Подсказать» on the screen at all.
+  /// False — «Без подсказок»: the server sends no hint at all, and the plate stands only after «Подсказать» (37-7c).
   final bool enabled;
 
-  /// How long a silence stands before the chip comes up by itself — 5 000.
-  final int delayMs;
+  /// THE LESSON'S SENTENCE of the target, in the learner's language, with its capital and its closing mark — «У меня
+  /// есть боль в плече.», «Мне сказать вам его температуру?». Null when hints are off, when the move is not the
+  /// learner's, when everything of the scene is said and when the talk has ended.
+  final String? sentence;
 
-  /// The intention for the next move, in the learner's language, WITHOUT a prefix and AS A CLAUSE —
-  /// «у моего сына температура» (наряд CONV-2, п. 11): the client prints it as it came inside its own
-  /// «Скажи, что …». Null when hints are off, when the move is not the learner's and when the talk
-  /// has ended.
-  final String? native;
+  /// THE EXACT LINE in the target language — «The pain is sharp when he bends.» — only on the move right after the
+  /// learner said this target ALMOST (one word off); null otherwise.
+  final String? target;
 
-  Duration get delay => Duration(milliseconds: delayMs);
+  /// Which target the hint is for — its pair in `targets[]`.
+  final String? sceneId;
+  final String? ref;
 }
 
 /// A CONSTRUCTION THE SERVER HEARD IN THE LEARNER'S LINE — the sage underline of кадр 37-8. Since наряд FIX-3 (§6) the
@@ -159,15 +203,16 @@ typedef TalkPhraseRef = ({String sceneId, String ref});
 /// ONE CONSTRUCTION THE TALK IS FOR — «Скажи в разговоре» (кадр 37-5), the plates over the microphone and their sheet
 /// (37-7…37-11, 37-8d) and the summary's cards (37-12); наряд FIX-3 §6. The target of a talk is a FRAME WITH A WINDOW,
 /// not a phrase: the lesson's own value stands grey beside it, and what the learner put in the window is theirs.
-/// [said] and [valueTarget] are the SERVER's: it turns true on the move the server heard the construction by its own
-/// rule (`PhraseUse`), and the phone counts nothing of its own.
+/// [state] and [valueTarget] are the SERVER's: its judge of whole frames decides them on every move (FIX-4 §2), and
+/// the phone counts nothing of its own. The same shape carries «Ещё вспомнил» (`extra_said[]`) — constructions of the
+/// scene said beyond the targets.
 class TalkTarget {
   const TalkTarget({
     required this.sceneId,
     required this.ref,
     required this.frameTarget,
     required this.frameNative,
-    required this.said,
+    required this.state,
     this.exampleTarget,
     this.exampleNative,
     this.valueTarget,
@@ -187,12 +232,28 @@ class TalkTarget {
   final String? exampleTarget;
   final String? exampleNative;
 
-  /// Сказана ли конструкция в этом разговоре — считает СЕРВЕР своим правилом (`PhraseUse`), не клиент.
-  final bool said;
+  /// Where the construction stands in the talk — the server's judge, not the phone's.
+  final TalkTargetState state;
 
   /// ЧТО УЧЕНИК ВСТАВИЛ В ОКНО, как услышано («Lisbon») — сервер (`value_target`); null, пока не сказана, и у каркаса
   /// без окна.
   final String? valueTarget;
+
+  /// Said in this talk — the same as the wire's `said`.
+  bool get said => state == TalkTargetState.said;
+
+  /// One word off the whole frame: the target still waits (37-8e).
+  bool get almost => state == TalkTargetState.almost;
+
+  /// The construction's pair — `scene_id` + `ref` name it everywhere on the wire.
+  String get key => '$sceneId:$ref';
+
+  /// THE LESSON'S LINE in the target language — the frame said with the lesson's own value: «I have some shoulder
+  /// pain.» (the line «почти — скажи целиком: …» and «из урока: …» of the sheet 37-8d, the second line of the hint).
+  String get lessonLine => saidWith(exampleTarget);
+
+  /// The same line in the learner's language — «У меня есть боль в плече.».
+  String get lessonNative => nativeWith(exampleNative);
 
   /// Окно каркаса на проводе.
   static const window = '___';
@@ -231,7 +292,7 @@ class TalkTarget {
             frameNative: t['frame_native'] as String,
             exampleTarget: _some(t['example_target']),
             exampleNative: _some(t['example_native']),
-            said: t['said'] == true,
+            state: TalkTargetState.fromWire(t['state'], said: t['said'] == true),
             valueTarget: _some(t['value_target']),
           ),
   ];
@@ -251,6 +312,9 @@ class TalkTurn {
     this.understood,
     this.offTopic,
     this.phrasesUsed = const [],
+    this.extraSaid = const [],
+    this.sceneId,
+    this.sceneEvent,
   });
 
   /// Its place in the journal — the server's number, not the client's.
@@ -277,6 +341,16 @@ class TalkTurn {
   /// The phrases of the plan heard in this line, by the server's own rule of spoken grading.
   final List<TalkPhraseRef> phrasesUsed;
 
+  /// «Ещё вспомнил» (FIX-4 §2): constructions of the scene this line said beyond the targets — they are underlined as
+  /// the targets are.
+  final List<TalkPhraseRef> extraSaid;
+
+  /// The scene the line was said in; null on a line from before FIX-4.
+  final String? sceneId;
+
+  /// The role's goodbye to its scene or the next role's greeting — null on an ordinary line.
+  final TalkSceneEvent? sceneEvent;
+
   bool get isOwn => speaker == TalkSpeaker.learner;
 
   factory TalkTurn.fromJson(Map<String, dynamic> j) => TalkTurn(
@@ -288,12 +362,17 @@ class TalkTurn {
     audio: CardAudio.maybe(j['audio']),
     understood: j['understood'] as bool?,
     offTopic: j['off_topic'] as bool?,
-    phrasesUsed: [
-      for (final p in _list(j['phrases_used'], 'turn.phrases_used'))
-        if (p is Map<String, dynamic>)
-          (sceneId: _string(p['scene_id'], 'phrase.scene_id'), ref: _string(p['ref'], 'phrase.ref')),
-    ],
+    phrasesUsed: _refs(_list(j['phrases_used'], 'turn.phrases_used')),
+    // FIX-4's fields are additive: a line without them is a line from before them.
+    extraSaid: _refs(j['extra_said'] is List ? j['extra_said'] as List : const []),
+    sceneId: _text(j['scene_id']),
+    sceneEvent: TalkSceneEvent.fromWire(j['scene_event']),
   );
+
+  static List<TalkPhraseRef> _refs(List<Object?> raw) => [
+    for (final p in raw)
+      if (p is Map<String, dynamic>) (sceneId: _string(p['scene_id'], 'phrase.scene_id'), ref: _string(p['ref'], 'phrase.ref')),
+  ];
 }
 
 /// THE SUMMARY (кадр 37-12) — every count in it is the server's.
@@ -309,6 +388,8 @@ class TalkSummary {
     required this.returnsTomorrow,
     this.endedReason,
     this.minutes,
+    this.extraSaid = const [],
+    this.endedByLimit = false,
   });
 
   /// «Сказал сам N реплик».
@@ -335,6 +416,14 @@ class TalkSummary {
   /// tomorrow before the event — «повтори перед приёмом».
   final bool returnsTomorrow;
 
+  /// «ЕЩЁ ВСПОМНИЛ» (кадры 37-12, 37-12b; FIX-4 §2) — constructions of the talk's scenes the learner said beyond the
+  /// targets, in the targets' shape; empty — the group is not drawn.
+  final List<TalkTarget> extraSaid;
+
+  /// The talk ran out of its time, its moves or its money (FIX-4 §4) — the role still said goodbye, and the summary
+  /// says «Разговор закончился по времени» over the plates (37-12).
+  final bool endedByLimit;
+
   /// The constructions that did not sound, in the order the server listed them.
   List<TalkTarget> get notSaid => [for (final p in phrases) if (!p.said) p];
 
@@ -352,6 +441,8 @@ class TalkSummary {
     endedReason: TalkEnd.fromWire(j['ended_reason']),
     minutes: (j['minutes'] as num?)?.toInt(),
     returnsTomorrow: j['returns_tomorrow'] == true,
+    extraSaid: TalkTarget.listOf(j['extra_said']),
+    endedByLimit: j['ended_by_limit'] == true,
   );
 }
 
@@ -373,6 +464,7 @@ class PlanConversation {
     this.replay = false,
     this.titleNative,
     this.targets = const [],
+    this.extraSaid = const [],
   });
 
   final String id;
@@ -393,6 +485,10 @@ class PlanConversation {
   /// [TalkTarget.valueTarget] recounted by the server on every move — the entry lists them, the dock holds them as
   /// plates, the summary closes them. Empty — the server sent none, and the plates are not drawn.
   final List<TalkTarget> targets;
+
+  /// «Ещё вспомнил» so far (FIX-4 §2) — the scenes' constructions said beyond [targets]; the lines that said them are
+  /// underlined by their words.
+  final List<TalkTarget> extraSaid;
 
   /// The role and the scene the talk is in NOW.
   final TalkPartner partner;
@@ -424,6 +520,72 @@ class PlanConversation {
     return null;
   }
 
+  /// The learner's last line — the one the judge's «Почти — скажи целиком» stands under (37-8e).
+  TalkTurn? get lastOwnTurn {
+    for (final t in turns.reversed) {
+      if (t.isOwn) return t;
+    }
+    return null;
+  }
+
+  /// The journal's last number — what a later answer's new lines are counted from.
+  int get lastIndex => turns.isEmpty ? 0 : turns.last.index;
+
+  /// A scene of the talk by its id; null for an id the talk does not name.
+  TalkScene? sceneOf(String? sceneId) {
+    if (sceneId == null) return null;
+    for (final s in scenes) {
+      if (s.sceneId == sceneId) return s;
+    }
+    return null;
+  }
+
+  /// «Сцена N из M» — the scene's place among the talk's scenes, from one; null — not a scene of this talk.
+  int? sceneNumberOf(String? sceneId) {
+    for (final (i, s) in scenes.indexed) {
+      if (s.sceneId == sceneId) return i + 1;
+    }
+    return null;
+  }
+
+  /// THE SCENE THE TALK IS IN NOW — the one `scenes[]` marks `current`; an ended talk marks none, and then it is the
+  /// scene of the role's last line. Null — the talk names no scene of its own, and every target is the scene's.
+  String? get currentSceneId {
+    for (final s in scenes) {
+      if (s.state == TalkSceneState.current) return s.sceneId;
+    }
+    for (final t in turns.reversed) {
+      if (!t.isOwn && t.sceneId != null) return t.sceneId;
+    }
+    return null;
+  }
+
+  /// The constructions of [sceneId], in the server's order; null — every construction of the talk.
+  List<TalkTarget> targetsOf(String? sceneId) =>
+      sceneId == null ? targets : [for (final t in targets) if (t.sceneId == sceneId) t];
+
+  /// A construction by its pair — a target or one of «Ещё вспомнил»; null — the talk does not hold it.
+  TalkTarget? constructionOf(String sceneId, String ref) {
+    for (final t in [...targets, ...extraSaid]) {
+      if (t.sceneId == sceneId && t.ref == ref) return t;
+    }
+    return null;
+  }
+
+  /// A BOUNDARY OF THE RIBBON (39-1): the line at [position] of [turns] is the next scene's greeting right after the
+  /// previous scene's goodbye. The talk's very first line is a `start` too, and it is no boundary — the entry (37-5)
+  /// opened that scene.
+  bool opensScene(int position) =>
+      position > 0 &&
+      position < turns.length &&
+      turns[position].sceneEvent == TalkSceneEvent.start &&
+      turns[position - 1].sceneEvent == TalkSceneEvent.end;
+
+  /// THE SCENE CHANGE NOT TAKEN YET — the last line is a boundary greeting and the learner has said nothing after it:
+  /// the transition card stands (39-1), the greeting waits for «Продолжить», and so it does after a restart (наряд
+  /// CLIENT-FIX-4 §1). Null — no scene is waiting.
+  TalkTurn? get pendingSceneStart => !isEnded && opensScene(turns.length - 1) ? turns.last : null;
+
   factory PlanConversation.fromJson(Object? json) {
     final j = _map(json, 'conversation');
     final partner = _map(j['partner'], 'conversation.partner');
@@ -447,8 +609,10 @@ class PlanConversation {
       turnsLeft: _int(j['turns_left'], 'conversation.turns_left'),
       hints: TalkHints(
         enabled: hints['enabled'] == true,
-        delayMs: _int(hints['delay_ms'], 'hints.delay_ms'),
-        native: _text(hints['native']),
+        sentence: _text(hints['sentence']),
+        target: _text(hints['target']),
+        sceneId: _text(hints['scene_id']),
+        ref: _text(hints['ref']),
       ),
       turns: [
         for (final t in _list(j['turns'], 'conversation.turns')) TalkTurn.fromJson(_map(t, 'conversation.turn')),
@@ -458,6 +622,7 @@ class PlanConversation {
       replay: j['replay'] == true,
       titleNative: _text(j['talk_title_native']),
       targets: TalkTarget.listOf(j['targets']),
+      extraSaid: TalkTarget.listOf(j['extra_said']),
     );
   }
 

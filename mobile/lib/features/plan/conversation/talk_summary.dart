@@ -12,16 +12,17 @@ import '../session/parts/session_chrome.dart';
 import 'talk_constructions.dart';
 import 'talk_screen.dart' show talkStripScene;
 
-/// THE TALK'S SUMMARY (кадры 37-12, 37-12b серии 38) — what was said, what was understood, and THE CONSTRUCTIONS OF
-/// THE TALK as it left them.
+/// THE TALK'S SUMMARY (кадры 37-12, 37-12b; наряды FIX-3 §3, CLIENT-FIX-4 §4) — what was said, what was understood, and
+/// THE CONSTRUCTIONS OF THE TALK as it left them.
 ///
 /// EVERY NUMBER AND EVERY INFLECTION IS THE SERVER'S. The client chooses which sentence to print and prints it:
 /// «Сказал сам N реплик», «Понял все вопросы» / «Понял вопросы, кроме одного», «переспросил N раз».
 ///
-/// ONE LIST, IN THE SERVER'S ORDER (наряд FIX-3 §3): under «Конструкции в разговоре» stand the cards of `summary.
-/// phrases[]` — said ones filled, with «ты сказал: …» under them, the rest in an outline with «вернётся завтра» or, on
-/// the rehearsal and on a replay over a walked stage (CONV-2 п. 2), «повтори перед событием». There is no counter here
-/// and no grouping by scene: the frame of серия 38 has neither.
+/// ONE LIST, IN THE SERVER'S ORDER: under «Конструкции в разговоре» stand the cards of `summary.phrases[]` — said ones
+/// filled, with «ты сказал: …» under them, the rest in an outline with «вернётся завтра» or, on the rehearsal and on a
+/// replay over a walked stage (CONV-2 п. 2), «повтори перед событием». Over them, when the talk ran out of its time
+/// (`summary.ended_by_limit`), one grey line says so. Under them, «Ещё вспомнил» — the scenes' constructions said beyond
+/// the targets (`summary.extra_said`), filled like the said ones; no group when there is none.
 class TalkSummaryView extends StatelessWidget {
   const TalkSummaryView({
     super.key,
@@ -53,6 +54,7 @@ class TalkSummaryView extends StatelessWidget {
     final rehearsal = talk.type == TalkType.rehearsal;
     final understood = s.understoodAll ? l.planTalkUnderstoodAll : l.planTalkUnderstoodExcept(s.notUnderstood);
     final understoodLine = s.rescues > 0 ? l.planDot(understood, l.planTalkRescues(s.rescues)) : understood;
+    final ended = talk.sceneOf(talk.currentSceneId);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,9 +70,9 @@ class TalkSummaryView extends StatelessWidget {
                   child: Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: onClose, label: l.planSessionClose)),
                 ),
                 SessionSceneStrip(
-                  scene: talkStripScene(talk, sceneById: sceneById) ?? scene,
-                  title: talk.partner.sceneNative,
-                  role: talk.partner.roleNative,
+                  scene: talkStripScene(talk, sceneId: talk.currentSceneId, sceneById: sceneById) ?? scene,
+                  title: ended?.titleNative ?? talk.partner.sceneNative,
+                  role: ended?.roleNative ?? talk.partner.roleNative,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(kSessionGutter, 24, kSessionGutter, 0),
@@ -99,7 +101,8 @@ class TalkSummaryView extends StatelessWidget {
                           ),
                         ],
                       ),
-                      ..._constructions(context, s),
+                      ..._constructions(l, s),
+                      ..._extra(l, s),
                     ],
                   ),
                 ),
@@ -116,17 +119,41 @@ class TalkSummaryView extends StatelessWidget {
 
   /// THE CONSTRUCTIONS OF THE TALK (кадры 37-12, 37-12b) — one list in the server's order, 8 apart. The rehearsal has
   /// no tomorrow before the event, and a replay returns nothing: both read `summary.returns_tomorrow` false and their
-  /// unsaid cards say «повтори перед событием».
-  List<Widget> _constructions(BuildContext context, TalkSummary s) {
+  /// unsaid cards say «повтори перед событием». A talk the time ran out on says so over the cards — and promises a
+  /// return only where the server gives one.
+  List<Widget> _constructions(AppLocalizations l, TalkSummary s) {
     if (s.phrases.isEmpty) return const [];
-    final l = AppLocalizations.of(context);
+    final notSaid = s.returnsTomorrow ? l.planWindowSheetReturnsTomorrow : l.planTalkRepeatBefore;
     return [
       const SizedBox(height: 32),
       SessionEyebrow(l.planTalkConstructions),
+      if (s.endedByLimit) ...[
+        const SizedBox(height: 8),
+        Text(
+          s.returnsTomorrow ? l.planTalkEndedByTime : l.planTalkEndedByTimeOnly,
+          key: const ValueKey('talk-summary-by-time'),
+          style: AppTextSession.meta,
+        ),
+      ],
       const SizedBox(height: 14),
       for (final (i, t) in s.phrases.indexed) ...[
         if (i > 0) const SizedBox(height: 8),
-        TalkConstructionCard(target: t, returnsTomorrow: s.returnsTomorrow),
+        TalkConstructionCard(target: t, note: t.said ? l.planTalkYouSaid(t.saidWith(t.valueTarget)) : notSaid),
+      ],
+    ];
+  }
+
+  /// «ЕЩЁ ВСПОМНИЛ» (37-12, 37-12b) — the plates of said targets, sage with their check and «ты сказал: …», for the
+  /// constructions the learner said beyond the targets; nothing to show — no group.
+  List<Widget> _extra(AppLocalizations l, TalkSummary s) {
+    if (s.extraSaid.isEmpty) return const [];
+    return [
+      const SizedBox(height: 32),
+      SessionEyebrow(l.planTalkExtraSaid, key: const ValueKey('talk-summary-extra')),
+      const SizedBox(height: 14),
+      for (final (i, t) in s.extraSaid.indexed) ...[
+        if (i > 0) const SizedBox(height: 8),
+        TalkConstructionCard(target: t, note: l.planTalkYouSaid(t.saidWith(t.valueTarget)), checkSize: 16),
       ],
     ];
   }

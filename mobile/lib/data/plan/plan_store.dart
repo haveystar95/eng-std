@@ -67,6 +67,18 @@ class PlanStore {
   /// dialogue mode.
   Future<bool> noHints(String planId) async => (await _db.getMeta('plan_no_hints:$planId')) == '1';
   Future<void> setNoHints(String planId, bool value) => _db.setMeta('plan_no_hints:$planId', value ? '1' : '0');
+
+  /// THE TALK WHOSE SUMMARY THE LEARNER HAS NOT SEEN YET (наряд CLIENT-FIX-4 §4) — the id of the day's talk from the
+  /// moment its role said goodbye until «Дальше» on its summary (37-12). A session opened again in between (the cross,
+  /// the app killed in the background) shows that summary before «День пройден» instead of losing it: the day's row
+  /// says only that the talk is over, not which talk it was. Per device — it is about this person's eyes.
+  Future<String?> talkSummaryOwed(String planId, int day) async {
+    final id = await _db.getMeta('plan_talk_summary_owed:$planId:$day');
+    return id == null || id.isEmpty ? null : id;
+  }
+
+  Future<void> setTalkSummaryOwed(String planId, int day, String? conversationId) =>
+      _db.setMeta('plan_talk_summary_owed:$planId:$day', conversationId);
 }
 
 /// What the cache holds: never written · «плана нет» · a plan's JSON.

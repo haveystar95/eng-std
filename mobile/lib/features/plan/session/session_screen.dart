@@ -12,7 +12,7 @@ import 'package:eng_std/ui/day_plate.dart';
 
 import '../../../data/app_version.dart';
 import '../../../data/languages.dart' show sttLocaleFor;
-import '../../../data/plan/day_window.dart' show WindowPhrase, WindowStageState;
+import '../../../data/plan/day_window.dart' show WindowPhrase, WindowSourceRef, WindowStageState;
 import '../../../data/plan/plan_models.dart';
 import '../../../data/plan/session/dialogue_feed.dart';
 import '../../../data/plan/session/session_models.dart';
@@ -92,6 +92,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   String? _shownScene;
   int _shownFor = -1;
 
+  /// The talk's server — the talk itself and, for a session opened again after its goodbye, the owed summary (§4).
+  ConversationBackend get _talkBackend => widget.talkBackend ?? ApiConversationBackend(ref.read(apiClientProvider));
+
   @override
   void initState() {
     super.initState();
@@ -101,6 +104,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       number: widget.number,
       store: ref.read(planStoreProvider),
       replayStage: widget.replayStage,
+      readTalk: widget.replay ? null : (id) => _talkBackend.read(widget.plan.id, id),
     )..addListener(_onSession);
     _voice = SessionVoice(lines: ref.read(lineAudioCacheProvider), targetLang: widget.plan.targetLang);
     unawaited(_voice.warmUp().catchError((Object _) {}));
@@ -472,12 +476,24 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   ConversationController _talkController() {
     final plan = widget.plan;
     return _talk ??= ConversationController(
-      backend: widget.talkBackend ?? ApiConversationBackend(ref.read(apiClientProvider)),
+      backend: _talkBackend,
       planId: plan.id,
       day: widget.number,
       voice: _voice,
       hints: !_session.noHints,
-    );
+    )..addListener(_onTalk);
+  }
+
+  /// The talk whose goodbye the session has already written down as «summary owed» (§4).
+  String? _finishedTalk;
+
+  /// THE ROLE HAS SAID GOODBYE — the session owes this talk's summary until «Дальше» on it.
+  void _onTalk() {
+    final talk = _talk;
+    final document = talk?.talk;
+    if (talk == null || document == null || talk.phase != TalkPhase.ended || _finishedTalk == document.id) return;
+    _finishedTalk = document.id;
+    unawaited(_session.talkFinished(document.id));
   }
 
   /// The talk's microphone: free speech in the target language, and a pause of its own
@@ -497,21 +513,31 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     for (final p in _session.day?.window?.program.phrases ?? const <WindowPhrase>[]) p.ref: p.text,
   };
 
-  /// 37-5.
-  Widget _talkEntry(BuildContext context) => TalkEntryView(
-    scene: _session.scene,
-    minutes: _session.talkMinutes,
-    title: _session.talkTitle,
-    scenesCount: _session.talkScenesCount,
-    targets: _session.talkTargets,
-    rehearsal: _session.day?.day.type == PlanDayType.rehearsal,
-    noHints: _session.noHints,
-    onNoHints: (v) => unawaited(_session.setNoHints(v)),
-    starting: _starting,
-    failure: _talkStartFailed ? AppLocalizations.of(context).planTalkOpenFailed : null,
-    onBack: () => Navigator.of(context).maybePop(),
-    onStart: _starting ? null : () => unawaited(_startTalk()),
-  );
+  /// 37-5 — and 37-5b for a talk that walks several scenes: its constructions by scene in the day's order of scenes
+  /// (`window.sources[]`), the strip on the first of them.
+  Widget _talkEntry(BuildContext context) {
+    final plan = _session.currentPlan;
+    final scenes = talkEntryScenes(
+      _session.talkTargets,
+      order: [for (final s in _session.day?.window?.sources ?? const <WindowSourceRef>[]) (sceneId: s.sceneId, title: s.titleNative)],
+      sceneById: plan.sceneById,
+    );
+    return TalkEntryView(
+      scene: scenes.isEmpty ? _session.scene : (plan.sceneById(scenes.first.sceneId) ?? _session.scene),
+      minutes: _session.talkMinutes,
+      title: _session.talkTitle,
+      scenesCount: _session.talkScenesCount,
+      targets: _session.talkTargets,
+      scenes: scenes,
+      rehearsal: _session.day?.day.type == PlanDayType.rehearsal,
+      noHints: _session.noHints,
+      onNoHints: (v) => unawaited(_session.setNoHints(v)),
+      starting: _starting,
+      failure: _talkStartFailed ? AppLocalizations.of(context).planTalkOpenFailed : null,
+      onBack: () => Navigator.of(context).maybePop(),
+      onStart: _starting ? null : () => unawaited(_startTalk()),
+    );
+  }
 
   Future<void> _startTalk() async {
     final talk = _talkController();
@@ -546,10 +572,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     );
   }
 
-  /// 37-12.
+  /// 37-12 — the talk this screen had, or the one a session opened again still owes the summary of (§4).
   Widget _talkSummaryPhase(BuildContext context) {
-    final talk = _talkController();
-    final document = talk.talk;
+    final document = _session.owedTalk ?? _talkController().talk;
     if (document?.summary == null) return _talkPhase(context);
     return TalkSummaryView(
       talk: document!,

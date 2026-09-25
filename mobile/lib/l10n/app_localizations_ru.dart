@@ -4141,7 +4141,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get planTalkReady => 'Ты готов к приёму';
+  String get planTalkReady => 'Ты готов к событию';
 
   @override
   String get planTalkHighlights => 'Что было хорошо';
@@ -4422,21 +4422,55 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planTalkConstructions => 'Конструкции в разговоре';
 
   @override
-  String get planTalkConstruction => 'Конструкция';
-
-  @override
-  String get planTalkFromLesson => 'Из урока';
-
-  @override
-  String get planTalkYouSaidLabel => 'Ты сказал';
-
-  @override
   String planTalkYouSaid(String said) {
     return 'ты сказал: $said';
   }
 
   @override
   String get planTalkRepeatBefore => 'повтори перед событием';
+
+  @override
+  String planTalkAlmostLine(String line) {
+    return 'почти — скажи целиком: $line';
+  }
+
+  @override
+  String planTalkFromLessonLine(String line) {
+    return 'из урока: $line';
+  }
+
+  @override
+  String get planTalkAlmostJudge => 'Почти — скажи целиком';
+
+  @override
+  String get planTalkExtraSaid => 'Ещё вспомнил';
+
+  @override
+  String get planTalkEndedByTime => 'Разговор закончился по времени — несказанное вернётся';
+
+  @override
+  String get planTalkEndedByTimeOnly => 'Разговор закончился по времени';
+
+  @override
+  String planTalkSceneNumber(int n) {
+    return 'Сцена $n';
+  }
+
+  @override
+  String planTalkSceneOf(int n, int total) {
+    return 'Сцена $n из $total';
+  }
+
+  @override
+  String get planTalkSceneContinue => 'Продолжить';
+
+  @override
+  String planTalkEntryRuleStartRole(String role) {
+    return '$role начнёт первым. Отвечай и спрашивай сам.';
+  }
+
+  @override
+  String get planTalkEntrySceneByScene => 'Разговор идёт сцена за сценой';
 
   @override
   String planWindowReturnedFromDay(int n) {

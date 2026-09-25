@@ -314,6 +314,14 @@ abstract final class AppColors {
   /// Sage ring 30 % around the «listening» button.
   static const sessionListenRing = Color.fromARGB(77, 78, 107, 82);
 
+  /// The scrim over the next scene's photo on the transition card (39-1) — `linear-gradient(rgba(24,20,16,.12),
+  /// rgba(24,20,16,.66))`, so the paper words at its foot read on any photo.
+  static const talkSceneScrimTop = Color.fromARGB(31, 24, 20, 16);
+  static const talkSceneScrimBottom = Color.fromARGB(168, 24, 20, 16);
+
+  /// The shadow the talk's end sheet casts upwards (37-11) — `0 -12px 40px rgba(24,20,16,.14)`.
+  static const talkEndSheetShadow = Color.fromARGB(36, 24, 20, 16);
+
   /// Brass ring 30 % around the current stage dot.
   static const sessionBrassRing = Color.fromARGB(77, 140, 106, 58);
 
