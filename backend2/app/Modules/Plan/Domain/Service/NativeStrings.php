@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Service;
 
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use DateTimeImmutable;
@@ -104,6 +105,10 @@ final class NativeStrings
      * регистратором и врачом». `{with}` is the preposition, said once before the first role, `{roles}` the roles in the
      * instrumental ({@see InstrumentalRole}) joined by `and`; `anyone` / `anyones` is the title when a role cannot be
      * inflected with certainty — plain, and never a wrong ending.
+     *
+     * Only the three languages whose roles the code can put in the right case, or needs in none, are here. Every other
+     * native names the talk by its pack's `talk_title_template` — a neutral «Rozmowa: recepcjonistka i lekarz» that puts
+     * no role in any case ({@see talkTitle()}, наряд LANG-1 §6).
      *
      * @var array<string, array{with: string, and: string, anyone: string, anyones: string}>
      */
@@ -278,10 +283,21 @@ final class NativeStrings
      * certainty — or none at all — gives «Поговори с собеседником», and «Поговори с собеседниками» when the talk has
      * several people: never a wrong ending.
      *
+     * ANY OTHER NATIVE (наряд LANG-1 §6; дополняет пп. 375, 417): the English fallback printed the learner's own role
+     * nouns inside English words — «Talk to the recepcjonistka and the lekarz». A native whose pack writes
+     * `talk_title_template` gets a title that inflects nothing ({@see neutralTalkTitle()}); ru, uk and en keep theirs
+     * whatever the pack says, and a native whose pack has no template keeps the English fallback, as before.
+     *
      * @param  list<string>  $rolesNative
+     * @param  LanguagePack|null  $native  the pack of this native — null, or a pack without the template: the fallback
      */
-    public function talkTitle(array $rolesNative): string
+    public function talkTitle(array $rolesNative, ?LanguagePack $native = null): string
     {
+        $template = isset(self::TALK_TITLE[$this->lang]) ? null : self::talkTemplate($native);
+        if ($template !== null) {
+            return self::neutralTalkTitle($rolesNative, $template);
+        }
+
         $titles = self::TALK_TITLE[$this->table()];
         $forms = [];
         $people = [];
@@ -311,6 +327,105 @@ final class NativeStrings
             '{with}' => $this->table() === 'en' ? '' : InstrumentalRole::with($this->table(), $forms[0] ?? $last),
             '{roles}' => $roles,
         ]);
+    }
+
+    /**
+     * THE PACK'S TITLE OF A TALK (наряд LANG-1 §6) — `talk_title_template` as {@see talkTitle()} reads it:
+     *
+     * - `title` — «Rozmowa: {roles}», the roles put in `{roles}` as they are written, in no case;
+     * - `and` — «i», said once, before the last role: «a, b i c»;
+     * - `anyone` — «Rozmowa», the whole title when the talk has no role to name;
+     * - `lower_first` — true: «Lekarz» → «lekarz» (an acronym keeps its capitals); false where a noun keeps its capital
+     *   in the middle of a sentence (de «Gespräch: Rezeptionistin und Arzt»); absent reads true;
+     * - `and_before` — optional, pattern → the word said instead of `and` before a last role the pattern matches, as it
+     *   is printed: es «médico e internista», «y» still before «hie-» (`['/^h?[ií](?![aeouáéóú])/iu' => 'e']`); absent or
+     *   `[]` — `and` everywhere.
+     *
+     * A template without its three strings is no template — the English fallback, never a title with a hole in it; nor
+     * is a `title` with no «{roles}» in it, which would name nobody in a talk that has people — the same line
+     * {@see LanguagePack::talkTitleTemplate()} draws (there it throws, for the pack-shape test; here the title is only
+     * printed, so it falls back instead).
+     *
+     * @return array{title: string, and: string, anyone: string, lower_first: bool, and_before: array<string, string>}|null
+     */
+    private static function talkTemplate(?LanguagePack $native): ?array
+    {
+        if ($native === null || ! $native->has('talk_title_template')) {
+            return null;
+        }
+        $template = $native->map('talk_title_template');
+        $title = $template['title'] ?? null;
+        $and = $template['and'] ?? null;
+        $anyone = $template['anyone'] ?? null;
+        if (! is_string($title) || ! str_contains($title, '{roles}') || ! is_string($and) || trim($and) === '' || ! is_string($anyone) || trim($anyone) === '') {
+            return null;
+        }
+        $before = [];
+        $patterns = $template['and_before'] ?? [];
+        foreach (is_array($patterns) ? $patterns : [] as $pattern => $word) {
+            if (is_string($pattern) && $pattern !== '' && is_string($word) && trim($word) !== '') {
+                $before[$pattern] = trim($word);
+            }
+        }
+
+        return [
+            'title' => $title,
+            'and' => trim($and),
+            'anyone' => $anyone,
+            'lower_first' => ($template['lower_first'] ?? true) !== false,
+            'and_before' => $before,
+        ];
+    }
+
+    /**
+     * «Rozmowa: recepcjonistka i lekarz» — the roles in the order the talk walks them, each said once (a role two scenes
+     * share, whatever its capitals), joined «a, b i c», put into the template's title; no role at all — its `anyone`. Nothing
+     * is inflected, so nothing can be a wrong ending: the title names the roles, it does not speak to them.
+     *
+     * @param  list<string>  $rolesNative
+     * @param  array{title: string, and: string, anyone: string, lower_first: bool, and_before: array<string, string>}  $template
+     */
+    private static function neutralTalkTitle(array $rolesNative, array $template): string
+    {
+        $roles = [];
+        foreach ($rolesNative as $roleNative) {
+            $role = trim((string) preg_replace('/\s+/u', ' ', $roleNative));
+            if ($role === '') {
+                continue;
+            }
+            $roles[mb_strtolower($role)] ??= $template['lower_first'] ? self::lowerUnlessAcronym($role) : $role;
+        }
+        if ($roles === []) {
+            return $template['anyone'];
+        }
+        $roles = array_values($roles);
+        $last = (string) array_pop($roles);
+        $and = $template['and'];
+        foreach ($template['and_before'] as $pattern => $word) {
+            if (preg_match($pattern, $last) === 1) {
+                $and = $word;
+
+                break;
+            }
+        }
+        $joined = $roles === [] ? $last : implode(', ', $roles).' '.$and.' '.$last;
+
+        return strtr($template['title'], ['{roles}' => $joined]);
+    }
+
+    /**
+     * «Lekarz» → «lekarz», «Рэгістратар» → «рэгістратар», but an acronym keeps its capitals: a first word with two
+     * capitals or more («HR-menedżer», «IT-specjalista», «DJ») is left as written. Only the first word is asked, so
+     * «Specjalista IT» still reads «specjalista IT».
+     */
+    private static function lowerUnlessAcronym(string $role): string
+    {
+        $first = explode(' ', $role, 2)[0];
+        if (preg_match_all('/\p{Lu}/u', $first) >= 2) {
+            return $role;
+        }
+
+        return mb_strtolower(mb_substr($role, 0, 1)).mb_substr($role, 1);
     }
 
     /** «Doctor» → «doctor», but «HR manager» keeps its capitals: a first letter goes lower only before a lower one. */

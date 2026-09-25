@@ -2,11 +2,32 @@
 
 declare(strict_types=1);
 
+use App\Modules\Plan\Application\Dto\LessonRequest;
+use App\Modules\Plan\Application\Dto\PlanRequest;
+use App\Modules\Plan\Application\Service\ConversationMaterial;
+use App\Modules\Plan\Domain\Blueprint\BlueprintParser;
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
+use App\Modules\Plan\Domain\Entity\Plan;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
+use App\Modules\Plan\Domain\Lesson\LessonParser;
+use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\ConversationTargets;
 use App\Modules\Plan\Domain\Service\IntentClause;
 use App\Modules\Plan\Domain\Service\NativeStrings;
+use App\Modules\Plan\Domain\Service\PlanCalendar;
 use App\Modules\Plan\Domain\ValueObject\ConversationCheckpoint;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
+use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\ModelCall;
+use App\Modules\Plan\Domain\ValueObject\PlanDayId;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
+use App\Modules\Plan\Domain\ValueObject\PlanLevel;
+use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Domain\ValueObject\PlanTermId;
+use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
+use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
@@ -124,4 +145,222 @@ it('names a talk over several scenes by every role: «Поговори с рег
         ->and($ru->talkTitle(['Регистратор', 'Иностранец']))->toBe('Поговори с собеседниками')
         ->and((new NativeStrings('uk'))->talkTitle(['Лікар', 'Секретар']))->toBe('Поговори з лікарем і секретарем')
         ->and((new NativeStrings('en'))->talkTitle(['Receptionist', 'Doctor', 'Nurse']))->toBe('Talk to the receptionist, the doctor and the nurse');
+});
+
+/**
+ * A pack's `talk_title_template` (наряд LANG-1 §6) — the shape every language executor writes, here with synthetic packs so
+ * the rule is tested apart from what the packs will say.
+ *
+ * @param  array<string, mixed>  $extra
+ */
+function ctTalkPack(string $code, string $title, string $and, string $anyone, bool $lowerFirst = true, array $extra = []): LanguagePack
+{
+    return new LanguagePack($code, ['talk_title_template' => [
+        'title' => $title, 'and' => $and, 'anyone' => $anyone, 'lower_first' => $lowerFirst, ...$extra,
+    ]]);
+}
+
+/**
+ * Canon (наряд LANG-1 §6; дополняет пп. 375, 417): «talk_title_template — for natives WITHOUT declension rules in code …
+ * Roles joined „a, b and c" with the pack's `and`; `anyone` when the list of roles is empty; lower_first lower-cases the
+ * first letter of each role unless the role is an acronym; de has lower_first false». The title of a talk for a Polish,
+ * Spanish, German or Belarusian learner names the roles and inflects none. CATCHES the English fallback with the learner's
+ * nouns in it («Talk to the recepcjonistka and the lekarz»), a role in capitals mid-title («Rozmowa: Lekarz»), a German noun
+ * lower-cased, an acronym lower-cased («hR-menedżer»), a role two scenes share said twice, «, » before the last role, an
+ * empty title for a talk with no role, and a template read for ru/uk/en — whose titles must not move by a byte.
+ */
+it('names the talk of any other native by its pack: «Rozmowa: recepcjonistka i lekarz», nothing inflected', function () {
+    $pl = ctTalkPack('pl', 'Rozmowa: {roles}', 'i', 'Rozmowa');
+    $es = ctTalkPack('es', 'Conversación: {roles}', 'y', 'Conversación');
+    $de = ctTalkPack('de', 'Gespräch: {roles}', 'und', 'Gespräch', lowerFirst: false);
+    $be = ctTalkPack('be', 'Размова: {roles}', 'і', 'Размова');
+    $plStrings = new NativeStrings('pl');
+
+    expect($plStrings->talkTitle(['Recepcjonistka', 'Lekarz'], $pl))->toBe('Rozmowa: recepcjonistka i lekarz')
+        ->and($plStrings->talkTitle(['Lekarz'], $pl))->toBe('Rozmowa: lekarz')
+        ->and((new NativeStrings('es'))->talkTitle(['Recepcionista', 'Médico'], $es))->toBe('Conversación: recepcionista y médico')
+        ->and((new NativeStrings('de'))->talkTitle(['Rezeptionistin', 'Arzt'], $de))->toBe('Gespräch: Rezeptionistin und Arzt')
+        ->and((new NativeStrings('be'))->talkTitle(['Рэгістратар'], $be))->toBe('Размова: рэгістратар')
+        // Three roles and more: commas, the pack's «and» once, before the last.
+        ->and($plStrings->talkTitle(['Recepcjonistka', 'Lekarz', 'Pielęgniarka'], $pl))->toBe('Rozmowa: recepcjonistka, lekarz i pielęgniarka')
+        ->and($plStrings->talkTitle(['Recepcjonistka', 'Lekarz', 'Farmaceuta', 'Pielęgniarka'], $pl))
+        ->toBe('Rozmowa: recepcjonistka, lekarz, farmaceuta i pielęgniarka')
+        // A role two scenes share is said once, where it comes first — whatever its capitals and spaces.
+        ->and($plStrings->talkTitle(['Lekarz', 'Recepcjonistka', 'lekarz '], $pl))->toBe('Rozmowa: lekarz i recepcjonistka')
+        ->and($plStrings->talkTitle(['Lekarz', 'Lekarz'], $pl))->toBe('Rozmowa: lekarz')
+        // No role to name: the whole title is the pack's own word.
+        ->and($plStrings->talkTitle([], $pl))->toBe('Rozmowa')
+        ->and($plStrings->talkTitle(['', '  '], $pl))->toBe('Rozmowa')
+        // An acronym keeps its capitals; a capital later in the role is not the first word's.
+        ->and($plStrings->talkTitle(['HR-menedżer', 'Lekarz'], $pl))->toBe('Rozmowa: HR-menedżer i lekarz')
+        ->and($plStrings->talkTitle(['Specjalista IT'], $pl))->toBe('Rozmowa: specjalista IT');
+
+    // A native whose pack has no template — or no pack — keeps the English fallback, as before.
+    expect($plStrings->talkTitle(['Recepcjonistka', 'Lekarz']))->toBe('Talk to the recepcjonistka and the lekarz')
+        ->and($plStrings->talkTitle(['Recepcjonistka', 'Lekarz'], LanguagePack::none('pl')))->toBe('Talk to the recepcjonistka and the lekarz')
+        ->and($plStrings->talkTitle(['Lekarz'], new LanguagePack('pl', ['talk_title_template' => null])))->toBe('Talk to the lekarz')
+        ->and($plStrings->talkTitle(['Lekarz'], new LanguagePack('pl', ['talk_title_template' => []])))->toBe('Talk to the lekarz')
+        // A template without its three strings is no template — never a title with a hole in it.
+        ->and($plStrings->talkTitle(['Lekarz'], new LanguagePack('pl', ['talk_title_template' => ['title' => 'Rozmowa: {roles}', 'and' => 'i']])))
+        ->toBe('Talk to the lekarz');
+
+    // ru, uk and en keep their own titles whatever the pack they are handed says.
+    $foreign = ctTalkPack('xx', 'Rozmowa: {roles}', 'i', 'Rozmowa');
+    expect((new NativeStrings('ru'))->talkTitle(['Регистратор', 'Врач'], $foreign))->toBe('Поговори с регистратором и врачом')
+        ->and((new NativeStrings('ru'))->talkTitle([], $foreign))->toBe('Поговори с собеседником')
+        ->and((new NativeStrings('uk'))->talkTitle(['Лікар'], $foreign))->toBe('Поговори з лікарем')
+        ->and((new NativeStrings('en'))->talkTitle(['Receptionist', 'Doctor'], $foreign))->toBe('Talk to the receptionist and the doctor');
+});
+
+/**
+ * Canon (наряд LANG-1 §6): «Spanish „y" before a word starting with i-/hi- becomes „e" („médico e internista") — via a
+ * pack field». `and_before` maps a pattern of the last role, as printed, to the word said instead of `and`; the pattern
+ * is the pack's, the code knows no Spanish. CATCHES «médico y internista», «y» turned «e» before «hie-» (a diphthong —
+ * «agua y hielo»), and the swap applied to a join that is not before the matching role.
+ */
+it('says the pack\'s other «and» before a role its pattern matches: «médico e internista», «y hierbero»', function () {
+    $es = ctTalkPack('es', 'Conversación: {roles}', 'y', 'Conversación', extra: ['and_before' => ['/^h?[ií](?![aeouáéóú])/iu' => 'e']]);
+    $strings = new NativeStrings('es');
+
+    expect($strings->talkTitle(['Médico', 'Internista'], $es))->toBe('Conversación: médico e internista')
+        ->and($strings->talkTitle(['Médico', 'Higienista'], $es))->toBe('Conversación: médico e higienista')
+        ->and($strings->talkTitle(['Recepcionista', 'Médico', 'Intérprete'], $es))->toBe('Conversación: recepcionista, médico e intérprete')
+        ->and($strings->talkTitle(['Médico', 'Hierbero'], $es))->toBe('Conversación: médico y hierbero')
+        ->and($strings->talkTitle(['Internista', 'Médico'], $es))->toBe('Conversación: internista y médico')
+        ->and($strings->talkTitle(['Internista'], $es))->toBe('Conversación: internista')
+        // An empty map is the pack's explicit «no such rule».
+        ->and($strings->talkTitle(['Médico', 'Internista'], ctTalkPack('es', 'Conversación: {roles}', 'y', 'Conversación', extra: ['and_before' => []])))
+        ->toBe('Conversación: médico y internista')
+        // A title with no place for its roles would name nobody: no template — the same line the pack's own reader draws.
+        ->and($strings->talkTitle(['Médico'], ctTalkPack('es', 'Conversación', 'y', 'Conversación')))->toBe('Talk to the médico');
+});
+
+/**
+ * The talk of day 1 of a fresh plan — its one scene's lesson written by the fake and illustrated — as
+ * {@see ConversationMaterial} names it with the packs given, and the scene's partner role as the plan wrote it.
+ *
+ * @return array{0: string|null, 1: string}
+ */
+function ctMaterialTitle(string $native, LanguagePacks $packs): array
+{
+    $now = new DateTimeImmutable('2026-09-17T10:00:00Z');
+    $plan = Plan::create(
+        id: PlanId::generate(),
+        userId: UserId::generate(),
+        goalText: 'Иду к врачу с ребёнком',
+        targetLang: new LanguageCode('en'),
+        nativeLang: new LanguageCode($native),
+        level: PlanLevel::Beginner,
+        daysRequested: 3,
+        eventDate: null,
+        today: new DateTimeImmutable('2026-09-17'),
+        now: $now,
+        dayIds: static fn (): PlanDayId => PlanDayId::generate(),
+    );
+    $plan->beginBuild($now);
+    $request = new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, PlanCalendar::scenesCount(3));
+    $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
+    $scene = $plan->sceneOf($plan->day(1)) ?? throw new RuntimeException('day 1 holds no scene');
+    $payload = FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    $scene->acceptLesson((new LessonParser)->parse($payload), lessonPacks()->for('en'), new ModelCall('lesson_day.v4.8', 'test', 'fake', '0.000000', 1, 1), [], $now);
+    $scene->finishIllustration($now);
+
+    // The talk's title needs no term: a repository that holds none, and fails loudly if asked to write.
+    $terms = new class implements PlanTermRepository
+    {
+        public function forScene(PlanSceneId $sceneId): array
+        {
+            return [];
+        }
+
+        public function forScenes(array $sceneIds): array
+        {
+            return [];
+        }
+
+        public function replaceForScene(PlanSceneId $sceneId, array $terms): void
+        {
+            throw new LogicException('read only');
+        }
+
+        public function rewriteTexts(PlanSceneId $sceneId, array $terms): void
+        {
+            throw new LogicException('read only');
+        }
+
+        public function attachImage(PlanTermId $id, Image $image): void
+        {
+            throw new LogicException('read only');
+        }
+
+        public function markImageMissing(PlanTermId $id, string $tone): void
+        {
+            throw new LogicException('read only');
+        }
+
+        public function replaceImage(PlanTermId $id, Image $image): void
+        {
+            throw new LogicException('read only');
+        }
+
+        public function photographedWithoutPrompt(?PlanId $planId): array
+        {
+            return [];
+        }
+
+        public function repeatingDayPhotos(?PlanId $planId): array
+        {
+            return [];
+        }
+    };
+
+    return [(new ConversationMaterial($terms, $packs))->for($plan, $plan->day(1))->titleNative, $scene->partnerRoleNative()];
+}
+
+/**
+ * Canon (наряд LANG-1 §6): the title is asked of the LEARNER'S pack at its one producer — {@see ConversationMaterial},
+ * whose `titleNative` the window's talk row and the talk itself both print. CATCHES the pack left out at the call (a Polish
+ * learner's talk named «Talk to the …» although the pack writes its template — every NativeStrings test above would still
+ * pass), the TARGET'S pack asked instead (the decoy «WRONG: …» on en), and a Russian learner's title moved by a template.
+ */
+it('names the talk by the learner\'s own pack where the talk is assembled, never by the target\'s', function () {
+    $packs = new LanguagePacks([
+        'en' => ['talk_title_template' => ['title' => 'WRONG: {roles}', 'and' => 'and', 'anyone' => 'WRONG', 'lower_first' => true]],
+        'pl' => ['talk_title_template' => ['title' => 'Rozmowa: {roles}', 'and' => 'i', 'anyone' => 'Rozmowa', 'lower_first' => true]],
+        'ru' => ['talk_title_template' => ['title' => 'WRONG: {roles}', 'and' => 'и', 'anyone' => 'WRONG', 'lower_first' => true]],
+    ]);
+
+    [$pl, $role] = ctMaterialTitle('pl', $packs);
+    expect($role)->not->toBe('')
+        ->and($pl)->toBe('Rozmowa: '.mb_strtolower(mb_substr($role, 0, 1)).mb_substr($role, 1));
+
+    [$ru] = ctMaterialTitle('ru', $packs);
+    expect($ru)->toStartWith('Поговори с')
+        ->and(str_contains((string) $ru, 'WRONG'))->toBeFalse();
+
+    // A native whose pack writes no template keeps the English fallback, as before наряд LANG-1.
+    [$bare, $bareRole] = ctMaterialTitle('pl', new LanguagePacks(['en' => [], 'pl' => []]));
+    expect($bare)->toBe('Talk to the '.mb_strtolower(mb_substr($bareRole, 0, 1)).mb_substr($bareRole, 1));
+});
+
+/**
+ * Canon (наряд LANG-1 §6, `talk_title_template.and_before`): the patterns are the pack's, and the title runs them on every
+ * talk it names — a pattern that does not compile is a PHP warning, which the framework turns into a 500 on the day's
+ * window and on the talk. {@see LanguagePack::talkTitleTemplate()} reads the other four fields and not this one, so the
+ * pack-shape check of the four does not see it. CATCHES a deployed pack whose `and_before` holds a broken pattern, a
+ * pattern keyed by a number, or a word that is no word.
+ */
+it('compiles every «and_before» pattern a deployed pack writes for its talk title', function () {
+    $packs = lessonPacks();
+    expect(count($packs->codes()))->toBeGreaterThan(0);
+    foreach ($packs->codes() as $code) {
+        $pack = $packs->for($code);
+        $template = $pack->has('talk_title_template') ? $pack->map('talk_title_template') : [];
+        $before = $template['and_before'] ?? [];
+        expect($before)->toBeArray("{$code}: talk_title_template.and_before");
+        foreach (is_array($before) ? $before : [] as $pattern => $word) {
+            expect(is_string($pattern) && @preg_match($pattern, '') !== false)->toBeTrue("{$code}: and_before «{$pattern}» does not compile")
+                ->and(is_string($word) && trim($word) !== '')->toBeTrue("{$code}: and_before «{$pattern}» says no word");
+        }
+    }
 });

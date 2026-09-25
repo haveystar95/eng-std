@@ -90,7 +90,11 @@ final readonly class ConversationMaterial
         return new ConversationMaterialView(
             $checkpoints,
             $phrases,
-            (new NativeStrings($plan->nativeLang()->value))->talkTitle(array_map(static fn (ConversationCheckpoint $c): string => $c->roleNative, $checkpoints)),
+            // A native with no declension here names the talk by its pack's template (наряд LANG-1 §6).
+            (new NativeStrings($plan->nativeLang()->value))->talkTitle(
+                array_map(static fn (ConversationCheckpoint $c): string => $c->roleNative, $checkpoints),
+                $this->packs->for($plan->nativeLang()->value),
+            ),
             $plan->targetLang()->value,
         );
     }
