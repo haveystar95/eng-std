@@ -17,6 +17,14 @@ use App\Modules\Shared\Domain\ValueObject\SpeechPack;
  * rule that needs it does not run and says so ({@see \App\Modules\Plan\Domain\Check\LessonValidationContext::reads()}),
  * it never guesses and never borrows another language's words. Asking for such a key without asking first is a
  * bug, and throws.
+ *
+ * THE PACK KNOWS ITS NEIGHBOURS (наряд LANG-1 §5). With seven languages taught and nine spoken, a line may be in the
+ * wrong language and still in the right letters — a Polish learner's grey line is in Latin letters, and so is the
+ * English it should have translated. A rule that has only the learner's pack in hand ({@see \App\Modules\Plan\Domain\Service\ReplyNative},
+ * called where the target's pack cannot be passed) tells the learner's language APART from the others by what
+ * {@see LanguagePacks} hands every pack it gives out: each OTHER pack's letters and most frequent words
+ * ({@see neighbours()}). That is no borrowing: another language's words never check this language's text as if they
+ * were its own — they only say which language a line is not.
  */
 final readonly class LanguagePack
 {
@@ -26,8 +34,17 @@ final readonly class LanguagePack
     /** @var array<string, array<string, true>> every list of words, lower-cased, as a set */
     private array $sets;
 
-    /** @param array<string, mixed> $data */
-    public function __construct(public string $code, array $data)
+    /** @var array<string, array{script_letters: ?string, common_words: list<string>}> the other packs, by code */
+    private array $neighbours;
+
+    /**
+     * `$neighbours` — what the other packs of the deployment are ({@see asNeighbour()}), by code: given by
+     * {@see LanguagePacks}; a pack built alone knows none, and its own code among them is dropped.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, array{script_letters: ?string, common_words: list<string>}>  $neighbours
+     */
+    public function __construct(public string $code, array $data, array $neighbours = [])
     {
         $this->data = $data;
         $sets = [];
@@ -37,12 +54,102 @@ final readonly class LanguagePack
             }
         }
         $this->sets = $sets;
+        unset($neighbours[$code]);
+        $this->neighbours = $neighbours;
     }
 
-    /** A language nobody has written a pack for. */
-    public static function none(string $code): self
+    /**
+     * A language nobody has written a pack for — it may still be told what the others are.
+     *
+     * @param  array<string, array{script_letters: ?string, common_words: list<string>}>  $neighbours
+     */
+    public static function none(string $code, array $neighbours = []): self
     {
-        return new self($code, []);
+        return new self($code, [], $neighbours);
+    }
+
+    /**
+     * THE LANGUAGE'S MOST FREQUENT WORDS (наряд LANG-1 §5, key `common_words`) — some thirty of them, lower-cased as
+     * {@see normal()} gives them: what tells a line of this language from a line of another in the same letters
+     * ({@see \App\Modules\Plan\Domain\Service\ReplyNative}). A word is a run of letters — a line is split on everything
+     * else, the apostrophe too, so an entry like «don't» or «il y a» could never be met. An empty list when the pack
+     * does not write the key: the neighbours are then not told apart, and nothing is refused for it.
+     *
+     * @return list<string>
+     */
+    public function commonWords(): array
+    {
+        return $this->has('common_words') ? $this->words('common_words') : [];
+    }
+
+    /**
+     * THE TITLE OF A TALK IN THIS LANGUAGE (наряд LANG-1, key `talk_title_template`) — written by the learner's side of
+     * the pair for a language whose declension the code does not know (every native but ru and uk; en keeps its
+     * constant): `title` holds «{roles}» where the roles go, `and` joins the last two («a, b and c»), `anyone` is the
+     * title when there are no roles, `lower_first` lower-cases a role's first letter unless the role is an acronym (de
+     * keeps its capitals). Null when the pack does not write it — or writes the no-op `[]`, a language whose title the
+     * code builds itself (ru, uk, en); a template written wrong — a field missing, blank or of another type — is a
+     * pack's bug and throws, naming the field: a title with no place for its roles would name nobody, and the title of
+     * the talk ({@see \App\Modules\Plan\Domain\Service\NativeStrings::talkTitle()}) falls back to English on a blank
+     * one without a word — this is where the deployment's packs are held to the shape (LanguagePacksTest). The
+     * optional `and_before` (es «médico e internista») is read by the title alone and is not handed out here.
+     *
+     * @return array{title: string, and: string, anyone: string, lower_first: bool}|null
+     */
+    public function talkTitleTemplate(): ?array
+    {
+        if (! $this->has('talk_title_template') || $this->data['talk_title_template'] === []) {
+            return null;
+        }
+        $template = $this->map('talk_title_template');
+        $title = $template['title'] ?? null;
+        if (! is_string($title) || ! str_contains($title, '{roles}')) {
+            throw LanguagePackKeyMissing::of($this->code, 'talk_title_template.title');
+        }
+        $lowerFirst = $template['lower_first'] ?? null;
+        if (! is_bool($lowerFirst)) {
+            throw LanguagePackKeyMissing::of($this->code, 'talk_title_template.lower_first');
+        }
+
+        return [
+            'title' => $title,
+            'and' => $this->templateWord($template, 'and'),
+            'anyone' => $this->templateWord($template, 'anyone'),
+            'lower_first' => $lowerFirst,
+        ];
+    }
+
+    /** @param array<string, mixed> $template */
+    private function templateWord(array $template, string $field): string
+    {
+        $value = $template[$field] ?? null;
+
+        return is_string($value) && trim($value) !== '' ? $value : throw LanguagePackKeyMissing::of($this->code, "talk_title_template.{$field}");
+    }
+
+    /**
+     * WHAT THE OTHER PACKS ARE TOLD OF THIS ONE (наряд LANG-1 §5): its letters as the pack writes them — the pattern
+     * string itself, since two languages share a script exactly when their packs write the SAME `script_letters` — and
+     * its {@see commonWords()}. Letters the pack does not write are null: such a language is nobody's neighbour.
+     *
+     * @return array{script_letters: ?string, common_words: list<string>}
+     */
+    public function asNeighbour(): array
+    {
+        $letters = $this->data['script_letters'] ?? null;
+
+        return ['script_letters' => is_string($letters) ? $letters : null, 'common_words' => $this->commonWords()];
+    }
+
+    /**
+     * Every OTHER pack of the deployment as {@see asNeighbour()} describes it, by code — never this one. Empty for a
+     * pack built alone rather than handed out by {@see LanguagePacks}.
+     *
+     * @return array<string, array{script_letters: ?string, common_words: list<string>}>
+     */
+    public function neighbours(): array
+    {
+        return $this->neighbours;
     }
 
     /**
