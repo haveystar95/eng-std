@@ -413,7 +413,7 @@ class TalkSummary {
   final int? minutes;
 
   /// Do the phrases that did not sound come back tomorrow. False on the rehearsal: there is no
-  /// tomorrow before the event — «повтори перед приёмом».
+  /// tomorrow before the event — «повтори перед разговором».
   final bool returnsTomorrow;
 
   /// «ЕЩЁ ВСПОМНИЛ» (кадры 37-12, 37-12b; FIX-4 §2) — constructions of the talk's scenes the learner said beyond the

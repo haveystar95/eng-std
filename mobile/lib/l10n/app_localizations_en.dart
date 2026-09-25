@@ -3954,7 +3954,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTalkReady => 'You are ready for the event';
+  String get planTalkReady => 'You are ready for the conversation';
 
   @override
   String get planTalkHighlights => 'What went well';
@@ -4217,7 +4217,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTalkRepeatBefore => 'go over it before the event';
+  String get planTalkRepeatBefore => 'go over it before the conversation';
 
   @override
   String planTalkAlmostLine(String line) {

@@ -22,6 +22,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/token_store.dart';
 import 'package:eng_std/features/plan/conversation/conversation_controller.dart';
 import 'package:eng_std/features/plan/conversation/talk_summary.dart';
+import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionDockButton;
 import 'package:eng_std/features/plan/session/session_controller.dart';
 import 'package:eng_std/features/plan/session/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -486,7 +487,7 @@ void main() {
   });
 
   group('37-11 · 37-12 · итог разговора', () {
-    Future<void> pumpSummary(WidgetTester tester, PlanConversation talk) async {
+    Future<void> pumpSummary(WidgetTester tester, PlanConversation talk, {VoidCallback? onNext}) async {
       tester.view.physicalSize = const Size(390, 844) * 2;
       tester.view.devicePixelRatio = 2;
       addTearDown(tester.view.reset);
@@ -496,7 +497,7 @@ void main() {
           locale: const Locale('ru'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: const [Locale('ru'), Locale('en')],
-          home: Scaffold(body: TalkSummaryView(talk: talk, scene: null, onNext: () {}, onClose: () {})),
+          home: Scaffold(body: TalkSummaryView(talk: talk, scene: null, onNext: onNext ?? () {}, onClose: () {})),
         ),
       );
       await tester.pump();
@@ -533,14 +534,14 @@ void main() {
       await settleTalk(tester);
     });
 
-    // RULE (§4, 37-12b): the rehearsal's summary — «Ты готов к событию», the targets as the server left them, and under
+    // RULE (§4, 37-12b): the rehearsal's summary — «Ты готов к разговору», the targets as the server left them, and under
     // them «Ещё вспомнил»: the constructions said beyond the targets, sage with «ты сказал: …». Ended by its goodbye —
     // no line about the time.
     // CATCHES: a summary without «Ещё вспомнил», a group drawn empty, «к приёму» printed for every plan.
     testWidgets('37-12b: репетиция — «Ещё вспомнил», строки про время нет', (tester) async {
       final talk = rehearsalTalk(RehearsalStep.ended);
       await pumpSummary(tester, talk);
-      expect(find.text('Ты готов к событию'), findsOneWidget);
+      expect(find.text('Ты готов к разговору'), findsOneWidget);
       expect(byKey('talk-summary-by-time'), findsNothing);
       final extra = talk.summary!.extraSaid.single;
       expect(find.text('ЕЩЁ ВСПОМНИЛ'), findsOneWidget);
@@ -582,7 +583,32 @@ void main() {
 
       await pumpSummary(tester, rehearsalTalk(RehearsalStep.ended, (json) => byLimit(json, returns: false)));
       expect(tester.widget<Text>(byKey('talk-summary-by-time')).data, 'Разговор закончился по времени');
-      expect(find.text('повтори перед событием'), findsOneWidget);
+      expect(find.text('повтори перед разговором'), findsOneWidget);
+    });
+
+    // RULE (§4, приёмка 25.09): «Дальше» on the talk's summary takes no tap for 600 ms after the summary appears —
+    // «Итог» of 37-11 stands in the same place, and the second tap of a double tap there must not pass the summary
+    // unread. The button looks the same all along; from 600 ms on, one tap is one «Дальше».
+    // CATCHES: a double tap on «Итог» landing on «Дальше» — the way to «сразу День пройден» (отчёт §2); a guard that
+    // greys the button, or one that never lets go.
+    testWidgets('«Дальше» не принимает тап первые 600 мс после появления итога', (tester) async {
+      var next = 0;
+      await pumpSummary(tester, rehearsalTalk(RehearsalStep.ended), onNext: () => next++);
+      final button = byKey('talk-next');
+      expect(tester.widget<SessionDockButton>(button).onTap, isNotNull, reason: 'кнопка выглядит как обычно');
+
+      await tester.tap(button, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(button, warnIfMissed: false);
+      await tester.pump(AppMotion.talkSummaryArm - const Duration(milliseconds: 101));
+      await tester.tap(button, warnIfMissed: false);
+      await tester.pump();
+      expect(next, 0, reason: 'тапы 0, 100 и 599 мс до кнопки не дошли');
+
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.tap(button);
+      await tester.pump();
+      expect(next, 1, reason: 'с 600 мс — один тап, один «Дальше»');
     });
   });
 
@@ -622,9 +648,17 @@ void main() {
       await tester.tap(byKey('talk-summary-action'));
       await tester.pump();
       expect(byKey('talk-summary-title'), findsOneWidget);
-      expect(find.text('Ты готов к событию'), findsOneWidget);
+      expect(find.text('Ты готов к разговору'), findsOneWidget);
       expect(find.textContaining('День пройден'), findsNothing, reason: 'итог дня — после итога разговора');
 
+      // The second tap of a double tap on «Итог» lands where «Дальше» now stands — and does not reach it.
+      await tester.tap(byKey('talk-next'), warnIfMissed: false);
+      await tester.pump();
+      await tester.pump();
+      expect(byKey('talk-summary-title'), findsOneWidget, reason: 'двойной тап по «Итог» итог не проскакивает');
+      expect(find.textContaining('День пройден'), findsNothing);
+
+      await tester.pump(AppMotion.talkSummaryArm);
       await tester.tap(byKey('talk-next'));
       await tester.pump();
       await tester.pump();
@@ -643,6 +677,7 @@ void main() {
       expect(probe.reads, 1, reason: 'разговор перечитан по id с устройства');
       expect(byKey('talk-summary-title'), findsOneWidget);
       expect(find.textContaining('День пройден'), findsNothing);
+      await tester.pump(AppMotion.talkSummaryArm);
       await tester.tap(byKey('talk-next'));
       await tester.pump();
       await tester.pump();

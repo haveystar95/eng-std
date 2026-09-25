@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -20,9 +22,11 @@ import 'talk_screen.dart' show talkStripScene;
 ///
 /// ONE LIST, IN THE SERVER'S ORDER: under «Конструкции в разговоре» stand the cards of `summary.phrases[]` — said ones
 /// filled, with «ты сказал: …» under them, the rest in an outline with «вернётся завтра» or, on the rehearsal and on a
-/// replay over a walked stage (CONV-2 п. 2), «повтори перед событием». Over them, when the talk ran out of its time
+/// replay over a walked stage (CONV-2 п. 2), «повтори перед разговором». Over them, when the talk ran out of its time
 /// (`summary.ended_by_limit`), one grey line says so. Under them, «Ещё вспомнил» — the scenes' constructions said beyond
 /// the targets (`summary.extra_said`), filled like the said ones; no group when there is none.
+///
+/// «Дальше» takes no tap for [AppMotion.talkSummaryArm] after the summary appears ([_ArmedNext]).
 class TalkSummaryView extends StatelessWidget {
   const TalkSummaryView({
     super.key,
@@ -111,7 +115,9 @@ class TalkSummaryView extends StatelessWidget {
           ),
         ),
         SessionDock(
-          child: SessionDockButton(key: const ValueKey('talk-next'), label: l.planSessionNext, busy: busy, onTap: onNext),
+          child: _ArmedNext(
+            child: SessionDockButton(key: const ValueKey('talk-next'), label: l.planSessionNext, busy: busy, onTap: onNext),
+          ),
         ),
       ],
     );
@@ -119,7 +125,7 @@ class TalkSummaryView extends StatelessWidget {
 
   /// THE CONSTRUCTIONS OF THE TALK (кадры 37-12, 37-12b) — one list in the server's order, 8 apart. The rehearsal has
   /// no tomorrow before the event, and a replay returns nothing: both read `summary.returns_tomorrow` false and their
-  /// unsaid cards say «повтори перед событием». A talk the time ran out on says so over the cards — and promises a
+  /// unsaid cards say «повтори перед разговором». A talk the time ran out on says so over the cards — and promises a
   /// return only where the server gives one.
   List<Widget> _constructions(AppLocalizations l, TalkSummary s) {
     if (s.phrases.isEmpty) return const [];
@@ -157,4 +163,40 @@ class TalkSummaryView extends StatelessWidget {
       ],
     ];
   }
+}
+
+/// «ДАЛЬШЕ» TAKES NO TAP FOR [AppMotion.talkSummaryArm] AFTER THE SUMMARY APPEARS (решение архитектора при приёмке
+/// CLIENT-FIX-4, 25.09): «Итог» of the end sheet (37-11) stands in the same place, and the second tap of a double tap
+/// there would pass the summary unread — the way to «сразу День пройден» (отчёт client-fix-4 §2). The button looks the
+/// same all along; the taps of the first 600 ms simply do not reach it. Every appearance arms it anew — after «Итог»
+/// and on a session opened again on an owed summary alike.
+class _ArmedNext extends StatefulWidget {
+  const _ArmedNext({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_ArmedNext> createState() => _ArmedNextState();
+}
+
+class _ArmedNextState extends State<_ArmedNext> {
+  Timer? _arm;
+  bool _armed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _arm = Timer(AppMotion.talkSummaryArm, () {
+      if (mounted) setState(() => _armed = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _arm?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AbsorbPointer(absorbing: !_armed, child: widget.child);
 }

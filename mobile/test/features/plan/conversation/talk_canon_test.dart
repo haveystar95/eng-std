@@ -885,7 +885,7 @@ void main() {
     // ПРАВИЛО (наряд FIX-3 §3, кадры 37-12, 37-12b): итог — ОДИН список конструкций в порядке сервера под
     // «Конструкции в разговоре», без счётчика и без групп по сценам. Сказанная лежит на шалфее 15 % с галкой, и под ней
     // серым «ты сказал: <каркас со своим значением>»; несказанная — в контуре чернил, окно пустое, под ней «вернётся
-    // завтра» у дня и «повтори перед событием» там, где завтра нет.
+    // завтра» у дня и «повтори перед разговором» там, где завтра нет.
     // ЛОВИТ: счётчик «N из M», группы «Не прозвучало» и обещание вернуть завтра то, что сервер не вернёт.
     testWidgets('день: закрашенные с «ты сказал», несказанные — «вернётся завтра»', (tester) async {
       final talk = serverTalk('conversation-day-ended', (json) {
@@ -927,10 +927,10 @@ void main() {
     });
 
     // ПРАВИЛО (кадр 37-12b): у репетиции завтра событие, а не день плана (`returns_tomorrow: false`) — несказанное
-    // читается «повтори перед событием»; заголовок — «Ты готов к событию» (формы события сервер не шлёт — отчёт
+    // читается «повтори перед разговором»; заголовок — «Ты готов к разговору» (формы события сервер не шлёт — отчёт
     // CLIENT-FIX-4 §7), строка «понял» со своим значком.
     // ЛОВИТ: «вернётся завтра» в репетиции, заголовок дня на репетиции и «к приёму» у плана, где событие — тренировка.
-    testWidgets('37-12b: репетиция — «повтори перед событием», без «завтра»', (tester) async {
+    testWidgets('37-12b: репетиция — «повтори перед разговором», без «завтра»', (tester) async {
       final talk = serverTalk('conversation-rehearsal-ended', (json) {
         final summary = json['summary'] as Map<String, dynamic>;
         final phrase = (summary['phrases'] as List<dynamic>).last as Map<String, dynamic>;
@@ -939,21 +939,21 @@ void main() {
       });
       await pumpSummary(tester, talk);
       expect(talk.summary!.returnsTomorrow, isFalse);
-      expect(find.text('Ты готов к событию'), findsOneWidget);
+      expect(find.text('Ты готов к разговору'), findsOneWidget);
       expect(find.byKey(const ValueKey('talk-summary-understood-check')), findsOneWidget);
       final check = tester.getRect(find.byKey(const ValueKey('talk-summary-understood-check')));
       final understood = tester.getRect(find.byKey(const ValueKey('talk-summary-understood')));
       expect(check.size, const Size(20, 20));
       expect(understood.left - check.right, moreOrLessEquals(12, epsilon: 0.5));
-      expect(find.text('повтори перед событием'), findsOneWidget);
+      expect(find.text('повтори перед разговором'), findsOneWidget);
       expect(find.textContaining('завтра'), findsNothing);
     });
 
     // ПРАВИЛО (наряд FIX-3 §5, CONV-2 п. 2): повтор поверх пройденного этапа ничего не возвращает завтра — и карточки
-    // несказанного читаются «повтори перед событием», как в репетиции: клиент печатает ответ сервера, а не вывод из
+    // несказанного читаются «повтори перед разговором», как в репетиции: клиент печатает ответ сервера, а не вывод из
     // вида дня.
     // ЛОВИТ: «вернётся завтра» на повторе, который ничего не вернёт.
-    testWidgets('повтор дня: несказанное — «повтори перед событием»', (tester) async {
+    testWidgets('повтор дня: несказанное — «повтори перед разговором»', (tester) async {
       final talk = serverTalk('conversation-day-ended', (json) {
         final summary = json['summary'] as Map<String, dynamic>;
         summary['returns_tomorrow'] = false;
@@ -963,7 +963,7 @@ void main() {
       });
       expect(talk.replay, isTrue);
       await pumpSummary(tester, talk);
-      expect(find.text('повтори перед событием'), findsOneWidget);
+      expect(find.text('повтори перед разговором'), findsOneWidget);
       expect(find.textContaining('вернётся завтра'), findsNothing);
     });
 
@@ -1077,7 +1077,7 @@ void main() {
     });
 
     // ПРАВИЛО: `returns_tomorrow` — ответ сервера, а не вывод из вида дня. У репетиции завтра
-    // событие, и несказанное читается «повтори перед событием».
+    // событие, и несказанное читается «повтори перед разговором».
     // ЛОВИТ: клиент, выводящий возврат из `type == rehearsal` вместо поля итога.
     test('итог репетиции: несказанное не возвращается завтра', () {
       final rehearsal = serverTalk('conversation-rehearsal-ended');

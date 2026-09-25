@@ -254,6 +254,11 @@ abstract final class AppMotion {
   /// «The last plate left — the row folds, the dock goes down by 58» (37-11b), the same 220 ms.
   static const talkRowFold = Duration(milliseconds: 220);
 
+  /// «Дальше» on the talk's summary (37-12, 37-12b) takes no tap for this long after the summary appears — a guard, not
+  /// an animation: «Итог» of 37-11 stands in the same place, and a double tap there must not pass the summary unread
+  /// (решение архитектора при приёмке CLIENT-FIX-4, 25.09).
+  static const talkSummaryArm = Duration(milliseconds: 600);
+
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);
 
