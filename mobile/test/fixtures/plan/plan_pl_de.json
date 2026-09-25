@@ -1,0 +1,1804 @@
+{
+ "_about": "SYNTHETIC — not shot from a server. A ready plan German (target) × Polish (native), work order LANG-1 part C: 'plan' is GET /plans/current, 'day' is GET /plans/{id}/days/1 (cards + window), 'conversation' is the talk of day 1 as POST /plans/{id}/days/1/conversation opens it. Shapes follow backend2/docs/fixtures/day-doctor.json and test/fixtures/plan/plan_window.json; the readings are German written in Polish orthography, as lesson_day.v4.8 asks for a Latin-script native.",
+ "plan": {
+  "id": "01M5DEPL0000000000000PLAN1",
+  "status": "active",
+  "goal_text": "Idę do lekarza w Berlinie: bolą mnie plecy i muszę to opisać po niemiecku",
+  "target_lang": "de",
+  "native_lang": "pl",
+  "level": "beginner",
+  "days_total": 2,
+  "days_requested": 2,
+  "days_shortened_from": null,
+  "event_date": null,
+  "days_left": null,
+  "title_native": "Wizyta u lekarza",
+  "title_target": "Arztbesuch",
+  "event_native": "Wizyta",
+  "until_phrase": null,
+  "overdue_native": null,
+  "route_summary": "2 dni · 1 sytuacja, próba",
+  "summary": "Wizyta u lekarza. Powiesz to wszystko sam",
+  "reminder_hour": 19,
+  "learner_role_target": "Patient",
+  "learner_role_native": "Pacjent",
+  "cover_image": {
+   "url": "https://images.pexels.test/de-scene.jpg",
+   "author": "Fake Photographer",
+   "author_url": "https://pexels.test/@fake",
+   "tone": "#7C8C96"
+  },
+  "collection_id": "01M5DEPL0000000000000COLL1",
+  "unclear_reason": null,
+  "fail_reason": null,
+  "current_day": {
+   "id": "01M5DEPL000000000000DAY001",
+   "number": 1,
+   "type": "scene",
+   "status": "in_progress",
+   "lock_reason": null,
+   "scene_id": "01M5DEPL00000000000SCENE01",
+   "title_native": "Wizyta u lekarza",
+   "title_target": "Beim Arzt",
+   "teaches_native": "opisać ból i odpowiedzieć lekarce",
+   "lesson_status": "ready",
+   "opens_on": "2026-09-26",
+   "slot": {
+    "code": "today",
+    "date": "2026-09-26",
+    "label_native": "dzisiaj"
+   },
+   "cards_total": 12,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": "2026-09-26T08:00:00+00:00",
+   "closed_at": null,
+   "stages": [
+    {
+     "stage": "words",
+     "state": "current"
+    },
+    {
+     "stage": "phrases",
+     "state": "locked"
+    },
+    {
+     "stage": "speak",
+     "state": "locked"
+    },
+    {
+     "stage": "conversation",
+     "state": "locked"
+    }
+   ]
+  },
+  "days": [
+   {
+    "id": "01M5DEPL000000000000DAY001",
+    "number": 1,
+    "type": "scene",
+    "status": "in_progress",
+    "lock_reason": null,
+    "scene_id": "01M5DEPL00000000000SCENE01",
+    "title_native": "Wizyta u lekarza",
+    "title_target": "Beim Arzt",
+    "teaches_native": "opisać ból i odpowiedzieć lekarce",
+    "lesson_status": "ready",
+    "opens_on": "2026-09-26",
+    "slot": {
+     "code": "today",
+     "date": "2026-09-26",
+     "label_native": "dzisiaj"
+    },
+    "cards_total": 12,
+    "cards_done": 0,
+    "minutes_spent": 0,
+    "opened_at": "2026-09-26T08:00:00+00:00",
+    "closed_at": null,
+    "stages": [
+     {
+      "stage": "words",
+      "state": "current"
+     },
+     {
+      "stage": "phrases",
+      "state": "locked"
+     },
+     {
+      "stage": "speak",
+      "state": "locked"
+     },
+     {
+      "stage": "conversation",
+      "state": "locked"
+     }
+    ]
+   },
+   {
+    "id": "01M5DEPL000000000000DAY002",
+    "number": 2,
+    "type": "rehearsal",
+    "status": "locked",
+    "lock_reason": null,
+    "scene_id": null,
+    "title_native": null,
+    "title_target": null,
+    "teaches_native": null,
+    "lesson_status": null,
+    "opens_on": "2026-09-27",
+    "slot": {
+     "code": "tomorrow",
+     "date": "2026-09-27",
+     "label_native": "jutro"
+    },
+    "cards_total": 0,
+    "cards_done": 0,
+    "minutes_spent": 0,
+    "opened_at": null,
+    "closed_at": null,
+    "stages": [
+     {
+      "stage": "recall",
+      "state": "locked"
+     },
+     {
+      "stage": "conversation",
+      "state": "locked"
+     }
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "01M5DEPL00000000000SCENE01",
+    "order": 1,
+    "kind": "situation",
+    "priority": 1,
+    "title_native": "Wizyta u lekarza",
+    "title_target": "Beim Arzt",
+    "teaches_native": "opisać ból i odpowiedzieć lekarce",
+    "goals_native": [
+     "powiedzieć, co boli",
+     "powiedzieć, od kiedy boli",
+     "odpowiedzieć na pytania lekarki"
+    ],
+    "learner_role_target": "Patient",
+    "learner_role_native": "Pacjent",
+    "partner_role_target": "Ärztin",
+    "partner_role_native": "Lekarka",
+    "image": {
+     "url": "https://images.pexels.test/de-scene.jpg",
+     "author": "Fake Photographer",
+     "author_url": "https://pexels.test/@fake",
+     "tone": "#7C8C96",
+     "url_112": "http://localhost/api/v1/plans/images/01M5DEPL00000000000SCENE01/112?v=de01",
+     "url_448": "http://localhost/api/v1/plans/images/01M5DEPL00000000000SCENE01/448?v=de01"
+    },
+    "lesson_status": "ready",
+    "lesson_fail_reason": null,
+    "day_number": 1,
+    "cost_usd": "0.000000",
+    "latency_ms": 9,
+    "prompt_version": "lesson_day.v4.8"
+   }
+  ],
+  "rescue_kit": [
+   {
+    "text_target": "Können Sie bitte langsamer sprechen?",
+    "text_native": "Czy może pani mówić wolniej?",
+    "pronunciation_native": "kenen zi bite langzamer szprechn"
+   },
+   {
+    "text_target": "Können Sie das bitte wiederholen?",
+    "text_native": "Czy może pani to powtórzyć?",
+    "pronunciation_native": "kenen zi das bite widerholen"
+   },
+   {
+    "text_target": "Guten Morgen!",
+    "text_native": "Dzień dobry!",
+    "pronunciation_native": "gutn morgn"
+   }
+  ],
+  "cost_usd": "0.000000",
+  "versions": {
+   "build": "synthetic",
+   "prompt_plan": "plan-builder-v2",
+   "prompt_lesson": "lesson_day.v4.8"
+  },
+  "started_at": "2026-09-26T08:00:00+00:00",
+  "finished_at": null,
+  "created_at": "2026-09-26T07:59:00+00:00"
+ },
+ "day": {
+  "plan_id": "01M5DEPL0000000000000PLAN1",
+  "day": {
+   "id": "01M5DEPL000000000000DAY001",
+   "number": 1,
+   "type": "scene",
+   "status": "in_progress",
+   "lock_reason": null,
+   "scene_id": "01M5DEPL00000000000SCENE01",
+   "title_native": "Wizyta u lekarza",
+   "title_target": "Beim Arzt",
+   "teaches_native": "opisać ból i odpowiedzieć lekarce",
+   "lesson_status": "ready",
+   "opens_on": "2026-09-26",
+   "slot": {
+    "code": "today",
+    "date": "2026-09-26",
+    "label_native": "dzisiaj"
+   },
+   "cards_total": 12,
+   "cards_done": 0,
+   "minutes_spent": 0,
+   "opened_at": "2026-09-26T08:00:00+00:00",
+   "closed_at": null,
+   "stages": [
+    {
+     "stage": "words",
+     "state": "current"
+    },
+    {
+     "stage": "phrases",
+     "state": "locked"
+    },
+    {
+     "stage": "speak",
+     "state": "locked"
+    },
+    {
+     "stage": "conversation",
+     "state": "locked"
+    }
+   ]
+  },
+  "scene": {
+   "id": "01M5DEPL00000000000SCENE01",
+   "order": 1,
+   "kind": "situation",
+   "priority": 1,
+   "title_native": "Wizyta u lekarza",
+   "title_target": "Beim Arzt",
+   "teaches_native": "opisać ból i odpowiedzieć lekarce",
+   "goals_native": [
+    "powiedzieć, co boli",
+    "powiedzieć, od kiedy boli",
+    "odpowiedzieć na pytania lekarki"
+   ],
+   "learner_role_target": "Patient",
+   "learner_role_native": "Pacjent",
+   "partner_role_target": "Ärztin",
+   "partner_role_native": "Lekarka",
+   "image": {
+    "url": "https://images.pexels.test/de-scene.jpg",
+    "author": "Fake Photographer",
+    "author_url": "https://pexels.test/@fake",
+    "tone": "#7C8C96",
+    "url_112": "http://localhost/api/v1/plans/images/01M5DEPL00000000000SCENE01/112?v=de01",
+    "url_448": "http://localhost/api/v1/plans/images/01M5DEPL00000000000SCENE01/448?v=de01"
+   },
+   "lesson_status": "ready",
+   "lesson_fail_reason": null,
+   "day_number": 1,
+   "cost_usd": "0.000000",
+   "latency_ms": 9,
+   "prompt_version": "lesson_day.v4.8"
+  },
+  "stages": [
+   {
+    "stage": "words",
+    "total": 4,
+    "done": 0,
+    "state": "current",
+    "cards": [
+     {
+      "id": "01M5DEPL0000000000CARD0001",
+      "stage": "words",
+      "position": 1,
+      "kind": "word_intro",
+      "unit": {
+       "kind": "word",
+       "ref": "v1"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "term": {
+        "ref": "v1",
+        "image": {
+         "url": "https://images.pexels.test/de-v1.jpg",
+         "tone": "#8A6F5A"
+        },
+        "text_native": "plecy",
+        "text_target": "Rücken",
+        "definition_target": "der hintere Teil des Körpers vom Hals bis zur Hüfte",
+        "pronunciation_native": "ryken"
+       },
+       "audio": {
+        "line": {
+         "ref": "x1b",
+         "url": "http://localhost/api/v1/plans/audio/de-x1b",
+         "duration_ms": 1900,
+         "voice": "learner"
+        },
+        "term": {
+         "ref": "v1",
+         "url": "http://localhost/api/v1/plans/audio/de-v1",
+         "duration_ms": 700,
+         "voice": "learner"
+        }
+       },
+       "used_in": {
+        "ref": "p1",
+        "line_ref": "x1b",
+        "term_span": [
+         12,
+         18
+        ],
+        "text_native": "Bolą mnie plecy.",
+        "text_target": "Mir tut der Rücken weh."
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "word",
+      "unit_ref": "v1",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0002",
+      "stage": "words",
+      "position": 2,
+      "kind": "word_intro",
+      "unit": {
+       "kind": "word",
+       "ref": "v2"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "term": {
+        "ref": "v2",
+        "image": {
+         "url": "https://images.pexels.test/de-v2.jpg",
+         "tone": "#B3524A"
+        },
+        "text_native": "gorączka",
+        "text_target": "Fieber",
+        "definition_target": "eine zu hohe Körpertemperatur",
+        "pronunciation_native": "fiber"
+       },
+       "audio": {
+        "line": {
+         "ref": "x3b",
+         "url": "http://localhost/api/v1/plans/audio/de-x3b",
+         "duration_ms": 1900,
+         "voice": "learner"
+        },
+        "term": {
+         "ref": "v2",
+         "url": "http://localhost/api/v1/plans/audio/de-v2",
+         "duration_ms": 700,
+         "voice": "learner"
+        }
+       },
+       "used_in": {
+        "ref": "p3",
+        "line_ref": "x3b",
+        "term_span": [
+         20,
+         26
+        ],
+        "text_native": "Nie, nie mam gorączki.",
+        "text_target": "Nein, ich habe kein Fieber."
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "word",
+      "unit_ref": "v2",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0003",
+      "stage": "words",
+      "position": 3,
+      "kind": "word_repeat",
+      "unit": {
+       "kind": "word",
+       "ref": "v1"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "term": {
+        "ref": "v1",
+        "image": {
+         "url": "https://images.pexels.test/de-v1.jpg",
+         "tone": "#8A6F5A"
+        },
+        "text_native": "plecy",
+        "text_target": "Rücken",
+        "definition_target": "der hintere Teil des Körpers vom Hals bis zur Hüfte",
+        "pronunciation_native": "ryken"
+       },
+       "audio": {
+        "term": {
+         "ref": "v1",
+         "url": "http://localhost/api/v1/plans/audio/de-v1",
+         "duration_ms": 700,
+         "voice": "learner"
+        }
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "speech_mode": "repeat",
+       "expected_text": "Rücken"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "word",
+      "unit_ref": "v1",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0004",
+      "stage": "words",
+      "position": 4,
+      "kind": "word_repeat",
+      "unit": {
+       "kind": "word",
+       "ref": "v2"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "term": {
+        "ref": "v2",
+        "image": {
+         "url": "https://images.pexels.test/de-v2.jpg",
+         "tone": "#B3524A"
+        },
+        "text_native": "gorączka",
+        "text_target": "Fieber",
+        "definition_target": "eine zu hohe Körpertemperatur",
+        "pronunciation_native": "fiber"
+       },
+       "audio": {
+        "term": {
+         "ref": "v2",
+         "url": "http://localhost/api/v1/plans/audio/de-v2",
+         "duration_ms": 700,
+         "voice": "learner"
+        }
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "speech_mode": "repeat",
+       "expected_text": "Fieber"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "word",
+      "unit_ref": "v2",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     }
+    ]
+   },
+   {
+    "stage": "phrases",
+    "total": 4,
+    "done": 0,
+    "state": "locked",
+    "cards": [
+     {
+      "id": "01M5DEPL0000000000CARD0005",
+      "stage": "phrases",
+      "position": 1,
+      "kind": "phrase_intro",
+      "unit": {
+       "kind": "phrase",
+       "ref": "p1"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "said": {
+        "audio": {
+         "ref": "p1",
+         "url": "http://localhost/api/v1/plans/audio/de-p1",
+         "duration_ms": 1500,
+         "voice": "learner"
+        },
+        "text_native": "Bolą mnie plecy.",
+        "text_target": "Mir tut der Rücken weh.",
+        "filler_index": 0,
+        "pronunciation_native": "mir tut der ryken we"
+       },
+       "frame": {
+        "ref": "p1",
+        "kind": "answer",
+        "slot": {
+         "fillers": [
+          {
+           "audio": {
+            "ref": "p1",
+            "url": "http://localhost/api/v1/plans/audio/de-p1",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 0,
+           "native": "plecy",
+           "target": "der Rücken",
+           "in_dialogue": true,
+           "native_line": "Bolą mnie plecy.",
+           "pronunciation_native": "der ryken"
+          },
+          {
+           "audio": {
+            "ref": "p1.f2",
+            "url": "http://localhost/api/v1/plans/audio/de-p1.f2",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 1,
+           "native": "głowa",
+           "target": "der Kopf",
+           "in_dialogue": false,
+           "native_line": "Boli mnie głowa.",
+           "pronunciation_native": "der kopf"
+          },
+          {
+           "audio": {
+            "ref": "p1.f3",
+            "url": "http://localhost/api/v1/plans/audio/de-p1.f3",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 2,
+           "native": "gardło",
+           "target": "der Hals",
+           "in_dialogue": false,
+           "native_line": "Boli mnie gardło.",
+           "pronunciation_native": "der hals"
+          }
+         ],
+         "hint_native": "co boli"
+        },
+        "frame_native": "Boli mnie ___.",
+        "frame_target": "Mir tut ___ weh.",
+        "frame_pronunciation_native": "mir tut ___ we"
+       },
+       "usage": {
+        "line": {
+         "ref": "x1b",
+         "audio": {
+          "ref": "x1b",
+          "url": "http://localhost/api/v1/plans/audio/de-x1b",
+          "duration_ms": 1900,
+          "voice": "learner"
+         },
+         "text_native": "Bolą mnie plecy.",
+         "text_target": "Mir tut der Rücken weh."
+        },
+        "length": 22,
+        "offset": 0,
+        "exchange": {
+         "ref": "x1",
+         "kind": "answer",
+         "step": 1
+        },
+        "partner_line": {
+         "ref": "x1",
+         "audio": {
+          "ref": "x1",
+          "url": "http://localhost/api/v1/plans/audio/de-x1",
+          "duration_ms": 2600,
+          "voice": "partner"
+         },
+         "text_native": "Dzień dobry! Co panu dolega?",
+         "text_target": "Guten Morgen! Was fehlt Ihnen?"
+        }
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "phrase",
+      "unit_ref": "p1",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0006",
+      "stage": "phrases",
+      "position": 2,
+      "kind": "phrase_intro",
+      "unit": {
+       "kind": "phrase",
+       "ref": "p2"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "said": {
+        "audio": {
+         "ref": "p2",
+         "url": "http://localhost/api/v1/plans/audio/de-p2",
+         "duration_ms": 1500,
+         "voice": "learner"
+        },
+        "text_native": "Od trzech dni.",
+        "text_target": "Seit drei Tagen.",
+        "filler_index": 0,
+        "pronunciation_native": "zajt draj tagn"
+       },
+       "frame": {
+        "ref": "p2",
+        "kind": "answer",
+        "slot": {
+         "fillers": [
+          {
+           "audio": {
+            "ref": "p2",
+            "url": "http://localhost/api/v1/plans/audio/de-p2",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 0,
+           "native": "trzech dni",
+           "target": "drei Tagen",
+           "in_dialogue": true,
+           "native_line": "Od trzech dni.",
+           "pronunciation_native": "draj tagn"
+          },
+          {
+           "audio": {
+            "ref": "p2.f2",
+            "url": "http://localhost/api/v1/plans/audio/de-p2.f2",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 1,
+           "native": "wczoraj",
+           "target": "gestern",
+           "in_dialogue": false,
+           "native_line": "Od wczoraj.",
+           "pronunciation_native": "gestern"
+          },
+          {
+           "audio": {
+            "ref": "p2.f3",
+            "url": "http://localhost/api/v1/plans/audio/de-p2.f3",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 2,
+           "native": "dzisiejszego ranka",
+           "target": "heute Morgen",
+           "in_dialogue": false,
+           "native_line": "Od dzisiejszego ranka.",
+           "pronunciation_native": "hojte morgn"
+          }
+         ],
+         "hint_native": "od kiedy"
+        },
+        "frame_native": "Od ___.",
+        "frame_target": "Seit ___.",
+        "frame_pronunciation_native": "zajt ___"
+       },
+       "usage": {
+        "line": {
+         "ref": "x2b",
+         "audio": {
+          "ref": "x2b",
+          "url": "http://localhost/api/v1/plans/audio/de-x2b",
+          "duration_ms": 1900,
+          "voice": "learner"
+         },
+         "text_native": "Od trzech dni.",
+         "text_target": "Seit drei Tagen."
+        },
+        "length": 15,
+        "offset": 0,
+        "exchange": {
+         "ref": "x2",
+         "kind": "answer",
+         "step": 2
+        },
+        "partner_line": {
+         "ref": "x2",
+         "audio": {
+          "ref": "x2",
+          "url": "http://localhost/api/v1/plans/audio/de-x2",
+          "duration_ms": 2600,
+          "voice": "partner"
+         },
+         "text_native": "Od kiedy ma pan te bóle?",
+         "text_target": "Seit wann haben Sie die Schmerzen?"
+        }
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "phrase",
+      "unit_ref": "p2",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0007",
+      "stage": "phrases",
+      "position": 3,
+      "kind": "phrase_intro",
+      "unit": {
+       "kind": "phrase",
+       "ref": "p3"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "said": {
+        "audio": {
+         "ref": "p3",
+         "url": "http://localhost/api/v1/plans/audio/de-p3",
+         "duration_ms": 1500,
+         "voice": "learner"
+        },
+        "text_native": "Nie mam gorączki.",
+        "text_target": "Ich habe kein Fieber.",
+        "filler_index": null,
+        "pronunciation_native": "ich habe kajn fiber"
+       },
+       "frame": {
+        "ref": "p3",
+        "kind": "answer",
+        "slot": null,
+        "frame_native": "Nie mam gorączki.",
+        "frame_target": "Ich habe kein Fieber.",
+        "frame_pronunciation_native": "ich habe kajn fiber"
+       },
+       "usage": {
+        "line": {
+         "ref": "x3b",
+         "audio": {
+          "ref": "x3b",
+          "url": "http://localhost/api/v1/plans/audio/de-x3b",
+          "duration_ms": 1900,
+          "voice": "learner"
+         },
+         "text_native": "Nie, nie mam gorączki.",
+         "text_target": "Nein, ich habe kein Fieber."
+        },
+        "length": 20,
+        "offset": 6,
+        "exchange": {
+         "ref": "x3",
+         "kind": "answer",
+         "step": 3
+        },
+        "partner_line": {
+         "ref": "x3",
+         "audio": {
+          "ref": "x3",
+          "url": "http://localhost/api/v1/plans/audio/de-x3",
+          "duration_ms": 2600,
+          "voice": "partner"
+         },
+         "text_native": "Czy ma pan gorączkę?",
+         "text_target": "Haben Sie Fieber?"
+        }
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "phrase",
+      "unit_ref": "p3",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0008",
+      "stage": "phrases",
+      "position": 4,
+      "kind": "phrase_repeat",
+      "unit": {
+       "kind": "phrase",
+       "ref": "p3"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "key": "Ich habe kein",
+       "audio": {
+        "ref": "p3",
+        "url": "http://localhost/api/v1/plans/audio/de-p3",
+        "duration_ms": 1500,
+        "voice": "learner"
+       },
+       "frame": {
+        "ref": "p3",
+        "kind": "answer",
+        "slot": null,
+        "frame_native": "Nie mam gorączki.",
+        "frame_target": "Ich habe kein Fieber.",
+        "frame_pronunciation_native": "ich habe kajn fiber"
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "speech_mode": "repeat",
+       "filler_index": null,
+       "expected_text": "Ich habe kein Fieber."
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "phrase",
+      "unit_ref": "p3",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     }
+    ]
+   },
+   {
+    "stage": "dialogue",
+    "total": 0,
+    "done": 0,
+    "state": "absent",
+    "cards": []
+   },
+   {
+    "stage": "listen",
+    "total": 0,
+    "done": 0,
+    "state": "absent",
+    "cards": []
+   },
+   {
+    "stage": "speak",
+    "total": 4,
+    "done": 0,
+    "state": "locked",
+    "cards": [
+     {
+      "id": "01M5DEPL0000000000CARD0009",
+      "stage": "speak",
+      "position": 1,
+      "kind": "speak_answer",
+      "unit": {
+       "kind": "exchange",
+       "ref": "x1"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "key": "Mir tut",
+       "hint": "Mir tut ___ weh.",
+       "frame": {
+        "ref": "p1",
+        "kind": "answer",
+        "slot": {
+         "fillers": [
+          {
+           "audio": {
+            "ref": "p1",
+            "url": "http://localhost/api/v1/plans/audio/de-p1",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 0,
+           "native": "plecy",
+           "target": "der Rücken",
+           "in_dialogue": true,
+           "native_line": "Bolą mnie plecy.",
+           "pronunciation_native": "der ryken"
+          },
+          {
+           "audio": {
+            "ref": "p1.f2",
+            "url": "http://localhost/api/v1/plans/audio/de-p1.f2",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 1,
+           "native": "głowa",
+           "target": "der Kopf",
+           "in_dialogue": false,
+           "native_line": "Boli mnie głowa.",
+           "pronunciation_native": "der kopf"
+          },
+          {
+           "audio": {
+            "ref": "p1.f3",
+            "url": "http://localhost/api/v1/plans/audio/de-p1.f3",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 2,
+           "native": "gardło",
+           "target": "der Hals",
+           "in_dialogue": false,
+           "native_line": "Boli mnie gardło.",
+           "pronunciation_native": "der hals"
+          }
+         ],
+         "hint_native": "co boli"
+        },
+        "frame_native": "Boli mnie ___.",
+        "frame_target": "Mir tut ___ weh.",
+        "frame_pronunciation_native": "mir tut ___ we"
+       },
+       "judge": true,
+       "exchange": {
+        "ref": "x1",
+        "kind": "answer",
+        "step": 1
+       },
+       "own_line": {
+        "key": "Mir tut",
+        "ref": "x1b",
+        "audio": {
+         "ref": "x1b",
+         "url": "http://localhost/api/v1/plans/audio/de-x1b",
+         "duration_ms": 1900,
+         "voice": "learner"
+        },
+        "frame_ref": "p1",
+        "text_native": "Bolą mnie plecy.",
+        "text_target": "Mir tut der Rücken weh.",
+        "filler_index": 0
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "speech_mode": "free",
+       "task_native": "Bolą mnie plecy.",
+       "partner_line": {
+        "ref": "x1",
+        "audio": {
+         "ref": "x1",
+         "url": "http://localhost/api/v1/plans/audio/de-x1",
+         "duration_ms": 2600,
+         "voice": "partner"
+        },
+        "text_native": "Dzień dobry! Co panu dolega?",
+        "text_target": "Guten Morgen! Was fehlt Ihnen?"
+       },
+       "task_clause_native": "bolą mnie plecy"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "exchange",
+      "unit_ref": "x1",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0010",
+      "stage": "speak",
+      "position": 2,
+      "kind": "speak_answer",
+      "unit": {
+       "kind": "exchange",
+       "ref": "x2"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "key": "Seit",
+       "hint": "Seit ___.",
+       "frame": {
+        "ref": "p2",
+        "kind": "answer",
+        "slot": {
+         "fillers": [
+          {
+           "audio": {
+            "ref": "p2",
+            "url": "http://localhost/api/v1/plans/audio/de-p2",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 0,
+           "native": "trzech dni",
+           "target": "drei Tagen",
+           "in_dialogue": true,
+           "native_line": "Od trzech dni.",
+           "pronunciation_native": "draj tagn"
+          },
+          {
+           "audio": {
+            "ref": "p2.f2",
+            "url": "http://localhost/api/v1/plans/audio/de-p2.f2",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 1,
+           "native": "wczoraj",
+           "target": "gestern",
+           "in_dialogue": false,
+           "native_line": "Od wczoraj.",
+           "pronunciation_native": "gestern"
+          },
+          {
+           "audio": {
+            "ref": "p2.f3",
+            "url": "http://localhost/api/v1/plans/audio/de-p2.f3",
+            "duration_ms": 1500,
+            "voice": "learner"
+           },
+           "index": 2,
+           "native": "dzisiejszego ranka",
+           "target": "heute Morgen",
+           "in_dialogue": false,
+           "native_line": "Od dzisiejszego ranka.",
+           "pronunciation_native": "hojte morgn"
+          }
+         ],
+         "hint_native": "od kiedy"
+        },
+        "frame_native": "Od ___.",
+        "frame_target": "Seit ___.",
+        "frame_pronunciation_native": "zajt ___"
+       },
+       "judge": true,
+       "exchange": {
+        "ref": "x2",
+        "kind": "answer",
+        "step": 2
+       },
+       "own_line": {
+        "key": "Seit",
+        "ref": "x2b",
+        "audio": {
+         "ref": "x2b",
+         "url": "http://localhost/api/v1/plans/audio/de-x2b",
+         "duration_ms": 1900,
+         "voice": "learner"
+        },
+        "frame_ref": "p2",
+        "text_native": "Od trzech dni.",
+        "text_target": "Seit drei Tagen.",
+        "filler_index": 0
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "speech_mode": "free",
+       "task_native": "Od trzech dni.",
+       "partner_line": {
+        "ref": "x2",
+        "audio": {
+         "ref": "x2",
+         "url": "http://localhost/api/v1/plans/audio/de-x2",
+         "duration_ms": 2600,
+         "voice": "partner"
+        },
+        "text_native": "Od kiedy ma pan te bóle?",
+        "text_target": "Seit wann haben Sie die Schmerzen?"
+       },
+       "task_clause_native": "od trzech dni"
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "exchange",
+      "unit_ref": "x2",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0011",
+      "stage": "speak",
+      "position": 3,
+      "kind": "speak_echo",
+      "unit": {
+       "kind": "exchange",
+       "ref": "x3"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "exchange": {
+        "ref": "x3",
+        "kind": "answer",
+        "step": 3
+       },
+       "own_line": {
+        "key": "Ich habe kein",
+        "ref": "x3b",
+        "audio": {
+         "ref": "x3b",
+         "url": "http://localhost/api/v1/plans/audio/de-x3b",
+         "duration_ms": 1900,
+         "voice": "learner"
+        },
+        "frame_ref": "p3",
+        "text_native": "Nie, nie mam gorączki.",
+        "text_target": "Nein, ich habe kein Fieber.",
+        "filler_index": null
+       },
+       "pause_ms": 3000,
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "speech_mode": "repeat",
+       "expected_text": "Nein, ich habe kein Fieber."
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "exchange",
+      "unit_ref": "x3",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     },
+     {
+      "id": "01M5DEPL0000000000CARD0012",
+      "stage": "speak",
+      "position": 4,
+      "kind": "speak_retell",
+      "unit": {
+       "kind": "exchange",
+       "ref": "x2"
+      },
+      "source": "today",
+      "source_day": null,
+      "retry_of": null,
+      "payload": {
+       "exchange": {
+        "ref": "x2",
+        "kind": "answer",
+        "step": 2
+       },
+       "own_line": {
+        "key": "Seit",
+        "ref": "x2b",
+        "audio": {
+         "ref": "x2b",
+         "url": "http://localhost/api/v1/plans/audio/de-x2b",
+         "duration_ms": 1900,
+         "voice": "learner"
+        },
+        "frame_ref": "p2",
+        "text_native": "Od trzech dni.",
+        "text_target": "Seit drei Tagen.",
+        "filler_index": 0
+       },
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "speech_mode": "repeat",
+       "expected_text": "Seit drei Tagen."
+      },
+      "result": null,
+      "attempts": 0,
+      "response": null,
+      "unit_kind": "exchange",
+      "unit_ref": "x2",
+      "source_day_id": null,
+      "answered_at": null,
+      "returns": false
+     }
+    ]
+   },
+   {
+    "stage": "recall",
+    "total": 0,
+    "done": 0,
+    "state": "absent",
+    "cards": []
+   },
+   {
+    "stage": "repetition",
+    "total": 0,
+    "done": 0,
+    "state": "absent",
+    "cards": []
+   },
+   {
+    "stage": "conversation",
+    "total": 0,
+    "done": 0,
+    "state": "locked",
+    "cards": []
+   }
+  ],
+  "metrics": {
+   "cards_total": 12,
+   "minutes_spent": 0
+  },
+  "program": [
+   {
+    "unit_kind": "word",
+    "source": "today",
+    "state": "pending"
+   },
+   {
+    "unit_kind": "word",
+    "source": "today",
+    "state": "pending"
+   },
+   {
+    "unit_kind": "phrase",
+    "source": "today",
+    "state": "pending"
+   },
+   {
+    "unit_kind": "phrase",
+    "source": "today",
+    "state": "pending"
+   },
+   {
+    "unit_kind": "phrase",
+    "source": "today",
+    "state": "pending"
+   },
+   {
+    "unit_kind": "exchange",
+    "source": "today",
+    "state": "pending"
+   },
+   {
+    "unit_kind": "exchange",
+    "source": "today",
+    "state": "pending"
+   },
+   {
+    "unit_kind": "exchange",
+    "source": "today",
+    "state": "pending"
+   }
+  ],
+  "window": {
+   "day": {
+    "index": 1,
+    "type": "scene",
+    "title_native": "Wizyta u lekarza",
+    "title_target": "Beim Arzt",
+    "image": {
+     "url": "https://images.pexels.test/de-scene.jpg",
+     "author": "Fake Photographer",
+     "author_url": "https://pexels.test/@fake",
+     "tone": "#7C8C96",
+     "url_112": "http://localhost/api/v1/plans/images/01M5DEPL00000000000SCENE01/112?v=de01",
+     "url_448": "http://localhost/api/v1/plans/images/01M5DEPL00000000000SCENE01/448?v=de01"
+    },
+    "image_tone": "#7C8C96",
+    "status": "in_progress",
+    "minutes_estimate": 15,
+    "minutes_spent": null,
+    "goals": [
+     {
+      "text": "powiedzieć, co boli",
+      "passed": false
+     },
+     {
+      "text": "powiedzieć, od kiedy boli",
+      "passed": false
+     },
+     {
+      "text": "odpowiedzieć na pytania lekarki",
+      "passed": false
+     }
+    ]
+   },
+   "stages": [
+    {
+     "stage": "words",
+     "state": "current",
+     "done_count": 0,
+     "total": 4,
+     "minutes_left": 2,
+     "minutes": 2,
+     "share": 0.0,
+     "talk_title_native": null,
+     "scenes_count": null,
+     "targets": null,
+     "again": true,
+     "summary": {
+      "done": 0,
+      "total": 2,
+      "first_try": 0,
+      "returns": 0
+     }
+    },
+    {
+     "stage": "phrases",
+     "state": "locked",
+     "done_count": null,
+     "total": null,
+     "minutes_left": null,
+     "minutes": 5,
+     "share": 0.0,
+     "talk_title_native": null,
+     "scenes_count": null,
+     "targets": null,
+     "again": true,
+     "summary": {
+      "done": 0,
+      "total": 3,
+      "first_try": 0,
+      "returns": 0
+     }
+    },
+    {
+     "stage": "speak",
+     "state": "locked",
+     "done_count": null,
+     "total": null,
+     "minutes_left": null,
+     "minutes": 3,
+     "share": 0.0,
+     "talk_title_native": null,
+     "scenes_count": null,
+     "targets": null,
+     "again": true,
+     "summary": {
+      "done": 0,
+      "total": 3,
+      "first_try": 0,
+      "returns": 0
+     }
+    },
+    {
+     "stage": "conversation",
+     "state": "locked",
+     "done_count": null,
+     "total": null,
+     "minutes_left": null,
+     "minutes": 5,
+     "share": 0.0,
+     "talk_title_native": "Porozmawiaj z lekarką",
+     "scenes_count": 1,
+     "targets": [
+      {
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "ref": "p1",
+       "frame_target": "Mir tut ___ weh.",
+       "frame_native": "Boli mnie ___.",
+       "example_target": "der Rücken",
+       "example_native": "plecy",
+       "said": false,
+       "value_target": null,
+       "state": "none"
+      },
+      {
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "ref": "p2",
+       "frame_target": "Seit ___.",
+       "frame_native": "Od ___.",
+       "example_target": "drei Tagen",
+       "example_native": "trzech dni",
+       "said": false,
+       "value_target": null,
+       "state": "none"
+      },
+      {
+       "scene_id": "01M5DEPL00000000000SCENE01",
+       "ref": "p3",
+       "frame_target": "Ich habe kein Fieber.",
+       "frame_native": "Nie mam gorączki.",
+       "example_target": null,
+       "example_native": null,
+       "said": false,
+       "value_target": null,
+       "state": "none"
+      }
+     ],
+     "again": false,
+     "summary": null
+    }
+   ],
+   "sources": [
+    {
+     "scene_id": "01M5DEPL00000000000SCENE01",
+     "title_native": "Wizyta u lekarza",
+     "day_number": 1,
+     "partner_gender": "female"
+    }
+   ],
+   "day_progress": 0.0,
+   "program": {
+    "words": {
+     "summary": {
+      "total": 2,
+      "done": 0,
+      "returns": 0
+     },
+     "items": [
+      {
+       "ref": "v1",
+       "term": "Rücken",
+       "translation": "plecy",
+       "pronunciation": "ryken",
+       "definition": "der hintere Teil des Körpers vom Hals bis zur Hüfte",
+       "image": {
+        "url": "https://images.pexels.test/de-v1.jpg",
+        "author": "Fake Photographer",
+        "author_url": "https://pexels.test/@fake",
+        "tone": "#8A6F5A"
+       },
+       "image_tone": "#8A6F5A",
+       "audio_url": "http://localhost/api/v1/plans/audio/de-v1",
+       "usage": {
+        "text": "Mir tut der Rücken weh.",
+        "translation": "Bolą mnie plecy.",
+        "offset": 12,
+        "length": 6,
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x1b"
+       },
+       "state": "pending",
+       "returns_day": null,
+       "used_in": [
+        "p1"
+       ],
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      },
+      {
+       "ref": "v2",
+       "term": "Fieber",
+       "translation": "gorączka",
+       "pronunciation": "fiber",
+       "definition": "eine zu hohe Körpertemperatur",
+       "image": {
+        "url": "https://images.pexels.test/de-v2.jpg",
+        "author": "Fake Photographer",
+        "author_url": "https://pexels.test/@fake",
+        "tone": "#B3524A"
+       },
+       "image_tone": "#B3524A",
+       "audio_url": "http://localhost/api/v1/plans/audio/de-v2",
+       "usage": {
+        "text": "Nein, ich habe kein Fieber.",
+        "translation": "Nie, nie mam gorączki.",
+        "offset": 20,
+        "length": 6,
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x3b"
+       },
+       "state": "pending",
+       "returns_day": null,
+       "used_in": [
+        "p3"
+       ],
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      }
+     ]
+    },
+    "phrases": {
+     "summary": {
+      "total": 3,
+      "done": 0,
+      "returns": 0
+     },
+     "items": [
+      {
+       "ref": "p1",
+       "text": "Mir tut der Rücken weh.",
+       "translation": "Bolą mnie plecy.",
+       "pronunciation": "mir tut der ryken we",
+       "audio_url": "http://localhost/api/v1/plans/audio/de-p1",
+       "state": "pending",
+       "frame": {
+        "target": "Mir tut ___ weh.",
+        "native": "Boli mnie ___.",
+        "pronunciation": "mir tut ___ we",
+        "kind": "answer",
+        "slot": {
+         "hint": "co boli",
+         "fillers": [
+          {
+           "target": "der Rücken",
+           "native": "plecy",
+           "pronunciation": "der ryken",
+           "in_dialogue": true,
+           "audio_url": "http://localhost/api/v1/plans/audio/de-p1"
+          },
+          {
+           "target": "der Kopf",
+           "native": "głowa",
+           "pronunciation": "der kopf",
+           "in_dialogue": false,
+           "audio_url": "http://localhost/api/v1/plans/audio/de-p1.f2"
+          },
+          {
+           "target": "der Hals",
+           "native": "gardło",
+           "pronunciation": "der hals",
+           "in_dialogue": false,
+           "audio_url": "http://localhost/api/v1/plans/audio/de-p1.f3"
+          }
+         ]
+        }
+       },
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      },
+      {
+       "ref": "p2",
+       "text": "Seit drei Tagen.",
+       "translation": "Od trzech dni.",
+       "pronunciation": "zajt draj tagn",
+       "audio_url": "http://localhost/api/v1/plans/audio/de-p2",
+       "state": "pending",
+       "frame": {
+        "target": "Seit ___.",
+        "native": "Od ___.",
+        "pronunciation": "zajt ___",
+        "kind": "answer",
+        "slot": {
+         "hint": "od kiedy",
+         "fillers": [
+          {
+           "target": "drei Tagen",
+           "native": "trzech dni",
+           "pronunciation": "draj tagn",
+           "in_dialogue": true,
+           "audio_url": "http://localhost/api/v1/plans/audio/de-p2"
+          },
+          {
+           "target": "gestern",
+           "native": "wczoraj",
+           "pronunciation": "gestern",
+           "in_dialogue": false,
+           "audio_url": "http://localhost/api/v1/plans/audio/de-p2.f2"
+          },
+          {
+           "target": "heute Morgen",
+           "native": "dzisiejszego ranka",
+           "pronunciation": "hojte morgn",
+           "in_dialogue": false,
+           "audio_url": "http://localhost/api/v1/plans/audio/de-p2.f3"
+          }
+         ]
+        }
+       },
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      },
+      {
+       "ref": "p3",
+       "text": "Ich habe kein Fieber.",
+       "translation": "Nie mam gorączki.",
+       "pronunciation": "ich habe kajn fiber",
+       "audio_url": "http://localhost/api/v1/plans/audio/de-p3",
+       "state": "pending",
+       "frame": {
+        "target": "Ich habe kein Fieber.",
+        "native": "Nie mam gorączki.",
+        "pronunciation": "ich habe kajn fiber",
+        "kind": "answer",
+        "slot": null
+       },
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      }
+     ]
+    },
+    "dialogue": {
+     "summary": {
+      "total": 3,
+      "done": 0,
+      "returns": 0
+     },
+     "items": [
+      {
+       "step": 1,
+       "kind": "answer",
+       "partner": {
+        "text": "Guten Morgen! Was fehlt Ihnen?",
+        "translation": "Dzień dobry! Co panu dolega?",
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x1"
+       },
+       "learner": {
+        "text": "Mir tut der Rücken weh.",
+        "translation": "Bolą mnie plecy.",
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x1b",
+        "state": "pending",
+        "phrase_ref": "p1",
+        "filler": "der Rücken"
+       },
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      },
+      {
+       "step": 2,
+       "kind": "answer",
+       "partner": {
+        "text": "Seit wann haben Sie die Schmerzen?",
+        "translation": "Od kiedy ma pan te bóle?",
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x2"
+       },
+       "learner": {
+        "text": "Seit drei Tagen.",
+        "translation": "Od trzech dni.",
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x2b",
+        "state": "pending",
+        "phrase_ref": "p2",
+        "filler": "drei Tagen"
+       },
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      },
+      {
+       "step": 3,
+       "kind": "answer",
+       "partner": {
+        "text": "Haben Sie Fieber?",
+        "translation": "Czy ma pan gorączkę?",
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x3"
+       },
+       "learner": {
+        "text": "Nein, ich habe kein Fieber.",
+        "translation": "Nie, nie mam gorączki.",
+        "audio_url": "http://localhost/api/v1/plans/audio/de-x3b",
+        "state": "pending",
+        "phrase_ref": "p3",
+        "filler": null
+       },
+       "source": "own",
+       "scene": {
+        "id": "01M5DEPL00000000000SCENE01",
+        "title_native": "Wizyta u lekarza",
+        "day_number": 1
+       }
+      }
+     ]
+    }
+   },
+   "allowed_action": "continue",
+   "highlights": [],
+   "listening": []
+  },
+  "speech": {
+   "unstressed_words": [],
+   "articles": [],
+   "abbreviations": [],
+   "number_words": {},
+   "number_joiners": [],
+   "repeat_misses": 0
+  }
+ },
+ "conversation": {
+  "id": "01M5DEPL00000000000000TALK",
+  "plan_id": "01M5DEPL0000000000000PLAN1",
+  "day": 1,
+  "type": "day",
+  "state": "your_turn",
+  "replay": false,
+  "talk_title_native": "Porozmawiaj z lekarką",
+  "partner": {
+   "role_native": "Lekarka",
+   "role_target": "Ärztin"
+  },
+  "scene": {
+   "title_native": "Wizyta u lekarza",
+   "title_target": "Beim Arzt"
+  },
+  "scenes": [
+   {
+    "scene_id": "01M5DEPL00000000000SCENE01",
+    "title_native": "Wizyta u lekarza",
+    "title_target": "Beim Arzt",
+    "role_native": "Lekarka",
+    "role_target": "Ärztin",
+    "lines": 3,
+    "state": "current"
+   }
+  ],
+  "minutes_estimate": 5,
+  "turns_left": 6,
+  "targets": [
+   {
+    "scene_id": "01M5DEPL00000000000SCENE01",
+    "ref": "p1",
+    "frame_target": "Mir tut ___ weh.",
+    "frame_native": "Boli mnie ___.",
+    "example_target": "der Rücken",
+    "example_native": "plecy",
+    "said": false,
+    "value_target": null
+   },
+   {
+    "scene_id": "01M5DEPL00000000000SCENE01",
+    "ref": "p2",
+    "frame_target": "Seit ___.",
+    "frame_native": "Od ___.",
+    "example_target": "drei Tagen",
+    "example_native": "trzech dni",
+    "said": false,
+    "value_target": null
+   },
+   {
+    "scene_id": "01M5DEPL00000000000SCENE01",
+    "ref": "p3",
+    "frame_target": "Ich habe kein Fieber.",
+    "frame_native": "Nie mam gorączki.",
+    "example_target": null,
+    "example_native": null,
+    "said": false,
+    "value_target": null
+   }
+  ],
+  "hints": {
+   "enabled": true,
+   "delay_ms": 5000,
+   "target": null,
+   "scene_id": "01M5DEPL00000000000SCENE01",
+   "ref": "p1",
+   "sentence": "Bolą mnie plecy."
+  },
+  "turns": [
+   {
+    "index": 1,
+    "speaker": "partner",
+    "kind": "agent",
+    "text_target": "Guten Morgen! Was fehlt Ihnen?",
+    "text_native": "Dzień dobry! Co panu dolega?",
+    "audio": null,
+    "understood": null,
+    "phrases_used": [],
+    "off_topic": false,
+    "created_at": "2026-09-26T08:20:00+00:00"
+   }
+  ],
+  "summary": null
+ }
+}

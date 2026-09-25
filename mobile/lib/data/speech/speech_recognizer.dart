@@ -6,6 +6,8 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../models.dart' show ExerciseMode;
+import '../practice/language_mode_support.dart';
 import 'speech_diagnostics.dart';
 
 /// What a listening attempt ended as. The card reads this and nothing else about the plugin.
@@ -17,8 +19,9 @@ enum SpeechOutcome {
   /// A CHANNEL failure: it says nothing about whether the learner knew the answer.
   silent,
 
-  /// The recogniser could not run at all: permission refused, no on-device model for the locale,
-  /// the engine busy. Also a channel failure, and the card treats it identically.
+  /// The recogniser could not run at all: permission refused, no recognizer for the locale, no
+  /// network for a language only Apple's server recognizes, the engine busy. Also a channel failure,
+  /// and the card treats it identically.
   unavailable,
 }
 
@@ -40,7 +43,8 @@ class SpeechAttempt {
   bool get isHeard => outcome == SpeechOutcome.heard && text.trim().isNotEmpty;
 }
 
-/// On-device speech recognition, as the speaking trainer and the intro's echo need it.
+/// Speech recognition — on the device wherever the language has a model there (see
+/// [PluginSpeechRecognizer.onDeviceFor]) — as the speaking trainer and the intro's echo need it.
 ///
 /// An interface with one real implementation, for one reason that is not testability alone: a
 /// simulator has no microphone, so a widget test of the speaking card can only exist if the card
@@ -210,9 +214,9 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
           // pause cuts off a mid-sentence hesitation instead (QA-20); the caller picks the window
           // that fits what is being read (see SpokenAnswer's word/example-form constants).
           pauseFor: pauseFor,
-          // On-device, always. The audio of someone practising vocabulary alone in a room is not
-          // something to send anywhere, and the trainer has to work in the metro with no signal.
-          onDevice: true,
+          // On-device wherever iOS has a model for the language — see [onDeviceFor]: Polish and
+          // Romanian have none, and asking for one there fails every attempt.
+          onDevice: onDeviceFor(localeId),
           partialResults: true,
           cancelOnError: true,
           // What is left of the accuracy hint (see the interface doc): tell the engine the SHAPE of
@@ -256,6 +260,44 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
   Future<void> cancel() async {
     if (_speech.isListening) await _speech.cancel();
     _settle(const SpeechAttempt.silent());
+  }
+
+  /// SHOULD iOS KEEP THIS LANGUAGE'S RECOGNITION ON THE DEVICE (`requiresOnDeviceRecognition`)?
+  ///
+  /// Yes wherever the OS has an on-device model: the audio of someone practising alone stays on the
+  /// phone, and the trainer works in the metro with no signal. No for a language without one — Polish
+  /// and Romanian (`docs/research/language-capability-matrix.md`; `docs/DECISIONS.md` item 48: speaking
+  /// and dictation in pl and ro use Apple's online recognition only, and with no network they are
+  /// skipped without a penalty). There `onDevice: true` is not a stricter request but a refusal: the
+  /// plugin's `listen` answers `onDeviceError` (`SpeechToTextPlugin.swift`), the attempt comes back
+  /// [SpeechOutcome.unavailable], and every speaking card and the talk's microphone of a pl/ro plan
+  /// failed on every attempt, network or not. Those two ask Apple's server recognizer instead — the
+  /// only one that hears them at all.
+  ///
+  /// Offline, that request fails like any other dead channel, and nothing new is needed for it: the
+  /// plugin closes the attempt without a transcript (`doneNoResult`, then a recognizer error), which
+  /// is [SpeechOutcome.silent] or [SpeechOutcome.unavailable] here — never a heard answer. The turn
+  /// above (`SpeechTurn`) reads repeated instant silences as a dead channel (a slower failure runs the
+  /// recording out to its cap and closes it silent), and the session card lands either on its
+  /// «microphone needed» view, whose «Skip» submits `skipped` with `no_mic`, or on «once more» with the
+  /// same «Skip» — the skip without a penalty that item 48 asks for. Silence is never sent to the
+  /// judge, so no attempt of a dead channel can be graded as a wrong answer.
+  ///
+  /// The list is NOT kept here: a language needs a network to be recognized exactly when its
+  /// `speaking` trainer is online-only in [LanguageModeSupport] (the port of the server's own
+  /// capability table), so that table is asked, by the locale's language subtag. `speaking` and
+  /// nothing else: it is the row that states the recognizer's own capability (the speaking card, the
+  /// intro's echo, the plan's voice cards and the talk all listen through this class). `dictation`
+  /// shares the online-only row in pl/ro, but in this app it is heard from the speaker and TYPED — it
+  /// never opens the recognizer, so a future row that made only dictation online-only must not send
+  /// a language's audio off the device. A language the table does not list keeps the on-device
+  /// request it always had — `ru`, `be` (recognized as `ru_RU`) and `uk`, the natives a plan goal is
+  /// dictated in; the matrix lists no on-device model for `uk` either, but it is not a taught
+  /// language and has no row there to say so.
+  static bool onDeviceFor(String localeId) {
+    final lang = localeId.trim().split(RegExp('[-_]')).first.toLowerCase();
+
+    return !LanguageModeSupport.isOnlineOnly(lang, ExerciseMode.speaking);
   }
 
   /// The SFSpeechRecognitionTaskHint that fits what this card is asking for. A single term is a
