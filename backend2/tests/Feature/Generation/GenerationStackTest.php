@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Infrastructure\Adapter\ContentModelCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -20,6 +21,10 @@ use Illuminate\Support\Facades\Http;
  * ones: the prompt version that was compared in the bake-off is the prompt version that ships, and
  * a rollback is a flag rather than a deploy.
  */
+
+// A generation over the faked wire writes its model call and its outbound rows: without a rollback the file left them in
+// `model_calls` and `api_request_logs` for good, and a serial run handed them to the journal's own tests (ACC-1 §4).
+uses(RefreshDatabase::class);
 function liveGenerator(array $config = []): CollectionGeneratorPort
 {
     // This file is ABOUT the real adapter, so it opens the gate for itself — see allowLiveAdapters().

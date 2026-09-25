@@ -52,10 +52,18 @@ function seedSweepExample(string $termId, string $exampleId, string $sentence, ?
     ]);
 }
 
+/**
+ * The export in the system temp dir, and gone after the test (наряд ACC-1 §4): it used to be written into the tree's
+ * `storage/app/testing` and stay there — after a run the tree's `storage` holds nothing new.
+ */
 function sweepExportPath(): string
 {
-    return storage_path('app/testing/translation-keys-sweep.md');
+    return sys_get_temp_dir().'/wordtrainer-translation-keys-sweep-'.getmypid().'.md';
 }
+
+afterEach(function () {
+    @unlink(sweepExportPath());
+});
 
 beforeEach(function () {
     // The owner's own case, still broken — «нам» dropped.

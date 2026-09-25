@@ -64,6 +64,8 @@
              тысячи строк `testing.*` за прогон уходили в `storage/logs/laravel.log` — лог боя, который пишет
              `wt_app`; после прогона в `storage` дерева не появляется ничего нового. -->
         <env name="LOG_CHANNEL" value="testing"/>
+        <!-- …и скомпилированные шаблоны сьюта — туда же, а не в `storage/framework/views` дерева (ACC-1 §4). -->
+        <env name="VIEW_COMPILED_PATH" value="/tmp/wordtrainer-testing-views"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

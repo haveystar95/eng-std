@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Port\TransientSpeechError;
 use App\Modules\Generation\Infrastructure\Adapter\ElevenLabsSpeechSynthesizer;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\ValueObject\LineVoice;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\Http;
  * THE REAL ELEVENLABS ADAPTER OVER A FAKED WIRE (TTS-2): what it asks for, how it reads the answer and its bill, what it
  * does with a refusal. `Http::fake()` underneath — nothing reaches the vendor.
  */
+
+// Every faked call still goes through the outbound log: without a rollback the file left 21 rows in `api_request_logs`
+// for good, and a serial run handed them to the log's own tests (наряд ACC-1 §4).
+uses(RefreshDatabase::class);
 
 function elevenVendor(int $concurrency = 3): ElevenLabsSpeechSynthesizer
 {

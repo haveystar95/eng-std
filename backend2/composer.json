@@ -59,6 +59,7 @@
             "@php vendor/bin/pest --parallel"
         ],
         "test-serial": [
+            "Composer\\Config::disableProcessTimeout",
             "@php artisan config:clear --ansi",
             "@php vendor/bin/pest"
         ],
