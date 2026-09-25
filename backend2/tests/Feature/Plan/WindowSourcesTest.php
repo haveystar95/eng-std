@@ -64,13 +64,15 @@ it('names the scenes a day is made of: its own, the two a review repeats, every 
         'scene_id' => $plan['days'][$day - 1]['scene_id'],
         'title_native' => $plan['days'][$day - 1]['title_native'],
         'day_number' => $day,
+        // The fake's lessons give every role a woman; a scene not written yet speaks with the default cast (наряд FIX-4c §3).
+        'partner_gender' => 'female',
     ];
 
     expect(array_column($plan['days'], 'type'))->toBe(['scene', 'scene', 'review', 'scene', 'rehearsal'])
         ->and(wsWindow($this, $token, $id, 1)['sources'])->toBe([$scene(1)])
         ->and(wsWindow($this, $token, $id, 3)['sources'])->toBe([$scene(1), $scene(2)])
         ->and(wsWindow($this, $token, $id, 5)['sources'])->toBe([$scene(1), $scene(2), $scene(4)])
-        ->and(array_keys(wsWindow($this, $token, $id, 1)['sources'][0]))->toBe(['scene_id', 'title_native', 'day_number']);
+        ->and(array_keys(wsWindow($this, $token, $id, 1)['sources'][0]))->toBe(['scene_id', 'title_native', 'day_number', 'partner_gender']);
 
     // A scene with no day of its own — the e2e stand spliced one into its plan by hand: the rehearsal is still made of it
     // (its «Вспомнить» and its talk walk every scene of the plan), so it is named — in its place in the plan (last here),
@@ -80,10 +82,29 @@ it('names the scenes a day is made of: its own, the two a review repeats, every 
     $spliced = '01J8SESS1XTVRESN0DAY000001';
     DB::insert("INSERT INTO plan_scenes (id, \"order\", {$quoted}) SELECT ?, 99, {$quoted} FROM plan_scenes WHERE id = ?", [$spliced, $scene(1)['scene_id']]);
     expect(wsWindow($this, $token, $id, 5)['sources'])->toBe([
-        $scene(1), $scene(2), $scene(4), ['scene_id' => $spliced, 'title_native' => $scene(1)['title_native'], 'day_number' => null],
+        $scene(1), $scene(2), $scene(4), ['scene_id' => $spliced, 'title_native' => $scene(1)['title_native'], 'day_number' => null, 'partner_gender' => 'female'],
     ])
         // A scene day and a review name only their own.
         ->and(wsWindow($this, $token, $id, 3)['sources'])->toBe([$scene(1), $scene(2)]);
+});
+
+// Canon (наряд FIX-4c §3): «window.sources[].partner_gender (male|female, из plan_scenes.partner_voice_gender) рядом с
+// title_native/day_number». The phone says «Регистратор начнёт первым», «Медсестра начнёт первой» by it. CATCHES a role
+// the phone has to guess the gender of, a gender read off anything but the scene, and a scene without a lesson that says
+// nothing — it speaks with the default cast, and says so.
+it('names the gender of each scene\'s partner role, the default cast\'s for a scene not written yet', function () {
+    ['token' => $token, 'id' => $id] = wsPlan($this);
+    $plan = planRead($this, $token, $id);
+    $second = $plan['days'][1]['scene_id'];
+    DB::table('plan_scenes')->where('id', $second)->update(['partner_voice_gender' => 'male']);
+    DB::table('plan_scenes')->where('id', $plan['days'][3]['scene_id'])->update(['partner_voice_gender' => null]);
+
+    expect(array_column(wsWindow($this, $token, $id, 5)['sources'], 'partner_gender', 'scene_id'))->toBe([
+        $plan['days'][0]['scene_id'] => 'female',
+        $second => 'male',
+        $plan['days'][3]['scene_id'] => 'female',
+    ])
+        ->and(wsWindow($this, $token, $id, 2)['sources'][0]['partner_gender'])->toBe('male');
 });
 
 // Canon (§4): «stages[].minutes у всех типов дней: этапы карточек — оценка DayPace, вверх до минуты; conversation —

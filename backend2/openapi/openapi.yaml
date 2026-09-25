@@ -3576,11 +3576,15 @@ components:
           items:
             type: object
             additionalProperties: false
-            required: [scene_id, title_native, day_number]
+            required: [scene_id, title_native, day_number, partner_gender]
             properties:
               scene_id: { type: string }
               title_native: { type: string }
               day_number: { type: [integer, 'null'], minimum: 1, description: 'The day of the route the scene stands on. Null for a scene with no day of its own — never in a plan the generator built, where every scene has its day; a stand put together by hand has one (the e2e rehearsal''s «Запись к врачу»)' }
+              partner_gender:
+                type: string
+                enum: [male, female]
+                description: 'The grammatical gender of the scene''s partner role (наряд FIX-4c §3) — «Регистратор начнёт первым», «Медсестра начнёт первой»: the gender the scene''s lesson gave the role (`plan_scenes.partner_voice_gender`), `female` — the default cast — for a scene whose lesson is not written yet'
         highlights:
           type: array
           description: >-

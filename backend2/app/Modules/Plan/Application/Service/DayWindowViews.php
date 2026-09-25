@@ -251,7 +251,12 @@ final readonly class DayWindowViews
         }
         $out = [];
         foreach ($plan->scenes() as $scene) {
-            $out[$scene->id()->value] = new WindowSourceView($scene->id()->value, $scene->titleNative(), $dayOf[$scene->id()->value] ?? null);
+            $out[$scene->id()->value] = new WindowSourceView(
+                $scene->id()->value,
+                $scene->titleNative(),
+                $dayOf[$scene->id()->value] ?? null,
+                ($scene->partnerVoiceGender() ?? PlanScene::DEFAULT_PARTNER_VOICE)->value,
+            );
         }
 
         return $out;

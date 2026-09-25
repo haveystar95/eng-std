@@ -7969,7 +7969,8 @@
             {
                 "scene_id": "ulid-0003",
                 "title_native": "Запись к врачу",
-                "day_number": 1
+                "day_number": 1,
+                "partner_gender": "female"
             }
         ],
         "day_progress": 0.0,

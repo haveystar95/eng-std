@@ -412,11 +412,13 @@ final class PlanJson
                     'returns' => $s->summary->returns,
                 ],
             ], $w->stages),
-            // «Из каких сцен» / «Из каких дней» (наряд BACK-TAILS-2 §4): the scenes the day is made of, route order.
+            // «Из каких сцен» / «Из каких дней» (наряд BACK-TAILS-2 §4): the scenes the day is made of, route order — and
+            // the gender of each scene's partner role (наряд FIX-4c §3), for «{Роль} начнёт первым / первой».
             'sources' => array_map(static fn (WindowSourceView $s): array => [
                 'scene_id' => $s->sceneId,
                 'title_native' => $s->titleNative,
                 'day_number' => $s->dayNumber,
+                'partner_gender' => $s->partnerGender,
             ], $w->sources),
             'day_progress' => $w->dayProgress,
             'program' => [
