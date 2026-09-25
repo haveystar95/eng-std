@@ -37,6 +37,8 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::get('/users/{id}/collections', [UserController::class, 'collections']);
     Route::get('/users/{id}/reviews', [UserController::class, 'reviews']);
     Route::post('/users/{id}/tier', [TierController::class, 'update']);
+    // The learner's access to the paid plan (наряд ACC-1 §2): read only — rights are given by `access:grant`.
+    Route::get('/users/{id}/access', [UserController::class, 'access']);
 
     // The acquisition ladder, watched live while a device is being used. Read-only, and polled by
     // the panel every few seconds — the ladder's CONTROLS (the admission matrix) are elsewhere.

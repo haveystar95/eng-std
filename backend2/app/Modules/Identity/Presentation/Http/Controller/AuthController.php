@@ -11,6 +11,8 @@ use App\Modules\Identity\Application\Port\DevSignIn;
 use App\Modules\Identity\Application\Port\GoogleSignIn;
 use App\Modules\Identity\Application\Port\SignOut;
 use App\Modules\Identity\Application\Port\UserReader;
+use App\Modules\Identity\Application\Query\GetAccess;
+use App\Modules\Identity\Application\Query\GetAccessHandler;
 use App\Modules\Identity\Presentation\Http\Request\DevLoginRequest;
 use App\Modules\Identity\Presentation\Http\Request\GoogleLoginRequest;
 use App\Modules\Identity\Presentation\Http\Resource\UserResource;
@@ -29,6 +31,7 @@ final class AuthController
         private readonly SignOut $signOut,
         private readonly GetGenerationQuotaHandler $generationQuota,
         private readonly AccountEraser $accountEraser,
+        private readonly GetAccessHandler $access,
     ) {}
 
     public function google(GoogleLoginRequest $request): JsonResponse
@@ -87,7 +90,7 @@ final class AuthController
             'used' => $quota->used,
             'remaining' => $quota->remaining,
             'resets_at' => $quota->resetsAt->format(DateTimeInterface::ATOM),
-        ]);
+        ])->withAccess(($this->access)(new GetAccess($actor))->toArray());
     }
 
     public function logout(): Response

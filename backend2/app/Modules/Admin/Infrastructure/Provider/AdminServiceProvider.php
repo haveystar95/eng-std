@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Infrastructure\Provider;
 
+use App\Modules\Admin\Application\Dto\PaywallSwitch;
 use App\Modules\Admin\Application\Port\AdminAuditAnonymizer;
 use App\Modules\Admin\Application\Port\AdminAuditRecorder;
 use App\Modules\Admin\Application\Port\AdminCollectionReader;
@@ -52,6 +53,8 @@ final class AdminServiceProvider extends ServiceProvider
         $this->app->bind(AdminAuditRecorder::class, EloquentAdminAuditRecorder::class);
         // Account deletion (наряд ACC-1 §1): the audit keeps the change and loses whom it was done to.
         $this->app->bind(AdminAuditAnonymizer::class, EloquentAdminAuditAnonymizer::class);
+        // The paywall's switch for the access page (наряд ACC-1 §2) — read here, where config may be.
+        $this->app->bind(PaywallSwitch::class, static fn (): PaywallSwitch => new PaywallSwitch((bool) config('access.paywall_enabled', false)));
 
         $this->app->bind(AdminMetricsReader::class, EloquentAdminMetricsReader::class);
         $this->app->bind(AdminCostReader::class, EloquentAdminCostReader::class);

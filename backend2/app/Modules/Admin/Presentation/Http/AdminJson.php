@@ -14,6 +14,7 @@ use App\Modules\Admin\Application\Dto\AdminLadderPair;
 use App\Modules\Admin\Application\Dto\AdminLadderProgressView;
 use App\Modules\Admin\Application\Dto\AdminLadderReview;
 use App\Modules\Admin\Application\Dto\AdminUserCollectionRow;
+use App\Modules\Admin\Application\Dto\AdminUserAccessView;
 use App\Modules\Admin\Application\Dto\AdminUserDetail;
 use App\Modules\Admin\Application\Dto\AdminUserRow;
 use App\Modules\Admin\Application\Dto\CollectionContentHealth;
@@ -133,6 +134,20 @@ final class AdminJson
             'created_at' => $u->createdAt,
             'collections_count' => $u->collectionsCount,
             'progress_count' => $u->progressCount,
+        ];
+    }
+
+    /**
+     * A learner's access (наряд ACC-1 §2): as the client is told it, every right behind it, and the paywall's switch.
+     *
+     * @return array<string, mixed>
+     */
+    public static function userAccess(AdminUserAccessView $a): array
+    {
+        return [
+            'access' => $a->access,
+            'entitlements' => $a->entitlements,
+            'paywall_enabled' => $a->paywallEnabled,
         ];
     }
 

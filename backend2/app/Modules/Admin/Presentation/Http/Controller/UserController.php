@@ -6,6 +6,8 @@ namespace App\Modules\Admin\Presentation\Http\Controller;
 
 use App\Modules\Admin\Application\Port\AdminReviewReader;
 use App\Modules\Admin\Application\Port\AdminUserReader;
+use App\Modules\Admin\Application\Query\GetUserAccess;
+use App\Modules\Admin\Application\Query\GetUserAccessHandler;
 use App\Modules\Admin\Application\Query\GetUserCollections;
 use App\Modules\Admin\Application\Query\GetUserCollectionsHandler;
 use App\Modules\Admin\Application\Query\GetUserDetail;
@@ -30,6 +32,7 @@ final class UserController
         private readonly GetUserPlanHandler $userPlan,
         private readonly GetUserCollectionsHandler $userCollections,
         private readonly AdminReviewReader $reviews,
+        private readonly GetUserAccessHandler $userAccess,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -48,6 +51,15 @@ final class UserController
         abort_if($view === null, Response::HTTP_NOT_FOUND);
 
         return response()->json(AdminJson::userDetail($view));
+    }
+
+    /** The learner's access to the paid plan (наряд ACC-1 §2) — read only; the page ADM-2 reads it. */
+    public function access(string $id): JsonResponse
+    {
+        $view = ($this->userAccess)(new GetUserAccess($this->userId($id)));
+        abort_if($view === null, Response::HTTP_NOT_FOUND);
+
+        return response()->json(['data' => AdminJson::userAccess($view)]);
     }
 
     public function plan(Request $request, string $id): JsonResponse

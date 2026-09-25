@@ -7,6 +7,7 @@ namespace App\Modules\Identity\Infrastructure\Provider;
 use App\Modules\Identity\Application\Port\AccountEraser;
 use App\Modules\Identity\Application\Port\DefaultTargetLangReader;
 use App\Modules\Identity\Application\Port\DevSignIn;
+use App\Modules\Identity\Application\Port\EntitlementStore;
 use App\Modules\Identity\Application\Port\GoogleSignIn;
 use App\Modules\Identity\Application\Port\GoogleTokenVerifier;
 use App\Modules\Identity\Application\Port\NativeLangReader;
@@ -25,6 +26,7 @@ use App\Modules\Identity\Infrastructure\Auth\SanctumGoogleSignIn;
 use App\Modules\Identity\Infrastructure\Eloquent\CrossModuleAccountEraser;
 use App\Modules\Identity\Infrastructure\Auth\SanctumSignOut;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentDefaultTargetLangReader;
+use App\Modules\Identity\Infrastructure\Eloquent\EloquentEntitlementStore;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentNativeLangReader;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentProfileUpdater;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentPushTokenStore;
@@ -62,6 +64,8 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->app->bind(PushTokenStore::class, EloquentPushTokenStore::class);
         $this->app->bind(PushDelivery::class, ConfiguredPushDelivery::class);
         $this->app->bind(VisitLog::class, EloquentVisitLog::class);
+        // The learner's rights to the paid plan (наряд ACC-1 §2); the table cascades with the user row.
+        $this->app->bind(EntitlementStore::class, EloquentEntitlementStore::class);
     }
 
     public function boot(): void

@@ -19,9 +19,11 @@ use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\ConversationAudioStore;
 use App\Modules\Plan\Application\Port\DayBuildLog;
 use App\Modules\Plan\Application\Port\LearnerCalendar;
+use App\Modules\Plan\Application\Port\LearnerAccess;
 use App\Modules\Plan\Application\Port\LearnerGender;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
+use App\Modules\Plan\Application\Service\Paywalls;
 use App\Modules\Plan\Application\Service\VoiceCap;
 use App\Modules\Plan\Application\Service\VoiceFuse;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
@@ -44,6 +46,7 @@ use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Assembly\PhraseCards;
 use App\Modules\Plan\Domain\Assembly\PhrasesStage;
+use App\Modules\Plan\Domain\Service\PlanAllowance;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayBudget;
 use App\Modules\Plan\Domain\Service\DayPace;
@@ -55,6 +58,7 @@ use App\Modules\Plan\Infrastructure\Adapter\DiskConversationAudioStore;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationTurnSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerCalendar;
+use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerAccess;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerGender;
 use App\Modules\Plan\Infrastructure\Adapter\LogDayBuildLog;
 use App\Modules\Plan\Infrastructure\Adapter\PexelsPlanImageFinder;
@@ -153,6 +157,14 @@ final class PlanServiceProvider extends ServiceProvider
         $this->app->bind(LearnerHabits::class, IdentityLearnerHabits::class);
         // Whether the learner may have the next day — asked before its lesson is (наряд GEN-3 §11); PAY-1 replaces this.
         $this->app->bind(NextDayAccess::class, EveryNextDayAllowed::class);
+        // THE PAYWALL (наряд ACC-1 §2): the switch and the cap from `config/access.php`, the subscription from Identity.
+        $this->app->bind(LearnerAccess::class, IdentityLearnerAccess::class);
+        $this->app->bind(Paywalls::class, fn (Container $app): Paywalls => new Paywalls(
+            $app->make(LearnerAccess::class),
+            $app->make(PlanRepository::class),
+            (bool) config('access.paywall_enabled', false),
+            max(1, (int) config('access.open_plans_cap', PlanAllowance::OPEN_PLANS_CAP)),
+        ));
         // No APNs key → dry mode. The same queue and the same log either way; only this door changes.
         $this->app->bind(PushSender::class, function (Container $app): PushSender {
             $key = trim((string) config('services.apns.key_p8', ''));

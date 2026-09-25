@@ -15,6 +15,7 @@ use App\Modules\Plan\Application\Service\CardViews;
 use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\DayWindowViews;
 use App\Modules\Plan\Application\Service\PlanAccess;
+use App\Modules\Plan\Application\Service\Paywalls;
 use App\Modules\Plan\Application\Service\PlanViews;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\DayCard;
@@ -58,6 +59,7 @@ final readonly class GetDayRoomHandler
         private LanguagePacks $packs,
         private PlanConfig $config,
         private ConversationRules $rules,
+        private Paywalls $paywalls,
     ) {}
 
     public function __invoke(GetDayRoom $query): DayRoomView
@@ -82,7 +84,9 @@ final readonly class GetDayRoomHandler
         $talkAgain = $passage?->conversationId !== null
             && $this->conversations->replaysSince($day->id(), $passage->conversationId, $passage->passedAt, $today) < $this->rules->replaysPerDay;
         $metrics = $day->metrics();
-        $route = $this->views->day($plan, $day, $today, null, $cards);
+        // The paywall (наряд ACC-1 §2): one reading for the day's route row and its window.
+        $paywall = $this->paywalls->of($plan);
+        $route = $this->views->day($plan, $day, $today, null, $cards, $paywall);
         $sceneView = $scene === null ? null : $this->views->scene($plan, $scene);
 
         return new DayRoomView(
@@ -100,7 +104,10 @@ final readonly class GetDayRoomHandler
             // progress. A day not yet opened has nothing to count.
             metrics: $dealt ? new DayMetricsView($metrics->cardsTotal, $metrics->minutesSpent) : null,
             program: $this->program($cards),
-            window: $this->windows->of($plan, $day, $plan->effectiveDayStatus($day, $today), $plan->isDayBuilding($day), $sceneView, $cards, $talkStage, $walked, $talk, $talkAgain),
+            window: $this->windows->of(
+                $plan, $day, $plan->effectiveDayStatus($day, $today, $paywall), $plan->isDayBuilding($day) && ! $paywall->locks($day),
+                $sceneView, $cards, $talkStage, $walked, $talk, $talkAgain,
+            ),
             speech: $this->packs->for($plan->targetLang()->value)->speech(),
             repeatMisses: $this->config->repeatMisses,
         );

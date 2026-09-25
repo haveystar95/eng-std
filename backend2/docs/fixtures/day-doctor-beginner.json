@@ -5,6 +5,7 @@
         "number": 1,
         "type": "scene",
         "status": "in_progress",
+        "lock_reason": null,
         "scene_id": "ulid-0003",
         "title_native": "Запись к врачу",
         "title_target": "Booking",

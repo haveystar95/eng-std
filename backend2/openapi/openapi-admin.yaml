@@ -331,6 +331,54 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /users/{id}/access:
+    get:
+      tags: [Users]
+      summary: A learner's access to the paid plan — read only (наряд ACC-1 §2; the page ADM-2)
+      description: >-
+        `access` — exactly what the learner's `GET /api/v1/auth/me` says (`plan` free | premium, `expires_at`,
+        `source`); `entitlements` — every right behind it, in force or not (`active` — in force now: status active or
+        grace, no end or an end still ahead); `paywall_enabled` — whether the plan's paywall is switched on at all
+        (`access.paywall_enabled`). Rights are given and taken back by the owner's commands `access:grant` /
+        `access:revoke`, never here; a store purchase writes its own right with PAY-1. `profiles.tier` (the tier
+        above) is a separate, older switch and is not read here.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [access, entitlements, paywall_enabled]
+                    properties:
+                      access:
+                        type: object
+                        required: [plan, expires_at, source]
+                        properties:
+                          plan: { type: string, enum: [free, premium] }
+                          expires_at: { type: [string, 'null'], format: date-time }
+                          source: { type: [string, 'null'], enum: [admin, promo, apple, google, null] }
+                      entitlements:
+                        type: array
+                        items:
+                          type: object
+                          required: [source, product, status, starts_at, expires_at, updated_at, active]
+                          properties:
+                            source: { type: string, enum: [admin, promo, apple, google] }
+                            product: { type: string, enum: [month, year, lifetime] }
+                            status: { type: string, enum: [active, expired, grace] }
+                            starts_at: { type: string, format: date-time }
+                            expires_at: { type: [string, 'null'], format: date-time }
+                            updated_at: { type: string, format: date-time }
+                            active: { type: boolean }
+                      paywall_enabled: { type: boolean }
+        '404': { $ref: '#/components/responses/Problem' }
+
   /exercise-modes:
     get:
       tags: [Exercise modes]

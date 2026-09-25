@@ -40,6 +40,24 @@ interface PlanRepository
     public function findLiveFor(UserId $owner): ?Plan;
 
     /**
+     * THE LEARNER'S FREE PLAN (наряд ACC-1 §2): the first plan they ever made, by `created_at` — a deleted one included,
+     * so deleting it does not make the next one free. Null — no plan yet.
+     */
+    public function freePlanIdOf(UserId $owner): ?PlanId;
+
+    /** Every plan the learner ever made, a deleted one too — «is there a free plan already» (наряд ACC-1 §2). */
+    public function countOf(UserId $owner): int;
+
+    /** The learner's plans in work — neither finished nor deleted: the subscriber's cap counts these (наряд ACC-1 §2). */
+    public function countInWorkOf(UserId $owner): int;
+
+    /**
+     * The learner's plans held still for the transaction (наряд ACC-1 §2): a second `POST /plans` of the same learner waits
+     * here until the first is written, so two quick taps cannot both be the free plan or both fit under the cap.
+     */
+    public function lockPlansOf(UserId $owner): void;
+
+    /**
      * What the tab shows: the live plan, or — when there is none — the newest plan that is built
      * and not started yet. A `ready` plan is a state of its own on the screen, not an absence.
      */

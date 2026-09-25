@@ -69,6 +69,31 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
         return $row === null ? null : $this->mapper->toDomain($row);
     }
 
+    public function freePlanIdOf(UserId $owner): ?PlanId
+    {
+        $id = DB::table('plans')->where('user_id', $owner->value)->orderBy('created_at')->orderBy('id')->value('id');
+
+        return $id === null ? null : PlanId::fromString((string) $id);
+    }
+
+    public function countOf(UserId $owner): int
+    {
+        return DB::table('plans')->where('user_id', $owner->value)->count();
+    }
+
+    public function countInWorkOf(UserId $owner): int
+    {
+        return DB::table('plans')->where('user_id', $owner->value)
+            ->whereNotIn('status', [PlanStatus::Finished->value, PlanStatus::Deleted->value])
+            ->count();
+    }
+
+    /** A transaction-scoped advisory lock keyed by the learner — there may be no plan row to lock yet. */
+    public function lockPlansOf(UserId $owner): void
+    {
+        DB::statement('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ['plans:'.$owner->value]);
+    }
+
     /**
      * Live first, then the newest built-and-unstarted one — one index scan on
      * `plans_user_status_idx`, ordered by a case so the two states come back in one query.

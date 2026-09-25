@@ -34,5 +34,10 @@ final readonly class DayRouteView
         public ?string $openedAt,
         public ?string $closedAt,
         public array $stages = [],
+        /**
+         * WHY a `locked` day is locked (наряд ACC-1 §2): `date` — its calendar day, the day before it, the plan not
+         * started — or `subscription` — the paywall; null for a day that is not locked
+         */
+        public ?string $lockReason = null,
     ) {}
 }

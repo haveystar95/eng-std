@@ -23,7 +23,9 @@ use App\Modules\Plan\Domain\ValueObject\DayMetrics;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\LockReason;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
+use App\Modules\Plan\Domain\ValueObject\Paywall;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
@@ -431,9 +433,10 @@ final class Plan
      *
      * A day opens when the day before it is closed, its lesson is written, and its calendar day has come — the day after
      * the day before it was OPENED, in the learner's calendar ({@see closeDay()}) — or at once while the plan is catching
-     * up with its event ({@see isCatchingUp()}; `docs/plan-v2.md` §5, наряд GEN-3 §11).
+     * up with its event ({@see isCatchingUp()}; `docs/plan-v2.md` §5, наряд GEN-3 §11). And, while the paywall is on, when
+     * it does not hold the day (наряд ACC-1 §2; {@see Paywall}) — asked first: a day it holds stays shut whatever the date.
      */
-    public function openDay(int $number, DateTimeImmutable $today, DateTimeImmutable $now): PlanDay
+    public function openDay(int $number, DateTimeImmutable $today, DateTimeImmutable $now, ?Paywall $paywall = null): PlanDay
     {
         $this->assertStatus('open day', [PlanStatus::Active, PlanStatus::Overdue]);
         $day = $this->day($number);
@@ -443,6 +446,9 @@ final class Plan
         }
         if ($day->status() === DayStatus::Closed) {
             throw PlanDayNotOpen::day($number, $day->status());
+        }
+        if ($paywall?->locks($day) === true) {
+            throw PlanDayLocked::bySubscription($number);
         }
 
         $previous = $number > 1 ? $this->day($number - 1) : null;
@@ -516,10 +522,13 @@ final class Plan
 
     /**
      * The day's status for today, not as stored: a locked day whose day before it is closed and whose calendar day has
-     * come — or whose plan is catching up — reads `open`.
+     * come — or whose plan is catching up — reads `open`; a day the paywall holds reads `locked` (наряд ACC-1 §2).
      */
-    public function effectiveDayStatus(PlanDay $day, DateTimeImmutable $today): DayStatus
+    public function effectiveDayStatus(PlanDay $day, DateTimeImmutable $today, ?Paywall $paywall = null): DayStatus
     {
+        if ($paywall?->locks($day) === true) {
+            return DayStatus::Locked;
+        }
         if ($day->status() !== DayStatus::Locked) {
             return $day->status();
         }
@@ -529,6 +538,23 @@ final class Plan
         return $previousClosed && $this->status->isLive() && ($day->isAvailableOn($today) || $this->isCatchingUp($today))
             ? DayStatus::Open
             : DayStatus::Locked;
+    }
+
+    /**
+     * WHY THE DAY IS LOCKED (наряд ACC-1 §2, `days[].lock_reason`): `subscription` while the paywall holds it; `date` for
+     * the lock there always was — its calendar day has not come, the day before it is not closed, the plan is not
+     * started; null for a day not locked, and for a day waiting for its lesson (`building` — not a lock).
+     */
+    public function lockReason(PlanDay $day, DateTimeImmutable $today, ?Paywall $paywall = null): ?LockReason
+    {
+        if ($paywall?->locks($day) === true) {
+            return LockReason::Subscription;
+        }
+        if ($this->isDayBuilding($day)) {
+            return null;
+        }
+
+        return $this->effectiveDayStatus($day, $today) === DayStatus::Locked ? LockReason::Date : null;
     }
 
     /**

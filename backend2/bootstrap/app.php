@@ -21,6 +21,8 @@ use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
 use App\Modules\Generation\Presentation\Console\RecoverLostTermsCommand;
 use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
+use App\Modules\Identity\Presentation\Console\AccessGrantCommand;
+use App\Modules\Identity\Presentation\Console\AccessRevokeCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanAudioDurationsCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanReconcileTalksCommand;
@@ -68,6 +70,10 @@ return Application::configure(basePath: dirname(__DIR__))
         SmokePracticeDialogCommand::class,
         ExpireStaleDialogsCommand::class,
         GrantPremiumCommand::class,
+        // The paid plan by hand (наряд ACC-1 §2): the owner's grant and its taking back — the only door into
+        // `entitlements` until the store purchases of PAY-1.
+        AccessGrantCommand::class,
+        AccessRevokeCommand::class,
         PlanShiftDayCommand::class,
         PlanSeedLoadCommand::class,
         // Plan notifications (PLAN-UI-3): the 15-minute tick (scheduled in routes/console.php) and

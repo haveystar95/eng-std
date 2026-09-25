@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Service\ConversationMaterial;
 use App\Modules\Plan\Application\Service\ConversationPassing;
 use App\Modules\Plan\Application\Service\DayDealer;
 use App\Modules\Plan\Application\Service\PlanAccess;
+use App\Modules\Plan\Application\Service\Paywalls;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\ValueObject\DayMetrics;
@@ -31,6 +32,7 @@ final readonly class OpenDayHandler
         private DayDealer $dealer,
         private ConversationMaterial $material,
         private ConversationPassing $passing,
+        private Paywalls $paywalls,
         private LearnerCalendar $calendar,
         private Clock $clock,
         private TransactionManager $tx,
@@ -43,7 +45,8 @@ final readonly class OpenDayHandler
 
         return $this->tx->run(function () use ($command, $today, $now): PlanDayId {
             $plan = $this->access->ownedForUpdate($command->planId, $command->actorId);
-            $day = $plan->openDay($command->number, $today, $now);
+            // The paywall first (наряд ACC-1 §2): a day it holds is 409 `plan_day_locked`, `meta.lock_reason: subscription`.
+            $day = $plan->openDay($command->number, $today, $now, $this->paywalls->of($plan));
 
             if ($this->cards->countForDay($day->id()) === 0) {
                 $cards = $this->dealer->deal($plan, $day);

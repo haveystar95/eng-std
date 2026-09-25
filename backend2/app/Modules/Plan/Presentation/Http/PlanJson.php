@@ -163,6 +163,8 @@ final class PlanJson
             'number' => $d->number,
             'type' => $d->type,
             'status' => $d->status,
+            // Why a locked day is locked (наряд ACC-1 §2): `date` | `subscription`; null for a day not locked.
+            'lock_reason' => $d->lockReason,
             'scene_id' => $d->sceneId,
             'title_native' => $d->titleNative,
             'title_target' => $d->titleTarget,

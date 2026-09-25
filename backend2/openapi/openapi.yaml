@@ -1821,6 +1821,14 @@ paths:
         waits on the model: the answer is 202 with the build status, and the client polls
         `GET /plans/{id}/build`. When the plan is built, day one's lesson is written right away —
         before «Начать».
+
+
+        THE PAYWALL (наряд ACC-1 §2) — only while `access.paywall_enabled` is on (off on the stand until the
+        client's paywall): a learner without a subscription has ONE plan, the first they ever made (a deleted
+        one counts) — any further plan is 402 `plan_subscription_required` (`meta.plans`); a subscriber has at
+        most three plans in work (not finished, not deleted) — the fourth is 409 `plan_active_limit`
+        (`meta.limit`, `meta.plans_in_work`). Nothing is written on a refusal. The learner's access is
+        `GET /auth/me` → `access`.
       requestBody:
         required: true
         content:
@@ -1837,6 +1845,8 @@ paths:
       responses:
         '202': { $ref: '#/components/responses/PlanBuild' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
   /plans/current:
@@ -2115,8 +2125,11 @@ paths:
         closes (GEN-3 §11). 409 `plan_day_locked` while the previous day is not closed
         (`meta.blocked_by_day`) or its calendar day has not come — the day after the previous day was
         OPENED, in the learner's calendar, and no lock at all while the plan catches up with its event
-        (`meta.opens_on`); 409 `plan_day_building` while the day is next in line and its lesson is not
-        back yet (`meta.lesson_status`); 409 `plan_lesson_not_ready` when the lesson failed.
+        (`meta.opens_on`) — `meta.lock_reason: date`; while the paywall is on (наряд ACC-1 §2), 409
+        `plan_day_locked` with `meta.lock_reason: subscription` for a day the learner has no subscription
+        for — past day 1 of the free plan, or any day of another plan (asked first: whatever the date); 409
+        `plan_day_building` while the day is next in line and its lesson is not back yet
+        (`meta.lesson_status`); 409 `plan_lesson_not_ready` when the lesson failed.
       parameters:
         - $ref: '#/components/parameters/PlanId'
         - $ref: '#/components/parameters/PlanDayNumber'
@@ -3057,13 +3070,23 @@ components:
       description: >-
         One day on the route. `status` is EFFECTIVE for today — a locked day whose predecessor is closed and whose date has come
         (or whose plan catches up, `catch_up`) reads `open`; a day next in line whose lesson is not back yet reads `building`
-        (not `locked`, not `failed`: no button, ask again — GEN-3 §11).
-      required: [id, number, type, status, slot, cards_total, cards_done, minutes_spent]
+        (not `locked`, not `failed`: no button, ask again — GEN-3 §11). A `locked` day says why in `lock_reason` (наряд ACC-1
+        §2): `date` — the lock there always was; `subscription` — the paywall (only while it is switched on).
+      required: [id, number, type, status, lock_reason, slot, cards_total, cards_done, minutes_spent]
       properties:
         id: { type: string, minLength: 26, maxLength: 26 }
         number: { type: integer, minimum: 1, maximum: 10 }
         type: { type: string, enum: [scene, review, rehearsal] }
         status: { type: string, enum: [locked, building, open, in_progress, closed] }
+        lock_reason:
+          type: [string, 'null']
+          enum: [date, subscription, null]
+          description: >-
+            WHY a `locked` day is locked (наряд ACC-1 §2); null for a day that is not locked (`building` is not a lock).
+            `date` — its calendar day has not come, the day before it is not closed, the plan is not started (every lock
+            before the наряд). `subscription` — the paywall holds it: the learner has no subscription, and the day is past
+            day 1 of their free plan (their first plan ever) or of another plan. Days in progress and closed days are never
+            locked by it. Only while `access.paywall_enabled` is on; off, a day is never `subscription`.
         scene_id: { type: [string, 'null'] }
         title_native: { type: [string, 'null'], description: '≤ 18 characters by the prompt''s rule; the client ellipsises a longer one' }
         title_target: { type: [string, 'null'] }
@@ -5201,6 +5224,18 @@ components:
             used: { type: integer }
             remaining: { type: integer }
             resets_at: { type: string, format: date-time }
+        access:
+          description: >-
+            THE LEARNER'S ACCESS (наряд ACC-1 §2) — on `GET /auth/me`. `plan` — `premium` while a right to the paid plan
+            is in force (status active or grace, no end or an end still ahead), else `free`; `expires_at` — until when
+            (null: no end, or the free plan); `source` — by which right (`admin` — granted by the owner, `promo`, `apple`,
+            `google`; null for the free plan). Told whether the paywall is switched on or not.
+          type: object
+          required: [plan, expires_at, source]
+          properties:
+            plan: { type: string, enum: [free, premium] }
+            expires_at: { type: [string, 'null'], format: date-time }
+            source: { type: [string, 'null'], enum: [admin, promo, apple, google, null] }
 
     GenerationRequest:
       type: object

@@ -18,4 +18,11 @@ final class EloquentUserReader implements UserReader
 
         return $user !== null ? $this->mapper->toView($user) : null;
     }
+
+    public function byEmail(string $email): ?UserView
+    {
+        $user = User::query()->where('email', $email)->first();
+
+        return $user !== null ? $this->mapper->toView($user) : null;
+    }
 }

@@ -32,6 +32,8 @@ use App\Modules\Plan\Domain\Service\RouteStages;
 use App\Modules\Plan\Domain\ValueObject\DayStatus;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\Image;
+use App\Modules\Plan\Domain\ValueObject\LockReason;
+use App\Modules\Plan\Domain\ValueObject\Paywall;
 use App\Modules\Plan\Domain\ValueObject\RouteStage;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
@@ -54,6 +56,7 @@ final readonly class PlanViews
         private ConversationRepository $conversations,
         private StagePassageRepository $passages,
         private LearnerGender $learners,
+        private Paywalls $paywalls,
     ) {}
 
     public function versions(): VersionsView
@@ -69,6 +72,8 @@ final readonly class PlanViews
         $daysLeft = $plan->daysLeftUntilEvent($today);
         $status = $plan->effectiveStatus($today);
         $current = $plan->currentDay();
+        // The paywall of this plan, asked once for the whole route (наряд ACC-1 §2; open while the switch is off).
+        $paywall = $this->paywalls->of($plan);
 
         // The route's stages: every dealt day counted in one grouped query, and the one day that
         // is not dealt yet but is the learner's next — drawn from what the dealer will deal.
@@ -115,10 +120,10 @@ final readonly class PlanViews
             collectionId: $plan->collectionId()?->value,
             unclearReason: $plan->unclearReason(),
             failReason: $plan->failReason(),
-            currentDay: $current === null ? null : $this->routeDay($plan, $current, $today, $strings, $tallies[$current->id()->value] ?? [], $outline, $talks[$current->id()->value] ?? null),
+            currentDay: $current === null ? null : $this->routeDay($plan, $current, $today, $strings, $tallies[$current->id()->value] ?? [], $outline, $talks[$current->id()->value] ?? null, $paywall),
             days: array_map(fn (PlanDay $d): DayRouteView => $this->routeDay(
                 $plan, $d, $today, $strings, $tallies[$d->id()->value] ?? [], $current !== null && $d->id()->equals($current->id()) ? $outline : [],
-                $talks[$d->id()->value] ?? null,
+                $talks[$d->id()->value] ?? null, $paywall,
             ), $plan->days()),
             scenes: array_map(fn (PlanScene $s): SceneView => $this->scene($plan, $s), $plan->scenes()),
             rescueKit: $this->config->rescueKit,
@@ -193,8 +198,9 @@ final readonly class PlanViews
      * are read with the plan's one grouped query.
      *
      * @param  list<DayCard>|null  $cards
+     * @param  Paywall|null  $paywall  the plan's paywall when the caller holds it already; null — asked here
      */
-    public function day(Plan $plan, PlanDay $day, DateTimeImmutable $today, ?NativeStrings $strings = null, ?array $cards = null): DayRouteView
+    public function day(Plan $plan, PlanDay $day, DateTimeImmutable $today, ?NativeStrings $strings = null, ?array $cards = null, ?Paywall $paywall = null): DayRouteView
     {
         $strings ??= new NativeStrings($plan->nativeLang()->value);
         if ($cards === null) {
@@ -214,7 +220,7 @@ final readonly class PlanViews
             $this->conversations->latestForDay($day->id()) !== null,
         );
 
-        return $this->routeDay($plan, $day, $today, $strings, $tallies, $outline, $talk);
+        return $this->routeDay($plan, $day, $today, $strings, $tallies, $outline, $talk, $paywall ?? $this->paywalls->of($plan));
     }
 
     /**
@@ -222,10 +228,11 @@ final readonly class PlanViews
      * @param  list<Stage>  $outline
      * @param  TalkStage|null  $talk  where the day's sixth stage stands (наряды CONV-1, CONV-2); null — nothing of it yet
      */
-    private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline, ?TalkStage $talk = null): DayRouteView
+    private function routeDay(Plan $plan, PlanDay $day, DateTimeImmutable $today, NativeStrings $strings, array $tallies, array $outline, ?TalkStage $talk, Paywall $paywall): DayRouteView
     {
         $scene = $plan->sceneOf($day);
-        $status = $plan->effectiveDayStatus($day, $today);
+        $status = $plan->effectiveDayStatus($day, $today, $paywall);
+        $lock = $plan->lockReason($day, $today, $paywall);
         $current = $plan->currentDay();
         $availableToday = $current !== null && $current->id()->equals($day->id())
             && ($status === DayStatus::Open || $status === DayStatus::InProgress);
@@ -235,8 +242,9 @@ final readonly class PlanViews
             id: $day->id()->value,
             number: $day->number(),
             type: $day->type()->value,
-            // A day next in line whose lesson is still being written is `building` (наряд GEN-3 §11) — not locked, not failed.
-            status: $plan->isDayBuilding($day) ? DayRouteView::BUILDING : $status->value,
+            // A day next in line whose lesson is still being written is `building` (наряд GEN-3 §11) — not locked, not failed;
+            // unless the paywall holds it (наряд ACC-1 §2): then it is `locked`, and `lock_reason` says why.
+            status: $lock !== LockReason::Subscription && $plan->isDayBuilding($day) ? DayRouteView::BUILDING : $status->value,
             sceneId: $scene?->id()->value,
             titleNative: $scene?->titleNative(),
             titleTarget: $scene?->titleTarget(),
@@ -256,6 +264,7 @@ final readonly class PlanViews
                     DayStages::walksTalk($talk), $talk,
                 ),
             ),
+            lockReason: $lock?->value,
         );
     }
 

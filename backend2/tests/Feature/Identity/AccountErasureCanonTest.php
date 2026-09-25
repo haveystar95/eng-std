@@ -10,6 +10,7 @@ use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -22,7 +23,7 @@ use Laravel\Sanctum\Sanctum;
  * a talk and its lines, the voice of a scene and of the talk on the disk, a photo copy, the journal and a letter; a pool
  * with reviews, triages, exposures, a session and a day's stats; a collection; a generation, a practice dialog and its
  * transcript, an example regenerated; a search lookup paid for; a push address and visits; a trainer override; an admin's
- * tier change; the request log of every call above. Then every text column of every table of the schema is searched for
+ * tier change; a right to the paid plan; the request log of every call above. Then every text column of every table of the schema is searched for
  * the id AND the email: none.
  */
 
@@ -106,6 +107,8 @@ function acc1LearnerWithEverything(object $ctx): array
     ]);
     DB::table('learning_mode_settings')->insert(['id' => Ulid::generate(), 'user_id' => $user->id, 'mode' => 'typing', 'enabled' => false, 'created_at' => $now, 'updated_at' => $now]);
     DB::table('admin_audit_log')->insert(['id' => Ulid::generate(), 'admin_id' => Ulid::generate(), 'action' => 'user.tier.change', 'target_user_id' => $user->id, 'context' => json_encode(['from' => 'free', 'to' => 'premium']), 'created_at' => $now]);
+    // A right to the paid plan (наряд ACC-1 §2) — the table cascades with the user row.
+    Artisan::call('access:grant', ['user' => $user->id, 'product' => 'lifetime']);
 
     $files = [
         ...DB::table('plan_line_audios')->where('user_id', $user->id)->pluck('path')->all(),
@@ -138,7 +141,8 @@ it('deletes the account to the last row and file: no table mentions the learner,
         ->and(array_keys($before))->toContain('plans.user_id', 'day_cards.user_id', 'conversation_turns.user_id', 'plan_line_audios.user_id',
             'reviews.user_id', 'term_triages.user_id', 'collections.owner_id', 'device_push_tokens.user_id', 'user_visits.user_id',
             'search_lookups.user_id', 'learning_mode_settings.user_id', 'admin_audit_log.target_user_id', 'api_request_logs.user_id',
-            'personal_access_tokens.tokenable_id', 'profiles.user_id', 'practice_dialogs.user_id', 'plan_events.user_id', 'plan_notifications.user_id')
+            'personal_access_tokens.tokenable_id', 'profiles.user_id', 'practice_dialogs.user_id', 'plan_events.user_id', 'plan_notifications.user_id',
+            'entitlements.user_id')
         ->and(array_keys(acc1Mentions($user->email)))->toContain('api_request_logs.response_body', 'users.email');
     foreach ($files as $path) {
         expect($disk->exists($path) || $images->exists($path))->toBeTrue($path);

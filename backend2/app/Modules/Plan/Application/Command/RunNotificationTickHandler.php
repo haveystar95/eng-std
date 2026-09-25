@@ -10,6 +10,7 @@ use App\Modules\Plan\Application\Port\NotifiablePlans;
 use App\Modules\Plan\Application\Port\NotificationLog;
 use App\Modules\Plan\Application\Service\PlanEventJournal;
 use App\Modules\Plan\Application\Service\PlanNotifier;
+use App\Modules\Plan\Application\Service\Paywalls;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Repository\PlanEventRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
@@ -50,6 +51,7 @@ final readonly class RunNotificationTickHandler
         private LearnerCalendar $calendar,
         private LearnerHabits $habits,
         private Clock $clock,
+        private Paywalls $paywalls,
     ) {}
 
     public function __invoke(RunNotificationTick $command): void
@@ -93,8 +95,9 @@ final readonly class RunNotificationTickHandler
             return;
         }
         $day = $plan->currentDay();
+        // «Available» is read with the paywall (наряд ACC-1 §2): a day it holds is not waiting for the learner.
         $waiting = $day !== null && ! $plan->isDayBuilding($day)
-            && in_array($plan->effectiveDayStatus($day, $today), [DayStatus::Open, DayStatus::InProgress], true);
+            && in_array($plan->effectiveDayStatus($day, $today, $this->paywalls->of($plan)), [DayStatus::Open, DayStatus::InProgress], true);
         if (! $waiting) {
             return;
         }
