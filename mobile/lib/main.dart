@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'theme/theme.dart';
+import 'data/app_identity.dart';
 import 'data/app_settings.dart';
 import 'data/deep_links.dart';
 import 'data/locale_controller.dart';
@@ -18,6 +19,8 @@ import 'l10n/app_localizations.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   unawaited(DeepLinks.init());
+  // Which build on which phone — asked once, before the first request needs it (наряд CLIENT-FIX-4 §6).
+  unawaited(AppIdentity.load());
   // Paper is a light background, so the status-bar content is dark (rule: the
   // reskinned screens have no AppBar to set this). Dark screens with an AppBar
   // (old tabs) reassert their own light overlay; the collection cover overrides

@@ -6,6 +6,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import 'app_identity.dart';
+
 /// ONE AUDIO LOADER FOR THE APP (наряд DAY-UI-3) — the twin of `ImageLoader`.
 ///
 /// Every server voice file goes to disk through here: at most [maxParallel] downloads on the wire
@@ -116,7 +118,8 @@ class AudioLoader {
         url,
         options: Options(
           responseType: ResponseType.bytes,
-          headers: bearer == null ? null : {'Authorization': 'Bearer $bearer'},
+          // Our own server's file: its token, and which build on which phone asks (наряд CLIENT-FIX-4 §6).
+          headers: bearer == null ? null : {'Authorization': 'Bearer $bearer', ...AppIdentity.headers},
           // A 4xx is an answer («no such file»), not an exception: the row may have gone with a voice
           // change between the day being read and the download.
           validateStatus: (code) => code != null && code < 600,

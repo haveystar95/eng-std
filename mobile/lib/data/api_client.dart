@@ -3,8 +3,10 @@ import 'dart:io' show SocketException;
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../features/search/search_pair.dart' show SearchLanguages;
+import 'app_identity.dart';
 import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
@@ -92,7 +94,10 @@ bool isOffline(Object? error) {
 /// HTTP client for the backend2 API (`/api/v1`, Sanctum bearer, snake_case,
 /// single resources wrapped in `data`). Attaches the token via an interceptor.
 class ApiClient {
-  ApiClient(TokenStore tokens) : _dio = _buildDio(tokens);
+  /// [adapter] — a test's own transport in place of the network (what the requests carried, not what the server said).
+  ApiClient(TokenStore tokens, {@visibleForTesting HttpClientAdapter? adapter}) : _dio = _buildDio(tokens) {
+    if (adapter != null) _dio.httpClientAdapter = adapter;
+  }
 
   final Dio _dio;
 
@@ -126,11 +131,13 @@ class ApiClient {
 
     dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
+        onRequest: (options, handler) async {
           final token = tokens.current;
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          // Which build, on which kind of phone (наряд CLIENT-FIX-4 §6) — on every request, for the admin.
+          options.headers.addAll(await AppIdentity.load());
           handler.next(options);
         },
       ),

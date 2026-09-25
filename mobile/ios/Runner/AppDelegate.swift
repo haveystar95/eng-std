@@ -74,18 +74,36 @@ import UIKit
   /// BUILD VERSION (work order SESSION-1b): "1.0.0 (2)" — `CFBundleShortVersionString` and `CFBundleVersion`
   /// from Info.plist, i.e. `version` from pubspec. Shown small on the stage entry (canvas 30-1, the owner's
   /// rule): it tells whether the phone runs the expected build.
+  ///
+  /// THE KIND OF PHONE (work order CLIENT-FIX-4 §6, `lib/data/app_identity.dart`): the model identifier («iPhone15,2»,
+  /// the simulated one on a simulator) and the system's name and version — the `X-Device` header of every request.
+  /// Never the device's own name or any identifier of THIS phone.
   private func registerAppInfoChannel(_ messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(name: "com.denis.engstd/app_info", binaryMessenger: messenger)
     channel.setMethodCallHandler { call, result in
-      guard call.method == "version" else {
+      switch call.method {
+      case "version":
+        let info = Bundle.main.infoDictionary
+        result([
+          "name": info?["CFBundleShortVersionString"] as? String ?? "",
+          "build": info?["CFBundleVersion"] as? String ?? "",
+        ])
+      case "device":
+        var system = utsname()
+        uname(&system)
+        let machine = withUnsafeBytes(of: &system.machine) { raw in
+          String(decoding: raw.prefix { $0 != 0 }, as: UTF8.self)
+        }
+        let simulated = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"]
+        result([
+          "machine": simulated ?? machine,
+          "simulator": simulated != nil,
+          "system": UIDevice.current.systemName,
+          "version": UIDevice.current.systemVersion,
+        ])
+      default:
         result(FlutterMethodNotImplemented)
-        return
       }
-      let info = Bundle.main.infoDictionary
-      result([
-        "name": info?["CFBundleShortVersionString"] as? String ?? "",
-        "build": info?["CFBundleVersion"] as? String ?? "",
-      ])
     }
   }
 

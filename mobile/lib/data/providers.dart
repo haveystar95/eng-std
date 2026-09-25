@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show ValueNotifier, debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
+import 'app_identity.dart';
 import 'auth_repository.dart';
 import 'config.dart';
 import 'device_timezone.dart';
@@ -79,7 +80,8 @@ final imageDiskCacheProvider = FutureProvider<ImageDiskCache?>((ref) async {
     final token = tokens.current;
     if (uri.host != apiHost || token == null) return const {};
 
-    return {'Authorization': 'Bearer $token', 'ngrok-skip-browser-warning': 'true'};
+    // Which build on which phone asks (наряд CLIENT-FIX-4 §6) — to our own server only, with its token.
+    return {'Authorization': 'Bearer $token', 'ngrok-skip-browser-warning': 'true', ...AppIdentity.headers};
   };
 
   return installImageDiskCache(ref.watch(appDatabaseProvider));
