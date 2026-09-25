@@ -1514,3 +1514,24 @@ it('speaks the two women of a rehearsal in two voices — the voice fixed for ea
         ->and($of($scenes[0]->id))->toBe([$key($f1)])
         ->and($of($scenes[1]->id))->toBe([$key($f2)]);
 });
+
+/**
+ * Canon (наряд FIX-4c §2): «документ разговора несёт hints (sentence/target/ref/scene_id) независимо от режима подсказок;
+ * hints_enabled остаётся, телефон прячет плашку сам». CATCHES a document of «Без подсказок» with nothing to show on
+ * «Подсказать», and a hint that differs from the one the other mode gets on the same move.
+ */
+it('carries the hint in «Без подсказок» too — `enabled` is the mode, the hint is the same', function () {
+    [$token, $id] = convDay($this);
+    $blind = convStart($this, $token, $id, 1, ['hints' => false]);
+
+    expect($blind['hints']['enabled'])->toBeFalse()
+        ->and($blind['hints']['sentence'])->toBe('У него болит поясница.')
+        ->and($blind['hints']['ref'])->toBe($blind['targets'][0]['ref'])
+        ->and($blind['hints']['scene_id'])->toBe($blind['targets'][0]['scene_id'])
+        ->and($blind['hints']['target'])->toBeNull();
+
+    $almost = convTurn($this, $token, $id, $blind['id'], 'said', 'It hurts in her lower back.');
+    expect($almost['hints']['enabled'])->toBeFalse()
+        ->and($almost['hints']['ref'])->toBe($blind['targets'][0]['ref'])
+        ->and($almost['hints']['target'])->toBe('It hurts in his lower back.');
+});

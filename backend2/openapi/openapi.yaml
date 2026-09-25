@@ -4794,7 +4794,7 @@ components:
           type: object
           required: [enabled, delay_ms, native, target, scene_id, ref, sentence]
           properties:
-            enabled: { type: boolean, description: 'False — «Без подсказок»: no chip and no «Подсказать» on the screen' }
+            enabled: { type: boolean, description: 'False — «Без подсказок»: the client hides the plate and offers «Подсказать». The hint itself travels in BOTH modes (наряд FIX-4c §2): `sentence`, `target`, `scene_id` and `ref` are the same whatever `enabled` says' }
             delay_ms: { type: integer, description: 'How long the silence is before the chip comes up by itself (кадр 37-7)' }
             native:
               type: [string, 'null']
@@ -4806,8 +4806,8 @@ components:
                 CLAUSE: no capital, no closing full stop, because the build (20) prints it inside its own «Скажи, что …».
                 Which target: the one the role's last line has just opened, else the first target of the scene not said
                 yet; after a move that said a target ALMOST, that target. It changes with every line of the role. Null
-                when hints are off, when the move is not the learner's, when every target of the scene is said, and when
-                the talk has ended.
+                when the move is not the learner's, when every target of the scene is said, and when the talk has ended —
+                in «Без подсказок» too, since FIX-4c §2.
             target:
               type: [string, 'null']
               description: 'The target''s exact line in the language of the talk («The pain is sharp when he bends.») — only on the move right after one that said it almost (наряд FIX-4 §5); else null'

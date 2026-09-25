@@ -155,13 +155,17 @@ final readonly class ConversationViews
      * ({@see ConversationLead::hint()}): one target of the scene the role's last line is said in — the one the move before
      * it said almost, then with its exact line; else the one the line opened; else the first not said. `sentence` is its
      * sentence in the learner's language as the lesson has it («У меня есть боль в плече.», наряд FIX-4b §2); `native` —
-     * the same as the clause of «Скажи, что …» («у меня есть боль в плече») for the build (20). None in «Без подсказок»,
-     * when it is not the learner's move, when the scene has nothing left to say, when the talk is over.
+     * the same as the clause of «Скажи, что …» («у меня есть боль в плече») for the build (20). None when it is not the
+     * learner's move, when the scene has nothing left to say, when the talk is over.
+     *
+     * «БЕЗ ПОДСКАЗОК» TOO (наряд FIX-4c §2): the document carries the hint whatever the mode — `hints.enabled` says the
+     * mode, and the phone hides the plate itself until «Подсказать». A phone that had to pick the target on its own in
+     * that mode did not know which one the role's line led to (`opens` is not on the wire).
      */
     private function hint(Conversation $talk, ConversationMaterialView $material): ?ConversationHintView
     {
         $line = $talk->lastAgentTurn();
-        if (! $talk->hintsEnabled() || ! $talk->awaitsLearner() || $line === null) {
+        if (! $talk->awaitsLearner() || $line === null) {
             return null;
         }
         $scene = $line->sceneId ?? $material->checkpoint($talk->currentCheckpoint())?->sceneId;
