@@ -25,8 +25,8 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  *
  * Canon: every line of the dialogue — the partner's and the learner's — every phrase, every phrase with each of its
  * other fillers and every word is voiced by the server, each line on a call of its own in the voice its speaker has in
- * the scene. What is owed is whatever the store does not have in that voice; a filler its phrase already says is not
- * owed at all.
+ * the scene — the partner in the voice fixed for the scene (наряд FIX-4c §1). What is owed is whatever the store does
+ * not have in that voice; a filler its phrase already says is not owed at all.
  *
  * Null when there is nothing to ask: no plan, no lesson yet, or no voice for the language (speech off).
  */
@@ -55,7 +55,7 @@ final readonly class SceneVoiceQueue
         $cast = $this->casts->ofScene($scene, $plan->userId());
         $keys = [];
         foreach ([Speaker::Partner, Speaker::Learner] as $speaker) {
-            $key = $this->speaker->voiceKeyFor($lang, $speaker, $cast->genderOf($speaker));
+            $key = $this->speaker->voiceKeyFor($lang, $speaker, $cast->genderOf($speaker), $cast->voiceOf($speaker));
             if ($key === null) {
                 return null;
             }
@@ -68,7 +68,7 @@ final readonly class SceneVoiceQueue
         $count = ['partner' => 0, 'learner' => 0, 'phrases' => 0, 'fillers' => 0, 'words' => 0];
         foreach (SpokenLines::dialogue($lesson) as $line) {
             if ($missing($line['ref'], $line['speaker'])) {
-                $lines[] = new LineToSay($line['ref'], $line['text'], $line['speaker'], $cast->genderOf($line['speaker']));
+                $lines[] = new LineToSay($line['ref'], $line['text'], $line['speaker'], $cast->genderOf($line['speaker']), $cast->voiceOf($line['speaker']));
                 $count[$line['speaker'] === Speaker::Partner ? 'partner' : 'learner']++;
             }
         }
@@ -129,7 +129,7 @@ final readonly class SceneVoiceQueue
         $cast = $this->casts->ofScene($scene, $plan->userId());
         $keys = [];
         foreach ([Speaker::Partner, Speaker::Learner] as $speaker) {
-            $key = $this->speaker->voiceKeyFor($plan->targetLang()->value, $speaker, $cast->genderOf($speaker));
+            $key = $this->speaker->voiceKeyFor($plan->targetLang()->value, $speaker, $cast->genderOf($speaker), $cast->voiceOf($speaker));
             if ($key === null) {
                 return [];
             }

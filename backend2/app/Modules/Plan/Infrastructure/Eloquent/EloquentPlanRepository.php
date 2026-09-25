@@ -111,6 +111,27 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
         return $row === null ? null : $this->mapper->sceneOf($row);
     }
 
+    public function sceneVoicesForUpdate(PlanId $planId): array
+    {
+        $out = [];
+        $rows = PlanSceneModel::query()
+            ->where('plan_id', $planId->value)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get(['id', 'order', 'partner_voice_gender', 'partner_voice_id']);
+        foreach ($rows as $row) {
+            $out[] = [
+                'id' => (string) $row->id,
+                'order' => (int) $row->order,
+                'gender' => VoiceGender::tryFromAny($row->partner_voice_gender),
+                'voice' => $row->partner_voice_id === null ? null : (string) $row->partner_voice_id,
+            ];
+        }
+
+        return $out;
+    }
+
     public function saveScene(PlanScene $scene): void
     {
         // The photo belongs to the photo jobs' conditional writes: the lesson job read this scene before its
@@ -179,8 +200,12 @@ final class EloquentPlanRepository implements PlanListReader, PlanRepository, Sc
             return [];
         }
         $out = [];
-        foreach (PlanSceneModel::query()->whereKey($sceneIds)->get(['id', 'user_id', 'partner_voice_gender']) as $row) {
-            $out[(string) $row->id] = ['partner' => VoiceGender::tryFromAny($row->partner_voice_gender), 'learner' => UserId::fromString((string) $row->user_id)];
+        foreach (PlanSceneModel::query()->whereKey($sceneIds)->get(['id', 'user_id', 'partner_voice_gender', 'partner_voice_id']) as $row) {
+            $out[(string) $row->id] = [
+                'partner' => VoiceGender::tryFromAny($row->partner_voice_gender),
+                'voice' => $row->partner_voice_id === null ? null : (string) $row->partner_voice_id,
+                'learner' => UserId::fromString((string) $row->user_id),
+            ];
         }
 
         return $out;

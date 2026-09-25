@@ -63,6 +63,7 @@ final readonly class ConversationMaterial
                 roleNative: $scene->partnerRoleNative(),
                 partnerGender: $scene->partnerVoiceGender() ?? PlanScene::DEFAULT_PARTNER_VOICE,
                 keyLines: self::keyLines($scene),
+                partnerVoice: $scene->partnerVoiceId(),
             );
             foreach ($terms[$scene->id()->value] ?? [] as $term) {
                 if ($term->kind() !== TermKind::Phrase) {

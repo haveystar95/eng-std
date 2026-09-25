@@ -50,6 +50,7 @@ final readonly class LessonReport
                 'learner_role_target' => $scene->learnerRoleTarget(),
                 'role_gender' => $scene->answer()?->roleGender?->value,
                 'partner_voice_gender' => $scene->partnerVoiceGender()?->value,
+                'partner_voice_id' => $scene->partnerVoiceId(),
                 'learner_voice_gender' => $data->profileGender?->value,
             ],
             'lesson' => $lesson?->toArray(),

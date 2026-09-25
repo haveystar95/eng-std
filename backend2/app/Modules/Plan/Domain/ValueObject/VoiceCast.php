@@ -21,23 +21,32 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * different male voices ({@see \App\Modules\Plan\Application\Port\LineSpeaker::voiceKeyFor()}).
  *
  * The learner's voice says everything that is the learner's: their lines of the dialogue, the day's phrases and its words.
+ *
+ * The partner has TWO voices of each gender (наряд FIX-4c §1), and which of them a scene speaks in is fixed for it
+ * ({@see PlanScene::partnerVoiceId()}): the cast carries that voice, so every reader and buyer of the scene's partner
+ * lines asks for the same one. None fixed — the pack's first voice of the gender.
  */
 final readonly class VoiceCast
 {
     /** The learner's voice while their profile says no gender — male, until the phone has asked (наряд FIX-3 §1). */
     public const DEFAULT_LEARNER = VoiceGender::Male;
 
-    private function __construct(public VoiceGender $partner, private VoiceGender $learner) {}
+    private function __construct(public VoiceGender $partner, private VoiceGender $learner, public ?string $partnerVoice = null) {}
 
-    /** The cast of a scene — its stored partner gender and the learner's own; a default for either that is not known. */
-    public static function of(?VoiceGender $partner, ?VoiceGender $learner): self
+    /**
+     * The cast of a scene — its stored partner gender and the learner's own, a default for either that is not known —
+     * and the partner's voice fixed for the scene, if one is.
+     */
+    public static function of(?VoiceGender $partner, ?VoiceGender $learner, ?string $partnerVoice = null): self
     {
-        return new self($partner ?? PlanScene::DEFAULT_PARTNER_VOICE, $learner ?? self::DEFAULT_LEARNER);
+        $voice = trim((string) $partnerVoice);
+
+        return new self($partner ?? PlanScene::DEFAULT_PARTNER_VOICE, $learner ?? self::DEFAULT_LEARNER, $voice === '' ? null : $voice);
     }
 
     public static function ofScene(PlanScene $scene, ?VoiceGender $learner): self
     {
-        return self::of($scene->partnerVoiceGender(), $learner);
+        return self::of($scene->partnerVoiceGender(), $learner, $scene->partnerVoiceId());
     }
 
     public function learner(): VoiceGender
@@ -48,5 +57,11 @@ final readonly class VoiceCast
     public function genderOf(Speaker $speaker): VoiceGender
     {
         return $speaker === Speaker::Partner ? $this->partner : $this->learner;
+    }
+
+    /** The voice fixed for the speaker in this scene — the partner's, if one is; the learner's is theirs by gender. */
+    public function voiceOf(Speaker $speaker): ?string
+    {
+        return $speaker === Speaker::Partner ? $this->partnerVoice : null;
     }
 }

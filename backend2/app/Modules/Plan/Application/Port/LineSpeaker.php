@@ -35,8 +35,11 @@ interface LineSpeaker
      */
     public function creditsFor(string $lang, array $lines): int;
 
-    /** The key a file of this voice is stored under, so a stored one is found before buying. Null — no such voice. */
-    public function voiceKeyFor(string $lang, Speaker $speaker, VoiceGender $gender): ?string;
+    /**
+     * The key a file of this voice is stored under, so a stored one is found before buying. Null — no such voice.
+     * `$voice` — the partner's voice fixed for the scene (наряд FIX-4c §1); null — the gender's first.
+     */
+    public function voiceKeyFor(string $lang, Speaker $speaker, VoiceGender $gender, ?string $voice = null): ?string;
 
     /** What the vendor account has left, as the vendor counts it; null — speech is off or the vendor would not say. */
     public function balance(): ?VoiceBalance;

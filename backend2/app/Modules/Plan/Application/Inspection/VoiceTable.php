@@ -13,6 +13,7 @@ use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
 use App\Modules\Plan\Domain\ValueObject\VoiceCast;
+use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
@@ -32,6 +33,7 @@ final readonly class VoiceTable
         private LineSpeaker $speaker,
         private PlanCallJournal $journal,
         private LanguagePacks $packs,
+        private VoiceCatalog $voices,
     ) {}
 
     /** @return list<VoiceLine> */
@@ -42,7 +44,7 @@ final readonly class VoiceTable
             return [];
         }
         $lang = $data->plan->targetLang()->value;
-        $cast = VoiceCast::of($scene->partnerVoiceGender(), $data->profileGender);
+        $cast = VoiceCast::of($scene->partnerVoiceGender(), $data->profileGender, $scene->partnerVoiceId());
         $identities = $this->identities($lang);
         $audios = $data->audiosOfScene($scene->id()->value);
         $texts = $this->voicedTexts($audios);
@@ -70,7 +72,7 @@ final readonly class VoiceTable
         $out = [];
         foreach ($wanted as [$ref, $kind, $speaker, $text]) {
             $gender = $cast->genderOf($speaker);
-            $expected = $this->speaker->voiceKeyFor($lang, $speaker, $gender);
+            $expected = $this->speaker->voiceKeyFor($lang, $speaker, $gender, $cast->voiceOf($speaker));
             $stored = array_values(array_filter($audios, static fn (InspectedAudio $a): bool => $a->lineRef === $ref));
             $own = null;
             $others = [];
@@ -100,7 +102,8 @@ final readonly class VoiceTable
     }
 
     /**
-     * Who a voice key is, by the pack's config: `role:gender` for each of the four voices of the language.
+     * Who a voice key is, by the pack's config: `role:gender` for each voice of the language — the partner's second
+     * voice of a gender as `partner:gender:2` (наряд FIX-4c §1).
      *
      * @return array<string, string>
      */
@@ -112,6 +115,14 @@ final readonly class VoiceTable
                 $key = $this->speaker->voiceKeyFor($lang, $speaker, $gender);
                 if ($key !== null) {
                     $out[$key] = $speaker->value.':'.$gender->value;
+                }
+            }
+        }
+        foreach ([VoiceGender::Female, VoiceGender::Male] as $gender) {
+            foreach (array_slice($this->voices->partnerVoices($lang, $gender), 1) as $i => $voice) {
+                $key = $this->speaker->voiceKeyFor($lang, Speaker::Partner, $gender, $voice);
+                if ($key !== null && ! isset($out[$key])) {
+                    $out[$key] = Speaker::Partner->value.':'.$gender->value.':'.($i + 2);
                 }
             }
         }

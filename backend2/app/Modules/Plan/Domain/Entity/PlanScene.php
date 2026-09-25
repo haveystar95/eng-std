@@ -31,7 +31,8 @@ use DateTimeImmutable;
  *
  * A lesson written is not yet a ready day (DAY-UI-3): the scene is `illustrating` until its photos
  * are found, and only then `ready` — a day opens with its pictures on it. The partner's voice
- * gender is the cast of the scene's two voices ({@see partnerVoiceGender()}).
+ * gender is the cast of the scene's two voices ({@see partnerVoiceGender()}), and the partner's voice itself is fixed
+ * for the scene once, when its lesson is accepted ({@see partnerVoiceId()}, наряд FIX-4c §1).
  */
 final class PlanScene
 {
@@ -71,6 +72,7 @@ final class PlanScene
         private ?VoiceGender $partnerVoiceGender,
         ?LanguagePack $targetPack,
         private ?DateTimeImmutable $builtAt = null,
+        private ?string $partnerVoiceId = null,
     ) {
         $this->lesson = $answer === null || $targetPack === null ? null : LessonAssembly::serve($answer, $id->value, $targetPack);
     }
@@ -118,12 +120,13 @@ final class PlanScene
         LanguagePack $targetPack,
         ?VoiceGender $partnerVoiceGender = null,
         ?DateTimeImmutable $builtAt = null,
+        ?string $partnerVoiceId = null,
     ): self {
         return new self(
             $id, $planId, $order, $kind, $priority, $titleNative, $titleTarget, $teachesNative, $goalsNative,
             $learnerRoleTarget, $learnerRoleNative, $partnerRoleTarget, $partnerRoleNative, $topicDescription,
             $imagePrompt, $image, $answer, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
-            $partnerVoiceGender, $targetPack, $builtAt,
+            $partnerVoiceGender, $targetPack, $builtAt, $partnerVoiceId,
         );
     }
 
@@ -137,7 +140,8 @@ final class PlanScene
 
     /**
      * The lesson is written: the scene waits for its photos (`illustrating`) and knows its voices — the
-     * partner's gender the lesson imagined for the role, the default when it said none.
+     * partner's gender the lesson imagined for the role, the default when it said none. A voice cast for another gender
+     * (a lesson written twice, the second with the role's other sex) is let go, to be cast anew ({@see castPartnerVoice()}).
      *
      * @param  LanguagePack  $targetPack  the plan's target language, which the served lesson's keys are read in
      * @param list<array{code: string, address: string, detail: string}> $findings
@@ -151,7 +155,23 @@ final class PlanScene
         $this->findings = $findings;
         $this->failReason = null;
         $this->generatedAt = $now;
-        $this->partnerVoiceGender = $answer->roleGender ?? self::DEFAULT_PARTNER_VOICE;
+        $gender = $answer->roleGender ?? self::DEFAULT_PARTNER_VOICE;
+        if ($this->partnerVoiceGender !== null && $this->partnerVoiceGender !== $gender) {
+            $this->partnerVoiceId = null;
+        }
+        $this->partnerVoiceGender = $gender;
+    }
+
+    /**
+     * THE PARTNER'S VOICE IS FIXED FOR THE SCENE ONCE (наряд FIX-4c §1): at the lesson's acceptance, by the rota of the
+     * plan's scenes ({@see \App\Modules\Plan\Domain\Service\PartnerVoiceRota}). A scene that has one keeps it —
+     * the lesson, «Вспомнить», the day's talk, the rehearsal and the review all speak the scene's partner in it.
+     */
+    public function castPartnerVoice(string $voice): void
+    {
+        if ($this->partnerVoiceId === null && trim($voice) !== '') {
+            $this->partnerVoiceId = trim($voice);
+        }
     }
 
     /**
@@ -244,6 +264,15 @@ final class PlanScene
     public function partnerVoiceGender(): ?VoiceGender
     {
         return $this->partnerVoiceGender;
+    }
+
+    /**
+     * The vendor's id of the partner's voice in this scene (наряд FIX-4c §1) — fixed when its lesson was accepted, or,
+     * for a scene voiced before, the voice it was voiced with. Null until then: the pack's first voice of the gender.
+     */
+    public function partnerVoiceId(): ?string
+    {
+        return $this->partnerVoiceId;
     }
 
     /** A build that started and never finished within `$staleAfterSeconds` counts as dead. */

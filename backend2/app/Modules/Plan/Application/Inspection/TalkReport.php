@@ -267,8 +267,9 @@ final readonly class TalkReport
                         }
                     }
                 }
-                $gender = $material->checkpoint($current)->partnerGender ?? VoiceGender::Female;
-                $out[$turn->index] = $this->speaker->voiceKeyFor($lang, Speaker::Partner, $gender);
+                $checkpoint = $material->checkpoint($current);
+                // The voice fixed for that scene (наряд FIX-4c §1) — a line said before it was fixed was said in voice 1.
+                $out[$turn->index] = $this->speaker->voiceKeyFor($lang, Speaker::Partner, $checkpoint->partnerGender ?? VoiceGender::Female, $checkpoint?->partnerVoice);
             }
             if ($turn->checkpointDone !== null) {
                 $done[] = $turn->checkpointDone;

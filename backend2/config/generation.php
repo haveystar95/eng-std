@@ -71,6 +71,11 @@ return [
          * старых (DECISIONS п. 248).
          *
          * Языка нет в таблице — голоса нет, и это не отказ: строки звучат системным синтезом.
+         *
+         * У собеседника — ВТОРОЙ голос каждого пола (`female_2`, `male_2`; наряд FIX-4c §1): голос сцены закрепляется за
+         * ней один раз, при приёме её урока (`plan_scenes.partner_voice_id`), и сцены одного пола по порядку плана
+         * чередуют голос 1 и 2 — две соседние сцены одного пола всегда звучат разными людьми. Вторые голоса Ден выбрал по
+         * образцам 25.09 (`docs/research/fix-4c/voices/`): Maisie и Caleb.
          */
         'voices' => [
             'en' => [
@@ -81,10 +86,22 @@ return [
                         'voice' => env('SPEECH_VOICE_EN_PARTNER_FEMALE', '4NejU5DwQjevnR6mh3mb'),
                         'stability' => (float) env('SPEECH_STABILITY', 0.5),
                     ],
+                    'female_2' => [
+                        'provider' => 'elevenlabs',
+                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
+                        'voice' => env('SPEECH_VOICE_EN_PARTNER_FEMALE_2', 'QtY3JBOUKEB5xzrRfOKc'),
+                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
+                    ],
                     'male' => [
                         'provider' => 'elevenlabs',
                         'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
                         'voice' => env('SPEECH_VOICE_EN_PARTNER_MALE', 'EnjklPXGBMNldCJ7jqkE'),
+                        'stability' => (float) env('SPEECH_STABILITY', 0.5),
+                    ],
+                    'male_2' => [
+                        'provider' => 'elevenlabs',
+                        'model' => env('SPEECH_MODEL', 'eleven_v3_conversational'),
+                        'voice' => env('SPEECH_VOICE_EN_PARTNER_MALE_2', 'AaOhDHYJ1XLZk74lXhdE'),
                         'stability' => (float) env('SPEECH_STABILITY', 0.5),
                     ],
                 ],

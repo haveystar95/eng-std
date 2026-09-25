@@ -12,6 +12,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use DateTimeImmutable;
 
 /**
@@ -46,6 +47,16 @@ interface PlanRepository
 
     /** One scene, its row locked for the transaction: a lesson job claims its own row, not the plan. */
     public function findSceneForUpdate(PlanSceneId $id): ?PlanScene;
+
+    /**
+     * THE PARTNER VOICES OF A PLAN'S SCENES, their rows locked for the transaction in the plan's order (наряд FIX-4c §1):
+     * what a scene's voice is cast against when its lesson is accepted. Two lessons of one plan accepted at once wait for
+     * each other here — in the same order, so they never deadlock — and the second sees the voice the first has cast, so
+     * two neighbouring scenes of one gender are never cast the same voice by a race. Asked BEFORE the scene is written.
+     *
+     * @return list<array{id: string, order: int, gender: VoiceGender|null, voice: string|null}>
+     */
+    public function sceneVoicesForUpdate(PlanId $planId): array;
 
     /**
      * The scene's own columns, and nothing else of the plan — not its photo either: the photo is written

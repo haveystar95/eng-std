@@ -364,7 +364,8 @@ it('casts a scene’s voices by the role and by the learner’s own profile: two
         ]);
 
     // A man partner and a learner who has not said: two men — two different male voices.
-    DB::table('plan_scenes')->where('id', $sceneId)->update(['partner_voice_gender' => 'male']);
+    // The role's gender and its voice go together (наряд FIX-4c §1): no voice fixed — the gender's first.
+    DB::table('plan_scenes')->where('id', $sceneId)->update(['partner_voice_gender' => 'male', 'partner_voice_id' => null]);
     $revoice();
     expect(windowVoiceKey('partner', 'male'))->not->toBe(windowVoiceKey('learner', 'male'))
         ->and($keys())->toMatchArray([

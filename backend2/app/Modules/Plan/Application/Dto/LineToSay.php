@@ -10,7 +10,7 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 /**
  * One line the voice is asked for: its ref — the file it becomes (`x3`, `x3b`, `p2`, `p2.f1`, `v5`) — its text, and
  * whose voice says it: the speaker and the gender that speaker has in this scene (TTS-2: the pack picks a voice by
- * both).
+ * both) — and, for the partner, the voice fixed for the scene (`$voice`, наряд FIX-4c §1; null — the gender's first).
  */
 final readonly class LineToSay
 {
@@ -19,5 +19,6 @@ final readonly class LineToSay
         public string $text,
         public Speaker $speaker,
         public VoiceGender $gender,
+        public ?string $voice = null,
     ) {}
 }

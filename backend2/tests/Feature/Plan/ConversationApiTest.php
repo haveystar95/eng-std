@@ -437,8 +437,10 @@ it('says the goodbye in the voice of its scene\'s role and changes the voice on 
     app()->instance(SpeechSynthesizerPort::class, new FakeSpeechSynthesizer);
     [$token, $id] = convRehearsal($this);
     $scenes = DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->pluck('id')->all();
-    DB::table('plan_scenes')->where('id', $scenes[0])->update(['partner_voice_gender' => 'female']);
-    DB::table('plan_scenes')->where('id', $scenes[1])->update(['partner_voice_gender' => 'male']);
+    // A role's gender and its voice are fixed together when the lesson is accepted (наряд FIX-4c §1): set by hand here,
+    // the voice goes with it — none fixed, the gender's first voice.
+    DB::table('plan_scenes')->where('id', $scenes[0])->update(['partner_voice_gender' => 'female', 'partner_voice_id' => null]);
+    DB::table('plan_scenes')->where('id', $scenes[1])->update(['partner_voice_gender' => 'male', 'partner_voice_id' => null]);
     $voice = static fn (VoiceGender $gender): string => app(LineSpeaker::class)->voiceKeyFor('en', Speaker::Partner, $gender);
 
     $talk = convStart($this, $token, $id, 3);
@@ -1481,4 +1483,34 @@ it('gives the learner a move per target and two more, and stops the talk on its 
         ->and($after['summary']['ended_reason'])->toBe('limit')
         ->and($moves)->toBe(5)
         ->and($after['summary']['minutes'])->toBe(5);
+});
+
+/**
+ * Canon (наряд FIX-4c §1): «голос собеседника выбирается по полу роли, а голос на пол один — регистратор и врач (обе
+ * женщины) звучат одинаково, и смена сцены не слышна». Both lessons of the fake give the role a woman: the scenes are cast
+ * F1 and F2 as their lessons are accepted, and the talk speaks each scene in its own. CATCHES two women cast one voice,
+ * the greeting of the second scene said in the first one's voice, and a talk that reads the gender and not the scene.
+ */
+it('speaks the two women of a rehearsal in two voices — the voice fixed for each scene', function () {
+    config(['generation.speech.enabled' => true, 'generation.speech.driver' => 'fake']);
+    app()->instance(SpeechSynthesizerPort::class, new FakeSpeechSynthesizer);
+    [$token, $id] = convRehearsal($this);
+    $scenes = DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->get(['id', 'partner_voice_gender', 'partner_voice_id'])->all();
+    $f1 = (string) config('generation.speech.voices.en.partner.female.voice');
+    $f2 = (string) config('generation.speech.voices.en.partner.female_2.voice');
+    $key = static fn (string $voice): ?string => app(LineSpeaker::class)->voiceKeyFor('en', Speaker::Partner, VoiceGender::Female, $voice);
+
+    $talk = convStart($this, $token, $id, 3);
+    foreach (convTargetsOf($talk, $scenes[0]->id) as $target) {
+        convTurn($this, $token, $id, $talk['id'], 'said', convLine($target));
+    }
+    $voices = DB::table('conversation_turns')->where('conversation_id', $talk['id'])->where('kind', 'agent')->orderBy('turn_index')
+        ->get(['scene_id', 'scene_event', 'audio_voice_key'])->map(static fn ($r): array => [$r->scene_id, $r->audio_voice_key])->all();
+    $of = static fn (string $scene): array => array_values(array_unique(array_column(array_filter($voices, static fn (array $v): bool => $v[0] === $scene), 1)));
+
+    expect(array_column($scenes, 'partner_voice_gender'))->toBe(['female', 'female'])
+        ->and(array_column($scenes, 'partner_voice_id'))->toBe([$f1, $f2])
+        ->and($f1)->not->toBe($f2)
+        ->and($of($scenes[0]->id))->toBe([$key($f1)])
+        ->and($of($scenes[1]->id))->toBe([$key($f2)]);
 });

@@ -262,7 +262,7 @@ final readonly class ConversationMoves
     private function write(Plan $plan, Conversation $talk, ConversationCheckpoint $scene, ConversationAgentReply $reply, int $index, array $how): void
     {
         $turnId = ConversationTurnId::generate();
-        $spoken = $this->voice->say($talk->id(), $turnId, $plan->targetLang()->value, $reply->replyTarget, $scene->partnerGender);
+        $spoken = $this->voice->say($talk->id(), $turnId, $plan->targetLang()->value, $reply->replyTarget, $scene->partnerGender, $scene->partnerVoice);
         /** @var TurnAudio|null $audio */
         $audio = $spoken['audio'];
         $cost = new TurnCost(

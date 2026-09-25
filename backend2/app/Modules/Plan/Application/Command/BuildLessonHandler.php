@@ -9,6 +9,7 @@ use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\LessonBuildService;
 use App\Modules\Plan\Application\Service\LessonRequests;
+use App\Modules\Plan\Application\Service\PartnerVoices;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
@@ -39,6 +40,11 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
  * The inputs are put together by {@see LessonRequests}: the learner's facts in TOPIC_DESCRIPTION, the learner's gender
  * as the profile says it now, the roles of the plan and the scene, and the story so far — the days before this one whose
  * lessons are written (наряд GEN-3).
+ *
+ * THE LESSON ACCEPTED CASTS THE PARTNER'S VOICE (наряд FIX-4c §1): the role's gender is known only now, and the scene is
+ * given the other voice of the nearest earlier scene of its gender ({@see PartnerVoices}). The plan's scene rows are
+ * locked first, in the plan's order — the only place this job reads past its own row — so two lessons of one plan
+ * accepted at once cannot both take the same voice.
  */
 final readonly class BuildLessonHandler
 {
@@ -52,6 +58,7 @@ final readonly class BuildLessonHandler
         private Clock $clock,
         private TransactionManager $tx,
         private LanguagePacks $packs,
+        private PartnerVoices $voices,
     ) {}
 
     public function __invoke(BuildLesson $command): void
@@ -94,14 +101,17 @@ final readonly class BuildLessonHandler
 
         $targetPack = $this->packs->for($plan->targetLang()->value);
         $nativePack = $this->packs->for($plan->nativeLang()->value);
-        $this->tx->run(function () use ($scene, $outcome, $now, $targetPack, $nativePack): void {
+        $this->tx->run(function () use ($plan, $scene, $outcome, $now, $targetPack, $nativePack): void {
             if ($outcome->lesson === null || $outcome->call === null) {
                 $scene->failLesson($outcome->failReason ?? 'unknown', $outcome->call, $outcome->findings);
                 $this->plans->saveScene($scene);
 
                 return;
             }
+            // Locked BEFORE this scene's row is written: every lesson job of the plan takes the rows in the same order.
+            $voices = $this->plans->sceneVoicesForUpdate($scene->planId());
             $scene->acceptLesson($outcome->lesson, $targetPack, $outcome->call, $outcome->findings, $now);
+            $this->voices->cast($scene, $plan->targetLang()->value, $voices);
             $this->plans->saveScene($scene);
             $served = $scene->lesson();
             if ($served !== null) {

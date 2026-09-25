@@ -39,12 +39,13 @@ interface SceneLocator
     public function missingImageCounts(?PlanId $planId): MissingImageCounts;
 
     /**
-     * Whose voices some scenes are said in — the partner's stored gender and the learner whose plan it is — one query by
-     * primary key, for a reader that holds cards and no aggregate (DAY-UI-3; наряд FIX-3 §1: the learner's voice is the
-     * learner's own, {@see \App\Modules\Plan\Application\Service\VoiceCasts}). A scene not found is simply absent.
+     * Whose voices some scenes are said in — the partner's stored gender and voice (наряд FIX-4c §1), and the learner
+     * whose plan it is — one query by primary key, for a reader that holds cards and no aggregate (DAY-UI-3; наряд FIX-3
+     * §1: the learner's voice is the learner's own, {@see \App\Modules\Plan\Application\Service\VoiceCasts}). A scene
+     * not found is simply absent.
      *
      * @param  list<string>  $sceneIds
-     * @return array<string, array{partner: VoiceGender|null, learner: UserId}>
+     * @return array<string, array{partner: VoiceGender|null, voice: string|null, learner: UserId}>
      */
     public function voicesOf(array $sceneIds): array;
 }

@@ -12,7 +12,8 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  *
  * A day's talk has one of these; the rehearsal walks them all in the plan's order, and the role
  * changes with them — the person at the reception desk is not the doctor. That is why the role and
- * the voice's gender live on the checkpoint and not on the talk.
+ * the voice live on the checkpoint and not on the talk: its gender, and the voice fixed for the scene (наряд FIX-4c §1 —
+ * two women of two scenes are two voices).
  */
 final readonly class ConversationCheckpoint
 {
@@ -32,5 +33,6 @@ final readonly class ConversationCheckpoint
         public string $roleNative,
         public VoiceGender $partnerGender,
         public array $keyLines,
+        public ?string $partnerVoice = null,
     ) {}
 }

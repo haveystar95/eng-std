@@ -38,6 +38,7 @@ final readonly class GenerationTurnSpeaker implements TurnSpeaker
         string $lang,
         string $text,
         VoiceGender $gender,
+        ?string $voice = null,
     ): array {
         if (trim($text) === '') {
             return ['audio' => null, 'latency_ms' => 0];
@@ -47,7 +48,7 @@ final readonly class GenerationTurnSpeaker implements TurnSpeaker
         try {
             $this->speaker->sayEach(
                 $lang,
-                [new LineToSay($turnId->value, $text, Speaker::Partner, $gender)],
+                [new LineToSay($turnId->value, $text, Speaker::Partner, $gender, $voice)],
                 function (string $ref, SpokenAudio $audio) use ($conversationId, $turnId, &$kept): void {
                     $kept = $this->store->put($conversationId, $turnId, $audio);
                 },

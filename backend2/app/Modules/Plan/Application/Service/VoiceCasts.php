@@ -47,7 +47,7 @@ final readonly class VoiceCasts
         $out = [];
         foreach ($this->scenes->voicesOf($sceneIds) as $sceneId => $voices) {
             $learner = $learners[$voices['learner']->value] ??= $this->learnerOf($voices['learner']);
-            $out[$sceneId] = VoiceCast::of($voices['partner'], $learner);
+            $out[$sceneId] = VoiceCast::of($voices['partner'], $learner, $voices['voice']);
         }
 
         return $out;

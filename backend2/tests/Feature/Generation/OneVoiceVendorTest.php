@@ -134,9 +134,10 @@ it('voices every language pack with ElevenLabs on eleven_v3_conversational, a ma
         }
     }
 
-    expect(array_keys($voices))->toBe(['en.partner.female', 'en.partner.male', 'en.learner.female', 'en.learner.male'])
+    // Two partner voices a gender since наряд FIX-4c §1 (scenes of one gender take turns) — six voices, every one apart.
+    expect(array_keys($voices))->toBe(['en.partner.female', 'en.partner.female_2', 'en.partner.male', 'en.partner.male_2', 'en.learner.female', 'en.learner.male'])
         ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->provider, $voices)))->toBe(['en.partner.female' => 'elevenlabs'])
         ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->model, $voices)))->toBe(['en.partner.female' => 'eleven_v3_conversational'])
-        ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $voices)))->toHaveCount(4)
+        ->and(array_unique(array_map(static fn (LineVoice $v): string => $v->voice, $voices)))->toHaveCount(6)
         ->and($voices['en.partner.female']->stability)->toBe(0.5);
 });

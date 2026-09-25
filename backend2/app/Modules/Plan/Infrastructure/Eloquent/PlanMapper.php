@@ -147,6 +147,7 @@ final class PlanMapper
             targetPack: $this->packs->for($targetLang),
             partnerVoiceGender: VoiceGender::tryFromAny($row->partner_voice_gender),
             builtAt: self::instant($row->built_at),
+            partnerVoiceId: $row->partner_voice_id,
         );
     }
 
@@ -262,6 +263,7 @@ final class PlanMapper
             'generated_at' => $scene->generatedAt()?->format(DATE_ATOM),
             'built_at' => $scene->builtAt()?->format(DATE_ATOM),
             'partner_voice_gender' => $scene->partnerVoiceGender()?->value,
+            'partner_voice_id' => $scene->partnerVoiceId(),
         ];
     }
 

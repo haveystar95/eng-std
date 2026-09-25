@@ -11,7 +11,8 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
  * THE ROLE'S VOICE FOR ONE TURN (наряд CONV-1, п. 5) — the same vendor and the same pack voice the
- * day uses for that scene's partner, bought line by line as the talk goes.
+ * day uses for that scene's partner, bought line by line as the talk goes: the voice fixed for the scene (наряд FIX-4c
+ * §1), so the registrar and the doctor of one rehearsal are two voices even when both are women.
  *
  * NOTHING BEHIND THIS PORT MAY FAIL THE TURN. A line without sound is still a line: the phone reads
  * it with its own voice, exactly as it does for a day whose voice has not been bought yet. So every
@@ -27,5 +28,6 @@ interface TurnSpeaker
         string $lang,
         string $text,
         VoiceGender $gender,
+        ?string $voice = null,
     ): array;
 }

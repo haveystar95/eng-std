@@ -83,9 +83,9 @@ final readonly class GenerationLineSpeaker implements LineSpeaker
         return $asked === [] ? 0 : $this->synthesizer->creditsFor($asked);
     }
 
-    public function voiceKeyFor(string $lang, Speaker $speaker, VoiceGender $gender): ?string
+    public function voiceKeyFor(string $lang, Speaker $speaker, VoiceGender $gender, ?string $voice = null): ?string
     {
-        $found = $this->enabled ? $this->voices->forLanguage($lang, VoiceRole::from($speaker->value), $gender) : null;
+        $found = $this->enabled ? $this->voices->forLanguage($lang, VoiceRole::from($speaker->value), $gender, $voice) : null;
 
         return $found === null ? null : self::key($found);
     }
@@ -104,7 +104,7 @@ final readonly class GenerationLineSpeaker implements LineSpeaker
 
     private function voiceOf(string $lang, LineToSay $line): ?LineVoice
     {
-        return $this->voices->forLanguage($lang, VoiceRole::from($line->speaker->value), $line->gender);
+        return $this->voices->forLanguage($lang, VoiceRole::from($line->speaker->value), $line->gender, $line->voice);
     }
 
     private static function key(LineVoice $voice): string
