@@ -25,9 +25,11 @@ interface DevSignIn
      * @param  string  $email  the QA address; created as a QA account when it does not exist yet
      * @param  string|null  $timezone  the device's IANA zone, seeded on the profile exactly as at
      *                                  Google sign-in
+     * @param  string|null  $nativeLanguage  the device's plan native, seeded on a profile this sign-in
+     *                                        creates — exactly as at Google sign-in (наряд LANG-1 §7)
      *
      * @throws DevLoginUnavailable when the gate is shut (production, or the flag is off)
      * @throws NotAQaAccount when the address belongs to an account that is not `is_qa`
      */
-    public function authenticate(string $email, string $deviceName, ?string $timezone = null): AuthResult;
+    public function authenticate(string $email, string $deviceName, ?string $timezone = null, ?string $nativeLanguage = null): AuthResult;
 }

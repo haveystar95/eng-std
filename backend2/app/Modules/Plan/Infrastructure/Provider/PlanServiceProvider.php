@@ -83,6 +83,7 @@ use App\Modules\Plan\Infrastructure\Model\ContentModelPlanBuilder;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Shared\Domain\Service\Clock;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use App\Modules\Plan\Application\Port\LearnerDevices;
 use App\Modules\Plan\Application\Port\LearnerHabits;
@@ -201,10 +202,7 @@ final class PlanServiceProvider extends ServiceProvider
             $counts = (array) config('plan.counts', []);
             /** @var list<array{text_target: string, text_native: string, pronunciation_native: string}> $kit */
             $kit = self::rescueKit();
-            $languages = array_values(array_unique(array_filter(
-                array_map(static fn (mixed $code): string => strtolower(trim(is_string($code) ? $code : '')), (array) config('plan.languages', ['en', 'de'])),
-                static fn (string $code): bool => preg_match('/^[a-z]{2,5}$/', $code) === 1,
-            )));
+            $languages = self::planLanguages((array) config('plan.languages', []));
 
             $pace = [];
             foreach ((array) config('plan.pace', DayPace::DEFAULTS) as $kind => $seconds) {
@@ -371,6 +369,34 @@ final class PlanServiceProvider extends ServiceProvider
         if (is_file($routes)) {
             Route::middleware('api')->prefix('api/v1')->group($routes);
         }
+    }
+
+    /**
+     * THE PLAN TARGETS THIS DEPLOYMENT OFFERS (наряд LANG-1 §7): `LanguageRoles::planTargets()` — the one
+     * list, in code (DECISIONS п. 145) — narrowed to the codes `plan.languages` names (`PLAN_LANGUAGES`, a
+     * list behind a flag, п. 82). The ORDER is always the targets' own, so the entry screen does not
+     * reshuffle with the env var; a configured code that is not a target is dropped rather than offered —
+     * the flag narrows, it never adds a language. An empty configuration narrows nothing: the
+     * config file already reads «no env» as every target, and an empty list here means the same.
+     *
+     * @param  array<mixed>  $configured
+     * @return list<string>
+     */
+    private static function planLanguages(array $configured): array
+    {
+        $asked = array_map(
+            static fn (mixed $code): string => LanguageRoles::normalize(is_string($code) ? $code : ''),
+            $configured,
+        );
+        $asked = array_values(array_filter($asked, static fn (string $code): bool => $code !== ''));
+        if ($asked === []) {
+            return LanguageRoles::planTargets();
+        }
+
+        return array_values(array_filter(
+            LanguageRoles::planTargets(),
+            static fn (string $code): bool => in_array($code, $asked, true),
+        ));
     }
 
     /**

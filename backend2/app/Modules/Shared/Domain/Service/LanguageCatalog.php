@@ -52,6 +52,7 @@ final class LanguageCatalog
         'ru' => ['name' => 'Russian', 'endonym' => 'Русский', 'nameRu' => 'Русский', 'flag' => '🇷🇺'],
         'en' => ['name' => 'English', 'endonym' => 'English', 'nameRu' => 'Английский', 'flag' => '🇬🇧'],
         'uk' => ['name' => 'Ukrainian', 'endonym' => 'Українська', 'nameRu' => 'Украинский', 'flag' => '🇺🇦'],
+        'be' => ['name' => 'Belarusian', 'endonym' => 'Беларуская', 'nameRu' => 'Белорусский', 'flag' => '🇧🇾'],
         'ro' => ['name' => 'Romanian', 'endonym' => 'Română', 'nameRu' => 'Румынский', 'flag' => '🇷🇴'],
         'es' => ['name' => 'Spanish', 'endonym' => 'Español', 'nameRu' => 'Испанский', 'flag' => '🇪🇸'],
         'de' => ['name' => 'German', 'endonym' => 'Deutsch', 'nameRu' => 'Немецкий', 'flag' => '🇩🇪'],

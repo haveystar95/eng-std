@@ -32,7 +32,7 @@ final readonly class SanctumDevSignIn implements DevSignIn
 {
     public function __construct(private UserViewMapper $mapper) {}
 
-    public function authenticate(string $email, string $deviceName, ?string $timezone = null): AuthResult
+    public function authenticate(string $email, string $deviceName, ?string $timezone = null, ?string $nativeLanguage = null): AuthResult
     {
         if (! DevLoginGate::isOpen((string) app()->environment(), (bool) config('qa.dev_login'))) {
             throw DevLoginUnavailable::make();
@@ -57,8 +57,9 @@ final readonly class SanctumDevSignIn implements DevSignIn
         // Same as the Google path: exactly one profile per user, created with defaults on first
         // sign-in, and the device's zone seeded so calendar-day due rounding (F19) is right from
         // the first review — a QA run is worthless if its dates are rounded in a zone the run
-        // never used.
-        $profile = $user->profile()->firstOrCreate([]);
+        // never used. And the same native seeding (наряд LANG-1 §7): the device's plan native, on the
+        // created row only — a QA account's native set by a run is not reset by the next login.
+        $profile = $user->profile()->firstOrCreate([], $nativeLanguage !== null ? ['native_language' => $nativeLanguage] : []);
         if ($timezone !== null && $timezone !== '' && $profile->timezone !== $timezone) {
             $profile->timezone = $timezone;
             $profile->save();

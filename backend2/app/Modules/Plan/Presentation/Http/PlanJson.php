@@ -117,10 +117,35 @@ final class PlanJson
         ];
     }
 
-    /** @return array{targets: list<string>} */
+    /**
+     * `GET /plans/languages` — the targets' CODES and nothing else. The exact shape build (21) on the phone
+     * reads; `GET /languages` is where the names and the natives went (наряд LANG-1 §7).
+     *
+     * @return array{targets: list<string>}
+     */
     public static function languages(PlanLanguagesView $l): array
     {
         return ['targets' => $l->targets];
+    }
+
+    /**
+     * `GET /languages` — both sides of a plan's pair, each language with what its picker draws (наряд
+     * LANG-1 §7): `{targets: [{code, endonym, flag}], natives: [{code, endonym, flag}]}`.
+     *
+     * @return array{targets: list<array{code: string, endonym: string, flag: string}>, natives: list<array{code: string, endonym: string, flag: string}>}
+     */
+    public static function languageOptions(PlanLanguagesView $l): array
+    {
+        $option = static fn (string $code): array => [
+            'code' => $code,
+            'endonym' => $l->names[$code]['endonym'] ?? $code,
+            'flag' => $l->names[$code]['flag'] ?? '',
+        ];
+
+        return [
+            'targets' => array_map($option, $l->targets),
+            'natives' => array_map($option, $l->natives),
+        ];
     }
 
     /** @return array<string, string> */

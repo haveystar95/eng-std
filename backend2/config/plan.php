@@ -84,8 +84,19 @@ return [
 
     // THE LANGUAGES A PLAN MAY BE BUILT IN — the server's list, not a client constant (owner's
     // decision, PLAN-UI-3): `GET /plans/languages` hands it to the entry screen and `POST /plans`
-    // refuses anything else. Comma-separated codes.
-    'languages' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLAN_LANGUAGES', 'en,de'))))),
+    // refuses anything else (`language_pair_invalid`, наряд LANG-1 §7).
+    //
+    // The list itself lives in code, in ONE place — `LanguageRoles::planTargets()` (DECISIONS п. 145) —
+    // and with no `PLAN_LANGUAGES` this is all of it. The env var is a NARROWING override and nothing
+    // more (a list behind a flag, п. 82): comma-separated codes, of which only the plan targets count,
+    // in the order of `planTargets()` whatever order they are written in (`PlanServiceProvider`). It
+    // cannot add a language — a code outside the targets is dropped — and a list that keeps none of them
+    // offers none. Unset or empty = every target. A change needs `app` and `horizon` restarted.
+    'languages' => (static function (): array {
+        $narrowed = array_values(array_filter(array_map('trim', explode(',', (string) env('PLAN_LANGUAGES', '')))));
+
+        return $narrowed !== [] ? $narrowed : \App\Modules\Shared\Domain\Service\LanguageRoles::planTargets();
+    })(),
 
     // Where the day's audio files land (both speakers, phrases, words) — a private disk, served by the plan's own route.
     'audio_disk' => env('PLAN_AUDIO_DISK', env('SPEECH_DISK', 'local')),

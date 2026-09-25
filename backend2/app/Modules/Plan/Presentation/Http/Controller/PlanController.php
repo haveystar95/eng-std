@@ -74,7 +74,11 @@ final class PlanController
         return response()->json(['data' => array_map(PlanJson::summary(...), $plans)]);
     }
 
-    /** 202: the row exists, the model is being asked; poll `GET /plans/{id}/build`. */
+    /**
+     * 202: the row exists, the model is being asked; poll `GET /plans/{id}/build`. The pair is not judged
+     * here: the native is the profile's, read by the command, and a pair outside the plan's lists is its 422
+     * `language_pair_invalid` (наряд LANG-1 §7).
+     */
     public function store(CreatePlanRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -108,6 +112,12 @@ final class PlanController
     public function languages(): JsonResponse
     {
         return response()->json(['data' => PlanJson::languages(($this->languages)(new GetPlanLanguages))]);
+    }
+
+    /** `GET /languages` — both sides of a plan's pair, named (наряд LANG-1 §7). */
+    public function languageOptions(): JsonResponse
+    {
+        return response()->json(['data' => PlanJson::languageOptions(($this->languages)(new GetPlanLanguages))]);
     }
 
     public function show(Request $request, string $id): JsonResponse

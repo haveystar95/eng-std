@@ -11,7 +11,8 @@ it('covers every language the capability matrix names', function () {
     // expectation out of the thing under test proves nothing.
     $taught = ['en', 'ro', 'pl', 'de', 'es', 'it', 'fr'];
     $referenceOnly = ['zh', 'ja'];
-    $support = ['ru', 'uk', 'en'];
+    // `be` joined with наряд LANG-1 §7 — a native of the learning plan (the matrix's §1.2 row).
+    $support = ['ru', 'uk', 'be', 'en'];
 
     $codes = LanguageCatalog::codes();
 
@@ -41,6 +42,14 @@ it('knows Romanian, and names the LANGUAGE rather than the country', function ()
     // while every backend copy of the table had no `ro` row at all and sent the model a bare code.
     expect(LanguageCatalog::entry('ro'))
         ->toBe(['name' => 'Romanian', 'endonym' => 'Română', 'nameRu' => 'Румынский', 'flag' => '🇷🇴']);
+});
+
+it('knows Belarusian, named in Belarusian', function () {
+    // A native of the learning plan since наряд LANG-1 §7. The endonym is the Belarusian spelling
+    // («Беларуская», with «а» after «л»), not the Russian «Белорусский», which is the nameRu column.
+    expect(LanguageCatalog::entry('be'))
+        ->toBe(['name' => 'Belarusian', 'endonym' => 'Беларуская', 'nameRu' => 'Белорусский', 'flag' => '🇧🇾']);
+    expect(LanguageName::of('be'))->toBe('Belarusian');
 });
 
 it('does not guess at a code it does not know', function () {

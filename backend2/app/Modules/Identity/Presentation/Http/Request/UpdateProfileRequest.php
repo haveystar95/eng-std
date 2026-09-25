@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Presentation\Http\Request;
 
+use App\Modules\Shared\Domain\Service\LanguageCatalog;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class UpdateProfileRequest extends FormRequest
 {
@@ -18,7 +20,11 @@ final class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'native_language' => ['sometimes', 'string', 'min:2', 'max:5'],
+            // THE LANGUAGE THE LEARNER READS — any language the catalogue names (наряд LANG-1 §7). Not the
+            // plan's nine natives: the same column is the support side of every collection and search, and
+            // that side takes any language with a name (DECISIONS п. 85). A plan asked for with a native it
+            // cannot be read in is refused by the plan itself (`language_pair_invalid`), not here.
+            'native_language' => ['sometimes', 'string', Rule::in(LanguageCatalog::codes())],
             'target_language' => ['sometimes', 'string', 'min:2', 'max:5'],
             'cefr_level' => ['sometimes', 'string', 'in:A1,A2,B1,B2,C1,C2'],
             'daily_goal' => ['sometimes', 'integer', 'min:0', 'max:100'], // 0 = introduce no new terms

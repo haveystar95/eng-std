@@ -6,7 +6,8 @@ import { LANGUAGES, LANGUAGE_CODES, langLabel } from '@/utils/languages'
 // thing under test proves nothing.
 const TAUGHT = ['en', 'ro', 'pl', 'de', 'es', 'it', 'fr']
 const REFERENCE_ONLY = ['zh', 'ja']
-const SUPPORT = ['ru', 'uk', 'en']
+// `be` joined with LANG-1 §7 — a native of the learning plan (the matrix's §1.2 row).
+const SUPPORT = ['ru', 'uk', 'be', 'en']
 
 describe('language catalogue', () => {
   it('covers every language the capability matrix names', () => {
@@ -32,6 +33,11 @@ describe('language catalogue', () => {
   it('names Romanian as the LANGUAGE, not as the country', () => {
     // `România` is the country; the endonym of the language is `Română` (QA-OBS-16).
     expect(LANGUAGES.ro.endonym).toBe('Română')
+  })
+
+  it('names Belarusian in Belarusian', () => {
+    // The endonym is «Беларуская»; «Белорусский» is the Russian name, the nameRu column.
+    expect(LANGUAGES.be).toEqual({ endonym: 'Беларуская', nameRu: 'Белорусский', nameEn: 'Belarusian', flag: '🇧🇾' })
   })
 })
 

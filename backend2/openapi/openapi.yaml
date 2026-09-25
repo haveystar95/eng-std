@@ -33,6 +33,8 @@ paths:
       tags: [Auth]
       summary: Sign in with a Google ID token
       security: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageNative'
       requestBody:
         required: true
         content:
@@ -71,6 +73,8 @@ paths:
         `not_a_qa_account`. A shut gate answers 404, not 403 — a closed door does not admit it is
         a door.
       security: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageNative'
       requestBody:
         required: true
         content:
@@ -152,19 +156,26 @@ paths:
       tags: [Auth]
       summary: Update learning preferences
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                native_language: { type: string, minLength: 2, maxLength: 5 }
-                target_language: { type: string, minLength: 2, maxLength: 5 }
-                cefr_level: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
-                daily_goal: { type: integer, minimum: 0, maximum: 100 }
-                timezone: { type: string, description: "Device IANA timezone (e.g. Europe/Kyiv); the scheduler floors day-scale due dates to the start of the user's day in it (F19). Send it at login and whenever the device zone changes. Validated as an IANA zone." }
-                onboarded: { type: boolean, description: "Send true on the onboarding-finish call to stamp profiles.onboarded_at once (never overwritten). Regular edits omit it." }
-                gender: { type: [string, 'null'], enum: [female, male, null], description: "The learner's gender (GEN-2a), optional. The lesson of a plan day is written with it (LEARNER_GENDER — the grammar of the learner's own lines in their language); null clears it and the lesson hears «unknown»." }
+        $ref: '#/components/requestBodies/ProfileUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    patch:
+      tags: [Auth]
+      summary: Update learning preferences (the same partial update as PUT)
+      description: >-
+        One action under two verbs (наряд LANG-1 §7): the order names PATCH, build (21) on the phone sends
+        PUT. Both are partial — a field left out is left alone.
+      requestBody:
+        $ref: '#/components/requestBodies/ProfileUpdate'
       responses:
         '200':
           description: OK
@@ -1829,6 +1840,13 @@ paths:
         most three plans in work (not finished, not deleted) — the fourth is 409 `plan_active_limit`
         (`meta.limit`, `meta.plans_in_work`). Nothing is written on a refusal. The learner's access is
         `GET /auth/me` → `access`.
+
+
+        THE PAIR (наряд LANG-1 §7) — asked first, before the paywall: the request names only the target; the
+        native is the learner's `profiles.native_language`. A plan is refused with 422 `language_pair_invalid`
+        (`meta.target`, `meta.native`) when the target is not in `GET /plans/languages` → `targets`, the native
+        is not one of the plan natives (`GET /languages` → `natives`: ru, uk, be, pl, ro, es, it, de, fr), or
+        the two are one language. Nothing is written. The native is changed with `PUT`/`PATCH /profile`.
       requestBody:
         required: true
         content:
@@ -1838,7 +1856,7 @@ paths:
               required: [goal_text, target_lang, level, days_total]
               properties:
                 goal_text: { type: string, minLength: 1, maxLength: 1000 }
-                target_lang: { type: string, pattern: '^[a-z]{2,5}$', description: 'One of `GET /plans/languages` → `targets`; any other code is a 422' }
+                target_lang: { type: string, pattern: '^[a-z]{2}$', description: 'One of `GET /plans/languages` → `targets`. A code of another shape is a validation 422; a two-letter code outside the list is the 422 problem `language_pair_invalid`.' }
                 level: { type: string, enum: [beginner, intermediate] }
                 days_total: { type: integer, minimum: 1, maximum: 10 }
                 event_date: { type: [string, 'null'], format: date, description: 'YYYY-MM-DD in the learner''s own calendar; null or absent = no date' }
@@ -1847,7 +1865,25 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
-        '422': { $ref: '#/components/responses/ValidationError' }
+        '422':
+          description: >-
+            Either malformed input — Laravel's validation shape (`application/json`, `{message, errors}`) — or
+            a pair no plan is built in — the problem `language_pair_invalid` (`application/problem+json`,
+            `meta {target, native}`: the target outside the plan targets, the profile's native outside the plan
+            natives, or the two equal). Nothing is written in either case.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string }
 
   /plans/current:
     get:
@@ -1892,9 +1928,12 @@ paths:
       tags: [Plans]
       summary: The languages a plan may be built in
       description: >-
-        The server's list (`config/plan.php` → `languages`, env `PLAN_LANGUAGES`; today `en`, `de`),
-        in the order the entry screen offers them. Not a client constant — `POST /plans` refuses a
-        `target_lang` outside this list with a 422.
+        The server's list, in the order the entry screen offers them: the plan targets of
+        `LanguageRoles::planTargets()` — en, pl, ro, es, it, de, fr (наряд LANG-1 §7) — narrowed by the env
+        `PLAN_LANGUAGES` when a deployment sets it (it can only narrow, and never reorders). Not a client
+        constant — `POST /plans` refuses a `target_lang` outside this list with the 422 problem
+        `language_pair_invalid`. CODES ONLY and frozen in this shape for build (21); the named list of both
+        sides is `GET /languages`.
       responses:
         '200':
           description: The list
@@ -1908,7 +1947,30 @@ paths:
                     type: object
                     required: [targets]
                     properties:
-                      targets: { type: array, items: { type: string, pattern: '^[a-z]{2,5}$' } }
+                      targets: { type: array, items: { type: string, pattern: '^[a-z]{2}$' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /languages:
+    get:
+      tags: [Plans]
+      summary: Both sides of a plan's pair, named
+      description: >-
+        What the entry screen and the native picker draw (наряд LANG-1 §7). `targets` — the same codes as
+        `GET /plans/languages` in the same order (the plan targets, narrowed by `PLAN_LANGUAGES`); `natives`
+        — the languages a plan may be read in (ru, uk, be, pl, ro, es, it, de, fr), which no flag narrows.
+        Every entry carries its endonym and flag from the server's one language catalogue. The learner's
+        own native is `GET /auth/me` → `profile.native_language`; a profile native outside `natives` is
+        allowed (collections and search are read in any catalogue language) but no plan is built for it.
+      responses:
+        '200':
+          description: The two lists
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/PlanLanguageOptions' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /plans/images/{sceneId}/{size}:
@@ -2890,6 +2952,32 @@ components:
       required: true
       description: The talk with the agent (наряд CONV-1)
       schema: { type: string, minLength: 26, maxLength: 26 }
+    AcceptLanguageNative:
+      name: Accept-Language
+      in: header
+      required: false
+      description: >-
+        The device's languages (наряд LANG-1 §7). On the sign-in that CREATES the profile, the first entry
+        whose primary subtag is a plan native (ru, uk, be, pl, ro, es, it, de, fr) becomes
+        `profile.native_language` — `uk-UA,uk;q=0.9` → uk, `be-BY` → be; none of them (English, or no
+        header) leaves the default `ru`. A profile that exists already is never changed by it.
+      schema: { type: string }
+
+  requestBodies:
+    ProfileUpdate:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              native_language: { type: string, minLength: 2, maxLength: 2, description: "The language the learner reads: any code of the server's language catalogue — ru, en, uk, be, ro, es, de, fr, it, pt, pl, tr, zh, ja (the support side of collections and search, DECISIONS п. 85); another code is a 422. A plan is built only for the plan natives (`GET /languages` → `natives`); outside them `POST /plans` answers `language_pair_invalid`." }
+              target_language: { type: string, minLength: 2, maxLength: 5 }
+              cefr_level: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
+              daily_goal: { type: integer, minimum: 0, maximum: 100 }
+              timezone: { type: string, description: "Device IANA timezone (e.g. Europe/Kyiv); the scheduler floors day-scale due dates to the start of the user's day in it (F19). Send it at login and whenever the device zone changes. Validated as an IANA zone." }
+              onboarded: { type: boolean, description: "Send true on the onboarding-finish call to stamp profiles.onboarded_at once (never overwritten). Regular edits omit it." }
+              gender: { type: [string, 'null'], enum: [female, male, null], description: "The learner's gender (GEN-2a), optional. The lesson of a plan day is written with it (LEARNER_GENDER — the grammar of the learner's own lines in their language); null clears it and the lesson hears «unknown»." }
 
   responses:
     Unauthorized:
@@ -2974,6 +3062,29 @@ components:
                   items: { type: string }
 
   schemas:
+    LanguageOption:
+      type: object
+      description: A language as a picker draws it — from the server's one catalogue (наряд LANG-1 §7).
+      required: [code, endonym, flag]
+      properties:
+        code: { type: string, pattern: '^[a-z]{2}$', description: ISO 639-1 }
+        endonym: { type: string, description: "The language's name in itself (`Беларуская`, `Polski`)" }
+        flag: { type: string, description: The emoji flag shown beside it }
+
+    PlanLanguageOptions:
+      type: object
+      description: Both sides of a plan's pair, in the order the screens offer them (`GET /languages`).
+      required: [targets, natives]
+      properties:
+        targets:
+          type: array
+          description: What a plan may teach — the same codes as `GET /plans/languages`.
+          items: { $ref: '#/components/schemas/LanguageOption' }
+        natives:
+          type: array
+          description: What a plan may be read in — the learner's own language.
+          items: { $ref: '#/components/schemas/LanguageOption' }
+
     PlanVersions:
       type: object
       description: Which server build and which prompt files are answering — stamped on every plan and lesson.
@@ -5148,7 +5259,7 @@ components:
     Profile:
       type: object
       properties:
-        native_language: { type: string }
+        native_language: { type: string, description: "A code of the server's language catalogue (see PUT /profile). Seeded on the first sign-in from Accept-Language when that names a plan native, else `ru` (наряд LANG-1 §7)." }
         target_language: { type: string }
         cefr_level: { type: string }
         daily_goal: { type: integer }

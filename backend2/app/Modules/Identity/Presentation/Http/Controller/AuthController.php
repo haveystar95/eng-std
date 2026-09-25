@@ -16,6 +16,7 @@ use App\Modules\Identity\Application\Query\GetAccessHandler;
 use App\Modules\Identity\Presentation\Http\Request\DevLoginRequest;
 use App\Modules\Identity\Presentation\Http\Request\GoogleLoginRequest;
 use App\Modules\Identity\Presentation\Http\Resource\UserResource;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
@@ -43,6 +44,7 @@ final class AuthController
             $request->string('id_token')->toString(),
             $deviceName !== '' ? $deviceName : 'mobile',
             $timezone !== '' ? $timezone : null,
+            self::deviceNative($request),
         );
 
         return response()->json([
@@ -69,6 +71,7 @@ final class AuthController
             $request->string('email')->toString(),
             $deviceName !== '' ? $deviceName : 'simulator',
             $timezone !== '' ? $timezone : null,
+            self::deviceNative($request),
         );
 
         return response()->json([
@@ -111,6 +114,17 @@ final class AuthController
         $request->setUserResolver(static fn (): null => null);
 
         return response()->noContent();
+    }
+
+    /**
+     * The device's language as a first sign-in's native (наряд LANG-1 §7): the first entry of
+     * `Accept-Language` that a plan may be read in, or null. `getLanguages()` and not
+     * `getPreferredLanguage()` — the latter, asked with a list, answers the list's FIRST entry when nothing
+     * matches, and «nothing matched» has to stay null here so the column keeps its own default.
+     */
+    private static function deviceNative(Request $request): ?string
+    {
+        return LanguageRoles::planNativeFromLocales(array_values($request->getLanguages()));
     }
 
     private function actorId(Request $request): UserId

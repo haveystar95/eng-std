@@ -25,6 +25,8 @@ Route::middleware('throttle:60,1')->group(function (): void {
         Route::delete('/auth/me', [AuthController::class, 'deleteAccount']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::put('/profile', [ProfileController::class, 'update']);
+        // The same partial update under the verb the order names (наряд LANG-1 §7); build (21) sends PUT.
+        Route::patch('/profile', [ProfileController::class, 'update']);
 
         // Devices (PLAN-UI-3): the push address and «I'm here». All three answer 204.
         Route::put('/devices/push-token', [DeviceController::class, 'putPushToken']);

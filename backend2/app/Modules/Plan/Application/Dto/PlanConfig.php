@@ -20,7 +20,9 @@ final readonly class PlanConfig
     /**
      * @param  array<string, array{vocabulary: int, dialogue: int}>  $counts  by level
      * @param  list<array{text_target: string, text_native: string, pronunciation_native: string}>  $rescueKit
-     * @param  list<string>  $languages  target language codes, in the order the entry screen offers them
+     * @param  list<string>  $languages  the EFFECTIVE plan targets — `LanguageRoles::planTargets()` narrowed by
+     *                                  `plan.languages` (наряд LANG-1 §7), in the order the entry screen offers
+     *                                  them; what `GET /plans/languages` lists and `POST /plans` accepts
      * @param  array<string, int>  $pace  seconds per card by kind value (`plan.pace`)
      * @param  int  $phrasesBudget  seconds «Фразы» may take before the trimming ladder runs (`plan.phrases_budget`)
      * @param  int  $slotJudgeDailyCap  slot-judge model calls per learner per local day (`plan.slot_judge.daily_cap`)
@@ -30,7 +32,8 @@ final readonly class PlanConfig
         public array $counts,
         public int $buildStaleSeconds,
         public array $rescueKit,
-        public array $languages = ['en', 'de'],
+        // No default: a copy of the list here is the second place it would have to be kept in (п. 145).
+        public array $languages,
         public array $pace = DayPace::DEFAULTS,
         public int $phrasesBudget = PhrasesStage::BUDGET,
         public int $slotJudgeDailyCap = 60,

@@ -25,6 +25,9 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::get('/plans/versions', [PlanController::class, 'versions']);
     Route::get('/plans/languages', [PlanController::class, 'languages']);
     Route::get('/plans/audio/{audioId}', [PlanAudioController::class, 'show']);
+    // Both sides of a plan's pair, named (наряд LANG-1 §7): the entry screen's targets and the natives the
+    // learner's own language is picked from. `/plans/languages` stays as it was for build (21).
+    Route::get('/languages', [PlanController::class, 'languageOptions']);
 
     Route::get('/plans', [PlanController::class, 'index']);
     Route::post('/plans', [PlanController::class, 'store']);

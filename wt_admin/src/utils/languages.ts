@@ -30,6 +30,8 @@ export const LANGUAGES: Record<string, LanguageEntry> = {
   ru: { endonym: 'Русский', nameRu: 'Русский', nameEn: 'Russian', flag: '🇷🇺' },
   en: { endonym: 'English', nameRu: 'Английский', nameEn: 'English', flag: '🇬🇧' },
   uk: { endonym: 'Українська', nameRu: 'Украинский', nameEn: 'Ukrainian', flag: '🇺🇦' },
+  // A native of the learning plan since LANG-1 §7 — the same row, in the same place, as backend2's catalogue.
+  be: { endonym: 'Беларуская', nameRu: 'Белорусский', nameEn: 'Belarusian', flag: '🇧🇾' },
   ro: { endonym: 'Română', nameRu: 'Румынский', nameEn: 'Romanian', flag: '🇷🇴' },
   es: { endonym: 'Español', nameRu: 'Испанский', nameEn: 'Spanish', flag: '🇪🇸' },
   de: { endonym: 'Deutsch', nameRu: 'Немецкий', nameEn: 'German', flag: '🇩🇪' },

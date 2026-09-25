@@ -23,7 +23,7 @@ final readonly class SanctumGoogleSignIn implements GoogleSignIn
         private UserViewMapper $mapper,
     ) {}
 
-    public function authenticate(string $idToken, string $deviceName, ?string $timezone = null): AuthResult
+    public function authenticate(string $idToken, string $deviceName, ?string $timezone = null, ?string $nativeLanguage = null): AuthResult
     {
         $identity = $this->verifier->verify($idToken);
         if ($identity === null) {
@@ -40,7 +40,12 @@ final readonly class SanctumGoogleSignIn implements GoogleSignIn
         // Every user has exactly one profile; create it with defaults on first sign-in. Seed the
         // timezone so calendar-day due rounding (F19) works from the very first review; refresh it
         // on later logins too (the device may have moved), but never blank a stored zone.
-        $profile = $user->profile()->firstOrCreate([]);
+        //
+        // The native language is the other way round (наряд LANG-1 §7): the device's language seeds it ONLY
+        // in the row this sign-in creates — `firstOrCreate`'s values are written on the insert and never on a
+        // found row — because a stored native is the learner's own choice, and a phone switched to Polish
+        // for a holiday must not turn their Russian plan screens Polish on the next login.
+        $profile = $user->profile()->firstOrCreate([], $nativeLanguage !== null ? ['native_language' => $nativeLanguage] : []);
         if ($timezone !== null && $timezone !== '' && $profile->timezone !== $timezone) {
             $profile->timezone = $timezone;
             $profile->save();

@@ -17,7 +17,7 @@ Controllers may not touch Eloquent/Infrastructure, so the parts that do (Eloquen
 | `GoogleTokenVerifier` | `Adapter/GoogleAuthTokenVerifier` (`google/auth`) | sign-in |
 | `GoogleSignIn` | `Auth/SanctumGoogleSignIn` | `POST /auth/google` |
 | `UserReader` | `Eloquent/EloquentUserReader` | `GET /auth/me` |
-| `ProfileUpdater` | `Eloquent/EloquentProfileUpdater` | `PUT /profile` |
+| `ProfileUpdater` | `Eloquent/EloquentProfileUpdater` | `PUT`/`PATCH /profile` |
 | `SignOut` | `Auth/SanctumSignOut` | `POST /auth/logout` |
 | `PushTokenStore` | `Eloquent/EloquentPushTokenStore` | `PUT`/`DELETE /devices/push-token`; `GetPushTokens` |
 | `VisitLog` | `Eloquent/EloquentVisitLog` | `POST /devices/visit`; `GetUsualVisitTime` |
@@ -69,6 +69,11 @@ Native Google Sign-In on the device yields an ID token → `POST /api/v1/auth/go
 → verify audience against accepted client ids → upsert user (keyed by Google `sub`) →
 ensure a `Profile` exists → issue a per-device Sanctum token. Idempotent across logins.
 
+The profile a sign-in CREATES (Google or the QA door) takes its `native_language` from the device (наряд LANG-1 §7):
+the first `Accept-Language` entry whose primary subtag is a plan native (`LanguageRoles::planNativeFromLocales` —
+`uk-UA` → `uk`, `be-BY` → `be`); none of them (English, or no header) leaves the column's `ru`. A profile that exists
+already is never touched by it — the stored native is the learner's choice.
+
 ## Endpoints
 
 - `POST /api/v1/auth/google` — `{id_token, device_name?}` → `{token, user}`. Invalid token → 422.
@@ -76,7 +81,9 @@ ensure a `Profile` exists → issue a per-device Sanctum token. Idempotent acros
 - `DELETE /api/v1/auth/me` — the account and everything of it (204); a repeat that got past the token check before the
   first deletion committed — 404 `account_not_found`; with the same (revoked) token — 401.
 - `POST /api/v1/auth/logout` — revokes the current token (204).
-- `PUT /api/v1/profile` — partial update of learning preferences.
+- `PUT /api/v1/profile` (and `PATCH`, the same action — LANG-1 §7) — partial update of learning preferences;
+  `native_language` is any code of `LanguageCatalog` (the support side of collections and search, п. 85), not only
+  the plan's natives.
 - `PUT /api/v1/devices/push-token` — `{platform: ios, token, locale?, timezone?}` → 204; upsert by
   (platform, token), a token seen under another account moves to the caller.
 - `DELETE /api/v1/devices/push-token` — `{platform, token}` → 204; only the caller's own row.
