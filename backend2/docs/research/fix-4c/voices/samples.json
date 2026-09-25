@@ -1,0 +1,118 @@
+{
+    "line": "Good morning. What brings you in today? Take a seat, please.",
+    "model": "eleven_v3_conversational",
+    "stability": 0.5,
+    "account_before": {
+        "status": 200,
+        "tier": "starter",
+        "character_count": 14215,
+        "character_limit": 39224
+    },
+    "account_after": {
+        "status": 200,
+        "tier": "starter",
+        "character_count": 14260,
+        "character_limit": 39224
+    },
+    "characters": 480,
+    "credits": 120,
+    "usd": 0.024,
+    "samples": [
+        {
+            "gender": "female",
+            "id": "OZ0L6eISlOejga3XjDFt",
+            "name": "Talia - Warm Soft Guide",
+            "source": "замена Default «Sarah»",
+            "status": 200,
+            "file": "female-1-talia.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "8ttcD92swDPl3UXNBzob",
+            "error": null
+        },
+        {
+            "gender": "female",
+            "id": "QtY3JBOUKEB5xzrRfOKc",
+            "name": "Maisie - Friendly Casual Neighbor",
+            "source": "замена Default «Matilda»",
+            "status": 200,
+            "file": "female-2-maisie.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "6mbZHSN5kjkXTwLQwGA9",
+            "error": null
+        },
+        {
+            "gender": "female",
+            "id": "g7LVvkPWALzPxOQbF6OE",
+            "name": "Jade - Upbeat and Natural",
+            "source": "замена Default «Jessica»",
+            "status": 200,
+            "file": "female-3-jade.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "hopgi9D9MQDLBpL1AjEO",
+            "error": null
+        },
+        {
+            "gender": "female",
+            "id": "aMSt68OGf4xUZAnLpTU8",
+            "name": "Juniper - Grounded and Professional",
+            "source": "библиотека, страница «conversational» (ConvoAI)",
+            "status": 200,
+            "file": "female-4-juniper.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "KN0swNjprU1ge25jX4rX",
+            "error": null
+        },
+        {
+            "gender": "male",
+            "id": "l7kNoIfnJKPg7779LI2t",
+            "name": "Eddie - Helpful and Comforting",
+            "source": "замена Default «Eric»",
+            "status": 200,
+            "file": "male-1-eddie.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "hNuNRfJn6slAiGErovkq",
+            "error": null
+        },
+        {
+            "gender": "male",
+            "id": "cymHWdiF8WjUCg6vvFxx",
+            "name": "Kellan - Casual Friendly Speaker",
+            "source": "замена Default «Callum»",
+            "status": 200,
+            "file": "male-2-kellan.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "etAmFWHQDL8hspxn5yWt",
+            "error": null
+        },
+        {
+            "gender": "male",
+            "id": "AaOhDHYJ1XLZk74lXhdE",
+            "name": "Caleb - Trusted Guide",
+            "source": "замена Default «Chris»",
+            "status": 200,
+            "file": "male-3-caleb.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "XdiZ8NCO7Dj7jdcTx1Ew",
+            "error": null
+        },
+        {
+            "gender": "male",
+            "id": "FrS6cKLB1wg4WYgPa9GW",
+            "name": "Wyatt - Seasoned Mentor",
+            "source": "замена Default «Bill»",
+            "status": 200,
+            "file": "male-4-wyatt.mp3",
+            "characters": 60,
+            "credits": 15,
+            "request_id": "zKmIudrgouQ7PBWiLRLn",
+            "error": null
+        }
+    ]
+}

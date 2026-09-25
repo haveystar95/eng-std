@@ -1,0 +1,54 @@
+окно дня 3 · sources:
+   01M2QRHF9M86KAM8JW8XYRAWDR «Запись к врачу» · partner_gender female
+   01M2QRHF9M69AMBE2XGD18KQ8P «Приём у врача» · partner_gender female
+   ряд разговора: «Поговори с регистратором и врачом»
+
+разговор 01M3CF7Z9J75T0EK4V1648XVSF · «Поговори с регистратором и врачом» · ходов 9
+ 1 РОЛЬ  [начало «Запись к врачу»] Hello. What seems to be the problem with his back?
+         Здравствуйте. Что у него с спиной?
+   hints: enabled false · «У него болит поясница.» · Запись к врачу/p1
+ 2 УЧЕНИК It hurts in his lower back. · сказано: p1
+ 3 РОЛЬ  When did it start?
+         Когда это началось?
+   hints: enabled false · «Началось три дня назад.» · Запись к врачу/p2
+ 4 УЧЕНИК It started two days ago. · сказано: p2
+ 5 РОЛЬ  Is the pain sharp, or more of a dull ache when he bends?
+         Боль острая или больше тупая, когда он наклоняется?
+   hints: enabled false · «Боль острая, когда он наклоняется.» · Запись к врачу/p3
+   GET документа: enabled false · «Боль острая, когда он наклоняется.» · p3
+ 6 УЧЕНИК The pain is sharp when she bends.
+ 7 РОЛЬ  Does he have a fever?
+         У него температура?
+   hints: enabled false · «Боль острая, когда он наклоняется.» · точная строка «The pain is sharp when he bends.» · Запись к врачу/p3
+ 8 УЧЕНИК The pain is sharp when he bends. · сказано: p3
+ 9 РОЛЬ  Thank you. He doesn't have a fever, right?
+         Спасибо. У него нет температуры, верно?
+   hints: enabled false · «Температуры у него нет.» · Запись к врачу/p4
+10 УЧЕНИК He doesn't have a fever. · сказано: p4
+11 РОЛЬ  [прощание «Запись к врачу»] Thank you. Please see a doctor if it gets worse.
+         Спасибо. Пожалуйста, обратитесь к врачу, если станет хуже.
+12 РОЛЬ  [начало «Приём у врача»] Good morning. What seems to be the problem with your son today?
+         Доброе утро. Что случилось с вашим сыном сегодня?
+   hints: enabled false · «У него температура и болит горло.» · Приём у врача/p1
+13 УЧЕНИК He has a fever and a sore throat. · сказано: p1
+14 РОЛЬ  How long has he had these symptoms?
+         Как долго у него эти симптомы?
+   hints: enabled false · «Он болеет уже три дня.» · Приём у врача/p2
+15 УЧЕНИК He's been sick for three days. I gave him paracetamol. · сказано: p2 · ещё вспомнил: p4
+16 РОЛЬ  Yes, thank you. The paracetamol is fine.
+         Да, спасибо. Парацетамол подходит.
+   hints: enabled false · «Мне сказать вам его температуру?» · Приём у врача/p3
+17 УЧЕНИК Should I tell you his temperature? · сказано: p3
+18 РОЛЬ  [прощание «Приём у врача»] No, that's okay. We can finish here. Goodbye.
+         Нет, это не нужно. Мы можем закончить здесь. До свидания.
+
+итог: ended · {"ended_reason":"natural","ended_by_limit":false,"phrases_used":7,"phrases_total":7,"extra_said":["p4"]}
+
+проверки:
+ ✅ §3 sources[].partner_gender у обеих сцен
+ ✅ §4 ряд окна — «Поговори с регистратором и врачом»
+ ✅ §4 заголовок разговора — «Поговори с регистратором и врачом»
+ ✅ §2 GET документа: hints при enabled=false
+ ✅ §2 hints на каждом ходе при enabled=false
+ ✅ §6 у каждой реплики роли перевод на родном
+wrote live/live-rehearsal.json
