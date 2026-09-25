@@ -978,6 +978,9 @@ it('names the talk and counts its scenes on the talk\'s row of the window', func
     planShiftDay($id);
     planOpenDay($this, $token, $id, 3);
     expect($row(3)['scenes_count'])->toBe(2)
+        // Canon (наряд FIX-4c §4): «две — „Поговори с регистратором и врачом"» — every role of the talk, in its order.
+        ->and($row(3)['talk_title_native'])->toBe('Поговори с регистратором и врачом')
+        ->and(convStart($this, $token, $id, 3)['talk_title_native'])->toBe('Поговори с регистратором и врачом')
         // A card row carries neither.
         ->and($this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/plans/{$id}/days/3")->json('data.window.stages.0.talk_title_native'))->toBeNull();
 });

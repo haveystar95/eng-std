@@ -35,7 +35,8 @@ use App\Modules\Plan\Domain\ValueObject\TermKind;
  * The phrases are the plan's own phrases of those scenes as CONSTRUCTIONS (наряд FIX-3 §6): the frame with its window,
  * the value the lesson says it with and the lesson's sentence of it — the learner came to say the frame with a value of
  * their own, and the talk ticks it by {@see \App\Modules\Plan\Domain\Service\FrameJudge} (наряд FIX-4 §2). Four to seven
- * of them are the talk's targets (наряд CONV-2, п. 10), and its entry title is «Поговори с …» the role it opens with (п. 12).
+ * of them are the talk's targets (наряд CONV-2, п. 10), and its entry title is «Поговори с …» the role it opens with (п. 12)
+ * — every role of it, in the order it walks them, for a talk over several scenes (наряд FIX-4c §4).
  */
 final readonly class ConversationMaterial
 {
@@ -89,7 +90,7 @@ final readonly class ConversationMaterial
         return new ConversationMaterialView(
             $checkpoints,
             $phrases,
-            (new NativeStrings($plan->nativeLang()->value))->talkTitle($checkpoints[0]->roleNative),
+            (new NativeStrings($plan->nativeLang()->value))->talkTitle(array_map(static fn (ConversationCheckpoint $c): string => $c->roleNative, $checkpoints)),
             $plan->targetLang()->value,
         );
     }

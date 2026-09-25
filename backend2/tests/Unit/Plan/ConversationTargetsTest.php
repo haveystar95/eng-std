@@ -92,11 +92,35 @@ it('names the talk «Поговори с врачом», by rule, and says «с 
         'Иностранец' => 'Поговори с собеседником', 'Дикарь' => 'Поговори с собеседником', '' => 'Поговори с собеседником',
     ];
     foreach ($roles as $role => $title) {
-        expect($ru->talkTitle($role))->toBe($title, $role);
+        expect($ru->talkTitle([(string) $role]))->toBe($title, (string) $role);
     }
 
-    expect((new NativeStrings('uk'))->talkTitle('Лікар'))->toBe('Поговори з лікарем')
-        ->and((new NativeStrings('uk'))->talkTitle('Співробітник банку'))->toBe('Поговори зі співробітником банку')
-        ->and((new NativeStrings('en'))->talkTitle('Doctor'))->toBe('Talk to the doctor')
-        ->and((new NativeStrings('en'))->talkTitle('HR manager'))->toBe('Talk to the HR manager');
+    expect((new NativeStrings('uk'))->talkTitle(['Лікар']))->toBe('Поговори з лікарем')
+        ->and((new NativeStrings('uk'))->talkTitle(['Співробітник банку']))->toBe('Поговори зі співробітником банку')
+        ->and((new NativeStrings('en'))->talkTitle(['Doctor']))->toBe('Talk to the doctor')
+        ->and((new NativeStrings('en'))->talkTitle(['HR manager']))->toBe('Talk to the HR manager')
+        ->and($ru->talkTitle([]))->toBe('Поговори с собеседником');
+});
+
+/**
+ * Canon (наряд FIX-4c §4): «talk_title_native: одна сцена — как сейчас; две — „Поговори с регистратором и врачом"; три и
+ * больше — „Поговори с регистратором, врачом и медсестрой". Формы ролей — из того же источника, что даёт нынешнее „с врачом"».
+ * The preposition is the first role's and said once; a role two scenes share is said once; a role the rule cannot inflect
+ * makes the whole title plain — «с собеседниками» for several. CATCHES the rehearsal's doctor lost from its title
+ * («Поговори с регистратором»), «с регистратором и с врачом», «со стоматологом» turned «с стоматологом» behind a first
+ * role, and a guessed ending among good ones.
+ */
+it('names a talk over several scenes by every role: «Поговори с регистратором и врачом», «…, врачом и медсестрой»', function () {
+    $ru = new NativeStrings('ru');
+
+    expect($ru->talkTitle(['Врач']))->toBe('Поговори с врачом')
+        ->and($ru->talkTitle(['Регистратор', 'Врач']))->toBe('Поговори с регистратором и врачом')
+        ->and($ru->talkTitle(['Регистратор', 'Врач', 'Медсестра']))->toBe('Поговори с регистратором, врачом и медсестрой')
+        ->and($ru->talkTitle(['Регистратор', 'Врач', 'Фармацевт', 'Медсестра']))->toBe('Поговори с регистратором, врачом, фармацевтом и медсестрой')
+        ->and($ru->talkTitle(['Стоматолог', 'Врач']))->toBe('Поговори со стоматологом и врачом')
+        ->and($ru->talkTitle(['Врач', 'Регистратор', 'Врач']))->toBe('Поговори с врачом и регистратором')
+        ->and($ru->talkTitle(['Врач', 'Врач']))->toBe('Поговори с врачом')
+        ->and($ru->talkTitle(['Регистратор', 'Иностранец']))->toBe('Поговори с собеседниками')
+        ->and((new NativeStrings('uk'))->talkTitle(['Лікар', 'Секретар']))->toBe('Поговори з лікарем і секретарем')
+        ->and((new NativeStrings('en'))->talkTitle(['Receptionist', 'Doctor', 'Nurse']))->toBe('Talk to the receptionist, the doctor and the nurse');
 });

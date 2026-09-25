@@ -3297,7 +3297,7 @@ components:
         minutes_left: { type: [integer, 'null'], description: 'By the pace of the stage (`DayPace`), rounded up; on the talk''s row — the talk''s own budget' }
         minutes: { type: integer, minimum: 0, description: 'What the WHOLE stage is reckoned to take, in whole minutes, rounded up — «около 4 минут» on the rows of a day not opened yet (кадры 37-1, 37-2). A stage of cards: every card of it by the PLAN''s price list (`plans.pace`, the snapshot of `plan.pace` measured on the phone, наряд FIX-3 §2; «Скажи целиком» per round, the «Вспомнить» sheet per scene, its lines said aloud per card); the talk''s row: its own budget, `plan.conversation.minutes` — 5 on a scene day, 6 on the rehearsal, 4 on a review. 0 where the day has no cards to price yet' }
         share: { type: number, minimum: 0, maximum: 1, description: 'The row''s bar: 1 done, 0 locked, answered/total current' }
-        talk_title_native: { type: [string, 'null'], description: 'The talk''s row only (наряд CONV-2, п. 12): the entry title «Поговори с врачом» — the role the talk opens with, in the instrumental, inflected by the server (кадр 37-5); «Поговори с собеседником» when the role cannot be inflected with certainty. Null on every card row' }
+        talk_title_native: { type: [string, 'null'], description: 'The talk''s row only (наряд CONV-2, п. 12): the entry title «Поговори с врачом» — the role the talk opens with, in the instrumental, inflected by the server (кадр 37-5); a talk over several scenes — every role in the order it walks them, the preposition once (наряд FIX-4c §4): «Поговори с регистратором и врачом», «Поговори с регистратором, врачом и медсестрой»; «Поговори с собеседником» («…с собеседниками» for several) when a role cannot be inflected with certainty. Null on every card row' }
         scenes_count: { type: [integer, 'null'], minimum: 0, description: 'The talk''s row only (наряд CONV-2, п. 12): how many scenes the talk walks — 1 on a scene day, all the ready scenes on the rehearsal («Разговор целиком · 3 сцены»), the repeated days'' scenes on a review day. Null on every card row' }
         targets:
           type: [array, 'null']
@@ -4738,7 +4738,7 @@ components:
             ended of its own, and this one began after it. A replay walks nothing and gives nothing back tomorrow
             (`summary.returns_tomorrow` false) — the day's result is the talk that walked the stage, and the day
             closes on it whether the replay is finished or not.
-        talk_title_native: { type: [string, 'null'], description: '«Поговори с врачом» — the entry title (кадр 37-5), the same string as the talk''s row of the window (наряд CONV-2, п. 12)' }
+        talk_title_native: { type: [string, 'null'], description: '«Поговори с врачом» — the entry title (кадр 37-5), the same string as the talk''s row of the window (наряд CONV-2, п. 12); a talk over several scenes names every role in the order it walks them (наряд FIX-4c §4): «Поговори с регистратором и врачом», «Поговори с регистратором, врачом и медсестрой»' }
         type:
           type: string
           enum: [day, rehearsal, review]

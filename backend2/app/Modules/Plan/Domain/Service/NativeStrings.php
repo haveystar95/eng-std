@@ -100,16 +100,17 @@ final class NativeStrings
     ];
 
     /**
-     * THE TALK'S TITLE (кадр 37-5, наряд CONV-2, п. 12): «Поговори с врачом». `{with}` is the preposition, `{role}` the role
-     * in the instrumental ({@see InstrumentalRole}); `anyone` is the title when the role cannot be inflected with
-     * certainty — plain, and never a wrong ending.
+     * THE TALK'S TITLE (кадр 37-5, наряд CONV-2, п. 12; several scenes — наряд FIX-4c §4): «Поговори с врачом», «Поговори с
+     * регистратором и врачом». `{with}` is the preposition, said once before the first role, `{roles}` the roles in the
+     * instrumental ({@see InstrumentalRole}) joined by `and`; `anyone` / `anyones` is the title when a role cannot be
+     * inflected with certainty — plain, and never a wrong ending.
      *
-     * @var array<string, array{with: string, anyone: string}>
+     * @var array<string, array{with: string, and: string, anyone: string, anyones: string}>
      */
     private const TALK_TITLE = [
-        'ru' => ['with' => 'Поговори {with} {role}', 'anyone' => 'Поговори с собеседником'],
-        'uk' => ['with' => 'Поговори {with} {role}', 'anyone' => 'Поговори зі співрозмовником'],
-        'en' => ['with' => 'Talk to the {role}', 'anyone' => 'Talk to your partner'],
+        'ru' => ['with' => 'Поговори {with} {roles}', 'and' => 'и', 'anyone' => 'Поговори с собеседником', 'anyones' => 'Поговори с собеседниками'],
+        'uk' => ['with' => 'Поговори {with} {roles}', 'and' => 'і', 'anyone' => 'Поговори зі співрозмовником', 'anyones' => 'Поговори зі співрозмовниками'],
+        'en' => ['with' => 'Talk to {roles}', 'and' => 'and', 'anyone' => 'Talk to your partner', 'anyones' => 'Talk to your partners'],
     ];
 
     /**
@@ -270,28 +271,55 @@ final class NativeStrings
     }
 
     /**
-     * «Поговори с врачом» — the entry title of the talk, from the role of the scene it opens with, in the learner's
-     * language. A role that cannot be inflected with certainty — or none — gives «Поговори с собеседником».
+     * «Поговори с врачом» — the entry title of the talk, from the roles of the scenes it walks, in the order it walks
+     * them, in the learner's language (наряд FIX-4c §4): one scene — «Поговори с врачом»; two — «Поговори с регистратором и
+     * врачом»; three or more — «Поговори с регистратором, врачом и медсестрой». The preposition is said once, by the
+     * first role («со стоматологом и врачом»); a role two scenes share is said once. A role that cannot be inflected with
+     * certainty — or none at all — gives «Поговори с собеседником», and «Поговори с собеседниками» when the talk has
+     * several people: never a wrong ending.
+     *
+     * @param  list<string>  $rolesNative
      */
-    public function talkTitle(?string $roleNative): string
+    public function talkTitle(array $rolesNative): string
     {
         $titles = self::TALK_TITLE[$this->table()];
-        $role = trim((string) $roleNative);
-        if ($role === '') {
-            return $titles['anyone'];
-        }
-        if ($this->table() === 'en') {
-            $first = mb_substr($role, 0, 1);
-            $second = mb_substr($role, 1, 1);
-            $lowered = $second !== '' && mb_strtolower($second) === $second ? mb_strtolower($first).mb_substr($role, 1) : $role;
+        $forms = [];
+        $people = [];
+        $unsure = false;
+        foreach ($rolesNative as $roleNative) {
+            $role = trim((string) preg_replace('/\s+/u', ' ', $roleNative));
+            if ($role === '') {
+                continue;
+            }
+            $people[mb_strtolower($role)] = true;
+            $form = $this->table() === 'en' ? 'the '.self::lowerFirst($role) : InstrumentalRole::of($this->table(), $role);
+            if ($form === null) {
+                $unsure = true;
 
-            return strtr($titles['with'], ['{role}' => $lowered]);
+                continue;
+            }
+            $forms[mb_strtolower($form)] ??= $form;
         }
-        $instrumental = InstrumentalRole::of($this->table(), $role);
+        if ($people === [] || $unsure) {
+            return count($people) > 1 ? $titles['anyones'] : $titles['anyone'];
+        }
+        $forms = array_values($forms);
+        $last = (string) array_pop($forms);
+        $roles = $forms === [] ? $last : implode(', ', $forms).' '.$titles['and'].' '.$last;
 
-        return $instrumental === null
-            ? $titles['anyone']
-            : strtr($titles['with'], ['{with}' => InstrumentalRole::with($this->table(), $instrumental), '{role}' => $instrumental]);
+        return strtr($titles['with'], [
+            '{with}' => $this->table() === 'en' ? '' : InstrumentalRole::with($this->table(), $forms[0] ?? $last),
+            '{roles}' => $roles,
+        ]);
+    }
+
+    /** «Doctor» → «doctor», but «HR manager» keeps its capitals: a first letter goes lower only before a lower one. */
+    private static function lowerFirst(string $role): string
+    {
+        $first = mb_substr($role, 0, 1);
+        $second = mb_substr($role, 1, 1);
+
+        return $second !== '' && mb_strtolower($second) === $second ? mb_strtolower($first).mb_substr($role, 1) : $role;
     }
 
     /**
