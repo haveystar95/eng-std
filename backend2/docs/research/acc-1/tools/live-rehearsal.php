@@ -88,7 +88,9 @@ $plan = call('GET', '/plans/'.PLAN, [], $token)['data'];
 $me = call('GET', '/auth/me', [], $token)['data'];
 echo "план · дни:\n";
 foreach ($plan['days'] as $d) {
-    echo sprintf("   день %d · %s · lock_reason %s · этапы: %s\n", $d['number'], $d['status'], json_encode($d['lock_reason'] ?? 'нет поля'), implode(' ', array_map(static fn (array $s): string => $s['stage'].':'.$s['state'], $d['stages'])));
+    // `??` would print a null `lock_reason` (the day is not locked) as a missing field — the first run did exactly that.
+    $lock = array_key_exists('lock_reason', $d) ? json_encode($d['lock_reason']) : 'нет поля';
+    echo sprintf("   день %d · %s · lock_reason %s · этапы: %s\n", $d['number'], $d['status'], $lock, implode(' ', array_map(static fn (array $s): string => $s['stage'].':'.$s['state'], $d['stages'])));
 }
 echo '   /auth/me access: '.json_encode($me['access'] ?? null, JSON_UNESCAPED_UNICODE)."\n";
 $checks['§2 у каждого дня есть lock_reason (date | subscription | null)'] = count(array_filter($plan['days'], static fn (array $d): bool => array_key_exists('lock_reason', $d) && in_array($d['lock_reason'], [null, 'date', 'subscription'], true))) === count($plan['days']);

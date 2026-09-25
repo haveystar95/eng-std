@@ -3267,7 +3267,10 @@
      accept what the learner has just said or offered, or thank them for it — never turn it down — and only then say
      goodbye, in one sentence.» Повод — ход 18 репетиции FIX-4c («Should I tell you his temperature?» → «No, that's okay. We
      can finish here. Goodbye.»). v3.3 удалён; `PlanPromptFiles`, фейк, счётчики и реестр промптов — под v3.4 (sha256
-     `8d8c414e…4387d`). Живая репетиция — отчёт ACC-1 §6.
+     `8d8c414e…4387d`). Живая репетиция на e2e после выката (отчёт ACC-1 §6): на том же ходе 18 — «Yes, please tell me
+     the highest reading. Thank you, and please come back if he gets worse.» — принимает; второе прощание сцены («Thank
+     you. I'll note that down. Goodbye.») — благодарит. Открытый вопрос архитектору: принятие может просить то, чего сцена
+     уже не услышит (ROADMAP, хвосты ACC-1).
 
 ---
 
