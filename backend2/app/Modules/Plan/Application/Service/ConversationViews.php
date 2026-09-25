@@ -19,7 +19,6 @@ use App\Modules\Plan\Domain\Service\ConversationLead;
 use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\FrameJudge;
-use App\Modules\Plan\Domain\Service\IntentClause;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\Stage;
 use App\Modules\Plan\Domain\ValueObject\TurnKind;
@@ -154,9 +153,9 @@ final readonly class ConversationViews
      * THE HINT OF THE LEARNER'S NEXT MOVE (наряд FIX-4 §5), read off the journal by the rule the line was written with
      * ({@see ConversationLead::hint()}): one target of the scene the role's last line is said in — the one the move before
      * it said almost, then with its exact line; else the one the line opened; else the first not said. `sentence` is its
-     * sentence in the learner's language as the lesson has it («У меня есть боль в плече.», наряд FIX-4b §2); `native` —
-     * the same as the clause of «Скажи, что …» («у меня есть боль в плече») for the build (20). None when it is not the
-     * learner's move, when the scene has nothing left to say, when the talk is over.
+     * sentence in the learner's language as the lesson has it («У меня есть боль в плече.», наряд FIX-4b §2); the clause
+     * of «Скажи, что …» the build (20) read (`native`) is gone (наряд ACC-1 §5). None when it is not the learner's move,
+     * when the scene has nothing left to say, when the talk is over.
      *
      * «БЕЗ ПОДСКАЗОК» TOO (наряд FIX-4c §2): the document carries the hint whatever the mode — `hints.enabled` says the
      * mode, and the phone hides the plate itself until «Подсказать». A phone that had to pick the target on its own in
@@ -185,7 +184,6 @@ final readonly class ConversationViews
 
         return new ConversationHintView(
             sentence: trim($target->lineNative),
-            native: IntentClause::of($target->lineNative),
             target: $hint['exact'] ? $target->lineTarget : null,
             sceneId: $target->sceneId,
             ref: $target->ref,

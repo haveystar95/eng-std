@@ -2400,7 +2400,8 @@ paths:
         The call waits on a model and a voice — it is the slowest call of this API by design (≤ 6 s).
         409 `plan_day_not_open` when the day is neither being walked nor passed with its talk walked;
         409 `plan_conversation_replay_limit` (above); 422 `plan_conversation_not_in_day`
-        when the day has no talk (dealt before наряд CONV-1, or no scene of it has a lesson);
+        when the day has no talk — its sixth stage is skipped (dealt with nothing to talk about, or on the five
+        stages of before наряд CONV-1; наряд ACC-1 §3), or no scene of it has a lesson;
         503 `plan_conversation_unavailable` when the role did not answer — nothing is written and the
         call may be repeated.
       parameters:
@@ -4796,22 +4797,10 @@ components:
           items: { $ref: '#/components/schemas/PlanConversationTarget' }
         hints:
           type: object
-          required: [enabled, delay_ms, native, target, scene_id, ref, sentence]
+          required: [enabled, delay_ms, target, scene_id, ref, sentence]
           properties:
             enabled: { type: boolean, description: 'False — «Без подсказок»: the client hides the plate and offers «Подсказать». The hint itself travels in BOTH modes (наряд FIX-4c §2): `sentence`, `target`, `scene_id` and `ref` are the same whatever `enabled` says' }
             delay_ms: { type: integer, description: 'How long the silence is before the chip comes up by itself (кадр 37-7)' }
-            native:
-              type: [string, 'null']
-              deprecated: true
-              description: >-
-                TO GO AFTER CLIENT-FIX-4 (наряд FIX-4b §2; снять после CLIENT-FIX-4) — `sentence` as a clause, for the
-                build (20). The target to offer for the next move WHOLE — the lesson's own sentence of it, its value in
-                it («у него болит поясница», never «у него болит …», наряд FIX-4 §5) — in the learner's language AS A
-                CLAUSE: no capital, no closing full stop, because the build (20) prints it inside its own «Скажи, что …».
-                Which target: the one the role's last line has just opened, else the first target of the scene not said
-                yet; after a move that said a target ALMOST, that target. It changes with every line of the role. Null
-                when the move is not the learner's, when every target of the scene is said, and when the talk has ended —
-                in «Без подсказок» too, since FIX-4c §2.
             target:
               type: [string, 'null']
               description: 'The target''s exact line in the language of the talk («The pain is sharp when he bends.») — only on the move right after one that said it almost (наряд FIX-4 §5); else null'
@@ -4820,10 +4809,15 @@ components:
             sentence:
               type: [string, 'null']
               description: >-
-                The hint AS THE CLIENT SHOWS IT (наряд FIX-4b §2): the same target's sentence in the learner's language
-                exactly as the lesson has it — its capital and its closing mark («У него болит поясница.», «Мне сказать
-                вам его температуру?») — with no «Скажи, что …» around it: the frame read crooked for a question. The
-                same target and the same nulls as `native`.
+                The hint AS THE CLIENT SHOWS IT (наряд FIX-4b §2): the target to offer for the next move WHOLE — the
+                lesson's own sentence of it, its value in it (never «у него болит …», наряд FIX-4 §5) — in the learner's
+                language exactly as the lesson has it, its capital and its closing mark («У него болит поясница.», «Мне
+                сказать вам его температуру?»), with no «Скажи, что …» around it: the frame read crooked for a question.
+                Which target: the one the role's last line has just opened, else the first target of the scene not said
+                yet; after a move that said a target ALMOST, that target. It changes with every line of the role. Null
+                when the move is not the learner's, when every target of the scene is said, and when the talk has ended
+                — in «Без подсказок» too (наряд FIX-4c §2). The clause for the frame of the build (20), `native`, is
+                gone (наряд ACC-1 §5).
         turns:
           type: array
           description: 'The whole ribbon, oldest first — the talk is a dozen short lines, so it travels whole'

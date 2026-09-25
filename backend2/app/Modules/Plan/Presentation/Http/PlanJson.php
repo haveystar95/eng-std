@@ -269,15 +269,14 @@ final class PlanJson
             'targets' => $c->targets,
             // «Ещё вспомнил» (наряд FIX-4 §2): the constructions of the talk's scenes said that are no target.
             'extra_said' => $c->extraSaid,
-            // The hint whole (наряд FIX-4 §5): `native` — the target's sentence as the clause of «Скажи, что …» (the build
-            // (20) prints the frame; to go after CLIENT-FIX-4); `target` — its exact line after an «almost», else null;
-            // `scene_id` + `ref` — which target it is; `sentence` (наряд FIX-4b §2) — the target's sentence as the lesson
-            // has it, capital and closing mark and all: what the client shows, with no frame around it. In «Без подсказок»
-            // as well (наряд FIX-4c §2): `enabled` is the mode, and the phone hides the plate itself.
+            // The hint whole (наряд FIX-4 §5): `target` — its exact line after an «almost», else null; `scene_id` + `ref` —
+            // which target it is; `sentence` (наряд FIX-4b §2) — the target's sentence as the lesson has it, capital and
+            // closing mark and all: what the client shows, with no frame around it (`native`, the clause the build (20)
+            // framed, is gone — наряд ACC-1 §5). In «Без подсказок» as well (наряд FIX-4c §2): `enabled` is the mode, and
+            // the phone hides the plate itself.
             'hints' => [
                 'enabled' => $c->hintsEnabled,
                 'delay_ms' => $c->hintDelayMs,
-                'native' => $c->hint?->native,
                 'target' => $c->hint?->target,
                 'scene_id' => $c->hint?->sceneId,
                 'ref' => $c->hint?->ref,

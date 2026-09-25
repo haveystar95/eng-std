@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Service;
 
 /**
- * THE INTENTION AS A CLAUSE (наряд CONV-2, п. 11) — what `hints.native` is on the wire: the part after «Скажи, что …»,
- * which the client prints around it (кадр 37-7).
+ * THE INTENTION AS A CLAUSE (наряд CONV-2, п. 11) — the part after «Скажи, что …», which the client prints around it: the
+ * task of a «Говорю сам» card (`task_clause_native`, наряд FIX-3 §11). It was the talk's `hints.native` too, until the
+ * build (21) took the whole sentence (`hints.sentence`) and the field was dropped (наряд ACC-1 §5).
  *
  * The hint is the learner's own line in their language, and a line is a sentence: «У моего сына температура.» Glued
  * into the chip as it stands it read «Скажи, что У моего сына температура.» on the phone, and the client wrote its own

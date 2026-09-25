@@ -126,11 +126,11 @@ it('opens with the role\'s own line, and carries on the same talk when asked aga
         ->and($talk['summary'])->toBeNull()
         ->and($talk['replay'])->toBeFalse()
         // The hint is the construction the role's opening line leads to, WHOLE — the lesson's sentence of it, its value in
-        // it, not «у него болит …» (наряд FIX-4 §5) — in the learner's language: as the lesson has it (наряд FIX-4b §2),
-        // and as a CLAUSE the build (20) prints «Скажи, что …» around. Its exact line only after an «almost»; which target
-        // it is, by scene and ref.
+        // it, not «у него болит …» (наряд FIX-4 §5) — in the learner's language: as the lesson has it (наряд FIX-4b §2);
+        // the clause the build (20) framed with «Скажи, что …» is gone (наряд ACC-1 §5). Its exact line only after an
+        // «almost»; which target it is, by scene and ref.
         ->and($talk['hints']['sentence'])->toBe('У него болит поясница.')
-        ->and($talk['hints']['native'])->toBe('у него болит поясница')
+        ->and($talk['hints'])->not->toHaveKey('native')
         ->and($talk['hints']['target'])->toBeNull()
         ->and($talk['hints']['ref'])->toBe($talk['targets'][0]['ref'])
         ->and($talk['hints']['scene_id'])->toBe($talk['targets'][0]['scene_id'])
@@ -298,7 +298,7 @@ it('ends as declined when the role says goodbye over a refused subject', functio
         ->and($after['summary']['ended_reason'])->toBe('declined')
         ->and($after['turns'][2]['off_topic'])->toBeTrue()
         // A talk that ends offers no next intention.
-        ->and($after['hints']['native'])->toBeNull();
+        ->and($after['hints']['sentence'])->toBeNull();
 });
 
 /**
@@ -1068,7 +1068,7 @@ it('reads a move for the construction as a phrase: said, one word off, or not �
     expect($p1($almost))->toMatchArray(['ref' => 'p1', 'state' => 'almost', 'said' => false, 'value_target' => null])
         ->and($almost['turns'][5]['phrases_used'])->toBe([])
         // The role is led back to it, and the hint gives its exact line — once.
-        ->and($almost['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'У него болит поясница.', 'native' => 'у него болит поясница', 'target' => 'It hurts in his lower back.']);
+        ->and($almost['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'У него болит поясница.', 'target' => 'It hurts in his lower back.']);
 
     $said = convTurn($this, $token, $id, $talk['id'], 'said', 'It hurts in his lower back.');
     expect($p1($said))->toMatchArray(['state' => 'said', 'said' => true, 'value_target' => 'lower back'])
@@ -1348,12 +1348,12 @@ it('leads the role to the targets one by one, and prompts every move with the do
     // The opening line opens the first target — named to the role by its short id (наряд FIX-4 §3) — and the chip gives
     // its sentence whole (§5).
     expect($fake->conversationRequests[0]->leadTo)->toBe('T1')
-        ->and($talk['hints'])->toMatchArray(['ref' => $talk['targets'][0]['ref'], 'native' => 'у него болит поясница', 'target' => null]);
+        ->and($talk['hints'])->toMatchArray(['ref' => $talk['targets'][0]['ref'], 'sentence' => 'У него болит поясница.', 'target' => null]);
 
     // The learner says something else: the first door was opened all the same — the lead moves on, and so does the hint.
     $moved = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
     expect($fake->conversationRequests[1]->leadTo)->toBe('T2')
-        ->and($moved['hints'])->toMatchArray(['ref' => $talk['targets'][1]['ref'], 'native' => 'началось три дня назад', 'target' => null])
+        ->and($moved['hints'])->toMatchArray(['ref' => $talk['targets'][1]['ref'], 'sentence' => 'Началось три дня назад.', 'target' => null])
         ->and(clDoors($talk['id']))->toBe([$order[0], $order[1]]);
 });
 
@@ -1441,11 +1441,11 @@ it('takes the door the role names, and a line that opens none prompts with the f
     $talk = convStart($this, $token, $id);
     $third = $talk['targets'][2];
 
-    expect($talk['hints'])->toMatchArray(['ref' => $third['ref'], 'native' => 'боль острая, когда он наклоняется']);
+    expect($talk['hints'])->toMatchArray(['ref' => $third['ref'], 'sentence' => 'Боль острая, когда он наклоняется.']);
 
     // Nothing opened: the first target not said.
     $none = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
-    expect($none['hints'])->toMatchArray(['ref' => $talk['targets'][0]['ref'], 'native' => 'у него болит поясница']);
+    expect($none['hints'])->toMatchArray(['ref' => $talk['targets'][0]['ref'], 'sentence' => 'У него болит поясница.']);
 
     // A stranger's id opens nothing either — dropped, and journaled.
     $again = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello again.');
@@ -1456,12 +1456,12 @@ it('takes the door the role names, and a line that opens none prompts with the f
 
 /**
  * Canon (наряд FIX-4b §2): «hints.sentence — целая родная фраза строки урока, как она есть в уроке (с заглавной и знаком
- * конца): «У него болит поясница.», «Мне сказать вам его температуру?»; поле аддитивное; hints.native (придаточное под
- * рамку сборки (20)) остаётся до перехода клиента». On the clean «врач»: an answer and a question the learner asks, each
- * as the lesson writes it, beside the clause. CATCHES the sentence sent as the clause (a small letter, no full stop), a
- * question's mark lost, and the clause the build (20) reads changed under it.
+ * конца): «У него болит поясница.», «Мне сказать вам его температуру?»»; и (наряд ACC-1 §5) «hints.native снять: сборка
+ * (21) его не читает». On the clean «врач»: an answer and a question the learner asks, each as the lesson writes it, and
+ * no clause beside them. CATCHES the sentence sent as the clause (a small letter, no full stop), a question's mark lost,
+ * and the clause of the build (20) come back.
  */
-it('offers the hint as the lesson\'s whole sentence, beside the clause the build (20) prints', function () {
+it('offers the hint as the lesson\'s whole sentence, and no clause beside it', function () {
     convAgentSays(static function (ConversationAgentRequest $request): array {
         $payload = FakePlanModel::conversationPayload($request);
         // The opening line leads where it is told; the next one opens the question the learner asks («Do we need ___?»).
@@ -1474,8 +1474,9 @@ it('offers the hint as the lesson\'s whole sentence, beside the clause the build
     $talk = convStart($this, $token, $id);
     $asked = convTurn($this, $token, $id, $talk['id'], 'said', 'Hello, nice weather today.');
 
-    expect($talk['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'У него болит поясница.', 'native' => 'у него болит поясница', 'target' => null])
-        ->and($asked['hints'])->toMatchArray(['ref' => 'p6', 'sentence' => 'Нам нужно сделать рентген?', 'native' => 'нам нужно сделать рентген?', 'target' => null]);
+    expect($talk['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'У него болит поясница.', 'target' => null])
+        ->and($asked['hints'])->toMatchArray(['ref' => 'p6', 'sentence' => 'Нам нужно сделать рентген?', 'target' => null])
+        ->and(array_keys($talk['hints']))->toBe(['enabled', 'delay_ms', 'target', 'scene_id', 'ref', 'sentence']);
 });
 
 /**

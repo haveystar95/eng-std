@@ -43,7 +43,7 @@ final class SpeakCards
      * The key is the frame's own words — the window is the judge's — so the mode is `free`.
      *
      * THE TASK AS A CLAUSE (`task_clause_native`, наряд FIX-3 §11): the chip «Скажи, что …» prints the learner's line as
-     * the clause of the sentence, and the server makes it one ({@see IntentClause}, the rule the talk's hint is made by) —
+     * the clause of the sentence, and the server makes it one ({@see IntentClause}, the rule the talk's hint was made by) —
      * the phone builds no clause. `task_native` stays the sentence: «Спроси: «…»» of an ask quotes it whole.
      *
      * Null when the phrase carries no frame or the exchange no learner line: there is nothing to say.

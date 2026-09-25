@@ -56,9 +56,10 @@ it('asks a talk for its phrases in the order of its scenes and their visits, sev
 
 /**
  * Canon (п. 11): «hints.native — придаточным без заглавной и точки». The rule the client wrote for itself
- * (`TalkTexts.clause`) moves to the server: the chip read «Скажи, что У моего сына температура.» (CLIENT-CONV-1a §5 п. 10).
- * Catches a capital glued inside a sentence, a full stop inside it, an abbreviation lower-cased, and a question mark or
- * an ellipsis eaten.
+ * (`TalkTexts.clause`) moved to the server: the chip read «Скажи, что У моего сына температура.» (CLIENT-CONV-1a §5 п. 10).
+ * The talk's `hints.native` is gone (наряд ACC-1 §5 — the build (21) shows `hints.sentence`); the rule stays the task of
+ * «Говорю сам» (`task_clause_native`). Catches a capital glued inside a sentence, a full stop inside it, an abbreviation
+ * lower-cased, and a question mark or an ellipsis eaten.
  */
 it('sends the intention as a clause: no capital, no closing full stop, the rest as written', function () {
     expect(IntentClause::of('У моего сына температура.'))->toBe('у моего сына температура')
