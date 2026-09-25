@@ -61,6 +61,7 @@ class SpeechRules {
     this.abbreviations = const [],
     this.numberWords = const {},
     this.numberJoiners = const {},
+    this.numberTensJoiners = const {},
     this.repeatMisses = 0,
   });
 
@@ -78,8 +79,12 @@ class SpeechRules {
   /// ([SpokenNumbers], наряд FIX-3 §4).
   final Map<String, String> numberWords;
 
-  /// The words that join the parts of one number (en «and» of «one hundred and twenty»).
+  /// The words that join a SCALE to the number below a hundred after it (en «and» of «one hundred and twenty»).
   final Set<String> numberJoiners;
+
+  /// The words that join a TENS value to the unit after it (es «y» of «treinta y uno», ro «și», fr «et» — наряд LANG-1
+  /// §4). Optional on the wire: a day without `number_tens_joiners` has none, which is English and Russian.
+  final Set<String> numberTensJoiners;
 
   /// How many CONTENT words a line on the screen may lose and still pass — the server's `plan.speech.repeat_misses`.
   final int repeatMisses;
@@ -87,6 +92,12 @@ class SpeechRules {
   /// Nothing known: every word counts, nothing is folded. What a day without the block falls back to.
   static const SpeechRules none = SpeechRules();
 
+  /// The block as the server sends it. Every WORD of it — the entries of `number_words`, the articles, the joiners, the
+  /// unstressed words — is read in the canonical form of the text it will meet ([SpeechMatch.canonicalize]: folded,
+  /// lower case, no apostrophe, a hyphen a space), as the server's `LanguagePack::speech()` already hands it (наряд
+  /// LANG-1 §4): a no-op on what the server sends, and a pack word written the way the language writes it («dreißig»,
+  /// «quatre-vingt-dix», «şi») still meets the text. An entry that folds into nothing is dropped; two that fold into one
+  /// are one, the first wins. `number_tens_joiners` is optional — absent, the language has none.
   factory SpeechRules.fromJson(Map<String, dynamic> j) => SpeechRules(
     unstressed: _words(j['unstressed_words']),
     articles: _words(j['articles']),
@@ -94,18 +105,28 @@ class SpeechRules {
       for (final v in (j['abbreviations'] as List?) ?? const [])
         if (v is String && v.isNotEmpty) v,
     ],
-    numberWords: {
-      for (final e in ((j['number_words'] as Map?) ?? const {}).entries)
-        if (e.key is String && e.value is String) (e.key as String).toLowerCase(): e.value as String,
-    },
+    numberWords: _numberWords(j['number_words']),
     numberJoiners: _words(j['number_joiners']),
+    numberTensJoiners: _words(j['number_tens_joiners']),
     repeatMisses: (j['repeat_misses'] as num?)?.toInt() ?? 0,
   );
 
   static Set<String> _words(Object? raw) => {
     for (final v in (raw as List?) ?? const [])
-      if (v is String && v.isNotEmpty) v.toLowerCase(),
-  };
+      if (v is String) SpeechMatch.canonicalize(v),
+  }..remove('');
+
+  /// The entries of `number_words`. A language with none arrives as `[]`, not `{}` — the server's JSON of an empty map
+  /// (a target whose pack writes no numbers, or no pack at all) — and reads as none rather than failing the whole day.
+  static Map<String, String> _numberWords(Object? raw) {
+    final out = <String, String>{};
+    for (final e in (raw is Map ? raw : const {}).entries) {
+      if (e.key is! String || e.value is! String) continue;
+      final entry = SpeechMatch.canonicalize(e.key as String);
+      if (entry.isNotEmpty) out.putIfAbsent(entry, () => e.value as String);
+    }
+    return out;
+  }
 }
 
 abstract final class SpeechMatch {
@@ -364,6 +385,7 @@ abstract final class SpeechMatch {
       numberWords: rules.numberWords,
       articles: rules.articles,
       joiners: rules.numberJoiners,
+      tensJoiners: rules.numberTensJoiners,
     );
   }
 

@@ -80,6 +80,124 @@ void main() {
     expect(SpeechMatch.words('twenty one', ru), ['twenty', 'one']);
   });
 
+  // Canon (наряд LANG-1 §4): English «and» joins a number only after a scale — `number_joiners`; the joiner after a tens
+  // word is a list of its own, `number_tens_joiners`, optional on the wire, and English sends none. So two numbers said
+  // with «and» between them stay two, as the server reads them. CATCHES the phone reading «between twenty and one
+  // hundred dollars» as 2100 (the first cut of LANG-1), a block without the new key failing to parse or reading one, and
+  // a tens joiner the phone receives and does not hand to the fold.
+  test('numbers: «and» after a tens word starts the next number; the tens joiners come off the wire, absent is none', () {
+    final day = SpeechRules.fromJson({
+      'unstressed_words': ['a', 'an', 'the'],
+      'articles': ['a', 'an', 'the'],
+      'abbreviations': <String>[],
+      'number_words': en.numberWords,
+      'number_joiners': ['and'],
+      'repeat_misses': 0,
+    });
+    expect(day.numberTensJoiners, isEmpty);
+    expect(SpeechMatch.words('It costs between twenty and one hundred dollars', day), [
+      'it',
+      'costs',
+      'between',
+      '20',
+      'and',
+      '100',
+      'dollars',
+    ]);
+    expect(SpeechMatch.words('twenty and five', en), ['20', 'and', '5']);
+    expect(SpeechMatch.repeated('It costs between 20 and 100 dollars', 'It costs between twenty and one hundred dollars.', en), isTrue);
+
+    final es = SpeechRules.fromJson({
+      'number_words': {'treinta': '30', 'uno': '1', 'ciento': '100'},
+      'number_joiners': <String>[],
+      'number_tens_joiners': ['y'],
+    });
+    expect(es.numberTensJoiners, {'y'});
+    expect(SpeechMatch.words('ciento treinta y uno', es), ['131']);
+    expect(SpeechMatch.words('ciento y uno', es), ['100', 'y', '1']);
+  });
+
+  // Canon (наряд LANG-1 §4): a target whose pack writes no numbers — or has no pack yet — still gets its day. The server
+  // serialises an EMPTY `number_words` map as `[]` (what `json_encode` makes of an empty PHP array), not `{}`; the phone
+  // reads it as «no number words». CATCHES the cast that threw on `[]` and took the whole day down with it — now that
+  // seven targets exist, not only English, whose pack always wrote its numbers.
+  test('numbers: a block with no number words — `[]` on the wire — parses and folds nothing', () {
+    final day = SpeechRules.fromJson({
+      'unstressed_words': <dynamic>[],
+      'articles': <dynamic>[],
+      'abbreviations': <dynamic>[],
+      'number_words': <dynamic>[],
+      'number_joiners': <dynamic>[],
+      'repeat_misses': 1,
+    });
+    expect(day.numberWords, isEmpty);
+    expect(day.repeatMisses, 1);
+    expect(SpeechMatch.words('zwanzig eins', day), ['zwanzig', 'eins']);
+  });
+
+  /// A PACK WRITTEN THE WAY ITS LANGUAGE WRITES — [the `speech` keys, a text, its comparable words] — identical, row for
+  /// row, to `speechPackAsWritten()` of `backend2/tests/Unit/Plan/LanguagePackTest.php`: the server hands its lists down
+  /// in the canonical form of the text (`LanguagePack::speech()`), and the phone reads them in that form too.
+  const de = {
+    'number_words': {'dreißig': '30', 'Zwei': '2'},
+  };
+  const fr = {
+    'number_words': {'quatre-vingt-dix': '90', 'vingt': '20', 'un': '1'},
+    'number_tens_joiners': ['et'],
+  };
+  const ro = {
+    'number_words': {'douăzeci': '20', 'unu': '1'},
+    'number_tens_joiners': ['şi'],
+  };
+  const asWritten = <(String, Map<String, Object>, String, String)>[
+    ('de «dreißig» in the pack, «dreißig» said', de, 'dreißig', '30'),
+    ('de «dreißig» in the pack, «Dreissig» said', de, 'Dreissig Euro', '30 euro'),
+    ('de «Zwei» in the pack', de, 'zwei', '2'),
+    ('fr «quatre-vingt-dix» in the pack', fr, 'quatre-vingt-dix', '90'),
+    ('fr «quatre-vingt-dix» said apart', fr, 'quatre vingt dix', '90'),
+    ('fr «et» after the tens', fr, 'vingt et un', '21'),
+    ('ro «şi» in the pack, «și» said', ro, 'douăzeci și unu', '21'),
+    ('ro «şi» in the pack, «şi» said', ro, 'douăzeci şi unu', '21'),
+    (
+      'es capitals in the pack',
+      {
+        'number_words': {'Treinta': '30', 'uno': '1'},
+        'number_tens_joiners': ['Y'],
+      },
+      'treinta y uno',
+      '31',
+    ),
+    (
+      'de two spellings of one entry — the first wins',
+      {
+        'number_words': {'dreißig': '30', 'dreissig': '31'},
+      },
+      'dreissig',
+      '30',
+    ),
+    (
+      'en «and» after a scale only',
+      {
+        'number_words': {'one': '1', 'five': '5', 'twenty': '20', 'hundred': '100'},
+        'number_joiners': ['And'],
+      },
+      'twenty and five, one hundred and five',
+      '20 and 5 105',
+    ),
+  ];
+
+  // Canon (наряд LANG-1 §4): «списки речи — в той же канонической форме, что и текст, с которым они сравниваются», на обеих
+  // сторонах. CATCHES an entry kept as written that no folded text can ever say («dreißig» against `dreissig`,
+  // «quatre-vingt-dix» — one word — against three, the «ş» of a joiner against the «ș» of a folded text), capitals kept,
+  // and two spellings of one entry fighting (the last one won).
+  group('a pack written the way its language writes meets the text', () {
+    for (final (name, keys, text, expected) in asWritten) {
+      test(name, () {
+        expect(SpeechMatch.words(text, SpeechRules.fromJson(keys)).join(' '), expected);
+      });
+    }
+  });
+
   // Canon: «нормализация — регистр, знаки, сокращения, числа словом/цифрой, сокращённые формы (I'd = I would)».
   // Catches a comparison done on the raw strings: the two readings below are the SAME sentence said by two
   // recognisers, and the owner's live day asked for exactly this one.

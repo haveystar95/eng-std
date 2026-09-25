@@ -89,8 +89,9 @@ return [
     ],
 
     // The word that joins the parts of one number said the British way (наряд FIX-3 §4: «составные складываются»): «one
-    // hundred and twenty» is 120, «two thousand and five» 2005 — only between a hundred or a thousand and a number below
-    // a hundred after it; «two hundred and a thousand» stays two numbers.
+    // hundred and twenty» is 120, «two thousand and five» 2005 — only after a SCALE (hundred, thousand, million) and before
+    // a number below a hundred; «two hundred and a thousand» stays two numbers. English writes no `number_tens_joiners`
+    // (наряд LANG-1 §4): after a tens word «and» starts the next number — «between twenty and one hundred» is 20 and 100.
     'number_joiners' => ['and'],
 
     // Two forms of one word: the shorter's letters but its last `stem_tail`, never fewer than `stem_min`, shared

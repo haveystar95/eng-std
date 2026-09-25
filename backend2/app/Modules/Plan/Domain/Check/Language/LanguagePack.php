@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check\Language;
 
 use App\Modules\Plan\Domain\Exception\LanguagePackKeyMissing;
+use App\Modules\Shared\Domain\Service\LexicalNormalizer;
+use App\Modules\Shared\Domain\Service\TextNormalizer;
 use App\Modules\Shared\Domain\ValueObject\SpeechPack;
 
 /**
@@ -153,29 +155,62 @@ final readonly class LanguagePack
     }
 
     /**
-     * WHAT A COMPARISON OF SPEECH MAY READ OF THIS LANGUAGE (наряд FIX-2, п. 2) — the four lists
+     * WHAT A COMPARISON OF SPEECH MAY READ OF THIS LANGUAGE (наряд FIX-2, п. 2) — the lists
      * {@see \App\Modules\Shared\Domain\Service\SpeechMatch} works from, handed DOWN to the kernel because the kernel
      * cannot read this module and must not hard-code English. A key this language has not written is an empty list:
      * the rule still runs and forgives nothing, which is the right answer for a language nobody has described.
      *
      * The same lists go out to the phone ({@see SpeechPack::toArray()}), so the mirror on the device is the pack
      * itself rather than a copy of it in Dart.
+     *
+     * IN THE FORM OF THE TEXT THEY MEET (наряд LANG-1 §4). A list is only as good as the spelling it is compared in: the
+     * words of a text reach these lists as {@see \App\Modules\Shared\Domain\Service\SpeechMatch::words()} gives them —
+     * the kernel's canonical form ({@see LexicalNormalizer::canonicalize()}: folded — NFC, «ß» as «ss», «œ» as «oe», the
+     * Romanian cedilla letters with the comma below —, lower case, no apostrophe, every other mark and the hyphen a
+     * space). So every WORD the pack hands down — the entries of `number_words`, `articles`, `number_joiners`,
+     * `number_tens_joiners`, `unstressed_words` — is put in that very form here, by the very same function, and a pack may
+     * write a word the way the language writes it: de «dreißig» is the `dreissig` a text says, fr «quatre-vingt-dix» the
+     * `quatre vingt dix` of three words, ro «şi» with a cedilla the `și` of the text. An entry that folds into nothing is
+     * dropped; two that fold into one are one, and the first written wins (its value, its place in the list).
+     *
+     * `abbreviations` are the exception, because a text meets them BEFORE it is folded: they are searched for in the text
+     * as written, letter case aside, and their dots are their whole content — so they only take the form text is
+     * stored in ({@see TextNormalizer::canonical()}: composed, the comma below), with their dots and their case.
+     *
+     * English and Russian are written in that form already, and hand down exactly the lists they did before LANG-1.
      */
     public function speech(): SpeechPack
     {
+        $lexical = new LexicalNormalizer;
+        // A list of words in the text's form: canonical, nothing empty, each once — the first written wins.
+        $words = function (string $key) use ($lexical): array {
+            $out = [];
+            foreach ($this->has($key) ? $this->words($key) : [] as $word) {
+                $canonical = $lexical->canonicalize($word);
+                if ($canonical !== '') {
+                    $out[$canonical] = true;
+                }
+            }
+
+            return array_map('strval', array_keys($out));
+        };
+
         $numbers = [];
-        foreach ($this->has('number_words') ? $this->map('number_words') : [] as $word => $digits) {
-            if (is_string($digits)) {
-                $numbers[self::normal((string) $word)] = $digits;
+        foreach ($this->has('number_words') ? $this->map('number_words') : [] as $entry => $digits) {
+            $canonical = $lexical->canonicalize((string) $entry);
+            if (is_string($digits) && $canonical !== '' && ! isset($numbers[$canonical])) {
+                $numbers[$canonical] = $digits;
             }
         }
+        $unicode = new TextNormalizer;
 
         return new SpeechPack(
-            unstressed: $this->has('unstressed_words') ? $this->words('unstressed_words') : [],
-            articles: $this->has('articles') ? $this->words('articles') : [],
-            abbreviations: $this->has('abbreviations') ? $this->rawList('abbreviations') : [],
+            unstressed: $words('unstressed_words'),
+            articles: $words('articles'),
+            abbreviations: $this->has('abbreviations') ? array_map($unicode->canonical(...), $this->rawList('abbreviations')) : [],
             numberWords: $numbers,
-            numberJoiners: $this->has('number_joiners') ? $this->words('number_joiners') : [],
+            numberJoiners: $words('number_joiners'),
+            numberTensJoiners: $words('number_tens_joiners'),
         );
     }
 
@@ -286,9 +321,26 @@ final readonly class LanguagePack
         return is_int($value) ? $value : throw LanguagePackKeyMissing::of($this->code, "{$key}.{$field}");
     }
 
+    /**
+     * A WORD AS EVERY LIST OF THE PACK IS KEPT AND ASKED — folded ({@see TextNormalizer::fold()}: composed, «ß» as «ss»,
+     * «œ» as «oe», the Romanian cedilla letters with the comma below), lower case, the typographic apostrophe a plain one.
+     *
+     * The fold is here since наряд LANG-1 §4, on both sides at once: the pack's lists are built through this function
+     * (every list as a set, {@see words()}, {@see mapWords()}) and so is every word a rule asks of them ({@see listed()},
+     * and the rules that fold their own tokens with it before comparing — {@see LanguageWords}, {@see
+     * \App\Modules\Plan\Domain\Service\ReplyNative}, {@see \App\Modules\Plan\Domain\Assembly\WordCards}). Without it a
+     * model's «ş» with a cedilla — what models and keyboards write most ({@see TextNormalizer}) — never met the «ș» of a
+     * Romanian list, and a de list writing «heißen» never met a line that writes «heissen». Every English and Russian
+     * word is the same with it and without it (LanguagePackTest walks both packs).
+     *
+     * A regular expression of the pack that reads a word in THIS form (`number_pattern`, `time_pattern`,
+     * `amount_pattern`, `amount_prefix`) meets «ß» as «ss» and «ş» as «ș»: it names such a letter in both spellings,
+     * `(?:ß|ss)`, `[șş]`, as the key spec asks (`docs/research/lang-1/pack-keys.md` §1.3) — a pattern that writes «ß»
+     * alone no longer matches.
+     */
     public static function normal(string $word): string
     {
-        return str_replace('’', "'", mb_strtolower(trim($word)));
+        return str_replace('’', "'", mb_strtolower((new TextNormalizer)->fold(trim($word))));
     }
 
     private function need(string $key): void

@@ -4,15 +4,18 @@ import 'package:eng_std/data/plan/session/speech_match.dart';
 import 'package:eng_std/data/plan/session/spoken_numbers.dart';
 
 /// A NUMBER SAID IN WORDS IS THE NUMBER IN DIGITS, IN EVERY LANGUAGE OF THE PLAN — the phone's half (наряд FIX-3 §4,
-/// DECISIONS п. 393; наряд LANG-1 — entries of several words, a joiner after a tens word).
+/// DECISIONS п. 393; наряд LANG-1 §4 — entries of several words, a joiner after a scale and a joiner after a tens word,
+/// each in a list of its own).
 ///
 /// The rule is ONE on the server and on the phone, so the example table below is the server's, row for row:
 /// `backend2/tests/Unit/Shared/SpokenNumbersTest.php`. A row changes in both files or in neither — a number the phone
 /// reads differently is a verdict the server would not give.
 ///
 /// The packs are SYNTHETIC — the real `number_words` of es, ro, fr, de, pl, it arrive with their languages; each map
-/// here holds only what its rows need, in the canonical form an entry takes (lower case, «ß» as «ss», one space between
-/// the words of one entry). English is the pack's own table (the server's test pins its copy to `en.php`).
+/// here holds only what its rows need, in the canonical form the server hands an entry in (lower case, «ß» as «ss», one
+/// space between the words of one entry; a pack written the way its language writes is `speech_match_test.dart`'s).
+/// `numberJoiners` is a pack's `number_joiners` (after a scale), `numberTensJoiners` its `number_tens_joiners` (after a
+/// tens value). English is the pack's own table (the server's test pins its copy to `en.php`).
 void main() {
   const packs = <String, SpeechRules>{
     'en': SpeechRules(
@@ -68,7 +71,7 @@ void main() {
         'mil': '1000',
       },
       articles: {'el', 'la', 'los', 'las', 'un', 'una'},
-      numberJoiners: {'y'},
+      numberTensJoiners: {'y'},
     ),
     'ro': SpeechRules(
       numberWords: {
@@ -84,7 +87,7 @@ void main() {
         'mii': '1000',
       },
       articles: {'un', 'o'},
-      numberJoiners: {'și'},
+      numberTensJoiners: {'și'},
     ),
     'fr': SpeechRules(
       numberWords: {
@@ -110,6 +113,7 @@ void main() {
       },
       articles: {'le', 'la', 'les', 'un', 'une'},
       numberJoiners: {'et'},
+      numberTensJoiners: {'et'},
     ),
     'de': SpeechRules(
       numberWords: {
@@ -169,14 +173,14 @@ void main() {
     ['en', 'two thousand and five hundred and twenty', '2520'],
     // A joiner is never taken and left without its value: nought after it does not fit, so «and» stays a word.
     ['en', 'a hundred and zero', '100 and 0'],
-    // What LANG-1 changes in English: a tens word «and» did not bring in joins a unit after «and», and a scale after
-    // that unit multiplies it. The second row is THE COST, pinned so it is seen — not a reading anyone wants: two
-    // numbers read as one, so a recogniser's «between 20 and 100 dollars» no longer matches (it was «between 20 and
-    // 100 dollars» before LANG-1). It flips back only with a key of the pack saying after what en «and» stands.
-    ['en', 'twenty and five', '25'],
-    ['en', 'between twenty and one hundred dollars', 'between 2100 dollars'],
+    // English «and» stands only after a scale (`number_joiners`, no `number_tens_joiners`): after a tens word it starts
+    // the next number. Two numbers stay two — a recogniser's «between 20 and 100 dollars» matches the line, as it did
+    // before LANG-1 (the first cut of LANG-1, one list read in both places, made it «between 2100 dollars»).
+    ['en', 'twenty and five', '20 and 5'],
+    ['en', 'between twenty and one hundred dollars', 'between 20 and 100 dollars'],
     // Spanish: «y» between the tens and the unit, in each part of a number; 21–29 are one word.
     ['es', 'treinta y uno', '31'],
+    ['es', 'veinte y cinco', '25'],
     ['es', 'veintiuno', '21'],
     ['es', 'ciento veinte', '120'],
     ['es', 'ciento treinta y uno euros', '131 euros'],
@@ -184,6 +188,8 @@ void main() {
     ['es', 'uno y dos', '1 y 2'],
     ['es', 'veinte y', '20 y'],
     ['es', 'mil y quinientos', '1000 y 500'],
+    // A joiner after a tens value is no joiner after a scale: es names «y» only for the tens.
+    ['es', 'ciento y uno', '100 y 1'],
     // Romanian: «și» after the tens, the article «o» before a scale, the plural forms of the scales.
     ['ro', 'douăzeci și unu', '21'],
     ['ro', 'douăzeci şi unu', '21'],
@@ -192,7 +198,8 @@ void main() {
     ['ro', 'trei sute douăzeci și cinci de lei', '325 de lei'],
     ['ro', 'o mie', '1000'],
     ['ro', 'două mii', '2000'],
-    // French: counting by twenties through entries of several words, the longest one read, «et» after the tens.
+    // French: counting by twenties through entries of several words, the longest one read, «et» after the tens and
+    // after a scale — the same word in both lists.
     ['fr', 'vingt et un', '21'],
     ['fr', 'soixante dix', '70'],
     ['fr', 'soixante-dix-sept', '77'],
@@ -207,6 +214,10 @@ void main() {
     ['fr', 'cent quatre vingt', '180'],
     ['fr', 'mille et un', '1001'],
     ['fr', 'vingt et onze', '20 et 11'],
+    // A tens value is 20 or more: «dix» is none, so «et» after it starts the next number.
+    ['fr', 'dix et un', '10 et 1'],
+    // A tens value a joiner brought in takes no joiner after it.
+    ['fr', 'cent et vingt et un', '120 et 1'],
     // What stands after the joiner is read as an entry too, the longest: «quatre vingts» is 80, which does not fit
     // after «vingt» — two numbers, «et» between them — not the 4 of «quatre», which would.
     ['fr', 'entre vingt et quatre-vingts euros', 'entre 20 et 80 euros'],
@@ -227,14 +238,17 @@ void main() {
     ['none', 'twenty one', 'twenty one'],
   ];
 
-  // Canon (DECISIONS п. 393, наряд LANG-1): «слова одного числа — одно число, по одному правилу у сервера и телефона».
-  // CATCHES, row by row: an entry of several words read word by word («quatre vingt» → «4 20»), a shorter entry read
-  // where a longer one stands («soixante et onze» → «60 et 11»), a joiner after a tens word ignored («treinta y uno» →
-  // «30 y 1») or taken twice («a hundred and twenty and five» → 125), a joiner joining what does not fit («vingt et
-  // onze», «uno y dos», «mil y quinientos»), a joiner swallowed with nothing after it («veinte y») or with nought after
-  // it («a hundred and zero» → «100 0»), the value after a joiner judged by its first word alone («entre vingt et
-  // quatre-vingts» → «entre 20 80»), an article or a plural scale not read («o sută», «două sute»), the canonical
-  // fold not reaching the numbers («dreißig», «soixante-dix-sept»), and any English reading of FIX-3 moved.
+  // Canon (DECISIONS п. 393, наряд LANG-1 §4): «слова одного числа — одно число, по одному правилу у сервера и
+  // телефона»; союз после разряда и союз после десятков — два списка пакета. CATCHES, row by row: an entry of several
+  // words read word by word («quatre vingt» → «4 20»), a shorter entry read where a longer one stands («soixante et
+  // onze» → «60 et 11»), a joiner after a tens word ignored («treinta y uno» → «30 y 1») or taken twice («cent et vingt
+  // et un» → 121), a scale joiner read after a tens word («between twenty and one hundred» → «between 2100») or a tens
+  // joiner after a scale («ciento y uno» → 101) — the two lists merged —, a tens joiner after a value below twenty
+  // («dix et un» → 11), a joiner joining what does not fit («vingt et onze», «uno y dos», «mil y quinientos»), a joiner
+  // swallowed with nothing after it («veinte y») or with nought after it («a hundred and zero» → «100 0»), the value
+  // after a joiner judged by its first word alone («entre vingt et quatre-vingts» → «entre 20 80»), an article or a
+  // plural scale not read («o sută», «două sute»), the canonical fold not reaching the numbers («dreißig»,
+  // «soixante-dix-sept», «şi»), and any English reading of FIX-3 moved.
   group('the words of one number are that number, in every language of the plan', () {
     for (final row in table) {
       final pack = row[0];
@@ -247,9 +261,24 @@ void main() {
           numberWords: rules.numberWords,
           articles: rules.articles,
           joiners: rules.numberJoiners,
+          tensJoiners: rules.numberTensJoiners,
         );
         expect(words.join(' '), expected);
       });
     }
+  });
+
+  // Canon (наряд LANG-1 §4): the tens joiner is a list of its own, and a caller that names only the old lists reads
+  // numbers exactly as FIX-3 did. CATCHES a default that is not «none» — English moved for every caller that does not
+  // know the new list.
+  test('joins nothing after a tens word for a caller that names no tens joiners', () {
+    final en = packs['en']!;
+    final words = SpokenNumbers.fold(
+      'between twenty and one hundred dollars'.split(' '),
+      numberWords: en.numberWords,
+      articles: en.articles,
+      joiners: en.numberJoiners,
+    );
+    expect(words, ['between', '20', 'and', '100', 'dollars']);
   });
 }

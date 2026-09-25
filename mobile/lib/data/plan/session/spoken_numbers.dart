@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 /// A NUMBER SAID IN WORDS IS THE NUMBER IN DIGITS — the phone's half of the server's rule (наряд FIX-3 §§2, 4,
-/// DECISIONS п. 393; the languages of the plan, наряд LANG-1).
+/// DECISIONS п. 393; the languages of the plan, наряд LANG-1 §4).
 ///
 /// The owner said «I will rest for 45 seconds» to a card that asked for «I'll rest for forty-five seconds» and was
 /// failed twice (зал, день 2): the recogniser writes a number in digits, the lesson in words, and a word-by-word fold
@@ -10,7 +10,8 @@ import 'dart:math' as math;
 /// THE RULE, over the canonical words of a text (case folded, contractions spelt out, every mark — the hyphen too — a
 /// space, so «forty-five» is «forty five» and «quatre-vingt-dix» is «quatre vingt dix»), left to right. It is the
 /// server's `Shared/Domain/Service/SpokenNumbers` word for word, and the lists it reads are the server's own
-/// (`speech.number_words`, `speech.articles`, `speech.number_joiners` of the day) — never a copy of a language in Dart:
+/// (`speech.number_words`, `speech.articles`, `speech.number_joiners`, `speech.number_tens_joiners` of the day) — never
+/// a copy of a language in Dart:
 ///
 /// 1. An ENTRY of `numberWords` is its value. An entry is one word or SEVERAL, one space apart, in that canonical form
 ///    («soixante dix» → 70, «quatre vingt dix» → 90): at every place the LONGEST entry whose words stand there is read,
@@ -25,29 +26,34 @@ import 'dart:math' as math;
 ///      power of ten that divides it — and above nought: «forty five» → 45, «hundred twenty» → 120, pl «dwadzieścia
 ///      jeden» → 21; «ten five», «twenty twelve», «two three» do not fit and stay two numbers;
 ///    - a JOINER stands between two values of one number when the value after it fits after the value before it and is
-///      below a hundred — after a SCALE (en «and»: «one hundred and twenty» → 120, «two thousand and five» → 2005), or
-///      after a TENS value — 20 or more, not a scale — that no joiner brought in (es «treinta y uno» → 31, ro «douăzeci
-///      și unu» → 21, fr «vingt et un» → 21); «vingt et onze» stays three words (fr 71 is an entry of its own), and «a
-///      hundred and twenty and five» is 120, «and», 5. Anywhere else the joiner is a word of its own («five and six»).
+///      below a hundred, in the place the pack names it for — a word may be in both lists (fr «et»):
+///      · [joiners] (`number_joiners`) — after a SCALE: en «one hundred and twenty» → 120, «two thousand and five» →
+///        2005, fr «mille et un» → 1001;
+///      · [tensJoiners] (`number_tens_joiners`) — after a TENS value (20 or more, not a scale) that no joiner brought in:
+///        es «treinta y uno» → 31, ro «douăzeci și unu» → 21, fr «vingt et un» → 21, «treinta y un mil» → 31000; «vingt
+///        et onze» stays three words (fr 71 is an entry of its own), and fr «cent et vingt et un» is 120, «et», 1.
+///      Anywhere else the joiner is a word of its own («five and six», «uno y dos»).
 /// 3. A joined number is written in digits and replaces its words; digits the text already has stay as they are and
 ///    never join anything.
 ///
-/// English reads as before LANG-1 but for one place: «tens and unit» — «twenty and five» is now 25, as es «veinte y
-/// cinco» is, and a scale after the unit multiplies it, as es «treinta y un mil» → 31000 must: so en «between twenty and
-/// one hundred dollars» — two numbers — is now «between 2100 dollars». On the server exactly the same; the way back for
-/// English is a key of the pack, an open question of наряд LANG-1.
+/// English says its «and» only after a scale, so it names no tens joiner, and «between twenty and one hundred dollars»
+/// is two numbers — «between 20 and 100 dollars» — exactly as before LANG-1 (one list read in both places made it
+/// «between 2100 dollars»; the server proved every English and Russian reading unchanged against the kernel before
+/// LANG-1).
 ///
 /// A verdict on the phone that the server would not give is a lie shown to the learner, so this file changes only
 /// together with the server's, and `test/data/plan/session/spoken_numbers_test.dart` holds the server's example table
 /// row for row.
 abstract final class SpokenNumbers {
   /// [words] — canonical words; [numberWords] — an entry (a word, or several one space apart) → the digits it says;
-  /// [articles], [joiners] — the pack's lists.
+  /// [articles] — the pack's articles; [joiners] — its joiners after a scale; [tensJoiners] — its joiners after a tens
+  /// value.
   static List<String> fold(
     List<String> words, {
     required Map<String, String> numberWords,
     Set<String> articles = const {},
     Set<String> joiners = const {},
+    Set<String> tensJoiners = const {},
   }) {
     if (numberWords.isEmpty) return words;
     final values = <String, int>{};
@@ -85,11 +91,12 @@ abstract final class SpokenNumbers {
       }
       while (i < n) {
         var viaJoiner = false;
-        if (joiners.contains(words[i]) &&
-            last != null &&
-            (_isScale(last) || (last >= 20 && !joined))) {
+        final afterScale = joiners.contains(words[i]) && _isScale(last);
+        final afterTens =
+            tensJoiners.contains(words[i]) && last != null && last >= 20 && !_isScale(last) && !joined;
+        if (afterScale || afterTens) {
           final next = _valueAt(words, i + 1, values, longest)?.$1;
-          if (next == null || next <= 0 || next >= math.min(100, _place(last))) break;
+          if (next == null || next <= 0 || next >= math.min(100, _place(last!))) break;
           viaJoiner = true;
           i++;
         }

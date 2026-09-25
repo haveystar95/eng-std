@@ -309,7 +309,13 @@ final readonly class SpeechMatch
             return [];
         }
 
-        return SpokenNumbers::fold(explode(' ', $canonical), $pack->numberWords, $pack->articles, $pack->numberJoiners);
+        return SpokenNumbers::fold(
+            explode(' ', $canonical),
+            $pack->numberWords,
+            $pack->articles,
+            $pack->numberJoiners,
+            $pack->numberTensJoiners,
+        );
     }
 
     /**

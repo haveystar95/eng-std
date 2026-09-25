@@ -85,6 +85,24 @@ it('joins a hundred and what follows it with «and», knows a million, and reads
         ->and($ru->toArray()['number_joiners'])->toBe([]);
 });
 
+// Canon (наряд LANG-1 §4): English «and» joins a number only after a scale — `number_joiners`; the joiner after a tens
+// word is a list of its own, `number_tens_joiners`, and English names none. So two numbers said with «and» between them
+// stay two — the same cases as speech_match_test.dart. CATCHES the first cut of LANG-1 («between twenty and one hundred
+// dollars» read as 2100, so a recogniser's «between 20 and 100 dollars» failed the line) and a tens joiner of the pack
+// that the comparison does not hand to the fold.
+it('starts the next number at «and» after a tens word, and joins with a tens joiner only where the pack names one', function () {
+    $speech = new SpeechMatch;
+    $es = new SpeechPack(numberWords: ['treinta' => '30', 'uno' => '1', 'ciento' => '100'], numberTensJoiners: ['y']);
+
+    expect($speech->words('It costs between twenty and one hundred dollars', fix2En()))->toBe(['it', 'costs', 'between', '20', 'and', '100', 'dollars'])
+        ->and($speech->words('twenty and five', fix2En()))->toBe(['20', 'and', '5'])
+        ->and($speech->repeated('It costs between 20 and 100 dollars', 'It costs between twenty and one hundred dollars.', fix2En()))->toBeTrue()
+        ->and(fix2En()->numberTensJoiners)->toBe([])
+        ->and($speech->words('ciento treinta y uno', $es))->toBe(['131'])
+        ->and($speech->words('ciento y uno', $es))->toBe(['100', 'y', '1'])
+        ->and($speech->repeated('131', 'ciento treinta y uno', $es))->toBeTrue();
+});
+
 // Canon: «все смысловые слова ожидаемого текста на месте и по порядку… служебные слова не учитываются». Catches the
 // share that let «He has a rush» pass for «He has a rash» on the owner's phone (проход 20.09, п. 2), and a rule that
 // would fail a learner for the article the recogniser ate.
