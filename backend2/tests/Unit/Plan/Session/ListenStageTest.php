@@ -564,5 +564,7 @@ it('reads a value as a run of number and time words standing together', function
         ->and($en?->says('after one week'))->toBeTrue()
         ->and($en?->says('last night'))->toBeFalse()
         ->and(NumberValues::of(LanguagePack::none('xx')))->toBeNull()
-        ->and(NumberValues::of(lessonPacks()->for('uk')))->toBeNull();
+        // A pack that names the keys and writes none of them (the skeleton a language starts from, наряд LANG-1 §1) —
+        // built here, not borrowed from a real pack that happens to be empty today.
+        ->and(NumberValues::of(new LanguagePack('xx', ['number_pattern' => null, 'time_pattern' => null, 'amount_pattern' => null, 'amount_prefix' => null])))->toBeNull();
 });

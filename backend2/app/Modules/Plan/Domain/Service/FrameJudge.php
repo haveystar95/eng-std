@@ -40,6 +40,14 @@ use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
  *   `negation` is no difference — «not» after a form of be, a modal or the auxiliary have, and «do/does/did not» before a
  *   verb, which is then read by its base: «I don't have any experience» says «I have ___ of experience», «he doesn't
  *   have a fever» says «He has ___». The window is free and the negation in it is the learner's value.
+ * - IN EVERY LANGUAGE ITS OWN WAY (наряд LANG-1 §1): the pack's `negation` is a list of `words`, each free right after a
+ *   word of `after` when `after` is a list (English: be, the modals, have) and ANYWHERE — the first word of the move too
+ *   — when `after` is null or not written: pl «Nie mam gorączki» says «Mam ___», ro «Nu am febră» says «Am ___», es «No
+ *   tengo fiebre» «Tengo ___», it «Non ho la febbre» «Ho ___», fr «Je n'ai pas de fièvre» «J'ai ___» (ne and pas both
+ *   free, the elision spelt out by {@see FrameWords}), de «Ich habe keine Zeit am Montag» «Ich habe Zeit am ___».
+ *   `do_support` stays the English rule. A negation word is only ever free when it is ADDED to the frame's words — one the
+ *   frame has and the move leaves out is a difference like any other, so a positive move is at most almost a negative
+ *   frame. The old English shape with one `word` is read as `words: [word]`.
  * - THE PARTITIVE GOES WITH A QUANTITY (the pack's `partitive`): a window of one determiner («no», «any», «some»…) may
  *   leave out the frame's «of» after it — «I have no experience» is «I have ___ of experience».
  *
@@ -63,9 +71,10 @@ final readonly class FrameJudge
     public function move(string $heard, array $frames, LanguagePack $pack): MoveVerdict
     {
         $sentences = FrameWords::sentences($heard, $pack);
+        $negation = self::negation($pack);
         $matches = [];
         foreach ($frames as $frame) {
-            $match = $this->match($sentences, $frame, $pack);
+            $match = $this->match($sentences, $frame, $pack, $negation);
             if ($match !== null) {
                 $matches[$frame->id()] = $match;
             }
@@ -140,7 +149,7 @@ final readonly class FrameJudge
         if ($words === []) {
             return false;
         }
-        if ($pack->has('dangling_words') && in_array($words[count($words) - 1], $pack->words('dangling_words'), true)) {
+        if (in_array([$words[count($words) - 1]], self::entries('dangling_words', $pack), true)) {
             return true;
         }
         foreach ($frames as $frame) {
@@ -160,9 +169,10 @@ final readonly class FrameJudge
      * sentence (nothing of the frame after it) and the frame's own words.
      *
      * @param  list<array{words: list<string>, at: list<int>, written: list<string>}>  $sentences
+     * @param  array{words: array<string, true>, after: array<string, true>|null, do_support: array<string, true>}  $negation
      * @return array{cost: int, sentence: int, start: int, window: array{0: int, 1: int}|null, open: bool, frameWords: list<string>}|null
      */
-    private function match(array $sentences, ConversationPhrase $frame, LanguagePack $pack): ?array
+    private function match(array $sentences, ConversationPhrase $frame, LanguagePack $pack, array $negation): ?array
     {
         $parts = preg_split(FrameText::SLOT_PATTERN, FrameText::withoutEndMark($frame->frameTarget), 2);
         $window = is_array($parts) && count($parts) === 2;
@@ -173,8 +183,8 @@ final readonly class FrameJudge
         foreach ($sentences as $n => $sentence) {
             foreach (self::starts($sentence['words'], $pack) as $start) {
                 $found = $window
-                    ? $this->withWindow($before, $after, $sentence, $start, $pack)
-                    : $this->whole($before, $sentence['words'], $start, $pack);
+                    ? $this->withWindow($before, $after, $sentence, $start, $pack, $negation)
+                    : $this->whole($before, $sentence['words'], $start, $pack, $negation);
                 if ($found !== null && ($best === null || $found['cost'] < $best['cost'])) {
                     $best = [
                         'cost' => $found['cost'], 'sentence' => $n, 'start' => $start, 'window' => $found['window'],
@@ -195,14 +205,15 @@ final readonly class FrameJudge
      *
      * @param  list<string>  $frame
      * @param  list<string>  $words
+     * @param  array{words: array<string, true>, after: array<string, true>|null, do_support: array<string, true>}  $negation
      * @return array{cost: int, window: null}|null
      */
-    private function whole(array $frame, array $words, int $start, LanguagePack $pack): ?array
+    private function whole(array $frame, array $words, int $start, LanguagePack $pack, array $negation): ?array
     {
         if ($frame === []) {
             return null;
         }
-        $cost = min([self::NEVER, ...$this->costs($frame, $words, $start, $pack)]);
+        $cost = min([self::NEVER, ...$this->costs($frame, $words, $start, $pack, $negation)]);
 
         return $cost <= self::ALMOST ? ['cost' => $cost, 'window' => null] : null;
     }
@@ -215,9 +226,10 @@ final readonly class FrameJudge
      * @param  list<string>  $before
      * @param  list<string>  $after
      * @param  array{words: list<string>, at: list<int>, written: list<string>}  $sentence
+     * @param  array{words: array<string, true>, after: array<string, true>|null, do_support: array<string, true>}  $negation
      * @return array{cost: int, window: array{0: int, 1: int}}|null
      */
-    private function withWindow(array $before, array $after, array $sentence, int $start, LanguagePack $pack): ?array
+    private function withWindow(array $before, array $after, array $sentence, int $start, LanguagePack $pack, array $negation): ?array
     {
         $words = $sentence['words'];
         $n = count($words);
@@ -225,7 +237,7 @@ final readonly class FrameJudge
         $best = null;
         /** @var array<string, int> $afterCosts the cheapest reading of a part after the window from a place — by place and part */
         $afterCosts = [];
-        foreach ($this->costs($before, $words, $start, $pack) as $j => $costBefore) {
+        foreach ($this->costs($before, $words, $start, $pack, $negation) as $j => $costBefore) {
             $from = $start + $j;
             if ($costBefore > self::ALMOST || $from >= $n) {
                 continue;
@@ -240,7 +252,7 @@ final readonly class FrameJudge
                 $costAfter = $after === [] ? 0 : self::NEVER;
                 foreach ($after === [] ? [] : self::afters($after, $words, $from, $to, $pack) as $shortened => $part) {
                     $key = $to.':'.count($part);
-                    $afterCosts[$key] ??= min([self::NEVER, ...$this->costs($part, $words, $to, $pack)]);
+                    $afterCosts[$key] ??= min([self::NEVER, ...$this->costs($part, $words, $to, $pack, $negation)]);
                     // Without its partitive word the part after forgives that word and nothing more: said, or not at all.
                     if ($shortened === 0 || $costBefore + $afterCosts[$key] === 0) {
                         $costAfter = min($costAfter, $afterCosts[$key]);
@@ -282,13 +294,15 @@ final readonly class FrameJudge
     /**
      * THE DIFFERENCES between `$frame` and the move's words from `$from` to each place after it — `result[j]` for
      * `$words[$from .. $from + j)`: a word replaced, added or left out costs one; the negation of the pack costs nothing
-     * (`not` after a form of be, a modal or have; `do/does/did not` before a verb read by its base).
+     * (en: `not` after a form of be, a modal or have, `do/does/did not` before a verb read by its base; pl «nie», fr «ne»
+     * and «pas» wherever they stand — {@see self::negation()}).
      *
      * @param  list<string>  $frame
      * @param  list<string>  $words
+     * @param  array{words: array<string, true>, after: array<string, true>|null, do_support: array<string, true>}  $negation
      * @return list<int>
      */
-    private function costs(array $frame, array $words, int $from, LanguagePack $pack): array
+    private function costs(array $frame, array $words, int $from, LanguagePack $pack, array $negation): array
     {
         $m = count($frame);
         $len = count($words) - $from;
@@ -308,12 +322,12 @@ final readonly class FrameJudge
                 $at = $from + $j;
                 if ($i < $m && $j < $len) {
                     $relax($cost, $i + 1, $j + 1, $here + ($frame[$i] === $words[$at] ? 0 : 1));
-                    if ($j + 2 < $len && self::doSupport($words, $at, $frame[$i], $pack)) {
+                    if ($j + 2 < $len && self::doSupport($words, $at, $frame[$i], $pack, $negation)) {
                         $relax($cost, $i + 1, $j + 3, $here);
                     }
                 }
                 if ($j < $len) {
-                    $relax($cost, $i, $j + 1, $here + (self::freeNot($words, $at, $pack) ? 0 : 1));
+                    $relax($cost, $i, $j + 1, $here + (self::freeNot($words, $at, $negation) ? 0 : 1));
                 }
                 if ($i < $m) {
                     $relax($cost, $i + 1, $j, $here + 1);
@@ -325,31 +339,73 @@ final readonly class FrameJudge
     }
 
     /**
-     * Is `$words[$at]` the negation after a form of be, a modal or the auxiliary have («is not», «can not»)?
+     * Is `$words[$at]` a negation word the pack forgives here — right after a word of its `after` list («is not», «can
+     * not»), or anywhere when the pack names no such list («nie mam», «je ne ai pas»)?
      *
      * @param  list<string>  $words
+     * @param  array{words: array<string, true>, after: array<string, true>|null, do_support: array<string, true>}  $negation
      */
-    private static function freeNot(array $words, int $at, LanguagePack $pack): bool
+    private static function freeNot(array $words, int $at, array $negation): bool
     {
-        $negation = $pack->has('negation') ? $pack->map('negation') : [];
-        $after = is_array($negation['after'] ?? null) ? $negation['after'] : [];
+        if (! isset($negation['words'][$words[$at]])) {
+            return false;
+        }
 
-        return ($negation['word'] ?? null) === $words[$at] && $at > 0 && in_array($words[$at - 1], $after, true);
+        return $negation['after'] === null || ($at > 0 && isset($negation['after'][$words[$at - 1]]));
     }
 
     /**
      * Do `$words[$at .. $at + 3)` say «do/does/did not» + the frame's verb in any form — «doesn't have» for «has»?
      *
      * @param  list<string>  $words
+     * @param  array{words: array<string, true>, after: array<string, true>|null, do_support: array<string, true>}  $negation
      */
-    private static function doSupport(array $words, int $at, string $verb, LanguagePack $pack): bool
+    private static function doSupport(array $words, int $at, string $verb, LanguagePack $pack, array $negation): bool
+    {
+        return isset($negation['do_support'][$words[$at]])
+            && isset($negation['words'][$words[$at + 1]])
+            && WordBases::meet($words[$at + 2], $verb, $pack);
+    }
+
+    /**
+     * THE PACK'S NEGATION AS THE MOVE'S WORDS ARE READ (наряд LANG-1 §1) — `words`, the words each may follow (`after`: a
+     * list, or null for anywhere) and the English `do_support`, each word read by {@see FrameWords} as the move is, so a
+     * pack that writes «N'» or «Nicht» still meets «ne» and «nicht». The old shape — one `word` — is `words: [word]`; a
+     * pack that writes no `negation`, or an empty one, forgives nothing. An entry that reads as more than one word can
+     * never stand for one word of the move, and is left out.
+     *
+     * @return array{words: array<string, true>, after: array<string, true>|null, do_support: array<string, true>}
+     */
+    private static function negation(LanguagePack $pack): array
     {
         $negation = $pack->has('negation') ? $pack->map('negation') : [];
-        $support = is_array($negation['do_support'] ?? null) ? $negation['do_support'] : [];
+        $words = $negation['words'] ?? (isset($negation['word']) ? [$negation['word']] : []);
+        $after = $negation['after'] ?? null;
 
-        return in_array($words[$at], $support, true)
-            && ($negation['word'] ?? null) === $words[$at + 1]
-            && WordBases::meet($words[$at + 2], $verb, $pack);
+        return [
+            'words' => self::oneWordEach(is_array($words) ? $words : [], $pack),
+            'after' => is_array($after) ? self::oneWordEach($after, $pack) : null,
+            'do_support' => self::oneWordEach(is_array($negation['do_support'] ?? null) ? $negation['do_support'] : [], $pack),
+        ];
+    }
+
+    /**
+     * The entries of a list of the pack that read as exactly one word of a move, as a set.
+     *
+     * @param  array<mixed>  $entries
+     * @return array<string, true>
+     */
+    private static function oneWordEach(array $entries, LanguagePack $pack): array
+    {
+        $out = [];
+        foreach ($entries as $entry) {
+            $said = is_string($entry) ? FrameWords::of($entry, $pack, articles: true) : [];
+            if (count($said) === 1) {
+                $out[$said[0]] = true;
+            }
+        }
+
+        return $out;
     }
 
     /**

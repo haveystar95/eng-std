@@ -560,15 +560,25 @@ function planShiftDay(string $planId, int $days = 1): void
 /**
  * THE LANGUAGE PACKS AS THE DEPLOYMENT HAS THEM (наряд GEN-2b) — read from `config/lesson/lang/*.php` by path, so a
  * Unit test that boots no application checks a lesson with the very words production reads.
+ *
+ * EVERY FILE OF THE DIRECTORY (наряд LANG-1 §1), not a list of codes kept here: a pack a language executor adds is read
+ * by every test the day it lands, as production reads it — and a test that needs a language WITHOUT a pack builds one
+ * ({@see App\Modules\Plan\Domain\Check\Language\LanguagePack::none()}), it does not borrow a real pack that happens to
+ * be empty today. Read once per process: the packs are immutable, and the directory does not change under a run.
  */
 function lessonPacks(): App\Modules\Plan\Domain\Check\Language\LanguagePacks
 {
-    $packs = [];
-    foreach (['en', 'ru', 'uk', 'ro'] as $code) {
-        $packs[$code] = require dirname(__DIR__)."/config/lesson/lang/{$code}.php";
+    static $deployed = null;
+    if ($deployed === null) {
+        $packs = [];
+        foreach (glob(dirname(__DIR__).'/config/lesson/lang/*.php') ?: [] as $file) {
+            $packs[basename($file, '.php')] = require $file;
+        }
+        ksort($packs);
+        $deployed = new App\Modules\Plan\Domain\Check\Language\LanguagePacks($packs);
     }
 
-    return new App\Modules\Plan\Domain\Check\Language\LanguagePacks($packs);
+    return $deployed;
 }
 
 /**

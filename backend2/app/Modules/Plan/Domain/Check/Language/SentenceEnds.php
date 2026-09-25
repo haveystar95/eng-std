@@ -30,9 +30,25 @@ use App\Modules\Plan\Domain\Service\Words;
  *
  * Heuristic on purpose, like every rule of the packs: a word of the list before a dot is read as the abbreviation
  * whatever it means there — which is why a list keeps out a word that is also an ordinary one («No.»).
+ *
+ * THE QUOTES OF SEVEN LANGUAGES (наряд LANG-1 §1). What may stand between an end and the space after it is every
+ * closing quote the taught and spoken languages write ({@see self::CLOSERS}): the English ” ’, the German „…“ and ‚…‘
+ * (so «„Ich komme.“» ends with «.»), the Polish and Romanian „…”, the French « … » with its spaces inside — a no-break
+ * one too, `\s` reads it — and the German reversed »…«. What may stand before an abbreviation is every opening one,
+ * and the Spanish ¿ ¡ ({@see self::OPENERS}: «¿Sr. García?» ends once). ¿ and ¡ OPEN a sentence and never end one: a
+ * pack that lists them among its `sentence_ends` has them left out, or «¿Puedo pagar?» would ask twice.
  */
 final readonly class SentenceEnds
 {
+    /** What may stand after an end mark and before the space — or the end — that follows it: spaces, closing quotes, brackets. */
+    private const CLOSERS = '\s»«"\'“”‘’›‹)\]';
+
+    /** What may stand before an abbreviation: a space, an opening quote or bracket, a Spanish opening mark. */
+    private const OPENERS = '\s("«»\'“„‚‹›\[¿¡';
+
+    /** The marks that open a sentence — never an end, whatever a pack lists. */
+    private const OPENING_MARKS = ['¿', '¡'];
+
     /** @var array<string, string> mark → what it says (`statement`, `question`, …) */
     private array $marks;
 
@@ -45,15 +61,17 @@ final readonly class SentenceEnds
     {
         $marks = [];
         foreach ($pack->map('sentence_ends') as $mark => $kind) {
-            $marks[(string) $mark] = is_string($kind) ? $kind : '';
+            if (! in_array((string) $mark, self::OPENING_MARKS, true)) {
+                $marks[(string) $mark] = is_string($kind) ? $kind : '';
+            }
         }
         $this->marks = $marks;
         $this->markClass = implode('', array_map(static fn (string $m): string => preg_quote($m, '/'), array_keys($marks)));
 
         $listed = $pack->has('abbreviations') ? $pack->words('abbreviations') : [];
-        $this->abbreviations = $listed === [] ? null : '/(?<![^\s("«\'“\[])(?:'
+        $this->abbreviations = $listed === [] ? null : '/(?<![^'.self::OPENERS.'])(?:'
             .implode('|', array_map(static fn (string $a): string => str_replace(' ', '\s+', preg_quote($a, '/')), $listed))
-            .')(?![^\s»"\'”’)\]'.$this->markClass.',;:])/iu';
+            .')(?![^'.self::CLOSERS.$this->markClass.',;:])/iu';
     }
 
     /**
@@ -143,7 +161,7 @@ final readonly class SentenceEnds
         }
         $last = $ends[count($ends) - 1];
 
-        return preg_match('/^[\s»"\'”’)\]]*$/u', substr($text, $last[0] + $last[2])) === 1 ? $last : null;
+        return preg_match('/^['.self::CLOSERS.']*$/u', substr($text, $last[0] + $last[2])) === 1 ? $last : null;
     }
 
     /**
@@ -156,8 +174,13 @@ final readonly class SentenceEnds
      */
     private function ends(string $text): array
     {
+        // A pack whose `sentence_ends` lists nothing (or only the opening ¿ ¡) knows no end: every text is one sentence
+        // with no mark — an empty class would be no pattern at all.
+        if ($this->markClass === '') {
+            return [];
+        }
         $masked = $this->abbreviationMarks($text);
-        preg_match_all('/['.$this->markClass.']+(?=[\s»"\'”’)\]]|$)/u', $text, $runs, PREG_OFFSET_CAPTURE);
+        preg_match_all('/['.$this->markClass.']+(?=['.self::CLOSERS.']|$)/u', $text, $runs, PREG_OFFSET_CAPTURE);
 
         $out = [];
         foreach ($runs[0] as [$run, $offset]) {
@@ -173,7 +196,7 @@ final readonly class SentenceEnds
             }
             if ($first !== null) {
                 $out[] = [$first, $kept, $offset + strlen($run) - $first, false];
-            } elseif (preg_match('/^[\s»"\'”’)\]]*$/u', substr($text, $offset + strlen($run))) === 1) {
+            } elseif (preg_match('/^['.self::CLOSERS.']*$/u', substr($text, $offset + strlen($run))) === 1) {
                 $out[] = [$offset, $run, strlen($run), true];
             }
         }

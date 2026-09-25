@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
@@ -9,8 +10,32 @@ use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
 
 /**
  * THE JUDGE OF THE TALK'S CONSTRUCTIONS — A COHERENT PHRASE, NOT A BAG OF WORDS (наряд FIX-4 §2), on the frames of the
- * owner's gym rehearsal (plan 2DX8QC): «Ресепшен зала» and «С тренером», seven frames each.
+ * owner's gym rehearsal (plan 2DX8QC): «Ресепшен зала» and «С тренером», seven frames each — and (наряд LANG-1 §1) the
+ * negation, elisions and opening marks of the six new targets, on packs built here in the shape the order fixes: the real packs
+ * are the language executors' to write, and a row below must not change when they land.
  */
+
+/**
+ * A pack of the judge's keys only, each written as the no-op the key spec gives it, with `$keys` over them — a language
+ * as a language executor writes it for the judge.
+ *
+ * @param  array<string, mixed>  $keys
+ */
+function fjPack(string $code, array $keys = []): LanguagePack
+{
+    return new LanguagePack($code, [
+        'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'],
+        'articles' => [], 'contractions' => [], 'contractions_before' => [], 'intro_words' => [], 'clause_starters' => [],
+        'negation' => [], 'partitive' => [], 'dangling_words' => [],
+        ...$keys,
+    ]);
+}
+
+/** One frame `p1` of a scene `x`, judged in a move under `$pack`. */
+function fjOne(string $heard, string $frame, LanguagePack $pack): MoveVerdict
+{
+    return (new FrameJudge)->move($heard, [new ConversationPhrase('x', 'p1', $frame, '', null, null)], $pack);
+}
 
 /** @return list<ConversationPhrase> */
 function fjReception(): array
@@ -130,7 +155,10 @@ it('forgives nothing in a language whose pack writes no opening words', function
 
     expect((new FrameJudge)->move('это мой первый визит', $frame, $ru)->said)->toBe(['r:p1'])
         ->and((new FrameJudge)->move('да это мой первый визит', $frame, $ru))->toEqual(new MoveVerdict([], ['r:p1']))
-        ->and((new FrameJudge)->move('я здесь и это мой первый визит', $frame, $ru))->toEqual(new MoveVerdict([], ['r:p1']));
+        ->and((new FrameJudge)->move('я здесь и это мой первый визит', $frame, $ru))->toEqual(new MoveVerdict([], ['r:p1']))
+        // A language with no pack at all, and one whose judge's keys are the empty no-ops, the same (наряд LANG-1 §1).
+        ->and((new FrameJudge)->move('да это мой первый визит', $frame, LanguagePack::none('xx')))->toEqual(new MoveVerdict([], ['r:p1']))
+        ->and((new FrameJudge)->move('не это мой первый визит', $frame, fjPack('xx')))->toEqual(new MoveVerdict([], ['r:p1']));
 });
 
 // Canon (наряд FIX-4b §1): «префикс каркаса может стоять в середине высказывания сразу после союза из ключа пакета
@@ -153,4 +181,114 @@ it('reads a construction after a conjunction as the start of a clause', function
         // A conjunction opens a clause wherever it stands — at the start of a sentence too.
         ->and(fjJudge('But I have some shoulder pain', fjTrainer()))->toEqual(new MoveVerdict(['s2:p3'], [], ['s2:p3' => 'shoulder pain']))
         ->and(fjJudge('He has a fever and a sore throat.', $fever)->values)->toBe(['d:p1' => 'a fever and a sore throat']);
+});
+
+// Canon (наряд LANG-1 §1, the order's own lines): «слово из words, вставленное в ход, ничего не стоит — сразу после слова
+// из after, когда after — список; ГДЕ УГОДНО (включая первое слово), когда after — null»: pl «Nie mam gorączki» is «Mam
+// ___», ro «Nu am febră» (and «N-am febră», the hyphen a space) is «Am ___», es «No tengo fiebre» is «Tengo ___», it «Non
+// ho la febbre» is «Ho ___» with the article in the value. CATCHES the negation of a language whose pack writes no `after`
+// counted as a word added (one difference: the construction only almost said), and a negation free in a pack that does
+// not list it.
+it('reads a construction said in the negative as the construction in every language, the negation anywhere', function () {
+    $pl = fjPack('pl', ['negation' => ['words' => ['nie'], 'after' => null, 'do_support' => []]]);
+    $ro = fjPack('ro', ['negation' => ['words' => ['nu', 'n'], 'after' => null, 'do_support' => []]]);
+    $es = fjPack('es', ['negation' => ['words' => ['no'], 'do_support' => []]]);
+    $it = fjPack('it', ['negation' => ['words' => ['non'], 'after' => null, 'do_support' => []], 'articles' => ['il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'uno', 'una']]);
+
+    expect(fjOne('Nie mam gorączki.', 'Mam ___.', $pl))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'gorączki']))
+        ->and(fjOne('Nu am febră', 'Am ___.', $ro))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'febră']))
+        ->and(fjOne('N-am febră', 'Am ___.', $ro))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'febră']))
+        // `after` not written at all is «anywhere» too.
+        ->and(fjOne('No tengo fiebre', 'Tengo ___.', $es))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'fiebre']))
+        ->and(fjOne('Non ho la febbre', 'Ho ___.', $it))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'la febbre']))
+        // Without the key the same move is one word added — almost.
+        ->and(fjOne('Nie mam gorączki.', 'Mam ___.', fjPack('pl')))->toEqual(new MoveVerdict([], ['x:p1']))
+        // The frame's own negation left out of the move is a difference like any other: a positive move is at most almost
+        // a negative frame.
+        ->and(fjOne('Mam gorączkę.', 'Nie mam ___.', $pl))->toEqual(new MoveVerdict([], ['x:p1']))
+        // A negation beyond it in the frame's words still leaves one difference to count.
+        ->and(fjOne('Nie mam dużej gorączki', 'Mam wysoką ___.', $pl))->toEqual(new MoveVerdict([], ['x:p1']));
+});
+
+// The key spec (docs/research/lang-1/pack-keys.md §4.3): «`'after' => []` (пустой список) — ни после чего, т. е. никогда;
+// не путайте с null», and «каждая запись читается как слово хода: «N'», «Nicht» тоже сработают». CATCHES an empty `after`
+// read as «anywhere» (a pack that switches the rule off with [] forgiving the negation everywhere), and the negation's
+// entries compared as written — an elided «N’» or a capitalised «Pas» of a pack never meeting the move's «ne», «pas».
+it('reads an empty after as never, and the negation\'s entries as the move\'s words are read', function () {
+    $never = fjPack('pl', ['negation' => ['words' => ['nie'], 'after' => [], 'do_support' => []]]);
+    $fr = fjPack('fr', [
+        'contractions' => ["j'" => 'je', "n'" => 'ne'],
+        'negation' => ['words' => ['N’', 'Pas'], 'after' => null, 'do_support' => []],
+    ]);
+
+    expect(fjOne('Nie mam gorączki.', 'Mam ___.', $never))->toEqual(new MoveVerdict([], ['x:p1']))
+        ->and(fjOne('Mam gorączkę.', 'Mam ___.', $never)->said)->toBe(['x:p1'])
+        ->and(fjOne("Je n'ai pas de fièvre.", "J'ai ___.", $fr))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'pas de fièvre']));
+});
+
+// Canon (наряд LANG-1 §1): «Je n'ai pas de fièvre» vs «J'ai ___» is said — the elisions «j'», «n'» spelt out by the pack's
+// contractions (keys ending with an apostrophe), «ne» and «pas» both free anywhere, either apostrophe. The window keeps
+// «pas de fièvre»: the negation in the window is the learner's value. CATCHES an elision read as one word («jai», «nai»),
+// the typographic apostrophe of a phone keyboard not read as one, and the spoken negation without «ne» not taken.
+it('reads a French negation around an elided verb as the construction', function () {
+    $fr = fjPack('fr', [
+        'contractions' => ["j'" => 'je', "n'" => 'ne', "l'" => 'le', "d'" => 'de', "qu'" => 'que'],
+        'negation' => ['words' => ['ne', 'pas'], 'after' => null, 'do_support' => []],
+        'articles' => ['le', 'la', 'les', 'un', 'une'],
+    ]);
+
+    expect(fjOne("Je n'ai pas de fièvre.", "J'ai ___.", $fr))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'pas de fièvre']))
+        ->and(fjOne('Je n’ai pas de fièvre', 'J’ai ___.', $fr))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'pas de fièvre']))
+        ->and(fjOne("J'ai pas de fièvre", "J'ai ___.", $fr)->said)->toBe(['x:p1'])
+        ->and(fjOne("J'ai de la fièvre depuis hier", "J'ai ___ depuis hier.", $fr))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'de la fièvre']))
+        // The elided article is the article: «l'hôpital» is «hôpital» to the comparison, «l'» in the value as said.
+        ->and(fjOne("Je vais à l'hôpital", 'Je vais à ___.', $fr))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => "l'hôpital"]))
+        // Without the elisions «j'ai» is one word no move of the learner's has — «Je» in its place is a difference.
+        ->and(fjOne("Je n'ai pas de fièvre.", "J'ai ___.", fjPack('fr', ['negation' => ['words' => ['ne', 'pas'], 'after' => null]])))->toEqual(new MoveVerdict([], ['x:p1']));
+});
+
+// Canon (наряд LANG-1 §1): de «nicht»/«kein…» are free anywhere. «Ich habe keine Zeit am Montag» says «Ich habe Zeit am
+// ___»; «Das passt mir nicht» says «Das passt mir.» and is only almost «Das passt mir am ___.» — «am» is left out and the
+// window has nothing but the negation; «Das passt mir am Montag nicht» says it, the negation in the window the learner's.
+// CATCHES «keine» counted as a word added, and a negation that makes a construction said with nothing in its window.
+it('reads a German negation as sensibly: free inside the frame\'s words, the learner\'s own in the window', function () {
+    $de = fjPack('de', ['negation' => ['words' => ['nicht', 'kein', 'keine', 'keinen', 'keinem', 'keiner', 'keines'], 'after' => null, 'do_support' => []]]);
+
+    expect(fjOne('Ich habe keine Zeit am Montag', 'Ich habe Zeit am ___.', $de))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'Montag']))
+        ->and(fjOne('Das passt mir nicht.', 'Das passt mir.', $de)->said)->toBe(['x:p1'])
+        ->and(fjOne('Das passt mir nicht', 'Das passt mir am ___.', $de))->toEqual(new MoveVerdict([], ['x:p1']))
+        ->and(fjOne('Das passt mir am Montag nicht', 'Das passt mir am ___.', $de))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'Montag nicht']))
+        ->and(fjOne('Das passt mir nicht am Montag', 'Das passt mir am ___.', $de))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'Montag']));
+});
+
+// Canon (наряд LANG-1 §1): «старая en-форма с одной строкой word продолжает работать (читается как words: [word])», and
+// English keeps its `after` list — «not» is free after be, a modal or have, nowhere else. CATCHES the new shape read
+// differently from the old one, and English «not» made free anywhere by the generalisation.
+it('keeps English negation as it was, in the old shape and the new', function () {
+    $en = require dirname(__DIR__, 3).'/config/lesson/lang/en.php';
+    $after = $en['negation']['after'];
+    $old = new LanguagePack('en', ['negation' => ['word' => 'not', 'do_support' => ['do', 'does', 'did'], 'after' => $after]] + $en);
+    $new = new LanguagePack('en', ['negation' => ['words' => ['not'], 'do_support' => ['do', 'does', 'did'], 'after' => $after]] + $en);
+    $moves = ['I don\'t have any experience', 'I am not working on anything', 'Not I have some shoulder pain', 'I have not some shoulder pain', 'no, he doesn\'t have a fever'];
+    $fever = [new ConversationPhrase('d', 'p1', 'He has ___.', 'У него ___.', null, null)];
+
+    foreach ($moves as $move) {
+        expect((new FrameJudge)->move($move, [...fjTrainer(), ...$fever], $new))->toEqual((new FrameJudge)->move($move, [...fjTrainer(), ...$fever], $old));
+    }
+    expect(fjJudge('Not I have some shoulder pain', fjTrainer()))->toEqual(new MoveVerdict([], ['s2:p3']))
+        ->and(fjJudge('I have not some shoulder pain', fjTrainer())->said)->toBe(['s2:p3']);
+});
+
+// Canon (наряд LANG-1 §1): the words are compared in the kernel's folded form — ß is ss, ş (cedilla) is ș (comma), œ is
+// oe — on both sides; and a Spanish question keeps its ¿ out of the words. CATCHES «Ich heisse Anna» not said for «Ich
+// heiße ___» and a recogniser's cedilla «Aş» not meeting the frame's «Aș».
+it('compares the words in one spelling of a letter, and reads past the Spanish opening marks', function () {
+    $es = fjPack('es', ['intro_words' => ['sí', 'vale'], 'negation' => ['words' => ['no'], 'after' => null]]);
+
+    expect(fjOne('Ich heisse Anna', 'Ich heiße ___.', fjPack('de'))->said)->toBe(['x:p1'])
+        ->and(fjOne('Ich heiße Anna', 'Ich heisse ___.', fjPack('de'))->said)->toBe(['x:p1'])
+        ->and(fjOne('Aş vrea o cafea', 'Aș vrea ___.', fjPack('ro'))->said)->toBe(['x:p1'])
+        ->and(fjOne('Sí, ¿puedo pagar con tarjeta?', '¿Puedo pagar con ___?', $es))->toEqual(new MoveVerdict(['x:p1'], [], ['x:p1' => 'tarjeta']))
+        ->and(fjOne('¡Vale! ¿Puedo pagar con tarjeta?', '¿Puedo pagar con ___?', $es)->said)->toBe(['x:p1'])
+        ->and(fjOne('¿No puedo pagar con tarjeta?', '¿Puedo pagar con ___?', $es)->said)->toBe(['x:p1']);
 });

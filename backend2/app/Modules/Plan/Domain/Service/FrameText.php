@@ -19,6 +19,13 @@ use App\Modules\Plan\Domain\Lesson\Phrase;
  * stands, the frame's first letter may be lowered («Okay, he will rest at home.» for «He will rest ___.»), and the
  * mark that ends the sentence (. ! ? …) is left out on both sides — a frame written without its full stop is still
  * the line that has one.
+ *
+ * THE FIRST LETTER IS A LETTER (наряд LANG-1 §1): Spanish opens a question and an exclamation with ¿ and ¡, and the
+ * mark stays with the words it opens — «Sí, ¿puedo pagar con tarjeta?» is the frame «¿Puedo pagar con ___?» after its
+ * glue, exactly as «Yes, can I pay by card?» is «Can I pay ___?». So the letter whose case is forgiven, the letter a
+ * sentence is capitalised at and the glue a line opens with are read past those opening marks; the marks themselves are
+ * compared character by character like everything else (a line that drops the frame's ¿ is not the frame). Nothing of it
+ * touches a language that writes no ¿ ¡.
  */
 final class FrameText
 {
@@ -26,6 +33,9 @@ final class FrameText
 
     /** The mark a sentence ends with, as the assembly reads it — the same for every language of a lesson. */
     private const END_MARK = '/[.!?…]+$/u';
+
+    /** The marks that open a sentence before its first letter (Spanish ¿ ¡) — read past for the first letter's case. */
+    private const OPENING_MARKS = '/^[¿¡]+/u';
 
     private const GLUE_MAX_WORDS = 3;
 
@@ -172,21 +182,29 @@ final class FrameText
         return self::capitalized(self::withEndMarkOf(self::fill($frameNative, $fillerNative, $ends), $endLike));
     }
 
-    /** `$text` with its first letter upper-cased; a text that starts with something else is left alone. */
+    /**
+     * `$text` with its first letter upper-cased — past the Spanish opening marks («¿la farmacia está abierta?» →
+     * «¿La farmacia está abierta?»); a text that starts with something else is left alone.
+     */
     public static function capitalized(string $text): string
     {
         $trimmed = ltrim($text);
+        if ($trimmed === '') {
+            return $text;
+        }
+        [$opening, $rest] = self::openingMarks($trimmed);
 
-        return $trimmed === '' ? $text : mb_strtoupper(mb_substr($trimmed, 0, 1)).mb_substr($trimmed, 1);
+        return $rest === '' ? $trimmed : $opening.mb_strtoupper(mb_substr($rest, 0, 1)).mb_substr($rest, 1);
     }
 
     /**
      * Leading conversational glue of any learner line, by its shape: a short prefix up to the first
-     * comma («Yes, », «Okay, thanks, »). What «10 words, not counting leading glue» leaves out.
+     * comma («Yes, », «Okay, thanks, »), an exclamation opened by ¡ too («¡Claro! »). What «10 words, not counting
+     * leading glue» leaves out.
      */
     public static function leadingGlue(string $text): string
     {
-        if (preg_match('/^((?:[\p{L}\'’]+\s*){1,'.self::GLUE_MAX_WORDS.'}[,!—–]\s+)/u', trim($text), $m) !== 1) {
+        if (preg_match('/^([¡¿]?(?:[\p{L}\'’]+\s*){1,'.self::GLUE_MAX_WORDS.'}[,!—–]\s+)/u', trim($text), $m) !== 1) {
             return '';
         }
 
@@ -238,15 +256,33 @@ final class FrameText
         return Words::count($prefix) <= self::GLUE_MAX_WORDS;
     }
 
+    /**
+     * The same text but, perhaps, the case of its first letter — read past the Spanish opening marks, which must be the
+     * same on both sides: «¿puedo pagar…» is «¿Puedo pagar…», «puedo pagar…» is not.
+     */
     private static function equalButFirstLetterCase(string $a, string $b): bool
     {
         if ($a === $b) {
             return true;
         }
-        if ($a === '' || $b === '' || mb_substr($a, 1) !== mb_substr($b, 1)) {
+        [$openA, $a] = self::openingMarks($a);
+        [$openB, $b] = self::openingMarks($b);
+        if ($openA !== $openB || $a === '' || $b === '' || mb_substr($a, 1) !== mb_substr($b, 1)) {
             return false;
         }
 
         return mb_strtolower(mb_substr($a, 0, 1)) === mb_strtolower(mb_substr($b, 0, 1));
+    }
+
+    /**
+     * The Spanish opening marks a text starts with, and the text after them.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private static function openingMarks(string $text): array
+    {
+        $opening = preg_match(self::OPENING_MARKS, $text, $m) === 1 ? $m[0] : '';
+
+        return [$opening, substr($text, strlen($opening))];
     }
 }

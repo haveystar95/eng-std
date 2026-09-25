@@ -116,3 +116,74 @@ it('reads the Russian abbreviations, a space inside one being any run of spaces'
 it('throws for a pack without sentence_ends', function () {
     expect(static fn () => new SentenceEnds(LanguagePack::none('xx')))->toThrow(App\Modules\Plan\Domain\Exception\LanguagePackKeyMissing::class);
 });
+
+/**
+ * A pack of the four marks every language writes and the abbreviations given — a language of LANG-1 as its executor
+ * writes it (наряд LANG-1 §1); `$extra` marks over them (a pack that lists the Spanish opening ones by mistake).
+ *
+ * @param  list<string>  $abbreviations
+ * @param  array<string, string>  $extra
+ */
+function endsOfMarks(array $abbreviations = [], array $extra = []): SentenceEnds
+{
+    return new SentenceEnds(new LanguagePack('xx', [
+        'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis', ...$extra],
+        'abbreviations' => $abbreviations,
+    ]));
+}
+
+// Canon (наряд LANG-1 §1): «немецкие кавычки „…“ (U+201E/U+201C) и французские « … » с пробелами внутри — закрывающие там,
+// где может стоять конец предложения». CATCHES a German quotation whose full stop stands before «“» read as no end (the
+// frame «„Ich komme.“» with no mark, two sentences counted as one), a French one with the spaces of its typography — a
+// no-break one too — read as unclosed, and an abbreviation right after an opening quote not read as one.
+it('closes a sentence before the German and the French closing quotes', function () {
+    $de = endsOfMarks(['z. B.', 'Dr.']);
+    $fr = endsOfMarks(['M.', 'etc.']);
+
+    expect($de->terminal('„Ich komme.“'))->toBe('.')
+        ->and($de->carriesSentence('„Ja.“'))->toBeTrue()
+        ->and($de->count('Er sagte: „Ich komme.“ Dann ging er.'))->toBe(2)
+        ->and($de->terminalKind('Sie fragte: „Kommst du?“'))->toBe('question')
+        ->and($de->terminal('‚Ja.‘'))->toBe('.')
+        ->and($de->terminal('»Ich komme.«'))->toBe('.')
+        ->and($de->count('„Dr. Müller kommt.“'))->toBe(1)
+        ->and($de->count('Obst, z. B. Äpfel, ist gesund.'))->toBe(1)
+        ->and($fr->terminal('« Oui. »'))->toBe('.')
+        ->and($fr->terminalKind("«\u{00A0}Vous avez de la fièvre\u{00A0}?\u{00A0}»"))->toBe('question')
+        ->and($fr->terminalKind('Vous avez de la fièvre ?'))->toBe('question')
+        ->and($fr->count('« Oui. » Il part.'))->toBe(2)
+        ->and($fr->count("Il a dit « non ». C'est tout."))->toBe(2)
+        ->and($fr->count('« M. Dupont arrive. »'))->toBe(1)
+        // The Polish and Romanian „…” close as the English ones did.
+        ->and($de->terminal('„Tak.”'))->toBe('.');
+});
+
+// Canon (наряд LANG-1 §1): «испанские открывающие ¿ ¡ ничего не ломают». CATCHES a question counted twice, a sentence
+// ended before its own ¿, and an abbreviation after ¿ read as an end — and a pack that lists ¿ ¡ among its ends by mistake
+// doing any of it.
+it('reads the Spanish opening marks as no end, whatever the pack lists', function () {
+    foreach ([endsOfMarks(['Sr.', 'Sra.']), endsOfMarks(['Sr.', 'Sra.'], ['¿' => 'question', '¡' => 'exclamation'])] as $es) {
+        expect($es->questionMarks('¿Puedo pagar con tarjeta?'))->toBe(1)
+            ->and($es->terminalKind('¿Puedo pagar con tarjeta?'))->toBe('question')
+            ->and($es->terminalKind('¡Qué bien!'))->toBe('exclamation')
+            ->and($es->count('¿Puedo pagar? ¡Claro!'))->toBe(2)
+            ->and($es->sentences('Sí, ¿puedo pagar con tarjeta? ¡Claro!'))->toBe(['Sí, ¿puedo pagar con tarjeta', '¡Claro'])
+            ->and($es->count('¿El Sr. García está?'))->toBe(1)
+            ->and($es->count('¿Sr. García?'))->toBe(1)
+            ->and($es->carriesSentence('¿Sí?'))->toBeTrue()
+            ->and($es->carriesSentence('Sr.'))->toBeFalse()
+            ->and($es->terminal('¿'))->toBe('');
+    }
+});
+
+// The key spec (наряд LANG-1 §1): `sentence_ends` is never written empty — every language ends a sentence with a full stop.
+// A pack that writes it so anyway knows no end rather than breaking every check that reads it. CATCHES an empty mark class
+// compiled into a pattern that is no pattern.
+it('knows no end for a pack whose sentence_ends is empty, and does not break', function () {
+    $none = new SentenceEnds(new LanguagePack('xx', ['sentence_ends' => []]));
+
+    expect($none->count('Hola. Adiós.'))->toBe(1)
+        ->and($none->terminal('Hola.'))->toBe('')
+        ->and($none->sentences('Hola. Adiós.'))->toBe(['Hola. Adiós.'])
+        ->and($none->questionMarks('¿Qué?'))->toBe(0);
+});

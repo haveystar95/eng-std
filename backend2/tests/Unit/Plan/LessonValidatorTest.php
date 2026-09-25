@@ -481,8 +481,10 @@ it('addresses every finding to its card', function () {
 
 // Canon GEN-2b: «правила не про английский и русский, а про пару (target_lang, native_lang); код, для которого пакета
 // нет, — пропуск проверки со счётчиком lang.pack_missing, НЕ находка». Catches a validator that reads a language it
-// has no pack for with another language's words (a Romanian learner's lines judged by Russian rules), that counts a
-// skip as a finding, that crashes on a pack with no keys — and one that skips checks that need no pack.
+// has no pack for with another language's words (a learner of a language nobody described judged by Russian rules),
+// that counts a skip as a finding, that crashes on a pack with no keys — and one that skips checks that need no pack.
+// The learner's language here is one WITHOUT a pack (наряд LANG-1 §1: the Romanian pack it used to borrow is written
+// now), so the row does not depend on which real pack happens to be empty.
 it('skips a check whose language has no pack and writes the skip down, finding nothing of it', function () {
     $p = lvPayload();
     $p['vocabulary'][1]['pronunciation_native'] = 'sharp';
@@ -492,12 +494,12 @@ it('skips a check whose language has no pack and writes the skip down, finding n
     $p['phrases'][4]['slot']['fillers'][2]['target'] = 'if he feels better';
 
     $ru = lessonContext('ru', 'en');
-    $ro = lessonContext('ro', 'en');
+    $bare = new LessonValidationContext(8, 8, LanguagePack::none('xx'), lessonPacks()->for('en'), null, new EarlierDays, 'Doctor');
     $codes = static fn (LessonValidationContext $context): array => array_values(array_unique(array_map(
         static fn (LessonViolation $v): string => $v->code,
         lvRun($p, null, $context),
     )));
-    // `frame.no_end_punct` reads both sides: the target frame is still read for the Romanian learner, the native one is not.
+    // `frame.no_end_punct` reads both sides: the target frame is still read for the learner without a pack, the native one is not.
     $native = [
         LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT,
         LessonCodes::FRAME_NO_END_PUNCT, LessonCodes::FRAME_NATIVE_PUNCT, LessonCodes::FRAME_NATIVE_AGREEMENT,
@@ -507,10 +509,10 @@ it('skips a check whose language has no pack and writes the skip down, finding n
 
     expect($codes($ru))->toContain(LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::NATIVE_GENDERED_PAST, LessonCodes::FRAME_NATIVE_AGREEMENT, LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER)
         ->and($ru->skips->codes())->toBe([])
-        ->and(array_intersect($codes($ro), $native))->toBe([])
-        ->and($ro->skips->codes())->toEqualCanonicalizing($native)
-        // The target's own rules and the rules that need no language still run for the Romanian learner.
-        ->and($codes($ro))->toContain(LessonCodes::FILLER_IS_CLAUSE);
+        ->and(array_intersect($codes($bare), $native))->toBe([])
+        ->and($bare->skips->codes())->toEqualCanonicalizing($native)
+        // The target's own rules and the rules that need no language still run for the learner without a pack.
+        ->and($codes($bare))->toContain(LessonCodes::FILLER_IS_CLAUSE);
 
     // No pack at all, on either side: nothing but the language-free rules, and no rule reads a key it was not given.
     $none = new LessonValidationContext(8, 8, LanguagePack::none('xx'), LanguagePack::none('yy'));
@@ -730,4 +732,97 @@ it('counts the partner\'s sentences by where a sentence ends, an abbreviation\'s
     expect($at('We have 3 p.m. and 5:30 p.m. today.'))->toBe([])
         ->and($at('Ask Dr. Smith. He is here today.'))->toBe([])
         ->and($at("I'm here. Are you? Yes."))->toBe(['A5']);
+});
+
+/**
+ * WHAT A PACK LEAVES THE VALIDATOR WITHOUT (наряд LANG-1 §1, docs/research/lang-1/pack-keys.md «Как проверить пакет»):
+ * every check skipped for want of a key of `$code`'s pack, read on `$side` — the target of a Russian learner, or the
+ * learner's own language under English. The fake lesson is read whatever it says: which checks a pair skips does not
+ * depend on the lesson, only on the packs, and the learner's gender is left unknown so the gendered past is asked too.
+ *
+ * @return list<array{code: string, side: string, language: string, keys: list<string>}>
+ */
+function lvPackGaps(string $code, string $side): array
+{
+    $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
+    lvRun(lvPayload(), null, $context);
+
+    return array_values(array_map(
+        static fn (App\Modules\Plan\Domain\Check\Language\PackSkip $skip): array => $skip->toArray(),
+        array_filter($context->skips->all(), static fn (App\Modules\Plan\Domain\Check\Language\PackSkip $skip): bool => $skip->language === $code),
+    ));
+}
+
+// Canon GEN-2b + LANG-1 §1: «пакет языка — все ключи, которые читает его сторона; пропуск (lang.pack_missing) — только у
+// языка без пакета». The deployed English pack gives the target side everything, the Russian the native side — the two
+// the spec's own example values are taken from. CATCHES a key of either pack lost or set to null (a check silently
+// skipped on every live day), and the key spec's snippet going stale against the validator.
+it('leaves no check without its key for the English target and the Russian learner', function () {
+    expect(lvPackGaps('en', 'target'))->toBe([])
+        ->and(lvPackGaps('ru', 'native'))->toBe([])
+        // The snippet sees a skip where there is one: a language with no pack misses every key of its side.
+        ->and(array_column(lvPackGaps('xx', 'native'), 'code'))->toContain(LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT, LessonCodes::FRAME_NATIVE_AGREEMENT)
+        ->and(array_column(lvPackGaps('xx', 'target'), 'code'))->toContain(LessonCodes::FILLER_UNGRAMMATICAL, LessonCodes::EXCHANGE_SECOND_QUESTION);
+});
+
+/**
+ * A PACK OF NO-OPS (docs/research/lang-1/pack-keys.md, the column «no-op»): every key a language may not need written as
+ * the value the spec gives it, the keys every language writes (marks, function words, word forms, numbers, script) with
+ * the least that is still a value. What the spec promises of a no-op is that it is READ — no skip, no throw — and finds
+ * nothing.
+ *
+ * @return array<string, mixed>
+ */
+function lvNoOpPack(): array
+{
+    $never = '/(?!)/u';
+
+    return [
+        'script' => '/^[\p{Latin}\p{N}\p{P}\s]*$/u', 'script_letters' => '/^[\p{Latin}]$/u',
+        'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'],
+        'abbreviations' => [], 'question_word_order' => ['auxiliaries' => [], 'subjects' => []],
+        'function_words' => ['x'], 'unstressed_words' => [], 'number_words' => [], 'number_joiners' => [],
+        'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],
+        'number_pattern' => '/^\d/u', 'time_pattern' => $never, 'amount_pattern' => $never, 'amount_prefix' => $never,
+        'everyday_words' => [], 'ordinary_heads' => [], 'closers' => [], 'saying_verbs' => [], 'alternative_words' => [],
+        'second_question_pattern' => $never, 'articles' => [], 'dangling_words' => [], 'seam_repeatable_words' => [],
+        'article_sound' => ['before_vowel' => '', 'before_consonant' => '', 'vowel' => $never, 'consonant' => $never, 'spelled' => $never, 'exception' => $never],
+        'clause' => ['subjects' => [], 'finite' => [], 'contractions' => [], 'subordinators' => [], 'subordinators_before_subject' => []],
+        'unresolved_pronouns' => ['words' => [], 'frame_initial_subject' => [], 'existential' => [], 'determiner_or_number' => [], 'partitive' => [], 'be_forms' => [], 'determiners' => []],
+        'gendered_past_pattern' => $never,
+        'agreement' => ['words' => [], 'short_forms' => [], 'suffixes_before_slot' => [], 'min_letters' => 99, 'after_slot_words' => 0],
+        'rescue_line' => 'Sorry?', 'neutral_reply' => 'I see. Please go on.',
+        'irregular_forms' => [], 'inflection_rules' => [], 'person_swap' => [],
+        'contractions' => [], 'contractions_before' => [], 'intro_words' => [], 'clause_starters' => [], 'negation' => [], 'partitive' => [],
+        'common_words' => [],
+    ];
+}
+
+// The key spec (наряд LANG-1 §1): «правило, которое к языку не относится, пишется явным no-op, НИКОГДА null — null считается
+// lang.pack_missing». CATCHES a no-op of the spec that a reader does not tolerate (an `article_sound` without its six
+// strings, an `agreement` without its two numbers, an empty mark class), and one that still finds something.
+it('reads a pack of the spec\'s no-ops on either side with no skip, no throw and nothing found of them', function () {
+    $pack = new App\Modules\Plan\Domain\Check\Language\LanguagePack('xx', lvNoOpPack());
+    $context = new LessonValidationContext(8, 8, $pack, $pack);
+    $found = array_map(static fn (LessonViolation $v): string => $v->code, lvRun(lvApart(), null, $context));
+    $words = new App\Modules\Plan\Domain\Check\Language\LanguageWords($pack);
+
+    expect($context->skips->all())->toBe([])
+        ->and(array_intersect($found, [
+            LessonCodes::FILLER_ARTICLE_SEAM, LessonCodes::FILLER_IS_CLAUSE, LessonCodes::FRAME_UNRESOLVED_PRONOUN, LessonCodes::FRAME_NATIVE_AGREEMENT,
+            LessonCodes::NATIVE_GENDERED_PAST, LessonCodes::PARTNER_CLOSER, LessonCodes::VOCAB_EVERYDAY_WORD,
+        ]))->toBe([])
+        ->and($words->articleMismatch('a', 'engineer'))->toBeNull()
+        ->and($words->isSoundArticle('a'))->toBeFalse()
+        ->and($words->clause('I am patient'))->toBeNull()
+        ->and($words->unresolvedPronoun('Is it ___?'))->toBeNull()
+        ->and($words->agreeingWithSlot('У моего ___ разрешён.'))->toBe([])
+        ->and($words->genderedPast('я заметила'))->toBe([])
+        ->and($words->isQuestion('Can I see it'))->toBeFalse()
+        ->and($words->asksTwice('When, and did you?'))->toBeFalse()
+        ->and(App\Modules\Plan\Domain\Assembly\NumberValues::of($pack)?->value('Come in 3 days.'))->toBe(['text' => '3', 'number' => true])
+        ->and((new App\Modules\Plan\Domain\Service\FrameJudge)->move('no I have it', [new App\Modules\Plan\Domain\ValueObject\ConversationPhrase('x', 'p1', 'I have ___.', '', null, null)], $pack))
+        ->toEqual(new App\Modules\Plan\Domain\ValueObject\MoveVerdict([], ['x:p1']))
+        ->and((new App\Modules\Plan\Domain\Service\LineShare)->share('a b', 'b a', $pack, swapPersons: true))->toBe(1.0)
+        ->and($pack->speech()->toArray())->toBe(['unstressed_words' => [], 'articles' => [], 'abbreviations' => [], 'number_words' => [], 'number_joiners' => []]);
 });
