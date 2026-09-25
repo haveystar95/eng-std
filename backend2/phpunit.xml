@@ -62,6 +62,10 @@
         <!-- Судья окна (SESSION-1a): счётчик вызовов на пользователя в сутки — в памяти процесса,
              не в Redis: тест не должен делить кап с живым стеком и с соседним воркером. -->
         <env name="PLAN_SLOT_JUDGE_QUOTA_STORE" value="array"/>
+        <!-- ЛОГ СЬЮТА — ВНЕ ДЕРЕВА (наряд ACC-1 §4): канал `testing` пишет в системный temp. В основном дереве
+             тысячи строк `testing.*` за прогон уходили в `storage/logs/laravel.log` — лог боя, который пишет
+             `wt_app`; после прогона в `storage` дерева не появляется ничего нового. -->
+        <env name="LOG_CHANNEL" value="testing"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

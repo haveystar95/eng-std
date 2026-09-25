@@ -33,8 +33,10 @@ use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tests\Doubles\FakeDefaultTargetLangReader;
 use Tests\Doubles\FakeLatencyMedianReader;
 use Tests\Doubles\FakeLearnerProfileReader;
@@ -79,8 +81,46 @@ pest()->extend(TestCase::class)
         // Not a model and not billed, but the same shape of accident: the photo job follows the
         // enricher, so faking the enricher without this one merely moves the stray call downstream.
         app()->instance(ImageSearchPort::class, new FakePexelsImageSearch(FakePexelsImageSearch::FOUND));
+
+        // THE VOICE AND THE PHOTOS OF A PLAN LAND ON A TEST DISK — for the whole Feature suite, not file
+        // by file (наряд ACC-1 §4), and for the same reason as the fakes above: the file that forgets is
+        // the file that leaks. Every test that walks a talk or voices a scene has the fake synthesizer
+        // write its mp3s through the plan's disk, and the files that never faked it wrote them into the
+        // tree's REAL `storage/app/private/plan-audio` — a serial run of the Plan folder left 57 files of
+        // talks and 280 of scenes there. A file that wants the disk to itself fakes it again; the fake is
+        // taken down after every test ({@see testDisks()}).
+        foreach (testDisks() as $disk) {
+            Storage::fake($disk);
+        }
+    })
+    // …and the test disk goes with the test: after a run the tree's `storage` holds nothing new (§4). ONLY a test disk:
+    // a disk that is not faked any more — a line above taken out, a test that set the real one back — has the tree's own
+    // storage for its root, and in the main tree that is the production voice. Checked by a mutant that removed the
+    // fake: the unguarded delete took `storage/app/private` with it.
+    ->afterEach(function (): void {
+        $scratch = storage_path('framework/testing/disks/');
+        foreach (testDisks() as $disk) {
+            $root = Storage::disk($disk)->path('');
+            if (str_starts_with($root, $scratch)) {
+                (new Filesystem)->deleteDirectory($root);
+            }
+        }
     })
     ->in('Feature');
+
+/**
+ * THE DISKS A FEATURE TEST NEVER WRITES FOR REAL (наряд ACC-1 §4): the plan's voice and the square copies of its photos —
+ * the only files the application keeps on a disk of its own. Both are `local` unless configured apart.
+ *
+ * @return list<string>
+ */
+function testDisks(): array
+{
+    return array_values(array_unique([
+        (string) config('plan.audio_disk', 'local'),
+        (string) config('plan.image_disk', 'local'),
+    ]));
+}
 
 // Every helper below is shared across more than one test file. It lives here — the one file Pest
 // actually auto-loads for the whole run (Pest\Bootstrappers\BootFiles only boots tests/Pest.php, not

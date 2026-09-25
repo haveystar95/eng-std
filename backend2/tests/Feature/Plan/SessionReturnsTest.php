@@ -11,7 +11,12 @@ declare(strict_types=1);
  * word failed twice on each scene day, and the returned card of day 2 failed twice as well.
  */
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+
+// Every row this chain writes goes with the test (наряд ACC-1 §4): without it the file left its plans behind, and in a
+// serial run the voice and photo tests after it counted them as their own.
+uses(RefreshDatabase::class);
 
 // Four walked days are some three hundred answers: past the API's 120 a minute, as for every walk over days here.
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));

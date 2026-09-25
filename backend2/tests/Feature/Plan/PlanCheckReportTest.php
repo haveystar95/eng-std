@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -11,14 +12,16 @@ use Illuminate\Support\Str;
  * and the counters, read-only.
  */
 
+// The rows of this test go with it (наряд ACC-1 §4): it used to keep its failed day and its counters in the test
+// database, and a serial run of the folder read them in the tests after it — the purge migration's canon among them.
+uses(RefreshDatabase::class);
+
 // Canon CHECK-1: «по каждому коду — срабатываний, из них фатальных, дней ушло в failed, доля от дней, 3 примера текста с
 // планом и днём; ключ --since». Catches a report that counts a fatal code as a warning, misses a failed day, prints more
 // than three examples, or ignores --since.
 it('reports every code with its findings, fatal ones, days, failed days, share, counters and three examples', function () {
-    // The test database keeps the days of earlier runs (the timestamps are whole seconds): the report is read since this
-    // test began, and the failed day an earlier run of this very test left is put back to pending first.
+    // The report is read since this test began (the timestamps are whole seconds).
     $since = now()->format(DATE_ATOM);
-    DB::table('plan_scenes')->where('fail_reason', 'fatal: filler.ungrammatical')->update(['lesson_status' => 'pending', 'fail_reason' => null, 'build_started_at' => null, 'checks_json' => '[]']);
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 3])['id'];
     $scenes = DB::table('plan_scenes')->where('plan_id', $id)->orderBy('order')->get();

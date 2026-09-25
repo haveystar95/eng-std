@@ -123,6 +123,16 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        // THE TEST SUITE'S LOG (наряд ACC-1 §4) — outside the tree; `phpunit.xml` picks it. The suite logs thousands of
+        // `testing.*` lines a run, and in the main tree they went into `storage/logs/laravel.log` — the production log
+        // `wt_app` writes. After a run the tree's `storage` holds nothing new; the lines stay readable in the temp dir.
+        'testing' => [
+            'driver' => 'single',
+            'path' => sys_get_temp_dir().'/wordtrainer-testing.log',
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

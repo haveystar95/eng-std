@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Domain\Assembly\PhraseSeries;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 
 /**
@@ -15,6 +16,10 @@ use Illuminate\Routing\Middleware\ThrottleRequests;
  * Real days of the fake doctor lesson, dealt by the server: the scene ids are generated, so which kinds a frame walks is
  * read off the day, never assumed.
  */
+
+// Every row these walks write goes with the test (наряд ACC-1 §4): without it the file left its plans behind, and in a
+// serial run the voice and photo tests after it counted them as their own.
+uses(RefreshDatabase::class);
 
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
