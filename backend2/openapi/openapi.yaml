@@ -4845,7 +4845,7 @@ components:
           enum: [agent, said, rescue, skip]
           description: 'The role''s line, or what the learner did: said something, asked to hear it again, or let the turn go'
         text_target: { type: [string, 'null'], description: 'The role''s line, what the recogniser heard, or — on a rescue — what a learner says when they did not catch it, in the language of the talk (en «Sorry?», наряд CONV-2, п. 4а); null for a skip' }
-        text_native: { type: [string, 'null'], description: 'The role''s line in the learner''s language; null on the learner''s own' }
+        text_native: { type: [string, 'null'], description: 'The role''s line in the learner''s language; null on the learner''s own. An empty string when the role gave no translation twice (наряд FIX-4c §6: empty, in the language of the talk, or the same words — asked once more, then the line is said with none): the client prints no translation, never the line again' }
         audio:
           oneOf:
             - $ref: '#/components/schemas/PlanCardAudio'

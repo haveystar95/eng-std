@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Dto;
 
 /**
- * WHAT THE ROLE IS TOLD BEFORE ONE MOVE (`conversation_agent.v3.2`, наряд CONV-1, п. 4; наряд CONV-2, пп. 1, 4; наряд
- * FIX-3 §7; наряд FIX-4 §§3–4; наряд FIX-4b §3 — the rules changed, the data did not).
+ * WHAT THE ROLE IS TOLD BEFORE ONE MOVE (`conversation_agent.v3.3`, наряд CONV-1, п. 4; наряд CONV-2, пп. 1, 4; наряд
+ * FIX-3 §7; наряд FIX-4 §§3–4; наряд FIX-4b §3; наряд FIX-4c §6 — the rules changed, the data did not).
  *
  * Everything that changes from call to call — and NOTHING else: the prompt file itself is the
  * system message, byte for byte the same every time, so the vendor's prompt cache holds it
@@ -56,9 +56,10 @@ final readonly class ConversationAgentRequest
          * ({@see \App\Modules\Plan\Domain\Service\RoleLines}) — `learner_line` when it said a line of the learner (quoted
          * in `line`), `learner_echo` when it said a move of the learner back (наряд BACK-TAILS-2 §9, FIX-3 §11), `same_words`
          * when a rescue said the rescued line again, `own_line` when it said a line of its own again (quoted in `line`) and
-         * `early_end` when it closed the talk with moves left (наряд FIX-3 §7). Null on every first try.
+         * `early_end` when it closed the talk with moves left (наряд FIX-3 §7), `native_missing` when its translation was
+         * none (наряд FIX-4c §6). Null on every first try.
          *
-         * @var array{reason: 'learner_line'|'learner_echo'|'same_words'|'own_line'|'early_end', said: string, line: string|null}|null
+         * @var array{reason: 'learner_line'|'learner_echo'|'same_words'|'own_line'|'early_end'|'native_missing', said: string, line: string|null}|null
          */
         public ?array $redo = null,
         /** The target to open the door to now, by its short id (наряд FIX-3 §7, FIX-4 §3) — the server's choice; null: none left. */
@@ -71,7 +72,7 @@ final readonly class ConversationAgentRequest
     /**
      * The same move asked again, with the reason the first answer was refused.
      *
-     * @param  'learner_line'|'learner_echo'|'same_words'|'own_line'|'early_end'  $reason
+     * @param  'learner_line'|'learner_echo'|'same_words'|'own_line'|'early_end'|'native_missing'  $reason
      */
     public function redo(string $reason, string $said, ?string $line): self
     {

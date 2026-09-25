@@ -718,7 +718,7 @@ function convDayId(string $planId, int $number = 1): string
 /** @return int the hits of one check of the role's prompt, as the admin panel reads them */
 function convHits(string $code): int
 {
-    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3.2')
+    return (int) DB::table('plan_check_counters')->where('prompt_version', 'conversation_agent.v3.3')
         ->where('check_name', $code)->where('action', 'counted')->value('hits');
 }
 
@@ -1537,4 +1537,42 @@ it('carries the hint in «Без подсказок» too — `enabled` is the m
     expect($almost['hints']['enabled'])->toBeFalse()
         ->and($almost['hints']['ref'])->toBe($blind['targets'][0]['ref'])
         ->and($almost['hints']['target'])->toBe('It hurts in his lower back.');
+});
+
+/**
+ * Canon (наряд FIX-4c §6): «reply_native не может совпадать с reply_target (без регистра и знаков) и должен быть на родном
+ * языке пары (по письменности пакета); иначе один перезапрос с указанием ошибки, отбраковка в журнал (reason
+ * native_missing), второй провал — оставить reply_target и native = ""». CATCHES an English line under the English
+ * bubble, a second try asked without the reason, a refusal not journaled, and a third call.
+ */
+it('asks the role again when its translation is none, and says the line with no translation when the second has none', function () {
+    $fake = convAgentSays(static function (ConversationAgentRequest $request, int $call): array {
+        $payload = FakePlanModel::conversationPayload($request, $call);
+        // The greeting's first try copies the line; a `said` move's both tries do.
+        if (($request->turn === 'start' && $request->redo === null) || $request->turn === 'said') {
+            $payload['reply_native'] = $payload['reply_target'];
+        }
+
+        return $payload;
+    });
+    [$token, $id] = convDay($this);
+
+    $talk = convStart($this, $token, $id);
+    expect($fake->conversationCalls)->toBe(2)
+        ->and($fake->conversationRequests[1]->redo)->toBe(['reason' => 'native_missing', 'said' => FakePlanModel::conversationPayload($fake->conversationRequests[0], 1)['reply_target'], 'line' => null])
+        ->and($talk['turns'][0]['text_native'])->toStartWith('Здравствуйте.')
+        ->and(convRejections($talk['id']))->toBe([[1, 1, 'rejected_answer', 'native_missing', '01J8FAKEM0DE1CA11000000001', []]])
+        ->and(convHits('conversation.native_missing'))->toBe(1);
+
+    $after = convTurn($this, $token, $id, $talk['id'], 'said', 'It hurts in his lower back.');
+    $line = $after['turns'][count($after['turns']) - 1];
+    expect($fake->conversationCalls)->toBe(4)
+        ->and($line['text_target'])->not->toBe('')
+        ->and($line['text_native'])->toBe('')
+        ->and(array_slice(convRejections($talk['id']), 1))->toBe([
+            [3, 1, 'rejected_answer', 'native_missing', '01J8FAKEM0DE1CA11000000003', []],
+            [3, 2, 'rejected_answer', 'native_missing', '01J8FAKEM0DE1CA11000000004', ['outcome' => 'blanked']],
+        ])
+        ->and(convHits('conversation.native_missing'))->toBe(2)
+        ->and(convHits('conversation.native_missing_blanked'))->toBe(1);
 });

@@ -20,6 +20,7 @@ use App\Modules\Plan\Domain\Service\ConversationOutcomes;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
+use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\RoleLines;
 use App\Modules\Plan\Domain\ValueObject\ConversationCheckpoint;
 use App\Modules\Plan\Domain\ValueObject\ConversationEnd;
@@ -71,6 +72,11 @@ use App\Modules\Shared\Domain\ValueObject\Ulid;
  * with nothing of the role's own around it gives way to the pack's neutral line (`…_neutral`). Every refused answer is
  * journaled with its attempt and its call (наряд FIX-4 §6), and so is a door the role named that is no door of its scene
  * (§3: another scene's target, one said, an id the talk does not have) — the door is dropped, the line stays.
+ *
+ * AND THE TRANSLATION IS CHECKED (наряд FIX-4c §6, {@see ReplyNative}): a `reply_native` that is empty, the same words as
+ * the line, or not in the learner's language is refused like the rest (`native_missing`) and asked for once more; when
+ * the second has none either, the line is said with no translation — an empty grey line the phone prints as none,
+ * never an English one under the English bubble.
  */
 final readonly class ConversationMoves
 {
@@ -351,7 +357,7 @@ final readonly class ConversationMoves
         int $index,
         bool $mayEnd,
     ): array {
-        $fault = $this->fault($reply, $talk, $material, $turn, $target, $turnsLeft, $mayEnd);
+        $fault = $this->fault($reply, $talk, $material, $turn, $target, $native, $turnsLeft, $mayEnd);
         if ($fault === null) {
             return [$reply, 1];
         }
@@ -371,28 +377,48 @@ final readonly class ConversationMoves
             [$said, $outcome] = $this->mended($reply, $fault, $talk, $material, $target, $native, $version);
             $talk->reject($first(['outcome' => $outcome, 'second' => 'unavailable']));
 
-            return [$said, 1];
+            return [$this->translated($said, $native, $version), 1];
         }
         $talk->reject($first());
-        $second = $this->fault($answer, $talk, $material, $turn, $target, $turnsLeft, $mayEnd);
+        $second = $this->fault($answer, $talk, $material, $turn, $target, $native, $turnsLeft, $mayEnd);
         if ($second === null) {
             return [$answer, 2];
         }
-        [$said, $outcome] = $this->mended($answer, $fault, $talk, $material, $target, $native, $version);
+        [$said, $outcome] = $this->mended($answer, $second['reason'] === ReplyNative::REDO ? $second : $fault, $talk, $material, $target, $native, $version);
         $talk->reject(new ConversationRejection(Ulid::generate(), $index, 2, RejectionKind::RejectedAnswer, $second['reason'], $answer->callId, ['outcome' => $outcome]));
 
-        return [$said, 2];
+        return [$this->translated($said, $native, $version), 2];
+    }
+
+    /**
+     * THE LAST WORD ON THE TRANSLATION (наряд FIX-4c §6): whatever a second answer was mended for, it never goes out with
+     * a `reply_native` that is no translation — that one is said with none, and counted.
+     */
+    private function translated(ConversationAgentReply $said, LanguagePack $native, string $version): ConversationAgentReply
+    {
+        if ($said->replyNative === '' || ! ReplyNative::missing($said->replyTarget, $said->replyNative, $native)) {
+            return $said;
+        }
+        $this->counters->recordCodes($version, [ReplyNative::CODE_BLANKED]);
+
+        return $said->saying($said->replyTarget, '');
     }
 
     /**
      * An answer asked for twice and still at fault, as it will be said: the learner's line cut out of it, the echo cut
      * out or the pack's neutral line instead of it, or — when nothing of the role's own would be left — as it came.
      *
-     * @param  array{reason: string, line: string|null, code: string, kept: string}  $fault  why the first answer was refused
-     * @return array{0: ConversationAgentReply, 1: 'cut'|'neutral'|'kept'}
+     * @param  array{reason: string, line: string|null, code: string, kept: string}  $fault  why the answer was refused
+     * @return array{0: ConversationAgentReply, 1: 'cut'|'neutral'|'kept'|'blanked'}
      */
     private function mended(ConversationAgentReply $answer, array $fault, Conversation $talk, ConversationMaterialView $material, LanguagePack $target, LanguagePack $native, string $version): array
     {
+        if ($fault['reason'] === ReplyNative::REDO) {
+            // The line stands, its translation does not: said with none (наряд FIX-4c §6).
+            $this->counters->recordCodes($version, [ReplyNative::CODE_BLANKED]);
+
+            return [$answer->saying($answer->replyTarget, ''), 'blanked'];
+        }
         if ($fault['reason'] === RoleLines::REDO_LEARNER_LINE) {
             $cut = RoleLines::withoutLearnerLines($answer->replyTarget, $answer->replyNative, $material->learnerLines(), self::saidSoFar($talk));
             if ($cut !== null) {
@@ -424,11 +450,12 @@ final readonly class ConversationMoves
      * What is wrong with an answer, if anything: a line of the learner said as the role's own, a move of the learner said
      * back (any move of the talk — наряд FIX-3 §11), on a rescue the rescued line said again, on any other move a line
      * the role has already said in the talk ({@see RoleLines} guard 4) — and the talk closed with moves still left
-     * ({@see ConversationRules::REDO_EARLY_END}), unless the line is a goodbye the server asked for.
+     * ({@see ConversationRules::REDO_EARLY_END}), unless the line is a goodbye the server asked for; last, a translation
+     * that is none ({@see ReplyNative}, наряд FIX-4c §6).
      *
-     * @return array{reason: 'learner_line'|'learner_echo'|'same_words'|'own_line'|'early_end', line: string|null, code: string, kept: string}|null
+     * @return array{reason: 'learner_line'|'learner_echo'|'same_words'|'own_line'|'early_end'|'native_missing', line: string|null, code: string, kept: string}|null
      */
-    private function fault(ConversationAgentReply $reply, Conversation $talk, ConversationMaterialView $material, string $turn, LanguagePack $target, int $turnsLeft, bool $mayEnd): ?array
+    private function fault(ConversationAgentReply $reply, Conversation $talk, ConversationMaterialView $material, string $turn, LanguagePack $target, LanguagePack $native, int $turnsLeft, bool $mayEnd): ?array
     {
         $line = RoleLines::learnerLineIn($reply->replyTarget, $material->learnerLines(), self::saidSoFar($talk));
         if ($line !== null) {
@@ -446,6 +473,9 @@ final readonly class ConversationMoves
         }
         if ($mayEnd && $reply->end === ConversationAgentReply::END_NATURAL && $turnsLeft > 0) {
             return ['reason' => ConversationRules::REDO_EARLY_END, 'line' => null, 'code' => ConversationRules::CODE_EARLY_END, 'kept' => ConversationRules::CODE_EARLY_END_KEPT];
+        }
+        if (ReplyNative::missing($reply->replyTarget, $reply->replyNative, $native)) {
+            return ['reason' => ReplyNative::REDO, 'line' => null, 'code' => ReplyNative::CODE, 'kept' => ReplyNative::CODE_BLANKED];
         }
 
         return null;

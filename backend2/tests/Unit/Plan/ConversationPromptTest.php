@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
 use App\Modules\Plan\Domain\Service\ConversationRules;
+use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\RoleLines;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
 
 /**
- * THE ROLE'S PROMPT (`conversation_agent.v3.2`, наряд FIX-4b §3; v3.1 — FIX-4 §§3–4; v3 — FIX-3 §7; v2 — наряд CONV-2;
- * v2.1 — BACK-TAILS-2 §9): the frozen file, the rules it was written for, the answer's shape, and the user message that
+ * THE ROLE'S PROMPT (`conversation_agent.v3.3`, наряд FIX-4c §6; v3.2 — FIX-4b §3; v3.1 — FIX-4 §§3–4; v3 — FIX-3 §7; v2 —
+ * наряд CONV-2; v2.1 — BACK-TAILS-2 §9): the frozen file, the rules it was written for, the answer's shape, and the user message that
  * names the learner's lines as the learner's, lists the targets of the role's scene as constructions under the talk's
  * short ids, says which door to open now, tells a new role what the learner told the roles before as facts, closes a
  * scene when the server closed it, and carries REDO on the second try of a move — and only there.
  */
 
-/** The sha256 of `conversation_agent.v3.2.md`: the file is frozen, and a change to it is a new version, never a new hash. */
-const CONVERSATION_AGENT_V3_2_SHA256 = 'de712b83cd717954e96a26acbdb473c307cb567b55cf46561c18e1d42f9c757c';
+/** The sha256 of `conversation_agent.v3.3.md`: the file is frozen, and a change to it is a new version, never a new hash. */
+const CONVERSATION_AGENT_V3_3_SHA256 = '1a39118ed95763d8dc94247d1b9caa3c02ea100283ca068b28a9464347f5377b';
 
 /** @param list<string> $earlier */
 function cpRequest(?array $redo = null, ?string $leadTo = 'T2', array $earlier = [], bool $sceneEnd = false): ConversationAgentRequest
@@ -68,15 +69,19 @@ function cpRequest(?array $redo = null, ?string $leadTo = 'T2', array $earlier =
  * LEAD_TO; из формы ответа убраны phrases_used и checkpoint_done. CATCHES a prompt edited in place under an old name, a
  * v3.2 without any of the rules of v3, v3.1 or its own, a model still asked for the two fields the server never read,
  * v3's «set checkpoint_done … and open the next checkpoint in the same reply» (the smear of scenes the owner's rehearsal
- * caught) — and v3.1 left beside it.
+ * caught) — and v3.1 left beside it. Canon (наряд FIX-4c §6): «промт v3.3 = v3.2 + одна фраза в OUTPUT: reply_native —
+ * перевод reply_target на родной язык ученика, дословно по смыслу, никогда не английский и не пересказ … v3.2 удалить».
+ * CATCHES a v3.3 that is more than v3.2 and that one sentence, and v3.2 left beside it.
  */
-it('keeps the role\'s prompt frozen under its own version, with every rule of v3, v3.1 and v3.2 in it', function () {
+it('keeps the role\'s prompt frozen under its own version, with every rule of v3, v3.1, v3.2 and v3.3 in it', function () {
     $path = dirname(__DIR__, 3).'/app/Modules/Plan/Infrastructure/Prompt/'.PlanPromptFiles::CONVERSATION_FILE;
     $raw = (string) file_get_contents($path);
     $prompts = new PlanPromptFiles;
 
-    expect(hash('sha256', $raw))->toBe(CONVERSATION_AGENT_V3_2_SHA256)
-        ->and($raw)->toStartWith("CONVERSATION AGENT — v3.2\n")
+    expect(hash('sha256', $raw))->toBe(CONVERSATION_AGENT_V3_3_SHA256)
+        ->and($raw)->toStartWith("CONVERSATION AGENT — v3.3\n")
+        // v3.3's one sentence, the last of OUTPUT.
+        ->and($raw)->toEndWith('the first character { and the last }. reply_native is reply_target translated into the learner\'s NATIVE_LANGUAGE — faithful to its meaning, never in TARGET_LANGUAGE and never a retelling.'."\n")
         // v3.2's own rules.
         ->and($raw)->toContain('THE LEARNER\'S WORD. What the learner says about themselves and their situation is true: the facts of the prepared visit are only for what the learner has not said. Never correct it and never dispute it — where it differs from the prepared visit, the prepared visit is forgotten.')
         ->and($raw)->toContain('Never ask what is already in HISTORY or EARLIER: you may only build on it.')
@@ -117,8 +122,9 @@ it('keeps the role\'s prompt frozen under its own version, with every rule of v3
         ->and($raw)->toContain('`'.RoleLines::REDO_LEARNER_LINE.'`')->toContain('`'.RoleLines::REDO_SAME_WORDS.'`')->toContain('`'.RoleLines::REDO_LEARNER_ECHO.'`')->toContain('`'.RoleLines::REDO_OWN_LINE.'`')->toContain('`'.ConversationRules::REDO_EARLY_END.'`')
         ->and($raw)->toContain('"opens": null')
         ->and($raw)->not->toContain('next_hint_native')
-        ->and(hash('sha256', $prompts->conversationSystem()))->toBe(CONVERSATION_AGENT_V3_2_SHA256)
-        ->and($prompts->conversationVersion())->toBe('conversation_agent.v3.2')
+        ->and(hash('sha256', $prompts->conversationSystem()))->toBe(CONVERSATION_AGENT_V3_3_SHA256)
+        ->and($prompts->conversationVersion())->toBe('conversation_agent.v3.3')
+        ->and(is_file(dirname($path).'/conversation_agent.v3.2.md'))->toBeFalse()
         ->and(is_file(dirname($path).'/conversation_agent.v3.1.md'))->toBeFalse()
         ->and(is_file(dirname($path).'/conversation_agent.v3.md'))->toBeFalse()
         ->and(is_file(dirname($path).'/conversation_agent.v2.1.md'))->toBeFalse();
@@ -155,7 +161,10 @@ it('lists the targets as constructions, names the door to open, and writes REDO 
         ->and($prompts->conversationUser(cpRequest([RoleLines::REDO_OWN_LINE, 'Hello again. Do you want a day pass?', 'Hello! Welcome to the gym.'])))
         ->toEndWith("\nREDO: own_line — do not say «Hello! Welcome to the gym.» again: you have said it already in this conversation. Answer HEARD and go on to LEAD_TO as YOUR_ROLE — never with a question the learner has already answered")
         ->and($prompts->conversationUser(cpRequest([ConversationRules::REDO_EARLY_END, 'Enjoy your training!', null])))
-        ->toEndWith("\nREDO: early_end — you ended the conversation, but TURNS_LEFT is 3: it goes on, even when every target is said. Answer HEARD as YOUR_ROLE with end \"no\" — unless HEARD is the learner saying goodbye");
+        ->toEndWith("\nREDO: early_end — you ended the conversation, but TURNS_LEFT is 3: it goes on, even when every target is said. Answer HEARD as YOUR_ROLE with end \"no\" — unless HEARD is the learner saying goodbye")
+        // Наряд FIX-4c §6: a translation that is none is asked for again — with the reason, and nothing quoted.
+        ->and($prompts->conversationUser(cpRequest([ReplyNative::REDO, 'Is this your first visit?', null])))
+        ->toEndWith("\nREDO: native_missing — your reply_native was no translation of your reply: it was empty, in TARGET_LANGUAGE, or the same words. Answer this move again as YOUR_ROLE, and write reply_native as reply_target translated into NATIVE_LANGUAGE, faithful to its meaning");
 });
 
 /**

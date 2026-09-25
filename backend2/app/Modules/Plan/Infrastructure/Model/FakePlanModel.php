@@ -147,7 +147,7 @@ final class FakePlanModel implements PlanModelPort
             ? ($this->conversation)($request, $this->conversationCalls)
             : self::conversationPayload($request, $this->conversationCalls);
 
-        return new ModelReply($payload, 'conversation_agent.v3.2', self::MODEL, 900, 90, '0.000000', 2, '', callId: sprintf('01J8FAKEM0DE1CA11%09d', $this->conversationCalls));
+        return new ModelReply($payload, 'conversation_agent.v3.3', self::MODEL, 900, 90, '0.000000', 2, '', callId: sprintf('01J8FAKEM0DE1CA11%09d', $this->conversationCalls));
     }
 
     /** @var list<array{0: string, 1: string}> the fake role's lines, one per move, none of them said twice in a talk */
@@ -226,7 +226,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function conversationPromptVersion(): string
     {
-        return 'conversation_agent.v3.2';
+        return 'conversation_agent.v3.3';
     }
 
     public function lessonPromptVersion(): string

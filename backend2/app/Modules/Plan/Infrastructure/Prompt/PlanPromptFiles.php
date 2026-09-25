@@ -49,9 +49,11 @@ final class PlanPromptFiles
      * a scene and the role says goodbye in it, the next role greets the learner first; v3.2 — наряд FIX-4b §3: what the
      * learner says is true and the prepared visit only fills what they have not said, the role keeps to its own job, asks
      * nothing HISTORY or EARLIER already holds, a new role repeats no line of the one before, and the answer no longer
-     * carries `phrases_used` and `checkpoint_done`).
+     * carries `phrases_used` and `checkpoint_done`; v3.3 — наряд FIX-4c §6: v3.2 and one sentence in OUTPUT —
+     * `reply_native` is `reply_target` translated into the learner's language, faithful to its meaning, never in the target
+     * language and never a retelling; a translation that is none is asked for again with REDO `native_missing`).
      */
-    public const CONVERSATION_FILE = 'conversation_agent.v3.2.md';
+    public const CONVERSATION_FILE = 'conversation_agent.v3.3.md';
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
@@ -302,6 +304,7 @@ final class PlanPromptFiles
                 'same_words' => 'REDO: same_words — do not say «'.self::oneLine($request->redo['said']).'» again: say its meaning in other, simpler, shorter words',
                 'own_line' => 'REDO: own_line — do not say «'.self::oneLine((string) $request->redo['line']).'» again: you have said it already in this conversation. Answer HEARD and go on to LEAD_TO as YOUR_ROLE — never with a question the learner has already answered',
                 'early_end' => 'REDO: early_end — you ended the conversation, but TURNS_LEFT is '.$request->turnsLeft.': it goes on, even when every target is said. Answer HEARD as YOUR_ROLE with end "no" — unless HEARD is the learner saying goodbye',
+                'native_missing' => 'REDO: native_missing — your reply_native was no translation of your reply: it was empty, in TARGET_LANGUAGE, or the same words. Answer this move again as YOUR_ROLE, and write reply_native as reply_target translated into NATIVE_LANGUAGE, faithful to its meaning',
             };
         }
 

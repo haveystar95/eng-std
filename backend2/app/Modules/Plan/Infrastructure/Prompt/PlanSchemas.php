@@ -162,7 +162,7 @@ final class PlanSchemas
     }
 
     /**
-     * ONE MOVE OF THE AGENT (`conversation_agent.v3.2`, наряд CONV-1; FIX-3 §7; FIX-4 §3; FIX-4b §3): its line in both
+     * ONE MOVE OF THE AGENT (`conversation_agent.v3.3`, наряд CONV-1; FIX-3 §7; FIX-4 §3; FIX-4b §3; FIX-4c §6): its line in both
      * languages, what it judged about the move it answers, the target its line opens the door to — by the short id of its
      * scene's target (`T3`) — and whether the talk is over. Which constructions the learner said and when a scene is over are
      * not asked at all (v3.2 took `phrases_used` and `checkpoint_done` out): the first is the code's judge's, the second the
