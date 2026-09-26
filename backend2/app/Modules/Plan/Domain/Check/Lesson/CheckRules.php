@@ -31,11 +31,17 @@ use App\Modules\Plan\Domain\Service\Words;
  * partner's. The checks are in the target language, and every word is read by the target's pack.
  *
  * THE OPTIONS OF ONE CHECK ARE OF ONE FORM WITH THE RIGHT ONE (наряд FIX-3 §5), read on the card's side — the learner's
- * language, which is what the card shows: each option is 0.5–2× the right one's length in letters, none starts with a
- * lower-case letter where the right one starts with a capital (a fragment is odd by its form, not by its meaning), and
- * none is a piece of the partner's line in the learner's language word for word (an option copied out of the translation
- * is found by reading, not by hearing). Otherwise `options.form_mismatch` at the check — fatal: the card a learner would
- * get tests the form, not the meaning.
+ * language, which is what the card shows: each option is 0.5–2× the right one's length in letters, and none starts with
+ * a lower-case letter where the right one starts with a capital (a fragment is odd by its form, not by its meaning).
+ * Otherwise `options.form_mismatch` at the check — fatal: the card a learner would get tests the form, not the meaning.
+ *
+ * AN OPTION COPIED OUT OF THE PARTNER'S LINE IS A WARNING OF ITS OWN — `options.partner_fragment` (наряд LANG-1b §1; it was
+ * the third sub-rule of `options.form_mismatch`, fatal, and failed some sixty per cent of days in every pair — report
+ * LANG-1, `docs/research/lang-1/baseline.md`): an option whose words stand in a row in the partner's line in the
+ * learner's language is found by reading, not by hearing, and is counted — the day is dealt. What no paraphrase can avoid
+ * is no piece at all, as with `check.verbatim`: an option with a number in it (a time «Завтра в одиннадцать», a price
+ * «Двести леев», an address «King Street 14»), a word of time («Завтра»), a name the partner said («До Лондона»), or the
+ * thing a number of the partner's line counts. It is read on the learner's side, by the learner's pack.
  *
  * «Starts lower-case» is read on the FIRST CHARACTER, not on the first letter (наряд LANG-1, валидатор; baseline
  * `docs/research/lang-1/baseline.md`): an option that opens with a digit, a quote, «¿» or «¡» does not start lower-case
@@ -45,7 +51,7 @@ use App\Modules\Plan\Domain\Service\Words;
  * And it counts only AGAINST the right option: a first letter in lower case is a fragment's tell only when the right one
  * opens with a capital — or the other way round, the right one in lower case against a wrong one's capital, the card's
  * answer given away by its form. Options all in lower case, or a right one that opens with a digit, are of one form.
- * The length and «piece of the partner's line» sub-rules are the architect's to change and are left as FIX-3 wrote them.
+ * The length sub-rule is the architect's to change and is left as FIX-3 wrote it.
  */
 final class CheckRules implements LessonRule
 {
@@ -55,10 +61,12 @@ final class CheckRules implements LessonRule
         $aboutLearner = $context->reads(LessonCodes::CHECK_ABOUT_LEARNER, LanguageSide::Target, 'saying_verbs', 'function_words', 'word_forms');
         $alternatives = $context->reads(LessonCodes::CHECK_LISTED_ALTERNATIVE_AS_WRONG, LanguageSide::Target, 'alternative_words', 'function_words', 'word_forms');
         $form = $context->reads(LessonCodes::OPTIONS_FORM_MISMATCH, LanguageSide::Native);
-        if (! $verbatim && ! $aboutLearner && ! $alternatives && ! $form) {
+        $fragment = $context->reads(LessonCodes::OPTIONS_PARTNER_FRAGMENT, LanguageSide::Native, 'number_pattern', 'time_pattern', 'function_words', 'sentence_ends');
+        if (! $verbatim && ! $aboutLearner && ! $alternatives && ! $form && ! $fragment) {
             return [];
         }
         $words = $context->targetWords();
+        $native = $fragment ? $context->nativeWords() : null;
 
         $out = [];
         $items = $verbatim ? self::itemWords($answer, $words) : [];
@@ -90,6 +98,11 @@ final class CheckRules implements LessonRule
                 $out[] = new LessonViolation(LessonCodes::OPTIONS_FORM_MISMATCH, $address, $mismatch);
             }
 
+            $piece = $native !== null ? self::partnerFragment($exchange, $native) : null;
+            if ($piece !== null) {
+                $out[] = new LessonViolation(LessonCodes::OPTIONS_PARTNER_FRAGMENT, $address, $piece);
+            }
+
             if ($alternatives && array_filter(Words::tokens($partner->textTarget), $words->isAlternative(...)) !== []) {
                 foreach ($exchange->check->options as $index => $option) {
                     if ($index === $exchange->check->correctOptionIndex) {
@@ -110,9 +123,9 @@ final class CheckRules implements LessonRule
 
     /**
      * What makes the options of an exchange's check not of one form with its right one, in the learner's language — or
-     * null when they are: the first option too short or too long against the right one, starting lower-case where the
-     * right one starts with a capital (or the right one alone starting lower-case), or said word for word in the
-     * partner's line.
+     * null when they are: the first option too short or too long against the right one, or starting lower-case where the
+     * right one starts with a capital (or the right one alone starting lower-case). An option said word for word in the
+     * partner's line is not a matter of form — {@see self::partnerFragment()}, a warning (наряд LANG-1b §1).
      */
     private static function formMismatch(Exchange $exchange): ?string
     {
@@ -123,7 +136,6 @@ final class CheckRules implements LessonRule
         }
         $rightLength = self::letters($right->textNative);
         $rightCase = self::initialCase($right->textNative);
-        $partnerWords = Words::tokens($partner->textNative);
         foreach ($exchange->check->options as $index => $option) {
             $text = trim($option->textNative);
             $length = self::letters($text);
@@ -139,8 +151,37 @@ final class CheckRules implements LessonRule
             if ($case === self::UPPER && $rightCase === self::LOWER) {
                 return "the right option «{$right->textNative}» starts lower-case against «{$text}»";
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * The first option of an exchange's check — the right one or a wrong one — whose words stand in a row in the partner's
+     * line in the learner's language, or null (наряд LANG-1b §1, `options.partner_fragment`). An option holding a value no
+     * paraphrase can avoid is no piece: a number («14A», «двести», «одиннадцать» — times, prices and addresses have one), a
+     * word of time («завтра», «утром»), a name of the partner's line (a capital anywhere but a sentence's start: «Лондона»),
+     * or the thing a number there counts («двести ЛЕЕВ»). The words are the learner's pack's.
+     */
+    private static function partnerFragment(Exchange $exchange, LanguageWords $native): ?string
+    {
+        $partner = $exchange->partner();
+        if ($exchange->check->correctOption() === null || $partner === null) {
+            return null;
+        }
+        $partnerWords = Words::tokens($partner->textNative);
+        $fixed = [...$native->names($partner->textNative), ...self::counted($partner->textNative, $native)];
+        foreach ($exchange->check->options as $option) {
+            $text = trim($option->textNative);
             $optionWords = Words::tokens($text);
-            if ($optionWords !== [] && self::contains($partnerWords, $optionWords)) {
+            if ($optionWords === [] || ! self::contains($partnerWords, $optionWords)) {
+                continue;
+            }
+            $unavoidable = array_filter(
+                $optionWords,
+                static fn (string $word): bool => $native->isNumber($word) || $native->isTime($word) || in_array($word, $fixed, true),
+            );
+            if ($unavoidable === []) {
                 return "the option «{$text}» is a piece of the partner's line «{$partner->textNative}»";
             }
         }

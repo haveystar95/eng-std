@@ -231,8 +231,9 @@ it('builds a day for a learner whose language has no rules yet, skipping and cou
     expect($fake->lessonRequests[0]->nativeLanguage)->toBe('Romanian')
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
         ->and($findings)->toBe([])
-        // Nine checks read the learner's language: seven of GEN-2b, the native side of `frame.no_end_punct`, and the
-        // letters of a reading (наряд BACK-TAILS-1 §3.2).
-        ->and($counters)->toBe(['lang.pack_missing' => 9])
+        // Ten checks read the learner's language: seven of GEN-2b, the native side of `frame.no_end_punct`, the letters
+        // of a reading (наряд BACK-TAILS-1 §3.2), and the numbers, times and names a piece of the partner's line is read
+        // by (`options.partner_fragment`, наряд LANG-1b §1).
+        ->and($counters)->toBe(['lang.pack_missing' => 10])
         ->and($fake->repairCalls)->toBe(0);
 });

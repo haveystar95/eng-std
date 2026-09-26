@@ -275,7 +275,8 @@ function lvBreaks(): array
         return $p;
     }],
     // Canon (наряд FIX-3 §5): «варианты одной проверки одной формы с верным — длина каждого в пределах 0,5–2× верного, ни
-    // один не начинается со строчной, ни один не совпадает с куском реплики собеседника на родном».
+    // один не начинается со строчной»; наряд LANG-1b §1: «кусок реплики собеседника — отдельный код
+    // options.partner_fragment, предупреждение».
     'an option a third as long as the right one' => [LessonCodes::OPTIONS_FORM_MISMATCH, static function (array $p): array {
         $p['dialogue'][3]['check']['options'][1]['text_native'] = 'Нет';
 
@@ -286,7 +287,7 @@ function lvBreaks(): array
 
         return $p;
     }],
-    'an option copied out of the partner\'s line in the learner\'s language' => [LessonCodes::OPTIONS_FORM_MISMATCH, static function (array $p): array {
+    'an option copied out of the partner\'s line in the learner\'s language' => [LessonCodes::OPTIONS_PARTNER_FRAGMENT, static function (array $p): array {
         $p['dialogue'][4]['check']['options'][1]['text_native'] = 'Растяжение мышцы';
 
         return $p;
@@ -353,6 +354,12 @@ function lvBreaks(): array
 
         return $p;
     }],
+    // Наряд LANG-1b §4: «определения слов на языке цели — страж-предупреждение vocab.definition_language».
+    'a definition written in the learner\'s language instead of the target\'s' => [LessonCodes::VOCAB_DEFINITION_LANGUAGE, static function (array $p): array {
+        $p['vocabulary'][0]['definition_target'] = 'боль в нижней части спины';
+
+        return $p;
+    }],
     'two frames of one native pattern' => [LessonCodes::FRAME_TWIN, static function (array $p): array {
         $p['phrases'][4]['frame_native'] = 'У него болит ___.';
 
@@ -409,13 +416,14 @@ it('counts the one rule a lesson breaks by its code', function (string $code, Cl
 
 // A code with no row of its own is a code nothing proves it counts. The seam judge's code is a model's, not a rule's
 // (LessonSeamJudge, `LessonObservationTest`). Доработка GEN-2b: no code is about the speaking key any more, the key is the
-// server's. Наряд GEN-3 added seven codes; наряд BACK-TAILS-1 §3.2 one more; наряд FIX-3 §5 one more — fifty-nine in all.
-it('has a broken rule for every one of its fifty-nine codes', function () {
+// server's. Наряд GEN-3 added seven codes; наряд BACK-TAILS-1 §3.2 one more; наряд FIX-3 §5 one more; наряд LANG-1b two
+// warnings (`options.partner_fragment`, `vocab.definition_language`) — sixty-one in all.
+it('has a broken rule for every one of its sixty-one codes', function () {
     $named = array_map(static fn (array $row): string => $row[0], [...array_values(lvBreaks()), ...array_values(lvStoryBreaks())]);
 
     expect(array_values(array_diff(LessonCodes::validated(), $named)))->toBe([])
-        ->and(count(LessonCodes::all()))->toBe(59)
-        ->and(count(array_unique(LessonCodes::all())))->toBe(59)
+        ->and(count(LessonCodes::all()))->toBe(61)
+        ->and(count(array_unique(LessonCodes::all())))->toBe(61)
         ->and(array_filter(LessonCodes::all(), static fn (string $code): bool => str_starts_with($code, 'key.')))->toBe([])
         ->and(LessonCodes::JUDGED)->toBe([LessonCodes::FILLER_NATIVE_SEAM]);
 });
@@ -505,6 +513,8 @@ it('skips a check whose language has no pack and writes the skip down, finding n
         LessonCodes::FRAME_NO_END_PUNCT, LessonCodes::FRAME_NATIVE_PUNCT, LessonCodes::FRAME_NATIVE_AGREEMENT,
         LessonCodes::LISTENING_SAME_EXCHANGE, LessonCodes::LISTENING_NO_LEARNER_VALUE, LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER,
         LessonCodes::NATIVE_GENDERED_PAST,
+        // Наряд LANG-1b §1: a piece of the partner's line is read by the learner's numbers, times and names.
+        LessonCodes::OPTIONS_PARTNER_FRAGMENT,
     ];
 
     expect($codes($ru))->toContain(LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::NATIVE_GENDERED_PAST, LessonCodes::FRAME_NATIVE_AGREEMENT, LessonCodes::LISTENING_DISTRACTOR_NOT_FILLER)

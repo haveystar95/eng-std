@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.7`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
- * BACK-TAILS-1, FIX-3) — fifty-nine.
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.9`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
+ * BACK-TAILS-1, FIX-3, LANG-1b) — sixty-one.
  * Every breach is counted by code; ELEVEN of them are fatal — the day is not dealt until a repair takes their card
- * ({@see LessonGate}) — and the other 48 are warnings: counted and kept. One code is not the validator's but the seam
+ * ({@see LessonGate}) — and the other 50 are warnings: counted and kept. Наряд LANG-1b added two warnings: an option of a
+ * check copied out of the partner's line ({@see OPTIONS_PARTNER_FRAGMENT} — once a sub-rule of the fatal
+ * `options.form_mismatch`) and a word defined in another language than the target ({@see VOCAB_DEFINITION_LANGUAGE}). One code is not the validator's but the seam
  * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}). Six codes read the story
  * so far or the day as a whole (GEN-3): a word or a frame an earlier day taught, a frame whose native pattern an earlier
  * day taught, two frames of one pattern, one frame in two exchanges in a row, a partner who changed gender; and one reads a
@@ -124,10 +126,13 @@ final class LessonCodes
 
     public const CHECK_LISTED_ALTERNATIVE_AS_WRONG = 'check.listed_alternative_as_wrong';
 
-    /** The options of one check are not of one form with the right one (наряд FIX-3 §5). Fatal. */
+    /** The options of one check are not of one form with the right one — length, a lower-case start (наряд FIX-3 §5). Fatal. */
     public const OPTIONS_FORM_MISMATCH = 'options.form_mismatch';
 
     // Listening.
+    /** An option of one check is a piece of the partner's line in the learner's language, word for word (наряд LANG-1b §1). */
+    public const OPTIONS_PARTNER_FRAGMENT = 'options.partner_fragment';
+
     public const LISTENING_COUNT = 'listening.count';
 
     public const LISTENING_SAME_EXCHANGE = 'listening.same_exchange';
@@ -150,6 +155,9 @@ final class LessonCodes
     public const VOCAB_ABBREVIATION = 'vocab.abbreviation';
 
     // Native text, image prompts.
+    /** A word's `definition_target` is not in the target language — by its letters and its frequent words (наряд LANG-1b §4). */
+    public const VOCAB_DEFINITION_LANGUAGE = 'vocab.definition_language';
+
     public const NATIVE_GENDERED_PAST = 'native.gendered_past';
 
     public const IMAGE_PROMPT_RULE_TEXT = 'image_prompt.rule_text';
@@ -187,8 +195,10 @@ final class LessonCodes
     }
 
     /** @return list<string> the codes the validator itself finds — every code but the judged ones */
+            self::OPTIONS_PARTNER_FRAGMENT,
     public static function validated(): array
     {
+            self::VOCAB_DEFINITION_LANGUAGE,
         return array_values(array_diff(self::all(), self::JUDGED));
     }
 }
