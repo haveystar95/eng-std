@@ -926,7 +926,7 @@ it('paints a word nothing was found for with its scene’s tone, counts image_mi
     expect($row->image_url)->toBeNull()
         ->and($row->image_tone)->toBe($scene['image']['tone'])
         ->and(array_count_values($finder->asked)["sharp, {$theme}"] ?? 0)->toBe(1)
-        ->and(DB::table('plan_check_counters')->where('check_name', 'image_missing')->where('prompt_version', 'lesson_day.v4.9')->value('hits'))->toBe(1)
+        ->and(DB::table('plan_check_counters')->where('check_name', 'image_missing')->where('prompt_version', 'lesson_day.v4.10')->value('hits'))->toBe(1)
         ->and($word['image'])->toBeNull()
         ->and($word['image_tone'])->toBe($scene['image']['tone']);
 });

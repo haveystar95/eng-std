@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.9`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
+ * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.10`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
  * BACK-TAILS-1, FIX-3, LANG-1b) — sixty-one.
  * Every breach is counted by code; ELEVEN of them are fatal — the day is not dealt until a repair takes their card
  * ({@see LessonGate}) — and the other 50 are warnings: counted and kept. Наряд LANG-1b added two warnings: an option of a

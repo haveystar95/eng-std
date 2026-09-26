@@ -70,7 +70,7 @@ it('reports every code with its findings, fatal ones, days, failed days, share, 
     // Наряд LANG-1b §1: the lesson built anew by the server is a counter, no finding — the report prints it under the table.
     // CATCHES the rebuilds of the gate invisible to whoever reads the report.
     foreach ([['counted', 3], ['failed', 1]] as [$action, $hits]) {
-        DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => 'lesson_day.v4.9', 'check_name' => 'lesson.auto_rebuild', 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
+        DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => 'lesson_day.v4.10', 'check_name' => 'lesson.auto_rebuild', 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
     }
     Artisan::call('plan:check-report', ['--since' => $since]);
     expect(Artisan::output())->toContain('Counters that are no findings')->toContain('lesson.auto_rebuild: 3 / 0 / 1');

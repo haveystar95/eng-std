@@ -623,7 +623,7 @@ function planWriteLessons(App\Modules\Plan\Domain\Entity\Plan $plan): void
         $scene->acceptLesson(
             (new App\Modules\Plan\Domain\Lesson\LessonParser)->parse(App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload($request)),
             lessonPacks()->for('en'),
-            new App\Modules\Plan\Domain\ValueObject\ModelCall('lesson_day.v4.9', 'test', 'fake', '0.000000', 1, 1),
+            new App\Modules\Plan\Domain\ValueObject\ModelCall('lesson_day.v4.10', 'test', 'fake', '0.000000', 1, 1),
             [],
             new DateTimeImmutable('2026-09-10T09:00:00Z'),
         );

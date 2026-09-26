@@ -15,7 +15,7 @@ use RuntimeException;
 
 /**
  * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
- * (`plan-builder-v2`, `lesson_day.v4.9`) — a rename is a version bump and nothing else is. The previous lesson and repair
+ * (`plan-builder-v2`, `lesson_day.v4.10`) — a rename is a version bump and nothing else is. The previous lesson and repair
  * files stay beside the current ones (`lesson_day.v4.7`, `lesson_card_repair.v1.2`): going back is one constant.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
@@ -42,9 +42,15 @@ final class PlanPromptFiles
      * (ROLE GENDER), and one sentence of TEXT QUALITY: the partner addresses the learner formally in TARGET_LANGUAGE unless
      * the scene is clearly casual, and the learner's own lines never assume the partner's gender. TEXT QUALITY is quoted by
      * the repair of a frame, an exchange and a line ({@see self::REPAIR_SECTIONS}), so those repairs read that sentence too.
-     * v4.7 stays beside it as the one rollback file (without the reading clause of v4.8); v4.8 is gone (in git).
+     * v4.10 — наряд LANG-1b §10, after a day of the owner's ru→ro plan wrote its definitions and its checks in English and
+     * turned the learner's skill into a question: v4.9 and three rules — `definition_target` is a short definition in
+     * TARGET_LANGUAGE, never in English unless the target is English (VOCABULARY, quoted by the repair of a word); the
+     * `text_target` of a check's question and options is in TARGET_LANGUAGE (CHECK PER EXCHANGE, quoted by the repair of a
+     * check and of an exchange); an ask exchange is a real question a person in the scene would ask the partner, never the
+     * learner's own skill or fact turned into one (EXCHANGE KINDS, quoted by the repair of an exchange and of a line).
+     * v4.7 stays beside it as the one rollback file (without the reading clause of v4.8); v4.8 and v4.9 are gone (in git).
      */
-    private const LESSON_FILE = 'lesson_day.v4.9.md';
+    private const LESSON_FILE = 'lesson_day.v4.10.md';
 
     private const REPAIR_FILE = 'lesson_card_repair.v1.3.md';
 

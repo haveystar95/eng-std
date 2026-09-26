@@ -20,7 +20,7 @@ it('builds the plan and day one at creation, and reports the versions on every a
         ->and($build['attempts'])->toBe(1)
         ->and($build['cost_usd'])->toBe('0.000000')
         ->and($build['versions']['prompt_plan'])->toBe('plan-builder-v2')
-        ->and($build['versions']['prompt_lesson'])->toBe('lesson_day.v4.9')
+        ->and($build['versions']['prompt_lesson'])->toBe('lesson_day.v4.10')
         ->and($build['versions']['build'])->not->toBe('');
 
     $plan = planRead($this, $token, $build['id']);
@@ -41,7 +41,7 @@ it('builds the plan and day one at creation, and reports the versions on every a
     $row = DB::table('plans')->where('id', $build['id'])->first();
     expect($row->prompt_version_plan)->toBe('plan-builder-v2')
         ->and($row->build_version)->not->toBeNull()
-        ->and(DB::table('plan_scenes')->where('plan_id', $build['id'])->where('lesson_status', 'ready')->value('prompt_version_lesson'))->toBe('lesson_day.v4.9')
+        ->and(DB::table('plan_scenes')->where('plan_id', $build['id'])->where('lesson_status', 'ready')->value('prompt_version_lesson'))->toBe('lesson_day.v4.10')
         ->and(DB::table('plan_terms')->where('user_id', $user->id)->count())->toBe(14);
 
     $versions = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/plans/versions')->assertOk()->json('data');

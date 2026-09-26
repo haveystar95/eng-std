@@ -21,7 +21,7 @@ use App\Modules\Plan\Domain\ValueObject\ModelCall;
 use Throwable;
 
 /**
- * THE LESSON CALL (`lesson_day.v4.9`). One retry, and only for an answer that is not the schema — the model's
+ * THE LESSON CALL (`lesson_day.v4.10`). One retry, and only for an answer that is not the schema — the model's
  * refusal; a call that got no answer at all (a timeout) is not retried here or anywhere (наряд GEN-3). The answer is spoken
  * in the roles the plan gives, whatever roles the model wrote (the learner's of the plan, the partner's of the scene).
  * Everything the validator finds — with the story so far, the earlier days of the plan — is counted and written beside the
