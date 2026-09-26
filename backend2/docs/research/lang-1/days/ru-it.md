@@ -147,3 +147,25 @@
 ### Судья швов
 
 Судья не звался: урок не прошёл порог.
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 5 → 6 · предупреждений: 14 → 16 · не проверено кодов (родной/целевой): 0/17 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились check.about_learner×2, exchange.second_question×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `exchange.second_question` | **фатальная** | x1 | the closing message of A «Certo. Qual è il problema?» ends with a question mark |
+| + `frame.no_end_punct` | предупреждение | p1 | «I'd like to make ___» and the native «Я хочу записаться на ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p2 | «I have ___» and the native «У меня ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p3 | «For ___» and the native «Уже ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p4 | «___ is better» and the native «Лучше ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p7 | «I'll bring ___» and the native «Я возьму с собой ___» end with no mark |
+| + `check.about_learner` | предупреждение | x4.check | «Which two appointment times does the receptionist offer?» → «Today at three and tomorrow at nine» is about the learner's line, not the partner's |
+| + `check.about_learner` | предупреждение | x8.check | «Which document does the receptionist mention?» → «A health insurance card» is about the learner's line, not the partner's |
+| − `frame.no_end_punct` | предупреждение | p1 | the native «Я хочу записаться на ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p2 | the native «У меня ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p3 | the native «Уже ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p4 | the native «Лучше ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p7 | the native «Я возьму с собой ___» ends with no mark |

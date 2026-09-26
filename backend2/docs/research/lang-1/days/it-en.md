@@ -130,3 +130,9 @@
 
 - p4.f1: «Che orari disponibili avete?» — «Che ___ avete?» + «orari disponibili»
 - p4.f2: «Che appuntamenti questa settimana avete?» — «Che ___ avete?» + «appuntamenti questa settimana»
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 1 → 1 · предупреждений: 6 → 6 · не проверено кодов (родной/целевой): 9/0 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: без изменений.

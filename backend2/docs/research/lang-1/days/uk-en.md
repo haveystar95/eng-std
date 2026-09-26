@@ -130,3 +130,21 @@
 ### Судья швов
 
 Судья не звался: урок не прошёл порог.
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 3 → 3 · предупреждений: 4 → 13 · не проверено кодов (родной/целевой): 9/0 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились pronunciation.script×7, native.gendered_past×2.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `pronunciation.script` | предупреждение | p1.f1 | the reading «э докторз епойнтмент» leaves the native script |
+| + `pronunciation.script` | предупреждение | p1.f2 | the reading «э чек-ап» leaves the native script |
+| + `pronunciation.script` | предупреждение | p2.f1 | the reading «э сор сроут энд э фівер» leaves the native script |
+| + `pronunciation.script` | предупреждение | p2.f2 | the reading «э бед коф» leaves the native script |
+| + `pronunciation.script` | предупреждение | p7.f1 | the reading «эт срі» leaves the native script |
+| + `pronunciation.script` | предупреждение | B2 | the reading «Ай хев э сор сроут энд э фівер.» leaves the native script |
+| + `pronunciation.script` | предупреждение | B7 | the reading «Зетс файн эт срі.» leaves the native script |
+| + `native.gendered_past` | предупреждение | B1 | «Я б хотів записатися на прийом до лікаря.» says «хотів» about the learner while the learner's gender is unknown |
+| + `native.gendered_past` | предупреждение | p1 | «Я б хотів записатися на ___.» says «хотів» about the learner while the learner's gender is unknown |

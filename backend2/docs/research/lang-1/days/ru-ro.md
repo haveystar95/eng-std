@@ -139,3 +139,13 @@
 ### Судья швов
 
 Предложений: 14 · с вердиктом: 14 · «нет»: 0 · `lesson_seam_judge.v1.1` · $0.0015
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 4 → 5 · предупреждений: 8 → 8 · не проверено кодов (родной/целевой): 0/17 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились exchange.second_question×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `exchange.second_question` | **фатальная** | x1 | the closing message of A «Sigur. Pentru ce specialitate?» ends with a question mark |

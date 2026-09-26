@@ -1,8 +1,14 @@
 {
-    "generated_at": "2026-09-25T21:09:35+00:00",
-    "packs_now": false,
+    "generated_at": "2026-09-25T23:59:48+00:00",
+    "packs_now": true,
     "packs": [
+        "be",
+        "de",
         "en",
+        "es",
+        "fr",
+        "it",
+        "pl",
         "ro",
         "ru",
         "uk"
@@ -249,7 +255,104 @@
                 "plan": 10.3,
                 "day": 52.6
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "exchange.second_question",
+                        "address": "x1",
+                        "detail": "the closing message of A «Dobrze. Jaki jest powód wizyty?» ends with a question mark"
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "address": "B5",
+                        "detail": "«Jutro o piętnastej mi pasuje.» repeats 3 of 5 words of the partner's «Tak, mamy jutro o piętnastej.» (jutro, o, piętnastej)"
+                    },
+                    {
+                        "code": "learner.restates_partner",
+                        "address": "B8",
+                        "detail": "«Dobrze, przyjdę dziesięć minut wcześniej.» repeats 3 of 5 words of the partner's «Proszę przyjść dziesięć minut wcześniej.» (dziesięć, minut, wcześniej)"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f1",
+                        "detail": "the reading «до лекáжа» is spelled with letters of another writing: «á»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f1",
+                        "detail": "the reading «до лекáжа» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3",
+                        "detail": "the reading «___ ми пасуe» is spelled with letters of another writing: «e»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3",
+                        "detail": "the reading «___ ми пасуe» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5.f2",
+                        "detail": "the reading «скеровáне» is spelled with letters of another writing: «á»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5.f2",
+                        "detail": "the reading «скеровáне» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B1",
+                        "detail": "the reading «хцэн умувичь визытэн до лекáжа» is spelled with letters of another writing: «á»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B1",
+                        "detail": "the reading «хцэн умувичь визытэн до лекáжа» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B3",
+                        "detail": "the reading «ютро о дженсёнтэй ми пасуe» is spelled with letters of another writing: «e»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B3",
+                        "detail": "the reading «ютро о дженсёнтэй ми пасуe» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B5",
+                        "detail": "the reading «ютро о пентнастэй ми пасуe» is spelled with letters of another writing: «e»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B5",
+                        "detail": "the reading «ютро о пентнастэй ми пасуe» leaves the native script"
+                    }
+                ],
+                "codes_added": {
+                    "learner.restates_partner": 2,
+                    "exchange.second_question": 1
+                },
+                "codes_gone": {
+                    "pronunciation.foreign_script": 6,
+                    "pronunciation.script": 6
+                },
+                "fatal": 3,
+                "warnings": 4,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "ru-ro": {
             "native": "ru",
@@ -491,7 +594,29 @@
                 "plan": 9.7,
                 "day": 57.0
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "exchange.second_question",
+                        "address": "x1",
+                        "detail": "the closing message of A «Sigur. Pentru ce specialitate?» ends with a question mark"
+                    }
+                ],
+                "gone": [],
+                "codes_added": {
+                    "exchange.second_question": 1
+                },
+                "codes_gone": [],
+                "fatal": 5,
+                "warnings": 8,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "ru-es": {
             "native": "ru",
@@ -729,7 +854,29 @@
                 "plan": 9.5,
                 "day": 50.4
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "exchange.second_question",
+                        "address": "x1",
+                        "detail": "the closing message of A «Claro. ¿Para qué día la necesita?» ends with a question mark"
+                    }
+                ],
+                "gone": [],
+                "codes_added": {
+                    "exchange.second_question": 1
+                },
+                "codes_gone": [],
+                "fatal": 3,
+                "warnings": 1,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "ru-it": {
             "native": "ru",
@@ -975,7 +1122,91 @@
                 "plan": 8.9,
                 "day": 42.0
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "exchange.second_question",
+                        "address": "x1",
+                        "detail": "the closing message of A «Certo. Qual è il problema?» ends with a question mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like to make ___» and the native «Я хочу записаться на ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» and the native «У меня ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«For ___» and the native «Уже ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«___ is better» and the native «Лучше ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«I'll bring ___» and the native «Я возьму с собой ___» end with no mark"
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "address": "x4.check",
+                        "detail": "«Which two appointment times does the receptionist offer?» → «Today at three and tomorrow at nine» is about the learner's line, not the partner's"
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "address": "x8.check",
+                        "detail": "«Which document does the receptionist mention?» → «A health insurance card» is about the learner's line, not the partner's"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "the native «Я хочу записаться на ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "the native «У меня ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "the native «Уже ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "the native «Лучше ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "the native «Я возьму с собой ___» ends with no mark"
+                    }
+                ],
+                "codes_added": {
+                    "check.about_learner": 2,
+                    "exchange.second_question": 1
+                },
+                "codes_gone": [],
+                "fatal": 6,
+                "warnings": 16,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "ru-de": {
             "native": "ru",
@@ -1214,7 +1445,41 @@
                 "plan": 9.0,
                 "day": 43.1
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "exchange.second_question",
+                        "address": "x1",
+                        "detail": "the closing message of A «Gern. Worum geht es?» ends with a question mark"
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "address": "p3",
+                        "detail": "«Das habe ich ___.» leans on «das», and nothing in the frame is what it stands for"
+                    },
+                    {
+                        "code": "vocab.free_combination",
+                        "address": "v4",
+                        "detail": "«seit drei Tagen» is a free combination of ordinary words"
+                    }
+                ],
+                "gone": [],
+                "codes_added": {
+                    "exchange.second_question": 1,
+                    "frame.unresolved_pronoun": 1,
+                    "vocab.free_combination": 1
+                },
+                "codes_gone": [],
+                "fatal": 4,
+                "warnings": 6,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "ru-fr": {
             "native": "ru",
@@ -1464,7 +1729,59 @@
                 "plan": 7.8,
                 "day": 43.3
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "exchange.second_question",
+                        "address": "x1",
+                        "detail": "the closing message of A «D'accord. C'est pour quel problème ?» ends with a question mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«J'ai ___» and the native «У меня ___» end with no mark"
+                    },
+                    {
+                        "code": "partner.too_long",
+                        "address": "A8",
+                        "detail": "«C'est noté. Rendez-vous demain à dix heures. Arrivez dix minutes avant.» has 3 sentences (max 2)"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v6",
+                        "detail": "the reading «нюмэро дё телефoн» is spelled with letters of another writing: «o»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v6",
+                        "detail": "the reading «нюмэро дё телефoн» leaves the native script"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "the native «У меня ___» ends with no mark"
+                    }
+                ],
+                "codes_added": {
+                    "exchange.second_question": 1,
+                    "partner.too_long": 1
+                },
+                "codes_gone": {
+                    "pronunciation.foreign_script": 1,
+                    "pronunciation.script": 1
+                },
+                "fatal": 3,
+                "warnings": 16,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "uk-en": {
             "native": "uk",
@@ -1628,7 +1945,70 @@
                 "plan": 10.4,
                 "day": 49.4
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f1",
+                        "detail": "the reading «э докторз епойнтмент» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f2",
+                        "detail": "the reading «э чек-ап» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f1",
+                        "detail": "the reading «э сор сроут энд э фівер» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f2",
+                        "detail": "the reading «э бед коф» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7.f1",
+                        "detail": "the reading «эт срі» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B2",
+                        "detail": "the reading «Ай хев э сор сроут энд э фівер.» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B7",
+                        "detail": "the reading «Зетс файн эт срі.» leaves the native script"
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "address": "B1",
+                        "detail": "«Я б хотів записатися на прийом до лікаря.» says «хотів» about the learner while the learner's gender is unknown"
+                    },
+                    {
+                        "code": "native.gendered_past",
+                        "address": "p1",
+                        "detail": "«Я б хотів записатися на ___.» says «хотів» about the learner while the learner's gender is unknown"
+                    }
+                ],
+                "gone": [],
+                "codes_added": {
+                    "pronunciation.script": 7,
+                    "native.gendered_past": 2
+                },
+                "codes_gone": [],
+                "fatal": 3,
+                "warnings": 13,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "be-en": {
             "native": "be",
@@ -1793,7 +2173,107 @@
                 "plan": 10.7,
                 "day": 60.5
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5",
+                        "detail": "the reading «уот из ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B5",
+                        "detail": "the reading «уот из зэ нірыст эвэйлэбл тайм» leaves the native script"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like to book ___» and the native «Я хачу запісацца на ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» and the native «У мяне ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«For ___» and the native «Ужо ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«I also have ___» and the native «У мяне таксама ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "address": "p5",
+                        "detail": "«Які ___?»: «які» agrees with the slot — it changes with the filler"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p6",
+                        "detail": "«___ works for me» and the native «Мне падыходзіць ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«Please book me for ___» and the native «Калі ласка, запішыце мяне на ___» end with no mark"
+                    },
+                    {
+                        "code": "listening.same_exchange",
+                        "address": "L4",
+                        "detail": "L3 and this question are both about exchange 5"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like to book ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«For ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«I also have ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p6",
+                        "detail": "«___ works for me» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«Please book me for ___» ends with no mark"
+                    }
+                ],
+                "codes_added": {
+                    "pronunciation.script": 2,
+                    "frame.native_agreement": 1,
+                    "listening.same_exchange": 1
+                },
+                "codes_gone": [],
+                "fatal": 2,
+                "warnings": 14,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "pl-en": {
             "native": "pl",
@@ -1956,7 +2436,116 @@
                 "plan": 10.6,
                 "day": 55.8
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B5",
+                        "detail": "the reading «maj nejm iz იან kowalski» is spelled with letters of another writing: «ი», «ა», «ნ»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B5",
+                        "detail": "the reading «maj nejm iz იან kowalski» leaves the native script"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like to make ___» and the native «Chcę umówić ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» and the native «Mam ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«It's been ___» and the native «To trwa ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«Can I come ___» and the native «Czy mogę przyjść ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p5",
+                        "detail": "«My name is ___» and the native «Nazywam się ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p6",
+                        "detail": "«I'll bring ___» and the native «Wezmę ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«Can I have ___» and the native «Czy mogę dostać ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p8",
+                        "detail": "«See you ___» and the native «Do zobaczenia ___» end with no mark"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like to make ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«It's been ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«Can I come ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p5",
+                        "detail": "«My name is ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p6",
+                        "detail": "«I'll bring ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«Can I have ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p8",
+                        "detail": "«See you ___» ends with no mark"
+                    }
+                ],
+                "codes_added": {
+                    "pronunciation.foreign_script": 1,
+                    "pronunciation.script": 1
+                },
+                "codes_gone": [],
+                "fatal": 3,
+                "warnings": 12,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "ro-en": {
             "native": "ro",
@@ -2131,7 +2720,90 @@
                 "plan": 10.2,
                 "day": 42.7
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B2",
+                        "detail": "the reading «ai hv ə sor throuăt» leaves the native script"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like to book ___» and the native «Aș vrea să fac ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» and the native «Am ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«I've had it ___» and the native «O am ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«___ works for me» and the native «___ este bine pentru mine» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«Here is my ___» and the native «Iată ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p8",
+                        "detail": "«See you ___» and the native «Ne vedem ___» end with no mark"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like to book ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«I've had it ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«___ works for me» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«Here is my ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p8",
+                        "detail": "«See you ___» ends with no mark"
+                    }
+                ],
+                "codes_added": {
+                    "pronunciation.script": 1
+                },
+                "codes_gone": [],
+                "fatal": 5,
+                "warnings": 14,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "es-en": {
             "native": "es",
@@ -2306,7 +2978,502 @@
                 "plan": 8.6,
                 "day": 47.8
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1",
+                        "detail": "the reading «айд лайк ___» is spelled with letters of another writing: «а», «й», «д», «л», «к»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1",
+                        "detail": "the reading «айд лайк ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f1",
+                        "detail": "the reading «э до́кторз эпо́йнтмэнт» is spelled with letters of another writing: «э», «д», «о», «к», «т», «р», «з», «п», «й», «н», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f1",
+                        "detail": "the reading «э до́кторз эпо́йнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f2",
+                        "detail": "the reading «эн эпо́йнтмэнт туде́й» is spelled with letters of another writing: «э», «н», «п», «о», «й», «т», «м», «у», «д», «е»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f2",
+                        "detail": "the reading «эн эпо́йнтмэнт туде́й» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2",
+                        "detail": "the reading «ай хэв ___» is spelled with letters of another writing: «а», «й», «х», «э», «в»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2",
+                        "detail": "the reading «ай хэв ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f1",
+                        "detail": "the reading «э сор сроут энд ֆíвер» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т», «н», «д», «ֆ», «в», «е»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f1",
+                        "detail": "the reading «э сор сроут энд ֆíвер» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f2",
+                        "detail": "the reading «э бэд коф» is spelled with letters of another writing: «э», «б», «д», «к», «о», «ф»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f2",
+                        "detail": "the reading «э бэд коф» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f3",
+                        "detail": "the reading «ир пэйн» is spelled with letters of another writing: «и», «р», «п», «э», «й», «н»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f3",
+                        "detail": "the reading «ир пэйн» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3",
+                        "detail": "the reading «айв хад ит ___» is spelled with letters of another writing: «а», «й», «в», «х», «д», «и», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3",
+                        "detail": "the reading «айв хад ит ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f1",
+                        "detail": "the reading «фор срí дейз» is spelled with letters of another writing: «ф», «о», «р», «с», «д», «е», «й», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f1",
+                        "detail": "the reading «фор срí дейз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f2",
+                        "detail": "the reading «синс ма́ндей» is spelled with letters of another writing: «с», «и», «н», «м», «а», «д», «е», «й»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f2",
+                        "detail": "the reading «синс ма́ндей» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4",
+                        "detail": "the reading «___ из нот гуд фор ми» is spelled with letters of another writing: «и», «з», «н», «о», «т», «г», «у», «д», «ф», «р», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4",
+                        "detail": "the reading «___ из нот гуд фор ми» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4.f1",
+                        "detail": "the reading «тэн» is spelled with letters of another writing: «т», «э», «н»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4.f1",
+                        "detail": "the reading «тэн» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4.f2",
+                        "detail": "the reading «фра́йдей афтэрнун» is spelled with letters of another writing: «ф», «р», «а», «й», «д», «е», «т», «э», «н», «у»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4.f2",
+                        "detail": "the reading «фра́йдей афтэрнун» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5",
+                        "detail": "the reading «из ___ эве́йлэбл» is spelled with letters of another writing: «и», «з», «э», «в», «е», «й», «л», «б»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5",
+                        "detail": "the reading «из ___ эве́йлэбл» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5.f1",
+                        "detail": "the reading «ту» is spelled with letters of another writing: «т», «у»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5.f1",
+                        "detail": "the reading «ту» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5.f2",
+                        "detail": "the reading «файв сёрти» is spelled with letters of another writing: «ф», «а», «й», «в», «с», «ё», «р», «т», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5.f2",
+                        "detail": "the reading «файв сёрти» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6",
+                        "detail": "the reading «ду ю хэв е́нисин ___» is spelled with letters of another writing: «д», «у», «ю», «х», «э», «в», «е», «н», «и», «с»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6",
+                        "detail": "the reading «ду ю хэв е́нисин ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6.f1",
+                        "detail": "the reading «томо́роу морнин» is spelled with letters of another writing: «т», «о», «м», «р», «у», «н», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6.f1",
+                        "detail": "the reading «томо́роу морнин» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6.f2",
+                        "detail": "the reading «зис íвнин» is spelled with letters of another writing: «з», «и», «с», «в», «н»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6.f2",
+                        "detail": "the reading «зис íвнин» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7",
+                        "detail": "the reading «май нейм из ___» is spelled with letters of another writing: «м», «а», «й», «н», «е», «и», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7",
+                        "detail": "the reading «май нейм из ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f1",
+                        "detail": "the reading «карлос руис» is spelled with letters of another writing: «к», «а», «р», «л», «о», «с», «у», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7.f1",
+                        "detail": "the reading «карлос руис» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f2",
+                        "detail": "the reading «ана торрес» is spelled with letters of another writing: «а», «н», «т», «о», «р», «е», «с»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7.f2",
+                        "detail": "the reading «ана торрес» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p8",
+                        "detail": "the reading «айл би ___» is spelled with letters of another writing: «а», «й», «л», «б», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p8",
+                        "detail": "the reading «айл би ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p8.f1",
+                        "detail": "the reading «зэр тэн mínитс ёрли» is spelled with letters of another writing: «з», «э», «р», «т», «н», «и», «с», «ё», «л»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p8.f1",
+                        "detail": "the reading «зэр тэн mínитс ёрли» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p8.f2",
+                        "detail": "the reading «бэк зис афтэрнун» is spelled with letters of another writing: «б», «э», «к», «з», «и», «с», «а», «ф», «т», «р», «н», «у»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p8.f2",
+                        "detail": "the reading «бэк зис афтэрнун» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v1",
+                        "detail": "the reading «эпо́йнтмэнт» is spelled with letters of another writing: «э», «п», «о», «й», «н», «т», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v1",
+                        "detail": "the reading «эпо́йнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v2",
+                        "detail": "the reading «сор сроут» is spelled with letters of another writing: «с», «о», «р», «у», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v2",
+                        "detail": "the reading «сор сроут» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v3",
+                        "detail": "the reading «ֆíвер» is spelled with letters of another writing: «ֆ», «в», «е», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v3",
+                        "detail": "the reading «ֆíвер» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v4",
+                        "detail": "the reading «эве́йлэбл» is spelled with letters of another writing: «э», «в», «е», «й», «л», «б»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v4",
+                        "detail": "the reading «эве́йлэбл» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v5",
+                        "detail": "the reading «томо́роу морнин» is spelled with letters of another writing: «т», «о», «м», «р», «у», «н», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v5",
+                        "detail": "the reading «томо́роу морнин» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v6",
+                        "detail": "the reading «нейм» is spelled with letters of another writing: «н», «е», «й», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v6",
+                        "detail": "the reading «нейм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v7",
+                        "detail": "the reading «букт» is spelled with letters of another writing: «б», «у», «к», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v7",
+                        "detail": "the reading «букт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v8",
+                        "detail": "the reading «эра́йв ёрли» is spelled with letters of another writing: «э», «р», «а», «й», «в», «ё», «л», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v8",
+                        "detail": "the reading «эра́йв ёрли» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B1",
+                        "detail": "the reading «айд лайк э до́кторз эпо́йнтмэнт» is spelled with letters of another writing: «а», «й», «д», «л», «к», «э», «о», «т», «р», «з», «п», «н», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B1",
+                        "detail": "the reading «айд лайк э до́кторз эпо́йнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B2",
+                        "detail": "the reading «ай хэв э сор сроут энд ֆíвер» is spelled with letters of another writing: «а», «й», «х», «э», «в», «с», «о», «р», «у», «т», «н», «д», «ֆ», «е»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B2",
+                        "detail": "the reading «ай хэв э сор сроут энд ֆíвер» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B3",
+                        "detail": "the reading «айв хад ит фор срí дейз» is spelled with letters of another writing: «а», «й», «в», «х», «д», «и», «т», «ф», «о», «р», «с», «е», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B3",
+                        "detail": "the reading «айв хад ит фор срí дейз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B4",
+                        "detail": "the reading «тэн из нот гуд фор ми» is spelled with letters of another writing: «т», «э», «н», «и», «з», «о», «г», «у», «д», «ф», «р», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B4",
+                        "detail": "the reading «тэн из нот гуд фор ми» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B5",
+                        "detail": "the reading «из ту эве́йлэбл» is spelled with letters of another writing: «и», «з», «т», «у», «э», «в», «е», «й», «л», «б»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B5",
+                        "detail": "the reading «из ту эве́йлэбл» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B6",
+                        "detail": "the reading «ду ю хэв е́нисин томо́роу морнин» is spelled with letters of another writing: «д», «у», «ю», «х», «э», «в», «е», «н», «и», «с», «т», «о», «м», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B6",
+                        "detail": "the reading «ду ю хэв е́нисин томо́роу морнин» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B7",
+                        "detail": "the reading «май нейм из карлос руис» is spelled with letters of another writing: «м», «а», «й», «н», «е», «и», «з», «к», «р», «л», «о», «с», «у»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B7",
+                        "detail": "the reading «май нейм из карлос руис» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B8",
+                        "detail": "the reading «айл би зэр тэн mínитс ёрли» is spelled with letters of another writing: «а», «й», «л», «б», «и», «з», «э», «р», «т», «н», «с», «ё»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B8",
+                        "detail": "the reading «айл би зэр тэн mínитс ёрли» leaves the native script"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like ___» and the native «Quisiera ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» and the native «Tengo ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«I've had it ___» and the native «Llevo ___ con eso» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«___ is not good for me» and the native «___ no me viene bien» end with no mark"
+                    },
+                    {
+                        "code": "frame.native_agreement",
+                        "address": "p5",
+                        "detail": "«¿Está libre ___?»: «libre» agrees with the slot — it changes with the filler"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«My name is ___» and the native «Me llamo ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p8",
+                        "detail": "«I'll be ___» and the native «Estaré ___» end with no mark"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p1",
+                        "detail": "«I'd like ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p3",
+                        "detail": "«I've had it ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«___ is not good for me» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«My name is ___» ends with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p8",
+                        "detail": "«I'll be ___» ends with no mark"
+                    }
+                ],
+                "codes_added": {
+                    "pronunciation.foreign_script": 41,
+                    "pronunciation.script": 41,
+                    "frame.native_agreement": 1
+                },
+                "codes_gone": [],
+                "fatal": 42,
+                "warnings": 54,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "it-en": {
             "native": "it",
@@ -2468,7 +3635,21 @@
                 "plan": 10.2,
                 "day": 55.3
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [],
+                "gone": [],
+                "codes_added": [],
+                "codes_gone": [],
+                "fatal": 1,
+                "warnings": 6,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "de-en": {
             "native": "de",
@@ -2632,7 +3813,445 @@
                 "plan": 9.5,
                 "day": 57.0
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1",
+                        "detail": "the reading «айд лайк ___» is spelled with letters of another writing: «а», «й», «д», «л», «к»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1",
+                        "detail": "the reading «айд лайк ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f1",
+                        "detail": "the reading «э докторс эпойнтмэнт» is spelled with letters of another writing: «э», «д», «о», «к», «т», «р», «с», «п», «й», «н», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f1",
+                        "detail": "the reading «э докторс эпойнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f2",
+                        "detail": "the reading «эн эпойнтмэнт тудэй» is spelled with letters of another writing: «э», «н», «п», «о», «й», «т», «м», «у», «д»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f2",
+                        "detail": "the reading «эн эпойнтмэнт тудэй» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2",
+                        "detail": "the reading «ай хэв ___» is spelled with letters of another writing: «а», «й», «х», «э», «в»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2",
+                        "detail": "the reading «ай хэв ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f1",
+                        "detail": "the reading «э сор сроут энд фивэр» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т», «н», «д», «ф», «и», «в»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f1",
+                        "detail": "the reading «э сор сроут энд фивэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f2",
+                        "detail": "the reading «э коф» is spelled with letters of another writing: «э», «к», «о», «ф»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f2",
+                        "detail": "the reading «э коф» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f3",
+                        "detail": "the reading «э бэд хэдэйк» is spelled with letters of another writing: «э», «б», «д», «х», «й», «к»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f3",
+                        "detail": "the reading «э бэд хэдэйк» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3",
+                        "detail": "the reading «айв хэд ит фо ___» is spelled with letters of another writing: «а», «й», «в», «х», «э», «д», «и», «т», «ф», «о»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3",
+                        "detail": "the reading «айв хэд ит фо ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f1",
+                        "detail": "the reading «сри дэйз» is spelled with letters of another writing: «с», «р», «и», «д», «э», «й», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f1",
+                        "detail": "the reading «сри дэйз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f2",
+                        "detail": "the reading «ту дэйз» is spelled with letters of another writing: «т», «у», «д», «э», «й», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f2",
+                        "detail": "the reading «ту дэйз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f3",
+                        "detail": "the reading «э уик» is spelled with letters of another writing: «э», «у», «и», «к»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f3",
+                        "detail": "the reading «э уик» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4",
+                        "detail": "the reading «___ из better фо ми» is spelled with letters of another writing: «и», «з», «ф», «о», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4",
+                        "detail": "the reading «___ из better фо ми» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4.f1",
+                        "detail": "the reading «ту оклок» is spelled with letters of another writing: «т», «у», «о», «к», «л»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4.f1",
+                        "detail": "the reading «ту оклок» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4.f2",
+                        "detail": "the reading «тэн оклок» is spelled with letters of another writing: «т», «э», «н», «о», «к», «л»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4.f2",
+                        "detail": "the reading «тэн оклок» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5",
+                        "detail": "the reading «уот ду ю нид фо ___» is spelled with letters of another writing: «у», «о», «т», «д», «ю», «н», «и», «ф»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5",
+                        "detail": "the reading «уот ду ю нид фо ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5.f1",
+                        "detail": "the reading «йор нэйм» is spelled with letters of another writing: «й», «о», «р», «н», «э», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5.f1",
+                        "detail": "the reading «йор нэйм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5.f2",
+                        "detail": "the reading «зе намбэр» is spelled with letters of another writing: «з», «е», «н», «а», «м», «б», «э», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5.f2",
+                        "detail": "the reading «зе намбэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6",
+                        "detail": "the reading «май фоун намбэр из ___» is spelled with letters of another writing: «м», «а», «й», «ф», «о», «у», «н», «б», «э», «р», «и», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6",
+                        "detail": "the reading «май фоун намбэр из ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6.f1",
+                        "detail": "the reading «оу уан сэвэн сикс ту сри фор файв сикс сэвэн» is spelled with letters of another writing: «о», «у», «а», «н», «с», «э», «в», «и», «к», «т», «р», «ф», «й»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6.f1",
+                        "detail": "the reading «оу уан сэвэн сикс ту сри фор файв сикс сэвэн» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6.f2",
+                        "detail": "the reading «зиро сри зиро фор фор файв файв сикс сикс» is spelled with letters of another writing: «з», «и», «р», «о», «с», «ф», «а», «й», «в», «к»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6.f2",
+                        "detail": "the reading «зиро сри зиро фор фор файв файв сикс сикс» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7",
+                        "detail": "the reading «айл кам ___» is spelled with letters of another writing: «а», «й», «л», «к», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7",
+                        "detail": "the reading «айл кам ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f1",
+                        "detail": "the reading «фифтин минитс ёрли» is spelled with letters of another writing: «ф», «и», «т», «н», «м», «с», «ё», «р», «л»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7.f1",
+                        "detail": "the reading «фифтин минитс ёрли» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f2",
+                        "detail": "the reading «тэн минитс ёрли» is spelled with letters of another writing: «т», «э», «н», «м», «и», «с», «ё», «р», «л»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7.f2",
+                        "detail": "the reading «тэн минитс ёрли» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p8",
+                        "detail": "the reading «куд ю гив ми ___» is spelled with letters of another writing: «к», «у», «д», «ю», «г», «и», «в», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p8",
+                        "detail": "the reading «куд ю гив ми ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p8.f1",
+                        "detail": "the reading «зи эдрэс» is spelled with letters of another writing: «з», «и», «э», «д», «р», «с»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p8.f1",
+                        "detail": "the reading «зи эдрэс» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p8.f2",
+                        "detail": "the reading «зи фоун намбэр» is spelled with letters of another writing: «з», «и», «ф», «о», «у», «н», «а», «м», «б», «э», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p8.f2",
+                        "detail": "the reading «зи фоун намбэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v1",
+                        "detail": "the reading «докторс эпойнтмэнт» is spelled with letters of another writing: «д», «о», «к», «т», «р», «с», «э», «п», «й», «н», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v1",
+                        "detail": "the reading «докторс эпойнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v2",
+                        "detail": "the reading «сор сроут» is spelled with letters of another writing: «с», «о», «р», «у», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v2",
+                        "detail": "the reading «сор сроут» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v3",
+                        "detail": "the reading «фивэр» is spelled with letters of another writing: «ф», «и», «в», «э», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v3",
+                        "detail": "the reading «фивэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v4",
+                        "detail": "the reading «симптомз» is spelled with letters of another writing: «с», «и», «м», «п», «т», «о», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v4",
+                        "detail": "the reading «симптомз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v5",
+                        "detail": "the reading «фул нэйм» is spelled with letters of another writing: «ф», «у», «л», «н», «э», «й», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v5",
+                        "detail": "the reading «фул нэйм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v6",
+                        "detail": "the reading «фоун намбэр» is spelled with letters of another writing: «ф», «о», «у», «н», «а», «м», «б», «э», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v6",
+                        "detail": "the reading «фоун намбэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v7",
+                        "detail": "the reading «форм» is spelled with letters of another writing: «ф», «о», «р», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v7",
+                        "detail": "the reading «форм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v8",
+                        "detail": "the reading «эдрэс» is spelled with letters of another writing: «э», «д», «р», «с»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v8",
+                        "detail": "the reading «эдрэс» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B1",
+                        "detail": "the reading «айд лайк э докторс эпойнтмэнт» is spelled with letters of another writing: «а», «й», «д», «л», «к», «э», «о», «т», «р», «с», «п», «н», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B1",
+                        "detail": "the reading «айд лайк э докторс эпойнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B2",
+                        "detail": "the reading «ай хэв э сор сроут энд фивэр» is spelled with letters of another writing: «а», «й», «х», «э», «в», «с», «о», «р», «у», «т», «н», «д», «ф», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B2",
+                        "detail": "the reading «ай хэв э сор сроут энд фивэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B3",
+                        "detail": "the reading «айв хэд ит фо сри дэйз» is spelled with letters of another writing: «а», «й», «в», «х», «э», «д», «и», «т», «ф», «о», «с», «р», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B3",
+                        "detail": "the reading «айв хэд ит фо сри дэйз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B4",
+                        "detail": "the reading «tu oklokk is better fo ми» is spelled with letters of another writing: «м», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B4",
+                        "detail": "the reading «tu oklokk is better fo ми» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B5",
+                        "detail": "the reading «уот ду ю нид фо йор нэйм» is spelled with letters of another writing: «у», «о», «т», «д», «ю», «н», «и», «ф», «й», «р», «э», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B5",
+                        "detail": "the reading «уот ду ю нид фо йор нэйм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B6",
+                        "detail": "the reading «май фоун намбэр из оу уан сэвэн сикс ту сри фор файв сикс сэвэн» is spelled with letters of another writing: «м», «а», «й», «ф», «о», «у», «н», «б», «э», «р», «и», «з», «с», «в», «к», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B6",
+                        "detail": "the reading «май фоун намбэр из оу уан сэвэн сикс ту сри фор файв сикс сэвэн» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B7",
+                        "detail": "the reading «айл кам фифтин минитс ёрли» is spelled with letters of another writing: «а», «й», «л», «к», «м», «ф», «и», «т», «н», «с», «ё», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B7",
+                        "detail": "the reading «айл кам фифтин минитс ёрли» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B8",
+                        "detail": "the reading «куд ю гив ми зи эдрэс» is spelled with letters of another writing: «к», «у», «д», «ю», «г», «и», «в», «м», «з», «э», «р», «с»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B8",
+                        "detail": "the reading «куд ю гив ми зи эдрэс» leaves the native script"
+                    }
+                ],
+                "gone": [],
+                "codes_added": {
+                    "pronunciation.foreign_script": 42,
+                    "pronunciation.script": 42
+                },
+                "codes_gone": [],
+                "fatal": 44,
+                "warnings": 45,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         },
         "fr-en": {
             "native": "fr",
@@ -2792,7 +4411,433 @@
                 "plan": 10.5,
                 "day": 55.6
             },
-            "packs_now": null
+            "packs_now": {
+                "done": true,
+                "note": null,
+                "skips": [],
+                "added": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1",
+                        "detail": "the reading «айд лайк ту мейк ___» is spelled with letters of another writing: «а», «й», «д», «л», «к», «т», «у», «м», «е»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1",
+                        "detail": "the reading «айд лайк ту мейк ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f1",
+                        "detail": "the reading «эн эпойнтмэнт» is spelled with letters of another writing: «э», «н», «п», «о», «й», «т», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f1",
+                        "detail": "the reading «эн эпойнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f2",
+                        "detail": "the reading «э сейм-дей эпойнтмэнт» is spelled with letters of another writing: «э», «с», «е», «й», «м», «д», «п», «о», «н», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p1.f2",
+                        "detail": "the reading «э сейм-дей эпойнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2",
+                        "detail": "the reading «итс фор ___» is spelled with letters of another writing: «и», «т», «с», «ф», «о», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2",
+                        "detail": "the reading «итс фор ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f1",
+                        "detail": "the reading «э сор сроут» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f1",
+                        "detail": "the reading «э сор сроут» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f2",
+                        "detail": "the reading «э фивэр» is spelled with letters of another writing: «э», «ф», «и», «в», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f2",
+                        "detail": "the reading «э фивэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p2.f3",
+                        "detail": "the reading «э коф» is spelled with letters of another writing: «э», «к», «о», «ф»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p2.f3",
+                        "detail": "the reading «э коф» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3",
+                        "detail": "the reading «айв хэд ит фор ___» is spelled with letters of another writing: «а», «й», «в», «х», «э», «д», «и», «т», «ф», «о», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3",
+                        "detail": "the reading «айв хэд ит фор ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f1",
+                        "detail": "the reading «сри дейз» is spelled with letters of another writing: «с», «р», «и», «д», «е», «й», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f1",
+                        "detail": "the reading «сри дейз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f2",
+                        "detail": "the reading «ту дейз» is spelled with letters of another writing: «т», «у», «д», «е», «й», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f2",
+                        "detail": "the reading «ту дейз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p3.f3",
+                        "detail": "the reading «э уик» is spelled with letters of another writing: «э», «у», «и», «к»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p3.f3",
+                        "detail": "the reading «э уик» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4",
+                        "detail": "the reading «уот таймз ар эвейлэбл ___» is spelled with letters of another writing: «у», «о», «т», «а», «й», «м», «з», «р», «э», «в», «е», «л», «б»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4",
+                        "detail": "the reading «уот таймз ар эвейлэбл ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4.f1",
+                        "detail": "the reading «тудей» is spelled with letters of another writing: «т», «у», «д», «е», «й»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4.f1",
+                        "detail": "the reading «тудей» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4.f2",
+                        "detail": "the reading «тумороу» is spelled with letters of another writing: «т», «у», «м», «о», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p4.f2",
+                        "detail": "the reading «тумороу» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5",
+                        "detail": "the reading «___ уоркс фор ми» is spelled with letters of another writing: «у», «о», «р», «к», «с», «ф», «м», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5",
+                        "detail": "the reading «___ уоркс фор ми» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5.f1",
+                        "detail": "the reading «сри пи эм» is spelled with letters of another writing: «с», «р», «и», «п», «э», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5.f1",
+                        "detail": "the reading «сри пи эм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p5.f2",
+                        "detail": "the reading «тен эй эм» is spelled with letters of another writing: «т», «е», «н», «э», «й», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p5.f2",
+                        "detail": "the reading «тен эй эм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6",
+                        "detail": "the reading «май нейм из ___» is spelled with letters of another writing: «м», «а», «й», «н», «е», «и», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6",
+                        "detail": "the reading «май нейм из ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6.f1",
+                        "detail": "the reading «мари дюпон» is spelled with letters of another writing: «м», «а», «р», «и», «д», «ю», «п», «о», «н»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6.f1",
+                        "detail": "the reading «мари дюпон» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6.f2",
+                        "detail": "the reading «пол мартен» is spelled with letters of another writing: «п», «о», «л», «м», «а», «р», «т», «е», «н»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p6.f2",
+                        "detail": "the reading «пол мартен» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7",
+                        "detail": "the reading «май фоун намбэр из ___» is spelled with letters of another writing: «м», «а», «й», «ф», «о», «у», «н», «б», «э», «р», «и», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7",
+                        "detail": "the reading «май фоун намбэр из ___» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f1",
+                        "detail": "the reading «зиро сикс уан ту сёрти-фор фифти-сикс севенти-эйт» is spelled with letters of another writing: «з», «и», «р», «о», «с», «к», «у», «а», «н», «т», «ё», «ф», «е», «в», «э», «й»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7.f1",
+                        "detail": "the reading «зиро сикс уан ту сёрти-фор фифти-сикс севенти-эйт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f2",
+                        "detail": "the reading «зиро севен форти-файв илевен тенти-ту сёрти-сри» is spelled with letters of another writing: «з», «и», «р», «о», «с», «е», «в», «н», «ф», «т», «а», «й», «л», «у», «ё»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p7.f2",
+                        "detail": "the reading «зиро севен форти-файв илевен тенти-ту сёрти-сри» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p8",
+                        "detail": "the reading «сэнк ю, си ю зэн» is spelled with letters of another writing: «с», «э», «н», «к», «ю», «и», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "p8",
+                        "detail": "the reading «сэнк ю, си ю зэн» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v1",
+                        "detail": "the reading «эпойнтмэнт» is spelled with letters of another writing: «э», «п», «о», «й», «н», «т», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v1",
+                        "detail": "the reading «эпойнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v2",
+                        "detail": "the reading «сор сроут» is spelled with letters of another writing: «с», «о», «р», «у», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v2",
+                        "detail": "the reading «сор сроут» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v3",
+                        "detail": "the reading «фивэр» is spelled with letters of another writing: «ф», «и», «в», «э», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v3",
+                        "detail": "the reading «фивэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v4",
+                        "detail": "the reading «эвейлэбл» is spelled with letters of another writing: «э», «в», «е», «й», «л», «б»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v4",
+                        "detail": "the reading «эвейлэбл» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v5",
+                        "detail": "the reading «уоркс фор ми» is spelled with letters of another writing: «у», «о», «р», «к», «с», «ф», «м», «и»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v5",
+                        "detail": "the reading «уоркс фор ми» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v6",
+                        "detail": "the reading «фул нейм» is spelled with letters of another writing: «ф», «у», «л», «н», «е», «й», «м»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v6",
+                        "detail": "the reading «фул нейм» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v7",
+                        "detail": "the reading «фоун намбэр» is spelled with letters of another writing: «ф», «о», «у», «н», «а», «м», «б», «э», «р»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v7",
+                        "detail": "the reading «фоун намбэр» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v8",
+                        "detail": "the reading «букт» is spelled with letters of another writing: «б», «у», «к», «т»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "v8",
+                        "detail": "the reading «букт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B1",
+                        "detail": "the reading «айд лайк ту мейк эн эпойнтмэнт» is spelled with letters of another writing: «а», «й», «д», «л», «к», «т», «у», «м», «е», «э», «н», «п», «о»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B1",
+                        "detail": "the reading «айд лайк ту мейк эн эпойнтмэнт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B2",
+                        "detail": "the reading «итс фор э сор сроут» is spelled with letters of another writing: «и», «т», «с», «ф», «о», «р», «э», «у»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B2",
+                        "detail": "the reading «итс фор э сор сроут» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B3",
+                        "detail": "the reading «айв хэд ит фор сри дейз» is spelled with letters of another writing: «а», «й», «в», «х», «э», «д», «и», «т», «ф», «о», «р», «с», «е», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B3",
+                        "detail": "the reading «айв хэд ит фор сри дейз» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B4",
+                        "detail": "the reading «уот таймз ар эвейлэбл тудей» is spelled with letters of another writing: «у», «о», «т», «а», «й», «м», «з», «р», «э», «в», «е», «л», «б», «д»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B4",
+                        "detail": "the reading «уот таймз ар эвейлэбл тудей» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B5",
+                        "detail": "the reading «сри пи эм уоркс фор ми» is spelled with letters of another writing: «с», «р», «и», «п», «э», «м», «у», «о», «к», «ф»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B5",
+                        "detail": "the reading «сри пи эм уоркс фор ми» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B6",
+                        "detail": "the reading «май нейм из мари дюпон» is spelled with letters of another writing: «м», «а», «й», «н», «е», «и», «з», «р», «д», «ю», «п», «о»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B6",
+                        "detail": "the reading «май нейм из мари дюпон» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B7",
+                        "detail": "the reading «май фоун намбэр из зиро сикс уан ту сёрти-фор фифти-сикс севенти-эйт» is spelled with letters of another writing: «м», «а», «й», «ф», «о», «у», «н», «б», «э», «р», «и», «з», «с», «к», «т», «ё», «е», «в»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B7",
+                        "detail": "the reading «май фоун намбэр из зиро сикс уан ту сёрти-фор фифти-сикс севенти-эйт» leaves the native script"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B8",
+                        "detail": "the reading «сэнк ю, си ю зэн» is spelled with letters of another writing: «с», «э», «н», «к», «ю», «и», «з»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B8",
+                        "detail": "the reading «сэнк ю, си ю зэн» leaves the native script"
+                    }
+                ],
+                "gone": [
+                    {
+                        "code": "options.form_mismatch",
+                        "address": "x4.check",
+                        "detail": "the option «9 h du matin et midi» starts lower-case"
+                    }
+                ],
+                "codes_added": {
+                    "pronunciation.foreign_script": 40,
+                    "pronunciation.script": 40
+                },
+                "codes_gone": {
+                    "options.form_mismatch": 1
+                },
+                "fatal": 43,
+                "warnings": 41,
+                "pack_missing": {
+                    "native": 0,
+                    "target": 0
+                }
+            }
         }
     },
     "totals": {
@@ -2814,8 +4859,8 @@
         "all_usd": 1.543986,
         "plan_s": 135.9,
         "day_s": 712.5,
-        "now_fatal": 0,
-        "now_warnings": 0,
+        "now_fatal": 167,
+        "now_warnings": 250,
         "now_pack_missing_native": 0,
         "now_pack_missing_target": 0
     }

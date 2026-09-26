@@ -14,16 +14,16 @@
 
 | # | вид обмена | кто | реплика | перевод | чтение | каркас · наполнение |
 |---|---|---|---|---|---|---|
-| 1 | вопрос ученика | Пациент (ученик) | Chcę umówić wizytę do lekarza. | Я хочу записаться к врачу. | хцэн умувичь визытэн до лекáжа | p1 · do lekarza |
+| 1 | вопрос ученика | Пациент (ученик) | Chcę umówić wizytę do lekarza. | Я хочу записаться к врачу. | хцэн умувичь визытэн до лека́жа | p1 · do lekarza |
 | 1 | вопрос ученика | Администратор (собеседник) | Dobrze. Jaki jest powód wizyty? | Хорошо. Какая причина визита? |  |  |
 | 2 | ответ | Администратор (собеседник) | Jaki jest powód wizyty? | Какая причина визита? |  |  |
 | 2 | ответ | Пациент (ученик) | Mam ból gardła i gorączkę. | У меня болит горло и температура. | мам буль гардуа и горанчкэн | p2 · ból gardła i gorączkę |
 | 3 | ответ | Администратор (собеседник) | Mamy wolny termin jutro o dziesiątej. | У нас есть свободное время завтра в десять. |  |  |
-| 3 | ответ | Пациент (ученик) | Jutro o dziesiątej mi pasuje. | Завтра в десять мне подходит. | ютро о дженсёнтэй ми пасуe | p3 · jutro o dziesiątej |
+| 3 | ответ | Пациент (ученик) | Jutro o dziesiątej mi pasuje. | Завтра в десять мне подходит. | ютро о дженсёнтэй ми пасуе | p3 · jutro o dziesiątej |
 | 4 | вопрос ученика | Пациент (ученик) | Czy jest coś po południu? | Есть что-нибудь после обеда? | чы ест цось по полу́дню | p4 · po południu |
 | 4 | вопрос ученика | Администратор (собеседник) | Tak, mamy jutro o piętnastej. | Да, у нас есть завтра в пятнадцать. |  |  |
 | 5 | ответ | Администратор (собеседник) | Tak, mamy jutro o piętnastej. | Да, у нас есть завтра в пятнадцать. |  |  |
-| 5 | ответ | Пациент (ученик) | Jutro o piętnastej mi pasuje. | Завтра в пятнадцать мне подходит. | ютро о пентнастэй ми пасуe | p3 · jutro o piętnastej |
+| 5 | ответ | Пациент (ученик) | Jutro o piętnastej mi pasuje. | Завтра в пятнадцать мне подходит. | ютро о пентнастэй ми пасуе | p3 · jutro o piętnastej |
 | 6 | вопрос ученика | Пациент (ученик) | Czy mam przynieść dokument? | Мне нужно принести документ? | чы мам пшынещь доку́мэнт | p5 · dokument |
 | 6 | вопрос ученика | Администратор (собеседник) | Proszę przynieść dokument i kartę ubezpieczenia. | Пожалуйста, принесите документ и страховую карту. |  |  |
 | 7 | переспрос | Пациент (ученик) | Proszę powtórzyć wolniej. | Повторите, пожалуйста, помедленнее. | про́шэ повту́жыць вольней | — |
@@ -37,7 +37,7 @@
 |---|---|---|---|---|---|
 | p1 | вопрос ученика | Chcę umówić wizytę ___. | Я хочу записаться ___. | хцэн умувичь визытэн ___ | **do lekarza** / к врачу · do internisty / к терапевту |
 | p2 | ответ | Mam ___. | У меня ___. | мам ___ | **ból gardła i gorączkę** / болит горло и температура · kaszel / кашель · wysoką temperaturę / высокую температуру |
-| p3 | ответ | ___ mi pasuje. | ___ мне подходит. | ___ ми пасуe | **jutro o dziesiątej** / завтра в десять · **jutro o piętnastej** / завтра в пятнадцать · w piątek rano / в пятницу утром |
+| p3 | ответ | ___ mi pasuje. | ___ мне подходит. | ___ ми пасуе | **jutro o dziesiątej** / завтра в десять · **jutro o piętnastej** / завтра в пятнадцать · w piątek rano / в пятницу утром |
 | p4 | вопрос ученика | Czy jest coś ___? | Есть что-нибудь ___? | чы ест цось ___ | **po południu** / после обеда · rano / утром |
 | p5 | вопрос ученика | Czy mam przynieść ___? | Мне нужно принести ___? | чы мам пшынещь ___ | **dokument** / документ · skierowanie / направление |
 | p6 | ответ | Przyjdę ___. | Я приду ___. | пшыйдэ ___ | **dziesięć minut wcześniej** / на десять минут раньше · na czas / вовремя |
@@ -46,7 +46,7 @@
 
 | каркас | наполнение | перевод | чтение | в диалоге | собранная фраза (родной) | судья швов |
 |---|---|---|---|---|---|---|
-| p1 | do lekarza | к врачу | до лекáжа | да | Я хочу записаться к врачу. | — |
+| p1 | do lekarza | к врачу | до лека́жа | да | Я хочу записаться к врачу. | — |
 | p1 | do internisty | к терапевту | до интэрнисты | — | Я хочу записаться к терапевту. | — |
 | p2 | ból gardła i gorączkę | болит горло и температура | буль гардуа и горанчкэн | да | У меня болит горло и температура. | — |
 | p2 | kaszel | кашель | кашэль | — | У меня кашель. | — |
@@ -57,7 +57,7 @@
 | p4 | po południu | после обеда | по полу́дню | да | Есть что-нибудь после обеда? | — |
 | p4 | rano | утром | рано | — | Есть что-нибудь утром? | — |
 | p5 | dokument | документ | докумэнт | да | Мне нужно принести документ? | — |
-| p5 | skierowanie | направление | скеровáне | — | Мне нужно принести направление? | — |
+| p5 | skierowanie | направление | скерова́не | — | Мне нужно принести направление? | — |
 | p6 | dziesięć minut wcześniej | на десять минут раньше | джещень минут вчешней | да | Я приду на десять минут раньше. | — |
 | p6 | na czas | вовремя | на час | — | Я приду вовремя. | — |
 
@@ -142,3 +142,27 @@
 ### Судья швов
 
 Судья не звался: урок не прошёл порог.
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 8 → 3 · предупреждений: 8 → 4 · не проверено кодов (родной/целевой): 0/17 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились learner.restates_partner×2, exchange.second_question×1; ушли pronunciation.foreign_script×6, pronunciation.script×6.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `exchange.second_question` | **фатальная** | x1 | the closing message of A «Dobrze. Jaki jest powód wizyty?» ends with a question mark |
+| + `learner.restates_partner` | предупреждение | B5 | «Jutro o piętnastej mi pasuje.» repeats 3 of 5 words of the partner's «Tak, mamy jutro o piętnastej.» (jutro, o, piętnastej) |
+| + `learner.restates_partner` | предупреждение | B8 | «Dobrze, przyjdę dziesięć minut wcześniej.» repeats 3 of 5 words of the partner's «Proszę przyjść dziesięć minut wcześniej.» (dziesięć, minut, wcześniej) |
+| − `pronunciation.foreign_script` | **фатальная** | p1.f1 | the reading «до лекáжа» is spelled with letters of another writing: «á» |
+| − `pronunciation.script` | предупреждение | p1.f1 | the reading «до лекáжа» leaves the native script |
+| − `pronunciation.foreign_script` | **фатальная** | p3 | the reading «___ ми пасуe» is spelled with letters of another writing: «e» |
+| − `pronunciation.script` | предупреждение | p3 | the reading «___ ми пасуe» leaves the native script |
+| − `pronunciation.foreign_script` | **фатальная** | p5.f2 | the reading «скеровáне» is spelled with letters of another writing: «á» |
+| − `pronunciation.script` | предупреждение | p5.f2 | the reading «скеровáне» leaves the native script |
+| − `pronunciation.foreign_script` | **фатальная** | B1 | the reading «хцэн умувичь визытэн до лекáжа» is spelled with letters of another writing: «á» |
+| − `pronunciation.script` | предупреждение | B1 | the reading «хцэн умувичь визытэн до лекáжа» leaves the native script |
+| − `pronunciation.foreign_script` | **фатальная** | B3 | the reading «ютро о дженсёнтэй ми пасуe» is spelled with letters of another writing: «e» |
+| − `pronunciation.script` | предупреждение | B3 | the reading «ютро о дженсёнтэй ми пасуe» leaves the native script |
+| − `pronunciation.foreign_script` | **фатальная** | B5 | the reading «ютро о пентнастэй ми пасуe» is spelled with letters of another writing: «e» |
+| − `pronunciation.script` | предупреждение | B5 | the reading «ютро о пентнастэй ми пасуe» leaves the native script |

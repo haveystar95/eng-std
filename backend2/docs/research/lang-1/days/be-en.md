@@ -133,3 +133,28 @@
 ### Судья швов
 
 Предложений: 16 · с вердиктом: 16 · «нет»: 0 · `lesson_seam_judge.v1.1` · $0.0018
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 2 → 2 · предупреждений: 10 → 14 · не проверено кодов (родной/целевой): 9/0 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились pronunciation.script×2, frame.native_agreement×1, listening.same_exchange×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `pronunciation.script` | предупреждение | p5 | the reading «уот из ___» leaves the native script |
+| + `pronunciation.script` | предупреждение | B5 | the reading «уот из зэ нірыст эвэйлэбл тайм» leaves the native script |
+| + `frame.no_end_punct` | предупреждение | p1 | «I'd like to book ___» and the native «Я хачу запісацца на ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p2 | «I have ___» and the native «У мяне ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p3 | «For ___» and the native «Ужо ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p4 | «I also have ___» and the native «У мяне таксама ___» end with no mark |
+| + `frame.native_agreement` | предупреждение | p5 | «Які ___?»: «які» agrees with the slot — it changes with the filler |
+| + `frame.no_end_punct` | предупреждение | p6 | «___ works for me» and the native «Мне падыходзіць ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p7 | «Please book me for ___» and the native «Калі ласка, запішыце мяне на ___» end with no mark |
+| + `listening.same_exchange` | предупреждение | L4 | L3 and this question are both about exchange 5 |
+| − `frame.no_end_punct` | предупреждение | p1 | «I'd like to book ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p2 | «I have ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p3 | «For ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p4 | «I also have ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p6 | «___ works for me» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p7 | «Please book me for ___» ends with no mark |

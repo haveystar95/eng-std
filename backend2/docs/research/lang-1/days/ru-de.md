@@ -141,3 +141,15 @@
 ### Судья швов
 
 Судья не звался: урок не прошёл порог.
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 3 → 4 · предупреждений: 4 → 6 · не проверено кодов (родной/целевой): 0/17 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились exchange.second_question×1, frame.unresolved_pronoun×1, vocab.free_combination×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `exchange.second_question` | **фатальная** | x1 | the closing message of A «Gern. Worum geht es?» ends with a question mark |
+| + `frame.unresolved_pronoun` | предупреждение | p3 | «Das habe ich ___.» leans on «das», and nothing in the frame is what it stands for |
+| + `vocab.free_combination` | предупреждение | v4 | «seit drei Tagen» is a free combination of ordinary words |

@@ -93,7 +93,7 @@
 | v3 | fièvre | слово | температура | фьевр | p2 |
 | v4 | place | слово | свободное место | пляс | A4 |
 | v5 | date de naissance | связка | дата рождения | дат дё нэсанс | A5, A6 |
-| v6 | numéro de téléphone | связка | номер телефона | нюмэро дё телефoн | A7, p6 |
+| v6 | numéro de téléphone | связка | номер телефона | нюмэро дё телефон | A7, p6 |
 | v7 | arriver | слово | приходить | арривэ | A8, p7 |
 | v8 | plus lentement | связка | помедленнее | плю лантман | A6 |
 
@@ -148,3 +148,18 @@
 ### Судья швов
 
 Судья не звался: урок не прошёл порог.
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 3 → 3 · предупреждений: 16 → 16 · не проверено кодов (родной/целевой): 0/17 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились exchange.second_question×1, partner.too_long×1; ушли pronunciation.foreign_script×1, pronunciation.script×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `exchange.second_question` | **фатальная** | x1 | the closing message of A «D'accord. C'est pour quel problème ?» ends with a question mark |
+| + `frame.no_end_punct` | предупреждение | p2 | «J'ai ___» and the native «У меня ___» end with no mark |
+| + `partner.too_long` | предупреждение | A8 | «C'est noté. Rendez-vous demain à dix heures. Arrivez dix minutes avant.» has 3 sentences (max 2) |
+| − `pronunciation.foreign_script` | **фатальная** | v6 | the reading «нюмэро дё телефoн» is spelled with letters of another writing: «o» |
+| − `pronunciation.script` | предупреждение | v6 | the reading «нюмэро дё телефoн» leaves the native script |
+| − `frame.no_end_punct` | предупреждение | p2 | the native «У меня ___» ends with no mark |

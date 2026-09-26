@@ -136,3 +136,30 @@
 ### Судья швов
 
 Предложений: 17 · с вердиктом: 17 · «нет»: 0 · `lesson_seam_judge.v1.1` · $0.0018
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 2 → 3 · предупреждений: 11 → 12 · не проверено кодов (родной/целевой): 9/0 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились pronunciation.foreign_script×1, pronunciation.script×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `pronunciation.foreign_script` | **фатальная** | B5 | the reading «maj nejm iz იან kowalski» is spelled with letters of another writing: «ი», «ა», «ნ» |
+| + `pronunciation.script` | предупреждение | B5 | the reading «maj nejm iz იან kowalski» leaves the native script |
+| + `frame.no_end_punct` | предупреждение | p1 | «I'd like to make ___» and the native «Chcę umówić ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p2 | «I have ___» and the native «Mam ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p3 | «It's been ___» and the native «To trwa ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p4 | «Can I come ___» and the native «Czy mogę przyjść ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p5 | «My name is ___» and the native «Nazywam się ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p6 | «I'll bring ___» and the native «Wezmę ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p7 | «Can I have ___» and the native «Czy mogę dostać ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p8 | «See you ___» and the native «Do zobaczenia ___» end with no mark |
+| − `frame.no_end_punct` | предупреждение | p1 | «I'd like to make ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p2 | «I have ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p3 | «It's been ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p4 | «Can I come ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p5 | «My name is ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p6 | «I'll bring ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p7 | «Can I have ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p8 | «See you ___» ends with no mark |

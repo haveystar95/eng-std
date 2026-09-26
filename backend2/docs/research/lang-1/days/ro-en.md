@@ -141,3 +141,25 @@
 ### Судья швов
 
 Судья не звался: урок не прошёл порог.
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 5 → 5 · предупреждений: 13 → 14 · не проверено кодов (родной/целевой): 9/0 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились pronunciation.script×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `pronunciation.script` | предупреждение | B2 | the reading «ai hv ə sor throuăt» leaves the native script |
+| + `frame.no_end_punct` | предупреждение | p1 | «I'd like to book ___» and the native «Aș vrea să fac ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p2 | «I have ___» and the native «Am ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p3 | «I've had it ___» and the native «O am ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p4 | «___ works for me» and the native «___ este bine pentru mine» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p7 | «Here is my ___» and the native «Iată ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p8 | «See you ___» and the native «Ne vedem ___» end with no mark |
+| − `frame.no_end_punct` | предупреждение | p1 | «I'd like to book ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p2 | «I have ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p3 | «I've had it ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p4 | «___ works for me» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p7 | «Here is my ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p8 | «See you ___» ends with no mark |

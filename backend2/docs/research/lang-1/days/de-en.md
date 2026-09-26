@@ -129,3 +129,96 @@
 ### Судья швов
 
 Судья не звался: урок не прошёл порог.
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 2 → 44 · предупреждений: 3 → 45 · не проверено кодов (родной/целевой): 9/0 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились pronunciation.foreign_script×42, pronunciation.script×42.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `pronunciation.foreign_script` | **фатальная** | p1 | the reading «айд лайк ___» is spelled with letters of another writing: «а», «й», «д», «л», «к» |
+| + `pronunciation.script` | предупреждение | p1 | the reading «айд лайк ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p1.f1 | the reading «э докторс эпойнтмэнт» is spelled with letters of another writing: «э», «д», «о», «к», «т», «р», «с», «п», «й», «н», «м» |
+| + `pronunciation.script` | предупреждение | p1.f1 | the reading «э докторс эпойнтмэнт» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p1.f2 | the reading «эн эпойнтмэнт тудэй» is spelled with letters of another writing: «э», «н», «п», «о», «й», «т», «м», «у», «д» |
+| + `pronunciation.script` | предупреждение | p1.f2 | the reading «эн эпойнтмэнт тудэй» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2 | the reading «ай хэв ___» is spelled with letters of another writing: «а», «й», «х», «э», «в» |
+| + `pronunciation.script` | предупреждение | p2 | the reading «ай хэв ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2.f1 | the reading «э сор сроут энд фивэр» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т», «н», «д», «ф», «и», «в» |
+| + `pronunciation.script` | предупреждение | p2.f1 | the reading «э сор сроут энд фивэр» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2.f2 | the reading «э коф» is spelled with letters of another writing: «э», «к», «о», «ф» |
+| + `pronunciation.script` | предупреждение | p2.f2 | the reading «э коф» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2.f3 | the reading «э бэд хэдэйк» is spelled with letters of another writing: «э», «б», «д», «х», «й», «к» |
+| + `pronunciation.script` | предупреждение | p2.f3 | the reading «э бэд хэдэйк» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p3 | the reading «айв хэд ит фо ___» is spelled with letters of another writing: «а», «й», «в», «х», «э», «д», «и», «т», «ф», «о» |
+| + `pronunciation.script` | предупреждение | p3 | the reading «айв хэд ит фо ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p3.f1 | the reading «сри дэйз» is spelled with letters of another writing: «с», «р», «и», «д», «э», «й», «з» |
+| + `pronunciation.script` | предупреждение | p3.f1 | the reading «сри дэйз» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p3.f2 | the reading «ту дэйз» is spelled with letters of another writing: «т», «у», «д», «э», «й», «з» |
+| + `pronunciation.script` | предупреждение | p3.f2 | the reading «ту дэйз» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p3.f3 | the reading «э уик» is spelled with letters of another writing: «э», «у», «и», «к» |
+| + `pronunciation.script` | предупреждение | p3.f3 | the reading «э уик» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p4 | the reading «___ из better фо ми» is spelled with letters of another writing: «и», «з», «ф», «о», «м» |
+| + `pronunciation.script` | предупреждение | p4 | the reading «___ из better фо ми» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p4.f1 | the reading «ту оклок» is spelled with letters of another writing: «т», «у», «о», «к», «л» |
+| + `pronunciation.script` | предупреждение | p4.f1 | the reading «ту оклок» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p4.f2 | the reading «тэн оклок» is spelled with letters of another writing: «т», «э», «н», «о», «к», «л» |
+| + `pronunciation.script` | предупреждение | p4.f2 | the reading «тэн оклок» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p5 | the reading «уот ду ю нид фо ___» is spelled with letters of another writing: «у», «о», «т», «д», «ю», «н», «и», «ф» |
+| + `pronunciation.script` | предупреждение | p5 | the reading «уот ду ю нид фо ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p5.f1 | the reading «йор нэйм» is spelled with letters of another writing: «й», «о», «р», «н», «э», «м» |
+| + `pronunciation.script` | предупреждение | p5.f1 | the reading «йор нэйм» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p5.f2 | the reading «зе намбэр» is spelled with letters of another writing: «з», «е», «н», «а», «м», «б», «э», «р» |
+| + `pronunciation.script` | предупреждение | p5.f2 | the reading «зе намбэр» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p6 | the reading «май фоун намбэр из ___» is spelled with letters of another writing: «м», «а», «й», «ф», «о», «у», «н», «б», «э», «р», «и», «з» |
+| + `pronunciation.script` | предупреждение | p6 | the reading «май фоун намбэр из ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p6.f1 | the reading «оу уан сэвэн сикс ту сри фор файв сикс сэвэн» is spelled with letters of another writing: «о», «у», «а», «н», «с», «э», «в», «и», «к», «т», «р», «ф», «й» |
+| + `pronunciation.script` | предупреждение | p6.f1 | the reading «оу уан сэвэн сикс ту сри фор файв сикс сэвэн» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p6.f2 | the reading «зиро сри зиро фор фор файв файв сикс сикс» is spelled with letters of another writing: «з», «и», «р», «о», «с», «ф», «а», «й», «в», «к» |
+| + `pronunciation.script` | предупреждение | p6.f2 | the reading «зиро сри зиро фор фор файв файв сикс сикс» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p7 | the reading «айл кам ___» is spelled with letters of another writing: «а», «й», «л», «к», «м» |
+| + `pronunciation.script` | предупреждение | p7 | the reading «айл кам ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p7.f1 | the reading «фифтин минитс ёрли» is spelled with letters of another writing: «ф», «и», «т», «н», «м», «с», «ё», «р», «л» |
+| + `pronunciation.script` | предупреждение | p7.f1 | the reading «фифтин минитс ёрли» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p7.f2 | the reading «тэн минитс ёрли» is spelled with letters of another writing: «т», «э», «н», «м», «и», «с», «ё», «р», «л» |
+| + `pronunciation.script` | предупреждение | p7.f2 | the reading «тэн минитс ёрли» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p8 | the reading «куд ю гив ми ___» is spelled with letters of another writing: «к», «у», «д», «ю», «г», «и», «в», «м» |
+| + `pronunciation.script` | предупреждение | p8 | the reading «куд ю гив ми ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p8.f1 | the reading «зи эдрэс» is spelled with letters of another writing: «з», «и», «э», «д», «р», «с» |
+| + `pronunciation.script` | предупреждение | p8.f1 | the reading «зи эдрэс» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p8.f2 | the reading «зи фоун намбэр» is spelled with letters of another writing: «з», «и», «ф», «о», «у», «н», «а», «м», «б», «э», «р» |
+| + `pronunciation.script` | предупреждение | p8.f2 | the reading «зи фоун намбэр» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v1 | the reading «докторс эпойнтмэнт» is spelled with letters of another writing: «д», «о», «к», «т», «р», «с», «э», «п», «й», «н», «м» |
+| + `pronunciation.script` | предупреждение | v1 | the reading «докторс эпойнтмэнт» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v2 | the reading «сор сроут» is spelled with letters of another writing: «с», «о», «р», «у», «т» |
+| + `pronunciation.script` | предупреждение | v2 | the reading «сор сроут» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v3 | the reading «фивэр» is spelled with letters of another writing: «ф», «и», «в», «э», «р» |
+| + `pronunciation.script` | предупреждение | v3 | the reading «фивэр» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v4 | the reading «симптомз» is spelled with letters of another writing: «с», «и», «м», «п», «т», «о», «з» |
+| + `pronunciation.script` | предупреждение | v4 | the reading «симптомз» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v5 | the reading «фул нэйм» is spelled with letters of another writing: «ф», «у», «л», «н», «э», «й», «м» |
+| + `pronunciation.script` | предупреждение | v5 | the reading «фул нэйм» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v6 | the reading «фоун намбэр» is spelled with letters of another writing: «ф», «о», «у», «н», «а», «м», «б», «э», «р» |
+| + `pronunciation.script` | предупреждение | v6 | the reading «фоун намбэр» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v7 | the reading «форм» is spelled with letters of another writing: «ф», «о», «р», «м» |
+| + `pronunciation.script` | предупреждение | v7 | the reading «форм» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v8 | the reading «эдрэс» is spelled with letters of another writing: «э», «д», «р», «с» |
+| + `pronunciation.script` | предупреждение | v8 | the reading «эдрэс» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B1 | the reading «айд лайк э докторс эпойнтмэнт» is spelled with letters of another writing: «а», «й», «д», «л», «к», «э», «о», «т», «р», «с», «п», «н», «м» |
+| + `pronunciation.script` | предупреждение | B1 | the reading «айд лайк э докторс эпойнтмэнт» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B2 | the reading «ай хэв э сор сроут энд фивэр» is spelled with letters of another writing: «а», «й», «х», «э», «в», «с», «о», «р», «у», «т», «н», «д», «ф», «и» |
+| + `pronunciation.script` | предупреждение | B2 | the reading «ай хэв э сор сроут энд фивэр» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B3 | the reading «айв хэд ит фо сри дэйз» is spelled with letters of another writing: «а», «й», «в», «х», «э», «д», «и», «т», «ф», «о», «с», «р», «з» |
+| + `pronunciation.script` | предупреждение | B3 | the reading «айв хэд ит фо сри дэйз» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B4 | the reading «tu oklokk is better fo ми» is spelled with letters of another writing: «м», «и» |
+| + `pronunciation.script` | предупреждение | B4 | the reading «tu oklokk is better fo ми» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B5 | the reading «уот ду ю нид фо йор нэйм» is spelled with letters of another writing: «у», «о», «т», «д», «ю», «н», «и», «ф», «й», «р», «э», «м» |
+| + `pronunciation.script` | предупреждение | B5 | the reading «уот ду ю нид фо йор нэйм» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B6 | the reading «май фоун намбэр из оу уан сэвэн сикс ту сри фор файв сикс сэвэн» is spelled with letters of another writing: «м», «а», «й», «ф», «о», «у», «н», «б», «э», «р», «и», «з», «с», «в», «к», «т» |
+| + `pronunciation.script` | предупреждение | B6 | the reading «май фоун намбэр из оу уан сэвэн сикс ту сри фор файв сикс сэвэн» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B7 | the reading «айл кам фифтин минитс ёрли» is spelled with letters of another writing: «а», «й», «л», «к», «м», «ф», «и», «т», «н», «с», «ё», «р» |
+| + `pronunciation.script` | предупреждение | B7 | the reading «айл кам фифтин минитс ёрли» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B8 | the reading «куд ю гив ми зи эдрэс» is spelled with letters of another writing: «к», «у», «д», «ю», «г», «и», «в», «м», «з», «э», «р», «с» |
+| + `pronunciation.script` | предупреждение | B8 | the reading «куд ю гив ми зи эдрэс» leaves the native script |

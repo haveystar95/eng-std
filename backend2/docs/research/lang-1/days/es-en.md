@@ -14,7 +14,7 @@
 
 | # | вид обмена | кто | реплика | перевод | чтение | каркас · наполнение |
 |---|---|---|---|---|---|---|
-| 1 | вопрос ученика | Paciente (ученик) | I'd like a doctor's appointment. | Quisiera una cita con el médico. | айд лайк э дóкторз эпóйнтмэнт | p1 · a doctor's appointment |
+| 1 | вопрос ученика | Paciente (ученик) | I'd like a doctor's appointment. | Quisiera una cita con el médico. | айд лайк э до́кторз эпо́йнтмэнт | p1 · a doctor's appointment |
 | 1 | вопрос ученика | Recepcionista (собеседник) | Of course. | Claro. |  |  |
 | 2 | ответ | Recepcionista (собеседник) | What seems to be the problem? | ¿Qué problema tienes? |  |  |
 | 2 | ответ | Paciente (ученик) | I have a sore throat and fever. | Tengo dolor de garganta y fiebre. | ай хэв э сор сроут энд ֆíвер | p2 · a sore throat and fever |
@@ -22,9 +22,9 @@
 | 3 | ответ | Paciente (ученик) | I've had it for three days. | Llevo tres días con eso. | айв хад ит фор срí дейз | p3 · for three days |
 | 4 | ответ | Recepcionista (собеседник) | We have appointments at ten and at two today. | Tenemos citas hoy a las diez y a las dos. |  |  |
 | 4 | ответ | Paciente (ученик) | Ten is not good for me. | Las diez no me vienen bien. | тэн из нот гуд фор ми | p4 · ten |
-| 5 | вопрос ученика | Paciente (ученик) | Is two available? | ¿Están libres las dos? | из ту эвéйлэбл | p5 · two |
+| 5 | вопрос ученика | Paciente (ученик) | Is two available? | ¿Están libres las dos? | из ту эве́йлэбл | p5 · two |
 | 5 | вопрос ученика | Recepcionista (собеседник) | Yes, two o'clock is available. | Sí, las dos están libres. |  |  |
-| 6 | вопрос ученика | Paciente (ученик) | Do you have anything tomorrow morning? | ¿Tienen algo mañana por la mañana? | ду ю хэв éнисин томóроу морнин | p6 · tomorrow morning |
+| 6 | вопрос ученика | Paciente (ученик) | Do you have anything tomorrow morning? | ¿Tienen algo mañana por la mañana? | ду ю хэв е́нисин томо́роу морнин | p6 · tomorrow morning |
 | 6 | вопрос ученика | Recepcionista (собеседник) | No, but two o'clock today is still free. | No, pero las dos de hoy siguen libres. |  |  |
 | 7 | ответ | Recepcionista (собеседник) | Can I have your name, please? | ¿Me dices tu nombre, por favor? |  |  |
 | 7 | ответ | Paciente (ученик) | My name is Carlos Ruiz. | Me llamo Carlos Ruiz. | май нейм из карлос руис | p7 · Carlos Ruiz |
@@ -39,8 +39,8 @@
 | p2 | ответ | I have ___ | Tengo ___ | ай хэв ___ | **a sore throat and fever** / dolor de garganta y fiebre · a bad cough / mucha tos · ear pain / dolor de oído |
 | p3 | ответ | I've had it ___ | Llevo ___ con eso | айв хад ит ___ | **for three days** / tres días · since Monday / desde el lunes |
 | p4 | ответ | ___ is not good for me | ___ no me viene bien | ___ из нот гуд фор ми | **ten** / las diez · Friday afternoon / el viernes por la tarde |
-| p5 | вопрос ученика | Is ___ available? | ¿Está libre ___? | из ___ эвéйлэбл | **two** / las dos · five thirty / las cinco y media |
-| p6 | вопрос ученика | Do you have anything ___? | ¿Tienen algo ___? | ду ю хэв éнисин ___ | **tomorrow morning** / mañana por la mañana · this evening / esta tarde |
+| p5 | вопрос ученика | Is ___ available? | ¿Está libre ___? | из ___ эве́йлэбл | **two** / las dos · five thirty / las cinco y media |
+| p6 | вопрос ученика | Do you have anything ___? | ¿Tienen algo ___? | ду ю хэв е́нисин ___ | **tomorrow morning** / mañana por la mañana · this evening / esta tarde |
 | p7 | ответ | My name is ___ | Me llamo ___ | май нейм из ___ | **Carlos Ruiz** / Carlos Ruiz · Ana Torres / Ana Torres |
 | p8 | ответ | I'll be ___ | Estaré ___ | айл би ___ | **there ten minutes early** / allí diez minutos antes · back this afternoon / de vuelta esta tarde |
 
@@ -48,18 +48,18 @@
 
 | каркас | наполнение | перевод | чтение | в диалоге | собранная фраза (родной) | судья швов |
 |---|---|---|---|---|---|---|
-| p1 | a doctor's appointment | una cita con el médico | э дóкторз эпóйнтмэнт | да | Quisiera una cita con el médico | да |
-| p1 | an appointment today | una cita hoy | эн эпóйнтмэнт тудéй | — | Quisiera una cita hoy | да |
+| p1 | a doctor's appointment | una cita con el médico | э до́кторз эпо́йнтмэнт | да | Quisiera una cita con el médico | да |
+| p1 | an appointment today | una cita hoy | эн эпо́йнтмэнт туде́й | — | Quisiera una cita hoy | да |
 | p2 | a sore throat and fever | dolor de garganta y fiebre | э сор сроут энд ֆíвер | да | Tengo dolor de garganta y fiebre | да |
 | p2 | a bad cough | mucha tos | э бэд коф | — | Tengo mucha tos | да |
 | p2 | ear pain | dolor de oído | ир пэйн | — | Tengo dolor de oído | да |
 | p3 | for three days | tres días | фор срí дейз | да | Llevo tres días con eso | да |
-| p3 | since Monday | desde el lunes | синс мáндей | — | Llevo desde el lunes con eso | **нет** |
+| p3 | since Monday | desde el lunes | синс ма́ндей | — | Llevo desde el lunes con eso | **нет** |
 | p4 | ten | las diez | тэн | да | las diez no me viene bien | **нет** |
-| p4 | Friday afternoon | el viernes por la tarde | фрáйдей афтэрнун | — | el viernes por la tarde no me viene bien | да |
+| p4 | Friday afternoon | el viernes por la tarde | фра́йдей афтэрнун | — | el viernes por la tarde no me viene bien | да |
 | p5 | two | las dos | ту | да | ¿Está libre las dos? | **нет** |
 | p5 | five thirty | las cinco y media | файв сёрти | — | ¿Está libre las cinco y media? | **нет** |
-| p6 | tomorrow morning | mañana por la mañana | томóроу морнин | да | ¿Tienen algo mañana por la mañana? | да |
+| p6 | tomorrow morning | mañana por la mañana | томо́роу морнин | да | ¿Tienen algo mañana por la mañana? | да |
 | p6 | this evening | esta tarde | зис íвнин | — | ¿Tienen algo esta tarde? | да |
 | p7 | Carlos Ruiz | Carlos Ruiz | карлос руис | да | Me llamo Carlos Ruiz | да |
 | p7 | Ana Torres | Ana Torres | ана торрес | — | Me llamo Ana Torres | да |
@@ -90,14 +90,14 @@
 
 | id | слово | вид | перевод | чтение | где звучит |
 |---|---|---|---|---|---|
-| v1 | appointment | слово | cita | эпóйнтмэнт | p1, A4 |
+| v1 | appointment | слово | cita | эпо́йнтмэнт | p1, A4 |
 | v2 | sore throat | связка | dolor de garganta | сор сроут | p2 |
 | v3 | fever | слово | fiebre | ֆíвер | p2 |
-| v4 | available | слово | libre | эвéйлэбл | p5, A5 |
-| v5 | tomorrow morning | связка | mañana por la mañana | томóроу морнин | p6 |
+| v4 | available | слово | libre | эве́йлэбл | p5, A5 |
+| v5 | tomorrow morning | связка | mañana por la mañana | томо́роу морнин | p6 |
 | v6 | name | слово | nombre | нейм | p7, A7 |
 | v7 | booked | слово | con cita confirmada | букт | A8 |
-| v8 | arrive early | связка | llegar antes | эрáйв ёрли | p8, A8 |
+| v8 | arrive early | связка | llegar antes | эра́йв ёрли | p8, A8 |
 
 ### Находки в ответе модели (до починок)
 
@@ -141,3 +141,107 @@
 - p4.f1: «las diez no me viene bien» — «___ no me viene bien» + «las diez»
 - p5.f1: «¿Está libre las dos?» — «¿Está libre ___?» + «las dos»
 - p5.f2: «¿Está libre las cinco y media?» — «¿Está libre ___?» + «las cinco y media»
+
+### Находки с пакетами LANG-1 (повторная проверка, без вызовов)
+
+Фатальных: 1 → 42 · предупреждений: 12 → 54 · не проверено кодов (родной/целевой): 9/0 → 0/0 · пакеты сейчас: be, de, en, es, fr, it, pl, ro, ru, uk
+
+Коды: появились pronunciation.foreign_script×41, pronunciation.script×41, frame.native_agreement×1.
+
+| ± код | порог | адрес | что |
+|---|---|---|---|
+| + `pronunciation.foreign_script` | **фатальная** | p1 | the reading «айд лайк ___» is spelled with letters of another writing: «а», «й», «д», «л», «к» |
+| + `pronunciation.script` | предупреждение | p1 | the reading «айд лайк ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p1.f1 | the reading «э до́кторз эпо́йнтмэнт» is spelled with letters of another writing: «э», «д», «о», «к», «т», «р», «з», «п», «й», «н», «м» |
+| + `pronunciation.script` | предупреждение | p1.f1 | the reading «э до́кторз эпо́йнтмэнт» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p1.f2 | the reading «эн эпо́йнтмэнт туде́й» is spelled with letters of another writing: «э», «н», «п», «о», «й», «т», «м», «у», «д», «е» |
+| + `pronunciation.script` | предупреждение | p1.f2 | the reading «эн эпо́йнтмэнт туде́й» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2 | the reading «ай хэв ___» is spelled with letters of another writing: «а», «й», «х», «э», «в» |
+| + `pronunciation.script` | предупреждение | p2 | the reading «ай хэв ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2.f1 | the reading «э сор сроут энд ֆíвер» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т», «н», «д», «ֆ», «в», «е» |
+| + `pronunciation.script` | предупреждение | p2.f1 | the reading «э сор сроут энд ֆíвер» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2.f2 | the reading «э бэд коф» is spelled with letters of another writing: «э», «б», «д», «к», «о», «ф» |
+| + `pronunciation.script` | предупреждение | p2.f2 | the reading «э бэд коф» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p2.f3 | the reading «ир пэйн» is spelled with letters of another writing: «и», «р», «п», «э», «й», «н» |
+| + `pronunciation.script` | предупреждение | p2.f3 | the reading «ир пэйн» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p3 | the reading «айв хад ит ___» is spelled with letters of another writing: «а», «й», «в», «х», «д», «и», «т» |
+| + `pronunciation.script` | предупреждение | p3 | the reading «айв хад ит ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p3.f1 | the reading «фор срí дейз» is spelled with letters of another writing: «ф», «о», «р», «с», «д», «е», «й», «з» |
+| + `pronunciation.script` | предупреждение | p3.f1 | the reading «фор срí дейз» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p3.f2 | the reading «синс ма́ндей» is spelled with letters of another writing: «с», «и», «н», «м», «а», «д», «е», «й» |
+| + `pronunciation.script` | предупреждение | p3.f2 | the reading «синс ма́ндей» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p4 | the reading «___ из нот гуд фор ми» is spelled with letters of another writing: «и», «з», «н», «о», «т», «г», «у», «д», «ф», «р», «м» |
+| + `pronunciation.script` | предупреждение | p4 | the reading «___ из нот гуд фор ми» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p4.f1 | the reading «тэн» is spelled with letters of another writing: «т», «э», «н» |
+| + `pronunciation.script` | предупреждение | p4.f1 | the reading «тэн» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p4.f2 | the reading «фра́йдей афтэрнун» is spelled with letters of another writing: «ф», «р», «а», «й», «д», «е», «т», «э», «н», «у» |
+| + `pronunciation.script` | предупреждение | p4.f2 | the reading «фра́йдей афтэрнун» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p5 | the reading «из ___ эве́йлэбл» is spelled with letters of another writing: «и», «з», «э», «в», «е», «й», «л», «б» |
+| + `pronunciation.script` | предупреждение | p5 | the reading «из ___ эве́йлэбл» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p5.f1 | the reading «ту» is spelled with letters of another writing: «т», «у» |
+| + `pronunciation.script` | предупреждение | p5.f1 | the reading «ту» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p5.f2 | the reading «файв сёрти» is spelled with letters of another writing: «ф», «а», «й», «в», «с», «ё», «р», «т», «и» |
+| + `pronunciation.script` | предупреждение | p5.f2 | the reading «файв сёрти» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p6 | the reading «ду ю хэв е́нисин ___» is spelled with letters of another writing: «д», «у», «ю», «х», «э», «в», «е», «н», «и», «с» |
+| + `pronunciation.script` | предупреждение | p6 | the reading «ду ю хэв е́нисин ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p6.f1 | the reading «томо́роу морнин» is spelled with letters of another writing: «т», «о», «м», «р», «у», «н», «и» |
+| + `pronunciation.script` | предупреждение | p6.f1 | the reading «томо́роу морнин» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p6.f2 | the reading «зис íвнин» is spelled with letters of another writing: «з», «и», «с», «в», «н» |
+| + `pronunciation.script` | предупреждение | p6.f2 | the reading «зис íвнин» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p7 | the reading «май нейм из ___» is spelled with letters of another writing: «м», «а», «й», «н», «е», «и», «з» |
+| + `pronunciation.script` | предупреждение | p7 | the reading «май нейм из ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p7.f1 | the reading «карлос руис» is spelled with letters of another writing: «к», «а», «р», «л», «о», «с», «у», «и» |
+| + `pronunciation.script` | предупреждение | p7.f1 | the reading «карлос руис» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p7.f2 | the reading «ана торрес» is spelled with letters of another writing: «а», «н», «т», «о», «р», «е», «с» |
+| + `pronunciation.script` | предупреждение | p7.f2 | the reading «ана торрес» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p8 | the reading «айл би ___» is spelled with letters of another writing: «а», «й», «л», «б», «и» |
+| + `pronunciation.script` | предупреждение | p8 | the reading «айл би ___» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p8.f1 | the reading «зэр тэн mínитс ёрли» is spelled with letters of another writing: «з», «э», «р», «т», «н», «и», «с», «ё», «л» |
+| + `pronunciation.script` | предупреждение | p8.f1 | the reading «зэр тэн mínитс ёрли» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | p8.f2 | the reading «бэк зис афтэрнун» is spelled with letters of another writing: «б», «э», «к», «з», «и», «с», «а», «ф», «т», «р», «н», «у» |
+| + `pronunciation.script` | предупреждение | p8.f2 | the reading «бэк зис афтэрнун» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v1 | the reading «эпо́йнтмэнт» is spelled with letters of another writing: «э», «п», «о», «й», «н», «т», «м» |
+| + `pronunciation.script` | предупреждение | v1 | the reading «эпо́йнтмэнт» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v2 | the reading «сор сроут» is spelled with letters of another writing: «с», «о», «р», «у», «т» |
+| + `pronunciation.script` | предупреждение | v2 | the reading «сор сроут» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v3 | the reading «ֆíвер» is spelled with letters of another writing: «ֆ», «в», «е», «р» |
+| + `pronunciation.script` | предупреждение | v3 | the reading «ֆíвер» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v4 | the reading «эве́йлэбл» is spelled with letters of another writing: «э», «в», «е», «й», «л», «б» |
+| + `pronunciation.script` | предупреждение | v4 | the reading «эве́йлэбл» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v5 | the reading «томо́роу морнин» is spelled with letters of another writing: «т», «о», «м», «р», «у», «н», «и» |
+| + `pronunciation.script` | предупреждение | v5 | the reading «томо́роу морнин» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v6 | the reading «нейм» is spelled with letters of another writing: «н», «е», «й», «м» |
+| + `pronunciation.script` | предупреждение | v6 | the reading «нейм» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v7 | the reading «букт» is spelled with letters of another writing: «б», «у», «к», «т» |
+| + `pronunciation.script` | предупреждение | v7 | the reading «букт» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | v8 | the reading «эра́йв ёрли» is spelled with letters of another writing: «э», «р», «а», «й», «в», «ё», «л», «и» |
+| + `pronunciation.script` | предупреждение | v8 | the reading «эра́йв ёрли» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B1 | the reading «айд лайк э до́кторз эпо́йнтмэнт» is spelled with letters of another writing: «а», «й», «д», «л», «к», «э», «о», «т», «р», «з», «п», «н», «м» |
+| + `pronunciation.script` | предупреждение | B1 | the reading «айд лайк э до́кторз эпо́йнтмэнт» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B2 | the reading «ай хэв э сор сроут энд ֆíвер» is spelled with letters of another writing: «а», «й», «х», «э», «в», «с», «о», «р», «у», «т», «н», «д», «ֆ», «е» |
+| + `pronunciation.script` | предупреждение | B2 | the reading «ай хэв э сор сроут энд ֆíвер» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B3 | the reading «айв хад ит фор срí дейз» is spelled with letters of another writing: «а», «й», «в», «х», «д», «и», «т», «ф», «о», «р», «с», «е», «з» |
+| + `pronunciation.script` | предупреждение | B3 | the reading «айв хад ит фор срí дейз» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B4 | the reading «тэн из нот гуд фор ми» is spelled with letters of another writing: «т», «э», «н», «и», «з», «о», «г», «у», «д», «ф», «р», «м» |
+| + `pronunciation.script` | предупреждение | B4 | the reading «тэн из нот гуд фор ми» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B5 | the reading «из ту эве́йлэбл» is spelled with letters of another writing: «и», «з», «т», «у», «э», «в», «е», «й», «л», «б» |
+| + `pronunciation.script` | предупреждение | B5 | the reading «из ту эве́йлэбл» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B6 | the reading «ду ю хэв е́нисин томо́роу морнин» is spelled with letters of another writing: «д», «у», «ю», «х», «э», «в», «е», «н», «и», «с», «т», «о», «м», «р» |
+| + `pronunciation.script` | предупреждение | B6 | the reading «ду ю хэв е́нисин томо́роу морнин» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B7 | the reading «май нейм из карлос руис» is spelled with letters of another writing: «м», «а», «й», «н», «е», «и», «з», «к», «р», «л», «о», «с», «у» |
+| + `pronunciation.script` | предупреждение | B7 | the reading «май нейм из карлос руис» leaves the native script |
+| + `pronunciation.foreign_script` | **фатальная** | B8 | the reading «айл би зэр тэн mínитс ёрли» is spelled with letters of another writing: «а», «й», «л», «б», «и», «з», «э», «р», «т», «н», «с», «ё» |
+| + `pronunciation.script` | предупреждение | B8 | the reading «айл би зэр тэн mínитс ёрли» leaves the native script |
+| + `frame.no_end_punct` | предупреждение | p1 | «I'd like ___» and the native «Quisiera ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p2 | «I have ___» and the native «Tengo ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p3 | «I've had it ___» and the native «Llevo ___ con eso» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p4 | «___ is not good for me» and the native «___ no me viene bien» end with no mark |
+| + `frame.native_agreement` | предупреждение | p5 | «¿Está libre ___?»: «libre» agrees with the slot — it changes with the filler |
+| + `frame.no_end_punct` | предупреждение | p7 | «My name is ___» and the native «Me llamo ___» end with no mark |
+| + `frame.no_end_punct` | предупреждение | p8 | «I'll be ___» and the native «Estaré ___» end with no mark |
+| − `frame.no_end_punct` | предупреждение | p1 | «I'd like ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p2 | «I have ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p3 | «I've had it ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p4 | «___ is not good for me» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p7 | «My name is ___» ends with no mark |
+| − `frame.no_end_punct` | предупреждение | p8 | «I'll be ___» ends with no mark |
