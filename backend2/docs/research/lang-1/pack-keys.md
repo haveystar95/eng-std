@@ -120,6 +120,7 @@
 | `gendered_past_pattern` | native | regex с группой 1 | Ⓔ | да | `'/(?!)/u'` |
 | `agreement` | native | map {words, short_forms, suffixes_before_slot, min_letters, after_slot_words} | Ⓐ | да | §3.28 |
 | `rescue_line` | target | string | — | нет | — |
+| `rescue` | target (**наряд LANG-1b §2**) | list `{target, native: {ru, uk, be, pl, ro, es, it, de, fr}}` × 6 | — | нет | `[]` у ru, uk, be |
 | `neutral_reply` | both | string | — | нет | — |
 | `irregular_forms` | target | map форма → основа | Ⓒ Ⓑ | нет | `[]` |
 | `inflection_rules` | target | list [regex, замена] | Ⓒ Ⓑ | нет | `[]` |
@@ -419,6 +420,20 @@
   ход-«спасение» в пузыре ученика).
 - string, короткая реплика «простите, не расслышал». no-op — нет (без неё ход без слов).
 - en: `'Sorry?'`; ru: `'Простите?'` (uk `'Перепрошую?'`, ro `'Poftim?'`).
+
+### 3.29а. `rescue` (наряд LANG-1b §2)
+- **target** · `LanguagePack::rescue()` → `RescueKits::of()` (набор плана на проводе, `rescue_kit`) и `RescueKits::owed()`
+  (звук набора, `VoiceRescueKitHandler`).
+- list из **шести** строк `['target' => <реплика на цели>, 'native' => ['ru' => …, 'uk' => …, 'be' => …, 'pl' => …, 'ro' =>
+  …, 'es' => …, 'it' => …, 'de' => …, 'fr' => …]]`: «Sorry?» (= `rescue_line`), «Could you say that more slowly, please?»,
+  «I don't understand.», «One moment.», «Can you write it down?», «Thank you.» — в языке цели, с переводом на все девять
+  родных. no-op — `[]` у языков, которые бывают только родными (ru, uk, be): набор — ЦЕЛИ.
+- Пишет одна матрица на все пакеты — `docs/research/lang-1b/tools/rescue-kit.py` (6 смыслов × 10 языков; колонка — и
+  строка цели, и перевод для ученика этого языка; fr — с U+00A0 перед «?», es — с «¿»). Строка набора с пустым текстом или
+  без перевода — ошибка пакета (`LanguagePackKeyMissing`), не пропуск.
+- Тест: `LanguagePacksTest` (шесть строк у каждой цели, девять родных у каждой, первая — `rescue_line`, один перевод смысла
+  на все цели, `[]` у ru/uk/be), `RescueKitTest` (пара ru→de — немецкий набор с русскими переводами, be→en — английский с
+  белорусскими).
 
 ### 3.30. `neutral_reply`
 - **both** · `LanguagePack::neutralReply()` `:212` → `ConversationMoves.php:437` (target — сказанное, native — его перевод).

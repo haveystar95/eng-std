@@ -2027,6 +2027,28 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such line }
 
+  /plans/rescue-audio/{key}:
+    get:
+      tags: [Plans]
+      summary: A line of the rescue kit as an audio file
+      description: >-
+        A line of a plan's rescue kit said in the learner's voice of the target (наряд LANG-1b §2) — the file
+        `rescue_kit[].audio_url` names. The key is the sha1 of (target, gender, voice, line): one file for every plan of
+        that target and gender. `audio/mpeg` normally. Immutable — cache it forever.
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9a-f]{40}$' }
+      responses:
+        '200':
+          description: The audio bytes
+          content:
+            audio/mpeg: { schema: { type: string, format: binary } }
+            audio/wav: { schema: { type: string, format: binary } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: The line is not bought (yet) }
+
   /plans/{id}:
     get:
       tags: [Plans]
@@ -3251,11 +3273,15 @@ components:
 
     PlanRescuePhrase:
       type: object
-      required: [text_target, text_native, pronunciation_native]
+      description: >-
+        A line of the plan's rescue kit (наряд LANG-1b §2): the TARGET's line (its language pack's `rescue`) with its
+        translation into the learner's language, and its sound in the learner's voice of the target.
+      required: [text_target, text_native, pronunciation_native, audio_url]
       properties:
-        text_target: { type: string }
-        text_native: { type: string }
-        pronunciation_native: { type: string }
+        text_target: { type: string, description: '«Wie bitte?» in a plan of German' }
+        text_native: { type: string, description: '«Простите?» for a Russian learner' }
+        pronunciation_native: { type: 'null', description: 'Always null since наряд LANG-1b — the kit has no reading, its sound says it; kept for build (21), which parses it as text' }
+        audio_url: { type: [string, 'null'], format: uri, description: '`GET /plans/rescue-audio/{key}` — the line in the learner''s voice of the target (the gender of the profile, male while it says none); null until bought. The same file for every plan of that target and gender' }
 
     Plan:
       type: object
@@ -3327,7 +3353,7 @@ components:
           items: { $ref: '#/components/schemas/PlanScene' }
         rescue_kit:
           type: array
-          description: The language pack's five rescue phrases — a static list, the same in every plan of the pair
+          description: 'The rescue kit of the plan''s pair (наряд LANG-1b §2): the six lines of the TARGET''s pack, each translated into the learner''s language — the same for every plan of the pair'
           items: { $ref: '#/components/schemas/PlanRescuePhrase' }
         cost_usd: { type: string, description: 'The plan call plus every lesson call, USD six decimals' }
         versions: { $ref: '#/components/schemas/PlanVersions' }
@@ -3478,16 +3504,19 @@ components:
         then, or), a word of the learner's own in the window, the part after straight after it — a negative is the same
         construction; ALMOST when one word is off (replaced, added, left out, another form). Only the frames of the scene
         the talk is in are judged, only the unsaid ones; said stays said, and counts once.
-      required: [scene_id, ref, frame_target, frame_native, example_target, example_native, said, value_target, state]
+      required: [scene_id, ref, frame_target, frame_native, example_target, example_native, said, value_target, line_native, state]
       properties:
         scene_id: { type: string }
         ref: { type: string, description: 'The phrase — `p3`' }
         frame_target: { type: string, description: '«I''m flying to ___.» — the whole phrase for a frame without a window' }
         frame_native: { type: string, description: '«Я лечу в ___.»' }
         example_target: { type: [string, 'null'], description: 'The value the lesson says the frame with — «London»; null for a frame without a window' }
-        example_native: { type: [string, 'null'] }
+        example_native: { type: [string, 'null'], description: 'The value in the learner''s language — what build (21) puts into `frame_native`; the whole line is `line_native`' }
         said: { type: boolean, description: 'The same as `state == said` — kept for build (20)' }
         value_target: { type: [string, 'null'], description: 'What the learner put into the window, as heard — «Lisbon»; null until said, and for a frame without a window. A window with nothing after it ends before the conjunction of the next construction the same move said (наряд FIX-4b §1: «my first visit», not «my first visit and I have about a year of experience»)' }
+        line_native:
+          type: string
+          description: 'The lesson''s own line of the construction in the learner''s language, WHOLE, as the model wrote it (наряд LANG-1b §3): «Мне нужна запись на приём.» — what 37-5, 37-8d and 37-12 print, instead of `frame_native` with `example_native` put in, which may not agree («Мне нужно запись на приём»). A frame no line of the lesson stands on: the frame with its value, as a fallback. The same sentence as `hints.sentence`'
         state:
           type: string
           enum: [none, almost, said]
@@ -4956,6 +4985,8 @@ components:
                 lesson's own sentence of it, its value in it (never «у него болит …», наряд FIX-4 §5) — in the learner's
                 language exactly as the lesson has it, its capital and its closing mark («У него болит поясница.», «Мне
                 сказать вам его температуру?»), with no «Скажи, что …» around it: the frame read crooked for a question.
+                Since наряд LANG-1b §3 it is the lesson's LINE as the model wrote it («Мне нужна запись на приём.»), not
+                the native frame said with the value («Мне нужно запись на приём») — the same as `targets[].line_native`.
                 Which target: the one the role's last line has just opened, else the first target of the scene not said
                 yet; after a move that said a target ALMOST, that target. It changes with every line of the role. Null
                 when the move is not the learner's, when every target of the scene is said, and when the talk has ended
