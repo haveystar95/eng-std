@@ -67,6 +67,14 @@ it('reports every code with its findings, fatal ones, days, failed days, share, 
     // The fixture's own warning stands on the ready days, on none of them failed.
     expect($report)->toMatch('/frame\.adjacent_repeat\s*\|\s*\d+\s*\|\s*0\s*\|\s*\d+\s*\|\s*0\s*\|/');
 
+    // Наряд LANG-1b §1: the lesson built anew by the server is a counter, no finding — the report prints it under the table.
+    // CATCHES the rebuilds of the gate invisible to whoever reads the report.
+    foreach ([['counted', 3], ['failed', 1]] as [$action, $hits]) {
+        DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => 'lesson_day.v4.9', 'check_name' => 'lesson.auto_rebuild', 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
+    }
+    Artisan::call('plan:check-report', ['--since' => $since]);
+    expect(Artisan::output())->toContain('Counters that are no findings')->toContain('lesson.auto_rebuild: 3 / 0 / 1');
+
     Artisan::call('plan:check-report', ['--since' => '2099-01-01']);
     expect(Artisan::output())->toContain('No day with a lesson since 2099-01-01');
 

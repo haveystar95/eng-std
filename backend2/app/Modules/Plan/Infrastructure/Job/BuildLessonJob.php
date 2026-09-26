@@ -20,8 +20,10 @@ use Throwable;
  * the lesson waits for the learner's retry (наряд GEN-3).
  *
  * Its timeout covers every model call the build may make, each waited for as long as the plan's config says, and a minute
- * for the writes: the lesson and its one retry, a repair of each card the gate may ask for, the seam judge. Anything
- * shorter kills a healthy build between two paid calls.
+ * for the writes: the lesson and its one retry, a repair of each card the gate may ask for — and all of that once more for
+ * the one lesson the server builds anew when the first failed the gate (наряд LANG-1b §1) — and the seam judge. Anything
+ * shorter kills a healthy build between two paid calls; the queue's `retry_after` and the stale window of a build
+ * (`plan.build_stale_seconds`) stay above it.
  */
 final class BuildLessonJob implements ShouldQueue
 {
@@ -42,7 +44,7 @@ final class BuildLessonJob implements ShouldQueue
     /** The job's timeout for a lesson whose every call waits `$callTimeout` seconds for its answer. */
     public static function timeoutSeconds(int $callTimeout): int
     {
-        $calls = LessonBuildService::MAX_ATTEMPTS + LessonGate::MAX_CARDS + 1;
+        $calls = (LessonBuildService::MAX_ATTEMPTS + LessonGate::MAX_CARDS) * (1 + LessonBuildService::AUTO_REBUILDS) + 1;
 
         return $calls * $callTimeout + self::MARGIN_SECONDS;
     }

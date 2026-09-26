@@ -116,6 +116,7 @@ final readonly class PipelineReport
                     'fail_reason' => $scene->failReason,
                 ], $lessonCalls, [
                     'окно вызовов — только последняя сборка сцены (build_started_at перезаписывается)',
+                    'автопересборка урока, не прошедшего ворота (LANG-1b §1), — в том же окне: второй вызов урока со своими починками; attempts и cost_usd — обеих сборок, счётчик lesson.auto_rebuild',
                     'время конца урока — plan_scenes.built_at (сцена стала ready, фото на месте); generated_at — момент НАЧАЛА сборки; у сцен без built_at окна нет',
                 ]),
                 self::stage('validator', 'Валидатор', $scene->failReason === null ? ($findings === [] ? 'clean' : 'warnings') : 'failed', null, null, [

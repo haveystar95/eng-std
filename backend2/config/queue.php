@@ -69,9 +69,10 @@ return [
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
             // Longer than the longest job may run (a plan's lesson: every model call it can make × 180 s, plus a minute —
-            // BuildLessonJob; the voice of a day, 900 s): a job still waiting for its answer is never handed to a second
-            // worker, and a job past its timeout fails instead of running again (наряд GEN-3).
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 1020),
+            // BuildLessonJob, 1 680 s since the lesson is built anew once when it fails the gate, наряд LANG-1b §1; the
+            // voice of a day, 900 s): a job still waiting for its answer is never handed to a second worker, and a job past
+            // its timeout fails instead of running again (наряд GEN-3).
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 1740),
             'block_for' => null,
             'after_commit' => false,
         ],

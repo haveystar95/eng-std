@@ -26,6 +26,16 @@ final readonly class ModelCall
         return new self($this->promptVersion, $this->buildVersion, $this->model, self::addCosts($this->costUsd, $costUsd), $this->latencyMs + $latencyMs, $this->attempts);
     }
 
+    /**
+     * This call with a build that came BEFORE it counted in — its money, its time and its attempts (наряд LANG-1b §1: a
+     * lesson the server built again after the first failed the gate). The version, the build and the model are this
+     * call's: the answer written, or failed, is this one.
+     */
+    public function after(self $earlier): self
+    {
+        return new self($this->promptVersion, $this->buildVersion, $this->model, self::addCosts($earlier->costUsd, $this->costUsd), $earlier->latencyMs + $this->latencyMs, $earlier->attempts + $this->attempts);
+    }
+
     public static function addCosts(string $a, string $b): string
     {
         return number_format((float) $a + (float) $b, 6, '.', '');

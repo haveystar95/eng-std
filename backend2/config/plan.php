@@ -37,9 +37,10 @@ return [
     ],
 
     // A build that started and never came back in this many seconds counts as dead: the client sees `failed` and may ask
-    // for a retry — by hand, nothing retries it on its own. Longer than the lesson's job may run (every call it can make ×
-    // the timeout, plus a minute — BuildLessonJob), so a retry never races a job that is still waiting for its answer.
-    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 1020),
+    // for a retry — by hand, nothing retries a DEAD build on its own (the one rebuild the server makes is inside the build,
+    // for a lesson that failed the gate — наряд LANG-1b §1). Longer than the lesson's job may run (every call it can make ×
+    // the timeout, plus a minute — BuildLessonJob, 1 680 s), so a retry never races a job that is still waiting for its answer.
+    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 1740),
 
     // What a lesson orders, per level: VOCABULARY_COUNT and DIALOGUE_COUNT. The number of frames is
     // not ordered — `lesson_day.v4.6` takes it from the dialogue (half to all of its answer/ask exchanges).

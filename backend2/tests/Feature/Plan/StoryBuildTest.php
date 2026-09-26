@@ -109,7 +109,8 @@ it('holds day 2 for a word day 1 taught, repairs that word and stores the day', 
 
 // Наряд GEN-3, §5: «перепроверка после term: used_in точен, термина нет среди прошлых дней и в словаре дня дважды»; «иначе — как
 // любая неудавшаяся починка». Catches a repaired word stored that is a word of day 1, a word the day already has, or a word the
-// lesson never says — each one a card that teaches nothing or teaches twice.
+// lesson never says — each one a card that teaches nothing or teaches twice. The day fails after the one rebuild the server
+// makes on its own (наряд LANG-1b §1): the fake writes the same lesson again and its repair is refused again — a card a build.
 it('refuses a repaired word that is a learned word, a word the day already has or a word the lesson never says', function (array $word) {
     $fake = new FakePlanModel(
         lesson: sbTeachesSharpAgain(...),
@@ -119,7 +120,7 @@ it('refuses a repaired word that is a learned word, a word the day already has o
     );
     [$token, $id, $scenes] = sbTwoDays($this, $fake);
 
-    expect($fake->repairCalls)->toBe(1)
+    expect($fake->repairCalls)->toBe(2)
         ->and($scenes[1]->lesson_status)->toBe('failed')
         ->and($scenes[1]->fail_reason)->toBe('fatal: vocab.known_repeat')
         ->and(planRead($this, $token, $id)['scenes'][1]['lesson_status'])->toBe('failed');

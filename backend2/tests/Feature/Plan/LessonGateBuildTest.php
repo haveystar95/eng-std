@@ -73,39 +73,114 @@ it('holds a lesson with a fatal finding, repairs the card at its address and giv
         ->and(lgCounters())->toBe(['filler.ungrammatical|counted' => 1, 'filler.ungrammatical|gated' => 1]);
 });
 
-// Catches a gate that keeps paying for repairs past two cards, and one that deals or silently drops a day it could
-// not put right instead of failing it with the code.
-it('asks for two cards at most and then fails the lesson with its fatal codes, which the learner can retry', function () {
-    $fake = new FakePlanModel(lesson: static function ($request): array {
-        $p = planCleanLesson($request);
-        $p['phrases'][0]['slot']['fillers'][1]['target'] = 'his neck';
-        array_pop($p['dialogue'][1]['check']['options']);
-        $p['listening']['questions'][2]['options_native'] = ['Завтра', 'Если через неделю ещё болит'];
-        $p['listening']['questions'][2]['correct_option_index'] = 1;
+/** @return array<string, mixed> the fake's clean lesson broken on three cards no repair of the fake puts right */
+function lgBrokenThrice(LessonRequest $request): array
+{
+    $p = planCleanLesson($request);
+    $p['phrases'][0]['slot']['fillers'][1]['target'] = 'his neck';
+    array_pop($p['dialogue'][1]['check']['options']);
+    $p['listening']['questions'][2]['options_native'] = ['Завтра', 'Если через неделю ещё болит'];
+    $p['listening']['questions'][2]['correct_option_index'] = 1;
 
-        return $p;
-    });
+    return $p;
+}
+
+// Catches a gate that keeps paying for repairs past two cards, and one that deals or silently drops a day it could
+// not put right instead of failing it with the code. Наряд LANG-1b §1: «день, упавший на воротах после двух починок,
+// сервер пересобирает сам ОДИН раз (новый ответ модели), и только второй провал — failed» — the fake answers the same
+// broken lesson twice, so the day fails after two builds of two cards each, and the rebuild is counted with its failure.
+it('asks for two cards at most a build, builds a failed lesson anew once, and only then fails it — the learner can retry', function () {
+    $fake = new FakePlanModel(lesson: static fn ($request): array => lgBrokenThrice($request));
     app()->instance(PlanModelPort::class, $fake);
     [, $token] = planLearner();
 
     $id = planCreate($this, $token, ['days_total' => 1])['id'];
     $plan = planRead($this, $token, $id);
-    $findings = json_decode((string) DB::table('plan_scenes')->where('plan_id', $id)->value('checks_json'), true);
+    $scene = DB::table('plan_scenes')->where('plan_id', $id)->first();
+    $findings = json_decode((string) $scene->checks_json, true);
 
-    expect($fake->repairCalls)->toBe(2)
-        ->and(array_map(static fn ($r): string => $r->address, $fake->repairRequests))->toBe(['p1', 'x2.check'])
+    expect($fake->lessonCalls)->toBe(2)
+        ->and($fake->repairCalls)->toBe(4)
+        ->and(array_map(static fn ($r): string => $r->address, $fake->repairRequests))->toBe(['p1', 'x2.check', 'p1', 'x2.check'])
         ->and($plan['scenes'][0]['lesson_status'])->toBe('failed')
         ->and($plan['scenes'][0]['lesson_fail_reason'])->toBe('fatal: check.shape, listening.shape, filler.ungrammatical')
         ->and(array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", $findings))
         ->toEqualCanonicalizing(['check.shape@x2.check', 'listening.shape@L3', 'filler.ungrammatical@p1.f2'])
+        // Both builds on the scene: two lesson calls, four repairs, no seam judge (a failed lesson is not judged).
+        ->and((int) $scene->attempts_lesson)->toBe(2)
+        ->and((int) $scene->latency_ms_lesson)->toBe(2 * (7 + 3 + 3))
         ->and(lgCounters())->toBe([
-            'check.shape|counted' => 1, 'check.shape|failed' => 1, 'check.shape|gated' => 1,
-            'filler.ungrammatical|counted' => 1, 'filler.ungrammatical|failed' => 1, 'filler.ungrammatical|gated' => 1,
-            'listening.shape|counted' => 1, 'listening.shape|failed' => 1, 'listening.shape|gated' => 1,
+            'check.shape|counted' => 2, 'check.shape|failed' => 2, 'check.shape|gated' => 2,
+            'filler.ungrammatical|counted' => 2, 'filler.ungrammatical|failed' => 2, 'filler.ungrammatical|gated' => 2,
+            'lesson.auto_rebuild|counted' => 1, 'lesson.auto_rebuild|failed' => 1,
+            'listening.shape|counted' => 2, 'listening.shape|failed' => 2, 'listening.shape|gated' => 2,
         ]);
 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/scenes/{$plan['scenes'][0]['id']}/lesson/retry")->assertStatus(202);
-    expect($fake->lessonCalls)->toBe(2);
+    expect($fake->lessonCalls)->toBe(4);
+});
+
+// Наряд LANG-1b §1: the rebuild is a NEW answer of the model, validated and gated from scratch with its own two cards; a
+// clean one is dealt. Catches a rebuild that is not asked, a day failed on the first answer, a rebuilt day that loses the
+// first build's time or lesson call, and a rebuild not counted.
+it('deals the lesson the server built anew when the first failed the gate', function () {
+    $fake = new FakePlanModel(lesson: static fn ($request, int $call): array => $call === 1 ? lgBrokenThrice($request) : planCleanLesson($request));
+    app()->instance(PlanModelPort::class, $fake);
+    [, $token] = planLearner();
+
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $scene = DB::table('plan_scenes')->where('plan_id', $id)->first();
+
+    expect($fake->lessonCalls)->toBe(2)
+        ->and($fake->repairCalls)->toBe(2)
+        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
+        ->and($scene->fail_reason)->toBeNull()
+        ->and(json_decode((string) $scene->checks_json, true))->toBe([])
+        ->and((int) $scene->attempts_lesson)->toBe(2)
+        ->and((int) $scene->latency_ms_lesson)->toBe((7 + 3 + 3) + (7 + 2)) // the first build and its repairs, the second and its judge
+        ->and(lgCounters())->toBe([
+            'check.shape|counted' => 1, 'check.shape|failed' => 1, 'check.shape|gated' => 1,
+            'filler.ungrammatical|counted' => 1, 'filler.ungrammatical|failed' => 1, 'filler.ungrammatical|gated' => 1,
+            'lesson.auto_rebuild|counted' => 1,
+            'listening.shape|counted' => 1, 'listening.shape|failed' => 1, 'listening.shape|gated' => 1,
+        ]);
+});
+
+// Наряд LANG-1b §1: only a lesson the GATE failed is built anew. Catches a rebuild bought for an answer off the schema: the
+// model refused twice, and its one retry is the canon's.
+it('does not build anew a lesson the model answered off the schema', function () {
+    $refused = new FakePlanModel(lesson: static fn (): array => ['not' => 'a lesson']);
+    app()->instance(PlanModelPort::class, $refused);
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+
+    expect($refused->lessonCalls)->toBe(2)
+        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('failed')
+        ->and(array_filter(array_keys(lgCounters()), static fn (string $k): bool => str_starts_with($k, 'lesson.auto_rebuild')))->toBe([]);
+});
+
+// Наряд LANG-1b §1 and GEN-3: a call that got no answer is not bought again. Catches a rebuild that got no answer and so
+// lost the day its reason (the gate's codes) — or took the first build's price and lesson call away from the scene.
+it('keeps the gate\'s reason and the first build when the rebuild gets no answer', function () {
+    $silent = new FakePlanModel(lesson: static function ($request, int $call): array {
+        if ($call === 2) {
+            throw App\Modules\Plan\Application\Exception\PlanModelUnavailable::because('no answer');
+        }
+
+        return lgBrokenThrice($request);
+    });
+    app()->instance(PlanModelPort::class, $silent);
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $scene = DB::table('plan_scenes')->where('plan_id', $id)->first();
+
+    expect($silent->lessonCalls)->toBe(2)
+        ->and($scene->lesson_status)->toBe('failed')
+        ->and($scene->fail_reason)->toBe('fatal: check.shape, listening.shape, filler.ungrammatical')
+        ->and((int) $scene->attempts_lesson)->toBe(1)
+        ->and((int) $scene->latency_ms_lesson)->toBe(7 + 3 + 3)
+        ->and(lgCounters()['lesson.auto_rebuild|counted'] ?? 0)->toBe(1)
+        ->and(lgCounters()['lesson.auto_rebuild|failed'] ?? 0)->toBe(0);
 });
 
 // Canon GEN-2b: «P2R получает новый вид карточки exchange и поле frame_update — сборка применяет его атомарно (обмен +
@@ -161,7 +236,8 @@ it('holds a repeated exchange, repairs the whole exchange and stores it together
         ->and(lgCounters())->toBe(['exchange.repeats|counted' => 1, 'exchange.repeats|gated' => 1]);
 
     // The same exchange with a frame its line does not stand on: the card is spent, nothing of it is put in, and the
-    // repeat fails the day.
+    // repeat fails the day — after the one rebuild the server makes on its own (наряд LANG-1b §1), whose answer is the
+    // same and whose repair is as wrong: a card spent in each build.
     $alien = new FakePlanModel(lesson: $repeat, repair: static function ($request): array {
         $card = $request->card;
         $card['messages'][0]['filler'] = 'a sick note';
@@ -174,7 +250,8 @@ it('holds a repeated exchange, repairs the whole exchange and stores it together
 
     $failed = planRead($this, $second, planCreate($this, $second, ['days_total' => 1])['id']);
 
-    expect($alien->repairCalls)->toBe(1)
+    expect($alien->repairCalls)->toBe(2)
+        ->and($alien->lessonCalls)->toBe(2)
         ->and($failed['scenes'][0]['lesson_status'])->toBe('failed')
         ->and($failed['scenes'][0]['lesson_fail_reason'])->toBe('fatal: exchange.repeats');
 });

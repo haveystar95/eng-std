@@ -203,15 +203,16 @@ it('names each plan call in the journal — plan, lesson, repair, judge — whil
 });
 
 // Addendum C: «таймаут job'а выше таймаута клиента с запасом; автоповтора job'а после таймаута нет». Catches a job killed
-// between two paid calls of one build (the lesson, its retry, two repairs, the judge), a job handed to a second worker while
-// the first still waits for its answer (the queue's retry_after under the job's timeout), a stale window a learner's retry
-// can open under a live job, and a job the queue runs again.
+// between two paid calls of one build (the lesson, its retry, two repairs — twice since the server builds a lesson that
+// failed the gate anew once, наряд LANG-1b §1 — and the judge), a job handed to a second worker while the first still
+// waits for its answer (the queue's retry_after under the job's timeout), a stale window a learner's retry can open under
+// a live job, and a job the queue runs again.
 it('lets a lesson job outlive every call it makes, and never runs it twice', function () {
     $lesson = new BuildLessonJob('01M2GEN3SCENE0000000000001');
     $plan = new BuildPlanJob('01M2GEN3PLAN00000000000001');
 
-    expect(BuildLessonJob::timeoutSeconds(180))->toBe(5 * 180 + 60)
-        ->and($lesson->timeout)->toBe(960)
+    expect(BuildLessonJob::timeoutSeconds(180))->toBe(((2 + 2) * 2 + 1) * 180 + 60)
+        ->and($lesson->timeout)->toBe(1680)
         ->and($plan->timeout)->toBe(2 * 180 + 60)
         ->and([$lesson->tries, $plan->tries])->toBe([1, 1])
         ->and((int) config('queue.connections.redis.retry_after'))->toBeGreaterThan($lesson->timeout)

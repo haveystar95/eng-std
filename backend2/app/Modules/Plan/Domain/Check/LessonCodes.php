@@ -18,8 +18,9 @@ namespace App\Modules\Plan\Domain\Check;
  *
  * No code is about the speaking key: the key is the server's, taken from the frame (`docs/plan-v2.md` §3а).
  *
- * Two counters are no findings at all: a check that did not run for want of a language pack
- * ({@see LANG_PACK_MISSING}), and a seam judge that did not answer ({@see JUDGE_UNAVAILABLE}).
+ * Three counters are no findings at all: a check that did not run for want of a language pack
+ * ({@see LANG_PACK_MISSING}), a seam judge that did not answer ({@see JUDGE_UNAVAILABLE}), and a lesson the server built
+ * a second time on its own because the first failed the gate ({@see AUTO_REBUILD}, наряд LANG-1b §1).
  *
  * Canon with the exact rule of every code — `docs/plan-v2.md` §4.
  */
@@ -129,10 +130,10 @@ final class LessonCodes
     /** The options of one check are not of one form with the right one — length, a lower-case start (наряд FIX-3 §5). Fatal. */
     public const OPTIONS_FORM_MISMATCH = 'options.form_mismatch';
 
-    // Listening.
     /** An option of one check is a piece of the partner's line in the learner's language, word for word (наряд LANG-1b §1). */
     public const OPTIONS_PARTNER_FRAGMENT = 'options.partner_fragment';
 
+    // Listening.
     public const LISTENING_COUNT = 'listening.count';
 
     public const LISTENING_SAME_EXCHANGE = 'listening.same_exchange';
@@ -154,10 +155,10 @@ final class LessonCodes
 
     public const VOCAB_ABBREVIATION = 'vocab.abbreviation';
 
-    // Native text, image prompts.
     /** A word's `definition_target` is not in the target language — by its letters and its frequent words (наряд LANG-1b §4). */
     public const VOCAB_DEFINITION_LANGUAGE = 'vocab.definition_language';
 
+    // Native text, image prompts.
     public const NATIVE_GENDERED_PAST = 'native.gendered_past';
 
     public const IMAGE_PROMPT_RULE_TEXT = 'image_prompt.rule_text';
@@ -167,6 +168,12 @@ final class LessonCodes
 
     /** The seam judge was asked and gave no usable answer: the day's native seams went unread. */
     public const JUDGE_UNAVAILABLE = 'judge.unavailable';
+
+    /**
+     * The lesson failed the gate and the server asked the model for a NEW lesson once, on its own (наряд LANG-1b §1): counted
+     * when the rebuild is asked, and `failed` too when the rebuilt lesson failed the gate as well — the day is then `failed`.
+     */
+    public const AUTO_REBUILD = 'lesson.auto_rebuild';
 
     /** The codes a model finds, not the validator: the native seams, read by the seam judge once a day. */
     public const JUDGED = [self::FILLER_NATIVE_SEAM];
@@ -188,17 +195,17 @@ final class LessonCodes
             self::KIND_ASK_COUNT, self::KIND_RESCUE_COUNT, self::RESCUE_NOT_FIRST, self::RESCUE_NEW_FACT, self::RESCUE_NO_PREV,
             self::PARTNER_TWO_QUESTIONS, self::PARTNER_TOO_LONG, self::PARTNER_CLOSER,
             self::CHECK_ABOUT_LEARNER, self::CHECK_VERBATIM, self::CHECK_LISTED_ALTERNATIVE_AS_WRONG, self::OPTIONS_FORM_MISMATCH,
+            self::OPTIONS_PARTNER_FRAGMENT,
             self::LISTENING_COUNT, self::LISTENING_SAME_EXCHANGE, self::LISTENING_NO_LEARNER_VALUE, self::LISTENING_DISTRACTOR_NOT_FILLER,
             self::VOCAB_FREE_COMBINATION, self::VOCAB_EVERYDAY_WORD, self::VOCAB_USED_IN_WRONG, self::VOCAB_LEARNER_SHARE, self::VOCAB_NESTED, self::VOCAB_ABBREVIATION,
+            self::VOCAB_DEFINITION_LANGUAGE,
             self::NATIVE_GENDERED_PAST, self::IMAGE_PROMPT_RULE_TEXT,
         ];
     }
 
     /** @return list<string> the codes the validator itself finds — every code but the judged ones */
-            self::OPTIONS_PARTNER_FRAGMENT,
     public static function validated(): array
     {
-            self::VOCAB_DEFINITION_LANGUAGE,
         return array_values(array_diff(self::all(), self::JUDGED));
     }
 }

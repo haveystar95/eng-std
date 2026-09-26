@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Infrastructure\Console;
 
+use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonGate;
 use DateTimeImmutable;
 use Illuminate\Console\Command;
@@ -21,6 +22,11 @@ use Throwable;
  * stands on, and the counters over every attempt — `counted / gated / failed`. Under the table, three examples a code:
  * the finding's text, the plan and the day. `--since` reads the days written from that moment (`generated_at`, or the
  * build's start of a failed day); the counters know no time and are printed whole.
+ *
+ * Under the examples, THE COUNTERS THAT ARE NO FINDINGS — a check not run for want of a pack (`lang.pack_missing`), a seam
+ * judge that did not answer (`judge.unavailable`), a lesson the server built anew because the first failed the gate
+ * (`lesson.auto_rebuild`: `counted` — asked, `failed` — failed again; наряд LANG-1b §1): nothing of them is in `checks_json`,
+ * so the table cannot show them.
  *
  * Read-only.
  */
@@ -98,6 +104,11 @@ final class PlanCheckReportCommand extends Command
             foreach ($c['examples'] as $example) {
                 $this->line('  · '.$example);
             }
+        }
+        $this->newLine();
+        $this->line('Counters that are no findings (counted / gated / failed, every attempt and every date):');
+        foreach ([LessonCodes::LANG_PACK_MISSING, LessonCodes::JUDGE_UNAVAILABLE, LessonCodes::AUTO_REBUILD] as $code) {
+            $this->line(sprintf('  %s: %s', $code, implode(' / ', [$counters[$code]['counted'] ?? 0, $counters[$code]['gated'] ?? 0, $counters[$code]['failed'] ?? 0])));
         }
 
         return self::SUCCESS;
