@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
+use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Application\Port\LineSpeaker;
 use App\Modules\Plan\Application\Service\RescueKits;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
+use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -18,6 +20,19 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->withoutMiddleware(ThrottleRequests::class);
     Storage::fake('local');
+    // The kit is voiced with an ACCEPTED lesson, and since наряд LANG-1b §10 a word defined in another language than the target
+    // holds the day (`vocab.definition_language`, fatal): the fake defines its words in English, so a German day of it defines
+    // them in German here — the kit, not the definitions, is what these tests read.
+    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: static function ($request): array {
+        $p = planCleanLesson($request);
+        if ($request->targetLangCode === 'de') {
+            foreach (array_keys($p['vocabulary']) as $i) {
+                $p['vocabulary'][$i]['definition_target'] = 'ein Wort aus dem Gespräch mit dem Arzt';
+            }
+        }
+
+        return $p;
+    }));
 });
 
 /**

@@ -104,7 +104,7 @@ final class FakePlanModel implements PlanModelPort
         $this->repairRequests[] = $request;
         $payload = $this->repair !== null ? ($this->repair)($request, $this->repairCalls) : ['card' => $request->card];
 
-        return new ModelReply($payload, 'lesson_card_repair.v1.3', self::MODEL, 900, 300, '0.000000', 3, '');
+        return new ModelReply($payload, 'lesson_card_repair.v1.4', self::MODEL, 900, 300, '0.000000', 3, '');
     }
 
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
@@ -211,7 +211,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function repairPromptVersion(): string
     {
-        return 'lesson_card_repair.v1.3';
+        return 'lesson_card_repair.v1.4';
     }
 
     public function judgePromptVersion(): string

@@ -16,7 +16,7 @@ use RuntimeException;
 /**
  * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
  * (`plan-builder-v2`, `lesson_day.v4.10`) — a rename is a version bump and nothing else is. The previous lesson and repair
- * files stay beside the current ones (`lesson_day.v4.7`, `lesson_card_repair.v1.2`): going back is one constant.
+ * files stay beside the current ones (`lesson_day.v4.7`, `lesson_card_repair.v1.3`): going back is one constant.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
  * author used to try the prompt by hand; that section is cut out and the real inputs go in the
@@ -52,7 +52,14 @@ final class PlanPromptFiles
      */
     private const LESSON_FILE = 'lesson_day.v4.10.md';
 
-    private const REPAIR_FILE = 'lesson_card_repair.v1.3.md';
+    /**
+     * The repair of one card. v1.4 — наряд LANG-1b §10: `vocab.definition_language` is fatal, and a word found only for its
+     * definition's language — and at most for its `used_in`, the warning that stood beside it on the owner's ru→ro day — is
+     * not a word to replace: the repair keeps the word, writes the definition anew in TARGET_LANGUAGE and lets `used_in` name
+     * where the word occurs (the rule of a word and one line of HOW TO FIX); a word of an earlier day is still replaced.
+     * v1.3 stays beside it as the one rollback file; v1.2 is gone (in git).
+     */
+    private const REPAIR_FILE = 'lesson_card_repair.v1.4.md';
 
     private const JUDGE_FILE = 'lesson_seam_judge.v1.1.md';
 

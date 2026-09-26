@@ -47,9 +47,10 @@ use Throwable;
  * The model answers with the card — an exchange may bring the frame its line stands on (`frame_update`), and the two
  * go in together or not at all; a learner line must stand on a frame of the lesson (the schema no longer names the
  * day's frames — its ids are the same for every call, so the vendor's prompt cache holds it). The card is parsed to its
- * shape, put into the answer, spoken in the plan's roles, and the whole answer is validated again. A repaired WORD is
- * checked again by the server before it counts: `used_in` true, not a word of an earlier day, not twice in the day —
- * else the repair is refused like one off the card's shape. Nothing is written here: the build stores what passed its
+ * shape, put into the answer, spoken in the plan's roles, and the whole answer is validated again. A word REPLACED by
+ * another is checked again by the server before it counts: `used_in` true, not a word of an earlier day, not twice in the
+ * day — else the repair is refused like one off the card's shape. A word kept, its definition written anew in the target
+ * language (P2R v1.4, наряд LANG-1b §10), is judged by the validator alone. Nothing is written here: the build stores what passed its
  * gate, the command writes only on `--apply` ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
  */
 final readonly class LessonCardRepairer
@@ -175,7 +176,8 @@ final readonly class LessonCardRepairer
 
         $repaired = $repaired->withRoles($request->roles);
         $after = $this->validator->run($repaired, $context);
-        if ($card->kind === LessonCard::TERM && ($refused = self::wordRefused($repaired, $card, $after)) !== []) {
+        if ($card->kind === LessonCard::TERM && self::replacesWord($answer, $repaired, $card)
+            && ($refused = self::wordRefused($repaired, $card, $after)) !== []) {
             return new LessonCardRepairOutcome(
                 LessonCardRepairOutcome::REFUSED, $card->address, $card->kind, $before, $card->of($repaired),
                 self::rows($atCard), [], null, [], count($found), $reply->costUsd, $reply->latencyMs, $reply->promptVersion,
@@ -215,6 +217,19 @@ final readonly class LessonCardRepairer
         if ($line?->phraseId !== null && $answer->phrase($line->phraseId) === null) {
             throw ModelAnswerOffSchema::at('card.phrase_id', "«{$line->phraseId}» names no frame of the lesson");
         }
+    }
+
+    /**
+     * Did the repair put ANOTHER word in the card's place? A word kept as it was — its definition written anew in the target
+     * language (P2R v1.4, наряд LANG-1b §10) — is no new word: whatever the day already said of it (a `used_in` warning) was
+     * there before the repair and is no reason to refuse the definition the repair fixed.
+     */
+    private static function replacesWord(Lesson $answer, Lesson $repaired, LessonCard $card): bool
+    {
+        $was = $answer->vocabularyItem($card->frameId)?->termTarget;
+        $now = $repaired->vocabularyItem($card->frameId)?->termTarget;
+
+        return $was === null || $now === null || FrameText::identity($was) !== FrameText::identity($now);
     }
 
     /**

@@ -8,7 +8,8 @@ use App\Modules\Plan\Domain\Check\Lesson\VocabularyRules;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 
 /**
- * THE DEFINITION OF A WORD IS IN THE TARGET LANGUAGE (наряд LANG-1b §4, `vocab.definition_language`, a warning). The
+ * THE DEFINITION OF A WORD IS IN THE TARGET LANGUAGE (наряд LANG-1b §4, `vocab.definition_language`; a warning there, FATAL
+ * since §10 — its card goes to P2R, which writes the definition anew). The
  * lessons are the LANG-1 scouting's own answers (`docs/research/lang-1/answers/`): ru→de defined every German word in
  * English, de→en defined its English words in English — as it should. The definitions are the ones the model wrote, one
  * rewritten in German where a German one is needed; the packs are the deployment's (`config/lesson/lang`).
@@ -71,4 +72,18 @@ it('finds a definition written in the letters of another writing', function () {
     expect(dlFindings('de-en', [0 => 'запланированное время визита к врачу']))->toBe([
         'v1: the definition «запланированное время визита к врачу» of «doctor\'s appointment» is not written in the letters of the target language (en)',
     ]);
+});
+
+// Наряд LANG-1b §10: the owner's ru→ro day defined its Romanian words in English («a place where goods are sold»), as the
+// ru→ro scouting day of LANG-1 had. CATCHES a fatal guard that lets a Romanian day's English definitions through. Five of
+// the eight are told by the words only English uses often; «an arranged time to see a doctor», «an official identity
+// document» and «earlier than a set time» hold none of them (the English pack keeps only the words no neighbour shares) and
+// pass — the prompt's own rule (v4.10, VOCABULARY) is what keeps them in Romanian.
+it('finds a Romanian word defined in English', function () {
+    $found = dlFindings('ru-ro');
+
+    expect($found)->toContain(
+        'v2: the definition «the general doctor you visit first» of «medicul de familie» reads as en, not ro (the, you)',
+        'v3: the definition «the front part of the neck used for swallowing and speaking» of «gât» reads as en, not ro (the, of, for, and)',
+    )->and(array_map(static fn (string $f): string => explode(':', $f)[0], $found))->toBe(['v2', 'v3', 'v4', 'v6', 'v7']);
 });

@@ -135,7 +135,7 @@ it('gives a card repair the lesson prompt\'s own sections for that card, word fo
     $prompts = new PlanPromptFiles(app_path('Modules/Plan/Infrastructure/Prompt'));
     $lesson = (string) file_get_contents(app_path('Modules/Plan/Infrastructure/Prompt/lesson_day.v4.10.md'));
 
-    expect($prompts->repairVersion())->toBe('lesson_card_repair.v1.3')
+    expect($prompts->repairVersion())->toBe('lesson_card_repair.v1.4')
         ->and($prompts->lessonVersion())->toBe('lesson_day.v4.10')
         ->and($lesson)->toContain($prompts->lessonSection('CHECK PER EXCHANGE'))
         ->and($prompts->repairSystem('check'))->toContain($prompts->lessonSection('CHECK PER EXCHANGE'))

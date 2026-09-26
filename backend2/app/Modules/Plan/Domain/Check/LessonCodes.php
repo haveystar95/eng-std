@@ -7,10 +7,11 @@ namespace App\Modules\Plan\Domain\Check;
 /**
  * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.10`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
  * BACK-TAILS-1, FIX-3, LANG-1b) — sixty-one.
- * Every breach is counted by code; ELEVEN of them are fatal — the day is not dealt until a repair takes their card
- * ({@see LessonGate}) — and the other 50 are warnings: counted and kept. Наряд LANG-1b added two warnings: an option of a
- * check copied out of the partner's line ({@see OPTIONS_PARTNER_FRAGMENT} — once a sub-rule of the fatal
- * `options.form_mismatch`) and a word defined in another language than the target ({@see VOCAB_DEFINITION_LANGUAGE}). One code is not the validator's but the seam
+ * Every breach is counted by code; TWELVE of them are fatal — the day is not dealt until a repair takes their card
+ * ({@see LessonGate}) — and the other 49 are warnings: counted and kept. Наряд LANG-1b added two codes: a warning, an option
+ * of a check copied out of the partner's line ({@see OPTIONS_PARTNER_FRAGMENT} — once a sub-rule of the fatal
+ * `options.form_mismatch`), and a word defined in another language than the target ({@see VOCAB_DEFINITION_LANGUAGE}) — a
+ * warning in its §4, FATAL since its §10: the owner's ru→ro day defined every Romanian word in English. One code is not the validator's but the seam
  * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}). Six codes read the story
  * so far or the day as a whole (GEN-3): a word or a frame an earlier day taught, a frame whose native pattern an earlier
  * day taught, two frames of one pattern, one frame in two exchanges in a row, a partner who changed gender; and one reads a
@@ -155,7 +156,10 @@ final class LessonCodes
 
     public const VOCAB_ABBREVIATION = 'vocab.abbreviation';
 
-    /** A word's `definition_target` is not in the target language — by its letters and its frequent words (наряд LANG-1b §4). */
+    /**
+     * A word's `definition_target` is not in the target language — by its letters and its frequent words (наряд LANG-1b §4);
+     * fatal, repaired by P2R on the word's card with the definition written anew (§10).
+     */
     public const VOCAB_DEFINITION_LANGUAGE = 'vocab.definition_language';
 
     // Native text, image prompts.

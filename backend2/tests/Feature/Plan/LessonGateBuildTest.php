@@ -255,3 +255,106 @@ it('holds a repeated exchange, repairs the whole exchange and stores it together
         ->and($failed['scenes'][0]['lesson_status'])->toBe('failed')
         ->and($failed['scenes'][0]['lesson_fail_reason'])->toBe('fatal: exchange.repeats');
 });
+
+// Наряд LANG-1b §10: «vocab.definition_language — ФАТАЛЬНЫЙ, починка P2R вид term: перевести определение на язык цели (одна
+// карточка)». The owner's ru→ro day defined every Romanian word in English; here an English word is defined in Russian, which
+// the letters tell as surely. Catches the definition dealt on the word's card, a repair asked for another card or another
+// kind, a repair that replaced the word instead of its definition, and the repaired definition not the one stored.
+it('holds a word defined in another language than the target, has its definition written anew on the word\'s card and deals the day', function () {
+    $fake = new FakePlanModel(
+        lesson: static function ($request): array {
+            $p = planCleanLesson($request);
+            $p['vocabulary'][1]['definition_target'] = 'внезапная и сильная, как порез';
+
+            return $p;
+        },
+        repair: static function ($request): array {
+            $card = $request->card;
+            $card['definition_target'] = 'sudden and strong, like a cut';
+
+            return ['card' => $card];
+        },
+    );
+    app()->instance(PlanModelPort::class, $fake);
+    [, $token] = planLearner();
+
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $scene = DB::table('plan_scenes')->where('plan_id', $id)->first();
+    $word = json_decode((string) $scene->lesson_json, true)['vocabulary'][1];
+
+    expect($fake->repairCalls)->toBe(1)
+        ->and($fake->repairRequests[0]->address)->toBe('v2')
+        ->and($fake->repairRequests[0]->kind)->toBe('term')
+        ->and(array_column($fake->repairRequests[0]->findings, 'code'))->toBe(['vocab.definition_language'])
+        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
+        ->and([$word['id'], $word['term_target'], $word['translation_native']])->toBe(['v2', 'sharp', 'острая'])
+        ->and($word['definition_target'])->toBe('sudden and strong, like a cut')
+        ->and(json_decode((string) $scene->checks_json, true))->toBe([])
+        ->and(lgCounters())->toBe(['vocab.definition_language|counted' => 1, 'vocab.definition_language|gated' => 1]);
+});
+
+// The server refuses a word a repair PUT IN whose `used_in` is off (P2R v1.2) — not a word the repair KEPT, its definition
+// written anew (P2R v1.4): what the day said of that word before the repair is no reason to throw the fixed definition away
+// and fail the day on it. Catches the refusal of GEN-3 applied to a word that did not change.
+it('keeps a word whose definition the repair wrote anew, though the word carries a warning of its own', function () {
+    $fake = new FakePlanModel(
+        lesson: static function ($request): array {
+            $p = planCleanLesson($request);
+            $p['vocabulary'][1]['definition_target'] = 'внезапная и сильная, как порез';
+            $p['vocabulary'][1]['used_in'] = ['p3', 'A5'];
+
+            return $p;
+        },
+        repair: static function ($request): array {
+            $card = $request->card;
+            $card['definition_target'] = 'sudden and strong, like a cut';
+
+            return ['card' => $card];
+        },
+    );
+    app()->instance(PlanModelPort::class, $fake);
+    [, $token] = planLearner();
+
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $scene = DB::table('plan_scenes')->where('plan_id', $id)->first();
+
+    expect($fake->repairCalls)->toBe(1)
+        ->and($fake->lessonCalls)->toBe(1)
+        ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready')
+        ->and(json_decode((string) $scene->lesson_json, true)['vocabulary'][1]['definition_target'])->toBe('sudden and strong, like a cut')
+        ->and(array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", json_decode((string) $scene->checks_json, true)))
+        ->toBe(['vocab.used_in_wrong@v2']);
+});
+
+// A definition is a card of its own, and a day has two cards: three words defined in another language hold the day past its
+// repairs, the server builds it anew once, and a second answer as foreign fails it with the code — the rule of §10 does not
+// lean on the repair, the prompt's own rule (v4.10, VOCABULARY) is what keeps such days apart. Catches a third word card
+// repaired past the limit, and a day dealt with a foreign definition left.
+it('fails a day with three words defined in another language — two word cards a build, the rebuild, then failed', function () {
+    $fake = new FakePlanModel(
+        lesson: static function ($request): array {
+            $p = planCleanLesson($request);
+            foreach ([1, 2, 3] as $i) {
+                $p['vocabulary'][$i]['definition_target'] = 'слово, объяснённое по-русски';
+            }
+
+            return $p;
+        },
+        repair: static function ($request): array {
+            $card = $request->card;
+            $card['definition_target'] = 'a word explained in English';
+
+            return ['card' => $card];
+        },
+    );
+    app()->instance(PlanModelPort::class, $fake);
+    [, $token] = planLearner();
+
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $plan = planRead($this, $token, $id);
+
+    expect($fake->lessonCalls)->toBe(2)
+        ->and(array_map(static fn ($r): string => $r->address, $fake->repairRequests))->toBe(['v2', 'v3', 'v2', 'v3'])
+        ->and($plan['scenes'][0]['lesson_status'])->toBe('failed')
+        ->and($plan['scenes'][0]['lesson_fail_reason'])->toBe('fatal: vocab.definition_language');
+});

@@ -417,7 +417,7 @@ it('counts the one rule a lesson breaks by its code', function (string $code, Cl
 // A code with no row of its own is a code nothing proves it counts. The seam judge's code is a model's, not a rule's
 // (LessonSeamJudge, `LessonObservationTest`). Доработка GEN-2b: no code is about the speaking key any more, the key is the
 // server's. Наряд GEN-3 added seven codes; наряд BACK-TAILS-1 §3.2 one more; наряд FIX-3 §5 one more; наряд LANG-1b two
-// warnings (`options.partner_fragment`, `vocab.definition_language`) — sixty-one in all.
+// (`options.partner_fragment`, a warning; `vocab.definition_language`, fatal since its §10) — sixty-one in all.
 it('has a broken rule for every one of its sixty-one codes', function () {
     $named = array_map(static fn (array $row): string => $row[0], [...array_values(lvBreaks()), ...array_values(lvStoryBreaks())]);
 

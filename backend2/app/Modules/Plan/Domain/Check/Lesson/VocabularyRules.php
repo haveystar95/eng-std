@@ -30,11 +30,13 @@ use App\Modules\Plan\Domain\Service\Words;
  * the everyday word read the target's pack — its ordinary heads, its everyday words and STOP LIST.
  *
  * THE DEFINITION IS IN THE TARGET LANGUAGE (`definition_target`, наряд LANG-1b §4): every ru→X day of the LANG-1 scouting
- * defined its German, Polish or French words in English. A heuristic warning, `vocab.definition_language`, read by
- * {@see TextLanguage} with the target's pack: fewer than half of the definition's letters are the target's letters (a
- * Russian definition under a German word), or — in the target's own letters — the definition holds more of the words only
- * a neighbour language uses often than of the words only the target does («pain in the throat» under a German word:
- * one English word, «the», and no German one). A definition of no frequent word at all says nothing and is let be.
+ * defined its German, Polish or French words in English. `vocab.definition_language`, read by {@see TextLanguage} with the
+ * target's pack: fewer than half of the definition's letters are the target's letters (a Russian definition under a German
+ * word), or — in the target's own letters — the definition holds more of the words only a neighbour language uses often
+ * than of the words only the target does («pain in the throat» under a German word: one English word, «the», and no German
+ * one). A definition of no frequent word at all says nothing and is let be. A warning in §4, FATAL since §10 (the owner's
+ * ru→ro day defined every word in English): the word's card goes to P2R, which writes the definition anew and keeps the
+ * word. On the 38 X→en days of the LANG-1b replay it found nothing — an English definition of an English word is no finding.
  */
 final class VocabularyRules implements LessonRule
 {

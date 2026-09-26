@@ -8,8 +8,8 @@ use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 
 /**
- * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a, в GEN-2b, GEN-3, BACK-TAILS-1 и FIX-3, docs/plan-v2.md §4): eleven fatal
- * codes, the cards a repair takes for them in the order it reaches furthest, and the reason a day fails with.
+ * WHAT HOLDS A DAY BACK (решения архитектора после GEN-2a, в GEN-2b, GEN-3, BACK-TAILS-1, FIX-3 и LANG-1b, docs/plan-v2.md §4):
+ * twelve fatal codes, the cards a repair takes for them in the order it reaches furthest, and the reason a day fails with.
  */
 
 // Canon GEN-2b: «фатальные — ТЕ ЖЕ пять из GEN-2a плюс exchange.second_question и exchange.repeats»; наряд GEN-3: «фатально
@@ -17,22 +17,24 @@ use App\Modules\Plan\Domain\Lesson\LessonCard;
 // — предупреждения»; доработка GEN-3: «vocab.abbreviation — из фатальных в предупреждения (фатальных снова 9): аббревиатура
 // допустима словом дня, если в NATIVE_LANGUAGE есть обычное слово; судит модель, код только считает»; «frame.known_native_repeat
 // — остаётся предупреждением»; наряд BACK-TAILS-1 §3.2: «чужие буквы в чтении — фатальный pronunciation.foreign_script,
-// фатальных становится 10»; наряд FIX-3 §5: «варианты проверки не одной формы — options.form_mismatch, день failed» — 11.
+// фатальных становится 10»; наряд FIX-3 §5: «варианты проверки не одной формы — options.form_mismatch, день failed» — 11;
+// наряд LANG-1b §1: «кусок реплики» — предупреждение options.partner_fragment, список прежний; §10: «vocab.definition_language —
+// ФАТАЛЬНЫЙ, починка P2R вид term» — 12.
 // Catches a code made fatal that is not on the list — a heuristic warning holding a learner's day
 // for a paid repair: an ATM taught as «банкомат» held back as an acronym, a native frame translated the way day 1 translated
-// one — and one of the nine left out, dealing a broken card or a word taught twice.
-it('holds the day for exactly the eleven fatal codes, and everything else the validator counts is a warning', function () {
+// one — and one of the twelve left out, dealing a broken card, a word taught twice or a Romanian word defined in English.
+it('holds the day for exactly the twelve fatal codes, and everything else the validator counts is a warning', function () {
     $fatal = [
         LessonCodes::LINE_NE_FRAME, LessonCodes::FILLER_UNGRAMMATICAL, LessonCodes::CHECK_SHAPE, LessonCodes::LISTENING_SHAPE,
         LessonCodes::EXCHANGE_SHAPE, LessonCodes::EXCHANGE_SECOND_QUESTION, LessonCodes::EXCHANGE_REPEATS,
         LessonCodes::VOCAB_KNOWN_REPEAT, LessonCodes::FRAME_KNOWN_REPEAT, LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT,
-        LessonCodes::OPTIONS_FORM_MISMATCH,
+        LessonCodes::OPTIONS_FORM_MISMATCH, LessonCodes::VOCAB_DEFINITION_LANGUAGE,
     ];
 
     expect(array_values(array_filter(LessonCodes::all(), LessonGate::isFatal(...))))->toEqualCanonicalizing($fatal)
-        ->and(count(LessonGate::FATAL))->toBe(11)
+        ->and(count(LessonGate::FATAL))->toBe(12)
         ->and(array_filter(
-            [LessonCodes::FRAME_KNOWN_NATIVE_REPEAT, LessonCodes::FRAME_TWIN, LessonCodes::FRAME_ADJACENT_REPEAT, LessonCodes::ROLE_GENDER_CHANGED, LessonCodes::VOCAB_ABBREVIATION, LessonCodes::PRONUNCIATION_SCRIPT],
+            [LessonCodes::FRAME_KNOWN_NATIVE_REPEAT, LessonCodes::FRAME_TWIN, LessonCodes::FRAME_ADJACENT_REPEAT, LessonCodes::ROLE_GENDER_CHANGED, LessonCodes::VOCAB_ABBREVIATION, LessonCodes::PRONUNCIATION_SCRIPT, LessonCodes::OPTIONS_PARTNER_FRAGMENT],
             LessonGate::isFatal(...),
         ))->toBe([])
         ->and(array_values(array_diff(LessonGate::FATAL, LessonCodes::all())))->toBe([])

@@ -183,7 +183,7 @@ it('finds every section a repair of each kind quotes in the lesson prompt it quo
         }
     }
     expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.10')
-        ->and(lrpPrompts()->repairVersion())->toBe('lesson_card_repair.v1.3');
+        ->and(lrpPrompts()->repairVersion())->toBe('lesson_card_repair.v1.4');
 });
 
 // Canon (наряд LANG-1 §8, DECISIONS п. 157): v4.8 was v4.7 with ONE clause of FINAL INTERNAL VALIDATION replaced — a reading
