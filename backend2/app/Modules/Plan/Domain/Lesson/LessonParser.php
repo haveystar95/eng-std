@@ -10,9 +10,10 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The model's JSON → a {@see Lesson} (`lesson_day.v4.7`). Strict about SHAPE only: a missing key, a
- * wrong type, an unknown kind or speaker, an empty required string is a reply that is not the
- * requested schema, and that is the model's refusal, not a finding ({@see ModelAnswerOffSchema}).
+ * The model's JSON → a {@see Lesson} (`lesson_day.v4.8`; its rollback `v4.7` answers the same schema).
+ * Strict about SHAPE only: a missing key, a wrong type, an unknown kind or speaker, an empty required
+ * string is a reply that is not the requested schema, and that is the model's refusal, not a finding
+ * ({@see ModelAnswerOffSchema}).
  * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
  * and the validator runs on the parsed lesson.
  *
@@ -24,7 +25,8 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * abbreviation's stop plus the sentence's, and the phone, the voice and the judge all read it as written. And a
  * READING — every `pronunciation_native` the parser reads: a frame's, a filler's, a word's, a learner line's, in a
  * whole lesson and in a repaired card alike — has the Latin letters drawn inside a Cyrillic word put back into
- * Cyrillic ({@see self::reading()}, наряд LANG-1).
+ * Cyrillic, a Latin acute vowel («á») as the Cyrillic vowel with the combining stress mark ({@see self::reading()},
+ * наряд LANG-1).
  */
 final class LessonParser
 {

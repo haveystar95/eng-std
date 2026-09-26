@@ -5130,7 +5130,7 @@ components:
           additionalProperties: { type: string }
         number_joiners:
           type: array
-          description: 'Соединители ПОСЛЕ РАЗРЯДА (en «and», fr «et»; наряд FIX-3 §4): слово между разрядом (hundred, thousand, …) и числом меньше ста после него — часть одного числа: «one hundred and twenty» → 120, «two thousand and five» → 2005, fr «mille et un» → 1001. Только там: после десятков такой соединитель начинает следующее число («between twenty and one hundred» — два числа, 20 и 100), в остальных местах это обычное слово («two hundred and a thousand», «five and six»). Пустой список — у языка их нет'
+          description: 'Соединители ПОСЛЕ РАЗРЯДА (en «and», de «und»; наряд FIX-3 §4): слово между разрядом (hundred, thousand, …) и числом меньше ста после него — часть одного числа: «one hundred and twenty» → 120, «two thousand and five» → 2005, de «tausend und eins» → 1001. Только там: после десятков такой соединитель начинает следующее число («between twenty and one hundred» — два числа, 20 и 100), в остальных местах это обычное слово («two hundred and a thousand», «five and six»). Пустой список — у языка их нет'
           items: { type: string }
         number_tens_joiners:
           type: array

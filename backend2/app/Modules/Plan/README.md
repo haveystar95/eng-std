@@ -70,9 +70,9 @@ plan fell to `ready` with no start date and day 1 locked again (`docs/research/p
 | `Conversation` (+ `ConversationTurn`) | the talk with the agent (наряд CONV-1): the journal is APPEND-ONLY and numbered by the aggregate (a client cannot insert, reorder or rewrite a line it is shown); a move is taken only when the state IS `your_turn` (a second `POST …/turn` in flight does not buy a second reply); an ended talk takes nothing more — «Ещё раз» is a NEW talk (`replayed`), never this one reopened; checkpoints walk FORWARD and a scene marked done stays done; the money — model plus voice — is added up in one place so the cap is asked of one number. Turns of the scene and money are two budgets: a rescue spends the money and none of the turns. Since CONV-2: whether a talk walks the stage is the talk's own answer (`passesStage()` — ended of its own, never `replayed`), its minutes are the time it was talked (`activeSeconds()`: gaps between lines, each up to `MAX_GAP_SECONDS` = 60), and the line a rescue asks to hear again is `lineBeforeLastMove()` |
 | `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
 
-The lesson (`Domain/Lesson`, `lesson_day.v4.7`): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
+The lesson (`Domain/Lesson`, `lesson_day.v4.8`; the rollback `v4.7` answers the same schema): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
 `check`), phrases as frames (`Phrase` + `Slot` + `Filler`), the listening (`ListeningQuestion`, the lesson's own,
-not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only — and one thing put right, доработка GEN-3: a native frame and a filler's native text lose the space before the mark they end with); `LessonAssembly` — the SERVED lesson
+not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only — and three things put right: a frame and a filler's native text lose the space before the mark they end with (доработка GEN-3, BACK-TAILS-1 §3.1); a text ending in two full stops keeps one (CONV-1); and — LANG-1, DECISIONS п. 437 — in a READING (`pronunciation_native` of a frame, a filler, a word, a learner line) every run of letters that holds a Cyrillic letter has its Latin look-alikes put back into Cyrillic, and a Latin acute vowel becomes the Cyrillic vowel with U+0301: «телефoн» → «телефон», «лекáжа» → «лека́жа»; a run with no Cyrillic, and letters of other writings, stay what `pronunciation.foreign_script` finds); `LessonAssembly` — the SERVED lesson
 every reader deals from: the filler of a learner line is the one the server finds in its text among its frame's
 fillers, the closing mark aside (`FrameText`), the `in_dialogue` marks are what the lines say, the speaking key comes
 from the frame (`SpeakingKey`, the target's pack says which words are content) — the model's `filler`, marks and key
@@ -123,11 +123,23 @@ almost; on the wire as the lesson has it, `hints.sentence`, FIX-4b §2), `Conver
 `DayHighlights` («Что было хорошо», кадр 37-13), `BlueprintChecker` (the plan
 checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
 card's address, `LessonCodes`), `Check/Language` — the rules' languages: `LanguagePack` (one language's words, marks
-and patterns from `config/lesson/lang/<code>.php`; a key it lacks is a check skipped, `PackSkips`, never a finding),
-`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the nine fatal codes, the
+and patterns from `config/lesson/lang/<code>.php`; a key it lacks is a check skipped, `PackSkips`, never a finding).
+Since наряд LANG-1 (DECISIONS п. 430) there are TEN packs — en, ru, uk, be, pl, ro, es, it, de, fr — and each writes every
+key the code reads for its side (targets en pl ro es it de fr, natives ru uk be pl ro es it de fr), a rule that is not
+the language's written as a no-op, never null (null is `lang.pack_missing`); the key spec is
+`docs/research/lang-1/pack-keys.md`. A pack's words are asked and kept FOLDED (`LanguagePack::normal()`: ß → ss, œ → oe,
+the Romanian cedilla letters with the comma below), and `speech()` hands its lists down in the text's canonical form, so a
+pack is written in the language's own spelling. `LanguagePacks` hands every pack its NEIGHBOURS — each other pack's
+`script_letters` and `common_words` (`asNeighbour()`) — for the translation guard (`ReplyNative`); `talkTitleTemplate()`
+holds a pack's `talk_title_template` to its shape (it throws on a missing field; the pack tests call it — the title itself
+is `NativeStrings::talkTitle`, which reads the key and falls back to English on a broken one);
+`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the eleven fatal codes of `LessonGate::FATAL`, the
 card order a repair takes — a word last —, at most two cards, the `fatal: …` reason), `Words` / `FrameText` / `FrameParts` (the text
 rules the validator and the assembly share — and, since SESSION-1a, the frame without its window: its words, where
-the slot stands), `DayMetricsCalculator`, `NativeStrings`, `Shuffle`. Whether a spoken attempt counts is NOT this
+the slot stands), `DayMetricsCalculator`, `NativeStrings` (the server's own strings in the learner's language — ru, uk
+and en; every other native reads them in English, L10N is not LANG-1's — but the talk's title, which for a native with no
+declension here is its pack's `talk_title_template`: «Rozmowa: recepcjonistka i lekarz», «Gespräch: Rezeptionistin und
+Arzt», nothing inflected, DECISIONS п. 434), `Shuffle`. Whether a spoken attempt counts is NOT this
 module's: since наряд FIX-2 there is one rule in the kernel, `Shared/Domain/Service/SpeechMatch` — two modes, and the
 card says which on the wire (`speech_mode`); this module hands it the target's `LanguagePack::speech()` and reads
 back both the verdict and what of the heard text falls OUTSIDE the frame, which is what the judge is shown as the
@@ -217,7 +229,7 @@ reads plan tables.
 | `BuildVersion` | `StampedBuildVersion` (`APP_COMMIT` / `storage/app/commit`) |
 | `PlanImageFinder` | `PexelsPlanImageFinder` (search → photo + tone; `findMany` — a batch, six on the wire, over Generation's `searchMany`; `tone(url)` → Pexels `GET /photos/{id}` for the backfill) |
 | `SceneImageStore` | `CdnSceneImageStore` (disk `plan.image_disk`; fetches the 112/448 square crops from the photo's CDN, labelled `images`; fetches nothing under the fake image driver) |
-| `LineSpeaker` | `GenerationLineSpeaker` — every line on its own vendor call in the voice the pack gives its role and gender (`SpeechSynthesizerPort::speakLines`), the account's balance for the fuse; off when `SPEECH_ENABLED=false` |
+| `LineSpeaker` | `GenerationLineSpeaker` — every line on its own vendor call in the voice the pack gives its role and gender (`SpeechSynthesizerPort::speakLines`), the account's balance for the fuse; off when `SPEECH_ENABLED=false`. Since LANG-1 (DECISIONS п. 436) every plan target has its six voices in `generation.speech.voices.<target>` (`SPEECH_VOICE_<LANG>_<SLOT>` → `SPEECH_VOICE_EN_<SLOT>` → the approved id) and every line goes with its language — the plan's target — as `language_code` (`SPEECH_LANGUAGE_CODE`, on by default); the file's voice key does not carry the language (п. 248) |
 | `LineAudioStore` | `EloquentLineAudioStore` (private disk `plan.audio_disk`; `withoutDuration` / `read` / `setDuration` are what `plan:audio-durations` backfills `duration_ms` through) |
 | `ConversationRepository` (Domain) | `EloquentConversationRepository` — the talk's row written whole, its lines only ever INSERTed (no update, no delete anywhere in the class), and `lockState()` for the re-check a write does after the model has answered; `findById`, `latestForDay` (by `started_at`, a tie of one second broken by the ULID — the talk the window's targets tick), `replaysSince` (the talks begun on a walked day since a moment, the one that walked it aside — the replay cap, BACK-TAILS-2 §7) and `walkedWithoutPassage` (the talks that ended of their own on days with no passage — what `plan:reconcile-talks` writes). A day's minutes read only the talk that walked its stage (`Application/Service/DayMetricsOf`) |
 | `StagePassageRepository` (Domain) | `EloquentStagePassageRepository` — `plan_stage_passages`, INSERT … ON CONFLICT DO NOTHING (`insertOrIgnore`) and SELECTs; no UPDATE/DELETE. Written by ONE writer, `Application/Service/ConversationPassing::mark()`, inside the transaction that saves the talk (CONV-2, DECISIONS п. 367) |
@@ -239,8 +251,12 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.7`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`; `lesson_day.v4.6`
-  and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`). The
+  (`plan-builder-v2`, `lesson_day.v4.8`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`; `lesson_day.v4.7`
+  and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`; `lesson_day.v4.6` is
+  gone, in git). `v4.8` (наряд LANG-1 §8, DECISIONS п. 435) is `v4.7` with ONE clause of FINAL INTERNAL VALIDATION
+  changed: a reading is written in the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and
+  Belarusian, Latin for the others) where `v4.7` said «Cyrillic only when NATIVE_LANGUAGE is Russian»; P2R quotes no
+  part of that section, so a repair's rules are `v4.7`'s byte for byte (registry row, `docs/research/lang-1/v4.8.diff`). The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
   `LessonRequests` (roles, `EARLIER_DAYS`) for the build and for a repair alike; the repair wrapper
@@ -266,7 +282,10 @@ reads plan tables.
   `conversation.rescue_same_words`, `…_kept` — CONV-2; `conversation.learner_echo`, `…_cut`, `…_neutral`, `…_kept` —
   BACK-TAILS-2 §9, against every move since FIX-3 §11; `conversation.own_line`, `…_kept` and `conversation.early_end`,
   `…_kept` — FIX-3 §7; `conversation.native_missing`, `…_blanked` — FIX-4c §6, `Domain/Service/ReplyNative`: a
-  translation empty, the same words or not in the learner's letters is asked for again, and a second one said with none).
+  translation empty, the same words or not in the learner's letters is asked for again, and a second one said with none;
+  since LANG-1 §5 (DECISIONS п. 433) also a line in the learner's letters that holds fewer than two of the words only the
+  learner's language has among its `common_words` and two or more of the words only a NEIGHBOUR in the same letters has —
+  every other pack of the deployment whose `script_letters` is the same string, not the target alone).
 - The day's build log (BACK-TAILS-2 §1, port `DayBuildLog`, adapter `LogDayBuildLog`): a scene day whose «Фразы» the
   ladder could not fit under their ceiling writes `plan.phrases_over_ceiling` (warning) with the rungs and the frames —
   the stop signal, not a failure; the day is dealt anyway.
@@ -311,8 +330,15 @@ reads plan tables.
   writes that one column, prints «без длительности: было N / стало M»; `--dry` only counts. A row of another
   format, a file gone from the disk or an empty one keeps its null and is named on its own line — a guessed length
   would lie to the player.
-- The plan languages are the server's list (`plan.languages`, `GET /plans/languages`), and
-  `POST /plans` validates against it.
+- The plan languages (наряд LANG-1 §7, DECISIONS пп. 427–429) live in code in ONE place, `Shared`'s
+  `LanguageRoles::planTargets()` (en, pl, ro, es, it, de, fr) and `planNatives()` (ru, uk, be, pl, ro, es, it, de, fr);
+  `plan.languages` (`PLAN_LANGUAGES`) may only NARROW the targets, in `planTargets()`'s order (`PlanServiceProvider`), and
+  unset is all seven — that effective list is `PlanConfig::$languages`. `GET /plans/languages` hands out its codes (the
+  shape build (21) reads), `GET /languages` both sides named from `LanguageCatalog` (`{code, endonym, flag}`), one view
+  (`GetPlanLanguagesHandler`). `POST /plans` takes the target only (a two-letter code — Laravel's 422 otherwise); the
+  native is the profile's (`LearnerCalendar::nativeLangFor`), and `CreatePlanHandler` refuses the pair — a target off the
+  effective list, a native off `planNatives()`, the two the same, or a profile native that is no language code at all — with
+  422 `language_pair_invalid` (`meta {target, native}`) before the paywall and before anything is written.
 - Notifications: `plan:notify-tick` (Presentation/Console, every 15 min in `routes/console.php`, run
   by the `scheduler` compose service) writes `event_today` / `event_passed` and the daily reminder;
   `plan:notify-test {user} {kind}` sends one letter now through the same handler. The server does NOT

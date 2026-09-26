@@ -88,8 +88,11 @@ class SpeechProbe {
   /// …и он `isAvailable` прямо сейчас: модель на месте, движок не занят.
   final bool recognizerAvailable;
 
-  /// Умеет ли он работать без сети на этом устройстве. Мы всегда просим `onDevice: true`, поэтому
-  /// «нет» здесь означает, что попытка кончится отказом, сколько бы человек ни говорил.
+  /// Whether it can run with no network on this device. The recognizer asks for on-device
+  /// recognition wherever iOS has a model for the language (`PluginSpeechRecognizer.onDeviceFor`)
+  /// and for Apple's server recognizer in Polish and Romanian, which have none (DECISIONS item 48,
+  /// LANG-1). So «no» here means every attempt of an on-device language is refused however long the
+  /// learner speaks; for pl and ro it is expected — their attempt needs the network instead.
   final bool onDeviceSupported;
 
   /// Оба разрешения на месте — единственное состояние, из которого ход вообще может состояться.

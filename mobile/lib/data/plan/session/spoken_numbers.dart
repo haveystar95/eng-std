@@ -26,9 +26,9 @@ import 'dart:math' as math;
 ///      power of ten that divides it — and above nought: «forty five» → 45, «hundred twenty» → 120, pl «dwadzieścia
 ///      jeden» → 21; «ten five», «twenty twelve», «two three» do not fit and stay two numbers;
 ///    - a JOINER stands between two values of one number when the value after it fits after the value before it and is
-///      below a hundred, in the place the pack names it for — a word may be in both lists (fr «et»):
+///      below a hundred, in the place the pack names it for — a word may be in both lists:
 ///      · [joiners] (`number_joiners`) — after a SCALE: en «one hundred and twenty» → 120, «two thousand and five» →
-///        2005, fr «mille et un» → 1001;
+///        2005, de «tausend und eins» → 1001 (the fr pack writes none: «mille et un» stays «1000 et un»);
 ///      · [tensJoiners] (`number_tens_joiners`) — after a TENS value (20 or more, not a scale) that no joiner brought in:
 ///        es «treinta y uno» → 31, ro «douăzeci și unu» → 21, fr «vingt et un» → 21, «treinta y un mil» → 31000; «vingt
 ///        et onze» stays three words (fr 71 is an entry of its own), and fr «cent et vingt et un» is 120, «et», 1.

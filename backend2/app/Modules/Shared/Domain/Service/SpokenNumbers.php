@@ -31,9 +31,9 @@ namespace App\Modules\Shared\Domain\Service;
  *      pl «dwadzieścia jeden» → 21; «ten five», «twenty twelve», «two three» do not fit and stay two numbers;
  *    - a JOINER stands between two values of one number when the value after it fits after the value before it and is
  *      below a hundred. Which place a joiner stands in is the LANGUAGE's to say, so the pack names its joiners in two
- *      lists, and a word may be in both (fr «et»):
- *      · `number_joiners` — after a SCALE (en «and», fr «et»): «one hundred and twenty» → 120, «two thousand and five»
- *        → 2005, fr «mille et un» → 1001;
+ *      lists, and a word may be in both:
+ *      · `number_joiners` — after a SCALE (en «and», de «und»): «one hundred and twenty» → 120, «two thousand and five»
+ *        → 2005, de «tausend und eins» → 1001 (the fr pack writes none: «mille et un» stays «1000 et un»);
  *      · `number_tens_joiners` — after a TENS value — 20 or more, not a scale — that no joiner brought in (es «y», ro
  *        «și», fr «et»): «treinta y uno» → 31, «douăzeci și unu» → 21, «vingt et un» → 21, «ciento treinta y uno» →
  *        131, and a scale after the unit multiplies what was joined, as a scale does («treinta y un mil» → 31000); what

@@ -282,7 +282,10 @@ enum ExerciseMode {
   descriptionMatch('description_match'),
 
   /// SPEAKING RECALL: the card is read, the answer is SAID OUT LOUD, and the device recognises the
-  /// speech on-device (nothing is uploaded but the recognised text).
+  /// speech — on-device wherever iOS has a model for the language, so nothing is uploaded but the
+  /// recognised text. Polish and Romanian have no such model: their audio goes to Apple's server
+  /// recognizer, and with no network the trainer is withheld (DECISIONS item 48,
+  /// `PluginSpeechRecognizer.onDeviceFor`, the online-only row of `LanguageModeSupport`).
   ///
   /// It checks that the word can be retrieved and produced — **not** that it is pronounced well.
   /// There is no accent scoring here and there must never be one: a recogniser disagreeing is a
