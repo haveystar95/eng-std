@@ -206,6 +206,10 @@ return [
     // Belarusian says who did not catch the other.
     'rescue_line' => 'Прабачце?',
 
+    // THE RESCUE KIT (наряд LANG-1b §2): the no-op — be is only ever a learner's language here, and a kit is its TARGET's
+    // (`RescueKits`); its translations stand in the kits of the targets.
+    'rescue' => [],
+
     // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9) — the same line as every pack's: the translation of the target's
     // line for a Belarusian learner (en «I see. Please go on.»).
     'neutral_reply' => 'Зразумела. Працягвайце, калі ласка.',

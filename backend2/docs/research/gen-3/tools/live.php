@@ -146,6 +146,8 @@ final class NoDispatch implements PlanDispatcher
     public function illustrateScene(PlanSceneId $sceneId): void {}
 
     public function voiceScene(PlanSceneId $sceneId): void {}
+
+    public function voiceRescueKit(PlanId $planId): void {}
 }
 
 function say(string $line): void

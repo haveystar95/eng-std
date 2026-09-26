@@ -12,6 +12,7 @@ use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Inspection\InspectionCanon;
 use App\Modules\Plan\Application\Port\PlanCallJournal;
 use App\Modules\Plan\Application\Port\PlanInspectionReader;
+use App\Modules\Plan\Infrastructure\Adapter\DiskRescueAudioStore;
 use App\Modules\Plan\Infrastructure\Adapter\ObservabilityPlanCallJournal;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanInspectionReader;
 use App\Modules\Plan\Application\Port\BuildVersion;
@@ -33,6 +34,7 @@ use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Port\PlanImageFinder;
 use App\Modules\Plan\Application\Port\PlanListReader;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Application\Port\RescueAudioStore;
 use App\Modules\Plan\Application\Port\SceneImageStore;
 use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Application\Port\SlotJudgeQuota;
@@ -67,9 +69,9 @@ use App\Modules\Plan\Infrastructure\Adapter\RedisSlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyNativeDistractorSource;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyPlanCollectionWriter;
+use App\Modules\Plan\Infrastructure\Console\PlanCleanTextCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRebuildCardTextsCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanReconcileScenesCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanCleanTextCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRepaceCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRevoiceLearnerCommand;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentCheckCounters;
@@ -201,8 +203,6 @@ final class PlanServiceProvider extends ServiceProvider
         $this->app->singleton(PlanConfig::class, function (): PlanConfig {
             /** @var array<string, array{vocabulary: int, dialogue: int}> $counts */
             $counts = (array) config('plan.counts', []);
-            /** @var list<array{text_target: string, text_native: string, pronunciation_native: string}> $kit */
-            $kit = self::rescueKit();
             $languages = self::planLanguages((array) config('plan.languages', []));
 
             $pace = [];
@@ -215,7 +215,6 @@ final class PlanServiceProvider extends ServiceProvider
             return new PlanConfig(
                 counts: $counts,
                 buildStaleSeconds: (int) config('plan.build_stale_seconds'),
-                rescueKit: $kit,
                 languages: $languages,
                 pace: $pace,
                 phrasesBudget: (int) config('plan.phrases_budget', PhrasesStage::BUDGET),
@@ -327,6 +326,11 @@ final class PlanServiceProvider extends ServiceProvider
             $app->make(Disks::class),
             (string) config('plan.audio_disk', 'local'),
         ));
+        // The rescue kit's sound (наряд LANG-1b §2): files by (target, gender, voice, line) on the same private disk.
+        $this->app->bind(RescueAudioStore::class, fn (Container $app): RescueAudioStore => new DiskRescueAudioStore(
+            $app->make(Disks::class),
+            (string) config('plan.audio_disk', 'local'),
+        ));
         // The voice fuse (TTS-2): the plan size it counts against when the vendor would not say, and the share of it
         // below which nothing is bought — read here so Application stays clear of config().
         $this->app->bind(VoiceFuse::class, fn (Container $app): VoiceFuse => new VoiceFuse(
@@ -365,13 +369,13 @@ final class PlanServiceProvider extends ServiceProvider
         // The texts of dealt cards that doubled an abbreviation's dot, rebuilt from the frame and its filler (наряд FIX-4
         // §6) — dry-run unless `--apply`.
         $this->commands([PlanRebuildCardTextsCommand::class]);
+        // The model's text already stored, without the characters that print nothing (наряд LANG-1b §6) — dry-run unless
+        // `--apply`; the model's new text is read through the same rule as it comes in.
+        $this->commands([PlanCleanTextCommand::class]);
 
         $routes = __DIR__.'/../../Presentation/Http/routes.php';
         if (is_file($routes)) {
             Route::middleware('api')->prefix('api/v1')->group($routes);
-        // The model's text already stored, without the characters that print nothing (наряд LANG-1b §6) — dry-run unless
-        // `--apply`; the model's new text is read through the same rule as it comes in.
-        $this->commands([PlanCleanTextCommand::class]);
         }
     }
 
@@ -401,30 +405,5 @@ final class PlanServiceProvider extends ServiceProvider
             LanguageRoles::planTargets(),
             static fn (string $code): bool => in_array($code, $asked, true),
         ));
-    }
-
-    /**
-     * The rescue kit of the deployment's one pair (en ← ru); a pair without a kit gets an empty
-     * list, not a crash.
-     *
-     * @return list<array{text_target: string, text_native: string, pronunciation_native: string}>
-     */
-    private static function rescueKit(): array
-    {
-        $kits = (array) config('plan.rescue_kit', []);
-        $en = is_array($kits['en'] ?? null) ? $kits['en'] : [];
-        $rows = is_array($en['ru'] ?? null) ? $en['ru'] : [];
-        $out = [];
-        foreach ($rows as $row) {
-            if (is_array($row)) {
-                $out[] = [
-                    'text_target' => (string) ($row['text_target'] ?? ''),
-                    'text_native' => (string) ($row['text_native'] ?? ''),
-                    'pronunciation_native' => (string) ($row['pronunciation_native'] ?? ''),
-                ];
-            }
-        }
-
-        return $out;
     }
 }

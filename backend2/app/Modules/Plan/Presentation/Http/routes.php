@@ -8,6 +8,7 @@ use App\Modules\Plan\Presentation\Http\Controller\PlanController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanConversationController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanDayController;
 use App\Modules\Plan\Presentation\Http\Controller\PlanImageController;
+use App\Modules\Plan\Presentation\Http\Controller\PlanRescueAudioController;
 use Illuminate\Support\Facades\Route;
 
 // Prefixed with /api/v1 by PlanServiceProvider. The contract: docs/plan-api.md.
@@ -20,11 +21,13 @@ Route::middleware(['auth:sanctum'])->group(function (): void {
 });
 
 Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
-    // Named routes before /plans/{id}: «current», «versions», «languages» and «audio» are words, not ULIDs.
+    // Named routes before /plans/{id}: «current», «versions», «languages», «audio» and «rescue-audio» are words, not ULIDs.
     Route::get('/plans/current', [PlanController::class, 'current']);
     Route::get('/plans/versions', [PlanController::class, 'versions']);
     Route::get('/plans/languages', [PlanController::class, 'languages']);
     Route::get('/plans/audio/{audioId}', [PlanAudioController::class, 'show']);
+    // A line of the rescue kit (наряд LANG-1b §2): one file per (target, gender, voice, line), whatever the plan.
+    Route::get('/plans/rescue-audio/{key}', [PlanRescueAudioController::class, 'show'])->where('key', '[0-9a-f]{40}');
     // Both sides of a plan's pair, named (наряд LANG-1 §7): the entry screen's targets and the natives the
     // learner's own language is picked from. `/plans/languages` stays as it was for build (21).
     Route::get('/languages', [PlanController::class, 'languageOptions']);

@@ -33,7 +33,8 @@ it('builds the plan and day one at creation, and reports the versions on every a
         // Day 1's lesson is written before «Начать»; the others wait.
         ->and($plan['days'][0]['lesson_status'])->toBe('ready')
         ->and($plan['days'][1]['lesson_status'])->toBe('pending')
-        ->and(count($plan['rescue_kit']))->toBe(5)
+        // The kit of the pair ru → en (наряд LANG-1b §2): the English pack's six lines with their Russian translations.
+        ->and(array_column($plan['rescue_kit'], 'text_native'))->toBe(['Простите?', 'Можно помедленнее, пожалуйста?', 'Я не понимаю.', 'Одну минуту.', 'Можете это записать?', 'Спасибо.'])
         ->and($plan['scenes'][0]['image'])->not->toBeNull()
         ->and($plan['cover_image'])->not->toBeNull();
 

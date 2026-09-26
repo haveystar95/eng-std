@@ -6,7 +6,6 @@ namespace App\Modules\Plan\Application\Service;
 
 use App\Modules\Plan\Application\Dto\DayRouteView;
 use App\Modules\Plan\Application\Dto\DaySlotView;
-use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Dto\PlanSummaryView;
 use App\Modules\Plan\Application\Dto\PlanView;
 use App\Modules\Plan\Application\Dto\RouteStageView;
@@ -14,6 +13,7 @@ use App\Modules\Plan\Application\Dto\SceneView;
 use App\Modules\Plan\Application\Dto\VersionsView;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\LearnerGender;
+use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 use App\Modules\Plan\Application\Port\LearnerHabits;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Entity\DayCard;
@@ -49,7 +49,6 @@ final readonly class PlanViews
     public function __construct(
         private PlanModelPort $model,
         private BuildVersion $build,
-        private PlanConfig $config,
         private DayCardRepository $cards,
         private DayDealer $dealer,
         private LearnerHabits $habits,
@@ -57,6 +56,7 @@ final readonly class PlanViews
         private StagePassageRepository $passages,
         private LearnerGender $learners,
         private Paywalls $paywalls,
+        private RescueKits $rescueKits,
     ) {}
 
     public function versions(): VersionsView
@@ -126,7 +126,8 @@ final readonly class PlanViews
                 $talks[$d->id()->value] ?? null, $paywall,
             ), $plan->days()),
             scenes: array_map(fn (PlanScene $s): SceneView => $this->scene($plan, $s), $plan->scenes()),
-            rescueKit: $this->config->rescueKit,
+            // The kit of the plan's pair, in the learner's voice (наряд LANG-1b §2).
+            rescueKit: $this->rescueKits->of($plan->targetLang()->value, $plan->nativeLang()->value, $this->learners->of($plan->userId()) ?? VoiceCast::DEFAULT_LEARNER),
             costUsd: $cost,
             versions: $this->versions(),
             startedAt: $plan->startedAt()?->format(DATE_ATOM),

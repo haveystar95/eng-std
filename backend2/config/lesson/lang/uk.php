@@ -202,6 +202,10 @@ return [
     // (кадр 37-7, en «Sorry?»). Dead data: read only for a target.
     'rescue_line' => 'Перепрошую?',
 
+    // THE RESCUE KIT (наряд LANG-1b §2): the no-op — uk is only ever a learner's language here, and a kit is its TARGET's
+    // (`RescueKits`); its translations stand in the kits of the targets.
+    'rescue' => [],
+
     // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9) — the same line as every pack's, in this language (en «I see.
     // Please go on.»): the translation of the target's line for a Ukrainian learner.
     'neutral_reply' => 'Зрозуміло. Продовжуйте, будь ласка.',

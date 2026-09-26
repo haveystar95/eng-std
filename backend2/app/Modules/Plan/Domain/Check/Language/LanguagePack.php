@@ -251,6 +251,43 @@ final readonly class LanguagePack
     }
 
     /**
+     * THE RESCUE KIT OF THIS LANGUAGE AS A TARGET (наряд LANG-1b §2, key `rescue`): the six lines a learner of it says when
+     * stuck in a real talk — «Sorry?», «Could you say that more slowly, please?», «I don't understand.», «One moment.», «Can
+     * you write it down?», «Thank you.» — each in this language (`target`) with its translation into every learner's
+     * language of the plan (`native`: ru, uk, be, pl, ro, es, it, de, fr). The kit of a plan is its target's, translated
+     * into its learner's language ({@see \App\Modules\Plan\Application\Service\RescueKits}). A language that is only ever
+     * a learner's writes the no-op `[]`; a row written wrong — a text missing or blank — is a pack's bug and throws, naming
+     * the row (LanguagePacksTest holds the deployment's packs to the shape).
+     *
+     * @return list<array{target: string, native: array<string, string>}>
+     */
+    public function rescue(): array
+    {
+        $rows = $this->data['rescue'] ?? [];
+        if (! is_array($rows)) {
+            throw LanguagePackKeyMissing::of($this->code, 'rescue');
+        }
+        $out = [];
+        foreach (array_values($rows) as $index => $row) {
+            $target = is_array($row) ? ($row['target'] ?? null) : null;
+            $natives = is_array($row) ? ($row['native'] ?? null) : null;
+            if (! is_string($target) || trim($target) === '' || ! is_array($natives) || $natives === []) {
+                throw LanguagePackKeyMissing::of($this->code, "rescue.{$index}");
+            }
+            $native = [];
+            foreach ($natives as $code => $text) {
+                if (! is_string($text) || trim($text) === '') {
+                    throw LanguagePackKeyMissing::of($this->code, "rescue.{$index}.native.{$code}");
+                }
+                $native[(string) $code] = $text;
+            }
+            $out[] = ['target' => $target, 'native' => $native];
+        }
+
+        return $out;
+    }
+
+    /**
      * THE ROLE'S NEUTRAL MOVE IN THIS LANGUAGE (наряд BACK-TAILS-2 §9) — «I see. Please go on.»: what the role says when
      * its answer was nothing but the learner's words said back. Every pack writes the same line, so the target's is said
      * and the learner's is its translation. Null for a language nobody has written it for.

@@ -134,6 +134,8 @@ final readonly class BuildLessonHandler
         if ($scene->hasLesson()) {
             // The voice first: it may wait for the vendor's window, the photos never hold it up.
             $this->dispatcher->voiceScene($scene->id());
+            // The plan's rescue kit in the learner's voice — bought once for a target and a gender (наряд LANG-1b §2).
+            $this->dispatcher->voiceRescueKit($plan->id());
             $this->dispatcher->illustrateScene($scene->id());
         }
     }

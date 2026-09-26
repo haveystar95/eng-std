@@ -27,4 +27,7 @@ interface PlanDispatcher
 
     /** The server's voice for everything a scene says out loud — never holding the day back (DAY-UI-3). */
     public function voiceScene(PlanSceneId $sceneId): void;
+
+    /** The plan's rescue kit in its learner's voice, what of it is not bought yet (наряд LANG-1b §2). */
+    public function voiceRescueKit(PlanId $planId): void;
 }

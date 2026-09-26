@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Service;
 
+use App\Modules\Plan\Application\Dto\LineToSay;
 use App\Modules\Plan\Application\Dto\SceneVoiceDebt;
 use App\Modules\Plan\Application\Exception\VoiceCapReached;
 use App\Modules\Plan\Application\Port\LineSpeaker;
@@ -26,7 +27,19 @@ final readonly class VoiceCap
     /** @throws VoiceCapReached */
     public function assertRoom(SceneVoiceDebt $debt, int $spentThisRun): void
     {
-        $scene = $this->speaker->creditsFor($debt->lang, $debt->lines);
+        $this->assertRoomFor($debt->lang, $debt->lines, $spentThisRun);
+    }
+
+    /**
+     * The same cap for lines that are no scene's — the plan's rescue kit (наряд LANG-1b §2).
+     *
+     * @param  list<LineToSay>  $lines
+     *
+     * @throws VoiceCapReached
+     */
+    public function assertRoomFor(string $lang, array $lines, int $spentThisRun): void
+    {
+        $scene = $this->speaker->creditsFor($lang, $lines);
         if ($spentThisRun + $scene > $this->creditsCap) {
             throw VoiceCapReached::before($scene, $spentThisRun, $this->creditsCap);
         }

@@ -11,7 +11,8 @@ final readonly class PlanView
      * @param  list<DayRouteView>  $days
      * @param  list<SceneView>  $scenes
      * @param  array{url: string, author: string|null, author_url: string|null, tone: string|null}|null  $coverImage
-     * @param  list<array{text_target: string, text_native: string, pronunciation_native: string}>  $rescueKit
+     * @param  list<array{text_target: string, text_native: string, audio_key: string|null}>  $rescueKit  the kit of the plan's
+     *                                                                                                   pair (наряд LANG-1b §2)
      */
     public function __construct(
         public string $id,

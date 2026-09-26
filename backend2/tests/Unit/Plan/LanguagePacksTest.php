@@ -319,3 +319,37 @@ it('ends a sentence at the same four marks, of the same four kinds, in every lan
 
     expect($wrong)->toBe([]);
 });
+
+// Наряд LANG-1b §2: «набор живёт в пакете целевого языка: 6 реплик спасения на цели с переводами на все девять родных — ключ
+// rescue: [{target, native: {ru, uk, be, pl, ro, es, it, de, fr}}]». One matrix writes every pack
+// (`docs/research/lang-1b/tools/rescue-kit.py`): a line of the kit is the same meaning in every language, its first line is
+// the talk's own «Sorry?» (`rescue_line`), and a language that is only ever a learner's writes the no-op. CATCHES a target
+// with no kit (its learners would get none), a learner's language left untranslated, a line that says in one target's kit
+// what another target's kit translates otherwise, and a kit whose «Sorry?» is not the one the talk says.
+it('writes the rescue kit of every target — six lines, each translated into all nine learners\' languages, from one matrix', function () {
+    $packs = lessonPacks();
+    $natives = LanguageRoles::planNatives();
+    $meanings = [];
+    foreach (LanguageRoles::planTargets() as $target) {
+        $kit = $packs->for($target)->rescue();
+        expect($kit)->toHaveCount(6)
+            ->and($kit[0]['target'])->toBe($packs->for($target)->rescueLine());
+        foreach ($kit as $index => $row) {
+            expect(array_keys($row['native']))->toEqualCanonicalizing($natives);
+            foreach ($row['native'] as $native => $text) {
+                $meanings[$index][$native][] = $text;
+            }
+            if (in_array($target, $natives, true)) {
+                expect($row['native'][$target])->toBe($row['target']);
+            }
+        }
+    }
+    foreach ($meanings as $index => $byNative) {
+        foreach ($byNative as $native => $texts) {
+            expect(array_values(array_unique($texts)))->toHaveCount(1, "line {$index} of the kit is translated into {$native} in more than one way");
+        }
+    }
+    foreach (array_diff($natives, LanguageRoles::planTargets()) as $learnerOnly) {
+        expect($packs->for($learnerOnly)->rescue())->toBe([]);
+    }
+});

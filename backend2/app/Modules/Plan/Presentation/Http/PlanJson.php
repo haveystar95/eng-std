@@ -75,7 +75,15 @@ final class PlanJson
             'current_day' => $p->currentDay === null ? null : self::day($p->currentDay),
             'days' => array_map(self::day(...), $p->days),
             'scenes' => array_map(self::scene(...), $p->scenes),
-            'rescue_kit' => $p->rescueKit,
+            // The kit of the plan's pair (наряд LANG-1b §2): the target's lines, their translation into the learner's
+            // language, and the sound in the learner's voice once bought. No reading any more — the sound says it; the key
+            // stays null for build (21), which parses it as text.
+            'rescue_kit' => array_map(static fn (array $row): array => [
+                'text_target' => $row['text_target'],
+                'text_native' => $row['text_native'],
+                'pronunciation_native' => null,
+                'audio_url' => $row['audio_key'] === null ? null : url("/api/v1/plans/rescue-audio/{$row['audio_key']}"),
+            ], $p->rescueKit),
             'cost_usd' => $p->costUsd,
             'versions' => self::versions($p->versions),
             'started_at' => $p->startedAt,

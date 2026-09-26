@@ -205,6 +205,10 @@ return [
     // (кадр 37-7, en «Sorry?»).
     'rescue_line' => 'Простите?',
 
+    // THE RESCUE KIT (наряд LANG-1b §2): the no-op — ru is only ever a learner's language here, and a kit is its TARGET's
+    // (`RescueKits`); its translations stand in the kits of the targets.
+    'rescue' => [],
+
     // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9) — the same line as every pack's, in this language: said by the role
     // in a talk held in Russian, or the translation of the target's line for a Russian learner (en «I see. Please go on.»).
     'neutral_reply' => 'Понятно. Продолжайте, пожалуйста.',

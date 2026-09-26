@@ -11,6 +11,7 @@ use App\Modules\Plan\Infrastructure\Job\AttachPlanImagesJob;
 use App\Modules\Plan\Infrastructure\Job\BuildLessonJob;
 use App\Modules\Plan\Infrastructure\Job\BuildPlanJob;
 use App\Modules\Plan\Infrastructure\Job\IllustrateSceneJob;
+use App\Modules\Plan\Infrastructure\Job\VoiceRescueKitJob;
 use App\Modules\Plan\Infrastructure\Job\VoiceSceneJob;
 use Illuminate\Support\Facades\Log;
 
@@ -45,5 +46,16 @@ final class QueuedPlanDispatcher implements PlanDispatcher
             return;
         }
         VoiceSceneJob::dispatch($sceneId->value);
+    }
+
+    public function voiceRescueKit(PlanId $planId): void
+    {
+        // Voiced only by name (the e2e stand): the kit is not bought on its own there either (TTS-2).
+        if (VoiceDatabase::namedPlansOnly()) {
+            Log::info('rescue kit voice not queued: this database is voiced only by name', ['plan_id' => $planId->value]);
+
+            return;
+        }
+        VoiceRescueKitJob::dispatch($planId->value);
     }
 }

@@ -66,22 +66,8 @@ return [
         ],
     ],
 
-    /*
-     * THE RESCUE KIT — five phrases of the language pack, the same in every plan of that pair.
-     * A static list, not a model call: the model asked a hundred times writes them a hundred ways.
-     * Shown beside the plan; the day is not built from them.
-     */
-    'rescue_kit' => [
-        'en' => [
-            'ru' => [
-                ['text_target' => 'Could you speak more slowly, please?', 'text_native' => 'Помедленнее, пожалуйста.', 'pronunciation_native' => 'куд ю спик мор слоули плиз'],
-                ['text_target' => 'Could you write it down, please?', 'text_native' => 'Напишите, пожалуйста.', 'pronunciation_native' => 'куд ю райт ит даун плиз'],
-                ['text_target' => 'Could you repeat that, please?', 'text_native' => 'Повторите ещё раз, пожалуйста.', 'pronunciation_native' => 'куд ю рипит зэт плиз'],
-                ['text_target' => 'How much is it?', 'text_native' => 'Сколько это стоит?', 'pronunciation_native' => 'хау мач из ит'],
-                ['text_target' => 'One moment, let me check.', 'text_native' => 'Секунду, я проверю.', 'pronunciation_native' => 'уан моумент лет ми чек'],
-            ],
-        ],
-    ],
+    // THE RESCUE KIT is its target's — the pack's `rescue` key, translated into every learner's language
+    // (`config/lesson/lang/<target>.php`, наряд LANG-1b §2): no list of its own here any more.
 
     // THE LANGUAGES A PLAN MAY BE BUILT IN — the server's list, not a client constant (owner's
     // decision, PLAN-UI-3): `GET /plans/languages` hands it to the entry screen and `POST /plans`

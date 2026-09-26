@@ -10,7 +10,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 
 /**
  * The knobs of the plan, read from `config/plan.php` once by the provider: how much a lesson
- * orders per level, how long a build may take before it counts as dead, the rescue kit, the
+ * orders per level, how long a build may take before it counts as dead, the
  * languages a plan may be built in, the seconds a card of each kind takes, how long «Фразы» may take before it
  * cuts itself, how many slot-judge calls a learner has per day, and how much of a line on the screen may go
  * missing when it is said aloud.
@@ -19,7 +19,6 @@ final readonly class PlanConfig
 {
     /**
      * @param  array<string, array{vocabulary: int, dialogue: int}>  $counts  by level
-     * @param  list<array{text_target: string, text_native: string, pronunciation_native: string}>  $rescueKit
      * @param  list<string>  $languages  the EFFECTIVE plan targets — `LanguageRoles::planTargets()` narrowed by
      *                                  `plan.languages` (наряд LANG-1 §7), in the order the entry screen offers
      *                                  them; what `GET /plans/languages` lists and `POST /plans` accepts
@@ -31,7 +30,6 @@ final readonly class PlanConfig
     public function __construct(
         public array $counts,
         public int $buildStaleSeconds,
-        public array $rescueKit,
         // No default: a copy of the list here is the second place it would have to be kept in (п. 145).
         public array $languages,
         public array $pace = DayPace::DEFAULTS,

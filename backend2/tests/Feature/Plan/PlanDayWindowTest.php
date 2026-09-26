@@ -137,6 +137,19 @@ function windowVoice(string $mode = FakeSpeechSynthesizer::OK, ?SpeechBalance $b
     return $vendor;
 }
 
+/**
+ * The lines the vendor was asked for a DAY — the plan's rescue kit left out: since наряд LANG-1b §2 a lesson accepted also
+ * queues the kit's voice (six lines of the target's pack, in the learner's voice, a job of its own).
+ *
+ * @return list<App\Modules\Generation\Application\Dto\SpeechLine>
+ */
+function windowDayLines(FakeSpeechSynthesizer $vendor, string $target = 'en'): array
+{
+    $kit = array_column(lessonPacks()->for($target)->rescue(), 'target');
+
+    return array_values(array_filter($vendor->lines, static fn ($line): bool => ! in_array($line->text, $kit, true)));
+}
+
 /** The voice key a line of this speaker and gender is stored under, as the pack configures it. */
 function windowVoiceKey(string $speaker, string $gender): string
 {
@@ -410,7 +423,7 @@ it('names what the learner\'s own voice would cost, buys nothing without --apply
 
     Artisan::call('plan:revoice-learner', ['--plan' => $id, '--scene' => [$sceneId], '--apply' => true]);
     expect(Artisan::output())->toContain("файлов прежнего голоса удалено: {$male}")
-        ->and(count($vendor->lines))->toBe(40 + $male)
+        ->and(count(windowDayLines($vendor)))->toBe(40 + $male)
         ->and($files('learner', 'female'))->toBe($male)
         ->and($files('learner', 'male'))->toBe(0)
         ->and($files('partner', 'female'))->toBe($partner);
@@ -434,8 +447,10 @@ it('says every line of a day on a call of its own — each dialogue line in its 
     $partner = (string) config('generation.speech.voices.en.partner.female.voice');
     $learner = (string) config('generation.speech.voices.en.learner.male.voice');
 
-    expect($vendor->calls)->toBe(16 + 6 + 10 + 8)
-        ->and($vendor->lines)->toHaveCount(40)
+    // Every line of the day on a call of its own — and the six lines of the plan's rescue kit on a job of their own, in
+    // the learner's voice (наряд LANG-1b §2).
+    expect($vendor->calls)->toBe(16 + 6 + 10 + 8 + 6)
+        ->and(windowDayLines($vendor))->toHaveCount(40)
         ->and(array_unique(array_map(static fn ($l): string => $l->voice->model, $vendor->lines)))->toBe(['eleven_v3_conversational'])
         ->and($voiceOf('Where does it hurt: his upper back or his lower back?'))->toBe([$partner])
         ->and($voiceOf('It hurts in his lower back.'))->toBe([$learner])
@@ -519,11 +534,13 @@ it('fails the voice job with the vendor’s code when the account refuses (402),
     // The queue went on: the photo job after the voice job ran, the day is ready and opens.
     expect(DB::table('plan_scenes')->where('id', $sceneId)->value('lesson_status'))->toBe('ready')
         ->and(DB::table('plan_scenes')->where('id', $sceneId)->value('image_url'))->not->toBeNull()
-        ->and($vendor->calls)->toBe(1)
+        // One call refused for the day's voice and one for the rescue kit's (наряд LANG-1b §2) — each job stops at it.
+        ->and($vendor->calls)->toBe(2)
         ->and(DB::table('plan_line_audios')->count())->toBe(0);
     $urls = windowVoiceUrls(windowOf($this, $token, $id, 1)['program']);
     expect(array_filter(array_merge(...array_values($urls))))->toBe([]);
-    Log::shouldHaveReceived('error')->withArgs(static fn (string $message, array $context): bool => str_contains($message, 'quota_exceeded') && $context['code'] === 'quota_exceeded' && $context['scene_id'] === $sceneId);
+    // The scene's letter (the kit's job writes its own, by the plan — наряд LANG-1b §2).
+    Log::shouldHaveReceived('error')->withArgs(static fn (string $message, array $context): bool => str_contains($message, 'quota_exceeded') && $context['code'] === 'quota_exceeded' && ($context['scene_id'] ?? null) === $sceneId);
 
     // The job itself: failed with the code, never released to knock again.
     $queueJob = Mockery::mock(Job::class);
