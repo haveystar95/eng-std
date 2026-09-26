@@ -420,6 +420,10 @@ final readonly class LanguageWords
      * one thing a learner cannot do is read an alphabet they do not know («ֆоутoуз» — an Armenian ֆ and two Latin o's
      * among the Cyrillic).
      *
+     * A letter of NO writing of its own — Unicode's Common and Inherited scripts — is nobody's foreign letter (наряд
+     * LANG-1): the Ukrainian and Belarusian apostrophe ʼ (U+02BC) is a modifier LETTER to Unicode but belongs to no
+     * alphabet, and «пʼять», «інтэрвʼю» are spelled right; reading it as foreign made a correct reading FATAL.
+     *
      * @return list<string>
      */
     public function foreignLetters(string $reading): array
@@ -427,7 +431,9 @@ final readonly class LanguageWords
         $letters = $this->pack->pattern('script_letters');
         $out = [];
         foreach (preg_split('//u', $reading, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $character) {
-            if (preg_match('/^\p{L}$/u', $character) === 1 && preg_match($letters, $character) !== 1) {
+            if (preg_match('/^\p{L}$/u', $character) === 1
+                && preg_match('/^[\p{Common}\p{Inherited}]$/u', $character) !== 1
+                && preg_match($letters, $character) !== 1) {
                 $out[$character] = true;
             }
         }

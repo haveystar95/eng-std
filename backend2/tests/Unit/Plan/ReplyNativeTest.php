@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Service\ReplyNative;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 
 /**
  * THE GUARD OF THE ROLE'S TRANSLATION (наряд FIX-4c §6): «reply_native не может совпадать с reply_target (без регистра и
@@ -203,3 +204,44 @@ it('compares only packs that write their words and the very same letters', funct
         ->and(ReplyNative::missing('—', $english, new LanguagePack('pl', ['script_letters' => '/^[\p{Latin}]$/u', 'common_words' => ['nie', 'się', 'w', 'jest']])))->toBeFalse()
         ->and(ReplyNative::missing('—', $english, replyNativePacks()->for('pl')))->toBeTrue();
 });
+
+// Canon (наряд LANG-1 §5, the order's pairs on the DEPLOYED packs: `config/lesson/lang/*.php` as lessonPacks() reads them,
+// each pack told of all the others). Every line is a real line of the order's scouting run
+// (docs/research/lang-1/answers/<pair>.json), in the language the model was asked for: under the learner of the pair it
+// is the other language of the learner's letters and no translation (pl ← en, de ← fr, ru ← uk, be ← ru), and under a
+// learner of its OWN language the very same line is a translation (the reverse: fr, uk, ru, be, pl, de keep their own).
+// The tests above pin the rule on packs written for them; this one pins what the packs the plan ships say. CATCHES a
+// deployed common_words list that lost the words telling two languages apart (the other language's line kept), and one
+// that took an ordinary word of a neighbour (the language's own line refused under its own learner — «Для записи к врачу
+// приходите до двенадцати» refused for ru by a uk list writing «для», «до»).
+it('refuses the other language of the learner\'s letters and keeps it for its own learner, with the deployed packs', function (string $learner, string $language, string $line) {
+    $packs = lessonPacks();
+
+    expect(ReplyNative::missing('—', $line, $packs->for($learner)))->toBeTrue("{$learner} ← {$language}: {$line}");
+    if (in_array($language, LanguageRoles::planNatives(), true)) {
+        expect(ReplyNative::missing('—', $line, $packs->for($language)))->toBeFalse("{$language} ← {$language}: {$line}");
+    }
+})->with([
+    // pl → en: the role's English line under a Polish learner (pl-en, the receptionist).
+    'pl ← en, a question' => ['pl', 'en', 'Of course. What seems to be the problem?'],
+    'pl ← en, a request' => ['pl', 'en', 'Please bring your ID and arrive ten minutes early.'],
+    'pl ← en, a typographic apostrophe' => ['pl', 'en', 'Yes. It’s 18 Green Street.'],
+    // The Polish line itself, kept under a Polish learner (and refused under a German one).
+    'de ← pl, kept for pl' => ['de', 'pl', 'Tak, ten termin jest jeszcze wolny.'],
+    // de → fr: French under a German learner of French (ru-fr, fr-en).
+    'de ← fr' => ['de', 'fr', 'Nous avons une place demain à dix heures.'],
+    'de ← fr, with elisions' => ['de', 'fr', 'J\'ai besoin de votre nom et de votre date de naissance.'],
+    // The reverse: German under a French learner of German (ru-de), kept for a German one.
+    'fr ← de' => ['fr', 'de', 'Bitte bringen Sie Ihre Versicherungskarte mit.'],
+    'fr ← de, the de-en receptionist' => ['fr', 'de', 'Natürlich. Was ist denn das Problem?'],
+    // ru ← uk: Ukrainian under a Russian learner (uk-en), kept for a Ukrainian one.
+    'ru ← uk' => ['ru', 'uk', 'Сьогодні є записи на десяту або на третю.'],
+    'ru ← uk, a question' => ['ru', 'uk', 'Не могли б ви дати мені адресу клініки?'],
+    // The reverse: Russian under a Ukrainian learner (ru-de), kept for a Russian one.
+    'uk ← ru' => ['uk', 'ru', 'Хорошо, тогда я запишу вас на завтра на четыре.'],
+    // be ← ru: Russian under a Belarusian learner (ru-de, ru-es) — the model's likeliest slip there.
+    'be ← ru' => ['be', 'ru', 'Пожалуйста, возьмите с собой страховую карту.'],
+    'be ← ru, a question' => ['be', 'ru', 'Конечно. На какой день вам нужна запись?'],
+    // The reverse: Belarusian under a Russian learner (be-en), kept for a Belarusian one.
+    'ru ← be' => ['ru', 'be', 'У нас ёсць сёння а чацвёртай і заўтра а дзявятай.'],
+]);

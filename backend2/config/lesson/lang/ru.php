@@ -9,18 +9,57 @@ declare(strict_types=1);
 |
 | docs/plan-v2.md §4 (наряд GEN-2b). Russian is written as the LEARNER'S OWN language: the reading of the
 | target, the listening questions and their options, the native frames and fillers. The keys only a target
-| language needs (closers, the STOP LIST, articles, clauses, pronouns a frame leans on) are null — no plan has
-| Russian as the language being learnt.
+| language needs (closers, the STOP LIST, articles, clauses, pronouns a frame leans on) are written as the key
+| spec's no-ops (наряд LANG-1: no key of a pack is null) — no plan has Russian as the language being learnt
+| (LanguageRoles::planTargets()), so nothing reads them, and a no-op reads exactly as the null it replaced did. Should
+| Russian ever become a target, these no-ops are to be written for real FIRST: unlike a null, an empty list is no
+| `lang.pack_missing` skip — the check would run and quietly find nothing.
 */
 return [
-    // A reading of the target is written in Cyrillic letters, digits, punctuation, whitespace and the stress
-    // mark U+0301 — nothing else («пáспорт» with a Latin «á» leaves the script).
-    'script' => '/^[\p{Cyrillic}\p{N}\p{P}\s\x{0301}]*$/u',
+    // A reading of the target is written in the letters of the RUSSIAN alphabet, digits, punctuation, whitespace and the
+    // stress mark U+0301 — nothing else («пáспорт» with a Latin «á» leaves the script). The strict alphabet since the
+    // order's update to LANG-1 («`script` — the STRICT alphabet of the language»): a reading with a Ukrainian «і», «ї», «є»,
+    // «ґ» or a Belarusian «ў» is Cyrillic and readable — `script_letters` below passes it, nothing fails — but it is not
+    // Russian spelling, and `pronunciation.script` (a warning) says so. Not one reading of the six ru→X scouting days reads
+    // differently for it.
+    'script' => '/^[а-яА-ЯёЁ\p{N}\p{P}\s\x{0301}]*$/u',
 
     // One LETTER of a reading, matched alone: only these are the learner's own alphabet. A letter that is not one
     // of them is fatal, not untidy — «ֆоутoуз» cannot be read at all. Spaces, hyphens, apostrophes and the slot's
     // underscores are no letters and are not matched here.
     'script_letters' => '/^[\p{Cyrillic}]$/u',
+
+    // FREQUENT AND DISTINCTIVE (наряд LANG-1 §5, `common_words`): the words Russian lines are full of that are NO ordinary
+    // word, in the same spelling, of the other Cyrillic languages of the plan (uk, be). The order said «the 30 most frequent
+    // words»; the list is «frequent and distinctive» on purpose. The guard of the role's translation
+    // ({@see \App\Modules\Plan\Domain\Service\ReplyNative}) reads a Russian learner's grey line against Ukrainian and
+    // Belarusian, and a Ukrainian or Belarusian learner's against Russian: a word both languages say, sitting in one list
+    // only, counts as the other language inside the learner's own line, and two such words refuse an honest translation
+    // (a probe refused «Для записи к врачу приходите до двенадцати» for ru because a uk list held «для» and «до»; the same
+    // mistake here would refuse Ukrainian and Belarusian lines). So the words a neighbour spells alike are left out — both
+    // say «для», «до», «на», «не», «я», «а», «у», «так», «за», «без», «вас», «вам», «нас», «ваш», «ваша», «ваше», «наш»,
+    // «через», «десять», «два», «три»; uk «в», «о», «по», «при», «же», «уже», «все», «завтра», «хочу», «можете», «будете»,
+    // «них», «давно», «приходите» (uk «ви приходите»), «простите» (uk «ви простите», future), «потом» (uk «потом» — with
+    // sweat); be «мы», «вы», «ты», «мне», «мой», «свой», «да», «бы», «была», «было» — and «к», «от», «но», «ли», «ей»,
+    // colloquial or rare in a neighbour, to be safe. «её», «ещё», «неё» are written both ways: models write them with «е»
+    // as often; «всё» only with «ё», since «все» is Ukrainian.
+    //
+    // WHY THE LIST IS LONGER THAN THIRTY: this list is what tells a RUSSIAN line under a Ukrainian or Belarusian learner —
+    // the likeliest wrong language of a mini model's «translation» for them — and the guard needs two of its words in a
+    // line. With the first forty-four words, 31 of the 46 partner lines of the scouting days (ru-pl … ru-fr), sent as a
+    // Ukrainian learner's translation, passed; with the second block (the pronoun and demonstrative forms, «сегодня»,
+    // «тогда», «хотите», «понятно», «отлично», «здравствуйте»…) 20 do, and none of the 92 Ukrainian and 89 Belarusian
+    // strings of uk-en and be-en is refused. One run of letters each, lower case.
+    'common_words' => [
+        'что', 'это', 'этот', 'эти', 'как', 'он', 'она', 'они', 'его', 'её', 'ее', 'ему', 'их', 'меня', 'и', 'с',
+        'из', 'чтобы', 'нет', 'есть', 'будет', 'может', 'можно', 'нужно', 'очень', 'ещё', 'еще', 'только', 'где',
+        'когда', 'если', 'или', 'сейчас', 'здесь', 'тоже', 'вот', 'какой', 'какая', 'какие', 'сколько', 'хорошо',
+        'конечно', 'пожалуйста', 'спасибо',
+        'эта', 'эту', 'этой', 'этого', 'него', 'неё', 'нее', 'ваши', 'кто', 'чем', 'чём', 'какое', 'какую',
+        'какому', 'каком', 'который', 'которая', 'которые', 'всё', 'был', 'были', 'будут', 'могу', 'хотите',
+        'сегодня', 'тогда', 'сначала', 'после', 'раньше', 'также', 'почему', 'куда', 'ничего', 'нибудь', 'нельзя',
+        'значит', 'понятно', 'понимаю', 'отлично', 'здравствуйте', 'извините', 'скажите',
+    ],
 
     'sentence_ends' => ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'],
 
@@ -29,8 +68,8 @@ return [
     // sentence.
     'abbreviations' => ['т. е.', 'т. д.', 'т. п.', 'г.', 'ул.'],
 
-    // The word order of a question — a target-language key, not written for Russian.
-    'question_word_order' => null,
+    // The word order of a question — a target-language key: the no-op, a question is its mark.
+    'question_word_order' => ['auxiliaries' => [], 'subjects' => []],
 
     // Words that carry no content of their own — what a listening question and a line of the visit may share
     // without being about the same thing.
@@ -72,7 +111,12 @@ return [
         'тысяча' => '1000', 'тысячи' => '1000', 'тысяч' => '1000', 'тысячу' => '1000',
         'миллион' => '1000000', 'миллиона' => '1000000', 'миллионов' => '1000000',
     ],
-    'number_joiners' => null,
+
+    // No joiner, after a scale or after a tens word («сто двадцать», «двадцать пять»; наряд LANG-1 §4) — the keys'
+    // no-ops (the first was null; key spec §3.9: «ru: null → пишите []»). Read by the speech of a TARGET only, and Russian
+    // is never one: dead data here.
+    'number_joiners' => [],
+    'number_tens_joiners' => [],
 
     // Two forms of one word in an inflected language: both at least four letters, sharing all but the last two
     // letters of the shorter («пояснице» — «поясница», «неделю» — «неделя»). One letter is no content word.
@@ -94,19 +138,25 @@ return [
     // («Неделе»), so the option grows to the left over these words. Read only to the left, and only next to the value.
     'amount_prefix' => '/^(?:на|в|во|за|через|до|после|с|со|по|около|примерно|спустя|этой|этот|эту|эти|этим|этих|прошл\w*|следующ\w*|ближайш\w*|т[ое]й|кажд\w*)$/u',
 
-    // Target-language keys: not written for Russian.
-    'everyday_words' => null,
-    'ordinary_heads' => null,
-    'closers' => null,
-    'saying_verbs' => null,
-    'alternative_words' => null,
-    'second_question_pattern' => null,
-    'articles' => null,
-    'dangling_words' => null,
-    'seam_repeatable_words' => null,
-    'article_sound' => null,
-    'clause' => null,
-    'unresolved_pronouns' => null,
+    // Target-language keys — the key spec's no-ops (they were null): Russian is never taught, nothing reads them.
+    'everyday_words' => [],
+    'ordinary_heads' => [],
+    'closers' => [],
+    'saying_verbs' => [],
+    'alternative_words' => [],
+    'second_question_pattern' => '/(?!)/u',
+    'articles' => [],
+    'dangling_words' => [],
+    'seam_repeatable_words' => [],
+    'article_sound' => [
+        'before_vowel' => '', 'before_consonant' => '',
+        'vowel' => '/(?!)/u', 'consonant' => '/(?!)/u', 'spelled' => '/(?!)/u', 'exception' => '/(?!)/u',
+    ],
+    'clause' => ['subjects' => [], 'finite' => [], 'contractions' => [], 'subordinators' => [], 'subordinators_before_subject' => []],
+    'unresolved_pronouns' => [
+        'words' => [], 'frame_initial_subject' => [], 'existential' => [], 'determiner_or_number' => [], 'partitive' => [],
+        'be_forms' => [], 'determiners' => [],
+    ],
 
     // A past-tense form right after «я» (a «не», «уже», «раньше», «тоже», «сам», «сама», «давно», «недавно» may
     // stand between) — the learner's gender said in their own line while it is unknown.
@@ -158,6 +208,11 @@ return [
     // THE ROLE'S NEUTRAL MOVE (наряд BACK-TAILS-2 §9) — the same line as every pack's, in this language: said by the role
     // in a talk held in Russian, or the translation of the target's line for a Russian learner (en «I see. Please go on.»).
     'neutral_reply' => 'Понятно. Продолжайте, пожалуйста.',
+
+    // THE TITLE OF A TALK (наряд LANG-1 §6): the no-op. A Russian title declines its roles — «Поговори с администратором и
+    // врачом» — and that is the code's (`NativeStrings::TALK_TITLE`, `InstrumentalRole`), whatever the pack says; a
+    // neutral template is for the natives whose declension the code does not know.
+    'talk_title_template' => [],
 
     // THE JUDGE OF THE TALK'S CONSTRUCTIONS (наряд FIX-4 §2; en has them written): Russian has no contractions to spell
     // out, and nobody has written its opening words, the words its clauses open with (FIX-4b §1), negation or partitive

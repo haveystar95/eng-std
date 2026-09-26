@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
+use App\Modules\Plan\Domain\Service\NativeStrings;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 
 /**
  * THE REGISTRY OF LANGUAGE PACKS WIRES THE NEIGHBOURS (наряд LANG-1 §5): every pack it hands out knows what the other packs
@@ -136,6 +138,181 @@ it('writes every deployed talk title template the way the title reads it', funct
             }
             if (! is_string($word) || trim($word) === '') {
                 $wrong[] = "{$code}: and_before «{$pattern}» says no word";
+            }
+        }
+    }
+
+    expect($wrong)->toBe([]);
+});
+
+/**
+ * The script each language of the plan is written in (наряд LANG-1 §5; `docs/research/lang-1/pack-keys.md` §3.2): the
+ * only thing a test cannot read from the packs themselves, since the letters are what is being checked.
+ *
+ * @return array<string, string> code → script
+ */
+function deployedPackScripts(): array
+{
+    $scripts = [];
+    foreach (array_unique([...LanguageRoles::planTargets(), ...LanguageRoles::planNatives()]) as $code) {
+        $scripts[$code] = in_array($code, ['ru', 'uk', 'be'], true) ? 'cyrillic' : 'latin';
+    }
+
+    return $scripts;
+}
+
+// Canon (LANG-1 §4.6): «no key may be null — null counts lang.pack_missing»; a rule a language has no use for is written as
+// its no-op. The one null a pack may hold is `negation.after`, which is a value there («the negation may stand anywhere»,
+// pack-keys §4.3). CATCHES a key left null in any deployed pack — a check skipped on every day of its pairs — and a null
+// field inside a key, which the readers take for «not written» too.
+it('writes no key of a deployed pack as null', function () {
+    $nulls = [];
+    $walk = static function (mixed $value, string $path) use (&$walk, &$nulls): void {
+        if ($value === null && ! str_ends_with($path, 'negation.after')) {
+            $nulls[] = $path;
+        }
+        if (is_array($value)) {
+            foreach ($value as $key => $inner) {
+                $walk($inner, "{$path}.{$key}");
+            }
+        }
+    };
+    foreach (deployedLanguagePacks() as $code => $pack) {
+        foreach ($pack as $key => $value) {
+            $walk($value, "{$code}.{$key}");
+        }
+    }
+
+    expect($nulls)->toBe([]);
+});
+
+// Canon (LANG-1, the main session's update to the key spec): `script_letters` is EXACTLY '/^[\p{Latin}]$/u' for a Latin
+// language and EXACTLY '/^[\p{Cyrillic}]$/u' for a Cyrillic one — the guard of the translation finds a learner's
+// neighbours by comparing the strings, and `pronunciation.foreign_script` is fatal, so a pattern of the language's own
+// alphabet would fail a valid day on one borrowed letter. Every language of the plan writes it, English too (a neighbour,
+// never a learner). CATCHES a pack that writes an equivalent pattern in other words (it would be nobody's neighbour), a
+// strict alphabet in place of the script, and a language of the plan with no letters at all.
+it('writes the one letters pattern of its script, exactly, for every language of the plan', function () {
+    $packs = new LanguagePacks(deployedLanguagePacks());
+    $reference = ['latin' => '/^[\p{Latin}]$/u', 'cyrillic' => '/^[\p{Cyrillic}]$/u'];
+    $wrong = [];
+    foreach (deployedPackScripts() as $code => $script) {
+        $letters = $packs->for($code)->asNeighbour()['script_letters'];
+        if ($letters !== $reference[$script]) {
+            $wrong[] = "{$code}: ".var_export($letters, true)." — not the {$script} reference";
+        }
+    }
+
+    expect($wrong)->toBe([]);
+});
+
+// Canon (LANG-1, the update to `common_words`): each entry is ONE run of letters, lower-case, as LanguagePack::normal() keeps
+// it — the pack is read as written by nobody else, so an entry in capitals or with an apostrophe is one the guard never
+// meets —, and every language of the plan writes some. CATCHES «Sie», «c'est», «il y a» written in a list, and a language
+// of the plan whose words tell it from nobody.
+it('writes every frequent word as the guard meets it, and a list for every language of the plan', function () {
+    $written = deployedLanguagePacks();
+    $wrong = [];
+    foreach ($written as $code => $pack) {
+        foreach (is_array($pack['common_words'] ?? null) ? $pack['common_words'] : [] as $word) {
+            if (! is_string($word) || preg_match('/^[\p{L}\p{M}]+$/u', $word) !== 1 || LanguagePack::normal($word) !== $word) {
+                $wrong[] = "{$code}: ".var_export($word, true);
+            }
+        }
+    }
+    $packs = new LanguagePacks($written);
+    foreach (array_keys(deployedPackScripts()) as $code) {
+        if ($packs->for($code)->commonWords() === []) {
+            $wrong[] = "{$code}: no common_words";
+        }
+    }
+
+    expect($wrong)->toBe([]);
+});
+
+// Canon (LANG-1, the update to `common_words`): «frequent AND distinctive — not an ordinary word (same spelling) in ANY
+// same-script neighbour». A word two neighbours both list is an ordinary word of each — and the guard drops it from the
+// comparison of the two, so it tells them apart from nobody but a third language, where it counts for one of them only.
+// CATCHES the same word written into two lists of one script («для» in ru and uk: a Russian line with «для» and «до» read
+// as Ukrainian, the probe of the order).
+it('keeps the frequent words of two packs in the same letters apart', function () {
+    $packs = new LanguagePacks(deployedLanguagePacks());
+    $shared = [];
+    foreach ($packs->codes() as $one) {
+        foreach ($packs->codes() as $other) {
+            $letters = $packs->for($one)->asNeighbour()['script_letters'];
+            if ($one >= $other || $letters === null || $letters !== $packs->for($other)->asNeighbour()['script_letters']) {
+                continue;
+            }
+            $both = array_values(array_intersect($packs->for($one)->commonWords(), $packs->for($other)->commonWords()));
+            if ($both !== []) {
+                $shared[] = "{$one} ∩ {$other}: ".implode(', ', $both);
+            }
+        }
+    }
+
+    expect($shared)->toBe([]);
+});
+
+// Canon (LANG-1, key `talk_title_template`): every learner's language whose declension the code does not know writes the
+// template (be pl ro es it de fr), the three the code titles itself (ru, uk; en is never a learner) write the no-op, and
+// the title built from a template names every role, joins the last two with the language's «and» and falls back to its
+// «anyone» with no roles. CATCHES a learner's language whose talks would be titled in English, a ru/uk template that
+// would shadow the declension, and a template whose title loses a role.
+it('writes a talk title template for every learner\'s language the code does not decline, and titles every role with it', function () {
+    $packs = new LanguagePacks(deployedLanguagePacks());
+    $wrong = [];
+    foreach (['ru', 'uk', 'en'] as $code) {
+        if ($packs->for($code)->talkTitleTemplate() !== null) {
+            $wrong[] = "{$code}: writes a template the code does not read";
+        }
+    }
+    foreach (array_diff(LanguageRoles::planNatives(), ['ru', 'uk']) as $code) {
+        $pack = $packs->for($code);
+        $template = $pack->talkTitleTemplate();
+        if ($template === null) {
+            $wrong[] = "{$code}: no template";
+
+            continue;
+        }
+        $title = (new NativeStrings($code))->talkTitle(['Alpha', 'Beta', 'MRI'], $pack);
+        foreach (['lpha', 'eta', 'MRI', ' '.$template['and'].' '] as $part) {
+            if (! str_contains($title, $part)) {
+                $wrong[] = "{$code}: «{$title}» lacks «{$part}»";
+            }
+        }
+        if ((new NativeStrings($code))->talkTitle([], $pack) !== $template['anyone']) {
+            $wrong[] = "{$code}: no roles is not «{$template['anyone']}»";
+        }
+    }
+
+    expect($wrong)->toBe([]);
+});
+
+// Canon (pack-keys §3.3, `frame.native_punct`): the kind a target frame ends with is compared with the kind its native frame
+// ends with — across two packs —, and `exchange.second_question` (fatal) asks for the kind `question`. So every language of
+// the plan names the four marks every language here ends a sentence with by the same four kinds, and no other kind. CATCHES
+// a pack that calls «…» a statement (every frame ending in it «punctuated differently» from its translation), one that
+// leaves «?» out (no question seen, the fatal check blind) and a kind misspelt.
+it('ends a sentence at the same four marks, of the same four kinds, in every language of the plan', function () {
+    $written = deployedLanguagePacks();
+    $kinds = ['.' => 'statement', '?' => 'question', '!' => 'exclamation', '…' => 'ellipsis'];
+    $wrong = [];
+    foreach (array_keys(deployedPackScripts()) as $code) {
+        $ends = $written[$code]['sentence_ends'] ?? null;
+        if (! is_array($ends)) {
+            $wrong[] = "{$code}: no sentence_ends";
+
+            continue;
+        }
+        foreach ($kinds as $mark => $kind) {
+            if (($ends[$mark] ?? null) !== $kind) {
+                $wrong[] = "{$code}: «{$mark}» is not «{$kind}»";
+            }
+        }
+        foreach ($ends as $mark => $kind) {
+            if (! in_array($kind, $kinds, true)) {
+                $wrong[] = "{$code}: «{$mark}» is of an unknown kind ".var_export($kind, true);
             }
         }
     }

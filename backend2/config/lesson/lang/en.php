@@ -13,18 +13,49 @@ declare(strict_types=1);
 | it does not run and counts `lang.pack_missing`; it never borrows another language's words.
 |
 | English is written as a TARGET language: what the learner says and hears. The keys only a learner's own
-| language needs (`script`, `time_pattern`, `gendered_past_pattern`, `agreement`) are null — no plan has
-| English as the learner's language.
+| language needs (`script`, `time_pattern`, `amount_pattern`, `amount_prefix`, `gendered_past_pattern`,
+| `agreement`) are written as the key spec's no-ops (наряд LANG-1: no key of a pack is null) — no plan has English
+| as the learner's language (LanguageRoles::planNatives()), so nothing reads them, and a no-op reads exactly as the
+| null it replaced did.
 |
 | Every list is a counter's reading of a rule, not the rule: the codes built on them are heuristics and the
 | canon names them so.
 */
 return [
-    // The writing a reading of the target is spelled in — read only when this is the learner's language.
-    'script' => null,
+    // The writing a reading of the target is spelled in — read only when this is the learner's language, and English
+    // never is: English's own alphabet, digits, marks, spaces and the stress mark, written for completeness (наряд LANG-1:
+    // `script` is the STRICT alphabet, `script_letters` the whole writing).
+    'script' => '/^[A-Za-z\p{N}\p{P}\s\x{0301}]*$/u',
 
-    // One letter of that writing, matched alone — a native-side key (наряд BACK-TAILS-1 §3.2).
-    'script_letters' => null,
+    // One letter of the LATIN writing, matched alone (наряд LANG-1 §5). English is nobody's own language, so no reading
+    // is ever checked against it (`pronunciation.foreign_script` reads the learner's pack, and the learner is never
+    // English); it is written for the OTHER packs: two languages are neighbours exactly when their packs write this very
+    // string, and the guard of the role's translation ({@see \App\Modules\Plan\Domain\Service\ReplyNative}) tells a
+    // Polish, Romanian, Spanish, Italian, German or French learner's grey line from an English one only when English says
+    // it writes Latin letters. The key spec's reference string, character for character — any other spelling of the same
+    // letters makes English nobody's neighbour.
+    'script_letters' => '/^[\p{Latin}]$/u',
+
+    // FREQUENT AND DISTINCTIVE (наряд LANG-1 §5, `common_words`): some forty words English lines are full of that are NO
+    // ordinary word, in the same spelling, of any other Latin language of the plan (pl ro es it de fr). The order said «the
+    // 30 most frequent words»; the list is «frequent and distinctive» on purpose. The guard reads a learner's grey line
+    // against EVERY neighbour, and a word that is also an ordinary word of the learner's own language, but sits in
+    // English's list only, counts as English inside the learner's own line — two such words and an honest translation is
+    // refused (a probe refused «Для записи к врачу приходите до двенадцати» for ru because a uk list held «для» and «до»).
+    // So the most frequent English words another language of the plan spells alike are left out — «a», «i», «in», «to»,
+    // «on», «do», «go», «so», «no», «me», «my», «we», «he», «by», «am», «an», «as», «or», «but», «also», «her», «was»,
+    // «will», «are», «has», «not», «don», «come», «still», «bring», «name» (pl «to», «my», «go», «we», «do»; ro «are»,
+    // «am»; es «has», «he», «me», «don»; it «so», «do», «come»; de «was», «will», «also», «her», «Not», «still», «bring»,
+    // «Name»; fr «on», «or», «as», «but») — and «okay», «sorry», «hello», which every language says. «today» and
+    // «tomorrow» are here because the role's lines say them all the time: without them «We have 10 a.m. today or 3 p.m.
+    // tomorrow.», sent back as its «translation», held one listed word and passed. One run of letters each, lower case: the
+    // guard splits a line on everything else, the apostrophe too («don't» is «don», «t»; «you're» is «you», «re»).
+    'common_words' => [
+        'the', 'you', 'your', 'is', 'it', 'and', 'of', 'for', 'with', 'this', 'that', 'have', 'had', 'been',
+        'does', 'did', 'can', 'could', 'would', 'should', 'need', 'like', 'what', 'which', 'how', 'when', 'where',
+        'there', 'here', 'about', 'from', 'before', 'at', 'some', 'yes', 'please', 'thank', 'she', 'they',
+        'today', 'tomorrow',
+    ],
 
     // The marks a sentence ends with, and what each says. «Does it end with a question?», «how many
     // sentences?», «does the native frame end the way the target frame ends?» are asked with these.
@@ -94,6 +125,10 @@ return [
     // (наряд LANG-1 §4): after a tens word «and» starts the next number — «between twenty and one hundred» is 20 and 100.
     'number_joiners' => ['and'],
 
+    // …and none after a tens word (наряд LANG-1 §4): the key's no-op, written — «between twenty and one hundred» stays two
+    // numbers, and the phone is served the very speech block it was before the key existed (an empty list goes out as none).
+    'number_tens_joiners' => [],
+
     // Two forms of one word: the shorter's letters but its last `stem_tail`, never fewer than `stem_min`, shared
     // from the start («heat» — «heating», «use» — «used»). A content word is at least `content_min_letters` long.
     'word_forms' => ['stem_min' => 3, 'stem_tail' => 3, 'content_min_letters' => 1],
@@ -102,13 +137,16 @@ return [
     // («thirty-nine»).
     'number_pattern' => '/\d|^(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|half|dozen|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|once|twice)(?:-(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|half|dozen|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|once|twice))*$/u',
 
-    // Time words of the learner's language, for «is this answer a number or a time» — a native-side key.
-    'time_pattern' => null,
+    // Time words of the learner's language, for «is this answer a number or a time» — a native-side key. The no-op, never
+    // matching: English is nobody's own language, and a target's time words would change which line «Поймай число» picks
+    // (key spec §3.12) — so, as when this key was null, a time is only what `number_pattern` calls a number.
+    'time_pattern' => '/(?!)/u',
 
     // The units an amount is counted in, and what carries one — native-side keys: what «Поймай число» may offer as
-    // an option, and in what form.
-    'amount_pattern' => null,
-    'amount_prefix' => null,
+    // an option, and in what form. No-ops, never matching (they were null): only a numeral is an amount, nothing grows
+    // to its left.
+    'amount_pattern' => '/(?!)/u',
+    'amount_prefix' => '/(?!)/u',
 
     // The prompt's STOP LIST (numbers, family, time words, colours, be / have / go) and plain words a learner
     // knows at any level of the plan: not vocabulary.
@@ -169,15 +207,17 @@ return [
     'seam_repeatable_words' => ['in', 'on', 'out', 'off', 'up', 'down', 'over', 'back', 'away', 'through', 'around', 'by', 'that', 'had'],
 
     // The article that changes with the next word's sound, and how the sound is read off the spelling. An
-    // initialism is read by its letters («an MRI», «an X-ray») and «one» starts with a «w»: both left alone;
-    // «u» and «h» are left alone too («a university», «an hour»).
+    // initialism is read by its letters («an MRI», «an X-ray») and «one», «once» start with a «w», «eu» with a «y»
+    // («a one-way ticket», «a once-daily tablet», «a euro account», «a European health insurance card» — every one of
+    // them a FATAL `filler.ungrammatical` at the seam of «… a ___» before the review of LANG-1): all left alone; «u» and
+    // «h» are left alone too («a university», «an hour»).
     'article_sound' => [
         'before_vowel' => 'an',
         'before_consonant' => 'a',
         'vowel' => '/^[aeio]/u',
         'consonant' => '/^[bcdfgjklmnpqrstvwyz]/u',
         'spelled' => '/^(?:[A-Z]{2,}|[A-Z]-)/u',
-        'exception' => '/^one/u',
+        'exception' => '/^(?:one|once|eu)/u',
     ],
 
     // A clause where a value should stand. `subjects` + `finite` at the start of a filler, or a contraction
@@ -207,9 +247,11 @@ return [
         'determiners' => ['the', 'a', 'an', 'my', 'your', 'his', 'her', 'our', 'their', 'this', 'these', 'those'],
     ],
 
-    // Learner's-language keys: a gendered past form after «I», words that agree with the slot.
-    'gendered_past_pattern' => null,
-    'agreement' => null,
+    // Learner's-language keys: a gendered past form after «I», words that agree with the slot. English says neither
+    // (an English past has no gender, an English determiner does not agree) and is nobody's own language: the key spec's
+    // no-ops, never read.
+    'gendered_past_pattern' => '/(?!)/u',
+    'agreement' => ['words' => [], 'short_forms' => [], 'suffixes_before_slot' => [], 'min_letters' => 99, 'after_slot_words' => 0],
 
     // «НЕ ПОНЯЛ» НА ЯЗЫКЕ ЦЕЛИ (наряд CONV-2, п. 4а): what a rescue move of the talk says in the learner's own bubble —
     // кадр 37-7 draws «Sorry?» there, and a rescue used to come with no words at all. One short line a learner says
@@ -220,6 +262,10 @@ return [
     // but the learner's own words said back — one short line that keeps the scene going and says nothing of its own.
     // Every pack writes the same line in its own language: the target's is said, the learner's is its translation.
     'neutral_reply' => 'I see. Please go on.',
+
+    // THE TITLE OF A TALK (наряд LANG-1 §6): the no-op. An English title is the code's (`NativeStrings::TALK_TITLE`, «Talk
+    // to the receptionist and the doctor»), whatever the pack says — no template of a pack is ever read for English.
+    'talk_title_template' => [],
 
     // THE FORMS OF ONE WORD (наряд BACK-TAILS-2 §2): «did the learner use the phrase» is read off the phrase's KEY WORDS,
     // and a word said in another form is the same word — «works» for «work», «bought» for «buy». A word's bases are the

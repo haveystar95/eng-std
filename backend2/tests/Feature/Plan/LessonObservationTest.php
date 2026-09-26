@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
@@ -208,6 +209,12 @@ it('asks the seam judge once a day with every native sentence of the lesson, and
 it('builds a day for a learner whose language has no rules yet, skipping and counting what it cannot check', function () {
     [$user, $token] = planLearner();
     DB::table('profiles')->where('user_id', $user->id)->update(['native_language' => 'ro']);
+    // Since наряд LANG-1 every plan native has a pack and a native outside the list is refused (422
+    // language_pair_invalid), so «a language with no rules yet» is only reachable by leaving its pack out of the
+    // registry — the case this canon keeps: a pack that is missing is skipped and counted, never guessed at.
+    $packs = (array) config('lesson.lang');
+    unset($packs['ro']);
+    app()->instance(LanguagePacks::class, new LanguagePacks($packs));
     $fake = new FakePlanModel(lesson: static function ($request): array {
         $p = planCleanLesson($request);
         $p['vocabulary'][1]['pronunciation_native'] = 'șarp';
