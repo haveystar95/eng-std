@@ -1,0 +1,1188 @@
+{
+    "pair": "pl-en",
+    "native": "pl",
+    "target": "en",
+    "database": "wordtrainer_e2e_test",
+    "email": "qa-lang1-live-pl-en-0926@wt.test",
+    "user_id": "01M3DGPMXF1MKGXDBEB32TFM56",
+    "plan_id": "01M3DGPN35MXD4HJEF9B5H1868",
+    "goal": "Zapisuję się do lekarza: od trzech dni boli mnie gardło i mam gorączkę. Muszę wybrać dogodny termin i wyjaśnić, co mi dolega",
+    "dumped_at": "2026-09-26T00:18:38Z",
+    "server": {
+        "create": {
+            "pid": 25696,
+            "processes": 5,
+            "docroot": "/wt/public",
+            "max_execution_time_0": true,
+            "DB_DATABASE": "wordtrainer_e2e_test",
+            "QUEUE_CONNECTION": "sync",
+            "CACHE_STORE": "array",
+            "SPEECH_ENABLED": false,
+            "PLAN_MODEL_DRIVER": "(по умолчанию)",
+            "IMAGE_DRIVER": "(по умолчанию)",
+            "PLAN_SLOT_JUDGE_QUOTA_STORE": "array"
+        },
+        "dump": {
+            "pid": 26003,
+            "processes": 5,
+            "docroot": "/wt/public",
+            "max_execution_time_0": true,
+            "DB_DATABASE": "wordtrainer_e2e_test",
+            "QUEUE_CONNECTION": "sync",
+            "CACHE_STORE": "array",
+            "SPEECH_ENABLED": true,
+            "PLAN_MODEL_DRIVER": "(по умолчанию)",
+            "IMAGE_DRIVER": "(по умолчанию)",
+            "PLAN_SLOT_JUDGE_QUOTA_STORE": "array"
+        }
+    },
+    "create": {
+        "started_at": "2026-09-26T00:09:07Z",
+        "started_epoch": 1790381347.893609,
+        "languages_offered": {
+            "target": true,
+            "native": true
+        },
+        "profile": {
+            "native_language": "pl",
+            "target_language": "en",
+            "timezone": "Europe/Kyiv",
+            "gender": null
+        },
+        "pack_missing_before": [
+            {
+                "prompt_version": "lesson_day.v4.5",
+                "action": "counted",
+                "hits": 14,
+                "updated_at": "2026-09-15 17:04:38+00"
+            },
+            {
+                "prompt_version": "lesson_day.v4.7",
+                "action": "counted",
+                "hits": 174,
+                "updated_at": "2026-09-25 21:09:20+00"
+            }
+        ],
+        "post": {
+            "status": 202,
+            "seconds": 53.0,
+            "code": null,
+            "error": null,
+            "data": {
+                "id": "01M3DGPN35MXD4HJEF9B5H1868",
+                "status": "ready",
+                "unclear_reason": null,
+                "fail_reason": null,
+                "scenes_count": 2,
+                "cost_usd": "0.012336",
+                "latency_ms": 8090,
+                "attempts": 1,
+                "versions": {
+                    "build": "unknown",
+                    "prompt_plan": "plan-builder-v2",
+                    "prompt_lesson": "lesson_day.v4.8"
+                }
+            }
+        },
+        "finished_at": "2026-09-26T00:10:01Z",
+        "plan_seconds": 53.1,
+        "day1_seconds": 53.2,
+        "pack_missing_after": [
+            {
+                "prompt_version": "lesson_day.v4.5",
+                "action": "counted",
+                "hits": 14,
+                "updated_at": "2026-09-15 17:04:38+00"
+            },
+            {
+                "prompt_version": "lesson_day.v4.7",
+                "action": "counted",
+                "hits": 174,
+                "updated_at": "2026-09-25 21:09:20+00"
+            }
+        ],
+        "pack_missing_delta": [
+            {
+                "prompt_version": "lesson_day.v4.5",
+                "action": "counted",
+                "before": 14,
+                "after": 14,
+                "delta": 0
+            },
+            {
+                "prompt_version": "lesson_day.v4.7",
+                "action": "counted",
+                "before": 174,
+                "after": 174,
+                "delta": 0
+            }
+        ],
+        "other_builds_in_window": [],
+        "build": {
+            "id": "01M3DGPN35MXD4HJEF9B5H1868",
+            "status": "ready",
+            "unclear_reason": null,
+            "fail_reason": null,
+            "scenes_count": 2,
+            "cost_usd": "0.012336",
+            "latency_ms": 8090,
+            "attempts": 1,
+            "versions": {
+                "build": "unknown",
+                "prompt_plan": "plan-builder-v2",
+                "prompt_lesson": "lesson_day.v4.8"
+            }
+        },
+        "plan_status": "ready",
+        "plan_row": {
+            "status": "ready",
+            "native_lang": "pl",
+            "target_lang": "en",
+            "prompt_version_plan": "plan-builder-v2",
+            "model_plan": "gpt-5.4-2026-03-05",
+            "cost_usd_plan": "0.012336",
+            "latency_ms_plan": 8090,
+            "attempts_plan": 1,
+            "fail_reason": null,
+            "unclear_reason": null
+        },
+        "days": [
+            {
+                "number": 1,
+                "type": "scene",
+                "status": "locked",
+                "lesson_status": "failed",
+                "title_native": "Rejestracja",
+                "title_target": "Reception desk"
+            },
+            {
+                "number": 2,
+                "type": "scene",
+                "status": "locked",
+                "lesson_status": "pending",
+                "title_native": "U lekarza",
+                "title_target": "Doctor visit"
+            },
+            {
+                "number": 3,
+                "type": "rehearsal",
+                "status": "locked",
+                "lesson_status": null,
+                "title_native": null,
+                "title_target": null
+            }
+        ],
+        "scenes": [
+            {
+                "id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+                "order": 1,
+                "kind": "situation",
+                "day_number": 1,
+                "title_native": "Rejestracja",
+                "title_target": "Reception desk",
+                "partner_role_native": "Recepcjonista",
+                "partner_role_target": "Receptionist",
+                "lesson_status": "failed",
+                "lesson_fail_reason": "fatal: options.form_mismatch",
+                "prompt_version": "lesson_day.v4.8",
+                "cost_usd": "0.113829",
+                "image": true
+            },
+            {
+                "id": "01M3DGPX12X5PESMT41KW1Q5JM",
+                "order": 2,
+                "kind": "situation",
+                "day_number": 2,
+                "title_native": "U lekarza",
+                "title_target": "Doctor visit",
+                "partner_role_native": "Lekarz",
+                "partner_role_target": "Doctor",
+                "lesson_status": "pending",
+                "lesson_fail_reason": null,
+                "prompt_version": null,
+                "cost_usd": null,
+                "image": true
+            }
+        ],
+        "day1": {
+            "lesson_status": "failed",
+            "fail_reason": "fatal: options.form_mismatch",
+            "scene_id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+            "scene_row": {
+                "lesson_status": "failed",
+                "fail_reason": "fatal: options.form_mismatch",
+                "prompt_version_lesson": "lesson_day.v4.8",
+                "model_lesson": "gpt-5.4-2026-03-05",
+                "cost_usd_lesson": "0.113829",
+                "latency_ms_lesson": 41708,
+                "attempts_lesson": 1,
+                "build_started_at": "2026-09-26 00:09:19+00",
+                "generated_at": null,
+                "built_at": null,
+                "partner_voice_gender": null,
+                "partner_voice_id": null,
+                "checks": [
+                    "frame.no_end_punct@p1",
+                    "frame.no_end_punct@p2",
+                    "frame.no_end_punct@p3",
+                    "frame.no_end_punct@p4",
+                    "frame.no_end_punct@p5",
+                    "frame.no_end_punct@p6",
+                    "frame.no_end_punct@p7",
+                    "frame.no_end_punct@p8",
+                    "options.form_mismatch@x7.check",
+                    "options.form_mismatch@x8.check",
+                    "vocab.everyday_word@v8"
+                ]
+            }
+        }
+    },
+    "walk": null,
+    "talk": null,
+    "talk_documents": [],
+    "plan": {
+        "id": "01M3DGPN35MXD4HJEF9B5H1868",
+        "status": "ready",
+        "goal_text": "Zapisuję się do lekarza: od trzech dni boli mnie gardło i mam gorączkę. Muszę wybrać dogodny termin i wyjaśnić, co mi dolega",
+        "target_lang": "en",
+        "native_lang": "pl",
+        "level": "beginner",
+        "days_total": 3,
+        "days_requested": 3,
+        "days_shortened_from": null,
+        "event_date": null,
+        "days_left": null,
+        "title_native": "Wizyta u lekarza",
+        "title_target": "Doctor's appointment",
+        "event_native": "Wizyta",
+        "until_phrase": null,
+        "overdue_native": null,
+        "route_summary": "3 days · 2 situations, rehearsal",
+        "summary": "Rejestracja, u lekarza. You will say all of this yourself",
+        "reminder_hour": 19,
+        "catch_up": false,
+        "learner_role_target": "Patient",
+        "learner_role_native": "Pacjent",
+        "cover_image": {
+            "url": "https://images.pexels.com/photos/6812426/pexels-photo-6812426.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+            "author": "Pavel Danilyuk",
+            "author_url": "https://www.pexels.com/@pavel-danilyuk",
+            "tone": "#828180"
+        },
+        "collection_id": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "current_day": {
+            "id": "01M3DGPN35HG9ARM127NHSAERY",
+            "number": 1,
+            "type": "scene",
+            "status": "locked",
+            "lock_reason": "date",
+            "scene_id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+            "title_native": "Rejestracja",
+            "title_target": "Reception desk",
+            "teaches_native": "umówić termin, podać powód wizyty",
+            "lesson_status": "failed",
+            "opens_on": null,
+            "slot": {
+                "code": "today",
+                "date": "2026-09-26",
+                "label_native": "today"
+            },
+            "cards_total": 0,
+            "cards_done": 0,
+            "minutes_spent": 0,
+            "opened_at": null,
+            "closed_at": null,
+            "stages": [
+                {
+                    "stage": "words",
+                    "state": "locked"
+                },
+                {
+                    "stage": "phrases",
+                    "state": "locked"
+                },
+                {
+                    "stage": "dialogue",
+                    "state": "locked"
+                },
+                {
+                    "stage": "listen",
+                    "state": "locked"
+                },
+                {
+                    "stage": "speak",
+                    "state": "locked"
+                },
+                {
+                    "stage": "conversation",
+                    "state": "locked"
+                }
+            ]
+        },
+        "days": [
+            {
+                "id": "01M3DGPN35HG9ARM127NHSAERY",
+                "number": 1,
+                "type": "scene",
+                "status": "locked",
+                "lock_reason": "date",
+                "scene_id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+                "title_native": "Rejestracja",
+                "title_target": "Reception desk",
+                "teaches_native": "umówić termin, podać powód wizyty",
+                "lesson_status": "failed",
+                "opens_on": null,
+                "slot": {
+                    "code": "today",
+                    "date": "2026-09-26",
+                    "label_native": "today"
+                },
+                "cards_total": 0,
+                "cards_done": 0,
+                "minutes_spent": 0,
+                "opened_at": null,
+                "closed_at": null,
+                "stages": [
+                    {
+                        "stage": "words",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "phrases",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "dialogue",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "listen",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "speak",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "conversation",
+                        "state": "locked"
+                    }
+                ]
+            },
+            {
+                "id": "01M3DGPN363J7HVAZT9V0EZKHV",
+                "number": 2,
+                "type": "scene",
+                "status": "locked",
+                "lock_reason": "date",
+                "scene_id": "01M3DGPX12X5PESMT41KW1Q5JM",
+                "title_native": "U lekarza",
+                "title_target": "Doctor visit",
+                "teaches_native": "opisać objawy i odpowiedzieć",
+                "lesson_status": "pending",
+                "opens_on": null,
+                "slot": {
+                    "code": "tomorrow",
+                    "date": "2026-09-27",
+                    "label_native": "tomorrow"
+                },
+                "cards_total": 0,
+                "cards_done": 0,
+                "minutes_spent": 0,
+                "opened_at": null,
+                "closed_at": null,
+                "stages": [
+                    {
+                        "stage": "words",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "phrases",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "dialogue",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "listen",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "speak",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "conversation",
+                        "state": "locked"
+                    }
+                ]
+            },
+            {
+                "id": "01M3DGPN363PQBJK5QC1SWZ5BF",
+                "number": 3,
+                "type": "rehearsal",
+                "status": "locked",
+                "lock_reason": "date",
+                "scene_id": null,
+                "title_native": null,
+                "title_target": null,
+                "teaches_native": null,
+                "lesson_status": null,
+                "opens_on": null,
+                "slot": {
+                    "code": "date",
+                    "date": "2026-09-28",
+                    "label_native": null
+                },
+                "cards_total": 0,
+                "cards_done": 0,
+                "minutes_spent": 0,
+                "opened_at": null,
+                "closed_at": null,
+                "stages": [
+                    {
+                        "stage": "recall",
+                        "state": "locked"
+                    },
+                    {
+                        "stage": "conversation",
+                        "state": "locked"
+                    }
+                ]
+            }
+        ],
+        "scenes": [
+            {
+                "id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Rejestracja",
+                "title_target": "Reception desk",
+                "teaches_native": "umówić termin, podać powód wizyty",
+                "goals_native": [
+                    "poprosić o wizytę",
+                    "podać dogodny termin",
+                    "powiedzieć, co dolega",
+                    "zapytać o wolne godziny"
+                ],
+                "learner_role_target": "Patient",
+                "learner_role_native": "Pacjent",
+                "partner_role_target": "Receptionist",
+                "partner_role_native": "Recepcjonista",
+                "image": {
+                    "url": "https://images.pexels.com/photos/6809657/pexels-photo-6809657.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                    "author": "Pavel Danilyuk",
+                    "author_url": "https://www.pexels.com/@pavel-danilyuk",
+                    "tone": "#958E88",
+                    "url_112": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX11CPBGNKNSMJP8Z2SF/112?v=a5a4ed8d4b8d",
+                    "url_448": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX11CPBGNKNSMJP8Z2SF/448?v=a5a4ed8d4b8d"
+                },
+                "lesson_status": "failed",
+                "lesson_fail_reason": "fatal: exchange.second_question, pronunciation.foreign_script, line.ne_frame, options.form_mismatch",
+                "day_number": 1,
+                "cost_usd": "0.078595",
+                "latency_ms": 34207,
+                "prompt_version": "lesson_day.v4.8"
+            },
+            {
+                "id": "01M3DGPX12X5PESMT41KW1Q5JM",
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "U lekarza",
+                "title_target": "Doctor visit",
+                "teaches_native": "opisać objawy i odpowiedzieć",
+                "goals_native": [
+                    "powiedzieć, co dolega",
+                    "podać czas trwania bólu",
+                    "powiedzieć o gorączce",
+                    "odpowiedzieć na pytania"
+                ],
+                "learner_role_target": "Patient",
+                "learner_role_native": "Pacjent",
+                "partner_role_target": "Doctor",
+                "partner_role_native": "Lekarz",
+                "image": {
+                    "url": "https://images.pexels.com/photos/7578800/pexels-photo-7578800.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                    "author": "cottonbro studio",
+                    "author_url": "https://www.pexels.com/@cottonbro",
+                    "tone": "#BDB6B6",
+                    "url_112": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX12X5PESMT41KW1Q5JM/112?v=0311a0e57a69",
+                    "url_448": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX12X5PESMT41KW1Q5JM/448?v=0311a0e57a69"
+                },
+                "lesson_status": "pending",
+                "lesson_fail_reason": null,
+                "day_number": 2,
+                "cost_usd": null,
+                "latency_ms": null,
+                "prompt_version": null
+            }
+        ],
+        "rescue_kit": [
+            {
+                "text_target": "Could you speak more slowly, please?",
+                "text_native": "Помедленнее, пожалуйста.",
+                "pronunciation_native": "куд ю спик мор слоули плиз"
+            },
+            {
+                "text_target": "Could you write it down, please?",
+                "text_native": "Напишите, пожалуйста.",
+                "pronunciation_native": "куд ю райт ит даун плиз"
+            },
+            {
+                "text_target": "Could you repeat that, please?",
+                "text_native": "Повторите ещё раз, пожалуйста.",
+                "pronunciation_native": "куд ю рипит зэт плиз"
+            },
+            {
+                "text_target": "How much is it?",
+                "text_native": "Сколько это стоит?",
+                "pronunciation_native": "хау мач из ит"
+            },
+            {
+                "text_target": "One moment, let me check.",
+                "text_native": "Секунду, я проверю.",
+                "pronunciation_native": "уан моумент лет ми чек"
+            }
+        ],
+        "cost_usd": "0.090931",
+        "versions": {
+            "build": "unknown",
+            "prompt_plan": "plan-builder-v2",
+            "prompt_lesson": "lesson_day.v4.8"
+        },
+        "started_at": null,
+        "finished_at": null,
+        "created_at": "2026-09-26T00:09:07+00:00"
+    },
+    "room": {
+        "plan_id": "01M3DGPN35MXD4HJEF9B5H1868",
+        "day": {
+            "id": "01M3DGPN35HG9ARM127NHSAERY",
+            "number": 1,
+            "type": "scene",
+            "status": "locked",
+            "lock_reason": "date",
+            "scene_id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+            "title_native": "Rejestracja",
+            "title_target": "Reception desk",
+            "teaches_native": "umówić termin, podać powód wizyty",
+            "lesson_status": "failed",
+            "opens_on": null,
+            "slot": {
+                "code": "today",
+                "date": "2026-09-26",
+                "label_native": "today"
+            },
+            "cards_total": 0,
+            "cards_done": 0,
+            "minutes_spent": 0,
+            "opened_at": null,
+            "closed_at": null,
+            "stages": [
+                {
+                    "stage": "words",
+                    "state": "locked"
+                },
+                {
+                    "stage": "phrases",
+                    "state": "locked"
+                },
+                {
+                    "stage": "dialogue",
+                    "state": "locked"
+                },
+                {
+                    "stage": "listen",
+                    "state": "locked"
+                },
+                {
+                    "stage": "speak",
+                    "state": "locked"
+                },
+                {
+                    "stage": "conversation",
+                    "state": "locked"
+                }
+            ]
+        },
+        "scene": {
+            "id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+            "order": 1,
+            "kind": "situation",
+            "priority": 2,
+            "title_native": "Rejestracja",
+            "title_target": "Reception desk",
+            "teaches_native": "umówić termin, podać powód wizyty",
+            "goals_native": [
+                "poprosić o wizytę",
+                "podać dogodny termin",
+                "powiedzieć, co dolega",
+                "zapytać o wolne godziny"
+            ],
+            "learner_role_target": "Patient",
+            "learner_role_native": "Pacjent",
+            "partner_role_target": "Receptionist",
+            "partner_role_native": "Recepcjonista",
+            "image": {
+                "url": "https://images.pexels.com/photos/6809657/pexels-photo-6809657.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "author": "Pavel Danilyuk",
+                "author_url": "https://www.pexels.com/@pavel-danilyuk",
+                "tone": "#958E88",
+                "url_112": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX11CPBGNKNSMJP8Z2SF/112?v=a5a4ed8d4b8d",
+                "url_448": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX11CPBGNKNSMJP8Z2SF/448?v=a5a4ed8d4b8d"
+            },
+            "lesson_status": "failed",
+            "lesson_fail_reason": "fatal: exchange.second_question, pronunciation.foreign_script, line.ne_frame, options.form_mismatch",
+            "day_number": 1,
+            "cost_usd": "0.078595",
+            "latency_ms": 34207,
+            "prompt_version": "lesson_day.v4.8"
+        },
+        "stages": [
+            {
+                "stage": "words",
+                "total": 0,
+                "done": 0,
+                "state": "absent",
+                "cards": []
+            },
+            {
+                "stage": "phrases",
+                "total": 0,
+                "done": 0,
+                "state": "absent",
+                "cards": []
+            },
+            {
+                "stage": "dialogue",
+                "total": 0,
+                "done": 0,
+                "state": "absent",
+                "cards": []
+            },
+            {
+                "stage": "listen",
+                "total": 0,
+                "done": 0,
+                "state": "absent",
+                "cards": []
+            },
+            {
+                "stage": "speak",
+                "total": 0,
+                "done": 0,
+                "state": "absent",
+                "cards": []
+            },
+            {
+                "stage": "recall",
+                "total": 0,
+                "done": 0,
+                "state": "absent",
+                "cards": []
+            },
+            {
+                "stage": "repetition",
+                "total": 0,
+                "done": 0,
+                "state": "absent",
+                "cards": []
+            }
+        ],
+        "metrics": null,
+        "program": [],
+        "window": {
+            "day": {
+                "index": 1,
+                "type": "scene",
+                "title_native": "Rejestracja",
+                "title_target": "Reception desk",
+                "image": {
+                    "url": "https://images.pexels.com/photos/6809657/pexels-photo-6809657.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                    "author": "Pavel Danilyuk",
+                    "author_url": "https://www.pexels.com/@pavel-danilyuk",
+                    "tone": "#958E88",
+                    "url_112": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX11CPBGNKNSMJP8Z2SF/112?v=a5a4ed8d4b8d",
+                    "url_448": "http://127.0.0.1:8012/api/v1/plans/images/01M3DGPX11CPBGNKNSMJP8Z2SF/448?v=a5a4ed8d4b8d"
+                },
+                "image_tone": "#958E88",
+                "status": "not_started",
+                "minutes_estimate": null,
+                "minutes_spent": null,
+                "goals": [
+                    {
+                        "text": "poprosić o wizytę",
+                        "passed": false
+                    },
+                    {
+                        "text": "podać dogodny termin",
+                        "passed": false
+                    },
+                    {
+                        "text": "powiedzieć, co dolega",
+                        "passed": false
+                    },
+                    {
+                        "text": "zapytać o wolne godziny",
+                        "passed": false
+                    }
+                ]
+            },
+            "stages": [
+                {
+                    "stage": "words",
+                    "state": "locked",
+                    "done_count": null,
+                    "total": null,
+                    "minutes_left": null,
+                    "minutes": 0,
+                    "share": 0.0,
+                    "talk_title_native": null,
+                    "scenes_count": null,
+                    "targets": null,
+                    "again": true,
+                    "summary": {
+                        "done": 0,
+                        "total": 0,
+                        "first_try": 0,
+                        "returns": 0
+                    }
+                },
+                {
+                    "stage": "phrases",
+                    "state": "locked",
+                    "done_count": null,
+                    "total": null,
+                    "minutes_left": null,
+                    "minutes": 0,
+                    "share": 0.0,
+                    "talk_title_native": null,
+                    "scenes_count": null,
+                    "targets": null,
+                    "again": true,
+                    "summary": {
+                        "done": 0,
+                        "total": 0,
+                        "first_try": 0,
+                        "returns": 0
+                    }
+                },
+                {
+                    "stage": "dialogue",
+                    "state": "locked",
+                    "done_count": null,
+                    "total": null,
+                    "minutes_left": null,
+                    "minutes": 0,
+                    "share": 0.0,
+                    "talk_title_native": null,
+                    "scenes_count": null,
+                    "targets": null,
+                    "again": true,
+                    "summary": {
+                        "done": 0,
+                        "total": 0,
+                        "first_try": 0,
+                        "returns": 0
+                    }
+                },
+                {
+                    "stage": "listen",
+                    "state": "locked",
+                    "done_count": null,
+                    "total": null,
+                    "minutes_left": null,
+                    "minutes": 0,
+                    "share": 0.0,
+                    "talk_title_native": null,
+                    "scenes_count": null,
+                    "targets": null,
+                    "again": true,
+                    "summary": {
+                        "done": 0,
+                        "total": 0,
+                        "first_try": 0,
+                        "returns": 0
+                    }
+                },
+                {
+                    "stage": "speak",
+                    "state": "locked",
+                    "done_count": null,
+                    "total": null,
+                    "minutes_left": null,
+                    "minutes": 0,
+                    "share": 0.0,
+                    "talk_title_native": null,
+                    "scenes_count": null,
+                    "targets": null,
+                    "again": true,
+                    "summary": {
+                        "done": 0,
+                        "total": 0,
+                        "first_try": 0,
+                        "returns": 0
+                    }
+                },
+                {
+                    "stage": "conversation",
+                    "state": "locked",
+                    "done_count": null,
+                    "total": null,
+                    "minutes_left": null,
+                    "minutes": 5,
+                    "share": 0.0,
+                    "talk_title_native": null,
+                    "scenes_count": 0,
+                    "targets": [],
+                    "again": false,
+                    "summary": null
+                }
+            ],
+            "sources": [
+                {
+                    "scene_id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+                    "title_native": "Rejestracja",
+                    "day_number": 1,
+                    "partner_gender": "female"
+                }
+            ],
+            "day_progress": 0.0,
+            "program": {
+                "words": {
+                    "summary": {
+                        "total": 0,
+                        "done": 0,
+                        "returns": 0
+                    },
+                    "items": []
+                },
+                "phrases": {
+                    "summary": {
+                        "total": 0,
+                        "done": 0,
+                        "returns": 0
+                    },
+                    "items": []
+                },
+                "dialogue": {
+                    "summary": {
+                        "total": 0,
+                        "done": 0,
+                        "returns": 0
+                    },
+                    "items": []
+                }
+            },
+            "allowed_action": "start",
+            "highlights": [],
+            "listening": []
+        },
+        "speech": {
+            "unstressed_words": [
+                "a",
+                "an",
+                "the",
+                "to",
+                "of",
+                "in",
+                "on",
+                "at",
+                "for",
+                "with",
+                "by",
+                "from",
+                "into",
+                "about",
+                "over",
+                "under",
+                "after",
+                "before",
+                "through",
+                "up",
+                "down",
+                "out",
+                "off",
+                "as",
+                "than",
+                "am",
+                "is",
+                "are",
+                "was",
+                "were",
+                "be",
+                "been",
+                "being",
+                "do",
+                "does",
+                "did",
+                "have",
+                "has",
+                "had",
+                "will",
+                "would",
+                "shall",
+                "should",
+                "can",
+                "could",
+                "may",
+                "might",
+                "must"
+            ],
+            "articles": [
+                "a",
+                "an",
+                "the"
+            ],
+            "abbreviations": [
+                "a.m.",
+                "p.m.",
+                "e.g.",
+                "i.e.",
+                "etc.",
+                "vs.",
+                "Mr.",
+                "Mrs.",
+                "Ms.",
+                "Dr.",
+                "St."
+            ],
+            "number_words": {
+                "zero": "0",
+                "one": "1",
+                "two": "2",
+                "three": "3",
+                "four": "4",
+                "five": "5",
+                "six": "6",
+                "seven": "7",
+                "eight": "8",
+                "nine": "9",
+                "ten": "10",
+                "eleven": "11",
+                "twelve": "12",
+                "thirteen": "13",
+                "fourteen": "14",
+                "fifteen": "15",
+                "sixteen": "16",
+                "seventeen": "17",
+                "eighteen": "18",
+                "nineteen": "19",
+                "twenty": "20",
+                "thirty": "30",
+                "forty": "40",
+                "fifty": "50",
+                "sixty": "60",
+                "seventy": "70",
+                "eighty": "80",
+                "ninety": "90",
+                "hundred": "100",
+                "thousand": "1000",
+                "million": "1000000"
+            },
+            "number_joiners": [
+                "and"
+            ],
+            "repeat_misses": 0
+        }
+    },
+    "sql": {
+        "plan": {
+            "status": "ready",
+            "native_lang": "pl",
+            "target_lang": "en",
+            "level": "beginner",
+            "days_total": 3,
+            "prompt_version_plan": "plan-builder-v2",
+            "model_plan": "gpt-5.4-2026-03-05",
+            "cost_usd_plan": "0.012336",
+            "latency_ms_plan": 8090,
+            "attempts_plan": 1,
+            "fail_reason": null,
+            "unclear_reason": null,
+            "build_started_at": null,
+            "started_at": null,
+            "created_at": "2026-09-26 00:09:07+00"
+        },
+        "scenes": [
+            {
+                "id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+                "order": 1,
+                "kind": "situation",
+                "title_native": "Rejestracja",
+                "title_target": "Reception desk",
+                "partner_role_native": "Recepcjonista",
+                "partner_role_target": "Receptionist",
+                "lesson_status": "failed",
+                "fail_reason": "fatal: exchange.second_question, pronunciation.foreign_script, line.ne_frame, options.form_mismatch",
+                "cost_usd_lesson": "0.078595",
+                "prompt_version_lesson": "lesson_day.v4.8",
+                "model_lesson": "gpt-5.4-2026-03-05",
+                "attempts_lesson": 1,
+                "latency_ms_lesson": 34207,
+                "partner_voice_gender": null,
+                "partner_voice_id": null,
+                "build_started_at": "2026-09-26 00:15:42+00",
+                "built_at": null,
+                "checks": [
+                    {
+                        "code": "exchange.second_question",
+                        "address": "x1",
+                        "detail": "the closing message of A «Of course. What seems to be the problem?» ends with a question mark"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "B7",
+                        "detail": "the reading «maj nejm yz იან kowalski» is spelled with letters of another writing: «ი», «ა», «ნ»"
+                    },
+                    {
+                        "code": "pronunciation.script",
+                        "address": "B7",
+                        "detail": "the reading «maj nejm yz იან kowalski» leaves the native script"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p2",
+                        "detail": "«I have ___» and the native «Mam ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.unresolved_pronoun",
+                        "address": "p3",
+                        "detail": "«I've had it for ___.» leans on «it», and nothing in the frame is what it stands for"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p4",
+                        "detail": "«I also have ___» and the native «Mam też ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p6",
+                        "detail": "«I'll take ___» and the native «Wezmę ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p7",
+                        "detail": "«My name is ___» and the native «Nazywam się ___» end with no mark"
+                    },
+                    {
+                        "code": "frame.no_end_punct",
+                        "address": "p8",
+                        "detail": "«My phone number is ___» and the native «Mój numer telefonu to ___» end with no mark"
+                    },
+                    {
+                        "code": "filler.one_in_dialogue",
+                        "address": "p3.f1",
+                        "detail": "«three days» is marked in_dialogue, but no line says it"
+                    },
+                    {
+                        "code": "line.ne_frame",
+                        "address": "B3",
+                        "detail": "«For three days.» is not «I've had it for ___.» with any of its fillers («three days», «two days»)"
+                    },
+                    {
+                        "code": "variant.longer",
+                        "address": "B3",
+                        "detail": "the variant «It's been three days.» has 4 words, the line 3"
+                    },
+                    {
+                        "code": "options.form_mismatch",
+                        "address": "x4.check",
+                        "detail": "the option «Ból ucha» is 7 letters against 22 of the right «Podwyższoną temperaturę»"
+                    },
+                    {
+                        "code": "check.about_learner",
+                        "address": "x7.check",
+                        "detail": "«What exactly does the receptionist ask the patient to say?» → «First and last name» is about the learner's line, not the partner's"
+                    },
+                    {
+                        "code": "options.form_mismatch",
+                        "address": "x7.check",
+                        "detail": "the option «Imię i nazwisko» is a piece of the partner's line «Proszę podać imię i nazwisko.»"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v8",
+                        "detail": "«reception desk» is not in the partner's line of exchange 1"
+                    }
+                ]
+            },
+            {
+                "id": "01M3DGPX12X5PESMT41KW1Q5JM",
+                "order": 2,
+                "kind": "situation",
+                "title_native": "U lekarza",
+                "title_target": "Doctor visit",
+                "partner_role_native": "Lekarz",
+                "partner_role_target": "Doctor",
+                "lesson_status": "pending",
+                "fail_reason": null,
+                "cost_usd_lesson": null,
+                "prompt_version_lesson": null,
+                "model_lesson": null,
+                "attempts_lesson": null,
+                "latency_ms_lesson": null,
+                "partner_voice_gender": null,
+                "partner_voice_id": null,
+                "build_started_at": null,
+                "built_at": null,
+                "checks": []
+            }
+        ],
+        "line_audios": {
+            "rows": [],
+            "summary": {
+                "total": {
+                    "lines": 0,
+                    "credits": 0,
+                    "characters": 0,
+                    "usd": 0.0
+                },
+                "by_voice": [],
+                "by_kind": []
+            }
+        },
+        "conversation": null,
+        "turns": [],
+        "rejections": [],
+        "slot_judge_calls": []
+    },
+    "bill": {
+        "voice": {
+            "day1_lines": {
+                "lines": 0,
+                "credits": 0,
+                "characters": 0,
+                "usd": 0.0
+            },
+            "talk": {
+                "lines": 0,
+                "credits": 0,
+                "characters": 0,
+                "usd": 0.0
+            },
+            "total": {
+                "credits": 0,
+                "characters": 0,
+                "usd": 0.0
+            }
+        },
+        "models": {
+            "plan": 0.012336,
+            "lesson_day1": 0.078595,
+            "lessons_other_scenes": 0.0,
+            "slot_judge": 0.0,
+            "talk": 0.0,
+            "total": 0.090931
+        },
+        "cross_checks": {
+            "talk": null,
+            "judge_calls_in_walk_window_usd": 0.0
+        }
+    }
+}
