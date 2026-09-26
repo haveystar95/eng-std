@@ -290,7 +290,9 @@ reads plan tables.
   where `used_in` says; a word the repair kept, its definition written anew, is the validator's alone); a lesson still held is asked for anew ONCE in the same build (наряд LANG-1b §1), and only then it
   fails `fatal: <codes>`. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
   extension rebuilds it. Every answer of the plan's model is read without the characters that print nothing
-  (`Domain/Service/ModelText`, at `ContentModelPlanBuilder`; `plan:clean-text` for what was stored before, наряд LANG-1b §6). A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
+  (`Domain/Service/ModelText`, at `ContentModelPlanBuilder`; `plan:clean-text` for what was stored before, наряд LANG-1b §6 —
+  and, since its last step, the readings stored in `plan_terms` and the dealt cards, by the parser's own rule,
+  `Domain/Service/ReadingLetters`). A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
   `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
