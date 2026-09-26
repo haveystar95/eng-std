@@ -19,6 +19,7 @@ use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Service\ModelText;
 use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
 use Illuminate\Support\Facades\Log;
@@ -238,10 +239,14 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
         return $port;
     }
 
+    /**
+     * Every answer of the plan's model comes in here — and comes in without the characters that print nothing (наряд
+     * LANG-1b §6, {@see ModelText}): a control character in a word of a day's title, a soft hyphen, a zero-width space.
+     */
     private static function reply(ModelAnswer $answer, string $promptVersion): ModelReply
     {
         return new ModelReply(
-            payload: $answer->payload,
+            payload: ModelText::visible($answer->payload),
             promptVersion: $promptVersion,
             model: $answer->model,
             tokensIn: $answer->tokensIn,

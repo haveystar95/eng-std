@@ -85,6 +85,36 @@ final class TextNormalizer
     }
 
     /**
+     * The characters that print nothing: every FORMAT character (Unicode Cf — the soft hyphen U+00AD, the zero-width space,
+     * non-joiner, joiner and the marks U+200B–U+200F, the bidi embeddings and isolates U+202A–U+202E, U+2066–U+2069, the word
+     * joiner U+2060, the byte order mark U+FEFF, the Arabic letter mark U+061C …) and every CONTROL character but the tab
+     * and the two line breaks (Cc).
+     */
+    private const INVISIBLE = '/[\p{Cf}\x{0000}-\x{0008}\x{000B}\x{000C}\x{000E}-\x{001F}\x{007F}-\x{009F}]/u';
+
+    /**
+     * The text WITHOUT THE CHARACTERS THAT PRINT NOTHING (наряд LANG-1b §6) — what a model's text is read through before
+     * any of it is stored: a day of a live plan was titled «Опы\u{0004}т и навыки», and the phone drew the control
+     * character U+0004 as an empty box. {@see INVISIBLE} is cut out; the line and paragraph separators U+2028/U+2029
+     * become a plain space, so the words on either side of one stay apart. What is a letter or a space of the text stays:
+     * a no-break space (the French «Pardon ?»), a combining accent (the stress of «лека́жа»), the apostrophe ʼ U+02BC,
+     * a tab, a line break.
+     *
+     * Not part of {@see canonical()}: the content writers of the other modules store what they are given, and this is
+     * the plan's rule for the model's text (`App\Modules\Plan\Domain\Service\ModelText`). Malformed UTF-8 comes back
+     * as it arrived.
+     */
+    public function visible(string $value): string
+    {
+        $cut = preg_replace(self::INVISIBLE, '', $value);
+        if (! is_string($cut)) {
+            return $value;
+        }
+
+        return (string) preg_replace('/[\x{2028}\x{2029}]/u', ' ', $cut);
+    }
+
+    /**
      * The form text is COMPARED in: canonical, plus the equivalences above.
      *
      * Never stored. A grader folds both sides and compares; the database keeps what the learner

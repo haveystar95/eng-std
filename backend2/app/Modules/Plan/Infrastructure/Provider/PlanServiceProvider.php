@@ -69,6 +69,7 @@ use App\Modules\Plan\Infrastructure\Adapter\VocabularyNativeDistractorSource;
 use App\Modules\Plan\Infrastructure\Adapter\VocabularyPlanCollectionWriter;
 use App\Modules\Plan\Infrastructure\Console\PlanRebuildCardTextsCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanReconcileScenesCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanCleanTextCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRepaceCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRevoiceLearnerCommand;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentCheckCounters;
@@ -368,6 +369,9 @@ final class PlanServiceProvider extends ServiceProvider
         $routes = __DIR__.'/../../Presentation/Http/routes.php';
         if (is_file($routes)) {
             Route::middleware('api')->prefix('api/v1')->group($routes);
+        // The model's text already stored, without the characters that print nothing (наряд LANG-1b §6) — dry-run unless
+        // `--apply`; the model's new text is read through the same rule as it comes in.
+        $this->commands([PlanCleanTextCommand::class]);
         }
     }
 
