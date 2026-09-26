@@ -10,7 +10,7 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The model's JSON → a {@see Lesson} (`lesson_day.v4.8`; its rollback `v4.7` answers the same schema).
+ * The model's JSON → a {@see Lesson} (`lesson_day.v4.9`; its rollback `v4.7` answers the same schema).
  * Strict about SHAPE only: a missing key, a wrong type, an unknown kind or speaker, an empty required
  * string is a reply that is not the requested schema, and that is the model's refusal, not a finding
  * ({@see ModelAnswerOffSchema}).

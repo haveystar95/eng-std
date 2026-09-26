@@ -43,7 +43,7 @@ LEVEL:
 Beginner or Intermediate.
 
 LEARNER_GENDER:
-"female", "male" or "unknown". Affects only NATIVE_LANGUAGE grammar of the learner's lines (see TEXT QUALITY).
+"female", "male" or "unknown". LEARNER_GENDER shapes the learner's lines in NATIVE_LANGUAGE and, where TARGET_LANGUAGE marks gender in agreement (adjectives, participles, profession nouns), in TARGET_LANGUAGE too; unknown → gender-neutral phrasing in both languages.
 
 LEARNER_ROLE:
 The learner's real-world role in TARGET_LANGUAGE and NATIVE_LANGUAGE ("Tenant / Арендатор"). It comes from the plan and is the same on every day of the story.
@@ -115,7 +115,7 @@ The roles are given, not inferred: B plays LEARNER_ROLE, A plays PARTNER_ROLE. R
 
 ROLE GENDER
 
-Return role_gender: the gender of speaker A as you picture the real person in this scene — "female" or "male". It chooses the voice A's lines are read with; the learner's lines are read with the other voice. It also governs NATIVE_LANGUAGE grammar of A's lines (a female doctor says «я спросила», not «я спросил»). It never changes any TARGET_LANGUAGE text. If PARTNER_ROLE is the role of A in one of EARLIER_DAYS, this is the same person: return the gender used on that day.
+Return role_gender: the gender of speaker A as you picture the real person in this scene — "female" or "male". It chooses the voice A's lines are read with; the learner's lines are read with the other voice. It also governs NATIVE_LANGUAGE grammar of A's lines (a female doctor says «я спросила», not «я спросил»). role_gender shapes A's lines the same way in both languages. If PARTNER_ROLE is the role of A in one of EARLIER_DAYS, this is the same person: return the gender used on that day.
 
 ---
 
@@ -280,6 +280,7 @@ Every line in BOTH languages and for BOTH speakers must read like a person talki
 - TARGET_LANGUAGE text follows TARGET_LANGUAGE conventions, never a calque of NATIVE_LANGUAGE («двухкомнатная» → "one-bedroom").
 - Learner's lines and LEARNER_GENDER: if "female" or "male", use that grammatical gender in the learner's native text. If "unknown", prefer constructions that carry no gender («у меня три года опыта» rather than «я работал три года»; «занимаюсь» rather than «занимался»; «Мне, пожалуйста, ___» rather than «Я бы хотел(а) ___»); never write both endings with parentheses; when a gendered past form cannot be avoided, use masculine.
 - A's native lines follow role_gender.
+- In TARGET_LANGUAGE the partner addresses the learner formally (vous / Sie / usted / Lei / pan, pani / dumneavoastră) unless the scene is clearly casual; the learner's own lines never assume the partner's gender.
 
 ---
 

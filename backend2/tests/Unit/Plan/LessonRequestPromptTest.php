@@ -182,33 +182,49 @@ it('finds every section a repair of each kind quotes in the lesson prompt it quo
             expect(lrpPrompts()->lessonSection($heading))->toStartWith($heading);
         }
     }
-    expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.8')
+    expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.9')
         ->and(lrpPrompts()->repairVersion())->toBe('lesson_card_repair.v1.3');
 });
 
-// Canon (наряд LANG-1 §8, DECISIONS п. 157): v4.8 is v4.7 with ONE clause of FINAL INTERNAL VALIDATION replaced — a reading
-// in the letters of NATIVE_LANGUAGE's own alphabet, where v4.7 said «Cyrillic only when NATIVE_LANGUAGE is Russian». Catches
-// a second edit slipped into the frozen text, the clause lost or written somewhere else, and a change to a section a
-// repair quotes: P2R's rules — and the vendor's cache of them — stay v4.7's byte for byte.
-it('writes v4.8 as v4.7 with one clause of the final validation replaced, and leaves every rule a repair quotes as it was', function () {
+// Canon (наряд LANG-1 §8, DECISIONS п. 157): v4.8 was v4.7 with ONE clause of FINAL INTERNAL VALIDATION replaced — a reading
+// in the letters of NATIVE_LANGUAGE's own alphabet, where v4.7 said «Cyrillic only when NATIVE_LANGUAGE is Russian». Наряд
+// LANG-1b §5: v4.9 is v4.8 with two lines replaced — LEARNER_GENDER (INPUTS) and role_gender (ROLE GENDER) shape the lines in
+// both languages — and ONE sentence added to TEXT QUALITY: the partner's formal address in TARGET_LANGUAGE, the learner
+// never assuming the partner's gender. v4.8 is gone; its rollback v4.7 stays — so v4.9 is read against v4.7: three lines
+// replaced, one added. Catches a further edit slipped into the frozen text, a clause lost or written elsewhere, and a
+// change to a section a repair quotes other than TEXT QUALITY: every other rule of P2R stays v4.7's byte for byte.
+it('writes v4.9 as v4.7 with the reading clause of v4.8, the two lines of gender and one sentence of address — and nothing else', function () {
     $dir = dirname(__DIR__, 3).'/app/Modules/Plan/Infrastructure/Prompt';
     $old = explode("\n", (string) file_get_contents("{$dir}/lesson_day.v4.7.md"));
-    $new = explode("\n", (string) file_get_contents("{$dir}/lesson_day.v4.8.md"));
-    $changed = array_keys(array_diff_assoc($new, $old));
-    $was = '; Cyrillic only when NATIVE_LANGUAGE is Russian.';
-    $now = "; only the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and Belarusian — each with its own letters; Latin for the others).";
+    $new = explode("\n", (string) file_get_contents("{$dir}/lesson_day.v4.9.md"));
+    $added = "- In TARGET_LANGUAGE the partner addresses the learner formally (vous / Sie / usted / Lei / pan, pani / dumneavoastră) unless the scene is clearly casual; the learner's own lines never assume the partner's gender.";
+    $at = array_search($added, $new, true);
+    expect($at)->toBeInt()
+        ->and($new[$at - 1])->toBe("- A's native lines follow role_gender.");
+    $without = array_values(array_filter($new, static fn (string $line): bool => $line !== $added));
+    $changed = array_keys(array_diff_assoc($without, $old));
+    $replaced = [
+        '; Cyrillic only when NATIVE_LANGUAGE is Russian.' => "; only the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and Belarusian — each with its own letters; Latin for the others).",
+        "Affects only NATIVE_LANGUAGE grammar of the learner's lines (see TEXT QUALITY)." => "LEARNER_GENDER shapes the learner's lines in NATIVE_LANGUAGE and, where TARGET_LANGUAGE marks gender in agreement (adjectives, participles, profession nouns), in TARGET_LANGUAGE too; unknown → gender-neutral phrasing in both languages.",
+        'It never changes any TARGET_LANGUAGE text.' => "role_gender shapes A's lines the same way in both languages.",
+    ];
 
-    expect(count($new))->toBe(count($old))
-        ->and($changed)->toHaveCount(1)
-        ->and(str_replace($now, $was, $new[$changed[0]]))->toBe($old[$changed[0]])
-        ->and($new[$changed[0]])->toStartWith('- Pronunciation: ')
-        ->and(lrpPrompts()->lessonSection('FINAL INTERNAL VALIDATION'))->toContain($new[$changed[0]])
+    expect(count($new))->toBe(count($old) + 1)
+        ->and($changed)->toHaveCount(3);
+    foreach ($changed as $line) {
+        expect(str_replace(array_values($replaced), array_keys($replaced), $without[$line]))->toBe($old[$line]);
+    }
+    expect(lrpPrompts()->lessonSection('FINAL INTERNAL VALIDATION'))->toContain(array_values($replaced)[0])
+        ->and(lrpPrompts()->lessonSection('ROLE GENDER'))->toContain(array_values($replaced)[2])
+        ->and(lrpPrompts()->lessonSection('TEXT QUALITY'))->toContain($added)
         // The example of PRONUNCIATION_NATIVE, which P2R quotes, is v4.7's: «(for Russian: Cyrillic)».
-        ->and(lrpPrompts()->lessonSection('PRONUNCIATION_NATIVE'))->toContain('(for Russian: Cyrillic)');
+        ->and(lrpPrompts()->lessonSection('PRONUNCIATION_NATIVE'))->toContain('(for Russian: Cyrillic)')
+        ->and(lrpPrompts()->repairSystem('line'))->toContain($added);
     $v47 = implode("\n", $old);
     foreach (PlanPromptFiles::REPAIR_SECTIONS as $headings) {
         foreach ($headings as $heading) {
-            expect($v47)->toContain(lrpPrompts()->lessonSection($heading));
+            $section = lrpPrompts()->lessonSection($heading);
+            expect($v47)->toContain($heading === 'TEXT QUALITY' ? str_replace("\n".$added, '', $section) : $section);
         }
     }
 });

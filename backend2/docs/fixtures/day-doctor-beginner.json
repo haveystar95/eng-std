@@ -79,7 +79,7 @@
         "day_number": 1,
         "cost_usd": "0.000000",
         "latency_ms": 9,
-        "prompt_version": "lesson_day.v4.8"
+        "prompt_version": "lesson_day.v4.9"
     },
     "stages": [
         {

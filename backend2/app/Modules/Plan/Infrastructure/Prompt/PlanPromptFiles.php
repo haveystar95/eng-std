@@ -15,7 +15,7 @@ use RuntimeException;
 
 /**
  * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
- * (`plan-builder-v2`, `lesson_day.v4.8`) — a rename is a version bump and nothing else is. The previous lesson and repair
+ * (`plan-builder-v2`, `lesson_day.v4.9`) — a rename is a version bump and nothing else is. The previous lesson and repair
  * files stay beside the current ones (`lesson_day.v4.7`, `lesson_card_repair.v1.2`): going back is one constant.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
@@ -36,11 +36,15 @@ final class PlanPromptFiles
      * The lesson of a scene day. v4.8 — наряд LANG-1 §8 (DECISIONS п. 157): v4.7 and one clause of FINAL INTERNAL
      * VALIDATION — a reading is written only in the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian,
      * Ukrainian and Belarusian, each with its own letters; Latin for the others), where v4.7 said «Cyrillic only when
-     * NATIVE_LANGUAGE is Russian» and so told a Ukrainian or a Polish learner nothing. That section is not one
-     * {@see self::REPAIR_SECTIONS} quotes: a card repair's rules are v4.7's byte for byte. v4.7 stays beside it as the
-     * one rollback file; v4.6 is gone (in git).
+     * NATIVE_LANGUAGE is Russian» and so told a Ukrainian or a Polish learner nothing. v4.9 — наряд LANG-1b §5: v4.8 and
+     * the gender and the address of a target language that has them — LEARNER_GENDER shapes the learner's lines in both
+     * languages where the target marks gender in agreement (INPUTS), role_gender shapes A's lines the same way in both
+     * (ROLE GENDER), and one sentence of TEXT QUALITY: the partner addresses the learner formally in TARGET_LANGUAGE unless
+     * the scene is clearly casual, and the learner's own lines never assume the partner's gender. TEXT QUALITY is quoted by
+     * the repair of a frame, an exchange and a line ({@see self::REPAIR_SECTIONS}), so those repairs read that sentence too.
+     * v4.7 stays beside it as the one rollback file (without the reading clause of v4.8); v4.8 is gone (in git).
      */
-    private const LESSON_FILE = 'lesson_day.v4.8.md';
+    private const LESSON_FILE = 'lesson_day.v4.9.md';
 
     private const REPAIR_FILE = 'lesson_card_repair.v1.3.md';
 
