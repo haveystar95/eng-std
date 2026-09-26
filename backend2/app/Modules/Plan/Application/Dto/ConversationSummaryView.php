@@ -16,9 +16,9 @@ namespace App\Modules\Plan\Application\Dto;
 final readonly class ConversationSummaryView
 {
     /**
-     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, state: string}>  $phrases
+     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, line_native: string, state: string}>  $phrases
      *   the talk's targets as the talk left them — the same shape as `targets[]` (наряд FIX-3 §6)
-     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}>  $extraSaid
+     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, line_native: string}>  $extraSaid
      */
     public function __construct(
         public int $saidCount,

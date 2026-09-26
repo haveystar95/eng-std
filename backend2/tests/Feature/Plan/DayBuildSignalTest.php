@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 use App\Modules\Plan\Application\Port\DayBuildLog;
+use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Assembly\PhrasesDeal;
 use App\Modules\Plan\Domain\ValueObject\PlanDayId;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
+use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
@@ -35,6 +38,14 @@ function bt2BuildLog(): DayBuildLog
         public function phrasesOverCeiling(PlanId $plan, PlanDayId $day, int $dayNumber, PlanSceneId $scene, PhrasesDeal $deal): void
         {
             $this->signals[] = ['plan' => $plan->value, 'day' => $dayNumber, 'scene' => $scene->value, 'deal' => $deal];
+        }
+
+        /** @var list<array{plan: string, scene: string, refs: list<string>}> */
+        public array $assembled = [];
+
+        public function hintsAssembled(PlanId $plan, PlanSceneId $scene, array $refs): void
+        {
+            $this->assembled[] = ['plan' => $plan->value, 'scene' => $scene->value, 'refs' => $refs];
         }
     };
 }
@@ -90,4 +101,40 @@ it('writes nothing to the build log when «Фразы» fit their ceiling', func
     planOpenDay($this, $token, $id, 1);
 
     expect($log->signals)->toBe([]);
+});
+
+// Наряд LANG-1b §3: «где строки нет — склейка как запас, с пометкой в журнале». The clean «врач» with no learner line on its
+// frame p1 (the line re-pointed to no frame): the talk will hint p1 with the frame put together, and the lesson's build says
+// so once, in the day's build log. CATCHES a hint put together without a word in the log — and a log line for a lesson that
+// has a line of every frame.
+it('names in the build log the frames the talk will hint by putting the frame together, once, when the lesson is written', function () {
+    $log = bt2BuildLog();
+    app()->instance(DayBuildLog::class, $log);
+    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: static function ($request): array {
+        $p = planCleanLesson($request);
+        foreach ($p['dialogue'] as $x => $exchange) {
+            foreach ($exchange['messages'] as $m => $message) {
+                if (($message['phrase_id'] ?? null) === 'p1') {
+                    $p['dialogue'][$x]['messages'][$m]['phrase_id'] = null;
+                }
+            }
+        }
+
+        return $p;
+    }));
+    [, $token] = planLearner();
+    $id = planCreate($this, $token, ['days_total' => 1])['id'];
+    $scene = (string) DB::table('plan_scenes')->where('plan_id', $id)->value('id');
+
+    expect($log->assembled)->toBe([['plan' => $id, 'scene' => $scene, 'refs' => ['p1']]]);
+});
+
+it('writes nothing of hints to the build log for a lesson that says every frame', function () {
+    $log = bt2BuildLog();
+    app()->instance(DayBuildLog::class, $log);
+    app()->instance(PlanModelPort::class, new FakePlanModel(lesson: planCleanLesson(...)));
+    [, $token] = planLearner();
+    planCreate($this, $token, ['days_total' => 1]);
+
+    expect($log->assembled)->toBe([]);
 });

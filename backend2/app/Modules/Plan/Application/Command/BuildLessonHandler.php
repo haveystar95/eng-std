@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
+use App\Modules\Plan\Application\Port\DayBuildLog;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\LessonBuildService;
 use App\Modules\Plan\Application\Service\LessonRequests;
@@ -16,6 +17,7 @@ use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
+use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
@@ -59,6 +61,7 @@ final readonly class BuildLessonHandler
         private TransactionManager $tx,
         private LanguagePacks $packs,
         private PartnerVoices $voices,
+        private DayBuildLog $buildLog,
     ) {}
 
     public function __invoke(BuildLesson $command): void
@@ -115,10 +118,16 @@ final readonly class BuildLessonHandler
             $this->plans->saveScene($scene);
             $served = $scene->lesson();
             if ($served !== null) {
-                $this->terms->replaceForScene(
-                    $scene->id(),
-                    PlanTerm::fromLesson($scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate(), $targetPack->sentenceEnds(), $nativePack->sentenceEnds()),
-                );
+                $terms = PlanTerm::fromLesson($scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate(), $targetPack->sentenceEnds(), $nativePack->sentenceEnds());
+                $this->terms->replaceForScene($scene->id(), $terms);
+                // A frame no learner line of the lesson stands on gives the talk no line to hint with (наряд LANG-1b §3).
+                $assembled = array_values(array_map(
+                    static fn (PlanTerm $term): string => $term->ref(),
+                    array_filter($terms, static fn (PlanTerm $term): bool => $term->kind() === TermKind::Phrase && trim((string) $term->exampleNative()) === ''),
+                ));
+                if ($assembled !== []) {
+                    $this->buildLog->hintsAssembled($plan->id(), $scene->id(), $assembled);
+                }
             }
         });
 

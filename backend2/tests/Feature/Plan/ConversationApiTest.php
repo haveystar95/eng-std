@@ -948,9 +948,10 @@ it('carries the talk\'s targets, ticks them off turn by turn, and names the hear
         ->and(count($talk['targets']))->toBeLessThanOrEqual(7)
         ->and(array_unique(array_column($talk['targets'], 'said')))->toBe([false])
         // A target is a CONSTRUCTION (наряд FIX-3 §6): the frame with its window, the lesson's value grey in it, said or not,
-        // what the learner put in the window — null until they have — and, since FIX-4 §2, where it stands: none · almost ·
-        // said (the key added last: the phone of build (20) reads the others as they were).
-        ->and(array_keys($talk['targets'][0]))->toBe(['scene_id', 'ref', 'frame_target', 'frame_native', 'example_target', 'example_native', 'said', 'value_target', 'state'])
+        // what the learner put in the window — null until they have — since наряд LANG-1b §3 the lesson's own line in the
+        // learner's language, whole (`line_native`), and, since FIX-4 §2, where it stands: none · almost · said (the keys
+        // added after the others: the phone of build (21) reads them as they were).
+        ->and(array_keys($talk['targets'][0]))->toBe(['scene_id', 'ref', 'frame_target', 'frame_native', 'example_target', 'example_native', 'said', 'value_target', 'line_native', 'state'])
         ->and(array_unique(array_column($talk['targets'], 'value_target')))->toBe([null])
         ->and(array_unique(array_column($talk['targets'], 'state')))->toBe(['none']);
 
@@ -1477,6 +1478,45 @@ it('offers the hint as the lesson\'s whole sentence, and no clause beside it', f
     expect($talk['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'У него болит поясница.', 'target' => null])
         ->and($asked['hints'])->toMatchArray(['ref' => 'p6', 'sentence' => 'Нам нужно сделать рентген?', 'target' => null])
         ->and(array_keys($talk['hints']))->toBe(['enabled', 'delay_ms', 'target', 'scene_id', 'ref', 'sentence']);
+});
+
+/**
+ * Наряд LANG-1b §3: «hints.sentence и targets[].example_native — родной текст реплики ученика из урока как он сгенерирован,
+ * не склейка каркас + наполнение» — решение владельца по вопросу наряда: `example_native` остаётся ЗНАЧЕНИЕМ окна (его
+ * вставляет в каркас сборка (21)), строка урока целиком — новым полем `targets[].line_native`. The clean «врач» with the
+ * first line of the lesson written otherwise than its frame and value put together («Поясница у него болит.» on «У него
+ * болит ___.» + «поясница»). CATCHES the hint or the new field put together from the frame again, the value of the
+ * window replaced by the whole line (build (21) would print the frame twice), and the new field missing from the summary.
+ */
+it('hints with the lesson\'s own line in the learner\'s language, and carries it whole beside the window\'s value', function () {
+    $fake = new FakePlanModel(
+        lesson: static function ($request): array {
+            $p = planCleanLesson($request);
+            $p['dialogue'][0]['messages'][1]['text_native'] = 'Поясница у него болит.';
+
+            return $p;
+        },
+        conversation: static function (ConversationAgentRequest $request): array {
+            $payload = FakePlanModel::conversationPayload($request);
+            $payload['opens'] = $request->leadTo;
+
+            return $payload;
+        },
+    );
+    app()->instance(PlanModelPort::class, $fake);
+    [$token, $id] = convDay($this);
+    $talk = convStart($this, $token, $id);
+    $first = array_values(array_filter($talk['targets'], static fn (array $t): bool => $t['ref'] === 'p1'))[0];
+
+    expect($talk['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'Поясница у него болит.'])
+        ->and($first['line_native'])->toBe('Поясница у него болит.')
+        ->and($first['frame_native'])->toBe('У него болит ___.')
+        ->and($first['example_native'])->toBe('поясница')
+        // A construction the lesson says as its frame with the value says the same both ways.
+        ->and(array_values(array_filter($talk['targets'], static fn (array $t): bool => $t['ref'] === 'p2'))[0]['line_native'])->toBe('Началось три дня назад.');
+
+    $ended = planTalkThrough($this, $token, $id, 1);
+    expect(array_column($ended['summary']['phrases'], 'line_native', 'ref')['p1'])->toBe('Поясница у него болит.');
 });
 
 /**

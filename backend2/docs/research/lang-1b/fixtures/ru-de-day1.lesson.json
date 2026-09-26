@@ -1,0 +1,728 @@
+{
+    "topic": {
+        "title_native": "Запись к врачу",
+        "title_target": "Einen Arzttermin buchen",
+        "description_native": "Запишитесь к врачу, скажите, что у вас болит горло и температура, и выберите время.",
+        "description_target": "Book a doctor's appointment, say you have a sore throat and fever, and choose a time."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "запись на приём",
+                        "target": "einen Termin",
+                        "in_dialogue": true,
+                        "pronunciation_native": "айнэн тэрмин"
+                    },
+                    {
+                        "native": "врач",
+                        "target": "einen Arzt",
+                        "in_dialogue": false,
+                        "pronunciation_native": "айнэн арцт"
+                    }
+                ],
+                "hint_native": "что вам нужно"
+            },
+            "frame_native": "Мне нужно ___.",
+            "frame_target": "Ich brauche ___.",
+            "pronunciation_native": "их браухэ ___"
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "болит горло",
+                        "target": "Halsschmerzen",
+                        "in_dialogue": true,
+                        "pronunciation_native": "хальсшмерцен"
+                    },
+                    {
+                        "native": "кашель",
+                        "target": "Husten",
+                        "in_dialogue": false,
+                        "pronunciation_native": "хустэн"
+                    },
+                    {
+                        "native": "головная боль",
+                        "target": "Kopfschmerzen",
+                        "in_dialogue": false,
+                        "pronunciation_native": "копфшмерцен"
+                    }
+                ],
+                "hint_native": "симптом"
+            },
+            "frame_native": "У меня ___.",
+            "frame_target": "Ich habe ___.",
+            "pronunciation_native": "их хабэ ___"
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "температура",
+                        "target": "Fieber",
+                        "in_dialogue": true,
+                        "pronunciation_native": "фиба"
+                    },
+                    {
+                        "native": "озноб",
+                        "target": "Schüttelfrost",
+                        "in_dialogue": false,
+                        "pronunciation_native": "шюттэльфрост"
+                    }
+                ],
+                "hint_native": "дополнительный симптом"
+            },
+            "frame_native": "У меня ещё и ___.",
+            "frame_target": "Ich habe auch ___.",
+            "pronunciation_native": "их хабэ аух ___"
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "три дня",
+                        "target": "drei Tagen",
+                        "in_dialogue": true,
+                        "pronunciation_native": "драй тагэн"
+                    },
+                    {
+                        "native": "два дня",
+                        "target": "zwei Tagen",
+                        "in_dialogue": false,
+                        "pronunciation_native": "цвай тагэн"
+                    },
+                    {
+                        "native": "неделю",
+                        "target": "einer Woche",
+                        "in_dialogue": false,
+                        "pronunciation_native": "айна вохэ"
+                    }
+                ],
+                "hint_native": "как долго"
+            },
+            "frame_native": "Уже ___.",
+            "frame_target": "Seit ___.",
+            "pronunciation_native": "зайт ___"
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "десять часов",
+                        "target": "zehn Uhr",
+                        "in_dialogue": true,
+                        "pronunciation_native": "цеен ур"
+                    },
+                    {
+                        "native": "четырнадцать часов",
+                        "target": "vierzehn Uhr",
+                        "in_dialogue": false,
+                        "pronunciation_native": "фирцеен ур"
+                    }
+                ],
+                "hint_native": "время"
+            },
+            "frame_native": "Мне подходит ___.",
+            "frame_target": "___ passt mir.",
+            "pronunciation_native": "___ паст мир"
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "моё имя",
+                        "target": "meinen Namen",
+                        "in_dialogue": true,
+                        "pronunciation_native": "майнэн намэн"
+                    },
+                    {
+                        "native": "мой номер",
+                        "target": "meine Nummer",
+                        "in_dialogue": false,
+                        "pronunciation_native": "майнэ нумма"
+                    }
+                ],
+                "hint_native": "какие данные"
+            },
+            "frame_native": "Вам нужно ___?",
+            "frame_target": "Brauchen Sie ___?",
+            "pronunciation_native": "браухэн зи ___"
+        },
+        {
+            "id": "p7",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "завтра в десять",
+                        "target": "morgen um zehn",
+                        "in_dialogue": true,
+                        "pronunciation_native": "морген ум цеен"
+                    },
+                    {
+                        "native": "завтра в четырнадцать",
+                        "target": "morgen um vierzehn",
+                        "in_dialogue": false,
+                        "pronunciation_native": "морген ум фирцеен"
+                    }
+                ],
+                "hint_native": "подтверждённое время"
+            },
+            "frame_native": "Хорошо, ___.",
+            "frame_target": "Das ist gut, ___.",
+            "pronunciation_native": "дас ист гут, ___"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "ask",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Причину обращения",
+                        "text_target": "The reason for the visit"
+                    },
+                    {
+                        "text_native": "Ваш домашний адрес",
+                        "text_target": "Your home address"
+                    },
+                    {
+                        "text_native": "Ваш страховой номер",
+                        "text_target": "Your insurance number"
+                    }
+                ],
+                "text_native": "О чём просит администратор?",
+                "text_target": "What does the receptionist ask for?",
+                "explanation_native": "Администратор просит сказать, по какой причине нужен приём.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "einen Termin",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "Мне нужна запись на приём.",
+                    "text_target": "Ich brauche einen Termin.",
+                    "speaking_key": "Ich brauche",
+                    "simplified_variants": [
+                        "Ich möchte einen Termin."
+                    ],
+                    "pronunciation_native": "их браухэ айнэн тэрмин"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "Конечно. Скажите, пожалуйста, причину.",
+                    "text_target": "Gern. Sagen Sie bitte den Grund."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Какие у вас симптомы",
+                        "text_target": "What symptoms you have"
+                    },
+                    {
+                        "text_native": "К какому врачу вы уже ходили",
+                        "text_target": "Which doctor you saw before"
+                    },
+                    {
+                        "text_native": "Как вы будете платить",
+                        "text_target": "How you will pay"
+                    }
+                ],
+                "text_native": "Что хочет узнать администратор?",
+                "text_target": "What does the receptionist want to know?",
+                "explanation_native": "Администратор спрашивает именно о жалобах.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "Какие у вас жалобы?",
+                    "text_target": "Was für Beschwerden haben Sie?"
+                },
+                {
+                    "filler": "Halsschmerzen",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "У меня болит горло.",
+                    "text_target": "Ich habe Halsschmerzen.",
+                    "speaking_key": "Ich habe",
+                    "simplified_variants": [
+                        "Mein Hals tut weh."
+                    ],
+                    "pronunciation_native": "их хабэ хальсшмерцен"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "О температуре",
+                        "text_target": "A high temperature"
+                    },
+                    {
+                        "text_native": "О головной боли",
+                        "text_target": "A headache"
+                    },
+                    {
+                        "text_native": "О кашле",
+                        "text_target": "A cough"
+                    }
+                ],
+                "text_native": "О каком дополнительном симптоме спрашивает администратор?",
+                "text_target": "What extra symptom does the receptionist ask about?",
+                "explanation_native": "Вопрос касается температуры.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "У вас тоже есть температура?",
+                    "text_target": "Haben Sie auch Fieber?"
+                },
+                {
+                    "filler": "Fieber",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "У меня ещё и температура.",
+                    "text_target": "Ich habe auch Fieber.",
+                    "speaking_key": "habe auch",
+                    "simplified_variants": [
+                        "Ja, ich habe Fieber."
+                    ],
+                    "pronunciation_native": "их хабэ аух фиба"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Как долго это продолжается",
+                        "text_target": "How long the problem has lasted"
+                    },
+                    {
+                        "text_native": "Насколько сильная боль",
+                        "text_target": "How strong the pain is"
+                    },
+                    {
+                        "text_native": "Какие лекарства вы принимали",
+                        "text_target": "What medicine you took"
+                    }
+                ],
+                "text_native": "Какую информацию спрашивает администратор?",
+                "text_target": "What information does the receptionist ask for?",
+                "explanation_native": "Администратор хочет узнать длительность проблемы.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "Как давно это у вас?",
+                    "text_target": "Seit wann haben Sie das?"
+                },
+                {
+                    "filler": "drei Tagen",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "Уже три дня.",
+                    "text_target": "Seit drei Tagen.",
+                    "speaking_key": "Seit",
+                    "simplified_variants": [
+                        "Das ist seit drei Tagen."
+                    ],
+                    "pronunciation_native": "зайт драй тагэн"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Завтра в 10:00 или в 14:00",
+                        "text_target": "10:00 or 14:00 tomorrow"
+                    },
+                    {
+                        "text_native": "Завтра в 9:00 или в 11:00",
+                        "text_target": "09:00 or 11:00 tomorrow"
+                    },
+                    {
+                        "text_native": "Сегодня в 14:00 или в 16:00",
+                        "text_target": "14:00 or 16:00 today"
+                    }
+                ],
+                "text_native": "Какие варианты времени предлагает администратор?",
+                "text_target": "Which appointment choices does the receptionist offer?",
+                "explanation_native": "Администратор предложила два времени на завтра: 10:00 и 14:00.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "У нас есть свободное время завтра в десять или в четырнадцать часов.",
+                    "text_target": "Wir haben morgen um zehn oder um vierzehn Uhr frei."
+                },
+                {
+                    "filler": "zehn Uhr",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "Десять часов мне подходит.",
+                    "text_target": "Zehn Uhr passt mir.",
+                    "speaking_key": "passt mir",
+                    "simplified_variants": [
+                        "Morgen um zehn passt.",
+                        "Zehn Uhr ist gut."
+                    ],
+                    "pronunciation_native": "цеен ур паст мир"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "rescue",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "8:00 и 12:00",
+                        "text_target": "08:00 and 12:00"
+                    },
+                    {
+                        "text_native": "10:00 и 14:00",
+                        "text_target": "10:00 and 14:00"
+                    },
+                    {
+                        "text_native": "11:00 и 15:00",
+                        "text_target": "11:00 and 15:00"
+                    }
+                ],
+                "text_native": "Какие два времени звучат в повторе?",
+                "text_target": "What are the two times in the repeated message?",
+                "explanation_native": "В повторе снова названы 10:00 и 14:00.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": null,
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "Повторите, пожалуйста.",
+                    "text_target": "Können Sie das bitte wiederholen?",
+                    "speaking_key": "bitte wiederholen",
+                    "simplified_variants": [
+                        "Bitte noch einmal.",
+                        "Können Sie das wiederholen?"
+                    ],
+                    "pronunciation_native": "кёнэн зи дас биттэ видахолен"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "Завтра в десять или в четырнадцать часов.",
+                    "text_target": "Morgen um zehn oder um vierzehn Uhr."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Чтобы отправить лекарство",
+                        "text_target": "To send medicine"
+                    },
+                    {
+                        "text_native": "Для записи на приём",
+                        "text_target": "For the appointment booking"
+                    },
+                    {
+                        "text_native": "Чтобы проверить ваш адрес",
+                        "text_target": "To check your address"
+                    }
+                ],
+                "text_native": "Зачем администратору ваше имя?",
+                "text_target": "Why does the receptionist need your name?",
+                "explanation_native": "Имя нужно именно для оформления записи.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "meinen Namen",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "Вам нужно моё имя?",
+                    "text_target": "Brauchen Sie meinen Namen?",
+                    "speaking_key": "Brauchen Sie",
+                    "simplified_variants": [
+                        "Soll ich meinen Namen sagen?"
+                    ],
+                    "pronunciation_native": "браухэн зи майнэн намэн"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "Да, мне нужно ваше имя для записи.",
+                    "text_target": "Ja, ich brauche Ihren Namen für die Buchung."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Завтра в 10:00",
+                        "text_target": "Tomorrow at 10:00"
+                    },
+                    {
+                        "text_native": "Сегодня в 14:00",
+                        "text_target": "Today at 14:00"
+                    },
+                    {
+                        "text_native": "Завтра в 16:00",
+                        "text_target": "Tomorrow at 16:00"
+                    }
+                ],
+                "text_native": "Когда в итоге назначен приём?",
+                "text_target": "When is the final appointment?",
+                "explanation_native": "Администратор подтверждает запись на завтра на 10:00.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Receptionist",
+                    "text_native": "Тогда ваш приём завтра в десять часов.",
+                    "text_target": "Dann ist Ihr Termin morgen um zehn Uhr."
+                },
+                {
+                    "filler": "morgen um zehn",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Пациент",
+                    "role_target": "Patient",
+                    "text_native": "Хорошо, завтра в десять.",
+                    "text_target": "Das ist gut, morgen um zehn.",
+                    "speaking_key": "Das ist gut",
+                    "simplified_variants": [
+                        "Gut, morgen um zehn.",
+                        "Das passt, morgen um zehn."
+                    ],
+                    "pronunciation_native": "дас ист гут, морген ум цеен"
+                }
+            ],
+            "initiator": "A"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Зачем пациент обращается в клинику?",
+                "options_native": [
+                    "Чтобы записаться на приём",
+                    "Чтобы узнать результаты анализа",
+                    "Чтобы заказать лекарство"
+                ],
+                "explanation_native": "С самого начала пациент говорит, что ему нужна запись на приём.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Что пациент назвал как основную жалобу?",
+                "options_native": [
+                    "Кашель",
+                    "Боль в горле",
+                    "Боль в спине"
+                ],
+                "explanation_native": "Пациент сказал, что у него болит горло.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Какую длительность проблемы назвал пациент?",
+                "options_native": [
+                    "Два дня",
+                    "Три дня",
+                    "Неделю"
+                ],
+                "explanation_native": "Пациент говорит, что это продолжается уже три дня.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Какое время в итоге выбрали?",
+                "options_native": [
+                    "Завтра в 10:00",
+                    "Завтра в 14:00",
+                    "Сегодня в 16:00"
+                ],
+                "explanation_native": "В конце администратор подтверждает запись на завтра на 10:00.",
+                "correct_option_index": 0
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p1"
+            ],
+            "term_target": "Termin",
+            "image_prompt": "appointment card on a clinic reception desk",
+            "definition_target": "an arranged time for a meeting or visit",
+            "translation_native": "запись на приём",
+            "pronunciation_native": "тэрмин"
+        },
+        {
+            "id": "v2",
+            "kind": "word",
+            "used_in": [
+                "p2"
+            ],
+            "term_target": "Halsschmerzen",
+            "image_prompt": "person touching their throat at home",
+            "definition_target": "pain in the throat",
+            "translation_native": "боль в горле",
+            "pronunciation_native": "хальсшмерцен"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "p3",
+                "A3"
+            ],
+            "term_target": "Fieber",
+            "image_prompt": "digital thermometer in a person's hand",
+            "definition_target": "a high body temperature when you are ill",
+            "translation_native": "температура",
+            "pronunciation_native": "фиба"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "A2"
+            ],
+            "term_target": "Beschwerden",
+            "image_prompt": null,
+            "definition_target": "health problems that a patient has",
+            "translation_native": "жалобы, симптомы",
+            "pronunciation_native": "бешвердэн"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "A4"
+            ],
+            "term_target": "seit",
+            "image_prompt": null,
+            "definition_target": "from a time in the past until now",
+            "translation_native": "уже, в течение",
+            "pronunciation_native": "зайт"
+        },
+        {
+            "id": "v6",
+            "kind": "chunk",
+            "used_in": [
+                "A5"
+            ],
+            "term_target": "frei haben",
+            "image_prompt": "appointment schedule with open time slots on a clinic computer screen",
+            "definition_target": "to have an available time slot",
+            "translation_native": "иметь свободное время",
+            "pronunciation_native": "фрай хабэн"
+        },
+        {
+            "id": "v7",
+            "kind": "chunk",
+            "used_in": [
+                "p5"
+            ],
+            "term_target": "passt mir",
+            "image_prompt": null,
+            "definition_target": "is convenient for me",
+            "translation_native": "мне подходит",
+            "pronunciation_native": "паст мир"
+        },
+        {
+            "id": "v8",
+            "kind": "word",
+            "used_in": [
+                "A7"
+            ],
+            "term_target": "Buchung",
+            "image_prompt": "receptionist entering an appointment into a booking system",
+            "definition_target": "the act of reserving or arranging something",
+            "translation_native": "оформление записи",
+            "pronunciation_native": "бухунг"
+        }
+    ],
+    "role_gender": "female",
+    "learner_role": {
+        "role_native": "Пациент",
+        "role_target": "Patient"
+    }
+}

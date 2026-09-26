@@ -7929,6 +7929,7 @@
                         "example_native": "поясница",
                         "said": false,
                         "value_target": null,
+                        "line_native": "У него болит поясница.",
                         "state": "none"
                     },
                     {
@@ -7940,6 +7941,7 @@
                         "example_native": "три дня назад",
                         "said": false,
                         "value_target": null,
+                        "line_native": "Началось три дня назад.",
                         "state": "none"
                     },
                     {
@@ -7951,6 +7953,7 @@
                         "example_native": "острая",
                         "said": false,
                         "value_target": null,
+                        "line_native": "Боль острая, когда он наклоняется.",
                         "state": "none"
                     },
                     {
@@ -7962,6 +7965,7 @@
                         "example_native": null,
                         "said": false,
                         "value_target": null,
+                        "line_native": "Нет, температуры нет.",
                         "state": "none"
                     },
                     {
@@ -7973,6 +7977,7 @@
                         "example_native": "дома",
                         "said": false,
                         "value_target": null,
+                        "line_native": "Хорошо, он будет отдыхать дома.",
                         "state": "none"
                     },
                     {
@@ -7984,6 +7989,7 @@
                         "example_native": "сделать рентген",
                         "said": false,
                         "value_target": null,
+                        "line_native": "Нам нужно сделать рентген?",
                         "state": "none"
                     }
                 ],

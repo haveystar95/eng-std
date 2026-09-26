@@ -87,14 +87,16 @@ final readonly class ConversationViews
 
     /**
      * «СКАЖИ В РАЗГОВОРЕ» ON THE WIRE — every target of the day's talk as a CONSTRUCTION (наряд FIX-3 §6): `{scene_id,
-     * ref, frame_target, frame_native, example_target, example_native, said, value_target, state}` — the frame with its
-     * window, the lesson's value (grey in the window on the screen), whether it has been said, what the learner put in its
-     * window when they said it (null until then; for a frame without a window — null too), and where it stands: `none`,
+     * ref, frame_target, frame_native, example_target, example_native, said, value_target, line_native, state}` — the frame
+     * with its window, the lesson's value (grey in the window on the screen), whether it has been said, what the learner put
+     * in its window when they said it (null until then; for a frame without a window — null too), the lesson's own line in
+     * the learner's language, whole (`line_native`, наряд LANG-1b §3: what 37-5, 37-8d and 37-12 print beside the frame
+     * instead of the frame and the value put together), and where it stands: `none`,
      * `almost` — said with one word off, not closed —, `said` (наряд FIX-4 §2). `said` and the value by the talk given:
      * the talk's own document, its summary and the talk's row of the day window (`window.stages[].targets`) print ONE list
      * — the day's material's, the one `POST …/conversation` starts the talk with. No talk yet: nothing is said.
      *
-     * @return list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, state: string}>
+     * @return list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, line_native: string, state: string}>
      */
     public function targets(ConversationMaterialView $material, ?Conversation $talk): array
     {
@@ -109,7 +111,7 @@ final readonly class ConversationViews
      * «ЕЩЁ ВСПОМНИЛ» (наряд FIX-4 §2): the constructions of the talk's scenes said that are no target — in the order they
      * were said, each with what went into its window. In the summary; never a target.
      *
-     * @return list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}>
+     * @return list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, line_native: string}>
      */
     public function extraSaid(ConversationMaterialView $material, Conversation $talk): array
     {
@@ -153,9 +155,11 @@ final readonly class ConversationViews
      * THE HINT OF THE LEARNER'S NEXT MOVE (наряд FIX-4 §5), read off the journal by the rule the line was written with
      * ({@see ConversationLead::hint()}): one target of the scene the role's last line is said in — the one the move before
      * it said almost, then with its exact line; else the one the line opened; else the first not said. `sentence` is its
-     * sentence in the learner's language as the lesson has it («У меня есть боль в плече.», наряд FIX-4b §2); the clause
-     * of «Скажи, что …» the build (20) read (`native`) is gone (наряд ACC-1 §5). None when it is not the learner's move,
-     * when the scene has nothing left to say, when the talk is over.
+     * sentence in the learner's language as the lesson has it («У меня есть боль в плече.», наряд FIX-4b §2) — the lesson's
+     * own line as the model wrote it, not the native frame with its value put together («Мне нужна запись на приём.», not
+     * «Мне нужно запись на приём», наряд LANG-1b §3; {@see ConversationMaterial::lessonLine()}); the clause of «Скажи, что …»
+     * the build (20) read (`native`) is gone (наряд ACC-1 §5). None when it is not the learner's move, when the scene has
+     * nothing left to say, when the talk is over.
      *
      * «БЕЗ ПОДСКАЗОК» TOO (наряд FIX-4c §2): the document carries the hint whatever the mode — `hints.enabled` says the
      * mode, and the phone hides the plate itself until «Подсказать». A phone that had to pick the target on its own in
@@ -193,7 +197,7 @@ final readonly class ConversationViews
     /**
      * One construction on the wire, whether it has been said and what the learner put in its window.
      *
-     * @return array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}
+     * @return array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, line_native: string}
      */
     private function construction(ConversationPhrase $phrase, ?Conversation $talk, ConversationMaterialView $material, LanguagePack $pack): array
     {
@@ -208,6 +212,7 @@ final readonly class ConversationViews
             'example_native' => $phrase->exampleNative,
             'said' => $said,
             'value_target' => $said ? $this->valueIn($talk, $phrase, $material, $pack) : null,
+            'line_native' => $phrase->lineNative,
         ];
     }
 

@@ -14,7 +14,7 @@ use App\Modules\Plan\Domain\ValueObject\StageSummary;
 final readonly class WindowStageView
 {
     /**
-     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null}>|null  $targets  the talk's row only
+     * @param  list<array{scene_id: string, ref: string, frame_target: string, frame_native: string, example_target: string|null, example_native: string|null, said: bool, value_target: string|null, line_native: string}>|null  $targets  the talk's row only
      */
     public function __construct(
         public string $stage,

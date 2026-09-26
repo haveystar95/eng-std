@@ -80,9 +80,10 @@ final readonly class ConversationMaterial
                     exampleTarget: $example?->target,
                     exampleNative: $example?->native,
                     kind: $frame->kind ?? ExchangeKind::Answer,
-                    // The lesson's own sentence of the construction — what the hint offers whole (наряд FIX-4 §5).
+                    // The lesson's own sentence of the construction — what the hint offers whole (наряд FIX-4 §5); in the
+                    // learner's language the LINE as the model wrote it (наряд LANG-1b §3), not the frame and its value put together.
                     lineTarget: $term->textTarget(),
-                    lineNative: $term->textNative(),
+                    lineNative: self::lessonLine($term),
                 );
             }
         }
@@ -174,6 +175,21 @@ final readonly class ConversationMaterial
     private static function says(Exchange $exchange): bool
     {
         return $exchange->kind !== ExchangeKind::Rescue && $exchange->learner() !== null && $exchange->partner() !== null;
+    }
+
+    /**
+     * THE LESSON'S OWN LINE OF A CONSTRUCTION IN THE LEARNER'S LANGUAGE, as the model wrote it (наряд LANG-1b §3): the first
+     * learner line the lesson says the frame with — stored beside the phrase as its example (`PlanTerm::fromLesson`). The
+     * frame and its value put together read otherwise where the value agrees with the frame: «Мне нужно ___.» with «запись на
+     * приём» gave the talk's hint «Мне нужно запись на приём», while the lesson said «Мне нужна запись на приём.». A frame no
+     * line of the lesson stands on has no such line — the frame said with its value is what is left, and the build of the
+     * day names it in its log ({@see \App\Modules\Plan\Application\Port\DayBuildLog::hintsAssembled()}).
+     */
+    public static function lessonLine(PlanTerm $term): string
+    {
+        $line = trim((string) $term->exampleNative());
+
+        return $line !== '' ? $line : $term->textNative();
     }
 
     /**

@@ -16,8 +16,10 @@ use App\Modules\Plan\Domain\Service\FrameText;
  * ({@see \App\Modules\Plan\Domain\Service\FrameJudge}, наряд FIX-4 §2). A frame with no window is said as it is: its
  * example is null.
  *
- * `line` is the lesson's own sentence of the construction — the frame said with its value, in both languages («I have
- * some shoulder pain.» / «У меня есть боль в плече.»): the hint of the talk offers it whole (наряд FIX-4 §5).
+ * `line` is the lesson's own sentence of the construction — the frame said with its value in the target language («I have
+ * some shoulder pain.»), and in the learner's the lesson's own line as the model wrote it («У меня есть боль в плече.»,
+ * наряд LANG-1b §3 — not the native frame with its value, which may not agree): the hint of the talk offers it whole (наряд
+ * FIX-4 §5), and every construction on the wire carries it as `line_native`.
  *
  * The id is scene-qualified on purpose: `p3` means nothing on its own in a rehearsal that walks three scenes.
  */
