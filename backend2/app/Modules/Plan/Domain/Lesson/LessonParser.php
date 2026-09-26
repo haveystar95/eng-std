@@ -6,6 +6,7 @@ namespace App\Modules\Plan\Domain\Lesson;
 
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
 use App\Modules\Plan\Domain\Service\FrameText;
+use App\Modules\Plan\Domain\Service\ReadingLetters;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
@@ -25,44 +26,12 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * abbreviation's stop plus the sentence's, and the phone, the voice and the judge all read it as written. And a
  * READING — every `pronunciation_native` the parser reads: a frame's, a filler's, a word's, a learner line's, in a
  * whole lesson and in a repaired card alike — has the Latin letters drawn inside a Cyrillic word put back into
- * Cyrillic, a Latin acute vowel («á») as the Cyrillic vowel with the combining stress mark ({@see self::reading()},
- * наряд LANG-1), and a letter of another Cyrillic alphabet as the letter it stands for («аҗута́» → «ажута́», наряд
- * LANG-1b §10).
+ * Cyrillic, a Latin acute vowel («á») as the Cyrillic vowel with the combining stress mark (наряд LANG-1), and a letter of
+ * another Cyrillic alphabet as the letter it stands for («аҗута́» → «ажута́», наряд LANG-1b §10) — the one rule of
+ * {@see ReadingLetters}, which `plan:clean-text` reads the readings already stored with.
  */
 final class LessonParser
 {
-    /**
-     * The Latin letters a Cyrillic word may be written with by mistake, each with the Cyrillic letter it is drawn
-     * like — one shape in two tables of the alphabet (наряд LANG-1): lower-case a e o c p x y k, capital A E O C P X
-     * Y B H K M T.
-     */
-    private const CYRILLIC_TWINS = [
-        'a' => 'а', 'e' => 'е', 'o' => 'о', 'c' => 'с', 'p' => 'р', 'x' => 'х', 'y' => 'у', 'k' => 'к',
-        'A' => 'А', 'E' => 'Е', 'O' => 'О', 'C' => 'С', 'P' => 'Р', 'X' => 'Х', 'Y' => 'У',
-        'B' => 'В', 'H' => 'Н', 'K' => 'К', 'M' => 'М', 'T' => 'Т',
-    ];
-
-    /**
-     * The letters of OTHER Cyrillic alphabets a Cyrillic reading may be written with by mistake — Kazakh, Tatar, Bashkir,
-     * Mongolian letters no learner's language of the plan has — each with the letter of the readings it stands for (наряд
-     * LANG-1b §10: the owner's ru→ro day read «a ajuta» as «а аҗута́»): җ→ж, ғ→г, қ→к, ә→э, ү→у, ұ→у, ң→н, һ→х, ө→о, and
-     * their capitals.
-     */
-    private const CYRILLIC_ALIENS = [
-        'җ' => 'ж', 'ғ' => 'г', 'қ' => 'к', 'ә' => 'э', 'ү' => 'у', 'ұ' => 'у', 'ң' => 'н', 'һ' => 'х', 'ө' => 'о',
-        'Җ' => 'Ж', 'Ғ' => 'Г', 'Қ' => 'К', 'Ә' => 'Э', 'Ү' => 'У', 'Ұ' => 'У', 'Ң' => 'Н', 'Һ' => 'Х', 'Ө' => 'О',
-    ];
-
-    /**
-     * A Latin vowel written with its acute in one character — the stress of a Cyrillic reading drawn from the Latin
-     * table («лекáжа») — as its canonical decomposition read through {@see self::CYRILLIC_TWINS}: the Cyrillic vowel,
-     * then the combining acute U+0301 the readings mark stress with («лека́жа»).
-     */
-    private const CYRILLIC_STRESSED = [
-        'á' => "а\u{0301}", 'é' => "е\u{0301}", 'ó' => "о\u{0301}", 'ý' => "у\u{0301}",
-        'Á' => "А\u{0301}", 'É' => "Е\u{0301}", 'Ó' => "О\u{0301}", 'Ý' => "У\u{0301}",
-    ];
-
     /** @param array<string, mixed> $payload */
     public function parse(array $payload): Lesson
     {
@@ -292,48 +261,15 @@ final class LessonParser
     }
 
     /**
-     * A READING WITH ITS CYRILLIC WORDS WRITTEN IN CYRILLIC (наряд LANG-1, валидатор): in every run of letters (and
-     * their combining marks) that holds at least one Cyrillic letter, a Latin letter drawn like a Cyrillic one becomes
-     * that Cyrillic letter ({@see self::CYRILLIC_TWINS}), and a Latin vowel with its acute becomes the Cyrillic vowel with
-     * the combining acute U+0301 ({@see self::CYRILLIC_STRESSED}): «до лекáжа» → «до лека́жа», «___ ми пасуe» → «___ ми
-     * пасуе», «нюмэро дё телефoн» → «нюмэро дё телефон». A letter of ANOTHER Cyrillic alphabet becomes the letter of the
-     * readings it stands for ({@see self::CYRILLIC_ALIENS}, наряд LANG-1b §10): «а аҗута́» → «а ажута́» — the owner's ru→ro
-     * day, three readings of «a ajuta» with the Tatar «җ»; the letter is Cyrillic, so the fatal `foreign_script` let it
-     * through and only the warning `pronunciation.script` counted it, and the learner got a letter they cannot read.
-     * Nothing else changes.
-     *
-     * Why the parser mends it rather than the repair: `pronunciation.foreign_script` is FATAL (наряд BACK-TAILS-1 §3.2),
-     * and these are not letters of another writing — they are the same letter taken from the other table, drawn as the
-     * learner already reads it; only the code point is wrong. They were every one of the
-     * seven `foreign_script` findings of the LANG-1 scouting days (ru→pl: the Polish «pasuje» leaving its «e», the stress
-     * written with a Latin «á»; ru→fr: «телефoн») and four of the eleven of the ru→en days replayed
-     * (`docs/research/lang-1/baseline.md`) — a paid repair, or a failed day, for a letter a machine puts back.
-     *
-     * What it does NOT touch. A run with no Cyrillic letter in it stays as written: the Latin reading of a learner who
-     * reads Latin letters, and a Latin word among Cyrillic ones («SMS-ку» keeps its «SMS»; «X-рэй» its «X» — the hyphen
-     * ends a run) — those stay what the rule finds. A letter with no Cyrillic twin stays too («пасуje» keeps its «j»).
-     * Letters of OTHER writings — Georgian «პლ», Armenian «ֆ» and «պր», the Greek «θ» of the ru→en days — are not
-     * mended by any table and stay real findings of `foreign_script` for the repair to rewrite. Only the reading is
-     * read so: `text_target`, `text_native` and every other field are the model's as written. And a reading the pattern
-     * cannot read at all — bytes that are not UTF-8, which a hand-built payload can carry though a decoded JSON cannot —
-     * is kept as written, never emptied: the validator judges the model's text, and a card never loses its reading to
-     * the mending of it.
+     * A READING IN THE LETTERS ITS LEARNER READS ({@see ReadingLetters}): the Latin twins and the letters of other Cyrillic
+     * alphabets inside a Cyrillic word put back, nothing else. Only the reading is read so: `text_target`, `text_native` and
+     * every other field are the model's as written, and the validator judges the reading the learner will get.
      *
      * @return ($reading is null ? null : string)
      */
     private static function reading(?string $reading): ?string
     {
-        if ($reading === null) {
-            return null;
-        }
-
-        return preg_replace_callback(
-            '/[\p{L}\p{M}]+/u',
-            static fn (array $run): string => preg_match('/\p{Cyrillic}/u', $run[0]) === 1
-                ? strtr($run[0], self::CYRILLIC_STRESSED + self::CYRILLIC_TWINS + self::CYRILLIC_ALIENS)
-                : $run[0],
-            $reading,
-        ) ?? $reading;
+        return $reading === null ? null : ReadingLetters::mended($reading);
     }
 
     /** @param array<string, mixed> $row */

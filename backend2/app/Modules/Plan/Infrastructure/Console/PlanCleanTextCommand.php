@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Console;
 
 use App\Modules\Plan\Domain\Service\ModelText;
+use App\Modules\Plan\Domain\Service\ReadingLetters;
 use App\Modules\Shared\Domain\Service\TextNormalizer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,15 @@ use Illuminate\Support\Facades\DB;
  * learner's own goal, the talk's journal of turns (written once, never changed) and the append-only journal of rejections
  * are not the model's text as stored, and are left as they are.
  *
+ * THE READINGS ALREADY STORED, IN THE LETTERS THEIR LEARNER READS (наряд LANG-1b, последнее): the readings of the words and
+ * phrases of a scene (`plan_terms`: the reading, the frame's reading, the fillers' readings in the slot) and of the dealt
+ * cards (every `pronunciation_native` and `frame_pronunciation_native` of a payload) are read, after the characters that
+ * print nothing, by the rule the parser reads a lesson's readings with ({@see ReadingLetters}): a Latin twin or a letter of
+ * another Cyrillic alphabet inside a Cyrillic word becomes the letter of the readings. The parser mends a stored LESSON every
+ * time it loads one, but the window of a day and its cards read `plan_terms`, written when the lesson was accepted: on 26.09
+ * the owner's day 1 of «Собеседование» (ru→ro) still showed «а аҗута́» after §10.3 was deployed. No other field is read so —
+ * a line, a translation, a definition is the model's text as written.
+ *
  * `--dry-run` (the default) prints every field it would change — «таблица · id · колонка: было → стало», an invisible
  * character shown as ⟨U+XXXX⟩ — and changes nothing; `--apply` writes, in one transaction, after the database backup (as
  * for any write to the dev database). Idempotent: a second run finds nothing. The last line counts the rows fixed.
@@ -33,7 +43,7 @@ final class PlanCleanTextCommand extends Command
         {--dry-run : only print what would change (the default)}
         {--apply : write the cleaned texts}';
 
-    protected $description = 'Cut the characters that print nothing out of the model\'s text already stored in the plan tables';
+    protected $description = 'Cut the characters that print nothing out of the model\'s text already stored in the plan tables, and put the stored readings in the letters of the readings';
 
     /** Table → its columns of the model's text: `text` columns and `json` ones (read and written back as JSON). */
     private const COLUMNS = [
@@ -54,6 +64,15 @@ final class PlanCleanTextCommand extends Command
             'json' => ['payload'],
         ],
     ];
+
+    /** Table → its READING fields: `text` columns that are a reading, `json` columns whose {@see READING_KEYS} hold one. */
+    private const READINGS = [
+        'plan_terms' => ['text' => ['pronunciation_native', 'frame_pronunciation_native'], 'json' => ['slot']],
+        'day_cards' => ['text' => [], 'json' => ['payload']],
+    ];
+
+    /** The keys a reading stands under in a JSON column: a filler's and a card's reading, a card's frame reading. */
+    private const READING_KEYS = ['pronunciation_native', 'frame_pronunciation_native'];
 
     public function handle(): int
     {
@@ -76,7 +95,14 @@ final class PlanCleanTextCommand extends Command
                     $update = [];
                     foreach ($columns['text'] as $column) {
                         $was = $row->{$column};
-                        if (is_string($was) && ($now = $normalizer->visible($was)) !== $was) {
+                        if (! is_string($was)) {
+                            continue;
+                        }
+                        $now = $normalizer->visible($was);
+                        if (in_array($column, self::READINGS[$table]['text'] ?? [], true)) {
+                            $now = ReadingLetters::mended($now);
+                        }
+                        if ($now !== $was) {
                             $update[$column] = $now;
                             $this->report($apply, $table, (string) $row->id, $column, $was, $now);
                         }
@@ -88,6 +114,9 @@ final class PlanCleanTextCommand extends Command
                             continue;
                         }
                         $clean = ModelText::visible($decoded);
+                        if (in_array($column, self::READINGS[$table]['json'] ?? [], true)) {
+                            $clean = self::readingsMended($clean);
+                        }
                         if ($clean !== $decoded) {
                             $update[$column] = json_encode($clean, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR);
                             $this->report($apply, $table, (string) $row->id, $column, self::changedStrings($decoded, $clean)[0], self::changedStrings($decoded, $clean)[1]);
@@ -121,6 +150,26 @@ final class PlanCleanTextCommand extends Command
     private function report(bool $apply, string $table, string $id, string $column, string $was, string $now): void
     {
         $this->line(sprintf('%s%s · %s · %s: «%s» → «%s»', $apply ? '' : '[dry-run] ', $table, $id, $column, self::shown($was), $now));
+    }
+
+    /**
+     * A JSON value with every reading in it — a string under one of {@see READING_KEYS}, at any depth — read by
+     * {@see ReadingLetters}; every other string as it is.
+     *
+     * @param  array<mixed>  $value
+     * @return array<mixed>
+     */
+    private static function readingsMended(array $value): array
+    {
+        foreach ($value as $key => $item) {
+            if (is_array($item)) {
+                $value[$key] = self::readingsMended($item);
+            } elseif (is_string($item) && in_array($key, self::READING_KEYS, true)) {
+                $value[$key] = ReadingLetters::mended($item);
+            }
+        }
+
+        return $value;
     }
 
     /** A text with every invisible character written out as ⟨U+XXXX⟩ — what the log can show of it. */
