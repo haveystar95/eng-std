@@ -70,7 +70,7 @@ plan fell to `ready` with no start date and day 1 locked again (`docs/research/p
 | `Conversation` (+ `ConversationTurn`) | the talk with the agent (наряд CONV-1): the journal is APPEND-ONLY and numbered by the aggregate (a client cannot insert, reorder or rewrite a line it is shown); a move is taken only when the state IS `your_turn` (a second `POST …/turn` in flight does not buy a second reply); an ended talk takes nothing more — «Ещё раз» is a NEW talk (`replayed`), never this one reopened; checkpoints walk FORWARD and a scene marked done stays done; the money — model plus voice — is added up in one place so the cap is asked of one number. Turns of the scene and money are two budgets: a rescue spends the money and none of the turns. Since CONV-2: whether a talk walks the stage is the talk's own answer (`passesStage()` — ended of its own, never `replayed`), its minutes are the time it was talked (`activeSeconds()`: gaps between lines, each up to `MAX_GAP_SECONDS` = 60), and the line a rescue asks to hear again is `lineBeforeLastMove()` |
 | `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
 
-The lesson (`Domain/Lesson`, `lesson_day.v4.9`; the rollback `v4.7` answers the same schema): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
+The lesson (`Domain/Lesson`, `lesson_day.v4.10`; the rollback `v4.7` answers the same schema): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
 `check`), phrases as frames (`Phrase` + `Slot` + `Filler`), the listening (`ListeningQuestion`, the lesson's own,
 not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only — and three things put right: a frame and a filler's native text lose the space before the mark they end with (доработка GEN-3, BACK-TAILS-1 §3.1); a text ending in two full stops keeps one (CONV-1); and — LANG-1, DECISIONS п. 437 — in a READING (`pronunciation_native` of a frame, a filler, a word, a learner line) every run of letters that holds a Cyrillic letter has its Latin look-alikes put back into Cyrillic, and a Latin acute vowel becomes the Cyrillic vowel with U+0301: «телефoн» → «телефон», «лекáжа» → «лека́жа»; a run with no Cyrillic, and letters of other writings, stay what `pronunciation.foreign_script` finds); `LessonAssembly` — the SERVED lesson
 every reader deals from: the filler of a learner line is the one the server finds in its text among its frame's
@@ -133,7 +133,7 @@ pack is written in the language's own spelling. `LanguagePacks` hands every pack
 `script_letters` and `common_words` (`asNeighbour()`) — for the translation guard (`ReplyNative`); `talkTitleTemplate()`
 holds a pack's `talk_title_template` to its shape (it throws on a missing field; the pack tests call it — the title itself
 is `NativeStrings::talkTitle`, which reads the key and falls back to English on a broken one);
-`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the eleven fatal codes of `LessonGate::FATAL`, the
+`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the twelve fatal codes of `LessonGate::FATAL`, the
 card order a repair takes — a word last —, at most two cards, the `fatal: …` reason), `Words` / `FrameText` / `FrameParts` (the text
 rules the validator and the assembly share — and, since SESSION-1a, the frame without its window: its words, where
 the slot stands), `DayMetricsCalculator`, `NativeStrings` (the server's own strings in the learner's language — ru, uk
@@ -255,15 +255,19 @@ reads plan tables.
 ## Notes
 
 - The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.9`, `lesson_card_repair.v1.3`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`; `lesson_day.v4.7`
-  and `lesson_card_repair.v1.2` stay beside them — a rollback is one constant of `PlanPromptFiles`; `lesson_day.v4.6` and
-  `v4.8` are gone, in git). `v4.8` (наряд LANG-1 §8, DECISIONS п. 435) was `v4.7` with ONE clause of FINAL INTERNAL
+  (`plan-builder-v2`, `lesson_day.v4.10`, `lesson_card_repair.v1.4`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`; `lesson_day.v4.7`
+  and `lesson_card_repair.v1.3` stay beside them — a rollback is one constant of `PlanPromptFiles`; `lesson_day.v4.6`, `v4.8`,
+  `v4.9` and `lesson_card_repair.v1.2` are gone, in git). `v4.8` (наряд LANG-1 §8, DECISIONS п. 435) was `v4.7` with ONE clause of FINAL INTERNAL
   VALIDATION changed: a reading is written in the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian,
   Ukrainian and Belarusian, Latin for the others) where `v4.7` said «Cyrillic only when NATIVE_LANGUAGE is Russian». `v4.9`
   (наряд LANG-1b §5) is `v4.8` with the gender and the address of a target that has them: LEARNER_GENDER and role_gender
   shape the lines in both languages, and one sentence of TEXT QUALITY — the partner addresses the learner formally in
   TARGET_LANGUAGE, the learner never assumes the partner's gender (the repairs of a frame, an exchange and a line quote
-  TEXT QUALITY and read it; `docs/research/lang-1b/v4.9.diff`). The
+  TEXT QUALITY and read it; `docs/research/lang-1b/v4.9.diff`). `v4.10` (наряд LANG-1b §10.1, DECISIONS п. 447) is `v4.9` with
+  a word's definition in TARGET_LANGUAGE, never in English unless the target is English (VOCABULARY), a check's `text_target`
+  in TARGET_LANGUAGE (CHECK PER EXCHANGE) and an ask exchange as a real question, never the learner's skill turned into one
+  (EXCHANGE KINDS) — `docs/research/lang-1b/v4.10.diff`; `lesson_card_repair.v1.4` (§10.2, п. 448) keeps a word found only for
+  its definition's language (and at most its `used_in`) and writes the definition anew. The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
   `LessonRequests` (roles, `EARLIER_DAYS`) for the build and for a repair alike; the repair wrapper
@@ -276,13 +280,14 @@ reads plan tables.
 - The lesson is stored as the model wrote it (`plan_scenes.lesson_json`), re-parsed on read and served assembled.
 - Every plan check ships in `observe`; modes are flipped in `config/plan.php`, never in code. The lesson validator
   has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code, `lang.pack_missing` for a check
-  its languages' packs cannot run); eleven codes are fatal by the architect's decisions after GEN-2a, in GEN-2b, GEN-3,
-  BACK-TAILS-1 and FIX-3 (an option of a check copied out of the partner's line is a WARNING since наряд LANG-1b §1,
-  `options.partner_fragment`)
+  its languages' packs cannot run); twelve codes are fatal by the architect's decisions after GEN-2a, in GEN-2b, GEN-3,
+  BACK-TAILS-1, FIX-3 and LANG-1b (an option of a check copied out of the partner's line is a WARNING since наряд LANG-1b §1,
+  `options.partner_fragment`; a word defined in another language than the target is FATAL since its §10.2,
+  `vocab.definition_language`)
   (`LessonGate`; an abbreviation as a word of the day is a warning — whether the learner's language has an everyday word for
   it is the model's to judge) — a lesson with them is never stored before P2R repairs their card (at most two a day; a
-  repaired WORD is checked again by the server and refused when it is still a known word, a second id of a word or not
-  where `used_in` says); a lesson still held is asked for anew ONCE in the same build (наряд LANG-1b §1), and only then it
+  word a repair REPLACED is checked again by the server and refused when it is still a known word, a second id of a word or not
+  where `used_in` says; a word the repair kept, its definition written anew, is the validator's alone); a lesson still held is asked for anew ONCE in the same build (наряд LANG-1b §1), and only then it
   fails `fatal: <codes>`. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
   extension rebuilds it. Every answer of the plan's model is read without the characters that print nothing
   (`Domain/Service/ModelText`, at `ContentModelPlanBuilder`; `plan:clean-text` for what was stored before, наряд LANG-1b §6). A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
