@@ -1,0 +1,28 @@
+--- lesson_day.v4.9.md
++++ lesson_day.v4.10.md
+@@ -129,6 +129,8 @@
+ 
+ Wrong: A gives instructions, B asks to repeat, next exchange is about something else — the repetition never happened.
+ Right: exchange 5: A "It looks like a muscle strain, so rest, use heat, and take ibuprofen with food." B "Okay, I'll rest and use heat." → exchange 6 (rescue): B "Could you say that more slowly, please?" A "Rest, use heat, and take ibuprofen with food."
++
++In an ask exchange the learner asks a real question a person in this scene would ask the partner (schedule, duties, pay, documents, next steps) — never their own skill or fact turned into a question; skills are answer exchanges.
+ 
+ Requirements across the lesson:
+ 
+@@ -261,7 +263,7 @@
+ 
+ Every item must actually occur in the lesson and says where, in used_in: a list of frame ids ("p3") and/or partner message references ("A3" = A's message in exchange 3, whichever position it has). Fillers count: "marketing" used as a filler of p1 → used_in ["p1"]. At least half of the items occur in learner frames or fillers — the learner must get to SAY most of the vocabulary, not only hear it.
+ 
+-No item is contained inside another item of the list. Avoid the STOP LIST unless the topic absolutely requires the term: numbers, family members, time words, colors, pronouns, be, have, go. One translation per item, no synonyms lists. definition_target in TARGET_LANGUAGE. image_prompt: a concise English description of a realistic photo showing the item and its setting; null for abstract items. The description names only what is in the picture ("ibuprofen tablets on a kitchen table") — never repeat these rules inside the string (no "realistic photo of", no "no text or logos").
++No item is contained inside another item of the list. Avoid the STOP LIST unless the topic absolutely requires the term: numbers, family members, time words, colors, pronouns, be, have, go. One translation per item, no synonyms lists. definition_target — a short definition in TARGET_LANGUAGE, never in English unless TARGET_LANGUAGE is English. image_prompt: a concise English description of a realistic photo showing the item and its setting; null for abstract items. The description names only what is in the picture ("ibuprofen tablets on a kitchen table") — never repeat these rules inside the string (no "realistic photo of", no "no text or logos").
+ 
+ ---
+ 
+@@ -298,6 +300,7 @@
+ - The correct option must be a PARAPHRASE: it must not repeat two or more consecutive words of A's message. If A said "twice a day after meals", the correct option is "Morning and evening, after eating" — not "Twice a day after meals".
+ - The two wrong options are the same kind of item, plausible in the situation, contradicting what A said. If A listed alternatives ("sit, stand, or bend"), none of them may be a wrong option — they were all said.
+ - Exactly 3 options, text_target and text_native for the question and each option, no pronunciation, explanation_native one sentence. correct_option_index is zero-based; place the correct answer at any index, not mechanically.
++- text_target of the question and of every option — in TARGET_LANGUAGE.
+ 
+ ---
+ 

@@ -1,0 +1,55 @@
+LANG-1b §10.4 — the owner's ru→ro day 1 copied to e2e and built on v4.10 (branch lang-1b-10, sidecar wt_lang1b10, the code of
+0177ce10: the word's rule of P2R v1.4 was refined after the run — `used_in` beside the definition, commit 2b43e119 — and no word
+was repaired in the run, so the day is the same on either)
+
+$ docker exec -w /wt -e DB_DATABASE=wordtrainer_e2e_test -e QUEUE_CONNECTION=sync -e CACHE_STORE=array -e SPEECH_ENABLED=false \
+    -e RUN_SUFFIX=-0926c -e LIVE_CAP=0.2214 -e LIVE_WORST_PAIR=0.20 wt_lang1b10 php docs/research/lang-1b/tools/live.php ru-ro:copy
+database=wordtrainer_e2e_test plan.driver=openai provider=openai plan=gpt-5.4 lesson=gpt-5.4 repair=gpt-5.4 judge=gpt-5.4-mini timeout=180 plan.languages=en,pl,ro,es,it,de,fr packs=be,de,en,es,fr,it,pl,ro,ru,uk
+NOTE: the REAL model (openai) — every call below is paid.
+writing to /wt/docs/research/lang-1b/live
+15:22:10 ru-ro plan $0.000000 (0.2s) · day 1 illustrating · lesson $0.147879 · P2R 4 $0.057757 (x5,x2.check,x5,x8.check) · judge $0.002101 · raw fatal 2 / all 14 · pack_missing 0/0 · day $0.207737 (68.0s) · pair $0.2077
+15:22:10 done: 1 pair(s), 0 with an error · $0.2077 · 68.2s
+
+(LIVE_CAP — what was left of the order's $0.60 after §8: $0.60 − $0.378577. model_calls of e2e since 12:20 UTC: lesson 2 ·
+repair 4 · judge 1, all `completed`, $0.207737; since 10:40:13 UTC — the whole of LANG-1b — $0.586314.)
+
+The run was preceded by a dry run on the fake model and the branch's test base (`PLAN_MODEL_DRIVER=fake`,
+`DB_DATABASE=wordtrainer_lang1b10_test`, `DRY_DIR=/tmp/lang1b10-dry`): the copy and the build went through, and the fake's
+English definitions failed the day on `vocab.definition_language` after two word cards a build (v1, v2, v1, v2) — the wiring
+of the fatal code, for nothing.
+
+$ docker exec -w /wt -e DB_DATABASE=wordtrainer_lang1b10_test wt_lang1b10 php docs/research/lang-1b/tools/recheck.php ru-ro
+── answer 1 of 2
+   fatal 3 on 3 card(s) · findings 9
+   * exchange.second_question x5 — the closing message of A «Da. Ce puteți face bine?» ends with a question mark
+     frame.adjacent_repeat x4 — exchanges 3 and 4 both stand on p3
+     variant.longer B4 — the variant «Lucram și cu marfa.» has 4 words, the line 3
+     variant.longer B6 — the variant «Mă descurc bine cu oamenii.» has 5 words, the line 4
+   * options.form_mismatch x2.check — the option «О перерыве на обед» is 15 letters against 31 of the right «О том, сколько времени вы там работали»
+   * options.form_mismatch x3.check — the option «Адрес магазина» is 13 letters against 30 of the right «Примеры того, что вы делали на работе»
+     check.verbatim x8.check — the right option «Ce faceți la computer» repeats «ce faceți» of the partner's line
+     options.partner_fragment x8.check — the option «Что вы делаете на компьютере» is a piece of the partner's line «Скажите, что вы делаете на компьютере.»
+     vocab.used_in_wrong v8 — «a repeta» is not in frame p4 or its fillers
+   vocab.definition_language: 0 · checks' text_target read as the target: 32, as another language: 0 · readings with letters of other Cyrillic alphabets: none
+── answer 2 of 2
+   fatal 2 on 2 card(s) · findings 14
+   * exchange.second_question x5 — the closing message of A «Sigur. Ce puteți face bine?» ends with a question mark
+     frame.adjacent_repeat x4 — exchanges 3 and 4 both stand on p3
+     frame.no_end_punct p1 — «Am lucrat ___» and the native «Я работал ___» end with no mark
+     frame.no_end_punct p2 — «Am lucrat acolo ___» and the native «Я работал там ___» end with no mark
+     frame.no_end_punct p3 — «Ajutam ___» and the native «Я помогал ___» end with no mark
+     frame.no_end_punct p5 — «Pot să lucrez bine ___» and the native «Я умею хорошо работать ___» end with no mark
+     frame.no_end_punct p7 — «Folosesc ___» and the native «Я пользуюсь ___» end with no mark
+     variant.longer B3 — the variant «Lucram cu clienți.» has 3 words, the line 2
+     variant.longer B4 — the variant «Aveam și marfă.» has 3 words, the line 2
+     variant.longer B5 — the variant «Repetați întrebarea despre abilități, vă rog.» has 6 words, the line 5
+     variant.longer B8 — the variant «Lucrez în Excel.» has 3 words, the line 2
+   * options.form_mismatch x8.check — the option «Что вы едите на обед» is 16 letters against 35 of the right «Какие программы вы используете на работе»
+     vocab.free_combination v2 — «doi ani» is a free combination of ordinary words
+     vocab.used_in_wrong v5 — «abilități» is not in the partner's line of exchange 5
+   vocab.definition_language: 0 · checks' text_target read as the target: 32, as another language: 0 · readings with letters of other Cyrillic alphabets: none
+
+$ docker exec -w /wt -e DB_DATABASE=wordtrainer_lang1b10_test wt_lang1b10 php docs/research/lang-1b/tools/term-repair-size.php
+term v6 (definition): 16055 chars (system 10598, user 4724, schema 733)
+check x8.check: 13328 chars (system 8563, user 4173, schema 592) · live: 3145 tokens in, 143 out, $0.010007
+chars per token 4.24 → the term repair ≈ 3788 tokens in; with 150 out: $0.011720 with no cache, $0.006093 with the rules cached

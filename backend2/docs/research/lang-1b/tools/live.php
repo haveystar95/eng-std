@@ -9,7 +9,12 @@ declare(strict_types=1);
  *       `options.form_mismatch`), built again as the learner's «ещё раз» builds it: `RetryLessonHandler` (the scene back to
  *       `pending`), then `BuildLessonHandler` — no new plan, the same plan and scene the seven failures had;
  *   (b) `de-en:female`, `es-en:female` — a new plan of two days for a QA learner whose profile says `female`, day 1 built on
- *       v4.9: the reading in the native's Latin letters, the formal address, the learner's gender.
+ *       v4.9: the reading in the native's Latin letters, the formal address, the learner's gender;
+ *   (c) `ru-ro:copy` — LANG-1b §10.4: THE SAME ru→ro DAY as the owner's (plan «Собеседование», `01M3E6C7NRN0N04QDHAKP9FBPQ` on
+ *       the live base, day 1 written on v4.9 with its definitions and checks in English): the plan, its scenes and its days
+ *       are copied from the live base — read in a READ ONLY transaction, nothing written there — under new ids to a QA
+ *       learner of e2e with the owner's pair and gender, every scene's lesson back to `pending`; day 1 is built on v4.10.
+ *       No plan call: the brief, the roles, the goal and the learner's inputs are the owner's own.
  *
  * Everything else is LANG-1's harness (`docs/research/lang-1/tools/live.php`): the QA learner logged in as the phone logs in,
  * the production handlers, every model call recorded (`RecordingPlanModel`), no job queued (`NoDispatch`: no photos, no
@@ -71,8 +76,8 @@ $kernel->bootstrap();
 // ── the guards ───────────────────────────────────────────────────────────────────────────────────────────────────────
 $database = (string) DB::connection()->getDatabaseName();
 $driver = (string) config('plan.model.driver');
-if (! ($database === 'wordtrainer_e2e_test' || ($database === 'wordtrainer_lang1b_test' && $driver === 'fake'))) {
-    fwrite(STDERR, "Refusing to run against {$database} (driver {$driver}): only wordtrainer_e2e_test, or wordtrainer_lang1b_test with PLAN_MODEL_DRIVER=fake.\n");
+if (! ($database === 'wordtrainer_e2e_test' || ($database === 'wordtrainer_lang1b10_test' && $driver === 'fake'))) {
+    fwrite(STDERR, "Refusing to run against {$database} (driver {$driver}): only wordtrainer_e2e_test, or wordtrainer_lang1b10_test with PLAN_MODEL_DRIVER=fake.\n");
     exit(1);
 }
 if ((bool) config('generation.speech.enabled')) {
@@ -300,14 +305,73 @@ function tokens(array $calls): array
     return $out;
 }
 
+/**
+ * (c) The live base's plan `$planId` copied to this base under new ids, for `$to`: the plan row, its scenes, its days — the
+ * live base read in a READ ONLY transaction and rolled back, nothing written there. What the plan's build wrote is kept
+ * (titles, the learner's role, the brief of every scene, the partner's voice); what the day's build wrote is dropped — every
+ * scene's lesson is `pending` again, with no findings, costs or times — and the plan belongs to no collection here. The
+ * learner's gender of the live base comes back with it: the copy's lesson is asked with the owner's LEARNER_GENDER.
+ *
+ * @return array{plan_id: PlanId, gender: string|null, goal: string, from: string}
+ */
+function copyLivePlan(string $planId, UserId $to): array
+{
+    config(['database.connections.live' => array_merge((array) config('database.connections.'.config('database.default')), ['database' => 'wordtrainer'])]);
+    $live = DB::connection('live');
+    $live->beginTransaction();
+    try {
+        $live->statement('SET TRANSACTION READ ONLY');
+        $plan = $live->table('plans')->where('id', $planId)->first();
+        if ($plan === null) {
+            throw new RuntimeException("the live base has no plan {$planId}");
+        }
+        $scenes = $live->table('plan_scenes')->where('plan_id', $planId)->orderBy('order')->get()->all();
+        $days = $live->table('plan_days')->where('plan_id', $planId)->orderBy('number')->get()->all();
+        $gender = $live->table('profiles')->where('user_id', $plan->user_id)->value('gender');
+    } finally {
+        $live->rollBack();
+        DB::purge('live');
+    }
+
+    $now = now();
+    $newPlan = (string) Illuminate\Support\Str::ulid();
+    $sceneIds = [];
+    DB::transaction(static function () use ($plan, $scenes, $days, $to, $now, $newPlan, &$sceneIds): void {
+        DB::table('plans')->insert(array_merge((array) $plan, [
+            'id' => $newPlan, 'user_id' => $to->value, 'collection_id' => null, 'created_at' => $now, 'updated_at' => $now,
+        ]));
+        foreach ($scenes as $scene) {
+            $sceneIds[$scene->id] = (string) Illuminate\Support\Str::ulid();
+            DB::table('plan_scenes')->insert(array_merge((array) $scene, [
+                'id' => $sceneIds[$scene->id], 'plan_id' => $newPlan, 'user_id' => $to->value,
+                'lesson_json' => null, 'lesson_status' => 'pending', 'prompt_version_lesson' => null, 'build_version' => null,
+                'model_lesson' => null, 'cost_usd_lesson' => null, 'latency_ms_lesson' => null, 'attempts_lesson' => null,
+                'checks_json' => null, 'fail_reason' => null, 'build_started_at' => null, 'generated_at' => null, 'built_at' => null,
+                'created_at' => $now, 'updated_at' => $now,
+            ]));
+        }
+        foreach ($days as $day) {
+            DB::table('plan_days')->insert(array_merge((array) $day, [
+                'id' => (string) Illuminate\Support\Str::ulid(), 'plan_id' => $newPlan, 'user_id' => $to->value,
+                'scene_id' => $day->scene_id === null ? null : $sceneIds[$day->scene_id],
+                'created_at' => $now, 'updated_at' => $now,
+            ]));
+        }
+    });
+
+    return ['plan_id' => PlanId::fromString($newPlan), 'gender' => $gender === null ? null : (string) $gender, 'goal' => (string) $plan->goal_text, 'from' => $planId];
+}
+
 // ── the pairs ────────────────────────────────────────────────────────────────────────────────────────────────────────
 $pairs = array_slice($argv, 1);
 if ($pairs === []) {
-    fwrite(STDERR, "usage: live.php <native>-<target>[:female|:male|:retry] … (e.g. pl-en:retry de-en:female es-en:female)\n");
+    fwrite(STDERR, "usage: live.php <native>-<target>[:female|:male|:retry|:copy] … (e.g. pl-en:retry de-en:female es-en:female ru-ro:copy)\n");
     exit(1);
 }
 /** The plans of LANG-1 part D a `:retry` builds day 1 of again. */
 $RETRY = ['pl-en' => '01M3DGPN35MXD4HJEF9B5H1868'];
+/** The live base's plans a `:copy` builds day 1 of on e2e (§10.4): the owner's «Собеседование». */
+$COPY = ['ru-ro' => '01M3E6C7NRN0N04QDHAKP9FBPQ'];
 $cap = (float) (getenv('LIVE_CAP') ?: '0.60');
 $worstPair = (float) (getenv('LIVE_WORST_PAIR') ?: '0.30');
 
@@ -330,8 +394,8 @@ $level = 'beginner';
 $totals = ['usd' => 0.0, 's' => 0.0, 'pairs' => 0, 'errors' => 0];
 
 foreach ($pairs as $arg) {
-    if (preg_match('/^([a-z]{2})-([a-z]{2})(?::(female|male|retry))?$/', $arg, $m) !== 1) {
-        say("{$arg}: not a pair <native>-<target>[:female|:male|:retry]");
+    if (preg_match('/^([a-z]{2})-([a-z]{2})(?::(female|male|retry|copy))?$/', $arg, $m) !== 1) {
+        say("{$arg}: not a pair <native>-<target>[:female|:male|:retry|:copy]");
         continue;
     }
     [, $native, $target] = $m;
@@ -340,6 +404,10 @@ foreach ($pairs as $arg) {
     $gender = in_array($mode, ['female', 'male'], true) ? $mode : null;
     if ($mode === 'retry' && ! isset($RETRY[$pair])) {
         say("{$arg}: no plan of part D to build again for {$pair}");
+        continue;
+    }
+    if ($mode === 'copy' && ! isset($COPY[$pair])) {
+        say("{$arg}: no plan of the live base to copy for {$pair}");
         continue;
     }
     if ($totals['usd'] + $worstPair > $cap) {
@@ -388,6 +456,19 @@ foreach ($pairs as $arg) {
             $planId = PlanId::fromString($RETRY[$pair]);
             $userId = UserId::fromString((string) DB::table('plans')->where('id', $planId->value)->value('user_id'));
             $run['email'] = (string) DB::table('users')->where('id', $userId->value)->value('email');
+        } elseif ($mode === 'copy') {
+            // (c): a QA learner of the owner's pair, then the owner's plan copied to them; the gender is read with the plan.
+            $email = "qa-lang1b-{$native}-{$target}{$suffix}@wt.test";
+            $phase = 'login';
+            $userId = learner($kernel, $email, $native, $target);
+            $phase = 'plan';
+            $copied = copyLivePlan($COPY[$pair], $userId);
+            DB::table('profiles')->where('user_id', $userId->value)->update(['gender' => $copied['gender']]);
+            $planId = $copied['plan_id'];
+            $run['email'] = $email;
+            $run['copied_from'] = $copied['from'];
+            $run['learner_gender'] = $copied['gender'];
+            $run['goal'] = $copied['goal'];
         } else {
             // (b): a learner of its own, then the two production handlers.
             $email = "qa-lang1b-{$native}-{$target}{$suffix}@wt.test";
