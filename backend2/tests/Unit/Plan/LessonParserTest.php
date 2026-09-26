@@ -17,8 +17,9 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
  * THE READINGS, AS THE PARSER READS THEM (наряд LANG-1, валидатор; `docs/research/lang-1/baseline.md`): a Latin letter
- * drawn inside a Cyrillic word is put back into Cyrillic — every `pronunciation_native` of a frame, a filler, a word and
- * a learner line, and of a repaired card — and nothing else is touched.
+ * drawn inside a Cyrillic word is put back into Cyrillic, and (наряд LANG-1b §10) a letter of another Cyrillic alphabet
+ * becomes the letter it stands for — every `pronunciation_native` of a frame, a filler, a word and a learner line, and of a
+ * repaired card — and nothing else is touched.
  */
 
 /** @return array<string, mixed> the fake's lesson for a Russian learner of English */
@@ -51,6 +52,19 @@ it('puts the Latin letters of a Cyrillic word back into Cyrillic, the acute a co
     'each acute, both cases' => ['дáéóýÁÉÓÝ', "да\u{0301}е\u{0301}о\u{0301}у\u{0301}А\u{0301}Е\u{0301}О\u{0301}У\u{0301}"],
     'a Latin a already decomposed' => ["лекa\u{0301}жа", "лека\u{0301}жа"],
     'a Cyrillic word opening with a Latin capital' => ['Cэнк ю', 'Сэнк ю'],
+]);
+
+// Наряд LANG-1b §10: «кириллические чужаки в кириллическом чтении чинит парсер, как латинские двойники: җ→ж, ғ→г, қ→к, ә→э,
+// ү→у, ұ→у, ң→н, һ→х, ө→о; тест на «аҗута́» → «ажута́»» — the owner's ru→ro day read «a ajuta» with the Tatar «җ» three
+// times. CATCHES a letter of the table left in a reading, a capital missed, the stress lost on the way, and the two tables
+// not read together in one word.
+it('puts the letters of other Cyrillic alphabets back into the letters of the readings', function (string $model, string $read) {
+    expect(lpFrameReading($model))->toBe($read);
+})->with([
+    'the owner\'s ru→ro day' => ["аҗута\u{0301}", "ажута\u{0301}"],
+    'every letter, lower-case' => ['җғқәүұңһө', 'жгкэуунхо'],
+    'every letter, capital' => ['ҖҒҚӘҮҰҢҺӨ', 'ЖГКЭУУНХО'],
+    'with a Latin twin in the same word' => ["Ам аҗутa\u{0301}т ___ .", "Ам ажута\u{0301}т ___ ."],
 ]);
 
 // Canon of the fix: «латиница рядом с кириллицей остаётся латиницей; другие письменности не чинятся». CATCHES a Latin word

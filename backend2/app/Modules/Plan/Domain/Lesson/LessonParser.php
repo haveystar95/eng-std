@@ -26,7 +26,8 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * READING — every `pronunciation_native` the parser reads: a frame's, a filler's, a word's, a learner line's, in a
  * whole lesson and in a repaired card alike — has the Latin letters drawn inside a Cyrillic word put back into
  * Cyrillic, a Latin acute vowel («á») as the Cyrillic vowel with the combining stress mark ({@see self::reading()},
- * наряд LANG-1).
+ * наряд LANG-1), and a letter of another Cyrillic alphabet as the letter it stands for («аҗута́» → «ажута́», наряд
+ * LANG-1b §10).
  */
 final class LessonParser
 {
@@ -39,6 +40,17 @@ final class LessonParser
         'a' => 'а', 'e' => 'е', 'o' => 'о', 'c' => 'с', 'p' => 'р', 'x' => 'х', 'y' => 'у', 'k' => 'к',
         'A' => 'А', 'E' => 'Е', 'O' => 'О', 'C' => 'С', 'P' => 'Р', 'X' => 'Х', 'Y' => 'У',
         'B' => 'В', 'H' => 'Н', 'K' => 'К', 'M' => 'М', 'T' => 'Т',
+    ];
+
+    /**
+     * The letters of OTHER Cyrillic alphabets a Cyrillic reading may be written with by mistake — Kazakh, Tatar, Bashkir,
+     * Mongolian letters no learner's language of the plan has — each with the letter of the readings it stands for (наряд
+     * LANG-1b §10: the owner's ru→ro day read «a ajuta» as «а аҗута́»): җ→ж, ғ→г, қ→к, ә→э, ү→у, ұ→у, ң→н, һ→х, ө→о, and
+     * their capitals.
+     */
+    private const CYRILLIC_ALIENS = [
+        'җ' => 'ж', 'ғ' => 'г', 'қ' => 'к', 'ә' => 'э', 'ү' => 'у', 'ұ' => 'у', 'ң' => 'н', 'һ' => 'х', 'ө' => 'о',
+        'Җ' => 'Ж', 'Ғ' => 'Г', 'Қ' => 'К', 'Ә' => 'Э', 'Ү' => 'У', 'Ұ' => 'У', 'Ң' => 'Н', 'Һ' => 'Х', 'Ө' => 'О',
     ];
 
     /**
@@ -284,7 +296,11 @@ final class LessonParser
      * their combining marks) that holds at least one Cyrillic letter, a Latin letter drawn like a Cyrillic one becomes
      * that Cyrillic letter ({@see self::CYRILLIC_TWINS}), and a Latin vowel with its acute becomes the Cyrillic vowel with
      * the combining acute U+0301 ({@see self::CYRILLIC_STRESSED}): «до лекáжа» → «до лека́жа», «___ ми пасуe» → «___ ми
-     * пасуе», «нюмэро дё телефoн» → «нюмэро дё телефон». Nothing else changes.
+     * пасуе», «нюмэро дё телефoн» → «нюмэро дё телефон». A letter of ANOTHER Cyrillic alphabet becomes the letter of the
+     * readings it stands for ({@see self::CYRILLIC_ALIENS}, наряд LANG-1b §10): «а аҗута́» → «а ажута́» — the owner's ru→ro
+     * day, three readings of «a ajuta» with the Tatar «җ»; the letter is Cyrillic, so the fatal `foreign_script` let it
+     * through and only the warning `pronunciation.script` counted it, and the learner got a letter they cannot read.
+     * Nothing else changes.
      *
      * Why the parser mends it rather than the repair: `pronunciation.foreign_script` is FATAL (наряд BACK-TAILS-1 §3.2),
      * and these are not letters of another writing — they are the same letter taken from the other table, drawn as the
@@ -314,7 +330,7 @@ final class LessonParser
         return preg_replace_callback(
             '/[\p{L}\p{M}]+/u',
             static fn (array $run): string => preg_match('/\p{Cyrillic}/u', $run[0]) === 1
-                ? strtr($run[0], self::CYRILLIC_STRESSED + self::CYRILLIC_TWINS)
+                ? strtr($run[0], self::CYRILLIC_STRESSED + self::CYRILLIC_TWINS + self::CYRILLIC_ALIENS)
                 : $run[0],
             $reading,
         ) ?? $reading;
