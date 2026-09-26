@@ -1,0 +1,3013 @@
+{
+    "pair": "es-en",
+    "mode": "female",
+    "learner_gender": "female",
+    "native": "es",
+    "target": "en",
+    "level": "beginner",
+    "goal": "Pido cita con el médico: llevo tres días con dolor de garganta y fiebre. Tengo que elegir una hora que me venga bien y explicar qué me pasa",
+    "run_suffix": "-0926b",
+    "database": "wordtrainer_e2e_test",
+    "driver": "openai",
+    "models": {
+        "plan": "gpt-5.4",
+        "lesson": "gpt-5.4",
+        "repair": "gpt-5.4",
+        "judge": "gpt-5.4-mini"
+    },
+    "prompt_versions": {
+        "plan": "plan-builder-v2",
+        "lesson": "lesson_day.v4.9",
+        "repair": "lesson_card_repair.v1.3",
+        "judge": "lesson_seam_judge.v1.1"
+    },
+    "packs": [
+        "be",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "pl",
+        "ro",
+        "ru",
+        "uk"
+    ],
+    "started_at": "2026-09-26T10:41:27+00:00",
+    "error": null,
+    "email": "qa-lang1b-es-en-0926b@wt.test",
+    "user_id": "01M3EMWF6H3ZGAS4C6N1X8XWET",
+    "plan_id": "01M3EMWF6QXM2XJFAE98K7D8BD",
+    "plan": {
+        "status": "ready",
+        "fail_reason": null,
+        "unclear_reason": null,
+        "native_lang": "es",
+        "target_lang": "en",
+        "prompt_version": "plan-builder-v2",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.011204",
+        "cost_usd": "0.011204",
+        "wall_s": 6.2,
+        "started_at": "2026-09-26T10:41:27+00:00",
+        "finished_at": "2026-09-26T10:41:33+00:00",
+        "calls": [
+            {
+                "call": "plan",
+                "at": "2026-09-26T10:41:27+00:00",
+                "prompt_version": "plan-builder-v2",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 3020,
+                "cached_tokens": 2816,
+                "tokens_out": 666,
+                "cost_usd": "0.011204",
+                "latency_ms": 6118,
+                "call_id": "01M3EMWF6X0WVWT2Y5DRXKMK39",
+                "asked": {
+                    "scenes": 2,
+                    "goal": "Pido cita con el médico: llevo tres días con dolor de garganta y fiebre. Tengo que elegir una hora que me venga bien y explicar qué me pasa",
+                    "target_language": "English",
+                    "native_language": "Spanish",
+                    "level": "beginner",
+                    "violations": []
+                },
+                "payload": {
+                    "status": "ok",
+                    "unclear_reason": null,
+                    "plan": {
+                        "title_native": "Cita con el médico",
+                        "title_target": "Doctor's appointment",
+                        "event_native": "Cita",
+                        "until_phrase_native": "Hasta la cita",
+                        "overdue_native": "La cita fue ayer",
+                        "cover_image_prompt": "reception desk of a local medical clinic, realistic photo, warm indoor light, no text, no logos, no faces in close-up",
+                        "learner_role_target": "Patient",
+                        "learner_role_native": "Paciente"
+                    },
+                    "scenes": [
+                        {
+                            "order": 1,
+                            "kind": "situation",
+                            "priority": 1,
+                            "title_native": "Consulta médica",
+                            "title_target": "Medical consultation",
+                            "teaches_native": "describir síntomas, entender",
+                            "goals_native": [
+                                "describir el dolor de garganta",
+                                "decir que tiene fiebre",
+                                "responder preguntas básicas",
+                                "entender instrucciones"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Paciente",
+                            "partner_role_target": "Doctor",
+                            "partner_role_native": "Médico",
+                            "topic_description": "Situation: In the doctor's office at a local clinic, the learner has an appointment for a sore throat and fever that have lasted three days. This is the main medical visit after arranging a suitable time.\nLearner: the learner's role is the patient. Partner: the partner's role is the doctor.\nLearner must be able to: say that they have a sore throat and fever; say how long the problem has lasted; answer simple questions about symptoms; understand basic advice and next steps.\nPartner will: ask what the problem is and how long it has lasted; ask simple symptom questions; give basic advice or instructions.\nNot in this scene: booking the appointment, choosing a time, asking about availability.",
+                            "image_prompt": "doctor's office in a small clinic, patient seated across from a doctor at a desk, realistic photo, no text, no logos, no faces in close-up"
+                        },
+                        {
+                            "order": 2,
+                            "kind": "situation",
+                            "priority": 2,
+                            "title_native": "Pedir la cita",
+                            "title_target": "Booking the appointment",
+                            "teaches_native": "pedir hora y explicar el motivo",
+                            "goals_native": [
+                                "pedir una cita médica",
+                                "decir qué le pasa",
+                                "elegir una hora adecuada",
+                                "confirmar día y hora"
+                            ],
+                            "learner_role_target": "Patient",
+                            "learner_role_native": "Paciente",
+                            "partner_role_target": "Receptionist",
+                            "partner_role_native": "Recepcionista",
+                            "topic_description": "Situation: At the clinic front desk or on the phone, the learner needs to book a doctor's appointment because they have had a sore throat and fever for three days. They need to choose a time that suits them and briefly explain the problem.\nLearner: the learner's role is the patient. Partner: the partner's role is the receptionist.\nLearner must be able to: ask for a doctor's appointment; say they have a sore throat and fever; understand available times; choose and confirm a suitable day and time.\nPartner will: ask what the problem is; offer appointment times or alternatives; confirm the booking details.\nNot in this scene: describing symptoms in detail, answering the doctor's medical questions, receiving treatment instructions.",
+                            "image_prompt": "clinic reception desk with appointment calendar and computer, realistic photo, warm light, no text, no logos, no faces in close-up"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "scene_ids": [
+        "01M3EMWN675QVRVJS9J2MWZ7T3",
+        "01M3EMWN67S2NYW4CCE0A2BMT4"
+    ],
+    "scene_id": "01M3EMWN675QVRVJS9J2MWZ7T3",
+    "scenes": [
+        {
+            "order": 1,
+            "kind": "situation",
+            "title_native": "Consulta médica",
+            "title_target": "Medical consultation",
+            "partner_target": "Doctor",
+            "partner_native": "Médico",
+            "brief": "Situation: In the doctor's office at a local clinic, the learner has an appointment for a sore throat and fever that have lasted three days. This is the main medical visit after arranging a suitable time.\nLearner: the learner's role is the patient. Partner: the partner's role is the doctor.\nLearner must be able to: say that they have a sore throat and fever; say how long the problem has lasted; answer simple questions about symptoms; understand basic advice and next steps.\nPartner will: ask what the problem is and how long it has lasted; ask simple symptom questions; give basic advice or instructions.\nNot in this scene: booking the appointment, choosing a time, asking about availability."
+        },
+        {
+            "order": 2,
+            "kind": "situation",
+            "title_native": "Pedir la cita",
+            "title_target": "Booking the appointment",
+            "partner_target": "Receptionist",
+            "partner_native": "Recepcionista",
+            "brief": "Situation: At the clinic front desk or on the phone, the learner needs to book a doctor's appointment because they have had a sore throat and fever for three days. They need to choose a time that suits them and briefly explain the problem.\nLearner: the learner's role is the patient. Partner: the partner's role is the receptionist.\nLearner must be able to: ask for a doctor's appointment; say they have a sore throat and fever; understand available times; choose and confirm a suitable day and time.\nPartner will: ask what the problem is; offer appointment times or alternatives; confirm the booking details.\nNot in this scene: describing symptoms in detail, answering the doctor's medical questions, receiving treatment instructions."
+        }
+    ],
+    "learner_role": {
+        "target": "Patient",
+        "native": "Paciente"
+    },
+    "plan_title": {
+        "native": "Cita con el médico",
+        "target": "Doctor's appointment"
+    },
+    "request": {
+        "topic": "Consulta médica",
+        "topic_description": "Situation: In the doctor's office at a local clinic, the learner has an appointment for a sore throat and fever that have lasted three days. This is the main medical visit after arranging a suitable time.\nLearner: the learner's role is the patient. Partner: the partner's role is the doctor.\nLearner must be able to: say that they have a sore throat and fever; say how long the problem has lasted; answer simple questions about symptoms; understand basic advice and next steps.\nPartner will: ask what the problem is and how long it has lasted; ask simple symptom questions; give basic advice or instructions.\nNot in this scene: booking the appointment, choosing a time, asking about availability.\n\nAbout the learner, in their own words: Pido cita con el médico: llevo tres días con dolor de garganta y fiebre. Tengo que elegir una hora que me venga bien y explicar qué me pasa",
+        "target_language": "English",
+        "native_language": "Spanish",
+        "target_lang_code": "en",
+        "native_lang_code": "es",
+        "level": "beginner",
+        "learner_gender": "female",
+        "vocabulary_count": 8,
+        "dialogue_count": 8,
+        "roles": {
+            "learnerTarget": "Patient",
+            "learnerNative": "Paciente",
+            "partnerTarget": "Doctor",
+            "partnerNative": "Médico"
+        },
+        "earlier_days": 0
+    },
+    "status_before": "pending",
+    "day1": {
+        "status": "failed",
+        "fail_reason": "fatal: pronunciation.foreign_script, options.form_mismatch",
+        "prompt_version": "lesson_day.v4.9",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_lesson": "0.154021",
+        "latency_ms_lesson": 53084,
+        "attempts": 2,
+        "findings": [
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Кэн ю чек ___?» is spelled with letters of another writing: «К», «э», «н», «ю», «ч», «е», «к»",
+                "address": "p3"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Кэн ю чек ___?» leaves the native script",
+                "address": "p3"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «май сроут» is spelled with letters of another writing: «м», «а», «й», «с», «р», «о», «у», «т»",
+                "address": "p3.f1"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «май сроут» leaves the native script",
+                "address": "p3.f1"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «май ир» is spelled with letters of another writing: «м», «а», «й», «и», «р»",
+                "address": "p3.f2"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «май ир» leaves the native script",
+                "address": "p3.f2"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «май нек» is spelled with letters of another writing: «м», «а», «й», «н», «е», «к»",
+                "address": "p3.f3"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «май нек» leaves the native script",
+                "address": "p3.f3"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Май сроут филз ___.» is spelled with letters of another writing: «М», «а», «й», «с», «р», «о», «у», «т», «ф», «и», «л», «з»",
+                "address": "p4"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Май сроут филз ___.» leaves the native script",
+                "address": "p4"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «ред» is spelled with letters of another writing: «р», «е», «д»",
+                "address": "p4.f1"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «ред» leaves the native script",
+                "address": "p4.f1"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «драй» is spelled with letters of another writing: «д», «р», «а», «й»",
+                "address": "p4.f2"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «драй» leaves the native script",
+                "address": "p4.f2"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «своулин» is spelled with letters of another writing: «с», «в», «о», «у», «л», «и», «н»",
+                "address": "p4.f3"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «своулин» leaves the native script",
+                "address": "p4.f3"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Ду ай нийд ___?» is spelled with letters of another writing: «Д», «у», «а», «й», «н», «и», «д»",
+                "address": "p5"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Ду ай нийд ___?» leaves the native script",
+                "address": "p5"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «медисин» is spelled with letters of another writing: «м», «е», «д», «и», «с», «н»",
+                "address": "p5.f1"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «медисин» leaves the native script",
+                "address": "p5.f1"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «э тест» is spelled with letters of another writing: «э», «т», «е», «с»",
+                "address": "p5.f2"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «э тест» leaves the native script",
+                "address": "p5.f2"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «антибайотикс» is spelled with letters of another writing: «а», «н», «т», «и», «б», «й», «о», «к», «с»",
+                "address": "p5.f3"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «антибайотикс» leaves the native script",
+                "address": "p5.f3"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Кэн ай гоу ___?» is spelled with letters of another writing: «К», «э», «н», «а», «й», «г», «о», «у»",
+                "address": "p6"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Кэн ай гоу ___?» leaves the native script",
+                "address": "p6"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «ту уорк» is spelled with letters of another writing: «т», «у», «о», «р», «к»",
+                "address": "p6.f1"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «ту уорк» leaves the native script",
+                "address": "p6.f1"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «ту скул» is spelled with letters of another writing: «т», «у», «с», «к», «л»",
+                "address": "p6.f2"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «ту скул» leaves the native script",
+                "address": "p6.f2"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «ту зе йим» is spelled with letters of another writing: «т», «у», «з», «е», «й», «и», «м»",
+                "address": "p6.f3"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «ту зе йим» leaves the native script",
+                "address": "p6.f3"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «сор сроут» is spelled with letters of another writing: «с», «о», «р», «у», «т»",
+                "address": "v1"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «сор сроут» leaves the native script",
+                "address": "v1"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «фивер» is spelled with letters of another writing: «ф», «и», «в», «е», «р»",
+                "address": "v2"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «фивер» leaves the native script",
+                "address": "v2"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «фор сри дейз» is spelled with letters of another writing: «ф», «о», «р», «с», «и», «д», «е», «й», «з»",
+                "address": "v3"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «фор сри дейз» leaves the native script",
+                "address": "v3"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «оупен йор маус» is spelled with letters of another writing: «о», «у», «п», «е», «н», «й», «р», «м», «а», «с»",
+                "address": "v4"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «оупен йор маус» leaves the native script",
+                "address": "v4"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «лангз» is spelled with letters of another writing: «л», «а», «н», «г», «з»",
+                "address": "v5"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «лангз» leaves the native script",
+                "address": "v5"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «параситамол» is spelled with letters of another writing: «п», «а», «р», «с», «и», «т», «м», «о», «л»",
+                "address": "v6"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «параситамол» leaves the native script",
+                "address": "v6"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «пленти ов уотер» is spelled with letters of another writing: «п», «л», «е», «н», «т», «и», «о», «в», «у», «р»",
+                "address": "v7"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «пленти ов уотер» leaves the native script",
+                "address": "v7"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «рест эт хоум» is spelled with letters of another writing: «р», «е», «с», «т», «э», «х», «о», «у», «м»",
+                "address": "v8"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «рест эт хоум» leaves the native script",
+                "address": "v8"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Ай хав э сор сроут.» is spelled with letters of another writing: «А», «й», «х», «а», «в», «э», «с», «о», «р», «у», «т»",
+                "address": "B1"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Ай хав э сор сроут.» leaves the native script",
+                "address": "B1"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Итс бин фор сри дейз.» is spelled with letters of another writing: «И», «т», «с», «б», «и», «н», «ф», «о», «р», «д», «е», «й», «з»",
+                "address": "B2"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Итс бин фор сри дейз.» leaves the native script",
+                "address": "B2"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Ай хав э фивер.» is spelled with letters of another writing: «А», «й», «х», «а», «в», «э», «ф», «и», «е», «р»",
+                "address": "B3"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Ай хав э фивер.» leaves the native script",
+                "address": "B3"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Кэн ю чек май сроут?» is spelled with letters of another writing: «К», «э», «н», «ю», «ч», «е», «к», «м», «а», «й», «с», «р», «о», «у», «т»",
+                "address": "B4"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Кэн ю чек май сроут?» leaves the native script",
+                "address": "B4"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Май сроут филз ред.» is spelled with letters of another writing: «М», «а», «й», «с», «р», «о», «у», «т», «ф», «и», «л», «з», «е», «д»",
+                "address": "B5"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Май сроут филз ред.» leaves the native script",
+                "address": "B5"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Ду ай нийд медисин?» is spelled with letters of another writing: «Д», «у», «а», «й», «н», «и», «д», «м», «е», «с»",
+                "address": "B6"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Ду ай нийд медисин?» leaves the native script",
+                "address": "B6"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Куд ю сей зат мор слоули, плиз?» is spelled with letters of another writing: «К», «у», «д», «ю», «с», «е», «й», «з», «а», «т», «м», «о», «р», «л», «и», «п»",
+                "address": "B7"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Куд ю сей зат мор слоули, плиз?» leaves the native script",
+                "address": "B7"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "detail": "the reading «Кэн ай гоу ту уорк?» is spelled with letters of another writing: «К», «э», «н», «а», «й», «г», «о», «у», «т», «р», «к»",
+                "address": "B8"
+            },
+            {
+                "code": "pronunciation.script",
+                "detail": "the reading «Кэн ай гоу ту уорк?» leaves the native script",
+                "address": "B8"
+            },
+            {
+                "code": "variant.longer",
+                "detail": "the variant «Yes, I have a fever.» has 5 words, the line 4",
+                "address": "B3"
+            },
+            {
+                "code": "variant.longer",
+                "detail": "the variant «Do I need any medicine?» has 5 words, the line 4",
+                "address": "B6"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «Your main problem today» repeats «problem today» of the partner's line",
+                "address": "x1.check"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «How long the problem has lasted» repeats «how long» of the partner's line",
+                "address": "x2.check"
+            },
+            {
+                "code": "options.form_mismatch",
+                "detail": "the option «Tos» is 3 letters against 15 of the right «Temperatura alta»",
+                "address": "x3.check"
+            },
+            {
+                "code": "options.form_mismatch",
+                "detail": "the option «Sentarte cerca de la ventana» is 24 letters against 11 of the right «Abrir la boca»",
+                "address": "x4.check"
+            },
+            {
+                "code": "options.partner_fragment",
+                "detail": "the option «Mucha agua» is a piece of the partner's line «Sí, toma paracetamol y bebe mucha agua.»",
+                "address": "x6.check"
+            },
+            {
+                "code": "options.partner_fragment",
+                "detail": "the option «Paracetamol» is a piece of the partner's line «Toma paracetamol y bebe mucha agua.»",
+                "address": "x7.check"
+            },
+            {
+                "code": "vocab.free_combination",
+                "detail": "«for three days» is a free combination of ordinary words",
+                "address": "v3"
+            },
+            {
+                "code": "vocab.learner_share",
+                "detail": "3 of 8 items are in the learner's frames or fillers (at least half)",
+                "address": "lesson"
+            }
+        ],
+        "spent": {
+            "lesson": "0.114683",
+            "repair": "0.039338",
+            "judge": "0.000000",
+            "total": "0.154021"
+        },
+        "tokens": {
+            "in": 36936,
+            "cached": 24320,
+            "out": 7760
+        },
+        "wall_s": 53.2,
+        "started_at": "2026-09-26T10:41:33+00:00",
+        "finished_at": "2026-09-26T10:42:26+00:00",
+        "calls": [
+            {
+                "call": "lesson",
+                "at": "2026-09-26T10:41:33+00:00",
+                "prompt_version": "lesson_day.v4.9",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 8431,
+                "cached_tokens": 7936,
+                "tokens_out": 3695,
+                "cost_usd": "0.058647",
+                "latency_ms": 23188,
+                "call_id": "01M3EMWN73A7G2JAZHW3H20NZK",
+                "asked": {
+                    "topic": "Consulta médica",
+                    "target_language": "English",
+                    "native_language": "Spanish",
+                    "target_code": "en",
+                    "native_code": "es",
+                    "violations": [],
+                    "earlier_days": 0,
+                    "roles": {
+                        "learnerTarget": "Patient",
+                        "learnerNative": "Paciente",
+                        "partnerTarget": "Doctor",
+                        "partnerNative": "Médico"
+                    }
+                },
+                "payload": {
+                    "topic": {
+                        "title_target": "Doctor's visit for a sore throat",
+                        "title_native": "Consulta por dolor de garganta",
+                        "description_target": "Talk to the doctor about a sore throat and fever, answer simple symptom questions, and understand basic advice.",
+                        "description_native": "Habla con el médico sobre dolor de garganta y fiebre, responde preguntas sencillas sobre los síntomas y entiende consejos básicos."
+                    },
+                    "learner_role": {
+                        "role_target": "Patient",
+                        "role_native": "Paciente"
+                    },
+                    "role_gender": "male",
+                    "dialogue": [
+                        {
+                            "step": 1,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "What seems to be the problem today?",
+                                    "text_native": "¿Qué te pasa hoy?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p1",
+                                    "filler": "a sore throat",
+                                    "text_target": "I have a sore throat.",
+                                    "text_native": "Tengo dolor de garganta.",
+                                    "pronunciation_native": "Ай хав э сор сроут.",
+                                    "speaking_key": "I have",
+                                    "simplified_variants": [
+                                        "My throat hurts.",
+                                        "I have throat pain."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the doctor ask about?",
+                                "text_native": "¿Sobre qué pregunta el médico?",
+                                "options": [
+                                    {
+                                        "text_target": "The patient's main problem today",
+                                        "text_native": "El problema principal de la paciente hoy"
+                                    },
+                                    {
+                                        "text_target": "The patient's address",
+                                        "text_native": "La dirección de la paciente"
+                                    },
+                                    {
+                                        "text_target": "The patient's job",
+                                        "text_native": "El trabajo de la paciente"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "El médico pregunta cuál es el problema de hoy."
+                            }
+                        },
+                        {
+                            "step": 2,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "How long have you had it?",
+                                    "text_native": "¿Cuánto tiempo lo has tenido?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p2",
+                                    "filler": "for three days",
+                                    "text_target": "It's been for three days.",
+                                    "text_native": "Lleva tres días.",
+                                    "pronunciation_native": "Итс бин фор сри дейз.",
+                                    "speaking_key": "been for",
+                                    "simplified_variants": [
+                                        "For three days.",
+                                        "I've had it three days."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What time period does the doctor ask about?",
+                                "text_native": "¿Qué período de tiempo pregunta el médico?",
+                                "options": [
+                                    {
+                                        "text_target": "When she ate last",
+                                        "text_native": "Cuándo comió por última vez"
+                                    },
+                                    {
+                                        "text_target": "How long the problem has lasted",
+                                        "text_native": "Cuánto tiempo ha durado el problema"
+                                    },
+                                    {
+                                        "text_target": "What time her appointment is",
+                                        "text_native": "A qué hora es su cita"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "El médico pregunta desde hace cuánto tiempo tiene el problema."
+                            }
+                        },
+                        {
+                            "step": 3,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Do you also have a fever?",
+                                    "text_native": "¿También tienes fiebre?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p1",
+                                    "filler": "a fever",
+                                    "text_target": "I have a fever.",
+                                    "text_native": "Tengo fiebre.",
+                                    "pronunciation_native": "Ай хав э фивер.",
+                                    "speaking_key": "I have",
+                                    "simplified_variants": [
+                                        "Yes, I have a fever.",
+                                        "I also have a fever."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which extra symptom does the doctor ask about?",
+                                "text_native": "¿Qué síntoma adicional pregunta el médico?",
+                                "options": [
+                                    {
+                                        "text_target": "A high temperature",
+                                        "text_native": "Temperatura alta"
+                                    },
+                                    {
+                                        "text_target": "A stomach ache",
+                                        "text_native": "Dolor de estómago"
+                                    },
+                                    {
+                                        "text_target": "A rash",
+                                        "text_native": "Un sarpullido"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "El médico pregunta si también tiene fiebre."
+                            }
+                        },
+                        {
+                            "step": 4,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p3",
+                                    "filler": "a cough",
+                                    "text_target": "I also have a cough.",
+                                    "text_native": "También tengo tos.",
+                                    "pronunciation_native": "Ай олсо хав э коф.",
+                                    "speaking_key": "also have",
+                                    "simplified_variants": [
+                                        "I have a cough too.",
+                                        "Also, a cough."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Okay. Is it dry or with mucus?",
+                                    "text_native": "Vale. ¿Es seca o con mucosidad?"
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which two kinds of cough does the doctor mention?",
+                                "text_native": "¿Qué dos tipos de tos menciona el médico?",
+                                "options": [
+                                    {
+                                        "text_target": "Short or long",
+                                        "text_native": "Corta o larga"
+                                    },
+                                    {
+                                        "text_target": "Dry or bringing up mucus",
+                                        "text_native": "Seca o con mucosidad"
+                                    },
+                                    {
+                                        "text_target": "Painful or quiet",
+                                        "text_native": "Dolorosa o suave"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "El médico pregunta si la tos es seca o con mucosidad."
+                            }
+                        },
+                        {
+                            "step": 5,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "You should rest, drink water, and take paracetamol.",
+                                    "text_native": "Debes descansar, beber agua y tomar paracetamol."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p4",
+                                    "filler": "paracetamol",
+                                    "text_target": "I'll take paracetamol.",
+                                    "text_native": "Tomaré paracetamol.",
+                                    "pronunciation_native": "Айл тейк параситамол.",
+                                    "speaking_key": "I'll take",
+                                    "simplified_variants": [
+                                        "I can take paracetamol.",
+                                        "Okay, paracetamol."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What medicine does the doctor advise?",
+                                "text_native": "¿Qué medicina recomienda el médico?",
+                                "options": [
+                                    {
+                                        "text_target": "Cough syrup",
+                                        "text_native": "Jarabe para la tos"
+                                    },
+                                    {
+                                        "text_target": "Antibiotics",
+                                        "text_native": "Antibióticos"
+                                    },
+                                    {
+                                        "text_target": "Paracetamol",
+                                        "text_native": "Paracetamol"
+                                    }
+                                ],
+                                "correct_option_index": 2,
+                                "explanation_native": "El médico recomienda tomar paracetamol."
+                            }
+                        },
+                        {
+                            "step": 6,
+                            "kind": "rescue",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": null,
+                                    "filler": null,
+                                    "text_target": "Could you say that more slowly, please?",
+                                    "text_native": "¿Puede decirlo más despacio, por favor?",
+                                    "pronunciation_native": "Куд ю сей зат мор слоули, плиз?",
+                                    "speaking_key": "say that more slowly",
+                                    "simplified_variants": [
+                                        "Please say it slowly.",
+                                        "Could you repeat that, please?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Rest, drink water, and take paracetamol.",
+                                    "text_native": "Descansa, bebe agua y toma paracetamol."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Besides rest and medicine, what else does the doctor say to do?",
+                                "text_native": "Además de descansar y la medicina, ¿qué más dice el médico que haga?",
+                                "options": [
+                                    {
+                                        "text_target": "Drink plenty of water",
+                                        "text_native": "Beber bastante agua"
+                                    },
+                                    {
+                                        "text_target": "Stay at work",
+                                        "text_native": "Seguir trabajando"
+                                    },
+                                    {
+                                        "text_target": "Eat spicy food",
+                                        "text_native": "Comer comida picante"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "El médico también dice que beba agua."
+                            }
+                        },
+                        {
+                            "step": 7,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p5",
+                                    "filler": "to work",
+                                    "text_target": "Can I go to work?",
+                                    "text_native": "¿Puedo ir al trabajo?",
+                                    "pronunciation_native": "Кэн ай гоу ту уорк?",
+                                    "speaking_key": "Can I go",
+                                    "simplified_variants": [
+                                        "Can I work?",
+                                        "Is work okay?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "No. Stay home tomorrow and rest.",
+                                    "text_native": "No. Quédate en casa mañana y descansa."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the doctor tell the patient to do tomorrow?",
+                                "text_native": "¿Qué le dice el médico a la paciente que haga mañana?",
+                                "options": [
+                                    {
+                                        "text_target": "Go back to the clinic",
+                                        "text_native": "Volver a la clínica"
+                                    },
+                                    {
+                                        "text_target": "Remain at home and rest",
+                                        "text_native": "Quedarse en casa y descansar"
+                                    },
+                                    {
+                                        "text_target": "Return to work early",
+                                        "text_native": "Volver al trabajo temprano"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "El médico dice que mañana se quede en casa y descanse."
+                            }
+                        },
+                        {
+                            "step": 8,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p6",
+                                    "filler": "in two days",
+                                    "text_target": "Should I come back in two days?",
+                                    "text_native": "¿Debo volver en dos días?",
+                                    "pronunciation_native": "Шуд ай кам бак ин ту дейз?",
+                                    "speaking_key": "Should I come back",
+                                    "simplified_variants": [
+                                        "Do I come back in two days?",
+                                        "Come back in two days?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Come back if the fever is not better in two days.",
+                                    "text_native": "Vuelve si la fiebre no mejora en dos días."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "When does the doctor want the patient to return?",
+                                "text_native": "¿Cuándo quiere el médico que vuelva la paciente?",
+                                "options": [
+                                    {
+                                        "text_target": "Only if the fever has not improved after two days",
+                                        "text_native": "Solo si la fiebre no ha mejorado después de dos días"
+                                    },
+                                    {
+                                        "text_target": "This evening",
+                                        "text_native": "Esta noche"
+                                    },
+                                    {
+                                        "text_target": "After one week, even if better",
+                                        "text_native": "Después de una semana, aunque mejore"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "El médico dice que vuelva solo si la fiebre no mejora en dos días."
+                            }
+                        }
+                    ],
+                    "phrases": [
+                        {
+                            "id": "p1",
+                            "kind": "answer",
+                            "frame_target": "I have ___.",
+                            "frame_native": "Tengo ___.",
+                            "pronunciation_native": "Ай хав ___.",
+                            "slot": {
+                                "hint_native": "un síntoma",
+                                "fillers": [
+                                    {
+                                        "target": "a sore throat",
+                                        "native": "dolor de garganta",
+                                        "pronunciation_native": "э сор сроут",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a fever",
+                                        "native": "fiebre",
+                                        "pronunciation_native": "э фивер",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a headache",
+                                        "native": "dolor de cabeza",
+                                        "pronunciation_native": "э хедейк",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p2",
+                            "kind": "answer",
+                            "frame_target": "It's been ___.",
+                            "frame_native": "Lleva ___.",
+                            "pronunciation_native": "Итс бин ___.",
+                            "slot": {
+                                "hint_native": "un período de tiempo",
+                                "fillers": [
+                                    {
+                                        "target": "for three days",
+                                        "native": "tres días",
+                                        "pronunciation_native": "фор сри дейз",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "since Monday",
+                                        "native": "desde el lunes",
+                                        "pronunciation_native": "синс мандей",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "for a week",
+                                        "native": "una semana",
+                                        "pronunciation_native": "фор э уик",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p3",
+                            "kind": "ask",
+                            "frame_target": "I also have ___.",
+                            "frame_native": "También tengo ___.",
+                            "pronunciation_native": "Ай олсо хав ___.",
+                            "slot": {
+                                "hint_native": "otro síntoma",
+                                "fillers": [
+                                    {
+                                        "target": "a cough",
+                                        "native": "tos",
+                                        "pronunciation_native": "э коф",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a runny nose",
+                                        "native": "moqueo",
+                                        "pronunciation_native": "э рани ноуз",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "ear pain",
+                                        "native": "dolor de oído",
+                                        "pronunciation_native": "ир пейн",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p4",
+                            "kind": "answer",
+                            "frame_target": "I'll take ___.",
+                            "frame_native": "Tomaré ___.",
+                            "pronunciation_native": "Айл тейк ___.",
+                            "slot": {
+                                "hint_native": "una medicina",
+                                "fillers": [
+                                    {
+                                        "target": "paracetamol",
+                                        "native": "paracetamol",
+                                        "pronunciation_native": "параситамол",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "ibuprofen",
+                                        "native": "ibuprofeno",
+                                        "pronunciation_native": "айбупрофен",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "cough syrup",
+                                        "native": "jarabe para la tos",
+                                        "pronunciation_native": "коф сироп",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p5",
+                            "kind": "ask",
+                            "frame_target": "Can I go to ___?",
+                            "frame_native": "¿Puedo ir a ___?",
+                            "pronunciation_native": "Кэн ай гоу ту ___?",
+                            "slot": {
+                                "hint_native": "un lugar o actividad",
+                                "fillers": [
+                                    {
+                                        "target": "work",
+                                        "native": "trabajo",
+                                        "pronunciation_native": "уорк",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "school",
+                                        "native": "clase",
+                                        "pronunciation_native": "скул",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "the gym",
+                                        "native": "gimnasio",
+                                        "pronunciation_native": "зе йим",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p6",
+                            "kind": "ask",
+                            "frame_target": "Should I come back ___?",
+                            "frame_native": "¿Debo volver ___?",
+                            "pronunciation_native": "Шуд ай кам бак ___?",
+                            "slot": {
+                                "hint_native": "un momento",
+                                "fillers": [
+                                    {
+                                        "target": "in two days",
+                                        "native": "en dos días",
+                                        "pronunciation_native": "ин ту дейз",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "tomorrow",
+                                        "native": "mañana",
+                                        "pronunciation_native": "тумороу",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "next week",
+                                        "native": "la semana que viene",
+                                        "pronunciation_native": "некст уик",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "listening": {
+                        "questions": [
+                            {
+                                "text_native": "¿Cuál era el problema principal que dijo la paciente al principio?",
+                                "options_native": [
+                                    "Dolor de garganta",
+                                    "Dolor de espalda",
+                                    "Dolor de estómago"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "La paciente dijo que tenía dolor de garganta."
+                            },
+                            {
+                                "text_native": "¿Cuánto tiempo llevaba con el problema?",
+                                "options_native": [
+                                    "Dos días",
+                                    "Tres días",
+                                    "Una semana"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Dijo que llevaba tres días así."
+                            },
+                            {
+                                "text_native": "¿Qué medicamento recomendó el médico?",
+                                "options_native": [
+                                    "Antibióticos",
+                                    "Jarabe para la tos",
+                                    "Paracetamol"
+                                ],
+                                "correct_option_index": 2,
+                                "explanation_native": "El médico recomendó paracetamol."
+                            },
+                            {
+                                "text_native": "¿Qué le dijo el médico sobre mañana?",
+                                "options_native": [
+                                    "Que fuera al trabajo",
+                                    "Que se quedara en casa",
+                                    "Que volviera a la clínica"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "El médico le dijo que mañana se quedara en casa y descansara."
+                            }
+                        ]
+                    },
+                    "vocabulary": [
+                        {
+                            "id": "v1",
+                            "term_target": "sore throat",
+                            "translation_native": "dolor de garganta",
+                            "pronunciation_native": "сор сроут",
+                            "definition_target": "pain or irritation in the throat",
+                            "kind": "chunk",
+                            "image_prompt": "person touching their throat while sitting in a clinic exam room",
+                            "used_in": [
+                                "p1"
+                            ]
+                        },
+                        {
+                            "id": "v2",
+                            "term_target": "fever",
+                            "translation_native": "fiebre",
+                            "pronunciation_native": "фивер",
+                            "definition_target": "a high body temperature",
+                            "kind": "word",
+                            "image_prompt": "digital thermometer on a bed next to tissues and a glass of water",
+                            "used_in": [
+                                "p1",
+                                "A3",
+                                "A8"
+                            ]
+                        },
+                        {
+                            "id": "v3",
+                            "term_target": "for three days",
+                            "translation_native": "desde hace tres días",
+                            "pronunciation_native": "фор сри дейз",
+                            "definition_target": "lasting during the last three days",
+                            "kind": "chunk",
+                            "image_prompt": null,
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v4",
+                            "term_target": "cough",
+                            "translation_native": "tos",
+                            "pronunciation_native": "коф",
+                            "definition_target": "air forced from the throat with a sudden noise",
+                            "kind": "word",
+                            "image_prompt": "patient coughing into elbow in a clinic waiting room",
+                            "used_in": [
+                                "p3",
+                                "A4"
+                            ]
+                        },
+                        {
+                            "id": "v5",
+                            "term_target": "mucus",
+                            "translation_native": "mucosidad",
+                            "pronunciation_native": "мьюкэс",
+                            "definition_target": "thick liquid produced in the nose or throat",
+                            "kind": "word",
+                            "image_prompt": "box of tissues and a glass of water on a bedside table",
+                            "used_in": [
+                                "A4"
+                            ]
+                        },
+                        {
+                            "id": "v6",
+                            "term_target": "paracetamol",
+                            "translation_native": "paracetamol",
+                            "pronunciation_native": "параситамол",
+                            "definition_target": "a medicine used to reduce pain and fever",
+                            "kind": "word",
+                            "image_prompt": "paracetamol tablets in a blister pack on a kitchen table",
+                            "used_in": [
+                                "p4",
+                                "A5",
+                                "A6"
+                            ]
+                        },
+                        {
+                            "id": "v7",
+                            "term_target": "stay home",
+                            "translation_native": "quedarse en casa",
+                            "pronunciation_native": "стей хоум",
+                            "definition_target": "remain at home instead of going out",
+                            "kind": "chunk",
+                            "image_prompt": "person resting under a blanket on a sofa at home during daytime",
+                            "used_in": [
+                                "A7"
+                            ]
+                        },
+                        {
+                            "id": "v8",
+                            "term_target": "come back",
+                            "translation_native": "volver",
+                            "pronunciation_native": "кам бак",
+                            "definition_target": "return to the same place later",
+                            "kind": "chunk",
+                            "image_prompt": "clinic entrance door with a patient walking back toward it",
+                            "used_in": [
+                                "p6",
+                                "A8"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-26T10:41:56+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 5043,
+                "cached_tokens": 0,
+                "tokens_out": 137,
+                "cost_usd": "0.014663",
+                "latency_ms": 1739,
+                "call_id": "01M3EMXBWDETJ3BGQCHJHHXF6S",
+                "asked": {
+                    "address": "p1",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1: the reading «Ай хав ___.» is spelled with letters of another writing: «А», «й», «х», «а», «в»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1: the reading «Ай хав ___.» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1.f1: the reading «э сор сроут» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1.f1: the reading «э сор сроут» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1.f2: the reading «э фивер» is spelled with letters of another writing: «э», «ф», «и», «в», «е», «р»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1.f2: the reading «э фивер» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1.f3: the reading «э хедейк» is spelled with letters of another writing: «э», «х», «е», «д», «й», «к»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1.f3: the reading «э хедейк» leaves the native script"
+                        }
+                    ],
+                    "card": {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I have ___.",
+                        "frame_native": "Tengo ___.",
+                        "pronunciation_native": "Ай хав ___.",
+                        "slot": {
+                            "hint_native": "un síntoma",
+                            "fillers": [
+                                {
+                                    "target": "a sore throat",
+                                    "native": "dolor de garganta",
+                                    "pronunciation_native": "э сор сроут",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a fever",
+                                    "native": "fiebre",
+                                    "pronunciation_native": "э фивер",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a headache",
+                                    "native": "dolor de cabeza",
+                                    "pronunciation_native": "э хедейк",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I have ___.",
+                        "frame_native": "Tengo ___.",
+                        "pronunciation_native": "ai jav ___",
+                        "slot": {
+                            "hint_native": "un síntoma",
+                            "fillers": [
+                                {
+                                    "target": "a sore throat",
+                                    "native": "dolor de garganta",
+                                    "pronunciation_native": "a sor zrout",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a fever",
+                                    "native": "fiebre",
+                                    "pronunciation_native": "a fíver",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a headache",
+                                    "native": "dolor de cabeza",
+                                    "pronunciation_native": "a jédeik",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-26T10:41:58+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 5006,
+                "cached_tokens": 2816,
+                "tokens_out": 138,
+                "cost_usd": "0.008249",
+                "latency_ms": 1718,
+                "call_id": "01M3EMXDK9HHG32V29PYQM6QSH",
+                "asked": {
+                    "address": "p2",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2: the reading «Итс бин ___.» is spelled with letters of another writing: «И», «т», «с», «б», «и», «н»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2: the reading «Итс бин ___.» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2.f1: the reading «фор сри дейз» is spelled with letters of another writing: «ф», «о», «р», «с», «и», «д», «е», «й», «з»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2.f1: the reading «фор сри дейз» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2.f2: the reading «синс мандей» is spelled with letters of another writing: «с», «и», «н», «м», «а», «д», «е», «й»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2.f2: the reading «синс мандей» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2.f3: the reading «фор э уик» is spelled with letters of another writing: «ф», «о», «р», «э», «у», «и», «к»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2.f3: the reading «фор э уик» leaves the native script"
+                        }
+                    ],
+                    "card": {
+                        "id": "p2",
+                        "kind": "answer",
+                        "frame_target": "It's been ___.",
+                        "frame_native": "Lleva ___.",
+                        "pronunciation_native": "Итс бин ___.",
+                        "slot": {
+                            "hint_native": "un período de tiempo",
+                            "fillers": [
+                                {
+                                    "target": "for three days",
+                                    "native": "tres días",
+                                    "pronunciation_native": "фор сри дейз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "since Monday",
+                                    "native": "desde el lunes",
+                                    "pronunciation_native": "синс мандей",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "for a week",
+                                    "native": "una semana",
+                                    "pronunciation_native": "фор э уик",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "id": "p2",
+                        "kind": "answer",
+                        "frame_target": "It's been ___.",
+                        "frame_native": "Lleva ___.",
+                        "pronunciation_native": "its bin ___.",
+                        "slot": {
+                            "hint_native": "un período de tiempo",
+                            "fillers": [
+                                {
+                                    "target": "for three days",
+                                    "native": "tres días",
+                                    "pronunciation_native": "for zri deiz",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "since Monday",
+                                    "native": "desde el lunes",
+                                    "pronunciation_native": "sins mandei",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "for a week",
+                                    "native": "una semana",
+                                    "pronunciation_native": "for a uik",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "call": "lesson",
+                "at": "2026-09-26T10:42:00+00:00",
+                "prompt_version": "lesson_day.v4.9",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 8431,
+                "cached_tokens": 7936,
+                "tokens_out": 3521,
+                "cost_usd": "0.056036",
+                "latency_ms": 22944,
+                "call_id": "01M3EMXF9Q7QGCZC61E3CSVJ9S",
+                "asked": {
+                    "topic": "Consulta médica",
+                    "target_language": "English",
+                    "native_language": "Spanish",
+                    "target_code": "en",
+                    "native_code": "es",
+                    "violations": [],
+                    "earlier_days": 0,
+                    "roles": {
+                        "learnerTarget": "Patient",
+                        "learnerNative": "Paciente",
+                        "partnerTarget": "Doctor",
+                        "partnerNative": "Médico"
+                    }
+                },
+                "payload": {
+                    "topic": {
+                        "title_target": "Doctor visit for a sore throat",
+                        "title_native": "Consulta por dolor de garganta",
+                        "description_target": "Explain your symptoms, answer simple questions, and understand the doctor's advice.",
+                        "description_native": "Explica tus síntomas, responde preguntas sencillas y entiende los consejos del médico."
+                    },
+                    "learner_role": {
+                        "role_target": "Patient",
+                        "role_native": "Paciente"
+                    },
+                    "role_gender": "female",
+                    "dialogue": [
+                        {
+                            "step": 1,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "What seems to be the problem today?",
+                                    "text_native": "¿Qué te pasa hoy?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p1",
+                                    "filler": "a sore throat",
+                                    "text_target": "I have a sore throat.",
+                                    "text_native": "Tengo dolor de garganta.",
+                                    "pronunciation_native": "Ай хав э сор сроут.",
+                                    "speaking_key": "I have",
+                                    "simplified_variants": [
+                                        "My throat hurts."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the doctor ask about?",
+                                "text_native": "¿Qué pregunta la doctora?",
+                                "options": [
+                                    {
+                                        "text_target": "Your main problem today",
+                                        "text_native": "Tu problema principal de hoy"
+                                    },
+                                    {
+                                        "text_target": "Your usual medicine",
+                                        "text_native": "Tu medicina habitual"
+                                    },
+                                    {
+                                        "text_target": "Your next appointment",
+                                        "text_native": "Tu próxima cita"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "La doctora quiere saber cuál es el problema principal hoy."
+                            }
+                        },
+                        {
+                            "step": 2,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "How long have you had it?",
+                                    "text_native": "¿Cuánto tiempo llevas con eso?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p2",
+                                    "filler": "for three days",
+                                    "text_target": "It's been for three days.",
+                                    "text_native": "Llevo tres días con esto.",
+                                    "pronunciation_native": "Итс бин фор сри дейз.",
+                                    "speaking_key": "been for",
+                                    "simplified_variants": [
+                                        "For three days."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What time period does the doctor ask about?",
+                                "text_native": "¿Qué periodo de tiempo pregunta la doctora?",
+                                "options": [
+                                    {
+                                        "text_target": "When you last ate",
+                                        "text_native": "Cuándo comiste por última vez"
+                                    },
+                                    {
+                                        "text_target": "How long the problem has lasted",
+                                        "text_native": "Cuánto tiempo ha durado el problema"
+                                    },
+                                    {
+                                        "text_target": "How often you work",
+                                        "text_native": "Con qué frecuencia trabajas"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "La doctora pregunta desde hace cuánto tiempo tienes el problema."
+                            }
+                        },
+                        {
+                            "step": 3,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Do you also have a fever?",
+                                    "text_native": "¿También tienes fiebre?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p1",
+                                    "filler": "a fever",
+                                    "text_target": "I have a fever.",
+                                    "text_native": "Tengo fiebre.",
+                                    "pronunciation_native": "Ай хав э фивер.",
+                                    "speaking_key": "I have",
+                                    "simplified_variants": [
+                                        "Yes, I have a fever."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which extra symptom does the doctor ask about?",
+                                "text_native": "¿Qué síntoma adicional pregunta la doctora?",
+                                "options": [
+                                    {
+                                        "text_target": "A high temperature",
+                                        "text_native": "Temperatura alta"
+                                    },
+                                    {
+                                        "text_target": "A cough",
+                                        "text_native": "Tos"
+                                    },
+                                    {
+                                        "text_target": "Ear pain",
+                                        "text_native": "Dolor de oído"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "La doctora pregunta si también tienes fiebre."
+                            }
+                        },
+                        {
+                            "step": 4,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p3",
+                                    "filler": "my throat",
+                                    "text_target": "Can you check my throat?",
+                                    "text_native": "¿Puede mirarme la garganta?",
+                                    "pronunciation_native": "Кэн ю чек май сроут?",
+                                    "speaking_key": "Can you check",
+                                    "simplified_variants": [
+                                        "Please check my throat."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Yes. Open your mouth, please.",
+                                    "text_native": "Sí. Abre la boca, por favor."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the doctor ask you to do?",
+                                "text_native": "¿Qué te pide la doctora que hagas?",
+                                "options": [
+                                    {
+                                        "text_target": "Take off your coat",
+                                        "text_native": "Quitarte el abrigo"
+                                    },
+                                    {
+                                        "text_target": "Open your mouth",
+                                        "text_native": "Abrir la boca"
+                                    },
+                                    {
+                                        "text_target": "Sit near the window",
+                                        "text_native": "Sentarte cerca de la ventana"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "La doctora te pide que abras la boca."
+                            }
+                        },
+                        {
+                            "step": 5,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Your throat is red, but your lungs sound clear.",
+                                    "text_native": "Tienes la garganta roja, pero los pulmones suenan bien."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p4",
+                                    "filler": "red",
+                                    "text_target": "My throat feels red.",
+                                    "text_native": "Siento la garganta irritada.",
+                                    "pronunciation_native": "Май сроут филз ред.",
+                                    "speaking_key": "My throat feels",
+                                    "simplified_variants": [
+                                        "My throat feels bad."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the doctor say about your lungs?",
+                                "text_native": "¿Qué dice la doctora sobre tus pulmones?",
+                                "options": [
+                                    {
+                                        "text_target": "They seem fine",
+                                        "text_native": "Parecen estar bien"
+                                    },
+                                    {
+                                        "text_target": "They sound blocked",
+                                        "text_native": "Suenan congestionados"
+                                    },
+                                    {
+                                        "text_target": "They need an X-ray",
+                                        "text_native": "Necesitan una radiografía"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "La doctora dice que los pulmones suenan bien."
+                            }
+                        },
+                        {
+                            "step": 6,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p5",
+                                    "filler": "medicine",
+                                    "text_target": "Do I need medicine?",
+                                    "text_native": "¿Necesito medicina?",
+                                    "pronunciation_native": "Ду ай нийд медисин?",
+                                    "speaking_key": "need medicine",
+                                    "simplified_variants": [
+                                        "Do I need any medicine?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Yes, take paracetamol and drink plenty of water.",
+                                    "text_native": "Sí, toma paracetamol y bebe mucha agua."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the doctor tell you to drink?",
+                                "text_native": "¿Qué te dice la doctora que bebas?",
+                                "options": [
+                                    {
+                                        "text_target": "Warm milk",
+                                        "text_native": "Leche caliente"
+                                    },
+                                    {
+                                        "text_target": "A lot of water",
+                                        "text_native": "Mucha agua"
+                                    },
+                                    {
+                                        "text_target": "Orange juice",
+                                        "text_native": "Zumo de naranja"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "La doctora te dice que bebas mucha agua."
+                            }
+                        },
+                        {
+                            "step": 7,
+                            "kind": "rescue",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": null,
+                                    "filler": null,
+                                    "text_target": "Could you say that more slowly, please?",
+                                    "text_native": "¿Puede decirlo más despacio, por favor?",
+                                    "pronunciation_native": "Куд ю сей зат мор слоули, плиз?",
+                                    "speaking_key": "say that more slowly",
+                                    "simplified_variants": [
+                                        "Please say it slowly."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Take paracetamol and drink lots of water.",
+                                    "text_native": "Toma paracetamol y bebe mucha agua."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which medicine does the doctor repeat?",
+                                "text_native": "¿Qué medicina repite la doctora?",
+                                "options": [
+                                    {
+                                        "text_target": "Ibuprofen",
+                                        "text_native": "Ibuprofeno"
+                                    },
+                                    {
+                                        "text_target": "Cough syrup",
+                                        "text_native": "Jarabe para la tos"
+                                    },
+                                    {
+                                        "text_target": "Paracetamol",
+                                        "text_native": "Paracetamol"
+                                    }
+                                ],
+                                "correct_option_index": 2,
+                                "explanation_native": "En la repetición, la doctora vuelve a decir paracetamol."
+                            }
+                        },
+                        {
+                            "step": 8,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Paciente",
+                                    "phrase_id": "p6",
+                                    "filler": "to work",
+                                    "text_target": "Can I go to work?",
+                                    "text_native": "¿Puedo ir a trabajar?",
+                                    "pronunciation_native": "Кэн ай гоу ту уорк?",
+                                    "speaking_key": "Can I go",
+                                    "simplified_variants": [
+                                        "Can I work tomorrow?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Doctor",
+                                    "role_native": "Médico",
+                                    "text_target": "Rest at home tomorrow if the fever continues.",
+                                    "text_native": "Descansa en casa mañana si la fiebre continúa."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "When should you stay home?",
+                                "text_native": "¿Cuándo debes quedarte en casa?",
+                                "options": [
+                                    {
+                                        "text_target": "If the fever is still there tomorrow",
+                                        "text_native": "Si mañana sigues con fiebre"
+                                    },
+                                    {
+                                        "text_target": "Only this evening",
+                                        "text_native": "Solo esta tarde"
+                                    },
+                                    {
+                                        "text_target": "After your next visit",
+                                        "text_native": "Después de tu próxima visita"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "La doctora dice que descanses en casa mañana si la fiebre continúa."
+                            }
+                        }
+                    ],
+                    "phrases": [
+                        {
+                            "id": "p1",
+                            "kind": "answer",
+                            "frame_target": "I have ___.",
+                            "frame_native": "Tengo ___.",
+                            "pronunciation_native": "Ай хав ___.",
+                            "slot": {
+                                "hint_native": "síntoma",
+                                "fillers": [
+                                    {
+                                        "target": "a sore throat",
+                                        "native": "dolor de garganta",
+                                        "pronunciation_native": "э сор сроут",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a fever",
+                                        "native": "fiebre",
+                                        "pronunciation_native": "э фивер",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a cough",
+                                        "native": "tos",
+                                        "pronunciation_native": "э коф",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p2",
+                            "kind": "answer",
+                            "frame_target": "It's been ___.",
+                            "frame_native": "Llevo ___.",
+                            "pronunciation_native": "Итс бин ___.",
+                            "slot": {
+                                "hint_native": "duración",
+                                "fillers": [
+                                    {
+                                        "target": "for three days",
+                                        "native": "tres días",
+                                        "pronunciation_native": "фор сри дейз",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "since Monday",
+                                        "native": "desde el lunes",
+                                        "pronunciation_native": "синс мандей",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "since yesterday",
+                                        "native": "desde ayer",
+                                        "pronunciation_native": "синс йестердей",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p3",
+                            "kind": "ask",
+                            "frame_target": "Can you check ___?",
+                            "frame_native": "¿Puede mirarme ___?",
+                            "pronunciation_native": "Кэн ю чек ___?",
+                            "slot": {
+                                "hint_native": "parte del cuerpo",
+                                "fillers": [
+                                    {
+                                        "target": "my throat",
+                                        "native": "la garganta",
+                                        "pronunciation_native": "май сроут",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "my ear",
+                                        "native": "el oído",
+                                        "pronunciation_native": "май ир",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "my neck",
+                                        "native": "el cuello",
+                                        "pronunciation_native": "май нек",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p4",
+                            "kind": "answer",
+                            "frame_target": "My throat feels ___.",
+                            "frame_native": "Siento la garganta ___.",
+                            "pronunciation_native": "Май сроут филз ___.",
+                            "slot": {
+                                "hint_native": "cómo se siente",
+                                "fillers": [
+                                    {
+                                        "target": "red",
+                                        "native": "irritada",
+                                        "pronunciation_native": "ред",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "dry",
+                                        "native": "seca",
+                                        "pronunciation_native": "драй",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "swollen",
+                                        "native": "hinchada",
+                                        "pronunciation_native": "своулин",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p5",
+                            "kind": "ask",
+                            "frame_target": "Do I need ___?",
+                            "frame_native": "¿Necesito ___?",
+                            "pronunciation_native": "Ду ай нийд ___?",
+                            "slot": {
+                                "hint_native": "tratamiento",
+                                "fillers": [
+                                    {
+                                        "target": "medicine",
+                                        "native": "medicina",
+                                        "pronunciation_native": "медисин",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a test",
+                                        "native": "una prueba",
+                                        "pronunciation_native": "э тест",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "antibiotics",
+                                        "native": "antibióticos",
+                                        "pronunciation_native": "антибайотикс",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p6",
+                            "kind": "ask",
+                            "frame_target": "Can I go ___?",
+                            "frame_native": "¿Puedo ir ___?",
+                            "pronunciation_native": "Кэн ай гоу ___?",
+                            "slot": {
+                                "hint_native": "lugar o actividad",
+                                "fillers": [
+                                    {
+                                        "target": "to work",
+                                        "native": "a trabajar",
+                                        "pronunciation_native": "ту уорк",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "to school",
+                                        "native": "a clase",
+                                        "pronunciation_native": "ту скул",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "to the gym",
+                                        "native": "al gimnasio",
+                                        "pronunciation_native": "ту зе йим",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "listening": {
+                        "questions": [
+                            {
+                                "text_native": "¿Cuánto tiempo lleva la paciente con el problema?",
+                                "options_native": [
+                                    "Desde ayer",
+                                    "Tres días",
+                                    "Una semana"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "La paciente dice que lleva tres días así."
+                            },
+                            {
+                                "text_native": "¿Qué le dice la doctora sobre los pulmones?",
+                                "options_native": [
+                                    "Que suenan bien",
+                                    "Que están infectados",
+                                    "Que necesita una radiografía"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "La doctora dice que los pulmones suenan bien."
+                            },
+                            {
+                                "text_native": "¿Qué medicina recomienda la doctora?",
+                                "options_native": [
+                                    "Ibuprofeno",
+                                    "Jarabe para la tos",
+                                    "Paracetamol"
+                                ],
+                                "correct_option_index": 2,
+                                "explanation_native": "La doctora recomienda paracetamol."
+                            },
+                            {
+                                "text_native": "¿A dónde pregunta la paciente si puede ir?",
+                                "options_native": [
+                                    "A trabajar",
+                                    "A clase",
+                                    "Al gimnasio"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "La paciente pregunta si puede ir a trabajar."
+                            }
+                        ]
+                    },
+                    "vocabulary": [
+                        {
+                            "id": "v1",
+                            "term_target": "sore throat",
+                            "translation_native": "dolor de garganta",
+                            "pronunciation_native": "сор сроут",
+                            "definition_target": "pain or irritation in the throat",
+                            "kind": "chunk",
+                            "image_prompt": "person touching throat in a clinic exam room",
+                            "used_in": [
+                                "p1"
+                            ]
+                        },
+                        {
+                            "id": "v2",
+                            "term_target": "fever",
+                            "translation_native": "fiebre",
+                            "pronunciation_native": "фивер",
+                            "definition_target": "a high body temperature",
+                            "kind": "word",
+                            "image_prompt": "digital thermometer showing a high temperature on a bedside table",
+                            "used_in": [
+                                "A3",
+                                "p1",
+                                "A8"
+                            ]
+                        },
+                        {
+                            "id": "v3",
+                            "term_target": "for three days",
+                            "translation_native": "durante tres días",
+                            "pronunciation_native": "фор сри дейз",
+                            "definition_target": "lasting through a period of three days",
+                            "kind": "chunk",
+                            "image_prompt": null,
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v4",
+                            "term_target": "open your mouth",
+                            "translation_native": "abre la boca",
+                            "pronunciation_native": "оупен йор маус",
+                            "definition_target": "to open your mouth for an examination",
+                            "kind": "chunk",
+                            "image_prompt": "patient opening mouth during a throat exam",
+                            "used_in": [
+                                "A4"
+                            ]
+                        },
+                        {
+                            "id": "v5",
+                            "term_target": "lungs",
+                            "translation_native": "pulmones",
+                            "pronunciation_native": "лангз",
+                            "definition_target": "the organs used for breathing",
+                            "kind": "word",
+                            "image_prompt": "doctor listening to a patient's chest with a stethoscope",
+                            "used_in": [
+                                "A5"
+                            ]
+                        },
+                        {
+                            "id": "v6",
+                            "term_target": "paracetamol",
+                            "translation_native": "paracetamol",
+                            "pronunciation_native": "параситамол",
+                            "definition_target": "a medicine used to reduce pain and fever",
+                            "kind": "word",
+                            "image_prompt": "paracetamol tablets next to a glass of water",
+                            "used_in": [
+                                "A6",
+                                "A7"
+                            ]
+                        },
+                        {
+                            "id": "v7",
+                            "term_target": "plenty of water",
+                            "translation_native": "mucha agua",
+                            "pronunciation_native": "пленти ов уотер",
+                            "definition_target": "a large amount of water to drink",
+                            "kind": "chunk",
+                            "image_prompt": "large glass of water on a kitchen table",
+                            "used_in": [
+                                "A6"
+                            ]
+                        },
+                        {
+                            "id": "v8",
+                            "term_target": "rest at home",
+                            "translation_native": "descansar en casa",
+                            "pronunciation_native": "рест эт хоум",
+                            "definition_target": "to stay home and recover",
+                            "kind": "chunk",
+                            "image_prompt": "person resting on a sofa with a blanket at home",
+                            "used_in": [
+                                "A8"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-26T10:42:23+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 5018,
+                "cached_tokens": 2816,
+                "tokens_out": 133,
+                "cost_usd": "0.008204",
+                "latency_ms": 1848,
+                "call_id": "01M3EMY5Q4TRV5QJA0DZ6XHTKW",
+                "asked": {
+                    "address": "p1",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1: the reading «Ай хав ___.» is spelled with letters of another writing: «А», «й», «х», «а», «в»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1: the reading «Ай хав ___.» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1.f1: the reading «э сор сроут» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1.f1: the reading «э сор сроут» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1.f2: the reading «э фивер» is spelled with letters of another writing: «э», «ф», «и», «в», «е», «р»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1.f2: the reading «э фивер» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p1.f3: the reading «э коф» is spelled with letters of another writing: «э», «к», «о», «ф»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p1.f3: the reading «э коф» leaves the native script"
+                        }
+                    ],
+                    "card": {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I have ___.",
+                        "frame_native": "Tengo ___.",
+                        "pronunciation_native": "Ай хав ___.",
+                        "slot": {
+                            "hint_native": "síntoma",
+                            "fillers": [
+                                {
+                                    "target": "a sore throat",
+                                    "native": "dolor de garganta",
+                                    "pronunciation_native": "э сор сроут",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a fever",
+                                    "native": "fiebre",
+                                    "pronunciation_native": "э фивер",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a cough",
+                                    "native": "tos",
+                                    "pronunciation_native": "э коф",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "id": "p1",
+                        "kind": "answer",
+                        "frame_target": "I have ___.",
+                        "frame_native": "Tengo ___.",
+                        "pronunciation_native": "Ai jav ___.",
+                        "slot": {
+                            "hint_native": "síntoma",
+                            "fillers": [
+                                {
+                                    "target": "a sore throat",
+                                    "native": "dolor de garganta",
+                                    "pronunciation_native": "a sor zróut",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a fever",
+                                    "native": "fiebre",
+                                    "pronunciation_native": "a fíver",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a cough",
+                                    "native": "tos",
+                                    "pronunciation_native": "a cof",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-26T10:42:24+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 5007,
+                "cached_tokens": 2816,
+                "tokens_out": 136,
+                "cost_usd": "0.008222",
+                "latency_ms": 1647,
+                "call_id": "01M3EMY7HMFVS4ZS1WANA1HT4N",
+                "asked": {
+                    "address": "p2",
+                    "kind": "frame",
+                    "findings": [
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2: the reading «Итс бин ___.» is spelled with letters of another writing: «И», «т», «с», «б», «и», «н»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2: the reading «Итс бин ___.» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2.f1: the reading «фор сри дейз» is spelled with letters of another writing: «ф», «о», «р», «с», «и», «д», «е», «й», «з»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2.f1: the reading «фор сри дейз» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2.f2: the reading «синс мандей» is spelled with letters of another writing: «с», «и», «н», «м», «а», «д», «е», «й»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2.f2: the reading «синс мандей» leaves the native script"
+                        },
+                        {
+                            "code": "pronunciation.foreign_script",
+                            "detail": "p2.f3: the reading «синс йестердей» is spelled with letters of another writing: «с», «и», «н», «й», «е», «т», «р», «д»"
+                        },
+                        {
+                            "code": "pronunciation.script",
+                            "detail": "p2.f3: the reading «синс йестердей» leaves the native script"
+                        }
+                    ],
+                    "card": {
+                        "id": "p2",
+                        "kind": "answer",
+                        "frame_target": "It's been ___.",
+                        "frame_native": "Llevo ___.",
+                        "pronunciation_native": "Итс бин ___.",
+                        "slot": {
+                            "hint_native": "duración",
+                            "fillers": [
+                                {
+                                    "target": "for three days",
+                                    "native": "tres días",
+                                    "pronunciation_native": "фор сри дейз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "since Monday",
+                                    "native": "desde el lunes",
+                                    "pronunciation_native": "синс мандей",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "since yesterday",
+                                    "native": "desde ayer",
+                                    "pronunciation_native": "синс йестердей",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "id": "p2",
+                        "kind": "answer",
+                        "frame_target": "It's been ___.",
+                        "frame_native": "Llevo ___.",
+                        "pronunciation_native": "its bin ___.",
+                        "slot": {
+                            "hint_native": "duración",
+                            "fillers": [
+                                {
+                                    "target": "for three days",
+                                    "native": "tres días",
+                                    "pronunciation_native": "for zri deiz",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "since Monday",
+                                    "native": "desde el lunes",
+                                    "pronunciation_native": "sins mandei",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "since yesterday",
+                                    "native": "desde ayer",
+                                    "pronunciation_native": "sins yesterdei",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "raw_check": {
+        "violations": [
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p1",
+                "detail": "the reading «Ай хав ___.» is spelled with letters of another writing: «А», «й», «х», «а», «в»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p1",
+                "detail": "the reading «Ай хав ___.» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p1.f1",
+                "detail": "the reading «э сор сроут» is spelled with letters of another writing: «э», «с», «о», «р», «у», «т»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p1.f1",
+                "detail": "the reading «э сор сроут» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p1.f2",
+                "detail": "the reading «э фивер» is spelled with letters of another writing: «э», «ф», «и», «в», «е», «р»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p1.f2",
+                "detail": "the reading «э фивер» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p1.f3",
+                "detail": "the reading «э коф» is spelled with letters of another writing: «э», «к», «о», «ф»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p1.f3",
+                "detail": "the reading «э коф» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p2",
+                "detail": "the reading «Итс бин ___.» is spelled with letters of another writing: «И», «т», «с», «б», «и», «н»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p2",
+                "detail": "the reading «Итс бин ___.» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p2.f1",
+                "detail": "the reading «фор сри дейз» is spelled with letters of another writing: «ф», «о», «р», «с», «и», «д», «е», «й», «з»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p2.f1",
+                "detail": "the reading «фор сри дейз» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p2.f2",
+                "detail": "the reading «синс мандей» is spelled with letters of another writing: «с», «и», «н», «м», «а», «д», «е», «й»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p2.f2",
+                "detail": "the reading «синс мандей» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p2.f3",
+                "detail": "the reading «синс йестердей» is spelled with letters of another writing: «с», «и», «н», «й», «е», «т», «р», «д»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p2.f3",
+                "detail": "the reading «синс йестердей» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p3",
+                "detail": "the reading «Кэн ю чек ___?» is spelled with letters of another writing: «К», «э», «н», «ю», «ч», «е», «к»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p3",
+                "detail": "the reading «Кэн ю чек ___?» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p3.f1",
+                "detail": "the reading «май сроут» is spelled with letters of another writing: «м», «а», «й», «с», «р», «о», «у», «т»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p3.f1",
+                "detail": "the reading «май сроут» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p3.f2",
+                "detail": "the reading «май ир» is spelled with letters of another writing: «м», «а», «й», «и», «р»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p3.f2",
+                "detail": "the reading «май ир» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p3.f3",
+                "detail": "the reading «май нек» is spelled with letters of another writing: «м», «а», «й», «н», «е», «к»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p3.f3",
+                "detail": "the reading «май нек» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p4",
+                "detail": "the reading «Май сроут филз ___.» is spelled with letters of another writing: «М», «а», «й», «с», «р», «о», «у», «т», «ф», «и», «л», «з»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p4",
+                "detail": "the reading «Май сроут филз ___.» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p4.f1",
+                "detail": "the reading «ред» is spelled with letters of another writing: «р», «е», «д»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p4.f1",
+                "detail": "the reading «ред» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p4.f2",
+                "detail": "the reading «драй» is spelled with letters of another writing: «д», «р», «а», «й»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p4.f2",
+                "detail": "the reading «драй» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p4.f3",
+                "detail": "the reading «своулин» is spelled with letters of another writing: «с», «в», «о», «у», «л», «и», «н»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p4.f3",
+                "detail": "the reading «своулин» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p5",
+                "detail": "the reading «Ду ай нийд ___?» is spelled with letters of another writing: «Д», «у», «а», «й», «н», «и», «д»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p5",
+                "detail": "the reading «Ду ай нийд ___?» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p5.f1",
+                "detail": "the reading «медисин» is spelled with letters of another writing: «м», «е», «д», «и», «с», «н»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p5.f1",
+                "detail": "the reading «медисин» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p5.f2",
+                "detail": "the reading «э тест» is spelled with letters of another writing: «э», «т», «е», «с»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p5.f2",
+                "detail": "the reading «э тест» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p5.f3",
+                "detail": "the reading «антибайотикс» is spelled with letters of another writing: «а», «н», «т», «и», «б», «й», «о», «к», «с»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p5.f3",
+                "detail": "the reading «антибайотикс» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p6",
+                "detail": "the reading «Кэн ай гоу ___?» is spelled with letters of another writing: «К», «э», «н», «а», «й», «г», «о», «у»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p6",
+                "detail": "the reading «Кэн ай гоу ___?» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p6.f1",
+                "detail": "the reading «ту уорк» is spelled with letters of another writing: «т», «у», «о», «р», «к»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p6.f1",
+                "detail": "the reading «ту уорк» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p6.f2",
+                "detail": "the reading «ту скул» is spelled with letters of another writing: «т», «у», «с», «к», «л»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p6.f2",
+                "detail": "the reading «ту скул» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p6.f3",
+                "detail": "the reading «ту зе йим» is spelled with letters of another writing: «т», «у», «з», «е», «й», «и», «м»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "p6.f3",
+                "detail": "the reading «ту зе йим» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v1",
+                "detail": "the reading «сор сроут» is spelled with letters of another writing: «с», «о», «р», «у», «т»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v1",
+                "detail": "the reading «сор сроут» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v2",
+                "detail": "the reading «фивер» is spelled with letters of another writing: «ф», «и», «в», «е», «р»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v2",
+                "detail": "the reading «фивер» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v3",
+                "detail": "the reading «фор сри дейз» is spelled with letters of another writing: «ф», «о», «р», «с», «и», «д», «е», «й», «з»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v3",
+                "detail": "the reading «фор сри дейз» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v4",
+                "detail": "the reading «оупен йор маус» is spelled with letters of another writing: «о», «у», «п», «е», «н», «й», «р», «м», «а», «с»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v4",
+                "detail": "the reading «оупен йор маус» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v5",
+                "detail": "the reading «лангз» is spelled with letters of another writing: «л», «а», «н», «г», «з»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v5",
+                "detail": "the reading «лангз» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v6",
+                "detail": "the reading «параситамол» is spelled with letters of another writing: «п», «а», «р», «с», «и», «т», «м», «о», «л»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v6",
+                "detail": "the reading «параситамол» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v7",
+                "detail": "the reading «пленти ов уотер» is spelled with letters of another writing: «п», «л», «е», «н», «т», «и», «о», «в», «у», «р»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v7",
+                "detail": "the reading «пленти ов уотер» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "v8",
+                "detail": "the reading «рест эт хоум» is spelled with letters of another writing: «р», «е», «с», «т», «э», «х», «о», «у», «м»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "v8",
+                "detail": "the reading «рест эт хоум» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B1",
+                "detail": "the reading «Ай хав э сор сроут.» is spelled with letters of another writing: «А», «й», «х», «а», «в», «э», «с», «о», «р», «у», «т»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B1",
+                "detail": "the reading «Ай хав э сор сроут.» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B2",
+                "detail": "the reading «Итс бин фор сри дейз.» is spelled with letters of another writing: «И», «т», «с», «б», «и», «н», «ф», «о», «р», «д», «е», «й», «з»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B2",
+                "detail": "the reading «Итс бин фор сри дейз.» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B3",
+                "detail": "the reading «Ай хав э фивер.» is spelled with letters of another writing: «А», «й», «х», «а», «в», «э», «ф», «и», «е», «р»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B3",
+                "detail": "the reading «Ай хав э фивер.» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B4",
+                "detail": "the reading «Кэн ю чек май сроут?» is spelled with letters of another writing: «К», «э», «н», «ю», «ч», «е», «к», «м», «а», «й», «с», «р», «о», «у», «т»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B4",
+                "detail": "the reading «Кэн ю чек май сроут?» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B5",
+                "detail": "the reading «Май сроут филз ред.» is spelled with letters of another writing: «М», «а», «й», «с», «р», «о», «у», «т», «ф», «и», «л», «з», «е», «д»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B5",
+                "detail": "the reading «Май сроут филз ред.» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B6",
+                "detail": "the reading «Ду ай нийд медисин?» is spelled with letters of another writing: «Д», «у», «а», «й», «н», «и», «д», «м», «е», «с»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B6",
+                "detail": "the reading «Ду ай нийд медисин?» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B7",
+                "detail": "the reading «Куд ю сей зат мор слоули, плиз?» is spelled with letters of another writing: «К», «у», «д», «ю», «с», «е», «й», «з», «а», «т», «м», «о», «р», «л», «и», «п»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B7",
+                "detail": "the reading «Куд ю сей зат мор слоули, плиз?» leaves the native script"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "B8",
+                "detail": "the reading «Кэн ай гоу ту уорк?» is spelled with letters of another writing: «К», «э», «н», «а», «й», «г», «о», «у», «т», «р», «к»"
+            },
+            {
+                "code": "pronunciation.script",
+                "address": "B8",
+                "detail": "the reading «Кэн ай гоу ту уорк?» leaves the native script"
+            },
+            {
+                "code": "variant.longer",
+                "address": "B3",
+                "detail": "the variant «Yes, I have a fever.» has 5 words, the line 4"
+            },
+            {
+                "code": "variant.longer",
+                "address": "B6",
+                "detail": "the variant «Do I need any medicine?» has 5 words, the line 4"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x1.check",
+                "detail": "the right option «Your main problem today» repeats «problem today» of the partner's line"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x2.check",
+                "detail": "the right option «How long the problem has lasted» repeats «how long» of the partner's line"
+            },
+            {
+                "code": "options.form_mismatch",
+                "address": "x3.check",
+                "detail": "the option «Tos» is 3 letters against 15 of the right «Temperatura alta»"
+            },
+            {
+                "code": "options.form_mismatch",
+                "address": "x4.check",
+                "detail": "the option «Sentarte cerca de la ventana» is 24 letters against 11 of the right «Abrir la boca»"
+            },
+            {
+                "code": "options.partner_fragment",
+                "address": "x6.check",
+                "detail": "the option «Mucha agua» is a piece of the partner's line «Sí, toma paracetamol y bebe mucha agua.»"
+            },
+            {
+                "code": "options.partner_fragment",
+                "address": "x7.check",
+                "detail": "the option «Paracetamol» is a piece of the partner's line «Toma paracetamol y bebe mucha agua.»"
+            },
+            {
+                "code": "vocab.free_combination",
+                "address": "v3",
+                "detail": "«for three days» is a free combination of ordinary words"
+            },
+            {
+                "code": "vocab.learner_share",
+                "address": "lesson",
+                "detail": "3 of 8 items are in the learner's frames or fillers (at least half)"
+            }
+        ],
+        "fatal": 42,
+        "skips": [],
+        "skips_known": true,
+        "parse_error": null,
+        "native_code": "es",
+        "target_code": "en"
+    },
+    "finished_at": "2026-09-26T10:42:26+00:00"
+}

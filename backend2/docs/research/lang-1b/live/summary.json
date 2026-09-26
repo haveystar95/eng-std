@@ -1,0 +1,329 @@
+{
+    "generated_at": "2026-09-26T10:42:52+00:00",
+    "packs_now": false,
+    "packs": [
+        "be",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "pl",
+        "ro",
+        "ru",
+        "uk"
+    ],
+    "pairs": {
+        "pl-en": {
+            "native": "pl",
+            "target": "en",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.9",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 2,
+                "warnings": 13,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "options.partner_fragment": 3,
+                    "check.verbatim": 2,
+                    "exchange.second_question": 1,
+                    "frame.twin": 1,
+                    "filler.one_in_dialogue": 1,
+                    "line.ne_frame": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 0,
+                "native_code": "pl",
+                "target_code": "en",
+                "skips": []
+            },
+            "judge": {
+                "called": true,
+                "sentences": 17,
+                "verdicts": 17,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question"
+                    ],
+                    "cost_usd": "0.020685"
+                },
+                {
+                    "address": "B5",
+                    "kind": "line",
+                    "codes": [
+                        "line.ne_frame"
+                    ],
+                    "cost_usd": "0.013097"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 13,
+                "codes": {
+                    "frame.no_end_punct": 6,
+                    "options.partner_fragment": 3,
+                    "check.verbatim": 2,
+                    "frame.twin": 1,
+                    "variant.longer": 1
+                }
+            },
+            "usd": {
+                "plan": 0.0,
+                "lesson": 0.079835,
+                "repair": 0.033782,
+                "judge": 0.001827,
+                "day": 0.115444,
+                "all": 0.115444,
+                "cost_usd_lesson_stored": "0.115444"
+            },
+            "tokens_day": {
+                "in": 20961,
+                "cached": 0,
+                "cached_share": 0.0
+            },
+            "seconds": {
+                "plan": 0.0,
+                "day": 33.2
+            },
+            "packs_now": null
+        },
+        "es-en": {
+            "native": "es",
+            "target": "en",
+            "status": "failed",
+            "fail_reason": "fatal: pronunciation.foreign_script, options.form_mismatch",
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "raw",
+            "prompt_version_lesson": "lesson_day.v4.9",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 42,
+                "warnings": 48,
+                "codes": {
+                    "pronunciation.foreign_script": 40,
+                    "pronunciation.script": 40,
+                    "variant.longer": 2,
+                    "check.verbatim": 2,
+                    "options.form_mismatch": 2,
+                    "options.partner_fragment": 2,
+                    "vocab.free_combination": 1,
+                    "vocab.learner_share": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 0,
+                "native_code": "es",
+                "target_code": "en",
+                "skips": []
+            },
+            "judge": {
+                "called": false,
+                "sentences": 0,
+                "verdicts": 0,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "p1",
+                    "kind": "frame",
+                    "codes": [
+                        "pronunciation.foreign_script",
+                        "pronunciation.script"
+                    ],
+                    "cost_usd": "0.014663"
+                },
+                {
+                    "address": "p2",
+                    "kind": "frame",
+                    "codes": [
+                        "pronunciation.foreign_script",
+                        "pronunciation.script"
+                    ],
+                    "cost_usd": "0.008249"
+                },
+                {
+                    "address": "p1",
+                    "kind": "frame",
+                    "codes": [
+                        "pronunciation.foreign_script",
+                        "pronunciation.script"
+                    ],
+                    "cost_usd": "0.008204"
+                },
+                {
+                    "address": "p2",
+                    "kind": "frame",
+                    "codes": [
+                        "pronunciation.foreign_script",
+                        "pronunciation.script"
+                    ],
+                    "cost_usd": "0.008222"
+                }
+            ],
+            "lesson_calls": 2,
+            "attempts": 2,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 74,
+                "codes": {
+                    "pronunciation.foreign_script": 32,
+                    "pronunciation.script": 32,
+                    "variant.longer": 2,
+                    "check.verbatim": 2,
+                    "options.form_mismatch": 2,
+                    "options.partner_fragment": 2,
+                    "vocab.free_combination": 1,
+                    "vocab.learner_share": 1
+                }
+            },
+            "usd": {
+                "plan": 0.011204,
+                "lesson": 0.114683,
+                "repair": 0.039338,
+                "judge": 0.0,
+                "day": 0.154021,
+                "all": 0.165225,
+                "cost_usd_lesson_stored": "0.154021"
+            },
+            "tokens_day": {
+                "in": 36936,
+                "cached": 24320,
+                "cached_share": 0.658
+            },
+            "seconds": {
+                "plan": 6.2,
+                "day": 53.2
+            },
+            "packs_now": null
+        },
+        "de-en": {
+            "native": "de",
+            "target": "en",
+            "status": "ready",
+            "fail_reason": null,
+            "error": null,
+            "error_phase": null,
+            "lesson_source": "stored",
+            "prompt_version_lesson": "lesson_day.v4.9",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "raw": {
+                "fatal": 1,
+                "warnings": 23,
+                "codes": {
+                    "pronunciation.script": 15,
+                    "check.verbatim": 3,
+                    "exchange.second_question": 1,
+                    "frame.unresolved_pronoun": 1,
+                    "frame.native_agreement": 1,
+                    "listening.same_exchange": 1,
+                    "vocab.free_combination": 1,
+                    "vocab.used_in_wrong": 1
+                },
+                "parse_error": null
+            },
+            "pack_missing": {
+                "known": true,
+                "native": 0,
+                "target": 0,
+                "native_code": "de",
+                "target_code": "en",
+                "skips": []
+            },
+            "judge": {
+                "called": true,
+                "sentences": 24,
+                "verdicts": 24,
+                "no": []
+            },
+            "repairs": [
+                {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "codes": [
+                        "exchange.second_question",
+                        "pronunciation.script"
+                    ],
+                    "cost_usd": "0.014274"
+                }
+            ],
+            "lesson_calls": 1,
+            "attempts": 1,
+            "broken_calls": [],
+            "stored_findings": {
+                "count": 23,
+                "codes": {
+                    "pronunciation.script": 15,
+                    "check.verbatim": 3,
+                    "frame.unresolved_pronoun": 1,
+                    "frame.native_agreement": 1,
+                    "listening.same_exchange": 1,
+                    "vocab.free_combination": 1,
+                    "vocab.used_in_wrong": 1
+                }
+            },
+            "usd": {
+                "plan": 0.017703,
+                "lesson": 0.063607,
+                "repair": 0.014274,
+                "judge": 0.002324,
+                "day": 0.080205,
+                "all": 0.097908,
+                "cost_usd_lesson_stored": "0.080205"
+            },
+            "tokens_day": {
+                "in": 16549,
+                "cached": 10752,
+                "cached_share": 0.65
+            },
+            "seconds": {
+                "plan": 6.3,
+                "day": 34.1
+            },
+            "packs_now": null
+        }
+    },
+    "totals": {
+        "pairs": 3,
+        "ready": 2,
+        "failed": 1,
+        "other": 0,
+        "errors": 0,
+        "raw_fatal": 45,
+        "raw_warnings": 84,
+        "pack_missing_native": 0,
+        "pack_missing_target": 0,
+        "pack_missing_unknown": 0,
+        "judge_no": 0,
+        "judge_all": 41,
+        "repairs": 7,
+        "plan_usd": 0.028907,
+        "day_usd": 0.34967,
+        "all_usd": 0.378577,
+        "plan_s": 12.5,
+        "day_s": 120.5,
+        "now_fatal": 0,
+        "now_warnings": 0,
+        "now_pack_missing_native": 0,
+        "now_pack_missing_target": 0
+    }
+}

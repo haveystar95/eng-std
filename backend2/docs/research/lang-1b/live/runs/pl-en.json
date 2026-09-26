@@ -1,0 +1,1447 @@
+{
+    "pair": "pl-en",
+    "mode": "retry",
+    "learner_gender": null,
+    "native": "pl",
+    "target": "en",
+    "level": "beginner",
+    "goal": "Zapisuję się do lekarza: od trzech dni boli mnie gardło i mam gorączkę. Muszę wybrać dogodny termin i wyjaśnić, co mi dolega",
+    "run_suffix": "-0926b",
+    "database": "wordtrainer_e2e_test",
+    "driver": "openai",
+    "models": {
+        "plan": "gpt-5.4",
+        "lesson": "gpt-5.4",
+        "repair": "gpt-5.4",
+        "judge": "gpt-5.4-mini"
+    },
+    "prompt_versions": {
+        "plan": "plan-builder-v2",
+        "lesson": "lesson_day.v4.9",
+        "repair": "lesson_card_repair.v1.3",
+        "judge": "lesson_seam_judge.v1.1"
+    },
+    "packs": [
+        "be",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "pl",
+        "ro",
+        "ru",
+        "uk"
+    ],
+    "started_at": "2026-09-26T10:40:13+00:00",
+    "error": null,
+    "email": "qa-lang1-live-pl-en-0926@wt.test",
+    "user_id": "01M3DGPMXF1MKGXDBEB32TFM56",
+    "plan_id": "01M3DGPN35MXD4HJEF9B5H1868",
+    "plan": {
+        "status": "ready",
+        "fail_reason": null,
+        "unclear_reason": null,
+        "native_lang": "pl",
+        "target_lang": "en",
+        "prompt_version": "plan-builder-v2",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.012336",
+        "cost_usd": "0.000000",
+        "wall_s": 0.0,
+        "started_at": "2026-09-26T10:40:13+00:00",
+        "finished_at": "2026-09-26T10:40:13+00:00",
+        "calls": []
+    },
+    "scene_ids": [
+        "01M3DGPX11CPBGNKNSMJP8Z2SF",
+        "01M3DGPX12X5PESMT41KW1Q5JM"
+    ],
+    "scene_id": "01M3DGPX11CPBGNKNSMJP8Z2SF",
+    "scenes": [
+        {
+            "order": 1,
+            "kind": "situation",
+            "title_native": "Rejestracja",
+            "title_target": "Reception desk",
+            "partner_target": "Receptionist",
+            "partner_native": "Recepcjonista",
+            "brief": "Situation: At the reception desk of a clinic, the learner wants to book a doctor's appointment because they have had a sore throat and fever for three days. They need a convenient time soon and must briefly explain the reason for the visit.\nLearner: the learner's role is a patient. Partner: the partner's role is a receptionist.\nLearner must be able to: ask for an appointment; say they have a sore throat and fever for three days; ask about available times and choose a convenient slot; give simple personal details if asked.\nPartner will: ask what the problem is; offer times or days; ask for the learner's name, phone number, or confirmation details.\nNot in this scene: describing symptoms in detail, answering medical questions, diagnosis, treatment, medicine instructions."
+        },
+        {
+            "order": 2,
+            "kind": "situation",
+            "title_native": "U lekarza",
+            "title_target": "Doctor visit",
+            "partner_target": "Doctor",
+            "partner_native": "Lekarz",
+            "brief": "Situation: In the doctor's office, the learner has the appointment they booked for a sore throat and fever. This is the main medical conversation, where they need to explain clearly that the throat has hurt for three days and that they also have a fever.\nLearner: the learner's role is a patient. Partner: the partner's role is a doctor.\nLearner must be able to: say what hurts and for how long; mention the fever and other very basic symptoms; answer simple questions from the doctor; understand simple advice or next steps.\nPartner will: ask where it hurts and how long it has lasted; ask about fever or other symptoms; give simple advice, recommendations, or tell the learner what to do next.\nNot in this scene: booking the appointment, discussing available times, giving contact details, buying medicine at a pharmacy."
+        }
+    ],
+    "learner_role": {
+        "target": "Patient",
+        "native": "Pacjent"
+    },
+    "plan_title": {
+        "native": "Wizyta u lekarza",
+        "target": "Doctor's appointment"
+    },
+    "request": {
+        "topic": "Rejestracja",
+        "topic_description": "Situation: At the reception desk of a clinic, the learner wants to book a doctor's appointment because they have had a sore throat and fever for three days. They need a convenient time soon and must briefly explain the reason for the visit.\nLearner: the learner's role is a patient. Partner: the partner's role is a receptionist.\nLearner must be able to: ask for an appointment; say they have a sore throat and fever for three days; ask about available times and choose a convenient slot; give simple personal details if asked.\nPartner will: ask what the problem is; offer times or days; ask for the learner's name, phone number, or confirmation details.\nNot in this scene: describing symptoms in detail, answering medical questions, diagnosis, treatment, medicine instructions.\n\nAbout the learner, in their own words: Zapisuję się do lekarza: od trzech dni boli mnie gardło i mam gorączkę. Muszę wybrać dogodny termin i wyjaśnić, co mi dolega",
+        "target_language": "English",
+        "native_language": "Polish",
+        "target_lang_code": "en",
+        "native_lang_code": "pl",
+        "level": "beginner",
+        "learner_gender": null,
+        "vocabulary_count": 8,
+        "dialogue_count": 8,
+        "roles": {
+            "learnerTarget": "Patient",
+            "learnerNative": "Pacjent",
+            "partnerTarget": "Receptionist",
+            "partnerNative": "Recepcjonista"
+        },
+        "earlier_days": 0
+    },
+    "status_before": "failed",
+    "day1": {
+        "status": "illustrating",
+        "fail_reason": null,
+        "prompt_version": "lesson_day.v4.9",
+        "model": "gpt-5.4-2026-03-05",
+        "cost_usd_lesson": "0.115444",
+        "latency_ms_lesson": 33002,
+        "attempts": 1,
+        "findings": [
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«I'd like ___» and the native «Chcę ___» end with no mark",
+                "address": "p1"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«I have ___» and the native «Mam ___» end with no mark",
+                "address": "p2"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«It's been ___» and the native «To trwa ___» end with no mark",
+                "address": "p3"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«___ works for me» and the native «___ mi pasuje» end with no mark",
+                "address": "p4"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«Here is my ___» and the native «Oto ___» end with no mark",
+                "address": "p6"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "detail": "«My appointment is ___» and the native «Wizytę mam ___» end with no mark",
+                "address": "p7"
+            },
+            {
+                "code": "frame.twin",
+                "detail": "«Do you need ___?» / «Czy potrzeba ___?» is the target pattern of p5",
+                "address": "p8"
+            },
+            {
+                "code": "variant.longer",
+                "detail": "the variant «Do you need my full name?» has 6 words, the line 5",
+                "address": "B5"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «How long it has lasted» repeats «how long» of the partner's line",
+                "address": "x3.check"
+            },
+            {
+                "code": "options.partner_fragment",
+                "detail": "the option «Jak długo to trwa» is a piece of the partner's line «Jak długo to trwa?»",
+                "address": "x3.check"
+            },
+            {
+                "code": "options.partner_fragment",
+                "detail": "the option «Pełne imię i nazwisko» is a piece of the partner's line «Tak, poproszę pani pełne imię i nazwisko.»",
+                "address": "x5.check"
+            },
+            {
+                "code": "check.verbatim",
+                "detail": "the right option «For the booking record» repeats «the booking» of the partner's line",
+                "address": "x6.check"
+            },
+            {
+                "code": "options.partner_fragment",
+                "detail": "the option «Do rezerwacji» is a piece of the partner's line «Potrzebuję też numeru telefonu do rezerwacji.»",
+                "address": "x6.check"
+            }
+        ],
+        "spent": {
+            "lesson": "0.079835",
+            "repair": "0.033782",
+            "judge": "0.001827",
+            "total": "0.115444"
+        },
+        "tokens": {
+            "in": 20961,
+            "cached": 0,
+            "out": 4487
+        },
+        "wall_s": 33.2,
+        "started_at": "2026-09-26T10:40:13+00:00",
+        "finished_at": "2026-09-26T10:40:46+00:00",
+        "calls": [
+            {
+                "call": "lesson",
+                "at": "2026-09-26T10:40:13+00:00",
+                "prompt_version": "lesson_day.v4.9",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 8462,
+                "cached_tokens": 0,
+                "tokens_out": 3912,
+                "cost_usd": "0.079835",
+                "latency_ms": 26915,
+                "call_id": "01M3EMT7BCA8YRTAE4AZ2SAS74",
+                "asked": {
+                    "topic": "Rejestracja",
+                    "target_language": "English",
+                    "native_language": "Polish",
+                    "target_code": "en",
+                    "native_code": "pl",
+                    "violations": [],
+                    "earlier_days": 0,
+                    "roles": {
+                        "learnerTarget": "Patient",
+                        "learnerNative": "Pacjent",
+                        "partnerTarget": "Receptionist",
+                        "partnerNative": "Recepcjonista"
+                    }
+                },
+                "payload": {
+                    "topic": {
+                        "title_target": "Booking a clinic appointment",
+                        "title_native": "Umawianie wizyty w przychodni",
+                        "description_target": "Book an appointment, say why you need it, and choose a suitable time.",
+                        "description_native": "Umów wizytę, powiedz krótko, co ci dolega, i wybierz dogodny termin."
+                    },
+                    "learner_role": {
+                        "role_target": "Patient",
+                        "role_native": "Pacjent"
+                    },
+                    "role_gender": "female",
+                    "dialogue": [
+                        {
+                            "step": 1,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p1",
+                                    "filler": "a doctor's appointment",
+                                    "text_target": "I'd like a doctor's appointment.",
+                                    "text_native": "Chcę umówić wizytę u lekarza.",
+                                    "pronunciation_native": "ajd lajk e dokters epojntment",
+                                    "speaking_key": "I'd like",
+                                    "simplified_variants": [
+                                        "I need an appointment."
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "Of course. What seems to be the problem?",
+                                    "text_native": "Oczywiście. Co się dzieje?"
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist ask about?",
+                                "text_native": "O co pyta recepcjonistka?",
+                                "options": [
+                                    {
+                                        "text_target": "The reason for the visit",
+                                        "text_native": "Powód wizyty"
+                                    },
+                                    {
+                                        "text_target": "The patient's address",
+                                        "text_native": "Adres pacjenta"
+                                    },
+                                    {
+                                        "text_target": "The payment method",
+                                        "text_native": "Sposób płatności"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepcjonistka pyta, jaki jest problem, czyli o powód wizyty."
+                            }
+                        },
+                        {
+                            "step": 2,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "Please tell me your symptoms.",
+                                    "text_native": "Proszę powiedzieć, jakie są objawy."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p2",
+                                    "filler": "a sore throat and fever",
+                                    "text_target": "I have a sore throat and fever.",
+                                    "text_native": "Boli mnie gardło i mam gorączkę.",
+                                    "pronunciation_native": "aj haw e sor throt end fiwer",
+                                    "speaking_key": "I have",
+                                    "simplified_variants": [
+                                        "I have throat pain and fever."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist ask the patient to describe?",
+                                "text_native": "Co recepcjonistka prosi opisać?",
+                                "options": [
+                                    {
+                                        "text_target": "Past medicines",
+                                        "text_native": "Leki brane wcześniej"
+                                    },
+                                    {
+                                        "text_target": "Current symptoms",
+                                        "text_native": "Obecne objawy"
+                                    },
+                                    {
+                                        "text_target": "Work schedule",
+                                        "text_native": "Grafik pracy"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Recepcjonistka prosi o podanie objawów."
+                            }
+                        },
+                        {
+                            "step": 3,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "How long have you had this?",
+                                    "text_native": "Jak długo to trwa?"
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p3",
+                                    "filler": "for three days",
+                                    "text_target": "It's been for three days.",
+                                    "text_native": "To trwa od trzech dni.",
+                                    "pronunciation_native": "its bin for thri dejs",
+                                    "speaking_key": "been for",
+                                    "simplified_variants": [
+                                        "For three days."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What does the receptionist want to know?",
+                                "text_native": "Czego chce się dowiedzieć recepcjonistka?",
+                                "options": [
+                                    {
+                                        "text_target": "How severe it is",
+                                        "text_native": "Jak bardzo to jest nasilone"
+                                    },
+                                    {
+                                        "text_target": "How long it has lasted",
+                                        "text_native": "Jak długo to trwa"
+                                    },
+                                    {
+                                        "text_target": "Who the doctor is",
+                                        "text_native": "Kim jest lekarz"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Pytanie dotyczy czasu trwania problemu."
+                            }
+                        },
+                        {
+                            "step": 4,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "I have a slot today at four and tomorrow at nine.",
+                                    "text_native": "Mam termin dziś o czwartej i jutro o dziewiątej."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p4",
+                                    "filler": "today at four",
+                                    "text_target": "Today at four works for me.",
+                                    "text_native": "Dziś o czwartej mi pasuje.",
+                                    "pronunciation_native": "tudej et for works for mi",
+                                    "speaking_key": "works for me",
+                                    "simplified_variants": [
+                                        "Today at four is good.",
+                                        "That time works for me."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Which time is available today?",
+                                "text_native": "Jaki termin jest dostępny dzisiaj?",
+                                "options": [
+                                    {
+                                        "text_target": "At six in the evening",
+                                        "text_native": "O szóstej wieczorem"
+                                    },
+                                    {
+                                        "text_target": "At four in the afternoon",
+                                        "text_native": "O czwartej po południu"
+                                    },
+                                    {
+                                        "text_target": "At nine in the morning",
+                                        "text_native": "O dziewiątej rano"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Recepcjonistka mówi o terminie dziś o czwartej."
+                            }
+                        },
+                        {
+                            "step": 5,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p5",
+                                    "filler": "your name",
+                                    "text_target": "Do I need your name?",
+                                    "text_native": "Czy potrzebne jest pani nazwisko?",
+                                    "pronunciation_native": "du aj nid jor nejm",
+                                    "speaking_key": "Do I need",
+                                    "simplified_variants": [
+                                        "Do you need my name?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "Yes, I need your full name, please.",
+                                    "text_native": "Tak, poproszę pani pełne imię i nazwisko."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "What personal detail does the receptionist ask for?",
+                                "text_native": "O jaką daną osobową prosi recepcjonistka?",
+                                "options": [
+                                    {
+                                        "text_target": "Full name",
+                                        "text_native": "Pełne imię i nazwisko"
+                                    },
+                                    {
+                                        "text_target": "Home address",
+                                        "text_native": "Adres domowy"
+                                    },
+                                    {
+                                        "text_target": "Date of birth",
+                                        "text_native": "Data urodzenia"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepcjonistka prosi o pełne imię i nazwisko."
+                            }
+                        },
+                        {
+                            "step": 6,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "I also need a phone number for the booking.",
+                                    "text_native": "Potrzebuję też numeru telefonu do rezerwacji."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p6",
+                                    "filler": "my phone number",
+                                    "text_target": "Here is my phone number.",
+                                    "text_native": "Oto mój numer telefonu.",
+                                    "pronunciation_native": "hir iz maj foun namber",
+                                    "speaking_key": "Here is my",
+                                    "simplified_variants": [
+                                        "My phone number is here.",
+                                        "This is my phone number."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Why does the receptionist need the phone number?",
+                                "text_native": "Po co recepcjonistce numer telefonu?",
+                                "options": [
+                                    {
+                                        "text_target": "For the booking record",
+                                        "text_native": "Do rezerwacji"
+                                    },
+                                    {
+                                        "text_target": "For insurance only",
+                                        "text_native": "Tylko do ubezpieczenia"
+                                    },
+                                    {
+                                        "text_target": "For the pharmacy",
+                                        "text_native": "Dla apteki"
+                                    }
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepcjonistka mówi, że numer telefonu jest potrzebny do rezerwacji."
+                            }
+                        },
+                        {
+                            "step": 7,
+                            "kind": "answer",
+                            "initiator": "A",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "Your appointment is today at four with Dr. Brown.",
+                                    "text_native": "Pani wizyta jest dziś o czwartej u doktora Browna."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p7",
+                                    "filler": "today at four",
+                                    "text_target": "My appointment is today at four.",
+                                    "text_native": "Moją wizytę mam dziś o czwartej.",
+                                    "pronunciation_native": "maj epojntment iz tudej et for",
+                                    "speaking_key": "appointment is",
+                                    "simplified_variants": [
+                                        "It's today at four.",
+                                        "The visit is at four."
+                                    ]
+                                }
+                            ],
+                            "check": {
+                                "text_target": "Who is the appointment with?",
+                                "text_native": "Do kogo jest ta wizyta?",
+                                "options": [
+                                    {
+                                        "text_target": "With Dr. Green",
+                                        "text_native": "Do doktora Greena"
+                                    },
+                                    {
+                                        "text_target": "With Dr. Brown",
+                                        "text_native": "Do doktora Browna"
+                                    },
+                                    {
+                                        "text_target": "With a nurse",
+                                        "text_native": "Do pielęgniarki"
+                                    }
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Recepcjonistka potwierdza wizytę u doktora Browna."
+                            }
+                        },
+                        {
+                            "step": 8,
+                            "kind": "ask",
+                            "initiator": "B",
+                            "messages": [
+                                {
+                                    "speaker": "B",
+                                    "role_target": "Patient",
+                                    "role_native": "Pacjent",
+                                    "phrase_id": "p8",
+                                    "filler": "anything else",
+                                    "text_target": "Do you need anything else?",
+                                    "text_native": "Czy potrzeba jeszcze czegoś?",
+                                    "pronunciation_native": "du ju nid enithing els",
+                                    "speaking_key": "need anything else",
+                                    "simplified_variants": [
+                                        "Do you need more?"
+                                    ]
+                                },
+                                {
+                                    "speaker": "A",
+                                    "role_target": "Receptionist",
+                                    "role_native": "Recepcjonista",
+                                    "text_target": "No, that's all. Please come ten minutes early.",
+                                    "text_native": "Nie, to wszystko. Proszę przyjść dziesięć minut wcześniej."
+                                }
+                            ],
+                            "check": {
+                                "text_target": "When should the patient arrive?",
+                                "text_native": "Kiedy pacjent powinien przyjść?",
+                                "options": [
+                                    {
+                                        "text_target": "A quarter of an hour before",
+                                        "text_native": "Piętnaście minut wcześniej"
+                                    },
+                                    {
+                                        "text_target": "Exactly on time",
+                                        "text_native": "Dokładnie na czas"
+                                    },
+                                    {
+                                        "text_target": "Ten minutes before",
+                                        "text_native": "Dziesięć minut wcześniej"
+                                    }
+                                ],
+                                "correct_option_index": 2,
+                                "explanation_native": "Recepcjonistka prosi, żeby przyjść dziesięć minut wcześniej."
+                            }
+                        }
+                    ],
+                    "phrases": [
+                        {
+                            "id": "p1",
+                            "kind": "ask",
+                            "frame_target": "I'd like ___",
+                            "frame_native": "Chcę ___",
+                            "pronunciation_native": "ajd lajk ___",
+                            "slot": {
+                                "hint_native": "czego chcesz",
+                                "fillers": [
+                                    {
+                                        "target": "a doctor's appointment",
+                                        "native": "umówić wizytę u lekarza",
+                                        "pronunciation_native": "e dokters epojntment",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "an appointment this week",
+                                        "native": "umówić wizytę w tym tygodniu",
+                                        "pronunciation_native": "en epojntment dys łik",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p2",
+                            "kind": "answer",
+                            "frame_target": "I have ___",
+                            "frame_native": "Mam ___",
+                            "pronunciation_native": "aj haw ___",
+                            "slot": {
+                                "hint_native": "co ci dolega",
+                                "fillers": [
+                                    {
+                                        "target": "a sore throat and fever",
+                                        "native": "ból gardła i gorączkę",
+                                        "pronunciation_native": "e sor throt end fiwer",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "a cough and fever",
+                                        "native": "kaszel i gorączkę",
+                                        "pronunciation_native": "e kof end fiwer",
+                                        "in_dialogue": false
+                                    },
+                                    {
+                                        "target": "a headache",
+                                        "native": "ból głowy",
+                                        "pronunciation_native": "e hedejk",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p3",
+                            "kind": "answer",
+                            "frame_target": "It's been ___",
+                            "frame_native": "To trwa ___",
+                            "pronunciation_native": "its bin ___",
+                            "slot": {
+                                "hint_native": "jak długo",
+                                "fillers": [
+                                    {
+                                        "target": "for three days",
+                                        "native": "od trzech dni",
+                                        "pronunciation_native": "for thri dejs",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "since yesterday",
+                                        "native": "od wczoraj",
+                                        "pronunciation_native": "sins jesterdej",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p4",
+                            "kind": "answer",
+                            "frame_target": "___ works for me",
+                            "frame_native": "___ mi pasuje",
+                            "pronunciation_native": "___ works for mi",
+                            "slot": {
+                                "hint_native": "jaki termin ci pasuje",
+                                "fillers": [
+                                    {
+                                        "target": "today at four",
+                                        "native": "dziś o czwartej",
+                                        "pronunciation_native": "tudej et for",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "tomorrow at nine",
+                                        "native": "jutro o dziewiątej",
+                                        "pronunciation_native": "tumoro et nayn",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p5",
+                            "kind": "ask",
+                            "frame_target": "Do you need ___?",
+                            "frame_native": "Czy potrzebuje pani ___?",
+                            "pronunciation_native": "du ju nid ___",
+                            "slot": {
+                                "hint_native": "jakiej danej potrzeba",
+                                "fillers": [
+                                    {
+                                        "target": "my name",
+                                        "native": "mojego imienia i nazwiska",
+                                        "pronunciation_native": "maj nejm",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "my ID",
+                                        "native": "mojego dowodu",
+                                        "pronunciation_native": "maj aj di",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p6",
+                            "kind": "answer",
+                            "frame_target": "Here is my ___",
+                            "frame_native": "Oto ___",
+                            "pronunciation_native": "hir iz maj ___",
+                            "slot": {
+                                "hint_native": "jaką daną podajesz",
+                                "fillers": [
+                                    {
+                                        "target": "phone number",
+                                        "native": "mój numer telefonu",
+                                        "pronunciation_native": "foun namber",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "ID card",
+                                        "native": "mój dowód",
+                                        "pronunciation_native": "aj di kard",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p7",
+                            "kind": "answer",
+                            "frame_target": "My appointment is ___",
+                            "frame_native": "Wizytę mam ___",
+                            "pronunciation_native": "maj epojntment iz ___",
+                            "slot": {
+                                "hint_native": "kiedy jest wizyta",
+                                "fillers": [
+                                    {
+                                        "target": "today at four",
+                                        "native": "dziś o czwartej",
+                                        "pronunciation_native": "tudej et for",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "tomorrow at nine",
+                                        "native": "jutro o dziewiątej",
+                                        "pronunciation_native": "tumoro et nayn",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": "p8",
+                            "kind": "ask",
+                            "frame_target": "Do you need ___?",
+                            "frame_native": "Czy potrzeba ___?",
+                            "pronunciation_native": "du ju nid ___",
+                            "slot": {
+                                "hint_native": "o co jeszcze pytasz",
+                                "fillers": [
+                                    {
+                                        "target": "anything else",
+                                        "native": "jeszcze czegoś",
+                                        "pronunciation_native": "enithing els",
+                                        "in_dialogue": true
+                                    },
+                                    {
+                                        "target": "my email",
+                                        "native": "mojego maila",
+                                        "pronunciation_native": "maj imejl",
+                                        "in_dialogue": false
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "listening": {
+                        "questions": [
+                            {
+                                "text_native": "Na kiedy pacjent wybiera termin wizyty?",
+                                "options_native": [
+                                    "Dziś na czwartą",
+                                    "Jutro na dziewiątą",
+                                    "Dziś na szóstą"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Pacjent wybiera termin dziś o czwartej."
+                            },
+                            {
+                                "text_native": "Jakie objawy podaje pacjent?",
+                                "options_native": [
+                                    "Kaszel i ból głowy",
+                                    "Ból gardła i gorączkę",
+                                    "Ból pleców i katar"
+                                ],
+                                "correct_option_index": 1,
+                                "explanation_native": "Pacjent mówi o bólu gardła i gorączce."
+                            },
+                            {
+                                "text_native": "Jakiej informacji potrzebuje recepcjonistka do rezerwacji?",
+                                "options_native": [
+                                    "Numeru telefonu",
+                                    "Adresu domowego",
+                                    "Numeru paszportu"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Recepcjonistka prosi o numer telefonu do rezerwacji."
+                            },
+                            {
+                                "text_native": "Co jeszcze mówi recepcjonistka na końcu?",
+                                "options_native": [
+                                    "Żeby przyjść dziesięć minut wcześniej",
+                                    "Żeby nic nie jeść przed wizytą",
+                                    "Żeby zabrać wyniki badań"
+                                ],
+                                "correct_option_index": 0,
+                                "explanation_native": "Na końcu recepcjonistka prosi, żeby przyjść dziesięć minut wcześniej."
+                            }
+                        ]
+                    },
+                    "vocabulary": [
+                        {
+                            "id": "v1",
+                            "term_target": "appointment",
+                            "translation_native": "wizyta",
+                            "pronunciation_native": "epojntment",
+                            "definition_target": "a scheduled meeting with a doctor or other professional",
+                            "kind": "word",
+                            "image_prompt": "clinic reception desk with an appointment calendar on a computer screen",
+                            "used_in": [
+                                "p1",
+                                "p7"
+                            ]
+                        },
+                        {
+                            "id": "v2",
+                            "term_target": "sore throat",
+                            "translation_native": "ból gardła",
+                            "pronunciation_native": "sor throt",
+                            "definition_target": "pain or irritation in the throat",
+                            "kind": "chunk",
+                            "image_prompt": "person touching their throat while standing indoors",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v3",
+                            "term_target": "fever",
+                            "translation_native": "gorączka",
+                            "pronunciation_native": "fiwer",
+                            "definition_target": "a high body temperature when you are ill",
+                            "kind": "word",
+                            "image_prompt": "digital thermometer showing a high temperature on a table",
+                            "used_in": [
+                                "p2"
+                            ]
+                        },
+                        {
+                            "id": "v4",
+                            "term_target": "symptoms",
+                            "translation_native": "objawy",
+                            "pronunciation_native": "simptoms",
+                            "definition_target": "signs that show you are ill",
+                            "kind": "word",
+                            "image_prompt": null,
+                            "used_in": [
+                                "A2"
+                            ]
+                        },
+                        {
+                            "id": "v5",
+                            "term_target": "slot",
+                            "translation_native": "wolny termin",
+                            "pronunciation_native": "slot",
+                            "definition_target": "an available time for an appointment",
+                            "kind": "word",
+                            "image_prompt": "appointment schedule with one open time marked in a clinic office",
+                            "used_in": [
+                                "A4"
+                            ]
+                        },
+                        {
+                            "id": "v6",
+                            "term_target": "full name",
+                            "translation_native": "pełne imię i nazwisko",
+                            "pronunciation_native": "ful nejm",
+                            "definition_target": "your complete first name and last name",
+                            "kind": "chunk",
+                            "image_prompt": null,
+                            "used_in": [
+                                "A5"
+                            ]
+                        },
+                        {
+                            "id": "v7",
+                            "term_target": "phone number",
+                            "translation_native": "numer telefonu",
+                            "pronunciation_native": "foun namber",
+                            "definition_target": "a number used to call someone",
+                            "kind": "chunk",
+                            "image_prompt": "hand holding a phone with a contact number on the screen",
+                            "used_in": [
+                                "p6",
+                                "A6"
+                            ]
+                        },
+                        {
+                            "id": "v8",
+                            "term_target": "early",
+                            "translation_native": "wcześniej",
+                            "pronunciation_native": "erli",
+                            "definition_target": "before the expected time",
+                            "kind": "word",
+                            "image_prompt": "wall clock in a clinic waiting room showing time before an appointment",
+                            "used_in": [
+                                "A8"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-26T10:40:40+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 6594,
+                "cached_tokens": 0,
+                "tokens_out": 280,
+                "cost_usd": "0.020685",
+                "latency_ms": 2458,
+                "call_id": "01M3EMV1NQ76121RPQ3DKMJW5N",
+                "asked": {
+                    "address": "x1",
+                    "kind": "exchange",
+                    "findings": [
+                        {
+                            "code": "exchange.second_question",
+                            "detail": "x1: the closing message of A «Of course. What seems to be the problem?» ends with a question mark"
+                        }
+                    ],
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Patient",
+                                "role_native": "Pacjent",
+                                "phrase_id": "p1",
+                                "filler": "a doctor's appointment",
+                                "text_target": "I'd like a doctor's appointment.",
+                                "text_native": "Chcę umówić wizytę u lekarza.",
+                                "pronunciation_native": "ajd lajk e dokters epojntment",
+                                "speaking_key": "I'd like",
+                                "simplified_variants": [
+                                    "I need an appointment."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Receptionist",
+                                "role_native": "Recepcjonista",
+                                "text_target": "Of course. What seems to be the problem?",
+                                "text_native": "Oczywiście. Co się dzieje?"
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the receptionist ask about?",
+                            "text_native": "O co pyta recepcjonistka?",
+                            "options": [
+                                {
+                                    "text_target": "The reason for the visit",
+                                    "text_native": "Powód wizyty"
+                                },
+                                {
+                                    "text_target": "The patient's address",
+                                    "text_native": "Adres pacjenta"
+                                },
+                                {
+                                    "text_target": "The payment method",
+                                    "text_native": "Sposób płatności"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Recepcjonistka pyta, jaki jest problem, czyli o powód wizyty."
+                        }
+                    },
+                    "neighbours": {
+                        "before": null,
+                        "after": {
+                            "step": 2,
+                            "kind": "answer",
+                            "messages": [
+                                {
+                                    "speaker": "A",
+                                    "text_target": "Please tell me your symptoms.",
+                                    "text_native": "Proszę powiedzieć, jakie są objawy."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "text_target": "I have a sore throat and fever.",
+                                    "text_native": "Boli mnie gardło i mam gorączkę.",
+                                    "phrase_id": "p2",
+                                    "filler": "a sore throat and fever"
+                                }
+                            ],
+                            "check": "What does the receptionist ask the patient to describe?"
+                        }
+                    }
+                },
+                "payload": {
+                    "card": {
+                        "step": 1,
+                        "kind": "ask",
+                        "initiator": "B",
+                        "messages": [
+                            {
+                                "speaker": "B",
+                                "role_target": "Patient",
+                                "role_native": "Pacjent",
+                                "phrase_id": "p1",
+                                "filler": "a doctor's appointment",
+                                "text_target": "I'd like a doctor's appointment.",
+                                "text_native": "Chcę umówić wizytę u lekarza.",
+                                "pronunciation_native": "ajd lajk e dokters epojntment",
+                                "speaking_key": "I'd like",
+                                "simplified_variants": [
+                                    "I need an appointment."
+                                ]
+                            },
+                            {
+                                "speaker": "A",
+                                "role_target": "Receptionist",
+                                "role_native": "Recepcjonista",
+                                "text_target": "Of course. Please tell me the problem.",
+                                "text_native": "Oczywiście. Proszę powiedzieć, co się dzieje."
+                            }
+                        ],
+                        "check": {
+                            "text_target": "What does the receptionist ask about?",
+                            "text_native": "O co pyta recepcjonistka?",
+                            "options": [
+                                {
+                                    "text_target": "The reason for the visit",
+                                    "text_native": "Powód wizyty"
+                                },
+                                {
+                                    "text_target": "The patient's address",
+                                    "text_native": "Adres pacjenta"
+                                },
+                                {
+                                    "text_target": "The payment method",
+                                    "text_native": "Sposób płatności"
+                                }
+                            ],
+                            "correct_option_index": 0,
+                            "explanation_native": "Recepcjonistka pyta, jaki jest problem, czyli o powód wizyty."
+                        }
+                    },
+                    "frame_update": null
+                }
+            },
+            {
+                "call": "repair",
+                "at": "2026-09-26T10:40:43+00:00",
+                "prompt_version": "lesson_card_repair.v1.3",
+                "model": "gpt-5.4-2026-03-05",
+                "tokens_in": 4669,
+                "cached_tokens": 0,
+                "tokens_out": 95,
+                "cost_usd": "0.013097",
+                "latency_ms": 1825,
+                "call_id": "01M3EMV436BQQFF12H06MP0BCD",
+                "asked": {
+                    "address": "B5",
+                    "kind": "line",
+                    "findings": [
+                        {
+                            "code": "line.ne_frame",
+                            "detail": "B5: «Do I need your name?» is not «Do you need ___?» with any of its fillers («my name», «my ID»)"
+                        }
+                    ],
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Patient",
+                        "role_native": "Pacjent",
+                        "phrase_id": "p5",
+                        "filler": null,
+                        "text_target": "Do I need your name?",
+                        "text_native": "Czy potrzebne jest pani nazwisko?",
+                        "pronunciation_native": "du aj nid jor nejm",
+                        "speaking_key": "Do you need",
+                        "simplified_variants": [
+                            "Do you need my name?"
+                        ]
+                    },
+                    "neighbours": null
+                },
+                "payload": {
+                    "card": {
+                        "speaker": "B",
+                        "role_target": "Patient",
+                        "role_native": "Pacjent",
+                        "phrase_id": "p5",
+                        "filler": "my name",
+                        "text_target": "Do you need my name?",
+                        "text_native": "Czy potrzebuje pani mojego imienia i nazwiska?",
+                        "pronunciation_native": "du ju nid maj nejm",
+                        "speaking_key": "Do you need",
+                        "simplified_variants": [
+                            "Do you need my full name?"
+                        ]
+                    }
+                }
+            },
+            {
+                "call": "judge",
+                "at": "2026-09-26T10:40:44+00:00",
+                "prompt_version": "lesson_seam_judge.v1.1",
+                "model": "gpt-5.4-mini-2026-03-17",
+                "tokens_in": 1236,
+                "cached_tokens": 0,
+                "tokens_out": 200,
+                "cost_usd": "0.001827",
+                "latency_ms": 1804,
+                "call_id": "01M3EMV5X1AWNS6NM8EG0BETDB",
+                "asked": {
+                    "native_language": "Polish",
+                    "items": [
+                        {
+                            "id": "p1.f1",
+                            "pattern": "Chcę ___",
+                            "value": "umówić wizytę u lekarza",
+                            "sentence": "Chcę umówić wizytę u lekarza"
+                        },
+                        {
+                            "id": "p1.f2",
+                            "pattern": "Chcę ___",
+                            "value": "umówić wizytę w tym tygodniu",
+                            "sentence": "Chcę umówić wizytę w tym tygodniu"
+                        },
+                        {
+                            "id": "p2.f1",
+                            "pattern": "Mam ___",
+                            "value": "ból gardła i gorączkę",
+                            "sentence": "Mam ból gardła i gorączkę"
+                        },
+                        {
+                            "id": "p2.f2",
+                            "pattern": "Mam ___",
+                            "value": "kaszel i gorączkę",
+                            "sentence": "Mam kaszel i gorączkę"
+                        },
+                        {
+                            "id": "p2.f3",
+                            "pattern": "Mam ___",
+                            "value": "ból głowy",
+                            "sentence": "Mam ból głowy"
+                        },
+                        {
+                            "id": "p3.f1",
+                            "pattern": "To trwa ___",
+                            "value": "od trzech dni",
+                            "sentence": "To trwa od trzech dni"
+                        },
+                        {
+                            "id": "p3.f2",
+                            "pattern": "To trwa ___",
+                            "value": "od wczoraj",
+                            "sentence": "To trwa od wczoraj"
+                        },
+                        {
+                            "id": "p4.f1",
+                            "pattern": "___ mi pasuje",
+                            "value": "dziś o czwartej",
+                            "sentence": "dziś o czwartej mi pasuje"
+                        },
+                        {
+                            "id": "p4.f2",
+                            "pattern": "___ mi pasuje",
+                            "value": "jutro o dziewiątej",
+                            "sentence": "jutro o dziewiątej mi pasuje"
+                        },
+                        {
+                            "id": "p5.f1",
+                            "pattern": "Czy potrzebuje pani ___?",
+                            "value": "mojego imienia i nazwiska",
+                            "sentence": "Czy potrzebuje pani mojego imienia i nazwiska?"
+                        },
+                        {
+                            "id": "p5.f2",
+                            "pattern": "Czy potrzebuje pani ___?",
+                            "value": "mojego dowodu",
+                            "sentence": "Czy potrzebuje pani mojego dowodu?"
+                        },
+                        {
+                            "id": "p6.f1",
+                            "pattern": "Oto ___",
+                            "value": "mój numer telefonu",
+                            "sentence": "Oto mój numer telefonu"
+                        },
+                        {
+                            "id": "p6.f2",
+                            "pattern": "Oto ___",
+                            "value": "mój dowód",
+                            "sentence": "Oto mój dowód"
+                        },
+                        {
+                            "id": "p7.f1",
+                            "pattern": "Wizytę mam ___",
+                            "value": "dziś o czwartej",
+                            "sentence": "Wizytę mam dziś o czwartej"
+                        },
+                        {
+                            "id": "p7.f2",
+                            "pattern": "Wizytę mam ___",
+                            "value": "jutro o dziewiątej",
+                            "sentence": "Wizytę mam jutro o dziewiątej"
+                        },
+                        {
+                            "id": "p8.f1",
+                            "pattern": "Czy potrzeba ___?",
+                            "value": "jeszcze czegoś",
+                            "sentence": "Czy potrzeba jeszcze czegoś?"
+                        },
+                        {
+                            "id": "p8.f2",
+                            "pattern": "Czy potrzeba ___?",
+                            "value": "mojego maila",
+                            "sentence": "Czy potrzeba mojego maila?"
+                        }
+                    ]
+                },
+                "payload": {
+                    "verdicts": [
+                        {
+                            "id": "p1.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p1.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p2.f3",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p3.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p4.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p5.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p6.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p7.f2",
+                            "reads": true
+                        },
+                        {
+                            "id": "p8.f1",
+                            "reads": true
+                        },
+                        {
+                            "id": "p8.f2",
+                            "reads": true
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "raw_check": {
+        "violations": [
+            {
+                "code": "exchange.second_question",
+                "address": "x1",
+                "detail": "the closing message of A «Of course. What seems to be the problem?» ends with a question mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p1",
+                "detail": "«I'd like ___» and the native «Chcę ___» end with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p2",
+                "detail": "«I have ___» and the native «Mam ___» end with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p3",
+                "detail": "«It's been ___» and the native «To trwa ___» end with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p4",
+                "detail": "«___ works for me» and the native «___ mi pasuje» end with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p6",
+                "detail": "«Here is my ___» and the native «Oto ___» end with no mark"
+            },
+            {
+                "code": "frame.no_end_punct",
+                "address": "p7",
+                "detail": "«My appointment is ___» and the native «Wizytę mam ___» end with no mark"
+            },
+            {
+                "code": "frame.twin",
+                "address": "p8",
+                "detail": "«Do you need ___?» / «Czy potrzeba ___?» is the target pattern of p5"
+            },
+            {
+                "code": "filler.one_in_dialogue",
+                "address": "p5.f1",
+                "detail": "«my name» is marked in_dialogue, but no line says it"
+            },
+            {
+                "code": "line.ne_frame",
+                "address": "B5",
+                "detail": "«Do I need your name?» is not «Do you need ___?» with any of its fillers («my name», «my ID»)"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x3.check",
+                "detail": "the right option «How long it has lasted» repeats «how long» of the partner's line"
+            },
+            {
+                "code": "options.partner_fragment",
+                "address": "x3.check",
+                "detail": "the option «Jak długo to trwa» is a piece of the partner's line «Jak długo to trwa?»"
+            },
+            {
+                "code": "options.partner_fragment",
+                "address": "x5.check",
+                "detail": "the option «Pełne imię i nazwisko» is a piece of the partner's line «Tak, poproszę pani pełne imię i nazwisko.»"
+            },
+            {
+                "code": "check.verbatim",
+                "address": "x6.check",
+                "detail": "the right option «For the booking record» repeats «the booking» of the partner's line"
+            },
+            {
+                "code": "options.partner_fragment",
+                "address": "x6.check",
+                "detail": "the option «Do rezerwacji» is a piece of the partner's line «Potrzebuję też numeru telefonu do rezerwacji.»"
+            }
+        ],
+        "fatal": 2,
+        "skips": [],
+        "skips_known": true,
+        "parse_error": null,
+        "native_code": "pl",
+        "target_code": "en"
+    },
+    "finished_at": "2026-09-26T10:40:46+00:00"
+}

@@ -1,0 +1,7 @@
+database=wordtrainer_e2e_test plan.driver=openai provider=openai plan=gpt-5.4 lesson=gpt-5.4 repair=gpt-5.4 judge=gpt-5.4-mini timeout=180 plan.languages=en,pl,ro,es,it,de,fr packs=be,de,en,es,fr,it,pl,ro,ru,uk
+NOTE: the REAL model (openai) — every call below is paid.
+writing to /wt/docs/research/lang-1b/live
+10:40:46 pl-en plan $0.000000 (0.0s) · day 1 illustrating · lesson $0.079835 · P2R 2 $0.033782 (x1,B5) · judge $0.001827 · raw fatal 2 / all 15 · pack_missing 0/0 · day $0.115444 (33.2s) · pair $0.1154
+10:41:27 de-en plan $0.017703 (6.3s) · day 1 illustrating · lesson $0.063607 · P2R 1 $0.014274 (x1) · judge $0.002324 · raw fatal 1 / all 24 · pack_missing 0/0 · day $0.080205 (34.1s) · pair $0.0979
+10:42:26 es-en plan $0.011204 (6.2s) · day 1 failed (fatal: pronunciation.foreign_script, options.form_mismatch) · lesson $0.114683 · P2R 4 $0.039338 (p1,p2,p1,p2) · judge $0.000000 · raw fatal 42 / all 90 · pack_missing 0/0 · day $0.154021 (53.2s) · pair $0.1652
+10:42:26 done: 3 pair(s), 0 with an error · $0.3786 · 133.0s
