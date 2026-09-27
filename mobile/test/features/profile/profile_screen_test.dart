@@ -131,7 +131,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('profile-header')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('name-sheet')), findsOneWidget);
-    expect(find.text('Имя'), findsWidgets);
+    expect(find.text('Имя'), findsOneWidget, reason: 'the sheet\'s title, and no label over the field');
+
+    // Empty — the placeholder says what goes there.
+    await tester.enterText(find.byKey(const ValueKey('name-field')), '');
+    await tester.pump();
+    expect(find.text('Как тебя зовут'), findsOneWidget);
 
     await tester.enterText(find.byKey(const ValueKey('name-field')), 'Мила');
     await tester.tap(find.byKey(const ValueKey('name-done')));

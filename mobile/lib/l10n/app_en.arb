@@ -2233,7 +2233,7 @@
   "accountSignOut": "Sign out",
   "accountDelete": "Delete account",
   "accountNameTitle": "Name",
-  "accountNameField": "Name",
+  "accountNameHint": "What’s your name",
   "accountDone": "Done",
   "accountDeleteTitle": "Delete account?",
   "accountDeleteBodyPlan": "Your plan “{plan}”, the days you’ve done and your settings will be gone. They can’t be restored.",

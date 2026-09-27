@@ -18,7 +18,8 @@ import 'profile_screen.dart' show setRemindersFromProfile;
 
 // ── 42-2 · the name ─────────────────────────────────────────────────────────────────────────────────────────────
 
-/// ИМЯ (frame 42-2): one field and «Готово»; no «Отмена» — the sheet goes down by a drag. Over the keyboard whole.
+/// ИМЯ (frame 42-2): one field under the sheet's title — no label of its own, «Как тебя зовут» in it while empty — and
+/// «Готово»; no «Отмена» — the sheet goes down by a drag. Over the keyboard whole.
 Future<void> showNameSheet(BuildContext context, WidgetRef ref, {required String current}) async {
   final name = await showPaperSheet<String>(context: context, builder: (_) => _NameSheet(current: current));
   if (name != null && name.trim().isNotEmpty && name.trim() != current) {
@@ -56,8 +57,6 @@ class _NameSheetState extends State<_NameSheet> {
       children: [
         Text(l.accountNameTitle, style: AppTextSession.sheetTitle),
         const SizedBox(height: 14),
-        Text(l.accountNameField, style: AppTextStart.fieldLabel),
-        const SizedBox(height: 8),
         Container(
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -76,7 +75,7 @@ class _NameSheetState extends State<_NameSheet> {
             maxLines: 1,
             cursorColor: AppColors.ink,
             style: AppTextStart.field,
-            decoration: const InputDecoration.collapsed(hintText: ''),
+            decoration: InputDecoration.collapsed(hintText: l.accountNameHint, hintStyle: AppTextStart.fieldHint),
             onSubmitted: (_) => _done(),
           ),
         ),

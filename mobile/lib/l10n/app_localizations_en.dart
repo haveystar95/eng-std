@@ -3896,7 +3896,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountNameTitle => 'Name';
 
   @override
-  String get accountNameField => 'Name';
+  String get accountNameHint => 'What’s your name';
 
   @override
   String get accountDone => 'Done';

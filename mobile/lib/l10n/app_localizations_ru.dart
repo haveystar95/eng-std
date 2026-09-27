@@ -4068,7 +4068,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountNameTitle => 'Имя';
 
   @override
-  String get accountNameField => 'Имя';
+  String get accountNameHint => 'Как тебя зовут';
 
   @override
   String get accountDone => 'Готово';

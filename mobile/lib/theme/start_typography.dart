@@ -134,9 +134,9 @@ abstract final class AppTextStart {
   /// The version at the foot — 13/18 grey.
   static const version = TextStyle(fontFamily: AppFonts.inter, fontSize: 13, height: 18 / 13, color: AppColors.tertiary);
 
-  /// 42-2: the field's label (13/18 grey) and its text (17/22 ink).
-  static const fieldLabel = sheetNote;
+  /// 42-2: the field's text (17/22 ink) and, while it is empty, its placeholder in grey.
   static const field = TextStyle(fontFamily: AppFonts.inter, fontSize: 17, height: 22 / 17, color: AppColors.ink);
+  static const fieldHint = TextStyle(fontFamily: AppFonts.inter, fontSize: 17, height: 22 / 17, color: AppColors.tertiary);
 
   /// 42-4: the wheel — the chosen value 22/500 ink, the others 17 grey.
   static const wheelChosen = TextStyle(

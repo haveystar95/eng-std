@@ -5191,9 +5191,9 @@
   "@accountNameTitle": {
     "description": "Шит имени (42-2): заголовок."
   },
-  "accountNameField": "Имя",
-  "@accountNameField": {
-    "description": "Шит имени (42-2): подпись над полем."
+  "accountNameHint": "Как тебя зовут",
+  "@accountNameHint": {
+    "description": "Шит имени (42-2): плейсхолдер пустого поля. Подписи над полем нет — заголовок листа уже «Имя»."
   },
   "accountDone": "Готово",
   "@accountDone": {

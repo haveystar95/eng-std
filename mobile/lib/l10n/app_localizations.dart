@@ -6027,11 +6027,11 @@ abstract class AppLocalizations {
   /// **'Имя'**
   String get accountNameTitle;
 
-  /// Шит имени (42-2): подпись над полем.
+  /// Шит имени (42-2): плейсхолдер пустого поля. Подписи над полем нет — заголовок листа уже «Имя».
   ///
   /// In ru, this message translates to:
-  /// **'Имя'**
-  String get accountNameField;
+  /// **'Как тебя зовут'**
+  String get accountNameHint;
 
   /// Шиты 42-2 и 42-4: угольная кнопка.
   ///
