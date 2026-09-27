@@ -105,7 +105,8 @@ class _IntroFrame extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, 0),
           child: Row(
             children: [
-              Text(l.sessionHeaderIntro, style: AppTextExercise.sessionHeader),
+              // The session header's caption is sample copy here: its ARB string died with the old session (CLIENT-START).
+              Text('Знакомство', style: AppTextExercise.sessionHeader),
               const Spacer(),
               Text('4 из 20', style: AppTextExercise.sessionHeader),
             ],

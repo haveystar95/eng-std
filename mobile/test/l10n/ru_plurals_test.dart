@@ -22,28 +22,6 @@ void main() {
     en = await AppLocalizations.delegate.load(const Locale('en'));
   });
 
-  group('homeCollectionProgress — «из» takes the genitive', () {
-    test('one: «1 из 1 слова», never «слово»', () {
-      expect(l.homeCollectionProgress(1, 1), nb('1 из 1 слова'));
-      expect(l.homeCollectionProgress(0, 21), nb('0 из 21 слова'));
-    });
-
-    test('few: «2 из 3 слов», never «слова»', () {
-      expect(l.homeCollectionProgress(2, 3), nb('2 из 3 слов'));
-      expect(l.homeCollectionProgress(1, 4), nb('1 из 4 слов'));
-    });
-
-    test('many: unchanged — this is the form the screen happened to show', () {
-      expect(l.homeCollectionProgress(4, 5), nb('4 из 5 слов'));
-      expect(l.homeCollectionProgress(18, 24), nb('18 из 24 слов'));
-    });
-
-    test('the category is chosen by the TOTAL, not by the done count', () {
-      expect(l.homeCollectionProgress(3, 5), nb('3 из 5 слов'));
-      expect(l.homeCollectionProgress(5, 1), nb('5 из 1 слова'));
-    });
-  });
-
   group('the neighbours: bare counts, counting forms', () {
     // Was «Повторить N слово/слова/слов» — that button died with кадры 17a–17d, where the day's
     // size is stated once on the session card instead of inside a verb. The paradigm it guarded is
@@ -52,18 +30,6 @@ void main() {
       expect(l.homeSessionCardWords(1), nb('1 слово'));
       expect(l.homeSessionCardWords(3), nb('3 слова'));
       expect(l.homeSessionCardWords(5), nb('5 слов'));
-    });
-
-    test('«В работе — N слово/слова/слов»', () {
-      expect(l.homeInWorkTitle(1), nb('В работе — 1 слово'));
-      expect(l.homeInWorkTitle(2), nb('В работе — 2 слова'));
-      expect(l.homeInWorkTitle(41), nb('В работе — 41 слово'));
-    });
-
-    test('«выпадет через N день/дня/дней»', () {
-      expect(l.homeEdgeInDays(1), nb('через 1 день'));
-      expect(l.homeEdgeInDays(2), nb('через 2 дня'));
-      expect(l.homeEdgeInDays(5), nb('через 5 дней'));
     });
 
     test('«N слово/слова/слов» in a collection', () {

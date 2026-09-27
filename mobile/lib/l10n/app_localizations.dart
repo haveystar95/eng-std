@@ -234,26 +234,8 @@ abstract class AppLocalizations {
   /// Чип-пример темы.
   ///
   /// In ru, this message translates to:
-  /// **'У врача'**
-  String get homeGenerateChipDoctor;
-
-  /// Чип-пример темы.
-  ///
-  /// In ru, this message translates to:
-  /// **'Аренда'**
-  String get homeGenerateChipRent;
-
-  /// Чип-пример темы.
-  ///
-  /// In ru, this message translates to:
   /// **'Собеседование'**
   String get homeGenerateChipInterview;
-
-  /// Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural). Предлог «из» требует родительного падежа, поэтому формы здесь НЕ счётные: 1 → «из 1 слова», 2 → «из 2 слов», 5 → «из 5 слов» (QA-OBS-5).
-  ///
-  /// In ru, this message translates to:
-  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
-  String homeCollectionProgress(int done, int total);
 
   /// Таб-бар: главная.
   ///
@@ -321,23 +303,11 @@ abstract class AppLocalizations {
   /// **'Учить {count}'**
   String collectionLearnButton(int count);
 
-  /// Подстрока кнопки «Учить».
-  ///
-  /// In ru, this message translates to:
-  /// **'Новые слова — выучить'**
-  String get collectionLearnSubtitle;
-
   /// Главная кнопка коллекции: подошёл срок повторения.
   ///
   /// In ru, this message translates to:
   /// **'Повторить {count}'**
   String collectionReviewButton(int count);
-
-  /// Подстрока кнопки «Повторить».
-  ///
-  /// In ru, this message translates to:
-  /// **'Срок повторения подошёл'**
-  String get collectionReviewSubtitle;
 
   /// Главная кнопка коллекции: долг закрыт, тихая контурная кнопка.
   ///
@@ -530,12 +500,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Других своих коллекций пока нет'**
   String get collectionMoveWordNowhere;
-
-  /// Почему у коллекции по умолчанию нет удаления.
-  ///
-  /// In ru, this message translates to:
-  /// **'«{title}» — коллекция для сохранённых слов, её нельзя удалить. Переименовать можно.'**
-  String collectionDefaultUndeletable(String title);
 
   /// Пункт меню коллекции: переименовать.
   ///
@@ -897,12 +861,6 @@ abstract class AppLocalizations {
   /// **'Текст появляется в поле по мере распознавания — после остановки его можно править руками.'**
   String get generateVoiceHelper;
 
-  /// Подсказка на месте клавиатуры во время записи (кадр 6c).
-  ///
-  /// In ru, this message translates to:
-  /// **'Говори — клавиатура вернётся, когда остановишь запись'**
-  String get generateVoiceRecordingNote;
-
   /// Сообщение при отказе в разрешении на микрофон/распознавание.
   ///
   /// In ru, this message translates to:
@@ -938,12 +896,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Создать'**
   String get collectionSheetCreateButton;
-
-  /// Заголовок экрана поиска.
-  ///
-  /// In ru, this message translates to:
-  /// **'Поиск слова'**
-  String get searchTitle;
 
   /// Плейсхолдер поля поиска (кадр 01).
   ///
@@ -1341,18 +1293,6 @@ abstract class AppLocalizations {
   /// **'День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.'**
   String get homeUnreachableBody;
 
-  /// Пояснение на пунктирной карточке генерации в офлайне (кадр 9c).
-  ///
-  /// In ru, this message translates to:
-  /// **'Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.'**
-  String get homeGenerateOfflineNote;
-
-  /// Ошибка, если Apple-вход не настроен (нет бэкенда/entitlement).
-  ///
-  /// In ru, this message translates to:
-  /// **'Вход через Apple пока недоступен.'**
-  String get authAppleUnavailable;
-
   /// Заголовок экрана профиля (кадр 11a).
   ///
   /// In ru, this message translates to:
@@ -1532,12 +1472,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'прочитай предложение вслух'**
   String get sessionInstrSpeakExample;
-
-  /// Кнопка записи на карточке говорения — до начала прослушивания.
-  ///
-  /// In ru, this message translates to:
-  /// **'Сказать'**
-  String get sessionSpeakStart;
 
   /// Кнопка остановки записи, пока телефон слушает.
   ///
@@ -1725,35 +1659,11 @@ abstract class AppLocalizations {
   /// **'Попробуй ещё'**
   String get sessionEchoAgain;
 
-  /// Семантика неактивного микрофончика на карточке знакомства: пермишена ещё нет, тап его запрашивает. Подписи на экране нет — только глиф (наряд A-4.1 Ч.5).
-  ///
-  /// In ru, this message translates to:
-  /// **'Включить микрофон'**
-  String get sessionEchoEnable;
-
-  /// Шапка сессии на карточке знакомства (кадры 16a–16b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Знакомство'**
-  String get sessionHeaderIntro;
-
-  /// Шапка сессии на ступенях узнавания 1–2 (кадры 16c-1, 16c-2).
-  ///
-  /// In ru, this message translates to:
-  /// **'Узнавание'**
-  String get sessionHeaderRecognition;
-
   /// Инструкция ступени 1: показан термин, выбрать перевод (кадр 16c-1).
   ///
   /// In ru, this message translates to:
   /// **'выбери перевод'**
   String get sessionInstrRecogniseTranslation;
-
-  /// Подпись на узнавании: слово встречалось в этой же сессии (кадр 16c-2).
-  ///
-  /// In ru, this message translates to:
-  /// **'вы только что познакомились с этим словом'**
-  String get sessionRecogniseJustMet;
 
   /// Подпись нулевой ступени лестницы в развёрнутой карточке слова (кадр 16e).
   ///
@@ -1815,12 +1725,6 @@ abstract class AppLocalizations {
   /// **'Ступень {step} из {total}: {rung}'**
   String statusLadderStep(int step, int total, String rung);
 
-  /// «Разобрать N слов» — единственная форма, в которой разбор называется в интерфейсе. Слова «триаж»/«стряж» в UI не живут.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
-  String statusCountToSort(int count);
-
   /// Заголовок шита-легенды, который открывается тапом по пяти точкам в «Моих словах» (Ч.4).
   ///
   /// In ru, this message translates to:
@@ -1832,12 +1736,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Слово помечено «знаю» — по лестнице оно не шло.'**
   String get poolKnownLegend;
-
-  /// Заголовок блока лестницы в развёрнутой карточке слова (кадр 16e).
-  ///
-  /// In ru, this message translates to:
-  /// **'ЛЕСТНИЦА СЛОВА'**
-  String get ladderTitle;
 
   /// Подпись вместо точек для слова, помеченного «знаю» в триаже — строка вне лестницы (кадр 16d).
   ///
@@ -2037,60 +1935,6 @@ abstract class AppLocalizations {
   /// **'Повторить озвучку'**
   String get sessionListenReplay;
 
-  /// Инструкция «Тебе скажут» на ситуационной карточке (SIT-1): реплика звучит, варианты — смыслы на языке поддержки.
-  ///
-  /// In ru, this message translates to:
-  /// **'выбери, что он сказал'**
-  String get sessionInstrSituationalHear;
-
-  /// Инструкция «Ты ответишь» на ситуационной карточке (SIT-1, канон §4).
-  ///
-  /// In ru, this message translates to:
-  /// **'выбери, что ответишь'**
-  String get sessionInstrSituationalSay;
-
-  /// Инструкция уровня B+ — сборка ответа из блоков вместо выбора из вариантов (SCENE-RUN, Ч.1).
-  ///
-  /// In ru, this message translates to:
-  /// **'собери свой ответ из блоков'**
-  String get sessionInstrAssembleTurn;
-
-  /// Подсказка на ходу прогона сцены: реплики на экране нет, есть только перевод (SCENE-RUN, Ч.2).
-  ///
-  /// In ru, this message translates to:
-  /// **'скажи свою реплику — текста не будет'**
-  String get sessionSceneRunHint;
-
-  /// Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4).
-  ///
-  /// In ru, this message translates to:
-  /// **'выбери, что спросишь'**
-  String get sessionInstrSituationalAsk;
-
-  /// Подпись над положением на ситуационной карточке (кадр D-04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Ситуация'**
-  String get sessionSituationLabel;
-
-  /// Подпись над названием сцены на карточке «Тебе скажут» (кадр D-03).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сейчас услышите'**
-  String get sessionSituationHearLabel;
-
-  /// Кнопка под карточкой «Тебе скажут»: показывает реплику после ответа.
-  ///
-  /// In ru, this message translates to:
-  /// **'Показать текст'**
-  String get sessionSituationRevealText;
-
-  /// Задача карточки, когда у дня нет парной реплики роли: умение сцены (канон §8).
-  ///
-  /// In ru, this message translates to:
-  /// **'Твоя задача — {outcome}.'**
-  String sessionSituationTask(String outcome);
-
   /// Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h).
   ///
   /// In ru, this message translates to:
@@ -2108,12 +1952,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Дневной лимит новых слов достигнут. Возвращайся завтра'**
   String get sessionDailyNewLimit;
-
-  /// Ошибка загрузки сессии (сессии строятся на сервере, офлайн недоступны).
-  ///
-  /// In ru, this message translates to:
-  /// **'Не удалось загрузить сессию: {error}'**
-  String sessionLoadError(String error);
 
   /// Кнопка входа в голосовой разговор на экране коллекции (только Premium).
   ///
@@ -2282,12 +2120,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Готовые'**
   String get storeSegmentReady;
-
-  /// Заголовок секции стора для наборов без темы.
-  ///
-  /// In ru, this message translates to:
-  /// **'Разное'**
-  String get storeSectionOther;
 
   /// Размер набора в сторе, «16 слов».
   ///
@@ -2511,12 +2343,6 @@ abstract class AppLocalizations {
   /// **'Premium активирован (dev-режим)'**
   String get paywallDevPurchased;
 
-  /// Сообщение, когда сервер отклоняет подписку без реального premium.
-  ///
-  /// In ru, this message translates to:
-  /// **'Нужен настоящий Premium (StoreKit — отдельный блок)'**
-  String get paywallNeedsRealPremium;
-
   /// Dev-секция профиля (только при DEV_MENU).
   ///
   /// In ru, this message translates to:
@@ -2606,12 +2432,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сервер недоступен · показываю сохранённое'**
   String get syncUnreachableBanner;
-
-  /// Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет. «На полке», а не «в каталоге»: слово ждёт разбора, и словарь статусов зовёт это состояние «Разобрать» (Ч.4).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слово на полке — ты его пока не учишь.'**
-  String get poolNotStudyingNote;
 
   /// Кнопка карточки слова: зачислить пару в пул (16e).
   ///
@@ -2721,29 +2541,11 @@ abstract class AppLocalizations {
   /// **'Ничего не нашлось'**
   String get myWordsNothingFound;
 
-  /// Вход на главном экране: учебная сессия, суженная до одной коллекции-источника.
-  ///
-  /// In ru, this message translates to:
-  /// **'Тренировка по теме'**
-  String get topicSessionAction;
-
-  /// Заголовок шита выбора коллекции для тематической тренировки.
-  ///
-  /// In ru, this message translates to:
-  /// **'Выбери тему'**
-  String get topicSessionTitle;
-
   /// Бейдж стрика в шапке главной (кадр 17a).
   ///
   /// In ru, this message translates to:
   /// **'Стрик {count}'**
   String homeStreakBadge(int count);
-
-  /// Заголовок тёмной карточки дня (кадр 17a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сессия на сегодня'**
-  String get homeSessionCardTitle;
 
   /// Лейбл карточки слова-вызова (кадр 19-4), брасовая мишень слева от него.
   ///
@@ -2859,71 +2661,11 @@ abstract class AppLocalizations {
   /// **'~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
   String sessionSizeCards(int count);
 
-  /// Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}'**
-  String homeSessionPartRepeat(int count);
-
-  /// Состав сессии: новые слова (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}'**
-  String homeSessionPartNew(int count);
-
-  /// Состав сессии: свайпы разбора.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}'**
-  String homeSessionPartTriage(int count);
-
   /// Кнопка тёмной карточки дня (кадр 17a).
   ///
   /// In ru, this message translates to:
   /// **'Начать'**
   String get homeSessionStart;
-
-  /// Заголовок блока «В работе» — размер пула (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}'**
-  String homeInWorkTitle(int count);
-
-  /// Сколько слов пула ещё ни разу не показывали (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}'**
-  String homeInWorkWaiting(int count);
-
-  /// Когда очередь дойдёт до последнего ждущего слова (ICU plural по дням).
-  ///
-  /// In ru, this message translates to:
-  /// **'{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}'**
-  String homeInWorkPace(int perDay, int days);
-
-  /// Строка «В работе» в состоянии Б (кадр 17d): квота дня цела, очередь стоит.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}'**
-  String homeInWorkQueueStands(int count);
-
-  /// Заголовок секции слов с ближайшей датой повтора (кадр 17a).
-  ///
-  /// In ru, this message translates to:
-  /// **'На грани забывания'**
-  String get homeEdgeTitle;
-
-  /// Дата выпадения слова: завтра.
-  ///
-  /// In ru, this message translates to:
-  /// **'выпадет завтра'**
-  String get homeEdgeTomorrow;
-
-  /// Дата выпадения слова, «через 2 дня» (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}'**
-  String homeEdgeInDays(int count);
 
   /// Заголовок вечерней секции ошибок сессии (кадр 17b).
   ///
@@ -2936,12 +2678,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}'**
   String homeHardestErrors(int count);
-
-  /// Счётчик справа от заголовка секции, «2 слова» (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
-  String homeSectionCount(int count);
 
   /// Заголовок вечерней карточки (кадр 17b).
   ///
@@ -2972,12 +2708,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}'**
   String homeChainProgress(int position, int total);
-
-  /// Прогресс дня: отвеченные карточки из запланированных, «32 из 32».
-  ///
-  /// In ru, this message translates to:
-  /// **'{done} из {total}'**
-  String homeDoneOf(int done, int total);
 
   /// Сколько заняла сессия, «6 мин 40 с».
   ///
@@ -3038,24 +2768,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}'**
   String homeExtraButton(int count);
-
-  /// Лейбл карточки брошенной коллекции (кадр 17a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжить'**
-  String get homeContinueLabel;
-
-  /// Давность последнего касания коллекции (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}'**
-  String homeContinueAbandoned(int count);
-
-  /// Строка входа в генерацию на главной (кадр 17a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Собрать коллекцию по теме'**
-  String get homeGenerateRow;
 
   /// Тихая строка входа в магазин под генерацией (ICU plural).
   ///
@@ -3147,30 +2859,6 @@ abstract class AppLocalizations {
   /// **'Начнём с первого набора'**
   String get homeFirstDayTitle;
 
-  /// Первая карточка первого дня (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}'**
-  String homeFirstDayReadyTitle(int count);
-
-  /// Подпись карточки готовых наборов (кадр 17c).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова уже отобраны, озвучены и размечены по уровню'**
-  String get homeFirstDayReadyHint;
-
-  /// Вторая карточка первого дня (кадр 17c).
-  ///
-  /// In ru, this message translates to:
-  /// **'Собрать свою по описанию'**
-  String get homeFirstDayOwnTitle;
-
-  /// Подпись карточки генерации (кадр 17c).
-  ///
-  /// In ru, this message translates to:
-  /// **'Опишите ситуацию — ИИ подберёт слова и фразы под неё'**
-  String get homeFirstDayOwnHint;
-
   /// Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).
   ///
   /// In ru, this message translates to:
@@ -3219,54 +2907,6 @@ abstract class AppLocalizations {
   /// **'Назад'**
   String get commonBack;
 
-  /// Строка-намерение над сборкой (DAY-GATE-1, Ч.2.4): что именно надо сказать, на языке поддержки. Строка серверная (`task.intent`), префикс клиентский.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скажи: {intent}'**
-  String sessionSayIntent(String intent);
-
-  /// Латунная метка карточки плана на главной (кадр 08).
-  ///
-  /// In ru, this message translates to:
-  /// **'План · день {index} из {total}'**
-  String homePlanCardBadge(int index, int total);
-
-  /// Правая метка карточки плана на главной.
-  ///
-  /// In ru, this message translates to:
-  /// **'{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}'**
-  String homePlanCardEventIn(int days);
-
-  /// Правая метка карточки плана на главной.
-  ///
-  /// In ru, this message translates to:
-  /// **'Событие сегодня'**
-  String get homePlanCardEventToday;
-
-  /// Кнопка карточки плана на главной.
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжить'**
-  String get homePlanCardContinue;
-
-  /// Приглашение на месте карточки плана (кадр 09).
-  ///
-  /// In ru, this message translates to:
-  /// **'Есть дата и цель?'**
-  String get homePlanInviteTitle;
-
-  /// Пояснение приглашения составить план.
-  ///
-  /// In ru, this message translates to:
-  /// **'Соберём дни подготовки — от приёма у врача до собеседования.'**
-  String get homePlanInviteBody;
-
-  /// Кнопка приглашения составить план.
-  ///
-  /// In ru, this message translates to:
-  /// **'Составить'**
-  String get homePlanInviteCta;
-
   /// Dev-экран прослушки голосов (наряд TTS-1, Ч.2.4) и пункт в секции «Разработка».
   ///
   /// In ru, this message translates to:
@@ -3314,36 +2954,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Фаворит сессии'**
   String get devVoicesFavourite;
-
-  /// Дев-бейдж сломанной трубы озвучки (наряд TTS-1). Показывается только при DEV_MENU: тихий фолбэк на системный голос при живом audio_url — дефект, и в дев-сборке он должен быть виден.
-  ///
-  /// In ru, this message translates to:
-  /// **'Озвучка: {silent} реплик системным голосом, {failed} не скачалось'**
-  String devVoiceTrouble(int silent, int failed);
-
-  /// Дев-меню (DAY-FIX-2, Ч.7): сдвиг «сегодня» плана на QA-аккаунте за dev-дверью.
-  ///
-  /// In ru, this message translates to:
-  /// **'QA · «сегодня» плана'**
-  String get devQaClockTitle;
-
-  /// Текущий сдвиг под заголовком строки.
-  ///
-  /// In ru, this message translates to:
-  /// **'{days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}}'**
-  String devQaClockShift(int days);
-
-  /// Кнопка сдвига «сегодня» плана на день вперёд.
-  ///
-  /// In ru, this message translates to:
-  /// **'+1 день'**
-  String get devQaClockPlus;
-
-  /// Кнопка сброса сдвига «сегодня» плана.
-  ///
-  /// In ru, this message translates to:
-  /// **'Сбросить'**
-  String get devQaClockReset;
 
   /// Шапка таба «План» (plan.title).
   ///
@@ -4652,12 +4262,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Закрыть'**
   String get planWindowSheetClose;
-
-  /// No description provided for @dayCards.
-  ///
-  /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}'**
-  String dayCards(int n);
 
   /// No description provided for @dayMinutes.
   ///

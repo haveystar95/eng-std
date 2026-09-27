@@ -92,24 +92,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGeneratePlaceholder => 'e.g. a visit to the doctor';
 
   @override
-  String get homeGenerateChipDoctor => 'At the doctor';
-
-  @override
-  String get homeGenerateChipRent => 'Renting';
-
-  @override
   String get homeGenerateChipInterview => 'Job interview';
-
-  @override
-  String homeCollectionProgress(int done, int total) {
-    String _temp0 = intl.Intl.pluralLogic(
-      total,
-      locale: localeName,
-      other: '$done of $total words',
-      one: '$done of $total word',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get tabHome => 'Today';
@@ -165,15 +148,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get collectionLearnSubtitle => 'New words — learn them';
-
-  @override
   String collectionReviewButton(int count) {
     return 'Review $count';
   }
-
-  @override
-  String get collectionReviewSubtitle => 'Due for review';
 
   @override
   String get collectionPracticeButton => 'Free practice';
@@ -277,11 +254,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionMoveWordNowhere => 'You have no other collections yet';
-
-  @override
-  String collectionDefaultUndeletable(String title) {
-    return '“$title” is where saved words land, so it cannot be deleted. Renaming it is fine.';
-  }
 
   @override
   String get collectionMenuRename => 'Rename';
@@ -514,9 +486,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Text appears in the field as it\'s recognised — after you stop you can edit it by hand.';
 
   @override
-  String get generateVoiceRecordingNote => 'Speak — the keyboard returns when you stop';
-
-  @override
   String get generateVoicePermissionDenied =>
       'Microphone and speech recognition access is needed — enable it in Settings';
 
@@ -534,9 +503,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionSheetCreateButton => 'Create';
-
-  @override
-  String get searchTitle => 'Word search';
 
   @override
   String get searchFieldHint => 'Find a word';
@@ -805,13 +771,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Today\'s plan couldn\'t be loaded. Pull down to try again — everything saved is still here.';
 
   @override
-  String get homeGenerateOfflineNote =>
-      'Generation needs a connection. Your topic is saved and will run once you\'re back online.';
-
-  @override
-  String get authAppleUnavailable => 'Sign in with Apple isn\'t available yet.';
-
-  @override
   String get profileTitle => 'Profile';
 
   @override
@@ -909,9 +868,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionInstrSpeakExample => 'read the sentence out loud';
-
-  @override
-  String get sessionSpeakStart => 'Speak';
 
   @override
   String get sessionSpeakStop => 'Done';
@@ -1022,19 +978,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionEchoAgain => 'Give it another go';
 
   @override
-  String get sessionEchoEnable => 'Turn on the microphone';
-
-  @override
-  String get sessionHeaderIntro => 'First look';
-
-  @override
-  String get sessionHeaderRecognition => 'Recognition';
-
-  @override
   String get sessionInstrRecogniseTranslation => 'choose the translation';
-
-  @override
-  String get sessionRecogniseJustMet => 'you have just met this word';
 
   @override
   String get ladderStep0 => 'first look';
@@ -1069,24 +1013,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String statusCountToSort(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Sort $count words',
-      one: 'Sort $count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get statusLegendTitle => 'What the dots mean';
 
   @override
   String get poolKnownLegend => 'Marked “I know it” — it never walked the ladder.';
-
-  @override
-  String get ladderTitle => 'WORD LADDER';
 
   @override
   String get ladderKnownDash => 'known';
@@ -1236,35 +1166,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionListenReplay => 'Replay audio';
 
   @override
-  String get sessionInstrSituationalHear => 'choose what they said';
-
-  @override
-  String get sessionInstrSituationalSay => 'choose what you will say';
-
-  @override
-  String get sessionInstrAssembleTurn => 'put your reply together from the blocks';
-
-  @override
-  String get sessionSceneRunHint => 'say your line — there will be no text';
-
-  @override
-  String get sessionInstrSituationalAsk => 'choose what you will ask';
-
-  @override
-  String get sessionSituationLabel => 'Situation';
-
-  @override
-  String get sessionSituationHearLabel => 'You are about to hear';
-
-  @override
-  String get sessionSituationRevealText => 'Show the text';
-
-  @override
-  String sessionSituationTask(String outcome) {
-    return 'Your task — $outcome.';
-  }
-
-  @override
   String get sessionListenReplaySlow => 'Slower';
 
   @override
@@ -1272,11 +1173,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionDailyNewLimit => 'You\'ve reached today\'s new-word limit. Come back tomorrow';
-
-  @override
-  String sessionLoadError(String error) {
-    return 'Couldn\'t load the session: $error';
-  }
 
   @override
   String get practiceDialogEntry => 'Conversation · 3 min';
@@ -1372,9 +1268,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storeSegmentReady => 'Ready-made';
-
-  @override
-  String get storeSectionOther => 'Other';
 
   @override
   String storeWordsCount(int count) {
@@ -1513,9 +1406,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallDevPurchased => 'Premium activated (dev mode)';
 
   @override
-  String get paywallNeedsRealPremium => 'Needs real Premium (StoreKit is a separate block)';
-
-  @override
   String get profileSectionDev => 'Development';
 
   @override
@@ -1561,9 +1451,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncUnreachableBanner => 'Server unreachable · showing what\'s saved';
-
-  @override
-  String get poolNotStudyingNote => 'This word is on the shelf — you are not studying it yet.';
 
   @override
   String get poolEnrollAction => 'Learn this word';
@@ -1632,18 +1519,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myWordsNothingFound => 'Nothing found';
 
   @override
-  String get topicSessionAction => 'Session by topic';
-
-  @override
-  String get topicSessionTitle => 'Pick a topic';
-
-  @override
   String homeStreakBadge(int count) {
     return 'Streak $count';
   }
-
-  @override
-  String get homeSessionCardTitle => 'Today\'s session';
 
   @override
   String get challengeLabel => 'Word challenge';
@@ -1744,101 +1622,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeSessionPartRepeat(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count to review',
-      one: '$count to review',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSessionPartNew(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count new',
-      one: '$count new',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSessionPartTriage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count to sort',
-      one: '$count to sort',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeSessionStart => 'Start';
-
-  @override
-  String homeInWorkTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'In progress — $count words',
-      one: 'In progress — $count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkWaiting(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count waiting in line',
-      one: '$count waiting in line',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkPace(int perDay, int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'at $perDay new a day the queue clears in ~$days days',
-      one: 'at $perDay new a day the queue clears in ~$days day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkQueueStands(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'take $count now and the queue moves today',
-      one: 'take $count now and the queue moves today',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeEdgeTitle => 'About to slip';
-
-  @override
-  String get homeEdgeTomorrow => 'due tomorrow';
-
-  @override
-  String homeEdgeInDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'in $count days',
-      one: 'in $count day',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get homeHardestTitle => 'Hardest today';
@@ -1850,17 +1634,6 @@ class AppLocalizationsEn extends AppLocalizations {
       locale: localeName,
       other: '$count mistakes',
       one: '$count mistake',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSectionCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
     );
     return '$_temp0';
   }
@@ -1910,11 +1683,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: 'card $position of $total',
     );
     return '$_temp0';
-  }
-
-  @override
-  String homeDoneOf(int done, int total) {
-    return '$done of $total';
   }
 
   @override
@@ -1990,23 +1758,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeContinueLabel => 'Continue';
-
-  @override
-  String homeContinueAbandoned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'left $count days ago',
-      one: 'left $count day ago',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeGenerateRow => 'Build a collection on a topic';
-
-  @override
   String homeStoreLink(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2080,27 +1831,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFirstDayTitle => 'Let\'s start with a first set';
 
   @override
-  String homeFirstDayReadyTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Take a ready-made set ($count topics)',
-      one: 'Take a ready-made set ($count topic)',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeFirstDayReadyHint => 'The words are already chosen, voiced and levelled';
-
-  @override
-  String get homeFirstDayOwnTitle => 'Build your own from a description';
-
-  @override
-  String get homeFirstDayOwnHint =>
-      'Describe a situation — AI will pick the words and phrases for it';
-
-  @override
   String homeSortOffer(int count, String title) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2144,43 +1874,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonBack => 'Back';
 
   @override
-  String sessionSayIntent(String intent) {
-    return 'Say: $intent';
-  }
-
-  @override
-  String homePlanCardBadge(int index, int total) {
-    return 'Plan · day $index of $total';
-  }
-
-  @override
-  String homePlanCardEventIn(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Event in $days days',
-      one: 'Event in $days day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homePlanCardEventToday => 'Event today';
-
-  @override
-  String get homePlanCardContinue => 'Continue';
-
-  @override
-  String get homePlanInviteTitle => 'Got a date and a goal?';
-
-  @override
-  String get homePlanInviteBody =>
-      'We will build the preparation days — from a doctor\'s appointment to a job interview.';
-
-  @override
-  String get homePlanInviteCta => 'Make one';
-
-  @override
   String get devVoicesTitle => 'Line voices';
 
   @override
@@ -2207,32 +1900,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devVoicesFavourite => 'This session\'s favourite';
-
-  @override
-  String devVoiceTrouble(int silent, int failed) {
-    return 'Voice: $silent lines fell back to the system voice, $failed downloads failed';
-  }
-
-  @override
-  String get devQaClockTitle => 'QA · the plan\'s “today”';
-
-  @override
-  String devQaClockShift(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'shifted by $days days',
-      one: 'shifted by $days day',
-      zero: 'no shift',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get devQaClockPlus => '+1 day';
-
-  @override
-  String get devQaClockReset => 'Reset';
 
   @override
   String get planTitle => 'Plan';
@@ -3060,12 +2727,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planWindowSheetClose => 'Close';
-
-  @override
-  String dayCards(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
-    return '$_temp0';
-  }
 
   @override
   String dayMinutes(int n) {
