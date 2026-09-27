@@ -65,6 +65,12 @@ class RouteSystemMark extends RouteCircle {
   final PlanSystemDay day;
 }
 
+/// A day that opens with a subscription (22-5a / 21-3 «по подписке»): a brass outline 1.5 with a brass point 8 inside,
+/// in place of the veiled photo.
+class RouteSubscriptionMark extends RouteCircle {
+  const RouteSubscriptionMark();
+}
+
 /// Один день маршрута.
 class RouteDayView {
   const RouteDayView({

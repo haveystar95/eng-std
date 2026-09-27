@@ -23,7 +23,7 @@ import 'route_view.dart';
 /// завтра». Экрана нет, сообщения нет — строка на своём месте. Тот же ответ тап получает, когда
 /// день просит ссылка или уведомление ([explainDay]).
 class PlanRoute extends StatefulWidget {
-  const PlanRoute({super.key, required this.plan, this.onOpenDay, this.explainDay, this.focus});
+  const PlanRoute({super.key, required this.plan, this.onOpenDay, this.explainDay, this.focus, this.onSubscription});
 
   /// День, к которому прокрутить маршрут (тап по уведомлению). Счётчик — чтобы второй тап по тому
   /// же дню тоже прокрутил.
@@ -33,6 +33,10 @@ class PlanRoute extends StatefulWidget {
 
   /// Тап по сегодняшнему или пройденному дню — кабинет. Null — режим чтения, узлы не нажимаются.
   final ValueChanged<PlanDayRoute>? onOpenDay;
+
+  /// A tap on a day that opens with a subscription — the paywall's place (44-1b); until PAY-1, the profile's
+  /// subscription group.
+  final VoidCallback? onSubscription;
 
   /// Номер дня, чью причину запрета показать сразу (ссылка на запертый день, 409 `plan_day_locked`).
   final int? explainDay;
@@ -115,7 +119,7 @@ class _PlanRouteState extends State<PlanRoute> {
       anchor: _anchor(day.number),
       title: l.planRouteDayTitle(day.number, planRouteDayName(l, plan, day)),
       meta: _meta(l, locale, day, tone, previous: previous, explain: explain),
-      circle: planRouteCircle(plan, day, dpr),
+      circle: day.lockedBySubscription ? const RouteSubscriptionMark() : planRouteCircle(plan, day, dpr),
       tone: tone,
       trailingToday: tone == RouteDayTone.current ? day.slot.labelNative : null,
       passedLine: reached,
@@ -132,6 +136,8 @@ class _PlanRouteState extends State<PlanRoute> {
       ],
       onTap: onOpen == null
           ? null
+          : day.lockedBySubscription
+          ? () => widget.onSubscription?.call()
           : tone == RouteDayTone.locked
           ? () => _explain(day)
           : () => onOpen(day),
@@ -166,7 +172,12 @@ class _PlanRouteState extends State<PlanRoute> {
         if (day.minutesSpent > 0) parts.add(l.planMinutesShort(day.minutesSpent));
       case RouteDayTone.locked || RouteDayTone.plain:
         if (date != null) parts.add(PlanFormat.date(date, locale));
-        if (explain) parts.add(planLockReason(l, day, previous));
+        // By subscription: every such day says so — the first «откроется с подпиской», the rest «по подписке».
+        if (day.lockedBySubscription) {
+          parts.add(previous?.lockedBySubscription == true ? l.planRouteMetaBySubscription : l.planRouteMetaOpensWithSubscription);
+        } else if (explain) {
+          parts.add(planLockReason(l, day, previous));
+        }
     }
 
     return parts.isEmpty ? null : dotJoin(parts);
@@ -177,6 +188,8 @@ class _PlanRouteState extends State<PlanRoute> {
 abstract final class PlanRouteDayState {
   static RouteDayTone of(PlanDayRoute day) {
     if (day.isClosed) return RouteDayTone.passed;
+    // Locked by the subscription even when its slot is today: it does not open, whatever the calendar says (ACC-1).
+    if (day.lockedBySubscription) return RouteDayTone.locked;
     if (day.slot.code == PlanSlotCode.today) return RouteDayTone.current;
 
     return RouteDayTone.locked;

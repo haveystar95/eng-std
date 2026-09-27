@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/paper_sheet.dart';
 
 import '../../../data/api_client.dart' show problemCodeOf;
 import '../../../data/audio_loader.dart';
@@ -16,9 +17,10 @@ import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
 import '../conversation/conversation_controller.dart';
 import '../conversation/talk_replay_screen.dart';
+import '../../profile/profile_screen.dart';
 import '../plan_providers.dart';
 import '../plan_tab_parts.dart' show PlanLoadFailedCard;
-import '../session/parts/session_bits.dart' show SessionDockButton;
+import '../session/parts/session_bits.dart' show DockButton;
 import '../session/session_screen.dart';
 import '../session/session_voice.dart';
 import 'day_voice.dart';
@@ -255,8 +257,13 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
           // пройденного дня — его итог: «Итог дня» (30-7) у дня плана и «Итог» у дня-системы, как на 37-1c. Повтора
           // дня целиком нет, «ещё раз» живёт у каждого ряда этапа.
           final passed = window.day.status == WindowDayStatus.passed;
+          // 23-0a «по подписке»: the whole day is there to read; «Откроется с подпиской» and «Подписка» in place of
+          // «Начать» (the button leads to the profile's subscription group until PAY-1).
+          final bySubscription = window.day.status == WindowDayStatus.locked;
           final summary = system != null ? l.planWindowSummary : l.planWindowDaySummary;
-          final barLabel = action != null ? WindowTexts.action(l, action) : (passed ? summary : null);
+          final barLabel = bySubscription
+              ? l.planPlateSubscription
+              : (action != null ? WindowTexts.action(l, action) : (passed ? summary : null));
           final cover = barLabel != null ? WindowActionBar.coverOf(context) : 0.0;
 
           return Stack(
@@ -290,7 +297,8 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
                   child: WindowActionBar(
                     label: barLabel,
                     busy: _replaying,
-                    onTap: () => unawaited(_act(action, r)),
+                    lockedNote: bySubscription ? l.planPlateOpensWithSubscription : null,
+                    onTap: bySubscription ? _openSubscription : () => unawaited(_act(action, r)),
                   ),
                 ),
             ],
@@ -300,37 +308,24 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
     );
   }
 
+  void _openSubscription() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen(pushed: true, focusSubscription: true)));
+  }
+
   /// A sentence on a sheet over the window, and «Понятно» — the replay limit of today (409
   /// `plan_conversation_replay_limit`), or a talk that did not start. The session's own sheet: the ground, corners 22,
   /// the handle, one sentence, one button.
-  static Future<void> _showWindowNotice(BuildContext context, String text) => showModalBottomSheet<void>(
+  static Future<void> _showWindowNotice(BuildContext context, String text) => showPaperSheet<void>(
     context: context,
-    backgroundColor: AppColors.ground,
-    barrierColor: AppColors.windowSheetScrim,
-    elevation: 0,
-    isScrollControlled: true,
-    sheetAnimationStyle: const AnimationStyle(duration: AppMotion.sessionExitSheet, curve: AppMotion.windowEaseOutCubic),
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
-    builder: (sheet) => Padding(
+    builder: (sheet) => Column(
       key: const ValueKey('window-notice-sheet'),
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.paddingOf(sheet).bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(color: AppColors.markerOutline, borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(text, key: const ValueKey('window-notice-text'), style: AppTextSession.sheetTitle),
-          const SizedBox(height: 32),
-          SessionDockButton(label: AppLocalizations.of(sheet).planSheetCta, onTap: () => Navigator.of(sheet).pop()),
-        ],
-      ),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(text, key: const ValueKey('window-notice-text'), style: AppTextSession.sheetTitle),
+        const SizedBox(height: 32),
+        DockButton(label: AppLocalizations.of(sheet).planSheetCta, onTap: () => Navigator.of(sheet).pop()),
+      ],
     ),
   );
 

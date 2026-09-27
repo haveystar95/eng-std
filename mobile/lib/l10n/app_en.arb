@@ -1,4 +1,5 @@
 {
+  "@@locale": "en",
   "triageCounter": "{current} of {total}",
   "triageSwipeHint": "Swipe or tap the buttons · tap to flip",
   "triageVerdictUnknown": "Don't know",
@@ -1336,18 +1337,9 @@
   "@planPlateBuildingSub": {
     "description": "Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub)."
   },
-  "planPlateFailedTitle": "The day did not build",
+  "planPlateFailedTitle": "Couldn’t put the day together",
   "@planPlateFailedTitle": {
     "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title)."
-  },
-  "planPlateFailedSub": "The network dropped. The route is intact — only day {n} is missing",
-  "@planPlateFailedSub": {
-    "description": "Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
   },
   "planPlateCtaRetry": "Try again",
   "@planPlateCtaRetry": {
@@ -2407,7 +2399,7 @@
   "planTalkSceneNumber": "Scene {n}",
   "planTalkSceneOf": "Scene {n} of {total}",
   "planTalkSceneContinue": "Continue",
-  "planTalkEntryRuleStartRole": "{role} speaks first. Answer, and ask your own questions.",
+  "planTalkEntryRuleStartRole": "{gender, select, female{{role} speaks first.} other{{role} speaks first.}} Answer, and ask your own questions.",
   "planTalkEntrySceneByScene": "The talk goes scene by scene",
   "planWindowReturnedFromDay": "Back from day {n}",
   "@planWindowReturnedFromDay": {

@@ -190,7 +190,9 @@ extension on TalkEntryView {
   /// «Регистратор начнёт первым…» (37-5b). The day keeps its line (наряд CLIENT-FIX-4 §5: «в дне — как было»).
   String _firstRule(AppLocalizations l) {
     final role = scenes.length > 1 ? scenes.first.role.trim() : '';
-    return role.isEmpty ? l.planTalkEntryRuleStart : l.planTalkEntryRuleStartRole(role);
+    if (role.isEmpty) return l.planTalkEntryRuleStart;
+    // The role's gender is the server's (`window.sources[].partner_gender`, FIX-4c §3): «Медсестра начнёт первой».
+    return l.planTalkEntryRuleStartRole(role, scenes.first.female ? 'female' : 'male');
   }
 
   /// 37-5b: a scene's caps and its constructions, 14 apart, the grey «Разговор идёт сцена за сценой» between two
@@ -216,8 +218,8 @@ extension on TalkEntryView {
 }
 
 /// A SCENE OF A TALK THAT WALKS SEVERAL (кадр 37-5b): its id, its name, its role in the nominative as the plan names it,
-/// and its constructions in the server's order.
-typedef TalkEntryScene = ({String sceneId, String title, String role, List<TalkTarget> targets});
+/// whether the role is a woman (`partner_gender`), and its constructions in the server's order.
+typedef TalkEntryScene = ({String sceneId, String title, String role, bool female, List<TalkTarget> targets});
 
 /// THE TALK ROW'S CONSTRUCTIONS BY SCENE (37-5b) — in the order the day names its scenes (`window.sources[]`,
 /// [order]); a scene that list does not name goes after them, in the order its constructions came. The name is the
@@ -225,7 +227,7 @@ typedef TalkEntryScene = ({String sceneId, String title, String role, List<TalkT
 /// talk lists its constructions as one block (37-5).
 List<TalkEntryScene> talkEntryScenes(
   List<TalkTarget> targets, {
-  required List<({String sceneId, String title})> order,
+  required List<({String sceneId, String title, bool female})> order,
   required PlanScene? Function(String sceneId) sceneById,
 }) {
   final byScene = <String, List<TalkTarget>>{};
@@ -234,6 +236,7 @@ List<TalkEntryScene> talkEntryScenes(
   }
   if (byScene.length < 2) return const [];
   final named = {for (final s in order) s.sceneId: s.title};
+  final female = {for (final s in order) s.sceneId: s.female};
   final ids = [
     for (final s in order)
       if (byScene.containsKey(s.sceneId)) s.sceneId,
@@ -246,6 +249,7 @@ List<TalkEntryScene> talkEntryScenes(
         sceneId: id,
         title: named[id] ?? sceneById(id)?.titleNative ?? '',
         role: sceneById(id)?.partnerRoleNative ?? '',
+        female: female[id] ?? false,
         targets: byScene[id]!,
       ),
   ];

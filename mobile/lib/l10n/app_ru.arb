@@ -1,4 +1,5 @@
 {
+  "@@locale": "ru",
   "triageCounter": "{current} из {total}",
   "@triageCounter": {
     "description": "Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).",
@@ -3245,18 +3246,9 @@
   "@planPlateBuildingSub": {
     "description": "Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub)."
   },
-  "planPlateFailedTitle": "День не собрался",
+  "planPlateFailedTitle": "Не получилось собрать день",
   "@planPlateFailedTitle": {
-    "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title)."
-  },
-  "planPlateFailedSub": "Сеть пропала. Маршрут на месте, пропал только день {n}",
-  "@planPlateFailedSub": {
-    "description": "Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
+    "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title): урок не прошёл ворота дважды (lesson_status = failed) — это не сеть (CLIENT-START §6)."
   },
   "planPlateCtaRetry": "Повторить",
   "@planPlateCtaRetry": {
@@ -5260,10 +5252,10 @@
   "@planTalkSceneContinue": {
     "description": "Карточка перехода между сценами (39-1): единственная кнопка — карточка сжимается в разделитель, здоровается роль следующей сцены."
   },
-  "planTalkEntryRuleStartRole": "{role} начнёт первым. Отвечай и спрашивай сам.",
+  "planTalkEntryRuleStartRole": "{gender, select, female{{role} начнёт первой.} other{{role} начнёт первым.}} Отвечай и спрашивай сам.",
   "@planTalkEntryRuleStartRole": {
-    "description": "Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»). Рода роли сервер не шлёт — «первым» для всех (отчёт CLIENT-FIX-4 §7).",
-    "placeholders": { "role": { "type": "String" } }
+    "description": "Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»); род — window.sources[].partner_gender первой сцены (FIX-4c §3): «Медсестра начнёт первой».",
+    "placeholders": { "role": { "type": "String" }, "gender": { "type": "String" } }
   },
   "planTalkEntrySceneByScene": "Разговор идёт сцена за сценой",
   "@planTalkEntrySceneByScene": {

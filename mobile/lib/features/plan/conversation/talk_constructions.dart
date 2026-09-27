@@ -48,9 +48,10 @@ class TalkConstructionLine extends StatelessWidget {
   }
 }
 
-/// A ROW OF «СКАЖИ В РАЗГОВОРЕ» (кадры 37-5, 39-1) — the frame in Literata 17 and, under it 2, the lesson's own example
-/// in grey 13: «I have pain in my lower back. · У меня болит поясница.» A construction the lesson gave no example for
-/// stands alone.
+/// A ROW OF «СКАЖИ В РАЗГОВОРЕ» (кадры 37-5, 39-1) — the frame in Literata 17 and, under it 2, the lesson's own line in
+/// grey 13: «I need an appointment. · Мне нужна запись на приём.» — the target line is the frame said with the lesson's
+/// value, the native one the lesson's own line as the model wrote it (`line_native`, CLIENT-START §6). A construction
+/// with neither stands alone.
 class TalkConstructionRow extends StatelessWidget {
   const TalkConstructionRow({super.key, required this.target});
 
@@ -59,10 +60,14 @@ class TalkConstructionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    // The lesson's example is a VALUE («lower back»), so the line is the frame said with it — on both languages.
-    final example = target.exampleTarget == null
-        ? null
-        : (target.exampleNative == null ? target.lessonLine : l.planDotPlain(target.lessonLine, target.lessonNative));
+    // The target line: the frame said with the lesson's value («lower back»); the native: the lesson's line as it is.
+    final native = target.lineNative;
+    final example = switch ((target.exampleTarget, native)) {
+      (null, null) => null,
+      (null, final String n) => n,
+      (_, null) => target.lessonLine,
+      (_, final String n) => l.planDotPlain(target.lessonLine, n),
+    };
     return Column(
       key: ValueKey('talk-entry-target-${target.sceneId}-${target.ref}'),
       crossAxisAlignment: CrossAxisAlignment.start,

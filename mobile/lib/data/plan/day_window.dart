@@ -18,12 +18,17 @@ import 'plan_models.dart';
 enum WindowDayStatus {
   notStarted,
   inProgress,
-  passed;
+  passed,
+
+  /// A locked day's window — drawn only for a day locked by the SUBSCRIPTION (23-0a «по подписке»): the window of a
+  /// day locked by its date is never opened (`openDayRoom`).
+  locked;
 
   static WindowDayStatus fromWire(Object? s) => switch (s) {
     'not_started' => notStarted,
     'in_progress' => inProgress,
     'passed' => passed,
+    'locked' => locked,
     _ => throw PlanContractError('window day status «$s»'),
   };
 }
@@ -179,11 +184,15 @@ class StageSummary {
 /// A SCENE A REVIEW OR THE REHEARSAL IS MADE OF (`window.sources[]`, наряд BACK-TAILS-2; кадры 37-1 «Из каких сцен»,
 /// 37-2 «Из каких дней») — the server's list, in its order. [dayNumber] — the day of the route the scene stands on.
 class WindowSourceRef {
-  const WindowSourceRef({required this.sceneId, required this.titleNative, this.dayNumber});
+  const WindowSourceRef({required this.sceneId, required this.titleNative, this.dayNumber, this.partnerFemale = false});
 
   final String sceneId;
   final String titleNative;
   final int? dayNumber;
+
+  /// The scene's role is a woman — `partner_gender: female` (FIX-4c §3): «Медсестра начнёт первой» (37-5b). The server
+  /// sends `female` for a scene without a lesson too (the voice's default).
+  final bool partnerFemale;
 }
 
 /// Счётчики брови вкладки: всего, пройдено и сколько единиц ВЕРНУЛОСЬ из прошлых дней (`summary.returns`, наряд
@@ -466,6 +475,7 @@ class DayWindow {
               sceneId: s['scene_id'] as String,
               titleNative: s['title_native'] as String,
               dayNumber: (s['day_number'] as num?)?.toInt(),
+              partnerFemale: s['partner_gender'] == 'female',
             ),
       ],
     );

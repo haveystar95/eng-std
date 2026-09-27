@@ -2612,12 +2612,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planPlateBuildingSub => 'около минуты · можно закрыть приложение';
 
   @override
-  String get planPlateFailedTitle => 'День не собрался';
-
-  @override
-  String planPlateFailedSub(int n) {
-    return 'Сеть пропала. Маршрут на месте, пропал только день $n';
-  }
+  String get planPlateFailedTitle => 'Не получилось собрать день';
 
   @override
   String get planPlateCtaRetry => 'Повторить';
@@ -4172,8 +4167,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planTalkSceneContinue => 'Продолжить';
 
   @override
-  String planTalkEntryRuleStartRole(String role) {
-    return '$role начнёт первым. Отвечай и спрашивай сам.';
+  String planTalkEntryRuleStartRole(String role, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$role начнёт первой.',
+      'other': '$role начнёт первым.',
+    });
+    return '$_temp0 Отвечай и спрашивай сам.';
   }
 
   @override

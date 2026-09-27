@@ -15,6 +15,7 @@ import '../../../data/plan/plan_languages.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
 import '../plan_format.dart';
+import '../../profile/profile_screen.dart';
 import '../plan_providers.dart';
 import 'entry_date_step.dart';
 import 'entry_days_step.dart';
@@ -230,7 +231,17 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       _onBuild(build);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _s = _s.copyWith(phase: EntryBuildPhase.failed, offline: isOffline(e)));
+      // The server said no to this learner (ACC-1 §2) — not a dropped network, and «Ещё раз» would be refused again.
+      final refusal = switch (problemCodeOf(e)) {
+        'plan_subscription_required' => EntryRefusal.subscription,
+        'plan_active_limit' => EntryRefusal.activeLimit,
+        _ => null,
+      };
+      setState(
+        () => _s = refusal == null
+            ? _s.copyWith(phase: EntryBuildPhase.failed, offline: isOffline(e))
+            : _s.copyWith(phase: EntryBuildPhase.refused, refusal: refusal),
+      );
     }
   }
 
@@ -468,6 +479,10 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
         summary: _summary(l, locale, languageName, levelName),
         onRetry: _retry,
         onEditGoal: () => _go(EntryStep.goal),
+        onSubscription: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ProfileScreen(pushed: true, focusSubscription: true)),
+        ),
+        onClose: () => Navigator.of(context).maybePop(),
       ),
     };
 

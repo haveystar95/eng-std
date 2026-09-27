@@ -578,22 +578,24 @@ class PlanScene {
   bool get isCore => priority == 1;
 }
 
-/// `PlanRescuePhrase` — one of the five (кадр 21-2b).
+/// `PlanRescuePhrase` — one line of the plan's rescue kit (`rescue_kit`, наряд LANG-1b §2; shown on the plan tab under
+/// the route, 21-2b): the line in the TARGET language, its translation into the learner's own, and the sound of it in
+/// the learner's voice (`audio_url`, `GET /plans/rescue-audio/{key}` under the same token; null until bought — then the
+/// phone reads it in the target language). No reading: the sound says it.
 class PlanRescuePhrase {
-  const PlanRescuePhrase({
-    required this.textTarget,
-    required this.textNative,
-    required this.pronunciationNative,
-  });
+  const PlanRescuePhrase({required this.textTarget, required this.textNative, this.audioUrl});
 
   final String textTarget;
   final String textNative;
-  final String pronunciationNative;
+  final String? audioUrl;
 
   factory PlanRescuePhrase.fromJson(Map<String, dynamic> j) => PlanRescuePhrase(
     textTarget: (j['text_target'] as String?) ?? '',
     textNative: (j['text_native'] as String?) ?? '',
-    pronunciationNative: (j['pronunciation_native'] as String?) ?? '',
+    audioUrl: switch (j['audio_url']) {
+      final String url when url.isNotEmpty => url,
+      _ => null,
+    },
   );
 }
 

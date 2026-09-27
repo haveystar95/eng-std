@@ -187,7 +187,70 @@ class DayPlate extends StatelessWidget {
       const SizedBox(height: 14),
       _PaperButton(label: label, onTap: onTap, enabled: enabled),
     ],
+    DayPlateFooterLocked(:final note, :final action, :final onTap) => [
+      const SizedBox(height: 16),
+      SizedBox(
+        height: 52,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                note,
+                style: TextStyle(fontFamily: AppFonts.inter, fontSize: 13, height: 18 / 13, color: AppColors.paper.withValues(alpha: .62)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            BrassOutlineButton(key: const ValueKey('day-plate-subscription'), label: action, onTap: onTap),
+          ],
+        ),
+      ),
+    ],
   };
+}
+
+/// THE BRASS OUTLINE BUTTON on a dark plate — 40 tall, radius 14, a 1.5 brass outline, paper 15/600 (21-3 / 23-0a «по
+/// подписке»: «Подписка»).
+class BrassOutlineButton extends StatelessWidget {
+  const BrassOutlineButton({super.key, required this.label, required this.onTap, this.onPaper = false});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  /// On the paper dock of the day window (23-0a) the label is ink, on the dark plate — paper.
+  final bool onPaper;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap == null
+          ? null
+          : () {
+              AppHaptics.light();
+              onTap!();
+            },
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.brassInk, width: 1.5),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: AppFonts.inter,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: onPaper ? AppColors.ink : AppColors.paper,
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Where the plate's footer stands: nothing (a closed day), or the one bumаga button.
@@ -200,6 +263,8 @@ sealed class DayPlateFooter {
     VoidCallback? onTap,
     bool enabled,
   }) = DayPlateFooterButton;
+  const factory DayPlateFooter.locked({required String note, required String action, VoidCallback? onTap}) =
+      DayPlateFooterLocked;
 }
 
 class DayPlateFooterNone extends DayPlateFooter {
@@ -212,6 +277,16 @@ class DayPlateFooterButton extends DayPlateFooter {
   final String label;
   final VoidCallback? onTap;
   final bool enabled;
+}
+
+/// A day that opens with a subscription (21-3 / 23-0a «по подписке»): «Откроется с подпиской» 13 grey and the brass
+/// outline «Подписка» in place of «Начать».
+class DayPlateFooterLocked extends DayPlateFooter {
+  const DayPlateFooterLocked({required this.note, required this.action, this.onTap});
+
+  final String note;
+  final String action;
+  final VoidCallback? onTap;
 }
 
 /// One stage row: name, «done / total», its state, and the second line the current one carries.
@@ -463,13 +538,17 @@ class _StageRow extends StatelessWidget {
 /// Не шиммер-скелет: канва заменила пять фальшивых строк ОДНОЙ честной — срок назван словами и
 /// уходить разрешено, а пять серых полосок обещали содержимое, которого пока нет.
 class DayPlateNotice {
-  const DayPlateNotice({required this.title, required this.sub, this.preloaderLines});
+  const DayPlateNotice({required this.title, this.sub, this.preloaderLines, this.offline = false});
 
-  /// «Собираем день 1» / «День не собрался» — 15/600 paper.
+  /// «Собираем день 1» / «Не получилось собрать день» — 15/600 paper.
   final String title;
 
-  /// «около минуты · можно закрыть приложение» — 14 paper .62.
-  final String sub;
+  /// «около минуты · можно закрыть приложение» / «Нет сети» — 14 paper .62; null — no second line.
+  final String? sub;
+
+  /// The trouble is the network (a retry that could not leave): the cloud mark. Otherwise a failed day is a lesson
+  /// that did not pass its checks twice (plan-api «Для CLIENT-START») — an alert mark, not a cloud.
+  final bool offline;
 
   /// 22-5a: три строки статуса живого прелоадера под строкой — тот же прелоадер, что на 22-4a, на
   /// угольной плите. Null — день не собрался (22-5c): значок вместо прелоадера.
@@ -492,11 +571,13 @@ class _NoticeRow extends StatelessWidget {
           notice.title,
           style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.paper),
         ),
-        const SizedBox(height: 4),
-        Text(
-          notice.sub,
-          style: TextStyle(fontFamily: AppFonts.inter, fontSize: 14, height: 1.35, color: AppColors.paper.withValues(alpha: .62)),
-        ),
+        if (notice.sub != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            notice.sub!,
+            style: TextStyle(fontFamily: AppFonts.inter, fontSize: 14, height: 1.35, color: AppColors.paper.withValues(alpha: .62)),
+          ),
+        ],
       ],
     );
 
@@ -508,10 +589,14 @@ class _NoticeRow extends StatelessWidget {
           ? Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(
+                SizedBox(
                   width: 30,
                   height: 30,
-                  child: Icon(LucideIcons.cloudOff, size: 30, color: AppColors.destructiveOnPlate),
+                  child: Icon(
+                    notice.offline ? LucideIcons.cloudOff : LucideIcons.circleAlert,
+                    size: 30,
+                    color: AppColors.destructiveOnPlate,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(child: text),

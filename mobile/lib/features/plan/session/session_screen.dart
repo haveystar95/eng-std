@@ -20,6 +20,7 @@ import '../../../data/plan/session/session_summary.dart';
 import '../../../data/plan/session/speech_match.dart';
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_turn.dart' show SpeechTurnConfig;
+import '../../profile/profile_screen.dart';
 import '../../profile/qa_report_button.dart' show QaReportHidden;
 import '../conversation/conversation_controller.dart';
 import '../conversation/talk_entry.dart';
@@ -263,7 +264,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     switch (_session.phase) {
       case SessionPhase.loading:
         return const Center(child: CircularProgressIndicator(color: AppColors.ink));
-      case SessionPhase.building || SessionPhase.lessonFailed:
+      case SessionPhase.building || SessionPhase.lessonFailed || SessionPhase.lockedBySubscription:
         return _lessonPlate(context);
       case SessionPhase.failed:
         return Center(
@@ -307,6 +308,37 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final route = plan.days.where((d) => d.number == widget.number).firstOrNull;
     final title = (route == null ? null : (route.titleNative ?? plan.sceneOf(route)?.titleNative)) ?? plan.displayTitle;
     final failed = _session.phase == SessionPhase.lessonFailed;
+    final bySubscription = _session.phase == SessionPhase.lockedBySubscription;
+    if (bySubscription) {
+      // 409 `plan_day_locked` · subscription: the plate of 21-3 «по подписке» — no toast (CLIENT-START §6).
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: () => Navigator.of(context).maybePop(), label: l.planSessionClose)),
+            Expanded(
+              child: Center(
+                child: DayPlate(
+                  key: const ValueKey('session-locked-subscription'),
+                  label: l.planPlateLabel(widget.number),
+                  title: title,
+                  meta: l.planPlateBySubscription,
+                  stages: const [],
+                  footer: DayPlateFooter.locked(
+                    note: l.planPlateOpensWithSubscription,
+                    action: l.planPlateSubscription,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ProfileScreen(pushed: true, focusSubscription: true)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
       child: Column(
@@ -321,7 +353,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                 title: title,
                 stages: const [],
                 notice: failed
-                    ? DayPlateNotice(title: l.planPlateFailedTitle, sub: l.planPlateFailedSub(widget.number))
+                    ? DayPlateNotice(
+                        title: l.planPlateFailedTitle,
+                        sub: _session.retryOffline ? l.planPlateNoNetwork : null,
+                        offline: _session.retryOffline,
+                      )
                     : DayPlateNotice(
                         title: l.planPlateBuildingTitle(widget.number),
                         sub: l.planPlateBuildingSub,
@@ -559,7 +595,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final plan = _session.currentPlan;
     final scenes = talkEntryScenes(
       _session.talkTargets,
-      order: [for (final s in _session.day?.window?.sources ?? const <WindowSourceRef>[]) (sceneId: s.sceneId, title: s.titleNative)],
+      order: [
+        for (final s in _session.day?.window?.sources ?? const <WindowSourceRef>[])
+          (sceneId: s.sceneId, title: s.titleNative, female: s.partnerFemale),
+      ],
       sceneById: plan.sceneById,
     );
     return TalkEntryView(

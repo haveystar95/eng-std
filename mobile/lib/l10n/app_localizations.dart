@@ -3765,17 +3765,11 @@ abstract class AppLocalizations {
   /// **'около минуты · можно закрыть приложение'**
   String get planPlateBuildingSub;
 
-  /// Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title).
+  /// Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title): урок не прошёл ворота дважды (lesson_status = failed) — это не сеть (CLIENT-START §6).
   ///
   /// In ru, this message translates to:
-  /// **'День не собрался'**
+  /// **'Не получилось собрать день'**
   String get planPlateFailedTitle;
-
-  /// Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сеть пропала. Маршрут на месте, пропал только день {n}'**
-  String planPlateFailedSub(int n);
 
   /// Кнопка плиты у несобравшегося дня (кадр 22-5c, plan.plate.cta.retry).
   ///
@@ -5937,11 +5931,11 @@ abstract class AppLocalizations {
   /// **'Продолжить'**
   String get planTalkSceneContinue;
 
-  /// Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»). Рода роли сервер не шлёт — «первым» для всех (отчёт CLIENT-FIX-4 §7).
+  /// Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»); род — window.sources[].partner_gender первой сцены (FIX-4c §3): «Медсестра начнёт первой».
   ///
   /// In ru, this message translates to:
-  /// **'{role} начнёт первым. Отвечай и спрашивай сам.'**
-  String planTalkEntryRuleStartRole(String role);
+  /// **'{gender, select, female{{role} начнёт первой.} other{{role} начнёт первым.}} Отвечай и спрашивай сам.'**
+  String planTalkEntryRuleStartRole(String role, String gender);
 
   /// Вход в разговор по нескольким сценам (37-5b): серая строка между группами конструкций сцен.
   ///

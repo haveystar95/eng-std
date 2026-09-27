@@ -2489,12 +2489,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planPlateBuildingSub => 'about a minute · you can close the app';
 
   @override
-  String get planPlateFailedTitle => 'The day did not build';
-
-  @override
-  String planPlateFailedSub(int n) {
-    return 'The network dropped. The route is intact — only day $n is missing';
-  }
+  String get planPlateFailedTitle => 'Couldn’t put the day together';
 
   @override
   String get planPlateCtaRetry => 'Try again';
@@ -3968,8 +3963,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkSceneContinue => 'Continue';
 
   @override
-  String planTalkEntryRuleStartRole(String role) {
-    return '$role speaks first. Answer, and ask your own questions.';
+  String planTalkEntryRuleStartRole(String role, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$role speaks first.',
+      'other': '$role speaks first.',
+    });
+    return '$_temp0 Answer, and ask your own questions.';
   }
 
   @override
