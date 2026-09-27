@@ -4953,7 +4953,7 @@
   "@introSceneBank": {
     "description": "Лист a (41-2a): капитель на карточке сцены."
   },
-  "introSceneInterview": "работа",
+  "introSceneInterview": "собеседование",
   "@introSceneInterview": {
     "description": "Лист a (41-2a): капитель на карточке сцены «собеседование»."
   },

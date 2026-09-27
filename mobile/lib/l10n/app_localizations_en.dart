@@ -3705,7 +3705,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introSceneBank => 'bank';
 
   @override
-  String get introSceneInterview => 'work';
+  String get introSceneInterview => 'interview';
 
   @override
   String get introSceneRent => 'rent';

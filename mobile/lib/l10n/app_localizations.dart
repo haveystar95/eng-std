@@ -5676,7 +5676,7 @@ abstract class AppLocalizations {
   /// Лист a (41-2a): капитель на карточке сцены «собеседование».
   ///
   /// In ru, this message translates to:
-  /// **'работа'**
+  /// **'собеседование'**
   String get introSceneInterview;
 
   /// Лист a (41-2a): капитель на карточке сцены.

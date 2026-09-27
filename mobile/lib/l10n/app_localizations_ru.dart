@@ -3875,7 +3875,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get introSceneBank => 'банк';
 
   @override
-  String get introSceneInterview => 'работа';
+  String get introSceneInterview => 'собеседование';
 
   @override
   String get introSceneRent => 'аренда';
