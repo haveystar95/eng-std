@@ -71,7 +71,9 @@ class PlanDayPlateView extends StatelessWidget {
       final count = cardsMeta(l);
       final stages = _stages(l);
       return DayPlate(
-        label: label,
+        // Only «ДЕНЬ N»: «догоняем» says the day opens as soon as the one before closes — this one waits for the
+        // subscription (доработка CLIENT-START п. 5; the window's brow, 23-0a, is «ДЕНЬ N» already).
+        label: l.planPlateLabel(day.number),
         title: title,
         meta: count == null ? l.planPlateBySubscription : l.planDot(l.planPlateBySubscription, count),
         cover: cover,

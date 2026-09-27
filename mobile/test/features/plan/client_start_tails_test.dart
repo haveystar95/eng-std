@@ -208,11 +208,18 @@ void main() {
       }
     }
 
-    // ЛОВИТ: день по подписке, нарисованный запертым «по дате» или с «Начать», и «Подписка», которая никуда не ведёт.
-    testWidgets('плита: «по подписке», «Откроется с подпиской», «Подписка» → группа подписки профиля', (tester) async {
-      // The e2e plan's event has passed (21-14 stands over the plate); the same plan the day before it — `active`.
-      await tab(tester, PlanTabState(plan: planFrom('current_subscription', (json) => json..['status'] = 'active'), finished: const []));
+    // ЛОВИТ: день по подписке, нарисованный запертым «по дате» или с «Начать», «Подписка», которая никуда не ведёт, и
+    // «ДЕНЬ 2 · ДОГОНЯЕМ» в шапке — день ждёт подписку, а не закрытия прошлого (доработка п. 5).
+    testWidgets('плита: «ДЕНЬ 2», «по подписке», «Откроется с подпиской», «Подписка» → группа подписки профиля', (tester) async {
+      // The e2e plan's event has passed (21-14 stands over the plate); the same plan the day before it — `active`,
+      // and catching up (`catch_up`, as the e2e plan of 21-3 is).
+      await tab(
+        tester,
+        PlanTabState(plan: planFrom('current_subscription', (json) => json..['status'] = 'active'..['catch_up'] = true), finished: const []),
+      );
 
+      expect(find.text('ДЕНЬ 2'), findsOneWidget);
+      expect(find.textContaining('ДОГОНЯЕМ'), findsNothing);
       expect(find.textContaining('по подписке'), findsWidgets);
       expect(find.text('Откроется с подпиской'), findsOneWidget);
       final button = find.byKey(const ValueKey('day-plate-subscription'));
@@ -239,9 +246,13 @@ void main() {
       expect(find.textContaining('откроется с подпиской'), findsWidgets);
     });
 
-    // ЛОВИТ: окно дня по подписке с «Начать», которое упрётся в 409.
-    testWidgets('окно дня 23-0a: вместо «Начать» — «Подписка» и «Откроется с подпиской»', (tester) async {
-      await pumpDayWindow(tester, roomFrom('room_subscription_locked'), plan: planFrom('current_subscription_building'));
+    // ЛОВИТ: окно дня по подписке с «Начать», которое упрётся в 409, и «догоняем» в шапке плана, который догоняет.
+    testWidgets('окно дня 23-0a: «ДЕНЬ 2», вместо «Начать» — «Подписка» и «Откроется с подпиской»', (tester) async {
+      final plan = planFrom('current_subscription_building');
+      expect(plan.catchUp, isTrue, reason: 'the e2e plan catches up');
+      await pumpDayWindow(tester, roomFrom('room_subscription_locked'), plan: plan);
+      expect(find.text('ДЕНЬ 2'), findsOneWidget);
+      expect(find.textContaining('ДОГОНЯЕМ'), findsNothing);
       expect(find.text('Подписка'), findsOneWidget);
       expect(find.text('Откроется с подпиской'), findsOneWidget);
       expect(find.text('Начать'), findsNothing);
