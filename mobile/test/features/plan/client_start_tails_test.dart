@@ -104,7 +104,7 @@ void main() {
 
   // ── partner_gender ────────────────────────────────────────────────────────────────────────────────────────────
   group('правило входа — род роли от сервера (`partner_gender`, FIX-4c §3)', () {
-    Future<void> entry(WidgetTester tester, Map<String, dynamic> dayJson) async {
+    Future<void> entry(WidgetTester tester, Map<String, dynamic> dayJson, {bool oneScene = false}) async {
       tester.view
         ..devicePixelRatio = 2
         ..physicalSize = const Size(390, 1400) * 2;
@@ -123,7 +123,7 @@ void main() {
         title: row.talkTitleNative,
         scenesCount: row.scenesCount,
         targets: row.targets,
-        scenes: scenes,
+        scenes: oneScene ? scenes.take(1).toList() : scenes,
         rehearsal: true,
         noHints: false,
         onNoHints: (_) {},
@@ -133,19 +133,29 @@ void main() {
       await tester.pump();
     }
 
-    // ЛОВИТ: «Регистратор начнёт первым» у роли-женщины — род, угаданный телефоном.
-    testWidgets('роль — женщина: «Регистратор начнёт первой.»', (tester) async {
+    // ЛОВИТ: «Регистратор начнёт первым» у роли-женщины — род, угаданный телефоном, и «…и он повторит проще» строкой
+    // ниже, когда первая уже сказала «первой» (доработка CLIENT-START п. 2).
+    testWidgets('роль — женщина: «Регистратор начнёт первой.», «…и она повторит проще.»', (tester) async {
       await entry(tester, serverFixtureJson('day-rehearsal'));
       expect(find.text(nbTypo('Регистратор начнёт первой. Отвечай и спрашивай сам.')), findsOneWidget);
+      expect(find.text(nbTypo('Не понял — нажми «Не понял», и она повторит проще.')), findsOneWidget);
     });
 
-    testWidgets('роль — мужчина: «Регистратор начнёт первым.»', (tester) async {
+    testWidgets('роль — мужчина: «Регистратор начнёт первым.», «…и он повторит проще.»', (tester) async {
       final json = serverFixtureJson('day-rehearsal');
       for (final s in ((json['window'] as Map<String, dynamic>)['sources'] as List).cast<Map<String, dynamic>>()) {
         s['partner_gender'] = 'male';
       }
       await entry(tester, json);
       expect(find.text(nbTypo('Регистратор начнёт первым. Отвечай и спрашивай сам.')), findsOneWidget);
+      expect(find.text(nbTypo('Не понял — нажми «Не понял», и он повторит проще.')), findsOneWidget);
+    });
+
+    // ЛОВИТ: «она повторит» под «Собеседник начнёт первым» — род роли, которую строка не называет.
+    testWidgets('роли нет (разговор одной сцены): «Собеседник начнёт первым.», «…и он повторит проще.»', (tester) async {
+      await entry(tester, serverFixtureJson('day-rehearsal'), oneScene: true);
+      expect(find.text(nbTypo('Собеседник начнёт первым. Отвечай и спрашивай сам.')), findsOneWidget);
+      expect(find.text(nbTypo('Не понял — нажми «Не понял», и он повторит проще.')), findsOneWidget);
     });
   });
 

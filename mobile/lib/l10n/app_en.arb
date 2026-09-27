@@ -1917,7 +1917,7 @@
     }
   },
   "planTalkEntryRuleStart": "They speak first. Answer, and ask your own questions.",
-  "planTalkEntryRuleRescue": "Lost the thread — tap «Didn't get it» and they will say it more simply.",
+  "planTalkEntryRuleRescue": "Lost the thread — tap «Didn't get it» and {gender, select, female{she} male{he} other{they}} will say it more simply.",
   "planTalkEntryRuleCounts": "What counts: what you said, the day's phrases, the questions you got.",
   "planTalkStart": "Start the talk",
   "planTalkRescueAction": "Didn't get it",

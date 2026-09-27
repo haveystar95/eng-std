@@ -61,6 +61,7 @@ const _keys = {
   'planEntryToTab',
   'planTalkEntryRuleStart',
   'planTalkEntryRuleStartRole',
+  'planTalkEntryRuleRescue',
 };
 
 Map<String, dynamic> _arb(String name) => jsonDecode(File('lib/l10n/$name').readAsStringSync()) as Map<String, dynamic>;

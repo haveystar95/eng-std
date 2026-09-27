@@ -131,7 +131,7 @@ class TalkEntryView extends StatelessWidget {
                         const SizedBox(height: 24),
                         for (final (i, (icon, line)) in [
                           (_RuleIcon.talk, _firstRule(l)),
-                          (_RuleIcon.rescue, l.planTalkEntryRuleRescue),
+                          (_RuleIcon.rescue, l.planTalkEntryRuleRescue(_gender)),
                           (_RuleIcon.counts, l.planTalkEntryRuleCounts),
                         ].indexed) ...[
                           if (i > 0) const SizedBox(height: 14),
@@ -187,13 +187,20 @@ class TalkEntryView extends StatelessWidget {
 }
 
 extension on TalkEntryView {
+  /// The role the first rule names: the first scene's, on a talk of several scenes (37-5b); none on the day's.
+  String get _role => scenes.length > 1 ? scenes.first.role.trim() : '';
+
+  /// Whom the rules speak of: the named role, by the server's gender (`window.sources[].partner_gender`, FIX-4c §3) —
+  /// «Регистратор начнёт первой», «…и она повторит проще» (доработка CLIENT-START п. 2); no role — `other`,
+  /// «Собеседник … он».
+  String get _gender => _role.isEmpty ? 'other' : (scenes.first.female ? 'female' : 'male');
+
   /// «Собеседник начнёт первым…» — or, on a talk of several scenes, the first scene's role as the plan names it:
   /// «Регистратор начнёт первым…» (37-5b). The day keeps its line (наряд CLIENT-FIX-4 §5: «в дне — как было»).
   String _firstRule(AppLocalizations l) {
-    final role = scenes.length > 1 ? scenes.first.role.trim() : '';
+    final role = _role;
     if (role.isEmpty) return l.planTalkEntryRuleStart;
-    // The role's gender is the server's (`window.sources[].partner_gender`, FIX-4c §3): «Медсестра начнёт первой».
-    return l.planTalkEntryRuleStartRole(role, scenes.first.female ? 'female' : 'male');
+    return l.planTalkEntryRuleStartRole(role, _gender);
   }
 
   /// 37-5b: a scene's caps and its constructions, 14 apart, the grey «Разговор идёт сцена за сценой» between two

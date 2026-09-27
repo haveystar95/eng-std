@@ -3390,7 +3390,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planTalkEntryRuleStart => 'Собеседник начнёт первым. Отвечай и спрашивай сам.';
 
   @override
-  String get planTalkEntryRuleRescue => 'Не понял — нажми «Не понял», и он повторит проще.';
+  String planTalkEntryRuleRescue(String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {'female': 'она', 'other': 'он'});
+    return 'Не понял — нажми «Не понял», и $_temp0 повторит проще.';
+  }
 
   @override
   String get planTalkEntryRuleCounts => 'Считается: сказал сам, фразы дня, понял вопросы.';

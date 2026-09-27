@@ -3244,8 +3244,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkEntryRuleStart => 'They speak first. Answer, and ask your own questions.';
 
   @override
-  String get planTalkEntryRuleRescue =>
-      'Lost the thread — tap «Didn\'t get it» and they will say it more simply.';
+  String planTalkEntryRuleRescue(String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {'female': 'she', 'male': 'he', 'other': 'they'});
+    return 'Lost the thread — tap «Didn\'t get it» and $_temp0 will say it more simply.';
+  }
 
   @override
   String get planTalkEntryRuleCounts =>
