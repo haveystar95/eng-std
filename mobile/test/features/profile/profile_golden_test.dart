@@ -15,7 +15,8 @@ import '../../support/plan_goldens.dart';
 import '../../support/start_harness.dart';
 
 /// THE PROFILE AND ITS SHEETS AS GOLDENS (work order CLIENT-START, «Golden»): 42-1a free (top and scrolled), 42-1b
-/// Premium, 42-1 in English, the name sheet 42-2, the deletion 42-3 (asked · deleting), the reminders sheet 42-4. The
+/// Premium, 42-1 in English, the name sheet 42-2 (a name · empty), the deletion 42-3 (asked · deleting), the reminders
+/// sheet 42-4. The
 /// frames stand under the canvas's 52 status bar; the reminders are on, as the canvas draws them (iOS allowed them).
 /// The canvas's «Подписка ›» row under «Бесплатно» is not drawn until PAY-1 brings the paywall it opens.
 ///
@@ -105,6 +106,21 @@ void main() {
   // On iOS, as the phone draws it: a bare caret in the focused field, no Android selection handle under it.
   testWidgets('42-2 имя — поле и «Готово»', (tester) async {
     await shoot(tester, profile(), '42-2-name', prime: (tester) => sheet(tester, 'profile-header'));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  // The field emptied: no label over it — the sheet's title is «Имя» — and the placeholder says what goes there
+  // (доработка CLIENT-START п. 3).
+  testWidgets('42-2 имя — пустое поле: плейсхолдер «Как тебя зовут»', (tester) async {
+    await shoot(
+      tester,
+      profile(),
+      '42-2-name-empty',
+      prime: (tester) async {
+        await sheet(tester, 'profile-header');
+        await tester.enterText(find.byKey(const ValueKey('name-field')), '');
+        await tester.pump();
+      },
+    );
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('42-3a удалить аккаунт — вопрос', (tester) async {
