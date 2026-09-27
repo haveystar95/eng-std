@@ -4023,7 +4023,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountUiLanguage => 'Язык интерфейса';
 
   @override
-  String get accountUiRussian => 'русский';
+  String get accountUiRussian => 'Русский';
 
   @override
   String get accountUiEnglish => 'English';

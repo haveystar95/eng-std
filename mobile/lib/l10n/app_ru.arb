@@ -5131,7 +5131,7 @@
   "@accountUiLanguage": {
     "description": "Профиль (42-1): язык интерфейса — шит выбора «русский / English»."
   },
-  "accountUiRussian": "русский",
+  "accountUiRussian": "Русский",
   "@accountUiRussian": {
     "description": "Профиль (42-1): русский язык интерфейса — своим именем в любом интерфейсе."
   },

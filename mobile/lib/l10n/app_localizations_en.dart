@@ -3851,7 +3851,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountUiLanguage => 'App language';
 
   @override
-  String get accountUiRussian => 'русский';
+  String get accountUiRussian => 'Русский';
 
   @override
   String get accountUiEnglish => 'English';

@@ -81,6 +81,9 @@ void main() {
       expect(inRow(key, label), findsOneWidget, reason: key);
     }
     expect(inRow('profile-time', '19:00'), findsOneWidget, reason: 'no plan, no choice — 19:00');
+    // Both languages in one case — the server's endonyms («Русский», «English»).
+    expect(inRow('profile-ui-language', 'Русский'), findsOneWidget);
+    expect(inRow('profile-native', 'Русский'), findsOneWidget);
     expect(find.text('Выйти'), findsOneWidget);
     expect(find.text('Удалить аккаунт'), findsOneWidget);
     expect(find.text('1.0.0 (22)'), findsOneWidget);
@@ -158,7 +161,8 @@ void main() {
     expect(s.container.read(appSettingsProvider).value?.sessionSoundsEnabled, isFalse);
   });
 
-  // ЛОВИТ: «Язык интерфейса» с третьим вариантом «Системный» и выбор, который не сохраняется.
+  // ЛОВИТ: «Язык интерфейса» с третьим вариантом «Системный», языки в разном регистре («русский» рядом с «English» и
+  // эндонимом «Русский» родного языка) и выбор, который не сохраняется.
   testWidgets('«Язык интерфейса» — лист из двух, выбор сохраняется', (tester) async {
     final s = await open(tester);
 
@@ -166,7 +170,7 @@ void main() {
     await tester.pumpAndSettle();
     final sheet = find.byKey(const ValueKey('ui-language-sheet'));
     expect(sheet, findsOneWidget);
-    expect(find.descendant(of: sheet, matching: find.text('русский')), findsOneWidget);
+    expect(find.descendant(of: sheet, matching: find.text('Русский')), findsOneWidget);
     expect(find.descendant(of: sheet, matching: find.text('English')), findsOneWidget);
     expect(find.descendant(of: sheet, matching: find.textContaining('Системный')), findsNothing);
 

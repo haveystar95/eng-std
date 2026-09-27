@@ -5940,7 +5940,7 @@ abstract class AppLocalizations {
   /// Профиль (42-1): русский язык интерфейса — своим именем в любом интерфейсе.
   ///
   /// In ru, this message translates to:
-  /// **'русский'**
+  /// **'Русский'**
   String get accountUiRussian;
 
   /// Профиль (42-1): английский язык интерфейса — своим именем.
