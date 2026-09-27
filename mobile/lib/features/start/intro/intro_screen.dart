@@ -47,6 +47,7 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
   int _generation = 0;
   Timer? _aliveTimer;
   bool _done = false;
+  bool _warmed = false;
 
   bool get _still => widget.still || (MediaQuery.maybeDisableAnimationsOf(context) ?? false);
 
@@ -62,6 +63,18 @@ class _IntroScreenState extends State<IntroScreen> with SingleTickerProviderStat
       }
       _settle(_page);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_warmed) return;
+    _warmed = true;
+    // The photos are read and decoded while the first sheet rises: a sheet swiped to shows its photo at once, not a
+    // frame of bare paper before it.
+    for (final image in IntroPages.images(context)) {
+      unawaited(precacheImage(image, context));
+    }
   }
 
   @override

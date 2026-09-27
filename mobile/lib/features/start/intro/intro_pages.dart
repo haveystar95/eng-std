@@ -35,6 +35,31 @@ abstract final class IntroPages {
   static const lines = [lineEn, 'Ich möchte einen Termin vereinbaren.', 'Aș vrea să fac o programare.', 'Chciałbym umówić wizytę.'];
   static const partnerLine = 'Good morning. What brings you in today?';
   static const ownLine = 'Sorry, could you say that again?';
+
+  /// The photo under c and d, decoded by the picture's height: a 3 : 4 photo (the files are 1536 × 2048) covering a
+  /// 390 × 560 picture meets its height first. Whole, one photo would hold 12 MB of memory.
+  static ImageProvider photo(String asset, {required double inset, required double dpr}) =>
+      ResizeImage(AssetImage('assets/intro/$asset.jpg'), height: ((pictureHeight + inset) * dpr).round());
+
+  /// A scene card's photo (a), decoded by the card's width — a 3 : 4 photo covering 160 × 208 meets its width first.
+  static ImageProvider scene(String name, {required double dpr}) =>
+      ResizeImage(AssetImage('assets/intro/scene-$name.jpg'), width: (_SceneStackState._w * dpr).round());
+
+  /// A cover's picture (e), decoded by the cover's width.
+  static ImageProvider cover(String name, {required double dpr}) =>
+      ResizeImage(AssetImage('assets/intro/cover-$name.jpg'), width: (_Cover.width * dpr).round());
+
+  /// Every picture of the five sheets at the size it is drawn at — [IntroScreen] reads and decodes them while the
+  /// first sheet rises, so each is there the moment its sheet is.
+  static List<ImageProvider> images(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final inset = math.max(0.0, MediaQuery.paddingOf(context).top - canvasStatusBar);
+    return [
+      for (final name in _SceneStackState._assets) scene(name, dpr: dpr),
+      for (final asset in _Photo.assets) photo(asset, inset: inset, dpr: dpr),
+      for (final name in _CoversState._assets) cover(name, dpr: dpr),
+    ];
+  }
 }
 
 /// ONE SHEET: the picture (with its own choreography), the scrim into the paper, the text at the foot.
@@ -73,8 +98,8 @@ class IntroPage extends StatelessWidget {
     final picture = switch (index) {
       0 => _SceneStack(life: life, inset: inset),
       1 => _FlagWall(life: life, inset: inset),
-      2 => _Photo(asset: 'assets/intro/doctor-office.jpg', inset: inset),
-      3 => _Photo(asset: 'assets/intro/cafe.jpg', inset: inset),
+      2 => _Photo(asset: _Photo.assets[0], inset: inset),
+      3 => _Photo(asset: _Photo.assets[1], inset: inset),
       _ => _Covers(life: life, inset: inset),
     };
 
@@ -459,7 +484,11 @@ class _SceneCard extends StatelessWidget {
     child: Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/intro/scene-$asset.jpg', fit: BoxFit.cover, excludeFromSemantics: true),
+        Image(
+          image: IntroPages.scene(asset, dpr: MediaQuery.devicePixelRatioOf(context)),
+          fit: BoxFit.cover,
+          excludeFromSemantics: true,
+        ),
         Positioned(
           left: 8,
           top: 4,
@@ -717,12 +746,19 @@ class _TypedLinesState extends State<_TypedLines> with TickerProviderStateMixin,
 class _Photo extends StatelessWidget {
   const _Photo({required this.asset, required this.inset});
 
+  /// c — the doctor's office, d — the café.
+  static const assets = ['doctor-office', 'cafe'];
+
   final String asset;
   final double inset;
 
   @override
-  Widget build(BuildContext context) =>
-      Image.asset(asset, fit: BoxFit.cover, alignment: Alignment.topCenter, excludeFromSemantics: true);
+  Widget build(BuildContext context) => Image(
+    image: IntroPages.photo(asset, inset: inset, dpr: MediaQuery.devicePixelRatioOf(context)),
+    fit: BoxFit.cover,
+    alignment: Alignment.topCenter,
+    excludeFromSemantics: true,
+  );
 }
 
 /// The route of a plan, larger (41-2c): the brow, the line 2 px across the field with six days at 52 — day 1 passed
@@ -1157,6 +1193,8 @@ class _Covers extends StatefulWidget {
 }
 
 class _CoversState extends State<_Covers> with TickerProviderStateMixin, _LifeClock {
+  static const _assets = ['city', 'health', 'work'];
+
   @override
   _Life get life => widget.life;
 
@@ -1185,9 +1223,9 @@ class _CoversState extends State<_Covers> with TickerProviderStateMixin, _LifeCl
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final covers = [
-      (-176.0, 20.0, -5.0, l.introECoverCity, 24, 'city'),
-      (-56.0, -8.0, 0.0, l.introECoverHealth, 16, 'health'),
-      (64.0, 20.0, 5.0, l.introECoverWork, 22, 'work'),
+      (-176.0, 20.0, -5.0, l.introECoverCity, 24, _assets[0]),
+      (-56.0, -8.0, 0.0, l.introECoverHealth, 16, _assets[1]),
+      (64.0, 20.0, 5.0, l.introECoverWork, 22, _assets[2]),
     ];
     return AnimatedBuilder(
       animation: clock,
@@ -1224,13 +1262,15 @@ class _CoversState extends State<_Covers> with TickerProviderStateMixin, _LifeCl
 class _Cover extends StatelessWidget {
   const _Cover({required this.title, required this.count, required this.asset});
 
+  static const width = 112.0;
+
   final String title;
   final String count;
   final String asset;
 
   @override
   Widget build(BuildContext context) => Container(
-    width: 112,
+    width: width,
     height: 210,
     decoration: BoxDecoration(
       color: AppColors.paper,
@@ -1255,7 +1295,11 @@ class _Cover extends StatelessWidget {
         Expanded(
           child: ColoredBox(
             color: AppColors.photoSlot,
-            child: Image.asset('assets/intro/cover-$asset.jpg', fit: BoxFit.cover, excludeFromSemantics: true),
+            child: Image(
+              image: IntroPages.cover(asset, dpr: MediaQuery.devicePixelRatioOf(context)),
+              fit: BoxFit.cover,
+              excludeFromSemantics: true,
+            ),
           ),
         ),
       ],
