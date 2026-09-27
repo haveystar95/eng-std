@@ -145,7 +145,7 @@ void main() {
     final row = day.window!.stages.firstWhere((s) => s.stage == PlanStage.conversation);
     final scenes = talkEntryScenes(
       row.targets,
-      order: [for (final WindowSourceRef s in day.window!.sources) (sceneId: s.sceneId, title: s.titleNative)],
+      order: [for (final WindowSourceRef s in day.window!.sources) (sceneId: s.sceneId, title: s.titleNative, female: s.partnerFemale)],
       sceneById: plan.sceneById,
     );
     return TalkEntryView(

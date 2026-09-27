@@ -16,7 +16,7 @@ void main() {
     // ровно для того, чтобы за полсекунды закрыть вопрос «ту ли сборку мы смотрим»; строка,
     // способная соврать, отвечает на него хуже, чем отсутствующая, — ей поверят.
     test('несобранная скриптом сборка честно говорит «без метки»', () {
-      final text = BuildStampLine.buildStampText(l, const AsyncValue.data('def5678'));
+      final text = buildStampText(l, const AsyncValue.data('def5678'));
 
       expect(text, contains('без метки'));
       expect(text, contains('def5678'));
@@ -26,7 +26,7 @@ void main() {
     // ЛОВИТ: строку, которая при мёртвой сети показывает пустоту или прошлое значение. «Нет связи»
     // и «сервер такой-то» — разные ответы, и путать их значит гоняться за поломкой не на той стороне.
     test('сервер не ответил — так и написано, без выдуманного SHA', () {
-      final text = BuildStampLine.buildStampText(
+      final text = buildStampText(
         l,
         AsyncValue.error(Exception('offline'), StackTrace.empty),
       );

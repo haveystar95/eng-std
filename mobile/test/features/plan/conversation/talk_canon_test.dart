@@ -19,6 +19,7 @@ import 'package:eng_std/features/plan/session/session_mic.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/rehearsal_run.dart';
 import '../../../support/server_fixtures.dart' show serverFixtureJson;
 import '../../../support/session_harness.dart' show SilentRecognizer, enterHeard;
 import '../../../support/talk_harness.dart';
@@ -264,8 +265,9 @@ void main() {
     // заходят на кольцо микрофона.
     // ЛОВИТ: «Не понял» и «Подсказать» серыми словами — док до правки 21.09.
     testWidgets('37-7c: «Не понял» и «Подсказать» — контурные плашки 44 по бокам микрофона', (tester) async {
-      final blind = serverTalk('conversation-day-open', (json) => (json['hints'] as Map<String, dynamic>)['enabled'] = false);
-      final probe = TalkProbe()..documents.add(blind);
+      // «Подсказать» stands when the server has a hint (FIX-4c §2: sent in both modes) — the live rehearsal carries one;
+      // the airport fixture predates `hints.sentence`.
+      final probe = TalkProbe()..documents.add(rehearsalTalk(RehearsalStep.opened, blind));
       final stand = await pumpTalk(tester, probe, hints: false);
       await finishLine(tester, stand);
 
@@ -471,12 +473,8 @@ void main() {
     // «прослушать» + «текст».
     // ЛОВИТ: плашку, стоящую независимо от режима, и закрытую реплику без «текст» (харнесс 08).
     testWidgets('в «Без подсказок» плашки нет, есть «Подсказать»; тексты закрыты до «текст»', (tester) async {
-      final blind = serverTalk('conversation-day-open', (json) {
-        (json['hints'] as Map<String, dynamic>)
-          ..['enabled'] = false
-          ..['native'] = null;
-      });
-      final probe = TalkProbe()..documents.add(blind);
+      // The live rehearsal under «Без подсказок» as the server answers it since FIX-4c §2: the hint rides along.
+      final probe = TalkProbe()..documents.add(rehearsalTalk(RehearsalStep.opened, blind));
       final stand = await pumpTalk(tester, probe, hints: false);
       expect(probe.hints, isFalse, reason: 'режим уходит на сервер один раз, со стартом');
       await finishLine(tester, stand);
@@ -484,11 +482,11 @@ void main() {
 
       expect(find.byKey(const ValueKey('talk-hint-plate')), findsNothing, reason: 'по таймеру ничего не встаёт');
       expect(find.byKey(const ValueKey('talk-hint')), findsOneWidget);
-      final turn = find.byKey(const ValueKey('turn-5'));
+      final turn = find.byKey(const ValueKey('turn-1'));
       expect(find.descendant(of: turn, matching: find.byKey(const ValueKey('talk-listen'))), findsOneWidget);
       expect(find.descendant(of: turn, matching: find.byKey(const ValueKey('talk-open-text'))), findsOneWidget,
           reason: 'закрытая реплика — «прослушать» и «текст»');
-      expect(find.text('Hello. What brings you in today?'), findsNothing, reason: 'тексты закрыты до тапа');
+      expect(find.text('Hello. What hurts — his upper back or his lower back?'), findsNothing, reason: 'тексты закрыты до тапа');
       expect(find.byKey(const ValueKey('talk-rescue')), findsOneWidget, reason: 'переспрос — не подсказка');
       await settleTalk(tester);
     });

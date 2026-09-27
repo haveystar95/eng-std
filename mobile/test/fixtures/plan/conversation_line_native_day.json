@@ -1,0 +1,596 @@
+{
+  "id": "01M3DH6BPSZASRT1X97NXXXG7B",
+  "plan_id": "01M3DGEQ5JN32N97SH0PQ66DEN",
+  "day": 1,
+  "type": "day",
+  "state": "ended",
+  "replay": false,
+  "talk_title_native": "Поговори с администратором",
+  "partner": {
+    "role_native": "Администратор",
+    "role_target": "Receptionist"
+  },
+  "scene": {
+    "title_native": "Запись к врачу",
+    "title_target": "Arzttermin buchen"
+  },
+  "scenes": [
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "title_native": "Запись к врачу",
+      "title_target": "Arzttermin buchen",
+      "role_native": "Администратор",
+      "role_target": "Receptionist",
+      "lines": 7,
+      "state": "done"
+    }
+  ],
+  "minutes_estimate": 5,
+  "turns_left": 0,
+  "targets": [
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "ref": "p1",
+      "frame_target": "Ich brauche ___.",
+      "frame_native": "Мне нужно ___.",
+      "example_target": "einen Termin",
+      "example_native": "запись на приём",
+      "said": true,
+      "value_target": "einen Termin",
+      "line_native": "Мне нужна запись на приём.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "ref": "p2",
+      "frame_target": "Ich habe ___.",
+      "frame_native": "У меня ___.",
+      "example_target": "Halsschmerzen",
+      "example_native": "болит горло",
+      "said": true,
+      "value_target": "Halsschmerzen",
+      "line_native": "У меня болит горло.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "ref": "p3",
+      "frame_target": "Ich habe auch ___.",
+      "frame_native": "У меня ещё и ___.",
+      "example_target": "Fieber",
+      "example_native": "температура",
+      "said": true,
+      "value_target": "Fieber",
+      "line_native": "У меня ещё и температура.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "ref": "p4",
+      "frame_target": "Seit ___.",
+      "frame_native": "Уже ___.",
+      "example_target": "drei Tagen",
+      "example_native": "три дня",
+      "said": true,
+      "value_target": "drei Tagen",
+      "line_native": "Уже три дня.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "ref": "p5",
+      "frame_target": "___ passt mir.",
+      "frame_native": "Мне подходит ___.",
+      "example_target": "zehn Uhr",
+      "example_native": "десять часов",
+      "said": true,
+      "value_target": "zehn Uhr",
+      "line_native": "Десять часов мне подходит.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "ref": "p6",
+      "frame_target": "Brauchen Sie ___?",
+      "frame_native": "Вам нужно ___?",
+      "example_target": "meinen Namen",
+      "example_native": "моё имя",
+      "said": true,
+      "value_target": "meinen Namen",
+      "line_native": "Вам нужно моё имя?",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "ref": "p7",
+      "frame_target": "Das ist gut, ___.",
+      "frame_native": "Хорошо, ___.",
+      "example_target": "morgen um zehn",
+      "example_native": "завтра в десять",
+      "said": true,
+      "value_target": "morgen um zehn",
+      "line_native": "Хорошо, завтра в десять.",
+      "state": "said"
+    }
+  ],
+  "extra_said": [],
+  "hints": {
+    "enabled": true,
+    "delay_ms": 5000,
+    "target": null,
+    "scene_id": null,
+    "ref": null,
+    "sentence": null
+  },
+  "turns": [
+    {
+      "index": 1,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Gern. Sagen Sie bitte den Grund.",
+      "text_native": "Хорошо. Скажите, пожалуйста, причину.",
+      "audio": {
+        "ref": "01M3DH6D644C6S1QNN7BK5MDN3",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6D644C6S1QNN7BK5MDN3",
+        "duration_ms": 2798,
+        "voice": "partner"
+      },
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:17:44+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 2,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "Ich brauche einen Termin.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+          "ref": "p1"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:17:44+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 3,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Was für Beschwerden haben Sie?",
+      "text_native": "Какие у вас жалобы?",
+      "audio": {
+        "ref": "01M3DH6FE6MQ324RQKWTHM4NHF",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6FE6MQ324RQKWTHM4NHF",
+        "duration_ms": 2223,
+        "voice": "partner"
+      },
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:17:47+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 4,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "Ich habe Halsschmerzen.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+          "ref": "p2"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:17:47+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 5,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Haben Sie auch Fieber?",
+      "text_native": "У вас ещё и температура?",
+      "audio": {
+        "ref": "01M3DH6HC5VRJ98S3JD048SNR5",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6HC5VRJ98S3JD048SNR5",
+        "duration_ms": 1439,
+        "voice": "partner"
+      },
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:17:48+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 6,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "Ich habe auch Fieber.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+          "ref": "p3"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:17:48+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 7,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Seit wann haben Sie das?",
+      "text_native": "С каких пор это у вас?",
+      "audio": {
+        "ref": "01M3DH6K78TH8Z40JMPC3M4HCV",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6K78TH8Z40JMPC3M4HCV",
+        "duration_ms": 1335,
+        "voice": "partner"
+      },
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:17:50+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 8,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "Seit drei Tagen.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+          "ref": "p4"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:17:50+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 9,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Wir haben morgen um zehn oder um vierzehn Uhr frei.",
+      "text_native": "У нас есть свободное время завтра в десять или в четырнадцать часов.",
+      "audio": {
+        "ref": "01M3DH6NM5K9FWAZ3XQ0MYX142",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6NM5K9FWAZ3XQ0MYX142",
+        "duration_ms": 4235,
+        "voice": "partner"
+      },
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:17:53+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 10,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "zehn Uhr passt mir.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+          "ref": "p5"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:17:53+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 11,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Ja, das notiere ich. Brauchen Sie noch etwas?",
+      "text_native": "Да, я это запишу. Вам ещё что-нибудь нужно?",
+      "audio": {
+        "ref": "01M3DH6R67RXV6QXSG64D6CGF5",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6R67RXV6QXSG64D6CGF5",
+        "duration_ms": 3503,
+        "voice": "partner"
+      },
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:17:56+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 12,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "Brauchen Sie meinen Namen?",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+          "ref": "p6"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:17:56+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 13,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Ja, ich brauche Ihren Namen für die Buchung. Dann ist Ihr Termin morgen um zehn Uhr.",
+      "text_native": "Да, мне нужно ваше имя для записи. Тогда ваш приём завтра в десять часов.",
+      "audio": {
+        "ref": "01M3DH6T7W5X81FJVSEHAEQHF1",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6T7W5X81FJVSEHAEQHF1",
+        "duration_ms": 5097,
+        "voice": "partner"
+      },
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:17:58+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 14,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "Das ist gut, morgen um zehn.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+          "ref": "p7"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:17:58+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 15,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Gut, ich notiere es so.",
+      "text_native": "Хорошо, я так и запишу.",
+      "audio": {
+        "ref": "01M3DH6W7VANXP7NXNYFF4PTDW",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6W7VANXP7NXNYFF4PTDW",
+        "duration_ms": 1910,
+        "voice": "partner"
+      },
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:18:00+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 16,
+      "speaker": "learner",
+      "kind": "skip",
+      "text_target": null,
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:18:00+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 17,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Gut, ich notiere es so. Wir sehen uns morgen.",
+      "text_native": "Хорошо, я это записываю. До завтра.",
+      "audio": {
+        "ref": "01M3DH6Z2Z7QW8JCYPYR5JYX8C",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH6Z2Z7QW8JCYPYR5JYX8C",
+        "duration_ms": 3033,
+        "voice": "partner"
+      },
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:18:03+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 18,
+      "speaker": "learner",
+      "kind": "skip",
+      "text_target": null,
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-26T00:18:03+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    },
+    {
+      "index": 19,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Auf Wiedersehen.",
+      "text_native": "До свидания.",
+      "audio": {
+        "ref": "01M3DH70N5F342W46CPW9XJY2S",
+        "url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/audio/01M3DH70N5F342W46CPW9XJY2S",
+        "duration_ms": 1335,
+        "voice": "partner"
+      },
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-26T00:18:04+00:00",
+      "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+      "scene_event": null
+    }
+  ],
+  "summary": {
+    "said_count": 7,
+    "phrases_used": 7,
+    "phrases_total": 7,
+    "phrases": [
+      {
+        "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+        "ref": "p1",
+        "frame_target": "Ich brauche ___.",
+        "frame_native": "Мне нужно ___.",
+        "example_target": "einen Termin",
+        "example_native": "запись на приём",
+        "said": true,
+        "value_target": "einen Termin",
+        "line_native": "Мне нужна запись на приём.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+        "ref": "p2",
+        "frame_target": "Ich habe ___.",
+        "frame_native": "У меня ___.",
+        "example_target": "Halsschmerzen",
+        "example_native": "болит горло",
+        "said": true,
+        "value_target": "Halsschmerzen",
+        "line_native": "У меня болит горло.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+        "ref": "p3",
+        "frame_target": "Ich habe auch ___.",
+        "frame_native": "У меня ещё и ___.",
+        "example_target": "Fieber",
+        "example_native": "температура",
+        "said": true,
+        "value_target": "Fieber",
+        "line_native": "У меня ещё и температура.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+        "ref": "p4",
+        "frame_target": "Seit ___.",
+        "frame_native": "Уже ___.",
+        "example_target": "drei Tagen",
+        "example_native": "три дня",
+        "said": true,
+        "value_target": "drei Tagen",
+        "line_native": "Уже три дня.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+        "ref": "p5",
+        "frame_target": "___ passt mir.",
+        "frame_native": "Мне подходит ___.",
+        "example_target": "zehn Uhr",
+        "example_native": "десять часов",
+        "said": true,
+        "value_target": "zehn Uhr",
+        "line_native": "Десять часов мне подходит.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+        "ref": "p6",
+        "frame_target": "Brauchen Sie ___?",
+        "frame_native": "Вам нужно ___?",
+        "example_target": "meinen Namen",
+        "example_native": "моё имя",
+        "said": true,
+        "value_target": "meinen Namen",
+        "line_native": "Вам нужно моё имя?",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M3DGF01S1YRDQGA7NB4HWBS9",
+        "ref": "p7",
+        "frame_target": "Das ist gut, ___.",
+        "frame_native": "Хорошо, ___.",
+        "example_target": "morgen um zehn",
+        "example_native": "завтра в десять",
+        "said": true,
+        "value_target": "morgen um zehn",
+        "line_native": "Хорошо, завтра в десять.",
+        "state": "said"
+      }
+    ],
+    "understood_all": true,
+    "not_understood": 0,
+    "rescues": 0,
+    "ended_reason": "natural",
+    "ended_by_limit": false,
+    "minutes": 1,
+    "returns_tomorrow": true,
+    "extra_said": []
+  }
+}

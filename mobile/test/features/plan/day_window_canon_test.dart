@@ -728,14 +728,18 @@ void main() {
   });
 
   // ── ЗАПЕРТЫЙ ДЕНЬ ─────────────────────────────────────────────────────────────────────────
-  // ПРАВИЛО (наряд DAY-UI-2 §3): запертый день в окно не попадает (таб отвечает 409); в окне запертого
-  // состояния нет — пришло — честная ошибка.
-  // ЛОВИТ: окно, нарисовавшее «запертое» состояние, которого нет ни в одном кадре серии 23.
-  testWidgets('запертый день — ошибка загрузки, а не нарисованное состояние', (tester) async {
+  // ПРАВИЛО (наряд DAY-UI-2 §3; с ACC-1 — наряд CLIENT-START §6, кадр 23-0a «по подписке»): день, запертый ДАТОЙ, в
+  // окно не попадает (таб отвечает листом «откроется …»); `locked` в окне — только день по подписке: бесплатный видит
+  // его целиком, а внизу вместо «Начать» — «Подписка» и «Откроется с подпиской».
+  // ЛОВИТ: окно дня по подписке с «Начать», которое упрётся в 409, и ошибку загрузки вместо кадра 23-0a.
+  testWidgets('запертый день в окне — «по подписке»: кадр целиком, «Подписка» вместо «Начать»', (tester) async {
     await pumpDayWindow(tester, windowRoom('not_started', (j) => j..['window']['day']['status'] = 'locked'));
 
-    expect(find.byType(PlanLoadFailedCard), findsOneWidget);
-    expect(find.byType(WindowPlate), findsNothing);
-    expect(find.byType(WindowActionBar), findsNothing);
+    expect(find.byType(PlanLoadFailedCard), findsNothing);
+    expect(find.byType(WindowPlate), findsOneWidget);
+    expect(find.byType(WindowActionBar), findsOneWidget);
+    expect(find.text('Подписка'), findsOneWidget);
+    expect(find.text('Откроется с подпиской'), findsOneWidget);
+    expect(find.text('Начать'), findsNothing);
   });
 }

@@ -2,26 +2,25 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/languages.dart';
-import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/plan/plan_languages.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/token_store.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
-import 'package:eng_std/features/profile/build_stamp.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../support/plan_goldens.dart';
+import '../../support/start_harness.dart';
 
 /// THE CANON OF THE PAIR'S LANGUAGES (наряд LANG-1, part C): seven targets and nine natives come from
 /// the server (`GET /languages`), are kept in memory for the app run and stood in for by the bundle
@@ -285,19 +284,7 @@ void main() {
   // ── THE NATIVE IN THE PROFILE ────────────────────────────────────────────────────────────────
   group('строка профиля «Родной язык»: родные сервера минус цель', () {
     List<Override> overrides(Profile profile, ApiClient api) => [
-      appDatabaseProvider.overrideWith((ref) {
-        final db = AppDatabase.forTesting(NativeDatabase.memory());
-        ref.onDispose(db.close);
-
-        return db;
-      }),
-      authControllerProvider.overrideWith(() => _Auth(profile)),
-      statsProvider.overrideWith(
-        (ref) => Stream.value(
-          Stats(totalWords: 0, learned: 0, mastered: 0, dueToday: 0, reviewsTotal: 0, streakDays: 0),
-        ),
-      ),
-      backendCommitProvider.overrideWith((ref) async => 'def5678'),
+      ...accountOverrides(auth: () => _Auth(profile)),
       apiClientProvider.overrideWithValue(api),
     ];
 
@@ -319,7 +306,7 @@ void main() {
       await tester.tap(find.text('Родной язык'));
       await tester.pumpAndSettle();
 
-      return find.byType(AppBottomSheet);
+      return find.byKey(const ValueKey('native-sheet'));
     }
 
     List<String> rows(WidgetTester tester, Finder sheet) => [
@@ -337,10 +324,10 @@ void main() {
 
       expect(rows(tester, sheet), ['ru', 'uk', 'be', 'pl', 'ro', 'es', 'it', 'de', 'fr']);
       expect(find.descendant(of: sheet, matching: find.text('Беларуская')), findsOneWidget);
-      final checked = find.descendant(of: sheet, matching: find.byIcon(Icons.check));
+      final checked = find.descendant(of: sheet, matching: find.byIcon(LucideIcons.check));
       expect(checked, findsOneWidget);
       expect(
-        find.ancestor(of: checked, matching: find.byWidgetPredicate((w) => w is Row && w.children.any((c) => c is MiniFlag && c.languageCode == 'be'))),
+        find.ancestor(of: checked, matching: find.byWidgetPredicate((w) => w is SettingsRow && w.leading is MiniFlag && (w.leading! as MiniFlag).languageCode == 'be')),
         findsOneWidget,
       );
     });

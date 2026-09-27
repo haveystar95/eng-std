@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionDockButton;
+import 'package:eng_std/features/plan/session/parts/session_bits.dart' show DockButton;
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
 import '../../../support/session_harness.dart';
@@ -17,7 +17,7 @@ void main() {
     slot['fillers'] = [(slot['fillers'] as List).first];
   });
 
-  double buttonTop(WidgetTester tester) => tester.getRect(find.byType(SessionDockButton)).top;
+  double buttonTop(WidgetTester tester) => tester.getRect(find.byType(DockButton)).top;
 
   // ПРАВИЛО (кадр 32-1, третье состояние, приёмка снимков): в кадре снимка 390 × 844 содержимое влезает над кнопкой —
   // лист, «В разговоре» и оба пузыря стоят целиком над «Дальше».

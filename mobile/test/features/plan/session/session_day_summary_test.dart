@@ -130,6 +130,10 @@ Future<void> _open(WidgetTester tester, _Backend backend) async {
     messenger.setMockMethodCallHandler(MethodChannel(name), (call) async => null);
     addTearDown(() => messenger.setMockMethodCallHandler(MethodChannel(name), null));
   }
+  // iOS has answered about notifications already: «Закрыть день» offers no 43-1 sheet and goes straight back.
+  const push = MethodChannel('com.denis.engstd/push');
+  messenger.setMockMethodCallHandler(push, (call) async => call.method == 'status' ? 'authorized' : null);
+  addTearDown(() => messenger.setMockMethodCallHandler(push, null));
   final plan = _plan();
   await tester.pumpWidget(
     ProviderScope(
