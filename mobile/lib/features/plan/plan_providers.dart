@@ -214,6 +214,11 @@ final planTabProvider = AsyncNotifierProvider<PlanTabController, PlanTabState>(
   PlanTabController.new,
 );
 
+/// THE PLAN THE APP ALREADY HOLDS — the tab's last answer, without waking the tab: the profile's reminder time (42-1) and
+/// the delete sheet's plan name (42-3) read it; a screen that is not under the tabs (a test, a pushed profile before the
+/// tab was ever built) gets null rather than a network read of its own.
+Plan? heldPlan(WidgetRef ref) => ref.exists(planTabProvider) ? ref.watch(planTabProvider).value?.plan : null;
+
 /// A finished plan opened from the list — read live, whole (кадр 21-7 in its reading mode).
 final finishedPlanProvider = FutureProvider.family<Plan, String>(
   (ref, id) => ref.read(apiClientProvider).plan(id),

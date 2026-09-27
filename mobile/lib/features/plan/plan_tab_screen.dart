@@ -16,7 +16,6 @@ import '../profile/profile_avatar.dart';
 import 'entry/plan_entry_screen.dart';
 import 'plan_day_plate_view.dart';
 import 'day/open_day.dart';
-import 'plan_notifications_host.dart';
 import 'plan_providers.dart';
 import 'route/plan_route.dart';
 import 'route/route_examples.dart';
@@ -332,9 +331,7 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
     // раз, за первым планом (правило целиком — в [showPlanHowSheetOnce]).
     if (!mounted) return;
     await showPlanHowSheetOnce(context, ref);
-    // РАЗРЕШЕНИЕ НА УВЕДОМЛЕНИЯ — один раз, после «Начать» на превью и листа «Как устроен план»,
-    // не при старте приложения (наряд PLAN-UI-3 §4); следом регистрация push-токена.
-    if (mounted) await askPlanNotificationsOnce(ref);
+    // Notifications are no longer asked here: the pre-permission 43-1 comes after day 1's summary (CLIENT-START §4).
   }
 
   void _openMenu(BuildContext anchor) {

@@ -40,9 +40,20 @@ class PlanNotice {
 /// слота — напоминание, в каждую следующую — «ждёт со вчера», в дату события — событие. Всё раньше
 /// [now] не ставится. План, который не идёт (не начат, завершён, нет плана), и план, чьи письма
 /// доставляет сервер ([pushEnabled]), — ничего.
-List<PlanNotice> planLocalNotices(Plan? plan, DateTime now, {required bool pushEnabled, int days = 7}) {
+///
+/// [at] — the learner's own time from the profile (42-4) instead of the server's hour. A current day locked by the
+/// subscription gets no reminder (the server's rule for its own letter, ACC-1 §2: «напоминание дня не приходит, пока
+/// текущий день заперт подпиской»); the event's day still does.
+List<PlanNotice> planLocalNotices(
+  Plan? plan,
+  DateTime now, {
+  required bool pushEnabled,
+  int days = 7,
+  ({int hour, int minute})? at,
+}) {
   if (pushEnabled || plan == null || !plan.status.isLive) return const [];
-  final day = plan.currentDay;
+  final locked = plan.currentDay?.lockReason == PlanLockReason.subscription;
+  final day = locked ? null : plan.currentDay;
   final slot = _date(day?.slot.date);
   final event = _date(plan.eventDate);
   final today = DateTime(now.year, now.month, now.day);
@@ -50,11 +61,11 @@ List<PlanNotice> planLocalNotices(Plan? plan, DateTime now, {required bool pushE
 
   for (var k = 0; k < days; k++) {
     final date = today.add(Duration(days: k));
-    final when = DateTime(date.year, date.month, date.day, plan.reminderHour);
+    final when = DateTime(date.year, date.month, date.day, at?.hour ?? plan.reminderHour, at?.minute ?? 0);
     if (!when.isAfter(now)) continue;
 
     if (event != null && date == event) {
-      out.add(PlanNotice(kind: PlanNoticeKind.eventToday, at: when, dayNumber: day?.number ?? plan.daysTotal));
+      out.add(PlanNotice(kind: PlanNoticeKind.eventToday, at: when, dayNumber: plan.currentDay?.number ?? plan.daysTotal));
       continue;
     }
     if (day == null || slot == null || date.isBefore(slot)) continue;

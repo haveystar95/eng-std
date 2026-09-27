@@ -815,136 +815,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileTitle => 'Profile';
 
   @override
-  String get profileSectionLearning => 'Learning';
-
-  @override
-  String get profileSectionApp => 'App';
-
-  @override
-  String get profileSectionSubscription => 'Subscription';
-
-  @override
-  String get profileSectionAccount => 'Account';
-
-  @override
-  String get profileRowLevel => 'Level';
-
-  @override
-  String get profileRowGoal => 'Daily goal';
-
-  @override
-  String get profileRowTargetLang => 'Learning language';
-
-  @override
-  String get profileRowUiLang => 'Interface language';
-
-  @override
-  String get profileRowAutoPronounce => 'Auto-pronounce';
-
-  @override
-  String get profileAutoPronounceHint => 'Speak the word when the card appears';
-
-  @override
-  String get profileRowTransliteration => 'Pronunciation hint';
-
-  @override
-  String get profileTransliterationHint => 'Show how the word reads, in your own letters';
-
-  @override
-  String get profileRowReminders => 'Reminders';
-
-  @override
-  String get profileRemindersHint => 'One a day, when there\'s something to review';
-
-  @override
-  String get profileRowReminderTime => 'Time';
-
-  @override
-  String get profileFreeTier => 'Free tier';
-
-  @override
-  String get profileFreeTierHint => '3 generations a day';
-
-  @override
-  String get profileSoon => 'Soon';
-
-  @override
-  String get profileSignOut => 'Sign out';
-
-  @override
-  String get profileDeleteAccount => 'Delete account';
-
-  @override
-  String profileGoalValue(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get uiLangSystem => 'System';
-
-  @override
-  String get uiLangRussian => 'Русский';
-
-  @override
-  String get uiLangEnglish => 'English';
-
-  @override
-  String get profileUiLangSheet => 'Interface language';
-
-  @override
-  String get profileLevelSheet => 'Level';
-
-  @override
-  String get profileGoalSheet => 'Daily goal';
-
-  @override
-  String get reminderSheetTitle => 'When to remind you';
-
-  @override
-  String get reminderSheetSubtitle =>
-      'It works best at a time when you usually have five free minutes.';
-
-  @override
   String get commonSave => 'Save';
-
-  @override
-  String get deleteAccountTitle => 'Delete account?';
-
-  @override
-  String deleteAccountBody(String words, String streak) {
-    return 'All data and progress will be erased permanently: $words, $streak and all collections.';
-  }
-
-  @override
-  String deleteAccountWords(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String deleteAccountStreak(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count-day streak',
-      one: '$count-day streak',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get deleteAccountConfirm => 'Delete';
 
   @override
   String get sessionPhaseIntro => 'Getting to know';
@@ -1645,29 +1516,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallNeedsRealPremium => 'Needs real Premium (StoreKit is a separate block)';
 
   @override
-  String get profileTryPremium => 'Try Premium';
-
-  @override
-  String profileFreeTierReset(String time) {
-    return '3 generations a day · resets at $time';
-  }
-
-  @override
-  String get profilePremiumActive => 'Premium';
-
-  @override
-  String get profilePremiumBadge => 'active';
-
-  @override
-  String get profilePremiumHint => 'Subscription active';
-
-  @override
-  String get profileManageSubscription => 'Manage subscription';
-
-  @override
-  String get profileRestorePurchases => 'Restore purchases';
-
-  @override
   String get profileSectionDev => 'Development';
 
   @override
@@ -2276,12 +2124,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeSortFirstTitle => 'Time to sort your words';
-
-  @override
-  String get profileRowNativeLang => 'Native language';
-
-  @override
-  String get profileNativeLangHint => 'Existing collections stay as they are';
 
   @override
   String profileNativeLangConfirmTitle(String language) {
@@ -3225,18 +3067,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planWindowSheetClose => 'Close';
 
   @override
-  String get profileRowSounds => 'Sounds';
-
-  @override
-  String get profileSoundsHint => 'Correct · wrong · stage closed · day closed';
-
-  @override
-  String get profileRowSessionSounds => 'Sounds in the session';
-
-  @override
-  String get profileSessionSoundsHint => 'Correct · miss · recording · stage done';
-
-  @override
   String dayCards(int n) {
     String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
     return '$_temp0';
@@ -4090,12 +3920,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planVoiceInProfile => 'You can change it in your profile';
-
-  @override
-  String get profileRowVoice => 'Voice of your lines';
-
-  @override
-  String get profileVoiceUnset => 'not chosen';
 
   @override
   String get planTalkConstructions => 'Constructions in the talk';

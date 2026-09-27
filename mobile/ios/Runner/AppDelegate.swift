@@ -1,7 +1,9 @@
 import AVFoundation
 import Flutter
 import Speech
+import StoreKit
 import UIKit
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -101,6 +103,16 @@ import UIKit
           "system": UIDevice.current.systemName,
           "version": UIDevice.current.systemVersion,
         ])
+      case "requestReview":
+        // «Оценить Ritora» (work order CLIENT-START §5, frame 42-1): the system's own rating sheet. iOS decides whether
+        // it shows (at most a few times a year, never in a TestFlight-less dev build's App Store sense) — nothing to
+        // report back.
+        DispatchQueue.main.async {
+          let scene = UIApplication.shared.connectedScenes
+            .first { $0.activationState == .foregroundActive } as? UIWindowScene
+          if let scene { SKStoreReviewController.requestReview(in: scene) }
+        }
+        result(nil)
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -119,12 +131,26 @@ import UIKit
     let channel = FlutterMethodChannel(name: "com.denis.engstd/push", binaryMessenger: messenger)
     pushChannel = channel
     channel.setMethodCallHandler { call, result in
-      guard call.method == "register" else {
+      switch call.method {
+      case "register":
+        DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
+        result(nil)
+      case "status":
+        // What iOS answered about notifications, without asking anything (work order CLIENT-START §4: the pre-permission
+        // sheet 43-1 is shown only while the answer is «not determined»; 42-4 shows a line about Settings when «denied»).
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+          let status: String
+          switch settings.authorizationStatus {
+          case .notDetermined: status = "not_determined"
+          case .denied: status = "denied"
+          case .authorized, .provisional, .ephemeral: status = "authorized"
+          @unknown default: status = "not_determined"
+          }
+          DispatchQueue.main.async { result(status) }
+        }
+      default:
         result(FlutterMethodNotImplemented)
-        return
       }
-      DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
-      result(nil)
     }
   }
 

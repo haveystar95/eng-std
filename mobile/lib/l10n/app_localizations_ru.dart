@@ -833,142 +833,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileTitle => 'Профиль';
 
   @override
-  String get profileSectionLearning => 'Обучение';
-
-  @override
-  String get profileSectionApp => 'Приложение';
-
-  @override
-  String get profileSectionSubscription => 'Подписка';
-
-  @override
-  String get profileSectionAccount => 'Аккаунт';
-
-  @override
-  String get profileRowLevel => 'Уровень';
-
-  @override
-  String get profileRowGoal => 'Дневная цель';
-
-  @override
-  String get profileRowTargetLang => 'Язык изучения';
-
-  @override
-  String get profileRowUiLang => 'Язык интерфейса';
-
-  @override
-  String get profileRowAutoPronounce => 'Автопроизношение';
-
-  @override
-  String get profileAutoPronounceHint => 'Озвучивать слово при показе карточки';
-
-  @override
-  String get profileRowTransliteration => 'Подсказка произношения';
-
-  @override
-  String get profileTransliterationHint => 'Показывать, как читается слово, вашими буквами';
-
-  @override
-  String get profileRowReminders => 'Напоминания';
-
-  @override
-  String get profileRemindersHint => 'Одно в день, если есть что повторить';
-
-  @override
-  String get profileRowReminderTime => 'Время';
-
-  @override
-  String get profileFreeTier => 'Бесплатный тариф';
-
-  @override
-  String get profileFreeTierHint => '3 генерации в день';
-
-  @override
-  String get profileSoon => 'Скоро';
-
-  @override
-  String get profileSignOut => 'Выйти';
-
-  @override
-  String get profileDeleteAccount => 'Удалить аккаунт';
-
-  @override
-  String profileGoalValue(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count слов',
-      many: '$count слов',
-      few: '$count слова',
-      one: '$count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get uiLangSystem => 'Системный';
-
-  @override
-  String get uiLangRussian => 'Русский';
-
-  @override
-  String get uiLangEnglish => 'English';
-
-  @override
-  String get profileUiLangSheet => 'Язык интерфейса';
-
-  @override
-  String get profileLevelSheet => 'Уровень';
-
-  @override
-  String get profileGoalSheet => 'Дневная цель';
-
-  @override
-  String get reminderSheetTitle => 'Когда напомнить';
-
-  @override
-  String get reminderSheetSubtitle =>
-      'Лучше всего работает время, когда у тебя обычно есть пять свободных минут.';
-
-  @override
   String get commonSave => 'Сохранить';
-
-  @override
-  String get deleteAccountTitle => 'Удалить аккаунт?';
-
-  @override
-  String deleteAccountBody(String words, String streak) {
-    return 'Все данные и прогресс будут удалены безвозвратно: $words, $streak и все коллекции.';
-  }
-
-  @override
-  String deleteAccountWords(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count слов',
-      many: '$count слов',
-      few: '$count слова',
-      one: '$count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String deleteAccountStreak(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count дней стрика',
-      many: '$count дней стрика',
-      few: '$count дня стрика',
-      one: '$count день стрика',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get deleteAccountConfirm => 'Удалить';
 
   @override
   String get sessionPhaseIntro => 'Знакомство';
@@ -1690,29 +1555,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallNeedsRealPremium => 'Нужен настоящий Premium (StoreKit — отдельный блок)';
 
   @override
-  String get profileTryPremium => 'Попробовать Premium';
-
-  @override
-  String profileFreeTierReset(String time) {
-    return '3 генерации в день · сбрасываются в $time';
-  }
-
-  @override
-  String get profilePremiumActive => 'Premium';
-
-  @override
-  String get profilePremiumBadge => 'активна';
-
-  @override
-  String get profilePremiumHint => 'Подписка активна';
-
-  @override
-  String get profileManageSubscription => 'Управлять подпиской';
-
-  @override
-  String get profileRestorePurchases => 'Восстановить покупки';
-
-  @override
   String get profileSectionDev => 'Разработка';
 
   @override
@@ -2389,12 +2231,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeSortFirstTitle => 'Пора разобрать слова';
-
-  @override
-  String get profileRowNativeLang => 'Родной язык';
-
-  @override
-  String get profileNativeLangHint => 'Существующие коллекции останутся как есть';
 
   @override
   String profileNativeLangConfirmTitle(String language) {
@@ -3371,18 +3207,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planWindowSheetClose => 'Закрыть';
 
   @override
-  String get profileRowSounds => 'Звуки';
-
-  @override
-  String get profileSoundsHint => 'Верно · неверно · этап закрыт · день закрыт';
-
-  @override
-  String get profileRowSessionSounds => 'Звуки в сессии';
-
-  @override
-  String get profileSessionSoundsHint => 'Верно · мимо · запись · этап пройден';
-
-  @override
   String dayCards(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -4300,12 +4124,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planVoiceInProfile => 'Можно поменять в профиле';
-
-  @override
-  String get profileRowVoice => 'Голос своих реплик';
-
-  @override
-  String get profileVoiceUnset => 'не выбран';
 
   @override
   String get planTalkConstructions => 'Конструкции в разговоре';

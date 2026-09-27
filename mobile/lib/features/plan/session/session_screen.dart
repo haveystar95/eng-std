@@ -25,6 +25,7 @@ import '../conversation/conversation_controller.dart';
 import '../conversation/talk_entry.dart';
 import '../conversation/talk_screen.dart';
 import '../conversation/talk_summary.dart';
+import '../notify_prompt.dart';
 import '../plan_providers.dart';
 import 'cards/card_host.dart';
 import 'cards/card_kit.dart';
@@ -32,6 +33,7 @@ import 'parts/session_bits.dart';
 import 'parts/session_chrome.dart';
 import 'parts/session_stage.dart';
 import 'session_controller.dart';
+import 'mic_ask.dart';
 import 'session_mic.dart';
 import 'session_texts.dart';
 import 'session_voice.dart';
@@ -162,12 +164,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   }
 
   /// The card's microphone in the target language's locale.
+  ///
+  /// THE FIRST MICROPHONE OF A CARD ASKS FIRST (41-3, work order CLIENT-START §4): while iOS has not been asked, a card
+  /// that shows a microphone raises the pre-permission sheet; the system's dialogs come only after «Разрешить
+  /// микрофон». «Позже» — this card offers «Skip» (the «Microphone needed» screen), and the next microphone card asks
+  /// again. A card that makes another microphone for itself (a new round, another chip) inherits its answer.
   SessionMic Function(String expected, List<String> contextual) _makeMic(String localeId) => (expected, contextual) {
     final strings = <String>{
       for (final s in contextual)
         if (s.trim().isNotEmpty) s.trim(),
     };
-    return SessionMic(
+    final mic = SessionMic(
       recognizer: ref.read(speechRecognizerProvider),
       diagnostics: ref.read(speechDiagnosticsProvider),
       localeId: localeId,
@@ -175,7 +182,40 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       contextualStrings: strings.take(50).toList(),
       rules: _session.day?.speech ?? SpeechRules.none,
     );
+    final serial = _session.cardSerial;
+    if (_micDeferredFor == serial) {
+      mic.markUnavailable(blockedInSettings: false);
+    } else if (_micAskedFor != serial) {
+      _micAskedFor = serial;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final allowed = await _askMic(localeId);
+        if (allowed || !mounted || _session.cardSerial != serial) return;
+        _micDeferredFor = serial;
+        mic.markUnavailable(blockedInSettings: false);
+      });
+    }
+    return mic;
   };
+
+  int? _micAskedFor;
+  int? _micDeferredFor;
+  bool _micSheetUp = false;
+
+  /// True — the card may listen (allowed now, or nothing to ask). One sheet at a time: a second card asking while the
+  /// first sheet is up waits for nothing and offers «Skip».
+  Future<bool> _askMic(String localeId) async {
+    if (_micSheetUp || !mounted) return false;
+    _micSheetUp = true;
+    try {
+      return await askMicOnce(
+        context,
+        probe: () => ref.read(speechDiagnosticsProvider).refresh(localeId),
+        allow: () => ref.read(speechRecognizerProvider).prepare(),
+      );
+    } finally {
+      _micSheetUp = false;
+    }
+  }
 
   Future<void> _openSettings() async {
     try {
@@ -637,6 +677,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         final closed = await _session.closeDay();
         if (!closed || !context.mounted) return;
         await _voice.stop();
+        // 43-1: after day 1's summary (and day 2's, after «Не сейчас»), before the plan — while iOS has not been asked.
+        if (!widget.replay && context.mounted) await offerReminders(context, ref, closedDay: widget.number);
         if (context.mounted) Navigator.of(context).pop();
       },
     );

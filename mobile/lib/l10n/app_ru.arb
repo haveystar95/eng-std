@@ -1106,168 +1106,9 @@
   "@profileTitle": {
     "description": "Заголовок экрана профиля (кадр 11a)."
   },
-  "profileSectionLearning": "Обучение",
-  "@profileSectionLearning": {
-    "description": "Секция профиля: обучение."
-  },
-  "profileSectionApp": "Приложение",
-  "@profileSectionApp": {
-    "description": "Секция профиля: приложение."
-  },
-  "profileSectionSubscription": "Подписка",
-  "@profileSectionSubscription": {
-    "description": "Секция профиля: подписка."
-  },
-  "profileSectionAccount": "Аккаунт",
-  "@profileSectionAccount": {
-    "description": "Секция профиля: аккаунт."
-  },
-  "profileRowLevel": "Уровень",
-  "@profileRowLevel": {
-    "description": "Строка профиля: уровень."
-  },
-  "profileRowGoal": "Дневная цель",
-  "@profileRowGoal": {
-    "description": "Строка профиля: дневная цель."
-  },
-  "profileRowTargetLang": "Язык изучения",
-  "@profileRowTargetLang": {
-    "description": "Строка профиля: язык изучения."
-  },
-  "profileRowUiLang": "Язык интерфейса",
-  "@profileRowUiLang": {
-    "description": "Строка профиля: язык интерфейса."
-  },
-  "profileRowAutoPronounce": "Автопроизношение",
-  "@profileRowAutoPronounce": {
-    "description": "Строка профиля: автопроизношение."
-  },
-  "profileAutoPronounceHint": "Озвучивать слово при показе карточки",
-  "@profileAutoPronounceHint": {
-    "description": "Подпись автопроизношения."
-  },
-  "profileRowTransliteration": "Подсказка произношения",
-  "@profileRowTransliteration": {
-    "description": "Строка профиля: показывать чтение слова своими буквами на карточке."
-  },
-  "profileTransliterationHint": "Показывать, как читается слово, вашими буквами",
-  "@profileTransliterationHint": {
-    "description": "Подпись подсказки произношения."
-  },
-  "profileRowReminders": "Напоминания",
-  "@profileRowReminders": {
-    "description": "Строка профиля: напоминания."
-  },
-  "profileRemindersHint": "Одно в день, если есть что повторить",
-  "@profileRemindersHint": {
-    "description": "Подпись напоминаний."
-  },
-  "profileRowReminderTime": "Время",
-  "@profileRowReminderTime": {
-    "description": "Строка профиля: время напоминания."
-  },
-  "profileFreeTier": "Бесплатный тариф",
-  "@profileFreeTier": {
-    "description": "Строка подписки: бесплатный тариф."
-  },
-  "profileFreeTierHint": "3 генерации в день",
-  "@profileFreeTierHint": {
-    "description": "Подпись бесплатного тарифа."
-  },
-  "profileSoon": "Скоро",
-  "@profileSoon": {
-    "description": "Метка «скоро» у подписки."
-  },
-  "profileSignOut": "Выйти",
-  "@profileSignOut": {
-    "description": "Строка профиля: выйти."
-  },
-  "profileDeleteAccount": "Удалить аккаунт",
-  "@profileDeleteAccount": {
-    "description": "Строка профиля: удалить аккаунт."
-  },
-  "profileGoalValue": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
-  "@profileGoalValue": {
-    "description": "Значение дневной цели, «N слов».",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "uiLangSystem": "Системный",
-  "@uiLangSystem": {
-    "description": "Язык интерфейса: системный."
-  },
-  "uiLangRussian": "Русский",
-  "@uiLangRussian": {
-    "description": "Язык интерфейса: русский."
-  },
-  "uiLangEnglish": "English",
-  "@uiLangEnglish": {
-    "description": "Язык интерфейса: английский."
-  },
-  "profileUiLangSheet": "Язык интерфейса",
-  "@profileUiLangSheet": {
-    "description": "Заголовок шита выбора языка интерфейса."
-  },
-  "profileLevelSheet": "Уровень",
-  "@profileLevelSheet": {
-    "description": "Заголовок шита выбора уровня."
-  },
-  "profileGoalSheet": "Дневная цель",
-  "@profileGoalSheet": {
-    "description": "Заголовок шита выбора дневной цели."
-  },
-  "reminderSheetTitle": "Когда напомнить",
-  "@reminderSheetTitle": {
-    "description": "Заголовок шита выбора времени напоминания (кадр 13b)."
-  },
-  "reminderSheetSubtitle": "Лучше всего работает время, когда у тебя обычно есть пять свободных минут.",
-  "@reminderSheetSubtitle": {
-    "description": "Подзаголовок шита времени напоминания."
-  },
   "commonSave": "Сохранить",
   "@commonSave": {
     "description": "Кнопка сохранения."
-  },
-  "deleteAccountTitle": "Удалить аккаунт?",
-  "@deleteAccountTitle": {
-    "description": "Заголовок подтверждения удаления аккаунта (кадр 11b)."
-  },
-  "deleteAccountBody": "Все данные и прогресс будут удалены безвозвратно: {words}, {streak} и все коллекции.",
-  "@deleteAccountBody": {
-    "description": "Тело подтверждения удаления аккаунта с персональными числами.",
-    "placeholders": {
-      "words": {
-        "type": "String"
-      },
-      "streak": {
-        "type": "String"
-      }
-    }
-  },
-  "deleteAccountWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
-  "@deleteAccountWords": {
-    "description": "Часть «N слов» в подтверждении удаления.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "deleteAccountStreak": "{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}",
-  "@deleteAccountStreak": {
-    "description": "Часть «N дней стрика» в подтверждении удаления.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "deleteAccountConfirm": "Удалить",
-  "@deleteAccountConfirm": {
-    "description": "Кнопка подтверждения удаления аккаунта."
   },
   "sessionPhaseIntro": "Знакомство",
   "@sessionPhaseIntro": {
@@ -2219,39 +2060,6 @@
   "@paywallNeedsRealPremium": {
     "description": "Сообщение, когда сервер отклоняет подписку без реального premium."
   },
-  "profileTryPremium": "Попробовать Premium",
-  "@profileTryPremium": {
-    "description": "Строка профиля (free): переход на пейволл (кадр 15a)."
-  },
-  "profileFreeTierReset": "3 генерации в день · сбрасываются в {time}",
-  "@profileFreeTierReset": {
-    "description": "Подпись бесплатного тарифа с временем сброса (кадр 15a).",
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "profilePremiumActive": "Premium",
-  "@profilePremiumActive": {
-    "description": "Строка профиля (premium): название тарифа (кадр 15b)."
-  },
-  "profilePremiumBadge": "активна",
-  "@profilePremiumBadge": {
-    "description": "Бейдж «активна» у строки Premium (кадр 15b)."
-  },
-  "profilePremiumHint": "Подписка активна",
-  "@profilePremiumHint": {
-    "description": "Подпись активной подписки Premium (кадр 15b)."
-  },
-  "profileManageSubscription": "Управлять подпиской",
-  "@profileManageSubscription": {
-    "description": "Строка профиля (premium): управление в App Store (кадр 15b)."
-  },
-  "profileRestorePurchases": "Восстановить покупки",
-  "@profileRestorePurchases": {
-    "description": "Строка профиля (premium): восстановление покупок (кадр 15b)."
-  },
   "profileSectionDev": "Разработка",
   "@profileSectionDev": {
     "description": "Dev-секция профиля (только при DEV_MENU)."
@@ -2945,14 +2753,6 @@
   "homeSortFirstTitle": "Пора разобрать слова",
   "@homeSortFirstTitle": {
     "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет."
-  },
-  "profileRowNativeLang": "Родной язык",
-  "@profileRowNativeLang": {
-    "description": "Строка профиля: родной язык (язык переводов)."
-  },
-  "profileNativeLangHint": "Существующие коллекции останутся как есть",
-  "@profileNativeLangHint": {
-    "description": "Подпись под строкой родного языка: смена языка не переписывает уже собранный материал."
   },
   "profileNativeLangConfirmTitle": "Переводы на «{language}»?",
   "@profileNativeLangConfirmTitle": {
@@ -4335,22 +4135,6 @@
   "@planWindowSheetClose": {
     "description": "Шит слова (23-0e): единственная кнопка — текстовая, латунью; шит закрывается и тягой вниз."
   },
-  "profileRowSounds": "Звуки",
-  "@profileRowSounds": {
-    "description": "Строка профиля: выключатель звуков (токен-лист 4к-3)."
-  },
-  "profileSoundsHint": "Верно · неверно · этап закрыт · день закрыт",
-  "@profileSoundsHint": {
-    "description": "Подпись выключателя «Звуки» — четыре события 4к-3."
-  },
-  "profileRowSessionSounds": "Звуки в сессии",
-  "@profileRowSessionSounds": {
-    "description": "Строка профиля: выключатель шести звуков сессии дня владельца (верно, мимо, старт записи, итог этапа, день пройден, день готов; наряд SESSION-1b′); хранится на телефоне, по умолчанию включён; выключен — сессия звуки не загружает."
-  },
-  "profileSessionSoundsHint": "Верно · мимо · запись · этап пройден",
-  "@profileSessionSoundsHint": {
-    "description": "Подпись выключателя «Звуки в сессии»: главные события, которые звучат; карточки знакомства молчат."
-  },
   "dayCards": "{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}",
   "@dayCards": {
     "placeholders": {
@@ -5410,14 +5194,6 @@
   "planVoiceInProfile": "Можно поменять в профиле",
   "@planVoiceInProfile": {
     "description": "Лист голоса (38-1): строка под плашками — выбор не навсегда."
-  },
-  "profileRowVoice": "Голос своих реплик",
-  "@profileRowVoice": {
-    "description": "Профиль: ряд выбора голоса своих реплик — тот же лист, что перед первым планом (38-1)."
-  },
-  "profileVoiceUnset": "не выбран",
-  "@profileVoiceUnset": {
-    "description": "Профиль: пол для голоса ещё не сказан — сервер озвучивает мужским, пока не сказан."
   },
   "planTalkConstructions": "Конструкции в разговоре",
   "@planTalkConstructions": {

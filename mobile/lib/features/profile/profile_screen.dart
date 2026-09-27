@@ -1,1259 +1,449 @@
-import 'package:flutter/cupertino.dart'
-    show CupertinoPicker, CupertinoPickerDefaultSelectionOverlay;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
-import 'package:eng_std/l10n/app_localizations.dart';
 
-import '../../data/languages.dart'
-    show Language, kCefrLevels, languageByCode, sttLocaleFor, studyLanguagesFor;
 import '../../data/app_settings.dart';
-import '../../data/plan/plan_languages.dart';
 import '../../data/config.dart';
 import '../../data/feature_flags.dart';
+import '../../data/languages.dart' show sttLocaleFor;
 import '../../data/locale_controller.dart';
 import '../../data/models.dart';
+import '../../data/plan/notify_permission.dart';
 import '../../data/providers.dart';
-import '../paywall/paywall_screen.dart';
+import '../../data/start/account_device_store.dart';
 import '../plan/entry/voice_gender_sheet.dart';
-import '../plan/plan_notifications_host.dart';
+import '../plan/notify_prompt.dart';
+import '../plan/plan_providers.dart';
+import 'account_providers.dart';
 import 'build_stamp.dart';
 import 'perf_log_screen.dart';
+import 'profile_sheets.dart';
 import 'qa_speech_view.dart';
 import 'voice_bakeoff_screen.dart';
-import '../../data/local/cached_image_provider.dart';
 
-/// Профиль (кадры 11a / 13a). Sections: обучение · приложение · подписка · аккаунт. Reads local
-/// where it can (settings, stats); the learning rows edit the server profile. Paper/ink.
+/// Whether the profile shows its «Разработка» door — [AppConfig.devMenuEnabled]; a snapshot turns it off to show the
+/// profile as the canvas draws it.
+final devMenuProvider = Provider<bool>((ref) => AppConfig.devMenuEnabled);
+
+/// ПРОФИЛЬ (frames 42-1a free, 42-1b Premium, 42-1 en) — pushed from the avatar in a tab's header.
 ///
-/// PUSHED from the avatar in a tab's header (токен-лист 4к-1) — there is no profile tab — so
-/// [pushed] draws the back chevron and its own scaffold. The version line (client hash · server
-/// hash) stands at the bottom ALWAYS, not behind the dev door: acceptance starts from it.
-class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key, this.pushed = false});
+/// The avatar's letter and the name (a tap on them — the name sheet 42-2), the door the account came in through, then
+/// the groups: ПОДПИСКА (what `access` of `/auth/me` says — the paywall itself is PAY-1's), ОБУЧЕНИЕ (the learner's
+/// voice, the session's sounds, the interface language, the native language), НАПОМИНАНИЯ (the switch and the time,
+/// 42-4), ПРИЛОЖЕНИЕ (the two documents, a letter to support, the rating), then «Выйти», «Удалить аккаунт» (42-3) and
+/// the version. There is no «кто ты» field: the plan asks what it needs when it is made.
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key, this.pushed = false, this.focusSubscription = false});
 
   final bool pushed;
 
+  /// Opened from a day locked by the subscription (23-0a «Подписка»): the subscription group is brought into view —
+  /// until PAY-1 brings the paywall, that group is where the button leads.
+  final bool focusSubscription;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  final _subscriptionKey = GlobalKey();
+  bool _restoring = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.focusSubscription) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final target = _subscriptionKey.currentContext;
+        if (target != null) Scrollable.ensureVisible(target, duration: AppMotion.windowSnap, alignment: .1);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final auth = ref.watch(authControllerProvider);
     final user = auth.value;
-    final settings = ref.watch(appSettingsProvider).value ?? AppSettings.defaults;
-    final uiLang = ref.watch(localeControllerProvider).value ?? UiLanguageOption.system;
 
-    // ВЫШЕЛ ИЗ АККАУНТА, А ПРОФИЛЬ ОСТАЛСЯ СВЕРХУ (наряд FIX-3 §8; зал, оба захода): без пользователя рисовать
-    // нечего, и пустой непрозрачный маршрут над экраном входа — это и есть «чёрный экран». Экран уходит сам, а
-    // пока уходит — держит бумагу, а не пустоту. Уходит ТОЛЬКО на ответе «пользователя нет»: пока аккаунт
-    // перечитывается, профиль стоит на месте.
+    // SIGNED OUT, AND THE PROFILE IS STILL ON TOP (FIX-3 §8): nothing to draw without the account, and an empty
+    // opaque route over the sign-in is the «black screen». The screen leaves by itself and holds the paper meanwhile.
     if (user == null) {
-      if (pushed && auth.hasValue) {
+      if (widget.pushed && auth.hasValue) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) Navigator.of(context).maybePop();
+          if (mounted) Navigator.of(context).maybePop();
         });
       }
-      return const ColoredBox(color: AppColors.paper, child: SizedBox.expand());
+      return const ColoredBox(color: AppColors.ground, child: SizedBox.expand());
     }
-    final profile = user.profile;
 
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s16;
+    final settings = ref.watch(appSettingsProvider).value ?? AppSettings.defaults;
+    final permission = ref.watch(notifyPermissionProvider).value ?? NotifyPermission.unknown;
+    final remindersOn = settings.remindersOn(systemAllows: permission == NotifyPermission.granted);
+    final name = ref.watch(accountNameProvider).value ?? user.name;
+    final door = ref.watch(signInDoorProvider).value;
+    final uiLang = ref.watch(localeControllerProvider).value ?? UiLanguageOption.system;
+    final locale = Localizations.localeOf(context);
+    final links = ref.read(accountLinksProvider);
+    final version = ref.watch(profileVersionProvider).value ?? '';
+    final time = reminderTimeOf(settings, heldPlan(ref)?.reminderHour);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: AppColors.paper,
+        backgroundColor: AppColors.ground,
         body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.screenH,
-            AppSpacing.s8,
-            AppSpacing.screenH,
-            bottomInset,
-          ),
-          children: [
-            Row(
-              children: [
-                if (pushed)
-                  Semantics(
+          bottom: false,
+          child: ListView(
+            key: const ValueKey('profile-list'),
+            padding: EdgeInsets.fromLTRB(24, 4, 24, 24 + MediaQuery.paddingOf(context).bottom),
+            children: [
+              if (widget.pushed)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Semantics(
                     button: true,
                     label: l.commonBack,
-                    child: InkResponse(
-                      radius: 22,
+                    child: GestureDetector(
+                      key: const ValueKey('profile-back'),
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => Navigator.of(context).maybePop(),
-                      child: const SizedBox(
-                        width: AppSpacing.minTap,
-                        height: AppSpacing.minTap,
-                        child: Icon(LucideIcons.chevronLeft, size: 22, color: AppColors.secondary),
-                      ),
+                      child: const SizedBox(height: 24, width: 44, child: Align(alignment: Alignment.centerLeft, child: Icon(LucideIcons.arrowLeft, size: 24, color: AppColors.ink))),
                     ),
                   ),
-                Expanded(child: Text(l.profileTitle, style: AppText.screenTitle)),
+                )
+              else
+                const SizedBox(height: 24),
+              const SizedBox(height: 14),
+              _Header(name: name, onTap: () => showNameSheet(context, ref, current: name)),
+              if (door != null) ...[
+                const SizedBox(height: 14),
+                Row(
+                  key: const ValueKey('profile-door'),
+                  children: [
+                    const Icon(LucideIcons.check, size: 20, color: AppColors.verdictKnown),
+                    const SizedBox(width: 12),
+                    Text(door == SignInDoor.apple ? l.accountSignedInApple : l.accountSignedInGoogle, style: AppTextStart.door),
+                  ],
+                ),
               ],
-            ),
-            const SizedBox(height: 18),
-            _Header(user: user),
-
-            if (profile != null) ...[
-              _SectionLabel(l.profileSectionLearning),
-              _NavRow(
-                label: l.profileRowLevel,
-                value: profile.cefrLevel,
-                onTap: () => _editLevel(context, ref, profile.cefrLevel),
+              const SizedBox(height: 32),
+              KeyedSubtree(
+                key: _subscriptionKey,
+                child: SettingsGroup(
+                  label: l.accountGroupSubscription,
+                  rows: _subscriptionRows(l, user.access, locale),
+                ),
               ),
-              _NavRow(
-                label: l.profileRowGoal,
-                value: l.profileGoalValue(profile.dailyGoal),
-                onTap: () => _editGoal(context, ref, profile.dailyGoal),
+              const SizedBox(height: 32),
+              SettingsGroup(
+                label: l.accountGroupLearning,
+                rows: [
+                  SettingsRow(
+                    key: const ValueKey('profile-voice'),
+                    first: true,
+                    label: l.accountVoice,
+                    value: user.profile?.gender == kVoiceFemale ? l.accountVoiceFemale : l.accountVoiceMale,
+                    onTap: () => _editVoice(user.profile?.gender),
+                  ),
+                  SettingsRow(
+                    key: const ValueKey('profile-sounds'),
+                    label: l.accountSessionSounds,
+                    end: SettingsRowEnd.toggle,
+                    on: settings.sessionSoundsEnabled,
+                    onTap: () => ref.read(appSettingsProvider.notifier).setSessionSoundsEnabled(!settings.sessionSoundsEnabled),
+                  ),
+                  SettingsRow(
+                    key: const ValueKey('profile-ui-language'),
+                    label: l.accountUiLanguage,
+                    value: _uiLanguageName(l, uiLang, locale),
+                    onTap: () => showUiLanguageSheet(context, ref, current: uiLang, locale: locale),
+                  ),
+                  SettingsRow(
+                    key: const ValueKey('profile-native'),
+                    label: l.accountNativeLanguage,
+                    value: nativeLanguageName(user.profile?.nativeLanguage ?? 'ru'),
+                    onTap: () => showNativeLanguageSheet(context, ref, current: user.profile?.nativeLanguage ?? 'ru'),
+                  ),
+                ],
               ),
-              _NavRow(
-                label: l.profileRowTargetLang,
-                value: languageByCode(profile.targetLanguage).endonym,
-                onTap: () => _editTargetLang(context, ref, profile.targetLanguage),
+              const SizedBox(height: 32),
+              SettingsGroup(
+                label: l.accountGroupReminders,
+                rows: [
+                  SettingsRow(
+                    key: const ValueKey('profile-reminders'),
+                    first: true,
+                    label: l.accountRemind,
+                    end: SettingsRowEnd.toggle,
+                    on: remindersOn,
+                    onTap: () async {
+                      // iOS said no: the switch cannot turn it on — the sheet says where it can (42-4).
+                      if (!remindersOn && permission == NotifyPermission.denied) {
+                        await showRemindersSheet(context, ref, on: false, time: time);
+                        return;
+                      }
+                      await setRemindersFromProfile(ref, on: !remindersOn);
+                    },
+                  ),
+                  SettingsRow(
+                    key: const ValueKey('profile-time'),
+                    label: l.accountTime,
+                    value: formatReminderTime(time, locale),
+                    onTap: () => showRemindersSheet(context, ref, on: remindersOn, time: time),
+                  ),
+                ],
               ),
-              // РОДНОЙ ЯЗЫК (ONB-1). Editable, and the row says what editing it does: the language
-              // is asked once at first run and everything downstream reads it off the account, so
-              // changing it changes what the NEXT collection and the next plan are written in.
-              // Material that already exists keeps the language it was generated in — a re-write
-              // would be a paid re-generation of the whole library, silently.
-              _NavRow(
-                label: l.profileRowNativeLang,
-                value: languageByCode(profile.nativeLanguage).endonym,
-                hint: l.profileNativeLangHint,
-                onTap: () => _editNativeLang(context, ref, profile.nativeLanguage),
+              const SizedBox(height: 32),
+              SettingsGroup(
+                label: l.accountGroupApp,
+                rows: [
+                  SettingsRow(
+                    key: const ValueKey('profile-terms'),
+                    first: true,
+                    label: l.accountTerms,
+                    onTap: () => links.open(AppConfig.termsUrl),
+                  ),
+                  SettingsRow(
+                    key: const ValueKey('profile-privacy'),
+                    label: l.accountPrivacy,
+                    onTap: () => links.open(AppConfig.privacyUrl),
+                  ),
+                  SettingsRow(
+                    key: const ValueKey('profile-support'),
+                    label: l.accountSupport,
+                    value: l.accountSupportValue,
+                    onTap: () => links.writeSupport(version: version),
+                  ),
+                  SettingsRow(key: const ValueKey('profile-rate'), label: l.accountRate, onTap: links.rate),
+                ],
               ),
-              // ГОЛОС СВОИХ РЕПЛИК (кадр 38-1, наряд FIX-3 §6) — the same sheet the first plan asks with; until it is
-              // said the server speaks the learner's lines male.
-              _NavRow(
-                label: l.profileRowVoice,
-                value: switch (profile.gender) {
-                  kVoiceMale => l.planVoiceMale,
-                  kVoiceFemale => l.planVoiceFemale,
-                  _ => l.profileVoiceUnset,
-                },
-                onTap: () => _editVoice(context, ref, profile.gender),
-                last: true,
+              if (ref.watch(devMenuProvider)) ...[
+                const SizedBox(height: 32),
+                SettingsGroup(label: l.profileSectionDev, rows: const [_DevRows()]),
+              ],
+              const SizedBox(height: 32),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: GestureDetector(
+                  key: const ValueKey('profile-sign-out'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    AppHaptics.light();
+                    unawaited(ref.read(authControllerProvider.notifier).signOut());
+                  },
+                  child: Text(l.accountSignOut, style: AppTextStart.signOut),
+                ),
               ),
+              const SizedBox(height: 14),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: GestureDetector(
+                  key: const ValueKey('profile-delete'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => showDeleteAccountSheet(context, ref),
+                  child: Text(l.accountDelete, style: AppTextStart.deleteAccount),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(version, key: const ValueKey('profile-version'), style: AppTextStart.version),
             ],
-
-            _SectionLabel(l.profileSectionApp),
-            _NavRow(
-              label: l.profileRowUiLang,
-              value: _uiLangName(l, uiLang),
-              onTap: () => _editUiLang(context, ref, uiLang),
-            ),
-            // Разрешение на уведомления спрашивается в двух местах: здесь — явным включением
-            // напоминаний, и один раз после «Начать» первого плана (наряд PLAN-UI-3 §4).
-            // Выключение ничего не спрашивает: отозвать разрешение можно только в настройках.
-            _SwitchRow(
-              label: l.profileRowReminders,
-              hint: l.profileRemindersHint,
-              value: settings.remindersEnabled,
-              onChanged: (v) {
-                unawaited(ref.read(appSettingsProvider.notifier).setRemindersEnabled(v));
-                if (v) unawaited(ref.read(planNotificationsProvider).requestPermission());
-              },
-            ),
-            // «Время» appears only while reminders are on (design 13a — the row slides in/out).
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              child: settings.remindersEnabled
-                  ? _NavRow(
-                      label: l.profileRowReminderTime,
-                      value: settings.reminderTime,
-                      onTap: () => _editReminderTime(context, ref, settings.reminderTime),
-                    )
-                  : const SizedBox(width: double.infinity),
-            ),
-            _SwitchRow(
-              label: l.profileRowAutoPronounce,
-              hint: l.profileAutoPronounceHint,
-              value: settings.autoPronounce,
-              onChanged: (v) => ref.read(appSettingsProvider.notifier).setAutoPronounce(v),
-            ),
-            // «ЗВУКИ» — четыре события плана и тренажёров (токен-лист 4к-3), по умолчанию включены.
-            // Беззвучный режим телефона стоит выше выключателя; хаптика остаётся при любом (4е).
-            _SwitchRow(
-              label: l.profileRowSounds,
-              hint: l.profileSoundsHint,
-              value: settings.soundsEnabled,
-              onChanged: (v) => ref.read(appSettingsProvider.notifier).setSoundsEnabled(v),
-            ),
-            // «SOUNDS IN THE SESSION» — the owner's six sounds of the day session (polish pass SESSION-1b′), a switch
-            // of its own, on by default.
-            _SwitchRow(
-              label: l.profileRowSessionSounds,
-              hint: l.profileSessionSoundsHint,
-              value: settings.sessionSoundsEnabled,
-              onChanged: (v) => ref.read(appSettingsProvider.notifier).setSessionSoundsEnabled(v),
-            ),
-            // «Подсказка произношения». The switch shows the EFFECTIVE value — the stored decision
-            // if there is one, otherwise the one the learner's own alphabet implies — so it never
-            // reads «off» while the hint is on screen.
-            _SwitchRow(
-              label: l.profileRowTransliteration,
-              hint: l.profileTransliterationHint,
-              value: ref.watch(transliterationEnabledProvider),
-              onChanged: (v) => ref.read(appSettingsProvider.notifier).setTransliteration(v),
-              last: true,
-            ),
-
-            _SectionLabel(l.profileSectionSubscription),
-            _SubscriptionSection(user: user),
-
-            if (AppConfig.devMenuEnabled) ...[_SectionLabel(l.profileSectionDev), _DevFlags()],
-
-            _SectionLabel(l.profileSectionAccount),
-            _LinkRow(
-              label: l.profileSignOut,
-              onTap: () => ref.read(authControllerProvider.notifier).signOut(),
-            ),
-            _LinkRow(
-              label: l.profileDeleteAccount,
-              destructive: true,
-              last: true,
-              onTap: () => _confirmDelete(context, ref),
-            ),
-            // ВЕРСИЯ СБОРКИ — хеш клиента и хеш сервера из `/api/v1/health` — стоит здесь ВСЕГДА
-            // (наряд PLAN-UI, §1): без неё приёмка не начинается.
-            const BuildStampLine(),
-          ],
+          ),
         ),
       ),
-      ),
     );
   }
 
-  String _uiLangName(AppLocalizations l, UiLanguageOption o) => switch (o) {
-    UiLanguageOption.system => l.uiLangSystem,
-    UiLanguageOption.russian => l.uiLangRussian,
-    UiLanguageOption.english => l.uiLangEnglish,
-  };
+  List<Widget> _subscriptionRows(AppLocalizations l, AccountAccess? access, Locale locale) {
+    if (access == null || !access.premium) {
+      return [
+        SettingsRow(
+          key: const ValueKey('profile-plan'),
+          first: true,
+          label: l.accountFree,
+          value: l.accountFreeValue,
+          end: SettingsRowEnd.none,
+        ),
+      ];
+    }
+    final until = access.expiresAt;
+    return [
+      SettingsRow(
+        key: const ValueKey('profile-plan'),
+        first: true,
+        label: l.accountPremium,
+        value: until == null ? l.accountPremiumForever : l.accountPremiumUntil(DateFormat('d MMMM', locale.toString()).format(until)),
+        end: SettingsRowEnd.none,
+      ),
+      SettingsRow(
+        key: const ValueKey('profile-manage'),
+        label: l.accountManageSubscription,
+        end: SettingsRowEnd.external,
+        onTap: () => ref.read(accountLinksProvider).open(kAppStoreSubscriptions),
+      ),
+      SettingsRow(
+        key: const ValueKey('profile-restore'),
+        label: l.accountRestorePurchases,
+        end: SettingsRowEnd.none,
+        busy: _restoring,
+        onTap: _restore,
+      ),
+    ];
+  }
 
-  Future<void> _saveProfile(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> changes,
-  ) async {
+  /// «Восстановить покупки» — «запрос без перехода» (42-1b). There are no purchases in the API until PAY-1: the
+  /// server's rights are read again, and the group redraws from the fresh `access`.
+  Future<void> _restore() async {
+    setState(() => _restoring = true);
     try {
-      await ref.read(authControllerProvider.notifier).updateProfile(changes);
+      await ref.read(authControllerProvider.notifier).refreshAccount();
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
+  }
+
+  Future<void> _editVoice(String? current) async {
+    final chosen = await showVoiceGenderSheet(context, current: current ?? kVoiceMale);
+    if (chosen == null || chosen == current || !mounted) return;
+    try {
+      await ref.read(authControllerProvider.notifier).updateProfile({'gender': chosen});
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      debugPrint('[profile] voice: $e');
     }
   }
 
-  Future<void> _editLevel(BuildContext context, WidgetRef ref, String current) async {
-    final l = AppLocalizations.of(context);
-    final chosen = await showAppBottomSheet<String>(
-      context: context,
-      builder: (_) =>
-          _GridSheet(title: l.profileLevelSheet, options: kCefrLevels, current: current),
-    );
-    if (chosen != null && chosen != current && context.mounted) {
-      await _saveProfile(context, ref, {'cefr_level': chosen});
-    }
-  }
-
-  Future<void> _editVoice(BuildContext context, WidgetRef ref, String? current) async {
-    final chosen = await showVoiceGenderSheet(context, current: current);
-    if (chosen != null && chosen != current && context.mounted) {
-      await _saveProfile(context, ref, {'gender': chosen});
-    }
-  }
-
-  Future<void> _editGoal(BuildContext context, WidgetRef ref, int current) async {
-    final l = AppLocalizations.of(context);
-    final chosen = await showAppBottomSheet<int>(
-      context: context,
-      builder: (_) => _GoalSheet(title: l.profileGoalSheet, current: current),
-    );
-    if (chosen != null && chosen != current && context.mounted) {
-      await _saveProfile(context, ref, {'daily_goal': chosen});
-    }
-  }
-
-  Future<void> _editTargetLang(BuildContext context, WidgetRef ref, String current) async {
-    final l = AppLocalizations.of(context);
-    final native = ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
-    final chosen = await showAppBottomSheet<String>(
-      context: context,
-      builder: (_) => _LanguageSheet(
-        title: l.profileRowTargetLang,
-        current: current,
-        // English and German (ONB-1), plus whatever the account is actually on — a sheet that
-        // cannot show its own current value would read as «ничего не выбрано».
-        options: studyLanguagesFor(current).where((lang) => lang.code != native).toList(),
-      ),
-    );
-    if (chosen != null && chosen != current && context.mounted) {
-      await _saveProfile(context, ref, {'target_language': chosen});
-    }
-  }
-
-  /// «Родной язык» — the account-wide answer to «на каком языке показывать переводы».
-  ///
-  /// Confirmed before it is saved, because the honest description of what happens is a sentence and
-  /// not a label: new material follows the new language, existing collections keep theirs. That is
-  /// deliberate — re-writing a library would be a paid regeneration of every card in it.
-  ///
-  /// The rows are the server's natives (`GET /languages`, LANG-1: nine, Беларуская among them) minus
-  /// the account's target — a pair of a language with itself is not a pair. The run's cached answer
-  /// is used at once; the first tap of a run waits for the server briefly, then takes the bundle.
-  Future<void> _editNativeLang(BuildContext context, WidgetRef ref, String current) async {
-    final l = AppLocalizations.of(context);
-    final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
-    final languages = await _nativeLists(ref);
-    if (!context.mounted) return;
-    final chosen = await showAppBottomSheet<String>(
-      context: context,
-      builder: (_) => _LanguageSheet(
-        title: l.profileRowNativeLang,
-        current: current,
-        options: languages.nativesFor(target: target),
-      ),
-    );
-    if (chosen == null || chosen == current || !context.mounted) return;
-
-    final ok = await showCenterAlert(
-      context: context,
-      title: l.profileNativeLangConfirmTitle(languageByCode(chosen).endonym),
-      message: l.profileNativeLangConfirmBody,
-      confirmLabel: l.commonSave,
-      cancelLabel: l.commonCancel,
-    );
-    if (ok == true && context.mounted) {
-      await _saveProfile(context, ref, {'native_language': chosen});
-    }
-  }
-
-  /// The run's language lists for the native sheet: the cached server answer when there is one;
-  /// otherwise (never asked, or the last ask fell back to the bundle) one more ask, waited on for
-  /// [_listsWait] at most — a sheet that opens seconds after the tap reads as a dead row.
-  static Future<PlanLanguages> _nativeLists(WidgetRef ref) async {
-    final cached = ref.read(planLanguagesProvider).value;
-    if (cached != null && !cached.fromBundle) return cached;
-    if (cached != null) ref.invalidate(planLanguagesProvider);
-
-    return ref.read(planLanguagesProvider.future).timeout(_listsWait, onTimeout: () => PlanLanguages.bundled);
-  }
-
-  static const _listsWait = Duration(milliseconds: 1500);
-
-  Future<void> _editUiLang(BuildContext context, WidgetRef ref, UiLanguageOption current) async {
-    final chosen = await showAppBottomSheet<UiLanguageOption>(
-      context: context,
-      builder: (_) => _UiLangSheet(current: current),
-    );
-    if (chosen != null && chosen != current) {
-      await ref.read(localeControllerProvider.notifier).setOption(chosen);
-    }
-  }
-
-  Future<void> _editReminderTime(BuildContext context, WidgetRef ref, String current) async {
-    final chosen = await showAppBottomSheet<String>(
-      context: context,
-      builder: (_) => _TimeSheet(current: current),
-    );
-    if (chosen != null) {
-      await ref.read(appSettingsProvider.notifier).setReminderTime(chosen);
-    }
-  }
-
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context);
-    final stats = ref.read(statsProvider).value;
-    final words = l.deleteAccountWords(stats?.totalWords ?? 0);
-    final streak = l.deleteAccountStreak(stats?.streakDays ?? 0);
-    final ok = await showCenterAlert(
-      context: context,
-      title: l.deleteAccountTitle,
-      message: l.deleteAccountBody(words, streak),
-      confirmLabel: l.deleteAccountConfirm,
-      cancelLabel: l.commonCancel,
-    );
-    if (ok == true) {
-      try {
-        await ref.read(authControllerProvider.notifier).deleteAccount();
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-        }
-      }
-    }
-  }
+  static String _uiLanguageName(AppLocalizations l, UiLanguageOption option, Locale locale) => switch (option) {
+    UiLanguageOption.russian => l.accountUiRussian,
+    UiLanguageOption.english => l.accountUiEnglish,
+    // «Системный» is not a choice of 42-1: the row names the language the app speaks now.
+    UiLanguageOption.system => locale.languageCode == 'en' ? l.accountUiEnglish : l.accountUiRussian,
+  };
 }
 
+/// The paper circle with the name's first letter, and the name — a tap on either opens 42-2.
 class _Header extends StatelessWidget {
-  const _Header({required this.user});
-  final AppUser user;
+  const _Header({required this.name, required this.onTap});
+
+  final String name;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final initials = user.name.trim().isEmpty
-        ? '?'
-        : user.name
-              .trim()
-              .split(RegExp(r'\s+'))
-              .take(2)
-              .map((w) => w.characters.first.toUpperCase())
-              .join();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
-            child: user.avatar != null
-                ? ClipOval(
-                    child: Image(
-                      image: CachedNetworkImage(user.avatar!),
-                      width: 52,
-                      height: 52,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Text(
-                    initials,
-                    style: const TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.paper,
-                    ),
-                  ),
+  Widget build(BuildContext context) => GestureDetector(
+    key: const ValueKey('profile-header'),
+    behavior: HitTestBehavior.opaque,
+    onTap: () {
+      AppHaptics.light();
+      onTap();
+    },
+    child: Row(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.avatarPlate,
+            boxShadow: [BoxShadow(color: AppColors.sessionSheetShadow, blurRadius: 16, offset: Offset(0, 4))],
           ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.name,
-                  style: const TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.ink,
-                  ),
-                ),
-                if (user.email != null) ...[
-                  const SizedBox(height: 3),
-                  Text(user.email!, style: AppText.transcription.copyWith(fontSize: 12.5)),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 20, bottom: 4),
-    child: Text(
-      text.toUpperCase(),
-      style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
+          child: Text(avatarLetter(name), style: AppTextStart.avatarLetter),
+        ),
+        const SizedBox(width: 14),
+        Expanded(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStart.name)),
+      ],
     ),
   );
 }
 
-/// A row with a value + chevron that opens an editor, and an optional line of consequence under the
-/// label — for a setting whose effect is not obvious from its name (the native language: it changes
-/// what NEW material is written in and leaves what already exists alone).
-class _NavRow extends StatelessWidget {
-  const _NavRow({
-    required this.label,
-    required this.value,
-    required this.onTap,
-    this.hint,
-    this.last = false,
-  });
-  final String label, value;
-  final String? hint;
-  final VoidCallback onTap;
-  final bool last;
+// ── «Разработка» — the dev door (DEV_MENU builds only; not in the canvas) ─────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
-    return _RowShell(
-      last: last,
-      onTap: onTap,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: _labelStyle),
-                if (hint != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    hint!,
-                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.s12),
-          Text(
-            value,
-            style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary),
-          ),
-          const SizedBox(width: 9),
-          const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
-        ],
-      ),
-    );
-  }
-}
+/// The dev toggles and doors — the store / paywall flags, the stall monitor, the line voices, the microphone's
+/// insides for a QA account, and the full build line with the server's hash.
+class _DevRows extends ConsumerWidget {
+  const _DevRows();
 
-class _SwitchRow extends StatelessWidget {
-  const _SwitchRow({
-    required this.label,
-    this.hint,
-    required this.value,
-    required this.onChanged,
-    this.last = false,
-  });
-  final String label;
-  final String? hint;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    return _RowShell(
-      last: last,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: _labelStyle),
-                if (hint != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    hint!,
-                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Switch.adaptive(
-            value: value,
-            onChanged: (v) {
-              AppHaptics.light();
-              onChanged(v);
-            },
-            activeTrackColor: AppColors.ink,
-            activeThumbColor: AppColors.paper,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.title, this.hint, this.trailing, this.last = false});
-  final String title;
-  final String? hint;
-  final String? trailing;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    return _RowShell(
-      last: last,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: _labelStyle),
-                if (hint != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    hint!,
-                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (trailing != null)
-            Text(
-              trailing!,
-              style: AppText.translation.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.tertiary,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LinkRow extends StatelessWidget {
-  const _LinkRow({
-    required this.label,
-    required this.onTap,
-    this.destructive = false,
-    this.last = false,
-  });
-  final String label;
-  final VoidCallback onTap;
-  final bool destructive, last;
-
-  @override
-  Widget build(BuildContext context) {
-    return _RowShell(
-      last: last,
-      onTap: onTap,
-      child: Text(
-        label,
-        style: TextStyle(
-          fontFamily: AppFonts.inter,
-          fontSize: 15.5,
-          fontWeight: FontWeight.w600,
-          color: destructive ? AppColors.destructiveText : AppColors.ink,
-        ),
-      ),
-    );
-  }
-}
-
-const _labelStyle = TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, color: AppColors.ink);
-
-/// A settings row: 12px vertical padding + a hairline underline unless it's the section's last.
-class _RowShell extends StatelessWidget {
-  const _RowShell({required this.child, this.onTap, this.last = false});
-  final Widget child;
-  final VoidCallback? onTap;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final row = Container(
-      decoration: last
-          ? null
-          : const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
-            ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: child,
-    );
-    if (onTap == null) return row;
-    return InkWell(
-      onTap: () {
-        AppHaptics.light();
-        onTap!();
-      },
-      child: row,
-    );
-  }
-}
-
-/// The «Подписка» section (кадры 15a/15b). Behind the paywall flag: off → the pre-A3.9 «Бесплатный
-/// тариф · Скоро» info row (existing screen untouched); on → the free rows with a «Попробовать
-/// Premium» entry, or the premium rows (active badge + manage/restore) when premium (server tier or
-/// the dev fake). No renewal date is shown — the contract carries none (reported).
-class _SubscriptionSection extends ConsumerWidget {
-  const _SubscriptionSection({required this.user});
-  final AppUser user;
-
-  static String _hhmm(DateTime t) =>
-      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-    final paywallOn = ref.watch(featureFlagsProvider).paywallEnabled;
-    if (!paywallOn) {
-      return _InfoRow(
-        title: l.profileFreeTier,
-        hint: l.profileFreeTierHint,
-        trailing: l.profileSoon,
-        last: true,
-      );
-    }
-    final premium = ref.watch(premiumProvider);
-    if (premium) {
-      return Column(
-        children: [
-          _PremiumRow(
-            title: l.profilePremiumActive,
-            badge: l.profilePremiumBadge,
-            hint: l.profilePremiumHint,
-          ),
-          _ChevronRow(label: l.profileManageSubscription, external: true),
-          _ChevronRow(label: l.profileRestorePurchases, last: true),
-        ],
-      );
-    }
-    final resetsAt = user.quota?.resetsAt;
-    final freeHint = resetsAt != null
-        ? l.profileFreeTierReset(_hhmm(resetsAt))
-        : l.profileFreeTierHint;
-    return Column(
-      children: [
-        _InfoRow(title: l.profileFreeTier, hint: freeHint),
-        _ChevronRow(
-          label: l.profileTryPremium,
-          bold: true,
-          last: true,
-          onTap: () => showPaywall(context, ref, const PaywallArgs(PaywallEntry.profile)),
-        ),
-      ],
-    );
-  }
-}
-
-/// The dev flag toggles (Profile → «Разработка»), shown only when DEV_MENU is set. Lets Den flip the
-/// store/paywall surfaces and the fake premium on device without a rebuild.
-class _DevFlags extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final flags = ref.watch(featureFlagsProvider);
     final notifier = ref.read(featureFlagsProvider.notifier);
     final qa = ref.watch(authControllerProvider).value?.qaTools ?? false;
+    final lang = ref.watch(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SwitchRow(
+        SettingsRow(
+          first: true,
           label: l.devFlagStore,
-          value: flags.storeEnabled,
-          onChanged: notifier.setStoreEnabled,
+          end: SettingsRowEnd.toggle,
+          on: flags.storeEnabled,
+          onTap: () => notifier.setStoreEnabled(!flags.storeEnabled),
         ),
-        _SwitchRow(
+        SettingsRow(
           label: l.devFlagPaywall,
-          value: flags.paywallEnabled,
-          onChanged: notifier.setPaywallEnabled,
+          end: SettingsRowEnd.toggle,
+          on: flags.paywallEnabled,
+          onTap: () => notifier.setPaywallEnabled(!flags.paywallEnabled),
         ),
-        _SwitchRow(
+        SettingsRow(
           label: l.devFlagPremium,
-          value: flags.devPremium,
-          onChanged: notifier.setDevPremium,
+          end: SettingsRowEnd.toggle,
+          on: flags.devPremium,
+          onTap: () => notifier.setDevPremium(!flags.devPremium),
         ),
-        // On-device stall monitor, off by default — the release build has no console to read.
-        _ChevronRow(
+        SettingsRow(
           label: l.perfMonitorTitle,
-          onTap: () =>
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PerfLogScreen())),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PerfLogScreen())),
         ),
-        // ГОЛОСА РЕПЛИК (наряд TTS-1, Ч.2.4). Дверь стоит здесь, а не за длинным тапом: дев-секция
-        // и есть заведённая дев-дверь этого приложения, и второй способ войти в одно и то же — это
-        // второе место, где чинить одну и ту же поломку.
-        _ChevronRow(
+        SettingsRow(
           label: l.devVoicesTitle,
-          last: !qa,
-          onTap: () => Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => const VoiceBakeoffScreen())),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VoiceBakeoffScreen())),
         ),
-        // МИКРОФОН, ЖИВЬЁМ (наряд DAY-GATE-1, Ч.0.1). За той же дверью и по той же причине, что
-        // строки выше: строка показывает статусы разрешений и внутренности движка, и боевому
-        // аккаунту в релизе она не показывается.
-        if (qa) const _QaSpeechRow(),
-        // ВЕРСИЯ ЦЕЛИКОМ (наряд DAY-GATE-1, Ч.0.4). Внизу вкладки «План» стоит короткая строка для
-        // всех; здесь — полная, с адресом сервера: «почему телефон разговаривает не с тем» это
-        // отдельный вопрос, и он решается только этой строкой.
-        const _DevBuildRow(),
-      ],
-    );
-  }
-}
-
-/// Полная версия сборки в дев-двери — {@see BuildStampLine} плюс адрес API.
-class _DevBuildRow extends ConsumerWidget {
-  const _DevBuildRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-
-    return _RowShell(
-      last: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Обычный `Text`, не `SelectableText`: выделяемый текст поднимает внутри себя ещё один
-          // `Scrollable`, а этот экран — один длинный список, по которому тесты и пальцы скроллят.
-          Text(
-            BuildStampLine.buildStampText(
-              l,
-              ref.watch(backendCommitProvider),
-              client: ref.watch(clientBuildProvider),
-            ),
-            style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.secondary),
+        if (qa)
+          Container(
+            decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.markerOutline))),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: QaSpeechView(diagnostics: ref.watch(speechDiagnosticsProvider), localeId: sttLocaleFor(lang)),
           ),
-          const SizedBox(height: 3),
-          Text(
-            AppConfig.apiBaseUrl,
-            style: AppText.transcription.copyWith(fontSize: 11, color: AppColors.tertiary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Служебная строка микрофона в дев-двери — оболочка строки плюс {@see QaSpeechView}.
-class _QaSpeechRow extends ConsumerWidget {
-  const _QaSpeechRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final lang =
-        ref.watch(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
-
-    return _RowShell(
-      last: true,
-      child: QaSpeechView(
-        diagnostics: ref.watch(speechDiagnosticsProvider),
-        localeId: sttLocaleFor(lang),
-      ),
-    );
-  }
-}
-
-/// The active-Premium row (кадр 15b): «Premium» + «активна» badge + hint.
-class _PremiumRow extends StatelessWidget {
-  const _PremiumRow({required this.title, required this.badge, required this.hint});
-  final String title, badge, hint;
-
-  @override
-  Widget build(BuildContext context) {
-    return _RowShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        Container(
+          decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.markerOutline))),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: AppFonts.inter,
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.ink,
-                ),
+                buildStampText(l, ref.watch(backendCommitProvider), client: ref.watch(clientBuildProvider)),
+                style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.secondary),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.ink,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  badge.toUpperCase(),
-                  style: const TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                    color: AppColors.paper,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            hint,
-            style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A label + chevron (or external-link icon) row — used by the subscription entries.
-class _ChevronRow extends StatelessWidget {
-  const _ChevronRow({
-    required this.label,
-    this.onTap,
-    this.bold = false,
-    this.external = false,
-    this.last = false,
-  });
-  final String label;
-  final VoidCallback? onTap;
-  final bool bold, external, last;
-
-  @override
-  Widget build(BuildContext context) {
-    return _RowShell(
-      last: last,
-      onTap: onTap,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: AppFonts.inter,
-                fontSize: 15.5,
-                fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
-                color: AppColors.ink,
-              ),
-            ),
-          ),
-          Icon(
-            external ? Icons.open_in_new : Icons.chevron_right,
-            size: external ? 16 : 18,
-            color: AppColors.tertiary,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Editor sheets ──────────────────────────────────────────────────────────
-
-/// A wrap-grid chooser (level).
-class _GridSheet extends StatelessWidget {
-  const _GridSheet({required this.title, required this.options, required this.current});
-  final String title;
-  final List<String> options;
-  final String current;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title, style: AppText.sheetButton.copyWith(fontSize: 17)),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final o in options)
-              SizedBox(
-                width: 88,
-                child: _PillOption(
-                  label: o,
-                  selected: o == current,
-                  onTap: () => Navigator.of(context).pop(o),
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _GoalSheet extends StatelessWidget {
-  const _GoalSheet({required this.title, required this.current});
-  final String title;
-  final int current;
-
-  static const _options = [10, 20, 30];
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title, style: AppText.sheetButton.copyWith(fontSize: 17)),
-        const SizedBox(height: 12),
-        for (final g in _options) ...[
-          if (g != _options.first) const SizedBox(height: 10),
-          _PillOption(
-            label: l.profileGoalValue(g),
-            selected: g == current,
-            onTap: () => Navigator.of(context).pop(g),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _LanguageSheet extends StatelessWidget {
-  const _LanguageSheet({required this.title, required this.current, required this.options});
-  final String title, current;
-
-  /// The rows to offer, already filtered by the caller. The sheet used to take the catalogue and one
-  /// exclusion; the two pickers on this screen now offer two different, shorter lists (ONB-1), and
-  /// «the whole table minus one» is no longer a rule either of them follows.
-  final List<Language> options;
-
-  @override
-  Widget build(BuildContext context) {
-    final langs = options;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title, style: AppText.sheetButton.copyWith(fontSize: 17)),
-        const SizedBox(height: 8),
-        Flexible(
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: langs.length,
-            itemBuilder: (context, i) {
-              final lang = langs[i];
-              return InkWell(
-                onTap: () => Navigator.of(context).pop(lang.code),
-                borderRadius: BorderRadius.circular(AppRadii.field),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-                  child: Row(
-                    children: [
-                      MiniFlag(languageCode: lang.code),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(lang.endonym, style: _labelStyle)),
-                      if (lang.code == current)
-                        const Icon(Icons.check, size: 18, color: AppColors.ink),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _UiLangSheet extends StatelessWidget {
-  const _UiLangSheet({required this.current});
-  final UiLanguageOption current;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final options = <(UiLanguageOption, String)>[
-      (UiLanguageOption.system, l.uiLangSystem),
-      (UiLanguageOption.russian, l.uiLangRussian),
-      (UiLanguageOption.english, l.uiLangEnglish),
-    ];
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(l.profileUiLangSheet, style: AppText.sheetButton.copyWith(fontSize: 17)),
-        const SizedBox(height: 8),
-        for (final (opt, name) in options)
-          InkWell(
-            onTap: () => Navigator.of(context).pop(opt),
-            borderRadius: BorderRadius.circular(AppRadii.field),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
-              child: Row(
-                children: [
-                  Expanded(child: Text(name, style: _labelStyle)),
-                  if (opt == current) const Icon(Icons.check, size: 18, color: AppColors.ink),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// Reminder time — two wheels (24h hour, 15-min minute), Сохранить (кадр 13b).
-class _TimeSheet extends StatefulWidget {
-  const _TimeSheet({required this.current});
-  final String current;
-
-  @override
-  State<_TimeSheet> createState() => _TimeSheetState();
-}
-
-class _TimeSheetState extends State<_TimeSheet> {
-  late int _hour;
-  late int _minuteIndex; // 0,15,30,45 → 0..3
-  static const _minutes = [0, 15, 30, 45];
-
-  @override
-  void initState() {
-    super.initState();
-    final parts = widget.current.split(':');
-    _hour = int.tryParse(parts.first)?.clamp(0, 23) ?? 20;
-    final m = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
-    _minuteIndex = _minutes.indexOf((m ~/ 15) * 15).clamp(0, 3);
-  }
-
-  String get _value =>
-      '${_hour.toString().padLeft(2, '0')}:${_minutes[_minuteIndex].toString().padLeft(2, '0')}';
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l.reminderSheetTitle,
-          style: const TextStyle(
-            fontFamily: AppFonts.literata,
-            fontSize: 23,
-            fontWeight: FontWeight.w500,
-            color: AppColors.ink,
-          ),
-        ),
-        const SizedBox(height: 7),
-        Text(
-          l.reminderSheetSubtitle,
-          style: AppText.translation.copyWith(
-            fontSize: 13,
-            height: 1.45,
-            color: AppColors.secondary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 160,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _Wheel(
-                count: 24,
-                initial: _hour,
-                label: (i) => i.toString().padLeft(2, '0'),
-                onChanged: (i) => setState(() => _hour = i),
-              ),
-              const Text(
-                ':',
-                style: TextStyle(
-                  fontFamily: AppFonts.inter,
-                  fontSize: 25,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
-                ),
-              ),
-              _Wheel(
-                count: _minutes.length,
-                initial: _minuteIndex,
-                label: (i) => _minutes[i].toString().padLeft(2, '0'),
-                onChanged: (i) => setState(() => _minuteIndex = i),
-              ),
+              const SizedBox(height: 3),
+              Text(AppConfig.apiBaseUrl, style: AppText.transcription.copyWith(fontSize: 11, color: AppColors.tertiary)),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        PrimaryButton(
-          label: l.commonSave,
-          minHeight: 52,
-          onPressed: () => Navigator.of(context).pop(_value),
-        ),
       ],
     );
   }
 }
 
-class _Wheel extends StatelessWidget {
-  const _Wheel({
-    required this.count,
-    required this.initial,
-    required this.label,
-    required this.onChanged,
-  });
-  final int count, initial;
-  final String Function(int) label;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 74,
-      child: CupertinoPicker(
-        scrollController: FixedExtentScrollController(initialItem: initial),
-        itemExtent: 40,
-        squeeze: 1.1,
-        diameterRatio: 1.3,
-        selectionOverlay: const CupertinoPickerDefaultSelectionOverlay(
-          background: AppColors.faintInk,
-        ),
-        onSelectedItemChanged: onChanged,
-        children: [
-          for (var i = 0; i < count; i++)
-            Center(
-              child: Text(
-                label(i),
-                style: const TextStyle(
-                  fontFamily: AppFonts.inter,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
+/// The profile's switch (42-1) and the reminders sheet (42-4): a decision. Turning it on asks iOS first when it has not
+/// been asked (and registers the push address, as the 43-1 sheet does); refused — it stays off.
+Future<void> setRemindersFromProfile(WidgetRef ref, {required bool on}) async {
+  final settings = ref.read(appSettingsProvider.notifier);
+  if (!on) {
+    await settings.setReminders(false);
+    return;
   }
-}
-
-class _PillOption extends StatelessWidget {
-  const _PillOption({required this.label, required this.selected, required this.onTap});
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.ink : Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.field),
-        side: selected ? BorderSide.none : const BorderSide(color: AppColors.hairline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 13),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: AppFonts.inter,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: selected ? AppColors.paper : AppColors.ink,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  final permission = await ref.read(notifyPermissionProbeProvider).status();
+  var allowed = permission == NotifyPermission.granted || permission == NotifyPermission.unknown;
+  if (permission == NotifyPermission.notDetermined) allowed = await askNotificationsAndRegister(ref);
+  ref.invalidate(notifyPermissionProvider);
+  await settings.setReminders(allowed);
 }

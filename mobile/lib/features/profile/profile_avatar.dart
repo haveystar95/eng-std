@@ -6,6 +6,7 @@ import 'package:eng_std/theme/theme.dart';
 
 import '../../data/local/cached_image_provider.dart';
 import '../../data/providers.dart';
+import 'account_providers.dart';
 import 'profile_screen.dart';
 
 /// ПРОФИЛЬ — КРУЖОК-АВАТАР 30 В ШАПКЕ СПРАВА (токен-лист 4к-1). Таба у профиля нет.
@@ -20,8 +21,8 @@ class ProfileAvatarButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final user = ref.watch(authControllerProvider).value;
-    final name = user?.name.trim() ?? '';
-    final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
+    // The name the profile shows — typed on this phone (42-2) or the account's — so the two circles agree.
+    final initial = avatarLetter(ref.watch(accountNameProvider).value ?? user?.name ?? '');
 
     return Semantics(
       button: true,

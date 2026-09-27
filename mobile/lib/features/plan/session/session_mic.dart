@@ -204,6 +204,14 @@ class SessionMic extends ChangeNotifier {
     _set(MicState.idle);
   }
 
+  /// The session's pre-permission (41-3) was answered «Позже» — or iOS refused: the card shows «Microphone needed» with
+  /// «Skip» at once, before any tap.
+  void markUnavailable({required bool blockedInSettings}) {
+    if (_disposed) return;
+    _blockedInSettings = blockedInSettings;
+    _set(MicState.unavailable);
+  }
+
   /// «Allow» on the «Microphone needed» screen: ask the system again.
   Future<bool> askAgain() async {
     final ok = await _recognizer.prepare();

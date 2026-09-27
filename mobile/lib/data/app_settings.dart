@@ -15,24 +15,27 @@ const Set<String> kCyrillicNativeLanguages = {'ru', 'uk', 'be', 'bg', 'sr', 'mk'
 bool transliterationDefaultFor(String? nativeLanguage) =>
     nativeLanguage != null && kCyrillicNativeLanguages.contains(nativeLanguage.toLowerCase());
 
-/// Device-local app preferences (кадры 11a / 13a) — reminders and auto-pronounce. Stored in the
-/// drift `sync_meta` KV, never synced (they're device settings). The reminder toggle + time are the
-/// preference only; wiring them to real OS notifications (the 2.12 pre-permission flow 13c/13d +
-/// a local-notifications plugin) is deferred — noted in the roadmap.
+/// Device-local app preferences — stored in the drift `sync_meta` KV, never synced (they're device settings).
+///
+/// The reminders (work order CLIENT-START §§4–5, frames 42-1, 42-4, 43-1) are the INPUTS of the local schedule
+/// (`PlanReminderScheduler`): off — the phone schedules nothing; a time — the day's reminder comes then instead of the
+/// server's `reminder_hour`.
 class AppSettings {
   const AppSettings({
-    required this.remindersEnabled,
-    required this.reminderTime,
+    this.reminders,
+    this.reminderTime,
     required this.autoPronounce,
     this.transliteration,
     this.soundsEnabled = true,
     this.sessionSoundsEnabled = true,
   });
 
-  final bool remindersEnabled;
+  /// «Напоминать о дне». Null — never decided on this phone: the reminders follow the system's permission (on when
+  /// iOS allows notifications) — that is how every build before (22) behaved, and an update must not silence them.
+  final bool? reminders;
 
-  /// «HH:mm», 24h. Default 20:00.
-  final String reminderTime;
+  /// «Время» — «HH:mm», 24 h. Null — the server's hour (`reminder_hour`: the usual visit, 19:00 without visits).
+  final String? reminderTime;
 
   /// Auto-pronounce the target word when a study card appears (default on).
   final bool autoPronounce;
@@ -55,27 +58,36 @@ class AppSettings {
   /// switch still wins.
   final bool sessionSoundsEnabled;
 
-  static const defaults = AppSettings(
-    remindersEnabled: false,
-    reminderTime: '20:00',
-    autoPronounce: true,
-  );
+  static const defaults = AppSettings(autoPronounce: true);
+
+  /// The switch as the profile shows it and the schedule obeys it: the decision, or — never decided — the system's.
+  bool remindersOn({required bool systemAllows}) => reminders ?? systemAllows;
 
   AppSettings copyWith({
-    bool? remindersEnabled,
+    bool? reminders,
     String? reminderTime,
     bool? autoPronounce,
     bool? transliteration,
     bool? soundsEnabled,
     bool? sessionSoundsEnabled,
   }) => AppSettings(
-    remindersEnabled: remindersEnabled ?? this.remindersEnabled,
+    reminders: reminders ?? this.reminders,
     reminderTime: reminderTime ?? this.reminderTime,
     autoPronounce: autoPronounce ?? this.autoPronounce,
     transliteration: transliteration ?? this.transliteration,
     soundsEnabled: soundsEnabled ?? this.soundsEnabled,
     sessionSoundsEnabled: sessionSoundsEnabled ?? this.sessionSoundsEnabled,
   );
+}
+
+/// «HH:mm» → hour and minute; null for anything else.
+({int hour, int minute})? parseReminderTime(String? hhmm) {
+  final m = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(hhmm ?? '');
+  if (m == null) return null;
+  final hour = int.parse(m.group(1)!);
+  final minute = int.parse(m.group(2)!);
+  if (hour > 23 || minute > 59) return null;
+  return (hour: hour, minute: minute);
 }
 
 abstract final class _Keys {
@@ -92,8 +104,12 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
   Future<AppSettings> build() async {
     final db = ref.read(appDatabaseProvider);
     final settings = AppSettings(
-      remindersEnabled: (await db.getMeta(_Keys.remindersEnabled)) == '1',
-      reminderTime: (await db.getMeta(_Keys.reminderTime)) ?? AppSettings.defaults.reminderTime,
+      reminders: switch (await db.getMeta(_Keys.remindersEnabled)) {
+        '1' => true,
+        '0' => false,
+        _ => null,
+      },
+      reminderTime: parseReminderTime(await db.getMeta(_Keys.reminderTime)) == null ? null : await db.getMeta(_Keys.reminderTime),
       autoPronounce: (await db.getMeta(_Keys.autoPronounce)) != '0', // default on
       // Absent key = never decided, which is NOT the same as «off» — see the field's note.
       transliteration: switch (await db.getMeta(_Keys.transliteration)) {
@@ -110,21 +126,16 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
     return settings;
   }
 
-  Future<void> setSoundsEnabled(bool on) async {
-    AppFeedback.soundsEnabled = on;
-    await ref.read(appDatabaseProvider).setMeta(_Keys.sounds, on ? '1' : '0');
-    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(soundsEnabled: on));
-  }
-
   Future<void> setSessionSoundsEnabled(bool on) async {
     SessionSounds.enabled = on;
     await ref.read(appDatabaseProvider).setMeta(_Keys.sessionSounds, on ? '1' : '0');
     state = AsyncData((state.value ?? AppSettings.defaults).copyWith(sessionSoundsEnabled: on));
   }
 
-  Future<void> setRemindersEnabled(bool on) async {
+  /// «Напоминать о дне» — a decision from now on (the profile's switch, 42-4, the answer to 43-1).
+  Future<void> setReminders(bool on) async {
     await ref.read(appDatabaseProvider).setMeta(_Keys.remindersEnabled, on ? '1' : '0');
-    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(remindersEnabled: on));
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(reminders: on));
   }
 
   Future<void> setReminderTime(String hhmm) async {
@@ -132,17 +143,6 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
     state = AsyncData((state.value ?? AppSettings.defaults).copyWith(reminderTime: hhmm));
   }
 
-  Future<void> setAutoPronounce(bool on) async {
-    await ref.read(appDatabaseProvider).setMeta(_Keys.autoPronounce, on ? '1' : '0');
-    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(autoPronounce: on));
-  }
-
-  /// Touching the switch is a DECISION — it stores `1`/`0` and the language-derived default stops
-  /// applying to this device from then on.
-  Future<void> setTransliteration(bool on) async {
-    await ref.read(appDatabaseProvider).setMeta(_Keys.transliteration, on ? '1' : '0');
-    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(transliteration: on));
-  }
 }
 
 final appSettingsProvider = AsyncNotifierProvider<AppSettingsController, AppSettings>(

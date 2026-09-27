@@ -345,8 +345,20 @@ class AuthController extends AsyncNotifier<AppUser?> {
   /// wiped just like sign-out so nothing of the deleted account lingers on the device.
   Future<void> deleteAccount() async {
     await ref.read(authRepositoryProvider).deleteAccount();
-    await ref.read(appDatabaseProvider).clearAll();
+    // The account is gone at the server; a local wipe that fails must not keep the phone «signed in» (as sign-out).
+    try {
+      await ref.read(appDatabaseProvider).clearAll();
+    } catch (e) {
+      debugPrint('[auth] local wipe on delete failed: $e');
+    }
     state = const AsyncData(null);
+  }
+
+  /// Read the account again from `/auth/me` (the profile's «Восстановить покупки», 42-1b: the rights are the server's
+  /// until PAY-1). Offline — the user stays as it was.
+  Future<void> refreshAccount() async {
+    final fresh = await ref.read(authRepositoryProvider).refresh();
+    if (fresh != null) state = AsyncData(fresh);
   }
 
   /// Persist profile changes and refresh the in-memory user (and the offline cache). Every profile

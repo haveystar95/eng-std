@@ -70,6 +70,21 @@ enum PlanDayStatus {
   };
 }
 
+/// `lock_reason` of a locked day (ACC-1 §2): [date] — the old locks (its date has not come, the day before it is not
+/// closed, the plan has not started); [subscription] — the paywall: day 2+ of the free plan, any day of another plan
+/// (plate 23-0a «по подписке», nodes of 22-5a / 21-3 in a brass outline with a point). Null — not locked, or an
+/// answer from before ACC-1.
+enum PlanLockReason {
+  date,
+  subscription;
+
+  static PlanLockReason? fromWire(Object? s) => switch (s) {
+    'date' => date,
+    'subscription' => subscription,
+    _ => null,
+  };
+}
+
 /// `PlanDaySlot.code` — WHEN a day sits in the learner's calendar.
 enum PlanSlotCode {
   today,
@@ -445,12 +460,16 @@ class PlanDayRoute {
     this.lessonStatus,
     this.opensOn,
     this.closedAt,
+    this.lockReason,
   });
 
   final String id;
   final int number;
   final PlanDayType type;
   final PlanDayStatus status;
+
+  /// Why a [PlanDayStatus.locked] day is locked — see [PlanLockReason].
+  final PlanLockReason? lockReason;
   final PlanDaySlot slot;
   final int cardsTotal;
   final int cardsDone;
@@ -487,9 +506,13 @@ class PlanDayRoute {
     lessonStatus: LessonStatus.fromWire(j['lesson_status'] as String?),
     opensOn: j['opens_on'] as String?,
     closedAt: DateTime.tryParse((j['closed_at'] as String?) ?? ''),
+    lockReason: PlanLockReason.fromWire(j['lock_reason']),
   );
 
   bool get isClosed => status == PlanDayStatus.closed;
+
+  /// Locked by the paywall — opens with a subscription, not with a date.
+  bool get lockedBySubscription => status == PlanDayStatus.locked && lockReason == PlanLockReason.subscription;
   bool get isInProgress => status == PlanDayStatus.inProgress;
 
   /// A day whose lesson the server is still writing (кадр 22-5a), or failed to (22-5c). The day's own `building`

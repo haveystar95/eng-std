@@ -1359,215 +1359,11 @@ abstract class AppLocalizations {
   /// **'Профиль'**
   String get profileTitle;
 
-  /// Секция профиля: обучение.
-  ///
-  /// In ru, this message translates to:
-  /// **'Обучение'**
-  String get profileSectionLearning;
-
-  /// Секция профиля: приложение.
-  ///
-  /// In ru, this message translates to:
-  /// **'Приложение'**
-  String get profileSectionApp;
-
-  /// Секция профиля: подписка.
-  ///
-  /// In ru, this message translates to:
-  /// **'Подписка'**
-  String get profileSectionSubscription;
-
-  /// Секция профиля: аккаунт.
-  ///
-  /// In ru, this message translates to:
-  /// **'Аккаунт'**
-  String get profileSectionAccount;
-
-  /// Строка профиля: уровень.
-  ///
-  /// In ru, this message translates to:
-  /// **'Уровень'**
-  String get profileRowLevel;
-
-  /// Строка профиля: дневная цель.
-  ///
-  /// In ru, this message translates to:
-  /// **'Дневная цель'**
-  String get profileRowGoal;
-
-  /// Строка профиля: язык изучения.
-  ///
-  /// In ru, this message translates to:
-  /// **'Язык изучения'**
-  String get profileRowTargetLang;
-
-  /// Строка профиля: язык интерфейса.
-  ///
-  /// In ru, this message translates to:
-  /// **'Язык интерфейса'**
-  String get profileRowUiLang;
-
-  /// Строка профиля: автопроизношение.
-  ///
-  /// In ru, this message translates to:
-  /// **'Автопроизношение'**
-  String get profileRowAutoPronounce;
-
-  /// Подпись автопроизношения.
-  ///
-  /// In ru, this message translates to:
-  /// **'Озвучивать слово при показе карточки'**
-  String get profileAutoPronounceHint;
-
-  /// Строка профиля: показывать чтение слова своими буквами на карточке.
-  ///
-  /// In ru, this message translates to:
-  /// **'Подсказка произношения'**
-  String get profileRowTransliteration;
-
-  /// Подпись подсказки произношения.
-  ///
-  /// In ru, this message translates to:
-  /// **'Показывать, как читается слово, вашими буквами'**
-  String get profileTransliterationHint;
-
-  /// Строка профиля: напоминания.
-  ///
-  /// In ru, this message translates to:
-  /// **'Напоминания'**
-  String get profileRowReminders;
-
-  /// Подпись напоминаний.
-  ///
-  /// In ru, this message translates to:
-  /// **'Одно в день, если есть что повторить'**
-  String get profileRemindersHint;
-
-  /// Строка профиля: время напоминания.
-  ///
-  /// In ru, this message translates to:
-  /// **'Время'**
-  String get profileRowReminderTime;
-
-  /// Строка подписки: бесплатный тариф.
-  ///
-  /// In ru, this message translates to:
-  /// **'Бесплатный тариф'**
-  String get profileFreeTier;
-
-  /// Подпись бесплатного тарифа.
-  ///
-  /// In ru, this message translates to:
-  /// **'3 генерации в день'**
-  String get profileFreeTierHint;
-
-  /// Метка «скоро» у подписки.
-  ///
-  /// In ru, this message translates to:
-  /// **'Скоро'**
-  String get profileSoon;
-
-  /// Строка профиля: выйти.
-  ///
-  /// In ru, this message translates to:
-  /// **'Выйти'**
-  String get profileSignOut;
-
-  /// Строка профиля: удалить аккаунт.
-  ///
-  /// In ru, this message translates to:
-  /// **'Удалить аккаунт'**
-  String get profileDeleteAccount;
-
-  /// Значение дневной цели, «N слов».
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}'**
-  String profileGoalValue(int count);
-
-  /// Язык интерфейса: системный.
-  ///
-  /// In ru, this message translates to:
-  /// **'Системный'**
-  String get uiLangSystem;
-
-  /// Язык интерфейса: русский.
-  ///
-  /// In ru, this message translates to:
-  /// **'Русский'**
-  String get uiLangRussian;
-
-  /// Язык интерфейса: английский.
-  ///
-  /// In ru, this message translates to:
-  /// **'English'**
-  String get uiLangEnglish;
-
-  /// Заголовок шита выбора языка интерфейса.
-  ///
-  /// In ru, this message translates to:
-  /// **'Язык интерфейса'**
-  String get profileUiLangSheet;
-
-  /// Заголовок шита выбора уровня.
-  ///
-  /// In ru, this message translates to:
-  /// **'Уровень'**
-  String get profileLevelSheet;
-
-  /// Заголовок шита выбора дневной цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'Дневная цель'**
-  String get profileGoalSheet;
-
-  /// Заголовок шита выбора времени напоминания (кадр 13b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Когда напомнить'**
-  String get reminderSheetTitle;
-
-  /// Подзаголовок шита времени напоминания.
-  ///
-  /// In ru, this message translates to:
-  /// **'Лучше всего работает время, когда у тебя обычно есть пять свободных минут.'**
-  String get reminderSheetSubtitle;
-
   /// Кнопка сохранения.
   ///
   /// In ru, this message translates to:
   /// **'Сохранить'**
   String get commonSave;
-
-  /// Заголовок подтверждения удаления аккаунта (кадр 11b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Удалить аккаунт?'**
-  String get deleteAccountTitle;
-
-  /// Тело подтверждения удаления аккаунта с персональными числами.
-  ///
-  /// In ru, this message translates to:
-  /// **'Все данные и прогресс будут удалены безвозвратно: {words}, {streak} и все коллекции.'**
-  String deleteAccountBody(String words, String streak);
-
-  /// Часть «N слов» в подтверждении удаления.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}'**
-  String deleteAccountWords(int count);
-
-  /// Часть «N дней стрика» в подтверждении удаления.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}'**
-  String deleteAccountStreak(int count);
-
-  /// Кнопка подтверждения удаления аккаунта.
-  ///
-  /// In ru, this message translates to:
-  /// **'Удалить'**
-  String get deleteAccountConfirm;
 
   /// Лейбл фазы сессии в шапке (кадр 12a) — новый термин, выбор из четырёх.
   ///
@@ -2721,48 +2517,6 @@ abstract class AppLocalizations {
   /// **'Нужен настоящий Premium (StoreKit — отдельный блок)'**
   String get paywallNeedsRealPremium;
 
-  /// Строка профиля (free): переход на пейволл (кадр 15a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Попробовать Premium'**
-  String get profileTryPremium;
-
-  /// Подпись бесплатного тарифа с временем сброса (кадр 15a).
-  ///
-  /// In ru, this message translates to:
-  /// **'3 генерации в день · сбрасываются в {time}'**
-  String profileFreeTierReset(String time);
-
-  /// Строка профиля (premium): название тарифа (кадр 15b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Premium'**
-  String get profilePremiumActive;
-
-  /// Бейдж «активна» у строки Premium (кадр 15b).
-  ///
-  /// In ru, this message translates to:
-  /// **'активна'**
-  String get profilePremiumBadge;
-
-  /// Подпись активной подписки Premium (кадр 15b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Подписка активна'**
-  String get profilePremiumHint;
-
-  /// Строка профиля (premium): управление в App Store (кадр 15b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Управлять подпиской'**
-  String get profileManageSubscription;
-
-  /// Строка профиля (premium): восстановление покупок (кадр 15b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Восстановить покупки'**
-  String get profileRestorePurchases;
-
   /// Dev-секция профиля (только при DEV_MENU).
   ///
   /// In ru, this message translates to:
@@ -3434,18 +3188,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Пора разобрать слова'**
   String get homeSortFirstTitle;
-
-  /// Строка профиля: родной язык (язык переводов).
-  ///
-  /// In ru, this message translates to:
-  /// **'Родной язык'**
-  String get profileRowNativeLang;
-
-  /// Подпись под строкой родного языка: смена языка не переписывает уже собранный материал.
-  ///
-  /// In ru, this message translates to:
-  /// **'Существующие коллекции останутся как есть'**
-  String get profileNativeLangHint;
 
   /// Заголовок подтверждения смены родного языка.
   ///
@@ -4917,30 +4659,6 @@ abstract class AppLocalizations {
   /// **'Закрыть'**
   String get planWindowSheetClose;
 
-  /// Строка профиля: выключатель звуков (токен-лист 4к-3).
-  ///
-  /// In ru, this message translates to:
-  /// **'Звуки'**
-  String get profileRowSounds;
-
-  /// Подпись выключателя «Звуки» — четыре события 4к-3.
-  ///
-  /// In ru, this message translates to:
-  /// **'Верно · неверно · этап закрыт · день закрыт'**
-  String get profileSoundsHint;
-
-  /// Строка профиля: выключатель шести звуков сессии дня владельца (верно, мимо, старт записи, итог этапа, день пройден, день готов; наряд SESSION-1b′); хранится на телефоне, по умолчанию включён; выключен — сессия звуки не загружает.
-  ///
-  /// In ru, this message translates to:
-  /// **'Звуки в сессии'**
-  String get profileRowSessionSounds;
-
-  /// Подпись выключателя «Звуки в сессии»: главные события, которые звучат; карточки знакомства молчат.
-  ///
-  /// In ru, this message translates to:
-  /// **'Верно · мимо · запись · этап пройден'**
-  String get profileSessionSoundsHint;
-
   /// No description provided for @dayCards.
   ///
   /// In ru, this message translates to:
@@ -6146,18 +5864,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Можно поменять в профиле'**
   String get planVoiceInProfile;
-
-  /// Профиль: ряд выбора голоса своих реплик — тот же лист, что перед первым планом (38-1).
-  ///
-  /// In ru, this message translates to:
-  /// **'Голос своих реплик'**
-  String get profileRowVoice;
-
-  /// Профиль: пол для голоса ещё не сказан — сервер озвучивает мужским, пока не сказан.
-  ///
-  /// In ru, this message translates to:
-  /// **'не выбран'**
-  String get profileVoiceUnset;
 
   /// Итог разговора (37-12, 37-12b): надпись над карточками конструкций; лист по тапу на ряд над микрофоном (37-8d): заголовок листа. Счётчика рядом нет — наряд FIX-3 §3 снял «N из M».
   ///

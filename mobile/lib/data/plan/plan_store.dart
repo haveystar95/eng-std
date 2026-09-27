@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../local/app_database.dart';
+import 'notify_permission.dart' show NotifyAsk;
 
 /// WHAT THE TAB KEEPS ON THE DEVICE (наряд PLAN-UI, §6).
 ///
@@ -50,12 +51,12 @@ class PlanStore {
   Future<bool> howSheetShown() async => (await _db.getMeta(_kSheetHow)) == '1';
   Future<void> markHowSheetShown() => _db.setMeta(_kSheetHow, '1');
 
-  static const _kNotifyAsked = 'plan_notify_permission_asked';
+  static const _kNotifyAsk = 'plan_notify_ask';
   static const _kPushEnabled = 'plan_push_enabled';
 
-  /// Разрешение на уведомления спрошено — второй раз системного окна не будет (наряд PLAN-UI-3 §4).
-  Future<bool> notifyPermissionAsked() async => (await _db.getMeta(_kNotifyAsked)) == '1';
-  Future<void> markNotifyPermissionAsked() => _db.setMeta(_kNotifyAsked, '1');
+  /// The pre-permission for reminders (43-1): shown after day 1, again after day 2 on «Не сейчас», then never.
+  Future<NotifyAsk> notifyAsk() async => NotifyAsk.fromKey(await _db.getMeta(_kNotifyAsk));
+  Future<void> setNotifyAsk(NotifyAsk ask) => _db.setMeta(_kNotifyAsk, ask.key);
 
   /// Последний ответ сервера на регистрацию токена: доставляет ли он push сам. Нет ответа — false,
   /// и телефон ставит напоминания локально.

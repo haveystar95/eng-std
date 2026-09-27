@@ -933,6 +933,11 @@ class AppUser {
   /// production со старым кэшем, не унесла его с собой.
   final bool qaTools;
 
+  /// WHAT THE ACCOUNT MAY DO — `GET /auth/me` → `access` (наряд ACC-1 §2): the profile's «ПОДПИСКА» group reads it
+  /// (42-1). Null — the server sent none (a sign-in answer; `/auth/me` always has it). Kept in the offline cache: a cold
+  /// start without the network still shows the plan the account had — the server enforces the real gate.
+  final AccountAccess? access;
+
   AppUser({
     required this.id,
     required this.name,
@@ -941,6 +946,7 @@ class AppUser {
     this.profile,
     this.quota,
     this.qaTools = false,
+    this.access,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
@@ -953,6 +959,7 @@ class AppUser {
         ? GenerationQuota.fromJson(j['generation'] as Map<String, dynamic>)
         : null,
     qaTools: j['qa_tools'] == true,
+    access: j['access'] is Map<String, dynamic> ? AccountAccess.fromJson(j['access'] as Map<String, dynamic>) : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -961,6 +968,29 @@ class AppUser {
     'email': ?email,
     'avatar': ?avatar,
     'profile': ?profile?.toJson(),
+    'access': ?access?.toJson(),
+  };
+}
+
+/// `access` of `GET /auth/me` (ACC-1 §2): `premium` while a right is in force, until [expiresAt] (null — no end);
+/// `free` — the first plan, day 1. [source] — whose right: `admin`, `promo`, `apple`, `google`.
+class AccountAccess {
+  const AccountAccess({required this.premium, this.expiresAt, this.source});
+
+  final bool premium;
+  final DateTime? expiresAt;
+  final String? source;
+
+  factory AccountAccess.fromJson(Map<String, dynamic> j) => AccountAccess(
+    premium: j['plan'] == 'premium',
+    expiresAt: DateTime.tryParse((j['expires_at'] as String?) ?? '')?.toLocal(),
+    source: j['source'] as String?,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'plan': premium ? 'premium' : 'free',
+    'expires_at': expiresAt?.toUtc().toIso8601String(),
+    'source': source,
   };
 }
 

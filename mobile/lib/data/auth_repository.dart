@@ -233,8 +233,17 @@ class AuthRepository {
 
   /// Permanently delete the account (B3) and clear the local session. The server cascade (204)
   /// removes all remote data; the caller wipes the local mirror.
+  ///
+  /// A 401 or a 404 `account_not_found` is the same answer as the 204 (plan-api, «Удаление аккаунта»): the token went
+  /// with the account, or a first deletion got there first — either way there is no account, and the phone must not
+  /// stay signed in to report that. Anything else (no network, a 5xx) throws: nothing was deleted.
   Future<void> deleteAccount() async {
-    await _api.deleteAccount();
+    try {
+      await _api.deleteAccount();
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status != 401 && status != 404) rethrow;
+    }
     try {
       await GoogleSignIn.instance.signOut();
     } catch (_) {
