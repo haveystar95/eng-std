@@ -170,3 +170,111 @@ DELETE /auth/me по проводу → заставка), `splash_choreography_
   `InstallMarker` сбросит сессию, которую iOS оставила в связке ключей. Установка с Mac:
   `DEVELOPER_DIR=…/Xcode-beta.app/Contents/Developer xcrun devicectl device install app --device 00008110-000A7CCC3492801E mobile/build/ios/iphoneos/Runner.app`.
 - Не запушено.
+
+## Доработка (27.09, один заход; сборка 1.0.0 (23))
+
+Восемь пунктов доработки и фото листов, которые владелец положил в `assets/intro` посреди захода. По наряду не
+тронуты: адреса Правил / Конфиденциальности (ссылки пустые до dart-define), имя и способ входа на сервере, баннер 23-0a.
+Сервер не тронут.
+
+| Хеш | Что |
+|---|---|
+| `0f84a499` | п. 8 — сняты 66 мёртвых ключей ARB прошлых нарядов |
+| `13749b36` | п. 3 — 42-2: подписи «Имя» над полем нет, в пустом поле — «Как тебя зовут» |
+| `adb707c2` | п. 4 — 42-1: языки одним регистром — «Русский», «English» |
+| `0c824e1c` | п. 6 — 41-2a: карточка «СОБЕСЕДОВАНИЕ» вместо «РАБОТА» |
+| `cc2b1b81` | п. 5 — 21-3: у дня по подписке в шапке только «ДЕНЬ N» |
+| `e660b42b` | п. 7 — имя под иконкой «Ritora» |
+| `ce9d42eb` | п. 1 — типографика строк наряда и страж |
+| `5290a797` | п. 2 — 37-5: «…и она повторит проще» у роли-женщины |
+| `325c8fa7` | golden пп. 1–6 |
+| `43f95dd1` | фото листов 41-2a, c, d; декодирование по размеру показа |
+| `30236815` | golden с фото |
+| `9d37be38` | версия 1.0.0 (23) |
+
+**п. 1. Типографика.** Во всех строках наряда — 107 ключей (`start*`, `intro*`, `account*`, `mic*`, `notify*`, хвосты
+плана §6), плюс строки, стоящие рядом на тех же экранах: `planTalkEntryRuleStart` (правила 37-5 — одна типографика на
+три строки) и `profileNativeLangConfirmBody` (подтверждение смены родного языка в профиле). ru — U+00A0 после «в, и, с,
+к, о, у, а, я» и «не»; en — после «a, A, I»; в обоих — перед «—». Строка не кончается однобуквенным словом и не начинается
+с тире: «Продолжая, ты принимаешь Правила / и Конфиденциальность», «Микрофон нужен, чтобы говорить: / в «Диалоге»…»,
+«Быт / и город», «Повторяй между планами — ничего / не пропадёт». Жёсткий перенос перед тире перенесён за тире:
+ru 41-2d `Живой разговор с ИИ —\nне по сценарию.`, en 41-2c `Twenty minutes a day —\nout loud.`
+Держит страж `test/l10n/nbsp_typography_test.dart` (строки наряда в обоих ARB), ожидания тестов рисует `nbTypo()`
+(`test/support/nbsp.dart`) по тому же правилу.
+**41-2d стоит в три строки:** «Живой разговор с ИИ —» в строку 390 pt не входит (≈ 363 из 342 pt) — заголовок
+переносится «Живой разговор / с ИИ — / не по сценарию.», ни одна строка не начинается с тире. Ровно две строки — только
+меньший кегль заголовка листа (он один на все пять) или другие слова (вопрос 1 ниже).
+
+**п. 2.** `planTalkEntryRuleRescue` получил `gender`: роль первой сцены названа и она женщина
+(`window.sources[].partner_gender`) — «…и она повторит проще»; мужчина или роли нет («Собеседник начнёт первым») —
+«он». en — she / he / they. Тесты: роль-женщина (e2e), роль-мужчина, разговор одной сцены без роли.
+
+**п. 3.** Подпись снята, пустое поле — плейсхолдер Inter 17 третичным; новый кадр `profile/42-2-name-empty`.
+
+**п. 4.** `accountUiRussian` — «Русский» в обоих ARB: рядом с «English» и эндонимом сервера «Русский» в «Родном языке».
+
+**п. 5.** Плита 21-3 «по подписке» берёт `planPlateLabel` («ДЕНЬ 2»), а не «ДЕНЬ 2 · ДОГОНЯЕМ» плана, который догоняет.
+Шапка окна дня 23-0a и плита сессии на 409 · subscription «ДЕНЬ N» писали и раньше — теперь это держат тесты на
+догоняющем плане (как e2e-план кадра).
+
+**п. 6.** `introSceneInterview` — «собеседование» / «interview»: как в строке под заголовком и в имени сцены плана.
+
+**п. 7.** `CFBundleDisplayName` — «Ritora» (bundle id `com.denis.engstd` не тронут); `MaterialApp.title` — то же имя.
+
+**п. 8. Снесено 66 ключей** (ARB ru/en и сгенерированные файлы):
+- `home*` (31): homeGenerateChipDoctor, homeGenerateChipRent, homeCollectionProgress, homeGenerateOfflineNote,
+  homeSessionCardTitle, homeSessionPartRepeat, homeSessionPartNew, homeSessionPartTriage, homeInWorkTitle,
+  homeInWorkWaiting, homeInWorkPace, homeInWorkQueueStands, homeEdgeTitle, homeEdgeTomorrow, homeEdgeInDays,
+  homeSectionCount, homeDoneOf, homeContinueLabel, homeContinueAbandoned, homeGenerateRow, homeFirstDayReadyTitle,
+  homeFirstDayReadyHint, homeFirstDayOwnTitle, homeFirstDayOwnHint, homePlanCardBadge, homePlanCardEventIn,
+  homePlanCardEventToday, homePlanCardContinue, homePlanInviteTitle, homePlanInviteBody, homePlanInviteCta;
+- `session*` (16): sessionSpeakStart, sessionEchoEnable, sessionHeaderIntro, sessionHeaderRecognition,
+  sessionRecogniseJustMet, sessionInstrSituationalHear, sessionInstrSituationalSay, sessionInstrAssembleTurn,
+  sessionSceneRunHint, sessionInstrSituationalAsk, sessionSituationLabel, sessionSituationHearLabel,
+  sessionSituationRevealText, sessionSituationTask, sessionLoadError, sessionSayIntent;
+- `dev*` (5): devVoiceTrouble, devQaClockTitle, devQaClockShift, devQaClockPlus, devQaClockReset;
+- `collection*` (3): collectionLearnSubtitle, collectionReviewSubtitle, collectionDefaultUndeletable;
+- `topic*` (2): topicSessionAction, topicSessionTitle;
+- по одному: generateVoiceRecordingNote, searchTitle, authAppleUnavailable, statusCountToSort, ladderTitle,
+  storeSectionOther, paywallNeedsRealPremium, poolNotStudyingNote, dayCards.
+
+Мёртвый — ни одного обращения `l.<ключ>` в `lib/` (кроме `lib/l10n`). С ключами ушли их тесты: в `ru_plurals_test`
+группа homeCollectionProgress, homeInWorkTitle и homeEdgeInDays; в `verdict_row_fits_test` пара QA-OBS-10 домашнего
+экрана. `tool/ladder_preview.dart` (инструмент, не приложение) держал `sessionHeaderIntro` — там теперь литерал
+«Знакомство».
+
+**Фото листов.** Семь фото 1536 × 2048 из `main` a4c6c5fa — карточки сцен 41-2a, кабинет врача 41-2c, кафе 41-2d — легли
+на места заглушек с теми же именами, теми же байтами (при слиянии конфликта не будет). Обложек 41-2e (`cover-*`) не было —
+остались заглушки. Целиком такое фото держало бы 12 МБ памяти на карточку в 160 pt: каждая картинка листов декодируется
+по стороне, в которую упирается под `BoxFit.cover` (карточка и обложка — по ширине, фото c/d — по высоте поля), и
+`IntroScreen` прогревает те же картинки, пока поднимается первый лист. Тест `intro_photos_test`. Сборка тяжелее на ≈ 2,7 МБ.
+**В `main` осталось:** коммит 14bb6c26 добавил те же семь фото ещё и в PNG (≈ 13 МБ); их удаление лежит в индексе
+основного checkout, не закоммичено. `assets/intro/` уходит в сборку целиком — до слияния ветки удаление нужно закоммитить,
+иначе сборка из `main` потащит 13 МБ лишнего.
+
+**Ворота (на итоговом дереве, с фото):** `flutter analyze` — чисто; `flutter test` — **2013 / 2013** (с golden), 1 мин 22 с; invariant-reviewer —
+CLEAN (по диффу доработки и отдельно по коммитам фото). Первый заход ворот — до того, как пришли фото: 2012 / 2012, CLEAN.
+
+**Найдено по ходу.** Golden 21-4 краснел, когда перед ним в том же файле падал 21-3 (ещё не перерисованный): упавший
+тест оставляет догружаться сетевые картинки маршрута, и 21-4 снимал фото вместо заглушек. Дефекта кадра нет — после
+перерисовки 21-3 кадр 21-4 побайтно прежний и зелёный.
+
+**Вопросы и наблюдения:**
+1. 41-2d — три строки заголовка (выше): кегль или слова?
+2. Строки сервера не типографятся: 37-5b «Поговори с / регистратором» — заголовок разговора от сервера. Неразрывные
+   пробелы в тексты плана — на сервере, или типограф на клиенте для серверных строк?
+3. Правило — однобуквенные слова и «не»; «…именно под / него.» (41-2a) осталось. Расширить на короткие предлоги?
+4. На фото: «Пропустить» на плашке 60 % поверх тёмной части фото d читается слабо; светлый статус-бар над светлым
+   небом фото c — тоже.
+5. PNG в `main` (выше).
+
+**Снимки:** `shots-dorabotka.zip` рядом (не в git) — 18 кадров, `before/` (сборка 22, 7bda7c53) и `after/`.
+
+**Выкладка (23):**
+- `scripts/build_ios.sh build` — штамп `BUILD_SHA=9d37be38`, `BUILD_AT=2026-09-27 11:27`; `Runner.app` 54,1 МБ (у (22) —
+  51,4: фото листов). В бандле `CFBundleDisplayName` «Ritora», `com.denis.engstd`, 1.0.0 (23).
+- Установлена на iPhone (Denis) поверх (22): `devicectl device info apps --bundle-id com.denis.engstd` → «Ritora
+  com.denis.engstd 1.0.0 23», 27.09 08:29 UTC. Сессия сохранена. Вход 41-4 — после «Выйти»; листы 41-2 с фото — один раз
+  на аккаунт на телефоне (после «Выйти» и входа — если на этом телефоне их ещё не видели), заново с нуля — только
+  удалить приложение и поставить (23) начисто.
+- Не запушено.
