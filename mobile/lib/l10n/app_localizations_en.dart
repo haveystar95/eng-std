@@ -809,87 +809,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Generation needs a connection. Your topic is saved and will run once you\'re back online.';
 
   @override
-  String get appWordmark => 'Слова';
-
-  @override
-  String get authTagline => 'Words for real situations — from the bank to a job interview.';
-
-  @override
-  String get authContinueGoogle => 'Continue with Google';
-
-  @override
-  String get authContinueApple => 'Continue with Apple';
-
-  @override
-  String get authTerms => 'Terms';
-
-  @override
-  String get authPrivacy => 'Privacy';
-
-  @override
-  String get authOfflineHint => 'No connection. The first sign-in needs the network.';
-
-  @override
   String get authAppleUnavailable => 'Sign in with Apple isn\'t available yet.';
-
-  @override
-  String get onbLangTitle => 'Which language are you learning?';
-
-  @override
-  String get onbLangSubtitle => 'You can change it in your profile anytime.';
-
-  @override
-  String get onbLevelTitle => 'How confidently do you read?';
-
-  @override
-  String get onbLevelSubtitle => 'Roughly — we\'ll refine it from how you sort your words.';
-
-  @override
-  String onbLevelExample(String level) {
-    return 'At $level, collections include words like “wire transfer” and “make ends meet”.';
-  }
-
-  @override
-  String get onbGoalTitle => 'How many words a day?';
-
-  @override
-  String get onbGoalSubtitle => 'The goal only affects reminders and progress.';
-
-  @override
-  String onbGoalMinutes(int count) {
-    return '≈ $count min a day';
-  }
-
-  @override
-  String get onbGoalRecommended => 'recommended';
-
-  @override
-  String get onbFooterNote =>
-      'All of this lives in your profile — level, goal and language aren\'t locked behind onboarding.';
-
-  @override
-  String get onbNext => 'Next';
-
-  @override
-  String get onbStart => 'Start';
-
-  @override
-  String get cefrHintA1 => 'beginner';
-
-  @override
-  String get cefrHintA2 => 'elementary';
-
-  @override
-  String get cefrHintB1 => 'intermediate';
-
-  @override
-  String get cefrHintB2 => 'upper';
-
-  @override
-  String get cefrHintC1 => 'advanced';
-
-  @override
-  String get cefrHintC2 => 'near-native';
 
   @override
   String get profileTitle => 'Profile';
@@ -1486,30 +1406,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String sessionLoadError(String error) {
     return 'Couldn\'t load the session: $error';
   }
-
-  @override
-  String get authErrorOffline => 'No internet connection. Signing in needs a network.';
-
-  @override
-  String get authErrorGoogleUnsupported => 'Google sign-in isn\'t supported on this platform.';
-
-  @override
-  String get authErrorCancelled => 'Sign-in cancelled.';
-
-  @override
-  String get authErrorGoogle => 'Google sign-in failed. Please try again.';
-
-  @override
-  String get authErrorGoogleToken => 'Couldn\'t get a Google token.';
-
-  @override
-  String get authErrorLoginFailed => 'Couldn\'t sign in. Please try again.';
-
-  @override
-  String get authErrorApple => 'Sign in with Apple isn\'t available yet.';
-
-  @override
-  String get authErrorAppleToken => 'Couldn\'t get an Apple token.';
 
   @override
   String get practiceDialogEntry => 'Conversation · 3 min';
@@ -2380,13 +2276,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeSortFirstTitle => 'Time to sort your words';
-
-  @override
-  String get onbNativeTitle => 'Which language should translations be in?';
-
-  @override
-  String get onbNativeSubtitle =>
-      'Translations, explanations and preparation plans use it. You can change it in your profile.';
 
   @override
   String get profileRowNativeLang => 'Native language';
@@ -4285,4 +4174,353 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get planWindowTalkReplayLimit =>
       'The talk was already replayed today — come back tomorrow';
+
+  @override
+  String get startSlogan => 'Prepared to speak.';
+
+  @override
+  String get startSignInApple => 'Sign in with Apple';
+
+  @override
+  String get startSignInGoogle => 'Sign in with Google';
+
+  @override
+  String get startSignInFailed => 'Couldn’t sign in. Try again';
+
+  @override
+  String startLegal(String terms, String privacy) {
+    return 'By continuing you accept the $terms and $privacy';
+  }
+
+  @override
+  String get startLegalTerms => 'Terms';
+
+  @override
+  String get startLegalPrivacy => 'Privacy Policy';
+
+  @override
+  String get introSkip => 'Skip';
+
+  @override
+  String get introStart => 'Start';
+
+  @override
+  String get introATitle => 'A big conversation\nis coming.\nYou’ll be ready.';
+
+  @override
+  String get introAThought =>
+      'A doctor, a landlord, an interview, the bank. Name the event — the plan builds itself around it.';
+
+  @override
+  String get introALineNative => '';
+
+  @override
+  String get introSceneAirport => 'airport';
+
+  @override
+  String get introSceneBank => 'bank';
+
+  @override
+  String get introSceneInterview => 'work';
+
+  @override
+  String get introSceneRent => 'rent';
+
+  @override
+  String get introSceneDoctor => 'doctor';
+
+  @override
+  String get introBTitle => 'A language\nfor every conversation.';
+
+  @override
+  String get introBThought =>
+      'English, German, Romanian, Polish, Spanish, Italian, French. Pick it per plan; hints stay in your own language.';
+
+  @override
+  String get introCBrow => '6 days · 20 min a day';
+
+  @override
+  String get introCToday => 'today';
+
+  @override
+  String get introCDate => 'October 2';
+
+  @override
+  String get introCEvent => 'doctor’s appointment';
+
+  @override
+  String get introStageWords => 'Words';
+
+  @override
+  String get introStagePhrases => 'Phrases';
+
+  @override
+  String get introStageDialogue => 'Dialogue';
+
+  @override
+  String get introStageListen => 'Listen';
+
+  @override
+  String get introStageSpeak => 'Speak';
+
+  @override
+  String get introStageTalk => 'Talk';
+
+  @override
+  String get introCTitle => 'Twenty minutes a day\n— out loud.';
+
+  @override
+  String get introCThought =>
+      'Words, phrases, dialogue: you listen and speak, not type. Exactly the days left before the event.';
+
+  @override
+  String get introDLineNative => '';
+
+  @override
+  String get introDTap => 'tap to speak';
+
+  @override
+  String get introDTitle => 'A live conversation\nwith AI — no script.';
+
+  @override
+  String get introDThought =>
+      'It hears what you said and answers that. Ask again, wander off — it keeps up.';
+
+  @override
+  String get introECaption => 'three sets from the store · your own words from plans';
+
+  @override
+  String get introECoverCity => 'Home and city';
+
+  @override
+  String get introECoverHealth => 'Health';
+
+  @override
+  String get introECoverWork => 'Work';
+
+  @override
+  String introEWordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introETitle => 'Your words\nstay with you.';
+
+  @override
+  String get introEThought =>
+      'Your own collections and ready-made sets. Review between plans — nothing gets lost.';
+
+  @override
+  String get accountSignedInApple => 'Signed in with Apple';
+
+  @override
+  String get accountSignedInGoogle => 'Signed in with Google';
+
+  @override
+  String get accountGroupSubscription => 'Subscription';
+
+  @override
+  String get accountFree => 'Free';
+
+  @override
+  String get accountFreeValue => 'one plan, day 1';
+
+  @override
+  String get accountPremium => 'Premium';
+
+  @override
+  String accountPremiumUntil(String date) {
+    return 'renews $date';
+  }
+
+  @override
+  String get accountPremiumForever => 'no end date';
+
+  @override
+  String get accountManageSubscription => 'Manage subscription';
+
+  @override
+  String get accountRestorePurchases => 'Restore purchases';
+
+  @override
+  String get accountGroupLearning => 'Learning';
+
+  @override
+  String get accountVoice => 'Learner voice';
+
+  @override
+  String get accountVoiceMale => 'male';
+
+  @override
+  String get accountVoiceFemale => 'female';
+
+  @override
+  String get accountSessionSounds => 'Session sounds';
+
+  @override
+  String get accountUiLanguage => 'App language';
+
+  @override
+  String get accountUiRussian => 'русский';
+
+  @override
+  String get accountUiEnglish => 'English';
+
+  @override
+  String get accountNativeLanguage => 'Native language';
+
+  @override
+  String get accountGroupReminders => 'Reminders';
+
+  @override
+  String get accountRemind => 'Remind me about the day';
+
+  @override
+  String get accountTime => 'Time';
+
+  @override
+  String get accountGroupApp => 'App';
+
+  @override
+  String get accountTerms => 'Terms';
+
+  @override
+  String get accountPrivacy => 'Privacy';
+
+  @override
+  String get accountSupport => 'Support';
+
+  @override
+  String get accountSupportValue => 'email';
+
+  @override
+  String get accountRate => 'Rate Ritora';
+
+  @override
+  String get accountSignOut => 'Sign out';
+
+  @override
+  String get accountDelete => 'Delete account';
+
+  @override
+  String get accountNameTitle => 'Name';
+
+  @override
+  String get accountNameField => 'Name';
+
+  @override
+  String get accountDone => 'Done';
+
+  @override
+  String get accountDeleteTitle => 'Delete account?';
+
+  @override
+  String accountDeleteBodyPlan(String plan) {
+    return 'Your plan “$plan”, the days you’ve done and your settings will be gone. They can’t be restored.';
+  }
+
+  @override
+  String get accountDeleteBody =>
+      'The days you’ve done and your settings will be gone. They can’t be restored.';
+
+  @override
+  String get accountDeleteNote => 'Cancel your subscription in the App Store';
+
+  @override
+  String get accountDeleteFailed => 'Couldn’t delete. Try again';
+
+  @override
+  String get accountDeleting => 'Deleting…';
+
+  @override
+  String get accountRemindersTitle => 'Reminders';
+
+  @override
+  String get accountRemindersNote =>
+      'We remind you once a day, when the next day of the plan is waiting';
+
+  @override
+  String get accountRemindersDenied => 'Notifications are off in iOS Settings — turn them on there';
+
+  @override
+  String notifyAskTitle(int day, String time) {
+    return 'Remind you about day $day tomorrow at $time?';
+  }
+
+  @override
+  String get notifyAskBody => 'Once a day, nothing more';
+
+  @override
+  String get notifyAskLater => 'Not now';
+
+  @override
+  String get notifyAskYes => 'Remind me';
+
+  @override
+  String get micAskTitle => 'Ritora listens to how you speak';
+
+  @override
+  String get micAskBody =>
+      'The microphone is how you speak: in Dialogue, Speak and the conversation';
+
+  @override
+  String get micAskLater => 'Later';
+
+  @override
+  String get micAskAllow => 'Allow microphone';
+
+  @override
+  String get planPlateNoNetwork => 'No network';
+
+  @override
+  String get planPlateBySubscription => 'with a subscription';
+
+  @override
+  String get planPlateOpensWithSubscription => 'Opens with a subscription';
+
+  @override
+  String get planPlateSubscription => 'Subscription';
+
+  @override
+  String get planRouteMetaOpensWithSubscription => 'opens with a subscription';
+
+  @override
+  String get planRouteMetaBySubscription => 'with a subscription';
+
+  @override
+  String get planKitLabel => 'Rescue kit';
+
+  @override
+  String planKitSub(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n lines for any moment',
+      one: '$n line for any moment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planKitAll(int n) {
+    return 'all $n →';
+  }
+
+  @override
+  String get planKitCollapse => 'collapse';
+
+  @override
+  String get planEntrySubscriptionTitle => 'A second plan comes with a subscription';
+
+  @override
+  String get planEntryActiveLimitTitle => 'No more than three plans at once';
+
+  @override
+  String get planEntryToTab => 'Back to the plan';
 }

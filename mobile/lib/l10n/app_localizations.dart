@@ -1347,161 +1347,11 @@ abstract class AppLocalizations {
   /// **'Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.'**
   String get homeGenerateOfflineNote;
 
-  /// Словесный знак приложения на экране входа (бренд, не переводится).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова'**
-  String get appWordmark;
-
-  /// Подзаголовок на экране входа (кадр 10a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова для реальных ситуаций — от банка до собеседования.'**
-  String get authTagline;
-
-  /// Кнопка входа через Google (кадр 10a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжить с Google'**
-  String get authContinueGoogle;
-
-  /// Подпись кнопки Apple. SignInWithAppleButton рисуется Flutter'ом и по умолчанию несёт зашитое английское «Sign in with Apple» — локаль устройства тут ни при чём (QA-OBS-31). Формулировка обязана оставаться одним из вариантов, разрешённых Apple HIG: sign in / sign up / continue with Apple.
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжить с Apple'**
-  String get authContinueApple;
-
-  /// Ссылка на условия (кадр 10a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Условия'**
-  String get authTerms;
-
-  /// Ссылка на политику конфиденциальности (кадр 10a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Конфиденциальность'**
-  String get authPrivacy;
-
-  /// Подсказка на экране входа в офлайне.
-  ///
-  /// In ru, this message translates to:
-  /// **'Нет сети. Для первого входа нужно подключение.'**
-  String get authOfflineHint;
-
   /// Ошибка, если Apple-вход не настроен (нет бэкенда/entitlement).
   ///
   /// In ru, this message translates to:
   /// **'Вход через Apple пока недоступен.'**
   String get authAppleUnavailable;
-
-  /// Онбординг, шаг 1 — заголовок (кадр 10b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Какой язык учим?'**
-  String get onbLangTitle;
-
-  /// Онбординг, шаг 1 — подзаголовок.
-  ///
-  /// In ru, this message translates to:
-  /// **'Можно поменять в профиле в любой момент.'**
-  String get onbLangSubtitle;
-
-  /// Онбординг, шаг 2 — заголовок (кадр 10c).
-  ///
-  /// In ru, this message translates to:
-  /// **'Насколько уверенно читаешь?'**
-  String get onbLevelTitle;
-
-  /// Онбординг, шаг 2 — подзаголовок.
-  ///
-  /// In ru, this message translates to:
-  /// **'Примерно — потом уточним по твоим ответам в разборе.'**
-  String get onbLevelSubtitle;
-
-  /// Онбординг, шаг 2 — пример слов для уровня.
-  ///
-  /// In ru, this message translates to:
-  /// **'На {level} в коллекции попадают слова вроде «wire transfer» и «make ends meet».'**
-  String onbLevelExample(String level);
-
-  /// Онбординг, шаг 3 — заголовок (кадр 10d).
-  ///
-  /// In ru, this message translates to:
-  /// **'Сколько слов в день?'**
-  String get onbGoalTitle;
-
-  /// Онбординг, шаг 3 — подзаголовок.
-  ///
-  /// In ru, this message translates to:
-  /// **'Цель влияет только на напоминания и прогресс.'**
-  String get onbGoalSubtitle;
-
-  /// Онбординг, шаг 3 — оценка времени.
-  ///
-  /// In ru, this message translates to:
-  /// **'≈ {count} минут в день'**
-  String onbGoalMinutes(int count);
-
-  /// Метка рекомендованной дневной цели.
-  ///
-  /// In ru, this message translates to:
-  /// **'рекомендуем'**
-  String get onbGoalRecommended;
-
-  /// Онбординг — сноска.
-  ///
-  /// In ru, this message translates to:
-  /// **'Всё это меняется в профиле — уровень, цель и язык не заперты за онбордингом.'**
-  String get onbFooterNote;
-
-  /// Кнопка перехода к следующему шагу онбординга.
-  ///
-  /// In ru, this message translates to:
-  /// **'Далее'**
-  String get onbNext;
-
-  /// Кнопка завершения онбординга.
-  ///
-  /// In ru, this message translates to:
-  /// **'Начать'**
-  String get onbStart;
-
-  /// Подпись уровня A1.
-  ///
-  /// In ru, this message translates to:
-  /// **'начало'**
-  String get cefrHintA1;
-
-  /// Подпись уровня A2.
-  ///
-  /// In ru, this message translates to:
-  /// **'базовый'**
-  String get cefrHintA2;
-
-  /// Подпись уровня B1.
-  ///
-  /// In ru, this message translates to:
-  /// **'средний'**
-  String get cefrHintB1;
-
-  /// Подпись уровня B2.
-  ///
-  /// In ru, this message translates to:
-  /// **'уверенный'**
-  String get cefrHintB2;
-
-  /// Подпись уровня C1.
-  ///
-  /// In ru, this message translates to:
-  /// **'свободный'**
-  String get cefrHintC1;
-
-  /// Подпись уровня C2.
-  ///
-  /// In ru, this message translates to:
-  /// **'почти носитель'**
-  String get cefrHintC2;
 
   /// Заголовок экрана профиля (кадр 11a).
   ///
@@ -2468,54 +2318,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Не удалось загрузить сессию: {error}'**
   String sessionLoadError(String error);
-
-  /// Ошибка входа: нет сети (кадр 10a).
-  ///
-  /// In ru, this message translates to:
-  /// **'Нет подключения к интернету. Для входа нужна сеть.'**
-  String get authErrorOffline;
-
-  /// Ошибка входа: Google Sign-In недоступен на платформе.
-  ///
-  /// In ru, this message translates to:
-  /// **'Вход через Google не поддерживается на этой платформе.'**
-  String get authErrorGoogleUnsupported;
-
-  /// Ошибка входа: пользователь отменил вход.
-  ///
-  /// In ru, this message translates to:
-  /// **'Вход отменён.'**
-  String get authErrorCancelled;
-
-  /// Ошибка входа: сбой Google Sign-In.
-  ///
-  /// In ru, this message translates to:
-  /// **'Не удалось войти через Google. Попробуй ещё раз.'**
-  String get authErrorGoogle;
-
-  /// Ошибка входа: нет ID-токена от Google.
-  ///
-  /// In ru, this message translates to:
-  /// **'Не удалось получить токен Google.'**
-  String get authErrorGoogleToken;
-
-  /// Ошибка входа: бэкенд отклонил обмен токена.
-  ///
-  /// In ru, this message translates to:
-  /// **'Не удалось войти. Попробуй ещё раз.'**
-  String get authErrorLoginFailed;
-
-  /// Ошибка входа: Apple-вход недоступен (нет бэкенда/платной команды).
-  ///
-  /// In ru, this message translates to:
-  /// **'Вход через Apple пока недоступен.'**
-  String get authErrorApple;
-
-  /// Ошибка входа: нет identity-токена от Apple.
-  ///
-  /// In ru, this message translates to:
-  /// **'Не удалось получить токен Apple.'**
-  String get authErrorAppleToken;
 
   /// Кнопка входа в голосовой разговор на экране коллекции (только Premium).
   ///
@@ -3632,18 +3434,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Пора разобрать слова'**
   String get homeSortFirstTitle;
-
-  /// Онбординг, шаг 1 (ONB-1) — родной язык. Спрашивается один раз за всё время.
-  ///
-  /// In ru, this message translates to:
-  /// **'На каком языке показывать переводы?'**
-  String get onbNativeTitle;
-
-  /// Онбординг, шаг 1 — что покупает ответ.
-  ///
-  /// In ru, this message translates to:
-  /// **'На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.'**
-  String get onbNativeSubtitle;
 
   /// Строка профиля: родной язык (язык переводов).
   ///
@@ -6494,6 +6284,636 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Разговор сегодня уже повторяли — вернись завтра'**
   String get planWindowTalkReplayLimit;
+
+  /// Заставка (41-1c) и вход на ней (41-4): слоган под словомарком Ritora. Inter 15 серым.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готов говорить.'**
+  String get startSlogan;
+
+  /// Вход на заставке (41-4): угольная кнопка с логотипом Apple. Формулировка из вариантов Apple HIG (sign in with Apple).
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти с Apple'**
+  String get startSignInApple;
+
+  /// Вход на заставке (41-4): карточка с контуром чернил и цветной «G».
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти с Google'**
+  String get startSignInGoogle;
+
+  /// Вход (41-4b): строка чернилами над кнопками, когда вход не удался (сеть, сервер, провайдер). Отмена своего окна Apple/Google — не ошибка, строки нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось войти. Попробуй ещё раз'**
+  String get startSignInFailed;
+
+  /// Вход (41-4): юрстрока под кнопками, 13 серым; {terms} и {privacy} — ссылки латунью (startLegalTerms, startLegalPrivacy).
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжая, ты принимаешь {terms} и {privacy}'**
+  String startLegal(String terms, String privacy);
+
+  /// Ссылка «Правила» в юрстроке входа (41-4) и строка профиля (42-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Правила'**
+  String get startLegalTerms;
+
+  /// Ссылка «Конфиденциальность» в юрстроке входа (41-4); в профиле (42-1) — строка «Конфиденциальность» (en: Privacy).
+  ///
+  /// In ru, this message translates to:
+  /// **'Конфиденциальность'**
+  String get startLegalPrivacy;
+
+  /// Листы «зачем» (41-2 a–d): справа сверху, на фото — на плашке бумаги 60 %; ведёт на вкладку «План».
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропустить'**
+  String get introSkip;
+
+  /// Последний лист «зачем» (41-2e): угольная кнопка → вкладка «План».
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать'**
+  String get introStart;
+
+  /// Лист a (41-2a): заголовок Literata 30, три строки ручным переносом; точки латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скоро важный\nразговор.\nТы будешь готов.'**
+  String get introATitle;
+
+  /// Лист a (41-2a): мысль под заголовком, Inter 15 серым.
+  ///
+  /// In ru, this message translates to:
+  /// **'Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.'**
+  String get introAThought;
+
+  /// Лист a (41-2a): перевод реплики «I’d like to make an appointment.» под ней, 13 серым. В английском интерфейсе пусто — строки нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Я хочу записаться на приём.'**
+  String get introALineNative;
+
+  /// Лист a (41-2a): капитель на карточке сцены (печатается прописными).
+  ///
+  /// In ru, this message translates to:
+  /// **'аэропорт'**
+  String get introSceneAirport;
+
+  /// Лист a (41-2a): капитель на карточке сцены.
+  ///
+  /// In ru, this message translates to:
+  /// **'банк'**
+  String get introSceneBank;
+
+  /// Лист a (41-2a): капитель на карточке сцены «собеседование».
+  ///
+  /// In ru, this message translates to:
+  /// **'работа'**
+  String get introSceneInterview;
+
+  /// Лист a (41-2a): капитель на карточке сцены.
+  ///
+  /// In ru, this message translates to:
+  /// **'аренда'**
+  String get introSceneRent;
+
+  /// Лист a (41-2a): капитель на верхней карточке сцены.
+  ///
+  /// In ru, this message translates to:
+  /// **'врач'**
+  String get introSceneDoctor;
+
+  /// Лист b (41-2b): заголовок, две строки; точка латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Язык —\nпод каждый разговор.'**
+  String get introBTitle;
+
+  /// Лист b (41-2b): мысль — семь языков дословно по реестру канвы.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.'**
+  String get introBThought;
+
+  /// Лист c (41-2c): бровь капителью над маршрутом (печатается прописными).
+  ///
+  /// In ru, this message translates to:
+  /// **'6 дней · 20 минут в день'**
+  String get introCBrow;
+
+  /// Лист c (41-2c): подпись под узлом дня 2 маршрута.
+  ///
+  /// In ru, this message translates to:
+  /// **'сегодня'**
+  String get introCToday;
+
+  /// Лист c (41-2c): капитель даты события над латунной точкой (печатается прописными).
+  ///
+  /// In ru, this message translates to:
+  /// **'2 октября'**
+  String get introCDate;
+
+  /// Лист c (41-2c): название события под латунной точкой, 13 чернилами.
+  ///
+  /// In ru, this message translates to:
+  /// **'приём у врача'**
+  String get introCEvent;
+
+  /// Лист c (41-2c): подпись иконки этапа в ряду шести этапов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова'**
+  String get introStageWords;
+
+  /// Лист c (41-2c): подпись иконки этапа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы'**
+  String get introStagePhrases;
+
+  /// Лист c (41-2c): подпись иконки этапа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог'**
+  String get introStageDialogue;
+
+  /// Лист c (41-2c): подпись иконки этапа «Слушаю и отвечаю» (коротко).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушаю'**
+  String get introStageListen;
+
+  /// Лист c (41-2c): подпись иконки этапа «Говорю сам» (коротко).
+  ///
+  /// In ru, this message translates to:
+  /// **'Говорю'**
+  String get introStageSpeak;
+
+  /// Лист c (41-2c): подпись иконки этапа «Разговор».
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор'**
+  String get introStageTalk;
+
+  /// Лист c (41-2c): заголовок, две строки; точка латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Двадцать минут\nв день — вслух.'**
+  String get introCTitle;
+
+  /// Лист c (41-2c): мысль под заголовком.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.'**
+  String get introCThought;
+
+  /// Лист d (41-2d): перевод реплики роли в её пузыре, 15 серым. В английском интерфейсе пусто — строки нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доброе утро. Что вас беспокоит?'**
+  String get introDLineNative;
+
+  /// Лист d (41-2d): подпись у микрофона 30-3 в покое.
+  ///
+  /// In ru, this message translates to:
+  /// **'тап — говорить'**
+  String get introDTap;
+
+  /// Лист d (41-2d): заголовок, две строки; точка латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Живой разговор с ИИ\n— не по сценарию.'**
+  String get introDTitle;
+
+  /// Лист d (41-2d): мысль под заголовком.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.'**
+  String get introDThought;
+
+  /// Лист e (41-2e): подпись 13 серым над заголовком.
+  ///
+  /// In ru, this message translates to:
+  /// **'три подборки из стора · свои слова из планов'**
+  String get introECaption;
+
+  /// Лист e (41-2e): название обложки подборки стора, Literata 17.
+  ///
+  /// In ru, this message translates to:
+  /// **'Быт и город'**
+  String get introECoverCity;
+
+  /// Лист e (41-2e): название средней обложки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Здоровье'**
+  String get introECoverHealth;
+
+  /// Лист e (41-2e): название обложки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Работа'**
+  String get introECoverWork;
+
+  /// Лист e (41-2e): число слов под названием обложки, 13 серым.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String introEWordCount(int count);
+
+  /// Лист e (41-2e): заголовок, две строки; точка латунью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова остаются\nс тобой.'**
+  String get introETitle;
+
+  /// Лист e (41-2e): мысль под заголовком.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свои коллекции и готовые подборки. Повторяй между планами — ничего не пропадёт.'**
+  String get introEThought;
+
+  /// Профиль (42-1): строка провайдера под именем, с галкой шалфея, без действия.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход через Apple'**
+  String get accountSignedInApple;
+
+  /// Профиль (42-1b): строка провайдера под именем.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход через Google'**
+  String get accountSignedInGoogle;
+
+  /// Профиль (42-1): капитель группы подписки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подписка'**
+  String get accountGroupSubscription;
+
+  /// Профиль (42-1a): тариф без подписки (access.plan = free).
+  ///
+  /// In ru, this message translates to:
+  /// **'Бесплатно'**
+  String get accountFree;
+
+  /// Профиль (42-1a): что даёт бесплатный тариф — справа серым.
+  ///
+  /// In ru, this message translates to:
+  /// **'один план, день 1'**
+  String get accountFreeValue;
+
+  /// Профиль (42-1b): тариф при access.plan = premium.
+  ///
+  /// In ru, this message translates to:
+  /// **'Premium'**
+  String get accountPremium;
+
+  /// Профиль (42-1b): когда продлится подписка — access.expires_at, дата «25 октября».
+  ///
+  /// In ru, this message translates to:
+  /// **'продлится {date}'**
+  String accountPremiumUntil(String date);
+
+  /// Профиль (42-1b): право без срока (access.expires_at = null — выдано владельцем, lifetime).
+  ///
+  /// In ru, this message translates to:
+  /// **'бессрочно'**
+  String get accountPremiumForever;
+
+  /// Профиль (42-1b): ведёт в подписки App Store.
+  ///
+  /// In ru, this message translates to:
+  /// **'Управлять подпиской'**
+  String get accountManageSubscription;
+
+  /// Профиль (42-1b): перечитывает права аккаунта, без перехода (покупок в API нет до PAY-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановить покупки'**
+  String get accountRestorePurchases;
+
+  /// Профиль (42-1): капитель группы обучения.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обучение'**
+  String get accountGroupLearning;
+
+  /// Профиль (42-1): голос своих реплик (мужской/женский → сервер, лист 38-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Голос ученика'**
+  String get accountVoice;
+
+  /// Профиль (42-1): значение строки «Голос ученика».
+  ///
+  /// In ru, this message translates to:
+  /// **'мужской'**
+  String get accountVoiceMale;
+
+  /// Профиль (42-1): значение строки «Голос ученика».
+  ///
+  /// In ru, this message translates to:
+  /// **'женский'**
+  String get accountVoiceFemale;
+
+  /// Профиль (42-1): тумблер шести звуков сессии дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Звуки в сессии'**
+  String get accountSessionSounds;
+
+  /// Профиль (42-1): язык интерфейса — шит выбора «русский / English».
+  ///
+  /// In ru, this message translates to:
+  /// **'Язык интерфейса'**
+  String get accountUiLanguage;
+
+  /// Профиль (42-1): русский язык интерфейса — своим именем в любом интерфейсе.
+  ///
+  /// In ru, this message translates to:
+  /// **'русский'**
+  String get accountUiRussian;
+
+  /// Профиль (42-1): английский язык интерфейса — своим именем.
+  ///
+  /// In ru, this message translates to:
+  /// **'English'**
+  String get accountUiEnglish;
+
+  /// Профиль (42-1): родной язык аккаунта — список родных сервера минус цель (LANG-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Родной язык'**
+  String get accountNativeLanguage;
+
+  /// Профиль (42-1): капитель группы напоминаний.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминания'**
+  String get accountGroupReminders;
+
+  /// Профиль (42-1) и шит 42-4: тумблер напоминаний.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминать о дне'**
+  String get accountRemind;
+
+  /// Профиль (42-1): время напоминания → шит 42-4.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время'**
+  String get accountTime;
+
+  /// Профиль (42-1): капитель группы приложения.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приложение'**
+  String get accountGroupApp;
+
+  /// Профиль (42-1): документ «Правила».
+  ///
+  /// In ru, this message translates to:
+  /// **'Правила'**
+  String get accountTerms;
+
+  /// Профиль (42-1): документ «Конфиденциальность».
+  ///
+  /// In ru, this message translates to:
+  /// **'Конфиденциальность'**
+  String get accountPrivacy;
+
+  /// Профиль (42-1): письмо в поддержку.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддержка'**
+  String get accountSupport;
+
+  /// Профиль (42-1): значение строки «Поддержка».
+  ///
+  /// In ru, this message translates to:
+  /// **'письмо'**
+  String get accountSupportValue;
+
+  /// Профиль (42-1): системное окно оценки App Store.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оценить Ritora'**
+  String get accountRate;
+
+  /// Профиль (42-1): текстом чернилами над «Удалить аккаунт»; POST /auth/logout → заставка 41-4a.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выйти'**
+  String get accountSignOut;
+
+  /// Профиль (42-1) и шит 42-3: текст терракотой / кнопка контуром терракоты.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить аккаунт'**
+  String get accountDelete;
+
+  /// Шит имени (42-2): заголовок.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя'**
+  String get accountNameTitle;
+
+  /// Шит имени (42-2): подпись над полем.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя'**
+  String get accountNameField;
+
+  /// Шиты 42-2 и 42-4: угольная кнопка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готово'**
+  String get accountDone;
+
+  /// Шит удаления (42-3): заголовок.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить аккаунт?'**
+  String get accountDeleteTitle;
+
+  /// Шит удаления (42-3): что исчезнет, с названием текущего плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.'**
+  String accountDeleteBodyPlan(String plan);
+
+  /// Шит удаления (42-3): то же, когда плана нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.'**
+  String get accountDeleteBody;
+
+  /// Шит удаления (42-3): строка 13 серым под текстом.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подписку отмени в App Store'**
+  String get accountDeleteNote;
+
+  /// Шит удаления (42-3): DELETE /auth/me не прошёл (нет сети, 5xx) — ничего не удалено, кнопка снова живая.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось удалить. Попробуй ещё раз'**
+  String get accountDeleteFailed;
+
+  /// Шит удаления (42-3b): кнопка, пока сервер удаляет; «Отмена» погашена, шит не закрывается.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удаляем…'**
+  String get accountDeleting;
+
+  /// Шит напоминаний (42-4): заголовок.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминания'**
+  String get accountRemindersTitle;
+
+  /// Шит напоминаний (42-4): строка под колесом.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мы напоминаем раз в день, когда ждёт следующий день плана'**
+  String get accountRemindersNote;
+
+  /// Шит напоминаний (42-4): вместо колеса, когда iOS запретила уведомления; тап — Настройки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уведомления выключены в Настройках iOS — включить там'**
+  String get accountRemindersDenied;
+
+  /// Пред-запрос уведомлений (43-1): после итога дня 1 (и дня 2 после «Не сейчас»); день — следующий, время — своё из профиля или час сервера.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напомнить про день {day} завтра в {time}?'**
+  String notifyAskTitle(int day, String time);
+
+  /// Пред-запрос уведомлений (43-1): строка под вопросом.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раз в день, без лишнего'**
+  String get notifyAskBody;
+
+  /// Пред-запрос уведомлений (43-1): латунью; после дня 1 — ещё раз после дня 2, потом не спрашивать.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не сейчас'**
+  String get notifyAskLater;
+
+  /// Пред-запрос уведомлений (43-1): угольная кнопка → системный запрос iOS.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминать'**
+  String get notifyAskYes;
+
+  /// Пред-запрос микрофона (41-3): на первой карточке с микрофоном.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ritora слушает, как ты говоришь'**
+  String get micAskTitle;
+
+  /// Пред-запрос микрофона (41-3): строка без обещаний.
+  ///
+  /// In ru, this message translates to:
+  /// **'Микрофон нужен, чтобы говорить: в «Диалоге», «Говорю сам» и в разговоре'**
+  String get micAskBody;
+
+  /// Пред-запрос микрофона (41-3): латунью; карточку можно пропустить, шит вернётся на следующей карточке с микрофоном.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позже'**
+  String get micAskLater;
+
+  /// Пред-запрос микрофона (41-3): угольная кнопка → системные окна iOS (распознавание и микрофон).
+  ///
+  /// In ru, this message translates to:
+  /// **'Разрешить микрофон'**
+  String get micAskAllow;
+
+  /// Плита упавшего дня (22-5c): вторая строка, только когда «Повторить» не ушёл — сети действительно нет (CLIENT-START §6).
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет сети'**
+  String get planPlateNoNetwork;
+
+  /// Плита дня, запертого подпиской (21-3 / 23-0a «по подписке»): начало строки под названием — «по подписке · 75 карточек».
+  ///
+  /// In ru, this message translates to:
+  /// **'по подписке'**
+  String get planPlateBySubscription;
+
+  /// Плита дня, запертого подпиской (21-3 / 23-0a): 13 серым вместо кнопки «Начать».
+  ///
+  /// In ru, this message translates to:
+  /// **'Откроется с подпиской'**
+  String get planPlateOpensWithSubscription;
+
+  /// Плита дня, запертого подпиской (21-3 / 23-0a), и экран «Второй план — по подписке»: кнопка контуром латуни → профиль, группа подписки (до PAY-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Подписка'**
+  String get planPlateSubscription;
+
+  /// Маршрут (22-5a / 21-3 «по подписке»): мета первого дня, запертого подпиской.
+  ///
+  /// In ru, this message translates to:
+  /// **'откроется с подпиской'**
+  String get planRouteMetaOpensWithSubscription;
+
+  /// Маршрут (22-5a / 21-3 «по подписке»): мета следующих дней, запертых подпиской.
+  ///
+  /// In ru, this message translates to:
+  /// **'по подписке'**
+  String get planRouteMetaBySubscription;
+
+  /// Таб «План» (21-2b): карточка спасательного набора под маршрутом — rescue_kit плана (LANG-1b §2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Спасательный набор'**
+  String get planKitLabel;
+
+  /// Карточка набора (21-2b): строка под названием — сколько фраз.
+  ///
+  /// In ru, this message translates to:
+  /// **'{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}'**
+  String planKitSub(int n);
+
+  /// Карточка набора (21-2b): раскрыть все фразы на месте.
+  ///
+  /// In ru, this message translates to:
+  /// **'все {n} →'**
+  String planKitAll(int n);
+
+  /// Карточка набора (21-2b): свернуть до первой фразы.
+  ///
+  /// In ru, this message translates to:
+  /// **'свернуть'**
+  String get planKitCollapse;
+
+  /// Вход в план: POST /plans ответил 402 plan_subscription_required — экран-заглушка до пейволла PAY-1, кнопка «Подписка» → профиль.
+  ///
+  /// In ru, this message translates to:
+  /// **'Второй план — по подписке'**
+  String get planEntrySubscriptionTitle;
+
+  /// Вход в план: POST /plans ответил 409 plan_active_limit — три плана уже в работе.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не больше трёх планов сразу'**
+  String get planEntryActiveLimitTitle;
+
+  /// Вход в план, заглушка «Не больше трёх планов сразу»: вернуться на таб «План».
+  ///
+  /// In ru, this message translates to:
+  /// **'К плану'**
+  String get planEntryToTab;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

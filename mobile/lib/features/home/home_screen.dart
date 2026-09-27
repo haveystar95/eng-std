@@ -21,14 +21,17 @@ const int kPlanTabIndex = 1;
 const int kCollectionsTabIndex = 2;
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.initialTab = 0});
+
+  /// The tab the shell opens on — «План» right after the five «why» sheets (41-2), «Сегодня» otherwise.
+  final int initialTab;
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
-  int _index = 0;
+  late int _index = widget.initialTab;
   StreamSubscription<List<ConnectivityResult>>? _connSub;
 
   @override

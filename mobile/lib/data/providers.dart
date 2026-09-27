@@ -32,6 +32,7 @@ import 'seq_counter.dart';
 import 'session_completion_sync.dart';
 import 'speech/speech_diagnostics.dart';
 import 'speech/speech_recognizer.dart';
+import 'start/account_device_store.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
 import 'triage_sync.dart';
@@ -265,41 +266,60 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 /// Holds the signed-in user (or null). `loading` while restoring/authing.
 class AuthController extends AsyncNotifier<AppUser?> {
+  /// THE SERVER'S FIRST ANSWER OF THIS RUN — the splash waits for it (41-1: «сервер не ответил за 1,5 с — ждать до
+  /// 4 с»). Completes when the background `/auth/me` of a restored session lands or fails; at once when there was
+  /// nothing to ask. A test double that overrides [build] never touches it and gets the finished default.
+  Future<void> get firstAnswer => _firstAnswer.future;
+  Completer<void> _firstAnswer = Completer<void>()..complete();
+
   @override
   Future<AppUser?> build() async {
     final repo = ref.read(authRepositoryProvider);
     final user = await repo.restore();
     if (user != null) {
+      _firstAnswer = Completer<void>();
       // Heal a stale/tier-less cache in-session: refresh from /me and push the fresh user (tier +
       // quota) into state when online. Best-effort — offline keeps the cached user.
       unawaited(() async {
         try {
           final fresh = await repo.refresh();
-          if (fresh != null) state = AsyncData(fresh);
+          if (fresh != null) {
+            state = AsyncData(fresh);
+          } else if (!await repo.hasSession()) {
+            // 401: the server no longer knows this token and `refresh` dropped it. The cached user must go too, or
+            // the app opens «signed in» on a session every request of which will be refused.
+            state = const AsyncData(null);
+          }
         } catch (_) {
           /* offline / transient — keep the cached user */
+        } finally {
+          if (!_firstAnswer.isCompleted) _firstAnswer.complete();
         }
       }());
     }
     return user;
   }
 
-  Future<void> signIn() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() => ref.read(authRepositoryProvider).signInWithGoogle());
-  }
+  Future<void> signIn() => _signIn(() => ref.read(authRepositoryProvider).signInWithGoogle(), SignInDoor.google);
 
-  Future<void> signInWithApple() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() => ref.read(authRepositoryProvider).signInWithApple());
-  }
+  Future<void> signInWithApple() =>
+      _signIn(() => ref.read(authRepositoryProvider).signInWithApple(), SignInDoor.apple);
 
   /// QA dev sign-in — debug builds only (see [kDevLoginEnabled]). No-op if somehow reached in a
   /// release build, rather than throwing into the UI: the button that calls it does not exist there.
   Future<void> signInWithDev(String email) async {
     if (!kDevLoginEnabled) return;
+    await _signIn(() => ref.read(authRepositoryProvider).signInWithDev(email), null);
+  }
+
+  /// One road for every door: the state goes loading → the user or the error, and the door the account came in
+  /// through is remembered for the profile's «Вход через …» (42-1) — the server's user does not carry it.
+  Future<void> _signIn(Future<AppUser> Function() door, SignInDoor? kind) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => ref.read(authRepositoryProvider).signInWithDev(email));
+    final next = await AsyncValue.guard(door);
+    final user = next.value;
+    if (user != null && kind != null) await ref.read(accountDeviceStoreProvider).setDoor(user.id, kind);
+    state = next;
   }
 
   Future<void> signOut() async {
@@ -342,16 +362,6 @@ class AuthController extends AsyncNotifier<AppUser?> {
 }
 
 final authControllerProvider = AsyncNotifierProvider<AuthController, AppUser?>(AuthController.new);
-
-/// Whether first-run onboarding is done — server truth via `profile.onboarded_at` (device-batch
-/// F1). Tied to the account, not the device: a relogin never re-onboards, a new account always
-/// does, and it survives keychain wipe / reinstall / a new device. Re-evaluated whenever the
-/// signed-in user changes (updateProfile refreshes the user with the stamped onboarded_at).
-final onboardedProvider = FutureProvider<bool>((ref) async {
-  final user = ref.watch(authControllerProvider).value;
-  if (user == null) return true; // not applicable when signed out
-  return user.profile?.onboardedAt != null;
-});
 
 // ---- Data providers (read-through: local DB is the source of truth) ----------
 //

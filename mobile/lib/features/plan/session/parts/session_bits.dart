@@ -13,6 +13,8 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../ui/plan_marks.dart';
 import '../../plan_stage_text.dart';
 
+export 'package:eng_std/ui/dock_button.dart';
+
 /// SHARED BUILDING BLOCKS OF THE DAY SESSION (canvas `session-canvas.dc.html`, series 30–32): sheet, eyebrow, task
 /// line, wave, «listen», the action button and its dock, photo, frame line with a slot, «correct / wrong» reactions.
 /// One widget per type — cards are assembled from them and do not introduce styles of their own.

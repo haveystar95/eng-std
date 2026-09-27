@@ -650,12 +650,6 @@ class Profile {
   /// in [toJson] (staleness-safe, like the generation quota). Gates the practice-dialog entry.
   final String tier;
 
-  /// ISO-8601 instant the user finished first-run onboarding, or null if never — the server-side
-  /// onboarding gate (device-batch F1). Replaces the old per-device keychain flag: it's tied to the
-  /// account, so a relogin never re-onboards and a new account always does. Persisted in [toJson]
-  /// so the offline-restored user still gates correctly on a cold start.
-  final String? onboardedAt;
-
   /// The user's IANA timezone as the server knows it (F19). UTC until the client has sent a real
   /// zone. Informational on the client (the client sends the *device* zone; the server does the due
   /// rounding), kept for round-tripping the cached user.
@@ -671,15 +665,11 @@ class Profile {
     required this.cefrLevel,
     required this.dailyGoal,
     this.tier = 'free',
-    this.onboardedAt,
     this.timezone = 'UTC',
     this.gender,
   });
 
   bool get isPremium => tier == 'premium';
-
-  /// True once the account has completed onboarding (server truth).
-  bool get isOnboarded => onboardedAt != null;
 
   factory Profile.fromJson(Map<String, dynamic> j) => Profile(
     nativeLanguage: (j['native_language'] as String?) ?? 'ru',
@@ -687,7 +677,6 @@ class Profile {
     cefrLevel: (j['cefr_level'] as String?) ?? 'B1',
     dailyGoal: (j['daily_goal'] as int?) ?? 20,
     tier: (j['tier'] as String?) ?? 'free',
-    onboardedAt: j['onboarded_at'] as String?,
     timezone: (j['timezone'] as String?) ?? 'UTC',
     gender: j['gender'] as String?,
   );
@@ -702,7 +691,6 @@ class Profile {
     // restored user defaults to free and the premium-gated dialog button vanishes until a
     // re-login. The server still enforces the real gate (403), so mild staleness is safe.
     'tier': tier,
-    'onboarded_at': onboardedAt, // keep the onboarding gate correct on offline cold start
     // The voice of the learner's own lines: kept so a cold start does not ask a question already answered.
     'gender': gender,
   };

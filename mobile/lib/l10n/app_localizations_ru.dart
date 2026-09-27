@@ -827,87 +827,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.';
 
   @override
-  String get appWordmark => 'Слова';
-
-  @override
-  String get authTagline => 'Слова для реальных ситуаций — от банка до собеседования.';
-
-  @override
-  String get authContinueGoogle => 'Продолжить с Google';
-
-  @override
-  String get authContinueApple => 'Продолжить с Apple';
-
-  @override
-  String get authTerms => 'Условия';
-
-  @override
-  String get authPrivacy => 'Конфиденциальность';
-
-  @override
-  String get authOfflineHint => 'Нет сети. Для первого входа нужно подключение.';
-
-  @override
   String get authAppleUnavailable => 'Вход через Apple пока недоступен.';
-
-  @override
-  String get onbLangTitle => 'Какой язык учим?';
-
-  @override
-  String get onbLangSubtitle => 'Можно поменять в профиле в любой момент.';
-
-  @override
-  String get onbLevelTitle => 'Насколько уверенно читаешь?';
-
-  @override
-  String get onbLevelSubtitle => 'Примерно — потом уточним по твоим ответам в разборе.';
-
-  @override
-  String onbLevelExample(String level) {
-    return 'На $level в коллекции попадают слова вроде «wire transfer» и «make ends meet».';
-  }
-
-  @override
-  String get onbGoalTitle => 'Сколько слов в день?';
-
-  @override
-  String get onbGoalSubtitle => 'Цель влияет только на напоминания и прогресс.';
-
-  @override
-  String onbGoalMinutes(int count) {
-    return '≈ $count минут в день';
-  }
-
-  @override
-  String get onbGoalRecommended => 'рекомендуем';
-
-  @override
-  String get onbFooterNote =>
-      'Всё это меняется в профиле — уровень, цель и язык не заперты за онбордингом.';
-
-  @override
-  String get onbNext => 'Далее';
-
-  @override
-  String get onbStart => 'Начать';
-
-  @override
-  String get cefrHintA1 => 'начало';
-
-  @override
-  String get cefrHintA2 => 'базовый';
-
-  @override
-  String get cefrHintB1 => 'средний';
-
-  @override
-  String get cefrHintB2 => 'уверенный';
-
-  @override
-  String get cefrHintC1 => 'свободный';
-
-  @override
-  String get cefrHintC2 => 'почти носитель';
 
   @override
   String get profileTitle => 'Профиль';
@@ -1527,30 +1447,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String sessionLoadError(String error) {
     return 'Не удалось загрузить сессию: $error';
   }
-
-  @override
-  String get authErrorOffline => 'Нет подключения к интернету. Для входа нужна сеть.';
-
-  @override
-  String get authErrorGoogleUnsupported => 'Вход через Google не поддерживается на этой платформе.';
-
-  @override
-  String get authErrorCancelled => 'Вход отменён.';
-
-  @override
-  String get authErrorGoogle => 'Не удалось войти через Google. Попробуй ещё раз.';
-
-  @override
-  String get authErrorGoogleToken => 'Не удалось получить токен Google.';
-
-  @override
-  String get authErrorLoginFailed => 'Не удалось войти. Попробуй ещё раз.';
-
-  @override
-  String get authErrorApple => 'Вход через Apple пока недоступен.';
-
-  @override
-  String get authErrorAppleToken => 'Не удалось получить токен Apple.';
 
   @override
   String get practiceDialogEntry => 'Разговор · 3 мин';
@@ -2493,13 +2389,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeSortFirstTitle => 'Пора разобрать слова';
-
-  @override
-  String get onbNativeTitle => 'На каком языке показывать переводы?';
-
-  @override
-  String get onbNativeSubtitle =>
-      'На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.';
 
   @override
   String get profileRowNativeLang => 'Родной язык';
@@ -4494,4 +4383,356 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planWindowTalkReplayLimit => 'Разговор сегодня уже повторяли — вернись завтра';
+
+  @override
+  String get startSlogan => 'Готов говорить.';
+
+  @override
+  String get startSignInApple => 'Войти с Apple';
+
+  @override
+  String get startSignInGoogle => 'Войти с Google';
+
+  @override
+  String get startSignInFailed => 'Не удалось войти. Попробуй ещё раз';
+
+  @override
+  String startLegal(String terms, String privacy) {
+    return 'Продолжая, ты принимаешь $terms и $privacy';
+  }
+
+  @override
+  String get startLegalTerms => 'Правила';
+
+  @override
+  String get startLegalPrivacy => 'Конфиденциальность';
+
+  @override
+  String get introSkip => 'Пропустить';
+
+  @override
+  String get introStart => 'Начать';
+
+  @override
+  String get introATitle => 'Скоро важный\nразговор.\nТы будешь готов.';
+
+  @override
+  String get introAThought =>
+      'Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.';
+
+  @override
+  String get introALineNative => 'Я хочу записаться на приём.';
+
+  @override
+  String get introSceneAirport => 'аэропорт';
+
+  @override
+  String get introSceneBank => 'банк';
+
+  @override
+  String get introSceneInterview => 'работа';
+
+  @override
+  String get introSceneRent => 'аренда';
+
+  @override
+  String get introSceneDoctor => 'врач';
+
+  @override
+  String get introBTitle => 'Язык —\nпод каждый разговор.';
+
+  @override
+  String get introBThought =>
+      'Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.';
+
+  @override
+  String get introCBrow => '6 дней · 20 минут в день';
+
+  @override
+  String get introCToday => 'сегодня';
+
+  @override
+  String get introCDate => '2 октября';
+
+  @override
+  String get introCEvent => 'приём у врача';
+
+  @override
+  String get introStageWords => 'Слова';
+
+  @override
+  String get introStagePhrases => 'Фразы';
+
+  @override
+  String get introStageDialogue => 'Диалог';
+
+  @override
+  String get introStageListen => 'Слушаю';
+
+  @override
+  String get introStageSpeak => 'Говорю';
+
+  @override
+  String get introStageTalk => 'Разговор';
+
+  @override
+  String get introCTitle => 'Двадцать минут\nв день — вслух.';
+
+  @override
+  String get introCThought =>
+      'Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.';
+
+  @override
+  String get introDLineNative => 'Доброе утро. Что вас беспокоит?';
+
+  @override
+  String get introDTap => 'тап — говорить';
+
+  @override
+  String get introDTitle => 'Живой разговор с ИИ\n— не по сценарию.';
+
+  @override
+  String get introDThought =>
+      'Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.';
+
+  @override
+  String get introECaption => 'три подборки из стора · свои слова из планов';
+
+  @override
+  String get introECoverCity => 'Быт и город';
+
+  @override
+  String get introECoverHealth => 'Здоровье';
+
+  @override
+  String get introECoverWork => 'Работа';
+
+  @override
+  String introEWordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introETitle => 'Слова остаются\nс тобой.';
+
+  @override
+  String get introEThought =>
+      'Свои коллекции и готовые подборки. Повторяй между планами — ничего не пропадёт.';
+
+  @override
+  String get accountSignedInApple => 'Вход через Apple';
+
+  @override
+  String get accountSignedInGoogle => 'Вход через Google';
+
+  @override
+  String get accountGroupSubscription => 'Подписка';
+
+  @override
+  String get accountFree => 'Бесплатно';
+
+  @override
+  String get accountFreeValue => 'один план, день 1';
+
+  @override
+  String get accountPremium => 'Premium';
+
+  @override
+  String accountPremiumUntil(String date) {
+    return 'продлится $date';
+  }
+
+  @override
+  String get accountPremiumForever => 'бессрочно';
+
+  @override
+  String get accountManageSubscription => 'Управлять подпиской';
+
+  @override
+  String get accountRestorePurchases => 'Восстановить покупки';
+
+  @override
+  String get accountGroupLearning => 'Обучение';
+
+  @override
+  String get accountVoice => 'Голос ученика';
+
+  @override
+  String get accountVoiceMale => 'мужской';
+
+  @override
+  String get accountVoiceFemale => 'женский';
+
+  @override
+  String get accountSessionSounds => 'Звуки в сессии';
+
+  @override
+  String get accountUiLanguage => 'Язык интерфейса';
+
+  @override
+  String get accountUiRussian => 'русский';
+
+  @override
+  String get accountUiEnglish => 'English';
+
+  @override
+  String get accountNativeLanguage => 'Родной язык';
+
+  @override
+  String get accountGroupReminders => 'Напоминания';
+
+  @override
+  String get accountRemind => 'Напоминать о дне';
+
+  @override
+  String get accountTime => 'Время';
+
+  @override
+  String get accountGroupApp => 'Приложение';
+
+  @override
+  String get accountTerms => 'Правила';
+
+  @override
+  String get accountPrivacy => 'Конфиденциальность';
+
+  @override
+  String get accountSupport => 'Поддержка';
+
+  @override
+  String get accountSupportValue => 'письмо';
+
+  @override
+  String get accountRate => 'Оценить Ritora';
+
+  @override
+  String get accountSignOut => 'Выйти';
+
+  @override
+  String get accountDelete => 'Удалить аккаунт';
+
+  @override
+  String get accountNameTitle => 'Имя';
+
+  @override
+  String get accountNameField => 'Имя';
+
+  @override
+  String get accountDone => 'Готово';
+
+  @override
+  String get accountDeleteTitle => 'Удалить аккаунт?';
+
+  @override
+  String accountDeleteBodyPlan(String plan) {
+    return 'Исчезнут план «$plan», пройденные дни и настройки. Восстановить их будет нельзя.';
+  }
+
+  @override
+  String get accountDeleteBody =>
+      'Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.';
+
+  @override
+  String get accountDeleteNote => 'Подписку отмени в App Store';
+
+  @override
+  String get accountDeleteFailed => 'Не удалось удалить. Попробуй ещё раз';
+
+  @override
+  String get accountDeleting => 'Удаляем…';
+
+  @override
+  String get accountRemindersTitle => 'Напоминания';
+
+  @override
+  String get accountRemindersNote => 'Мы напоминаем раз в день, когда ждёт следующий день плана';
+
+  @override
+  String get accountRemindersDenied => 'Уведомления выключены в Настройках iOS — включить там';
+
+  @override
+  String notifyAskTitle(int day, String time) {
+    return 'Напомнить про день $day завтра в $time?';
+  }
+
+  @override
+  String get notifyAskBody => 'Раз в день, без лишнего';
+
+  @override
+  String get notifyAskLater => 'Не сейчас';
+
+  @override
+  String get notifyAskYes => 'Напоминать';
+
+  @override
+  String get micAskTitle => 'Ritora слушает, как ты говоришь';
+
+  @override
+  String get micAskBody =>
+      'Микрофон нужен, чтобы говорить: в «Диалоге», «Говорю сам» и в разговоре';
+
+  @override
+  String get micAskLater => 'Позже';
+
+  @override
+  String get micAskAllow => 'Разрешить микрофон';
+
+  @override
+  String get planPlateNoNetwork => 'Нет сети';
+
+  @override
+  String get planPlateBySubscription => 'по подписке';
+
+  @override
+  String get planPlateOpensWithSubscription => 'Откроется с подпиской';
+
+  @override
+  String get planPlateSubscription => 'Подписка';
+
+  @override
+  String get planRouteMetaOpensWithSubscription => 'откроется с подпиской';
+
+  @override
+  String get planRouteMetaBySubscription => 'по подписке';
+
+  @override
+  String get planKitLabel => 'Спасательный набор';
+
+  @override
+  String planKitSub(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n фразы на любой случай',
+      many: '$n фраз на любой случай',
+      few: '$n фразы на любой случай',
+      one: '$n фраза на любой случай',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planKitAll(int n) {
+    return 'все $n →';
+  }
+
+  @override
+  String get planKitCollapse => 'свернуть';
+
+  @override
+  String get planEntrySubscriptionTitle => 'Второй план — по подписке';
+
+  @override
+  String get planEntryActiveLimitTitle => 'Не больше трёх планов сразу';
+
+  @override
+  String get planEntryToTab => 'К плану';
 }

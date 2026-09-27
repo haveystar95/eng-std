@@ -11,6 +11,7 @@ import 'api_client.dart';
 import 'device_timezone.dart';
 import 'models.dart';
 import 'seq_counter.dart';
+import 'start/account_device_store.dart' show InstallMarker;
 import 'token_store.dart';
 
 /// Why a sign-in failed — a code, not a message, so the copy lives in `AppLocalizations` (the
@@ -36,12 +37,17 @@ class AuthException implements Exception {
 /// Owns the sign-in flow: native Google Sign-In → backend token exchange →
 /// persisted Sanctum token.
 class AuthRepository {
-  AuthRepository(this._api, this._tokens, this._seq);
+  AuthRepository(this._api, this._tokens, this._seq, {InstallMarker? installMarker})
+    : _install = installMarker ?? InstallMarker();
 
   final ApiClient _api;
   final TokenStore _tokens;
   final SeqCounter _seq;
+  final InstallMarker _install;
   bool _googleReady = false;
+
+  /// A token is stored — the session survived (or was never dropped by) the last `/auth/me`.
+  Future<bool> hasSession() async => (await _tokens.load())?.isNotEmpty ?? false;
 
   Future<void> _ensureGoogle() async {
     if (_googleReady) return;
@@ -59,6 +65,8 @@ class AuthRepository {
   /// cleared ONLY on a genuine auth rejection (401/403) — never on a network failure, which would
   /// otherwise log the user out the first time they cold-start offline and lose their token.
   Future<AppUser?> restore() async {
+    // A new install starts signed out, whatever the keychain kept from the one before (CLIENT-START).
+    await _install.check(dropSession: _tokens.clear);
     final token = await _tokens.load();
     if (token == null || token.isEmpty) return null;
 

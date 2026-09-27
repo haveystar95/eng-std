@@ -1,5 +1,4 @@
 {
-  "@@locale": "ru",
   "triageCounter": "{current} из {total}",
   "@triageCounter": {
     "description": "Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).",
@@ -1099,119 +1098,9 @@
   "@homeGenerateOfflineNote": {
     "description": "Пояснение на пунктирной карточке генерации в офлайне (кадр 9c)."
   },
-  "appWordmark": "Слова",
-  "@appWordmark": {
-    "description": "Словесный знак приложения на экране входа (бренд, не переводится)."
-  },
-  "authTagline": "Слова для реальных ситуаций — от банка до собеседования.",
-  "@authTagline": {
-    "description": "Подзаголовок на экране входа (кадр 10a)."
-  },
-  "authContinueGoogle": "Продолжить с Google",
-  "@authContinueGoogle": {
-    "description": "Кнопка входа через Google (кадр 10a)."
-  },
-  "authContinueApple": "Продолжить с Apple",
-  "@authContinueApple": {
-    "description": "Подпись кнопки Apple. SignInWithAppleButton рисуется Flutter'ом и по умолчанию несёт зашитое английское «Sign in with Apple» — локаль устройства тут ни при чём (QA-OBS-31). Формулировка обязана оставаться одним из вариантов, разрешённых Apple HIG: sign in / sign up / continue with Apple."
-  },
-  "authTerms": "Условия",
-  "@authTerms": {
-    "description": "Ссылка на условия (кадр 10a)."
-  },
-  "authPrivacy": "Конфиденциальность",
-  "@authPrivacy": {
-    "description": "Ссылка на политику конфиденциальности (кадр 10a)."
-  },
-  "authOfflineHint": "Нет сети. Для первого входа нужно подключение.",
-  "@authOfflineHint": {
-    "description": "Подсказка на экране входа в офлайне."
-  },
   "authAppleUnavailable": "Вход через Apple пока недоступен.",
   "@authAppleUnavailable": {
     "description": "Ошибка, если Apple-вход не настроен (нет бэкенда/entitlement)."
-  },
-  "onbLangTitle": "Какой язык учим?",
-  "@onbLangTitle": {
-    "description": "Онбординг, шаг 1 — заголовок (кадр 10b)."
-  },
-  "onbLangSubtitle": "Можно поменять в профиле в любой момент.",
-  "@onbLangSubtitle": {
-    "description": "Онбординг, шаг 1 — подзаголовок."
-  },
-  "onbLevelTitle": "Насколько уверенно читаешь?",
-  "@onbLevelTitle": {
-    "description": "Онбординг, шаг 2 — заголовок (кадр 10c)."
-  },
-  "onbLevelSubtitle": "Примерно — потом уточним по твоим ответам в разборе.",
-  "@onbLevelSubtitle": {
-    "description": "Онбординг, шаг 2 — подзаголовок."
-  },
-  "onbLevelExample": "На {level} в коллекции попадают слова вроде «wire transfer» и «make ends meet».",
-  "@onbLevelExample": {
-    "description": "Онбординг, шаг 2 — пример слов для уровня.",
-    "placeholders": {
-      "level": {
-        "type": "String"
-      }
-    }
-  },
-  "onbGoalTitle": "Сколько слов в день?",
-  "@onbGoalTitle": {
-    "description": "Онбординг, шаг 3 — заголовок (кадр 10d)."
-  },
-  "onbGoalSubtitle": "Цель влияет только на напоминания и прогресс.",
-  "@onbGoalSubtitle": {
-    "description": "Онбординг, шаг 3 — подзаголовок."
-  },
-  "onbGoalMinutes": "≈ {count} минут в день",
-  "@onbGoalMinutes": {
-    "description": "Онбординг, шаг 3 — оценка времени.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "onbGoalRecommended": "рекомендуем",
-  "@onbGoalRecommended": {
-    "description": "Метка рекомендованной дневной цели."
-  },
-  "onbFooterNote": "Всё это меняется в профиле — уровень, цель и язык не заперты за онбордингом.",
-  "@onbFooterNote": {
-    "description": "Онбординг — сноска."
-  },
-  "onbNext": "Далее",
-  "@onbNext": {
-    "description": "Кнопка перехода к следующему шагу онбординга."
-  },
-  "onbStart": "Начать",
-  "@onbStart": {
-    "description": "Кнопка завершения онбординга."
-  },
-  "cefrHintA1": "начало",
-  "@cefrHintA1": {
-    "description": "Подпись уровня A1."
-  },
-  "cefrHintA2": "базовый",
-  "@cefrHintA2": {
-    "description": "Подпись уровня A2."
-  },
-  "cefrHintB1": "средний",
-  "@cefrHintB1": {
-    "description": "Подпись уровня B1."
-  },
-  "cefrHintB2": "уверенный",
-  "@cefrHintB2": {
-    "description": "Подпись уровня B2."
-  },
-  "cefrHintC1": "свободный",
-  "@cefrHintC1": {
-    "description": "Подпись уровня C1."
-  },
-  "cefrHintC2": "почти носитель",
-  "@cefrHintC2": {
-    "description": "Подпись уровня C2."
   },
   "profileTitle": "Профиль",
   "@profileTitle": {
@@ -1994,38 +1883,6 @@
         "type": "String"
       }
     }
-  },
-  "authErrorOffline": "Нет подключения к интернету. Для входа нужна сеть.",
-  "@authErrorOffline": {
-    "description": "Ошибка входа: нет сети (кадр 10a)."
-  },
-  "authErrorGoogleUnsupported": "Вход через Google не поддерживается на этой платформе.",
-  "@authErrorGoogleUnsupported": {
-    "description": "Ошибка входа: Google Sign-In недоступен на платформе."
-  },
-  "authErrorCancelled": "Вход отменён.",
-  "@authErrorCancelled": {
-    "description": "Ошибка входа: пользователь отменил вход."
-  },
-  "authErrorGoogle": "Не удалось войти через Google. Попробуй ещё раз.",
-  "@authErrorGoogle": {
-    "description": "Ошибка входа: сбой Google Sign-In."
-  },
-  "authErrorGoogleToken": "Не удалось получить токен Google.",
-  "@authErrorGoogleToken": {
-    "description": "Ошибка входа: нет ID-токена от Google."
-  },
-  "authErrorLoginFailed": "Не удалось войти. Попробуй ещё раз.",
-  "@authErrorLoginFailed": {
-    "description": "Ошибка входа: бэкенд отклонил обмен токена."
-  },
-  "authErrorApple": "Вход через Apple пока недоступен.",
-  "@authErrorApple": {
-    "description": "Ошибка входа: Apple-вход недоступен (нет бэкенда/платной команды)."
-  },
-  "authErrorAppleToken": "Не удалось получить токен Apple.",
-  "@authErrorAppleToken": {
-    "description": "Ошибка входа: нет identity-токена от Apple."
   },
   "practiceDialogEntry": "Разговор · 3 мин",
   "@practiceDialogEntry": {
@@ -3088,14 +2945,6 @@
   "homeSortFirstTitle": "Пора разобрать слова",
   "@homeSortFirstTitle": {
     "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет."
-  },
-  "onbNativeTitle": "На каком языке показывать переводы?",
-  "@onbNativeTitle": {
-    "description": "Онбординг, шаг 1 (ONB-1) — родной язык. Спрашивается один раз за всё время."
-  },
-  "onbNativeSubtitle": "На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.",
-  "@onbNativeSubtitle": {
-    "description": "Онбординг, шаг 1 — что покупает ответ."
   },
   "profileRowNativeLang": "Родной язык",
   "@profileRowNativeLang": {
@@ -5672,5 +5521,432 @@
   "planWindowTalkReplayLimit": "Разговор сегодня уже повторяли — вернись завтра",
   "@planWindowTalkReplayLimit": {
     "description": "Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан."
+  },
+  "startSlogan": "Готов говорить.",
+  "@startSlogan": {
+    "description": "Заставка (41-1c) и вход на ней (41-4): слоган под словомарком Ritora. Inter 15 серым."
+  },
+  "startSignInApple": "Войти с Apple",
+  "@startSignInApple": {
+    "description": "Вход на заставке (41-4): угольная кнопка с логотипом Apple. Формулировка из вариантов Apple HIG (sign in with Apple)."
+  },
+  "startSignInGoogle": "Войти с Google",
+  "@startSignInGoogle": {
+    "description": "Вход на заставке (41-4): карточка с контуром чернил и цветной «G»."
+  },
+  "startSignInFailed": "Не удалось войти. Попробуй ещё раз",
+  "@startSignInFailed": {
+    "description": "Вход (41-4b): строка чернилами над кнопками, когда вход не удался (сеть, сервер, провайдер). Отмена своего окна Apple/Google — не ошибка, строки нет."
+  },
+  "startLegal": "Продолжая, ты принимаешь {terms} и {privacy}",
+  "@startLegal": {
+    "description": "Вход (41-4): юрстрока под кнопками, 13 серым; {terms} и {privacy} — ссылки латунью (startLegalTerms, startLegalPrivacy).",
+    "placeholders": {"terms": {"type": "String"}, "privacy": {"type": "String"}}
+  },
+  "startLegalTerms": "Правила",
+  "@startLegalTerms": {
+    "description": "Ссылка «Правила» в юрстроке входа (41-4) и строка профиля (42-1)."
+  },
+  "startLegalPrivacy": "Конфиденциальность",
+  "@startLegalPrivacy": {
+    "description": "Ссылка «Конфиденциальность» в юрстроке входа (41-4); в профиле (42-1) — строка «Конфиденциальность» (en: Privacy)."
+  },
+  "introSkip": "Пропустить",
+  "@introSkip": {
+    "description": "Листы «зачем» (41-2 a–d): справа сверху, на фото — на плашке бумаги 60 %; ведёт на вкладку «План»."
+  },
+  "introStart": "Начать",
+  "@introStart": {
+    "description": "Последний лист «зачем» (41-2e): угольная кнопка → вкладка «План»."
+  },
+  "introATitle": "Скоро важный\nразговор.\nТы будешь готов.",
+  "@introATitle": {
+    "description": "Лист a (41-2a): заголовок Literata 30, три строки ручным переносом; точки латунью."
+  },
+  "introAThought": "Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.",
+  "@introAThought": {
+    "description": "Лист a (41-2a): мысль под заголовком, Inter 15 серым."
+  },
+  "introALineNative": "Я хочу записаться на приём.",
+  "@introALineNative": {
+    "description": "Лист a (41-2a): перевод реплики «I’d like to make an appointment.» под ней, 13 серым. В английском интерфейсе пусто — строки нет."
+  },
+  "introSceneAirport": "аэропорт",
+  "@introSceneAirport": {
+    "description": "Лист a (41-2a): капитель на карточке сцены (печатается прописными)."
+  },
+  "introSceneBank": "банк",
+  "@introSceneBank": {
+    "description": "Лист a (41-2a): капитель на карточке сцены."
+  },
+  "introSceneInterview": "работа",
+  "@introSceneInterview": {
+    "description": "Лист a (41-2a): капитель на карточке сцены «собеседование»."
+  },
+  "introSceneRent": "аренда",
+  "@introSceneRent": {
+    "description": "Лист a (41-2a): капитель на карточке сцены."
+  },
+  "introSceneDoctor": "врач",
+  "@introSceneDoctor": {
+    "description": "Лист a (41-2a): капитель на верхней карточке сцены."
+  },
+  "introBTitle": "Язык —\nпод каждый разговор.",
+  "@introBTitle": {
+    "description": "Лист b (41-2b): заголовок, две строки; точка латунью."
+  },
+  "introBThought": "Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.",
+  "@introBThought": {
+    "description": "Лист b (41-2b): мысль — семь языков дословно по реестру канвы."
+  },
+  "introCBrow": "6 дней · 20 минут в день",
+  "@introCBrow": {
+    "description": "Лист c (41-2c): бровь капителью над маршрутом (печатается прописными)."
+  },
+  "introCToday": "сегодня",
+  "@introCToday": {
+    "description": "Лист c (41-2c): подпись под узлом дня 2 маршрута."
+  },
+  "introCDate": "2 октября",
+  "@introCDate": {
+    "description": "Лист c (41-2c): капитель даты события над латунной точкой (печатается прописными)."
+  },
+  "introCEvent": "приём у врача",
+  "@introCEvent": {
+    "description": "Лист c (41-2c): название события под латунной точкой, 13 чернилами."
+  },
+  "introStageWords": "Слова",
+  "@introStageWords": {
+    "description": "Лист c (41-2c): подпись иконки этапа в ряду шести этапов."
+  },
+  "introStagePhrases": "Фразы",
+  "@introStagePhrases": {
+    "description": "Лист c (41-2c): подпись иконки этапа."
+  },
+  "introStageDialogue": "Диалог",
+  "@introStageDialogue": {
+    "description": "Лист c (41-2c): подпись иконки этапа."
+  },
+  "introStageListen": "Слушаю",
+  "@introStageListen": {
+    "description": "Лист c (41-2c): подпись иконки этапа «Слушаю и отвечаю» (коротко)."
+  },
+  "introStageSpeak": "Говорю",
+  "@introStageSpeak": {
+    "description": "Лист c (41-2c): подпись иконки этапа «Говорю сам» (коротко)."
+  },
+  "introStageTalk": "Разговор",
+  "@introStageTalk": {
+    "description": "Лист c (41-2c): подпись иконки этапа «Разговор»."
+  },
+  "introCTitle": "Двадцать минут\nв день — вслух.",
+  "@introCTitle": {
+    "description": "Лист c (41-2c): заголовок, две строки; точка латунью."
+  },
+  "introCThought": "Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.",
+  "@introCThought": {
+    "description": "Лист c (41-2c): мысль под заголовком."
+  },
+  "introDLineNative": "Доброе утро. Что вас беспокоит?",
+  "@introDLineNative": {
+    "description": "Лист d (41-2d): перевод реплики роли в её пузыре, 15 серым. В английском интерфейсе пусто — строки нет."
+  },
+  "introDTap": "тап — говорить",
+  "@introDTap": {
+    "description": "Лист d (41-2d): подпись у микрофона 30-3 в покое."
+  },
+  "introDTitle": "Живой разговор с ИИ\n— не по сценарию.",
+  "@introDTitle": {
+    "description": "Лист d (41-2d): заголовок, две строки; точка латунью."
+  },
+  "introDThought": "Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.",
+  "@introDThought": {
+    "description": "Лист d (41-2d): мысль под заголовком."
+  },
+  "introECaption": "три подборки из стора · свои слова из планов",
+  "@introECaption": {
+    "description": "Лист e (41-2e): подпись 13 серым над заголовком."
+  },
+  "introECoverCity": "Быт и город",
+  "@introECoverCity": {
+    "description": "Лист e (41-2e): название обложки подборки стора, Literata 17."
+  },
+  "introECoverHealth": "Здоровье",
+  "@introECoverHealth": {
+    "description": "Лист e (41-2e): название средней обложки."
+  },
+  "introECoverWork": "Работа",
+  "@introECoverWork": {
+    "description": "Лист e (41-2e): название обложки."
+  },
+  "introEWordCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@introEWordCount": {
+    "description": "Лист e (41-2e): число слов под названием обложки, 13 серым.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "introETitle": "Слова остаются\nс тобой.",
+  "@introETitle": {
+    "description": "Лист e (41-2e): заголовок, две строки; точка латунью."
+  },
+  "introEThought": "Свои коллекции и готовые подборки. Повторяй между планами — ничего не пропадёт.",
+  "@introEThought": {
+    "description": "Лист e (41-2e): мысль под заголовком."
+  },
+  "accountSignedInApple": "Вход через Apple",
+  "@accountSignedInApple": {
+    "description": "Профиль (42-1): строка провайдера под именем, с галкой шалфея, без действия."
+  },
+  "accountSignedInGoogle": "Вход через Google",
+  "@accountSignedInGoogle": {
+    "description": "Профиль (42-1b): строка провайдера под именем."
+  },
+  "accountGroupSubscription": "Подписка",
+  "@accountGroupSubscription": {
+    "description": "Профиль (42-1): капитель группы подписки."
+  },
+  "accountFree": "Бесплатно",
+  "@accountFree": {
+    "description": "Профиль (42-1a): тариф без подписки (access.plan = free)."
+  },
+  "accountFreeValue": "один план, день 1",
+  "@accountFreeValue": {
+    "description": "Профиль (42-1a): что даёт бесплатный тариф — справа серым."
+  },
+  "accountPremium": "Premium",
+  "@accountPremium": {
+    "description": "Профиль (42-1b): тариф при access.plan = premium."
+  },
+  "accountPremiumUntil": "продлится {date}",
+  "@accountPremiumUntil": {
+    "description": "Профиль (42-1b): когда продлится подписка — access.expires_at, дата «25 октября».",
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "accountPremiumForever": "бессрочно",
+  "@accountPremiumForever": {
+    "description": "Профиль (42-1b): право без срока (access.expires_at = null — выдано владельцем, lifetime)."
+  },
+  "accountManageSubscription": "Управлять подпиской",
+  "@accountManageSubscription": {
+    "description": "Профиль (42-1b): ведёт в подписки App Store."
+  },
+  "accountRestorePurchases": "Восстановить покупки",
+  "@accountRestorePurchases": {
+    "description": "Профиль (42-1b): перечитывает права аккаунта, без перехода (покупок в API нет до PAY-1)."
+  },
+  "accountGroupLearning": "Обучение",
+  "@accountGroupLearning": {
+    "description": "Профиль (42-1): капитель группы обучения."
+  },
+  "accountVoice": "Голос ученика",
+  "@accountVoice": {
+    "description": "Профиль (42-1): голос своих реплик (мужской/женский → сервер, лист 38-1)."
+  },
+  "accountVoiceMale": "мужской",
+  "@accountVoiceMale": {
+    "description": "Профиль (42-1): значение строки «Голос ученика»."
+  },
+  "accountVoiceFemale": "женский",
+  "@accountVoiceFemale": {
+    "description": "Профиль (42-1): значение строки «Голос ученика»."
+  },
+  "accountSessionSounds": "Звуки в сессии",
+  "@accountSessionSounds": {
+    "description": "Профиль (42-1): тумблер шести звуков сессии дня."
+  },
+  "accountUiLanguage": "Язык интерфейса",
+  "@accountUiLanguage": {
+    "description": "Профиль (42-1): язык интерфейса — шит выбора «русский / English»."
+  },
+  "accountUiRussian": "русский",
+  "@accountUiRussian": {
+    "description": "Профиль (42-1): русский язык интерфейса — своим именем в любом интерфейсе."
+  },
+  "accountUiEnglish": "English",
+  "@accountUiEnglish": {
+    "description": "Профиль (42-1): английский язык интерфейса — своим именем."
+  },
+  "accountNativeLanguage": "Родной язык",
+  "@accountNativeLanguage": {
+    "description": "Профиль (42-1): родной язык аккаунта — список родных сервера минус цель (LANG-1)."
+  },
+  "accountGroupReminders": "Напоминания",
+  "@accountGroupReminders": {
+    "description": "Профиль (42-1): капитель группы напоминаний."
+  },
+  "accountRemind": "Напоминать о дне",
+  "@accountRemind": {
+    "description": "Профиль (42-1) и шит 42-4: тумблер напоминаний."
+  },
+  "accountTime": "Время",
+  "@accountTime": {
+    "description": "Профиль (42-1): время напоминания → шит 42-4."
+  },
+  "accountGroupApp": "Приложение",
+  "@accountGroupApp": {
+    "description": "Профиль (42-1): капитель группы приложения."
+  },
+  "accountTerms": "Правила",
+  "@accountTerms": {
+    "description": "Профиль (42-1): документ «Правила»."
+  },
+  "accountPrivacy": "Конфиденциальность",
+  "@accountPrivacy": {
+    "description": "Профиль (42-1): документ «Конфиденциальность»."
+  },
+  "accountSupport": "Поддержка",
+  "@accountSupport": {
+    "description": "Профиль (42-1): письмо в поддержку."
+  },
+  "accountSupportValue": "письмо",
+  "@accountSupportValue": {
+    "description": "Профиль (42-1): значение строки «Поддержка»."
+  },
+  "accountRate": "Оценить Ritora",
+  "@accountRate": {
+    "description": "Профиль (42-1): системное окно оценки App Store."
+  },
+  "accountSignOut": "Выйти",
+  "@accountSignOut": {
+    "description": "Профиль (42-1): текстом чернилами над «Удалить аккаунт»; POST /auth/logout → заставка 41-4a."
+  },
+  "accountDelete": "Удалить аккаунт",
+  "@accountDelete": {
+    "description": "Профиль (42-1) и шит 42-3: текст терракотой / кнопка контуром терракоты."
+  },
+  "accountNameTitle": "Имя",
+  "@accountNameTitle": {
+    "description": "Шит имени (42-2): заголовок."
+  },
+  "accountNameField": "Имя",
+  "@accountNameField": {
+    "description": "Шит имени (42-2): подпись над полем."
+  },
+  "accountDone": "Готово",
+  "@accountDone": {
+    "description": "Шиты 42-2 и 42-4: угольная кнопка."
+  },
+  "accountDeleteTitle": "Удалить аккаунт?",
+  "@accountDeleteTitle": {
+    "description": "Шит удаления (42-3): заголовок."
+  },
+  "accountDeleteBodyPlan": "Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.",
+  "@accountDeleteBodyPlan": {
+    "description": "Шит удаления (42-3): что исчезнет, с названием текущего плана.",
+    "placeholders": {"plan": {"type": "String"}}
+  },
+  "accountDeleteBody": "Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.",
+  "@accountDeleteBody": {
+    "description": "Шит удаления (42-3): то же, когда плана нет."
+  },
+  "accountDeleteNote": "Подписку отмени в App Store",
+  "@accountDeleteNote": {
+    "description": "Шит удаления (42-3): строка 13 серым под текстом."
+  },
+  "accountDeleteFailed": "Не удалось удалить. Попробуй ещё раз",
+  "@accountDeleteFailed": {
+    "description": "Шит удаления (42-3): DELETE /auth/me не прошёл (нет сети, 5xx) — ничего не удалено, кнопка снова живая."
+  },
+  "accountDeleting": "Удаляем…",
+  "@accountDeleting": {
+    "description": "Шит удаления (42-3b): кнопка, пока сервер удаляет; «Отмена» погашена, шит не закрывается."
+  },
+  "accountRemindersTitle": "Напоминания",
+  "@accountRemindersTitle": {
+    "description": "Шит напоминаний (42-4): заголовок."
+  },
+  "accountRemindersNote": "Мы напоминаем раз в день, когда ждёт следующий день плана",
+  "@accountRemindersNote": {
+    "description": "Шит напоминаний (42-4): строка под колесом."
+  },
+  "accountRemindersDenied": "Уведомления выключены в Настройках iOS — включить там",
+  "@accountRemindersDenied": {
+    "description": "Шит напоминаний (42-4): вместо колеса, когда iOS запретила уведомления; тап — Настройки."
+  },
+  "notifyAskTitle": "Напомнить про день {day} завтра в {time}?",
+  "@notifyAskTitle": {
+    "description": "Пред-запрос уведомлений (43-1): после итога дня 1 (и дня 2 после «Не сейчас»); день — следующий, время — своё из профиля или час сервера.",
+    "placeholders": {"day": {"type": "int"}, "time": {"type": "String"}}
+  },
+  "notifyAskBody": "Раз в день, без лишнего",
+  "@notifyAskBody": {
+    "description": "Пред-запрос уведомлений (43-1): строка под вопросом."
+  },
+  "notifyAskLater": "Не сейчас",
+  "@notifyAskLater": {
+    "description": "Пред-запрос уведомлений (43-1): латунью; после дня 1 — ещё раз после дня 2, потом не спрашивать."
+  },
+  "notifyAskYes": "Напоминать",
+  "@notifyAskYes": {
+    "description": "Пред-запрос уведомлений (43-1): угольная кнопка → системный запрос iOS."
+  },
+  "micAskTitle": "Ritora слушает, как ты говоришь",
+  "@micAskTitle": {
+    "description": "Пред-запрос микрофона (41-3): на первой карточке с микрофоном."
+  },
+  "micAskBody": "Микрофон нужен, чтобы говорить: в «Диалоге», «Говорю сам» и в разговоре",
+  "@micAskBody": {
+    "description": "Пред-запрос микрофона (41-3): строка без обещаний."
+  },
+  "micAskLater": "Позже",
+  "@micAskLater": {
+    "description": "Пред-запрос микрофона (41-3): латунью; карточку можно пропустить, шит вернётся на следующей карточке с микрофоном."
+  },
+  "micAskAllow": "Разрешить микрофон",
+  "@micAskAllow": {
+    "description": "Пред-запрос микрофона (41-3): угольная кнопка → системные окна iOS (распознавание и микрофон)."
+  },
+  "planPlateNoNetwork": "Нет сети",
+  "@planPlateNoNetwork": {
+    "description": "Плита упавшего дня (22-5c): вторая строка, только когда «Повторить» не ушёл — сети действительно нет (CLIENT-START §6)."
+  },
+  "planPlateBySubscription": "по подписке",
+  "@planPlateBySubscription": {
+    "description": "Плита дня, запертого подпиской (21-3 / 23-0a «по подписке»): начало строки под названием — «по подписке · 75 карточек»."
+  },
+  "planPlateOpensWithSubscription": "Откроется с подпиской",
+  "@planPlateOpensWithSubscription": {
+    "description": "Плита дня, запертого подпиской (21-3 / 23-0a): 13 серым вместо кнопки «Начать»."
+  },
+  "planPlateSubscription": "Подписка",
+  "@planPlateSubscription": {
+    "description": "Плита дня, запертого подпиской (21-3 / 23-0a), и экран «Второй план — по подписке»: кнопка контуром латуни → профиль, группа подписки (до PAY-1)."
+  },
+  "planRouteMetaOpensWithSubscription": "откроется с подпиской",
+  "@planRouteMetaOpensWithSubscription": {
+    "description": "Маршрут (22-5a / 21-3 «по подписке»): мета первого дня, запертого подпиской."
+  },
+  "planRouteMetaBySubscription": "по подписке",
+  "@planRouteMetaBySubscription": {
+    "description": "Маршрут (22-5a / 21-3 «по подписке»): мета следующих дней, запертых подпиской."
+  },
+  "planKitLabel": "Спасательный набор",
+  "@planKitLabel": {
+    "description": "Таб «План» (21-2b): карточка спасательного набора под маршрутом — rescue_kit плана (LANG-1b §2)."
+  },
+  "planKitSub": "{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}",
+  "@planKitSub": {
+    "description": "Карточка набора (21-2b): строка под названием — сколько фраз.",
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "planKitAll": "все {n} →",
+  "@planKitAll": {
+    "description": "Карточка набора (21-2b): раскрыть все фразы на месте.",
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "planKitCollapse": "свернуть",
+  "@planKitCollapse": {
+    "description": "Карточка набора (21-2b): свернуть до первой фразы."
+  },
+  "planEntrySubscriptionTitle": "Второй план — по подписке",
+  "@planEntrySubscriptionTitle": {
+    "description": "Вход в план: POST /plans ответил 402 plan_subscription_required — экран-заглушка до пейволла PAY-1, кнопка «Подписка» → профиль."
+  },
+  "planEntryActiveLimitTitle": "Не больше трёх планов сразу",
+  "@planEntryActiveLimitTitle": {
+    "description": "Вход в план: POST /plans ответил 409 plan_active_limit — три плана уже в работе."
+  },
+  "planEntryToTab": "К плану",
+  "@planEntryToTab": {
+    "description": "Вход в план, заглушка «Не больше трёх планов сразу»: вернуться на таб «План»."
   }
 }
