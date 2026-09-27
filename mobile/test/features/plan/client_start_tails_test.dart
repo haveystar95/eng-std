@@ -33,6 +33,7 @@ import 'package:eng_std/l10n/app_localizations_ru.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../support/day_window_harness.dart';
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 import '../../support/server_fixtures.dart';
 import '../../support/session_harness.dart' show SilentRecognizer;
@@ -135,7 +136,7 @@ void main() {
     // ЛОВИТ: «Регистратор начнёт первым» у роли-женщины — род, угаданный телефоном.
     testWidgets('роль — женщина: «Регистратор начнёт первой.»', (tester) async {
       await entry(tester, serverFixtureJson('day-rehearsal'));
-      expect(find.text('Регистратор начнёт первой. Отвечай и спрашивай сам.'), findsOneWidget);
+      expect(find.text(nbTypo('Регистратор начнёт первой. Отвечай и спрашивай сам.')), findsOneWidget);
     });
 
     testWidgets('роль — мужчина: «Регистратор начнёт первым.»', (tester) async {
@@ -144,7 +145,7 @@ void main() {
         s['partner_gender'] = 'male';
       }
       await entry(tester, json);
-      expect(find.text('Регистратор начнёт первым. Отвечай и спрашивай сам.'), findsOneWidget);
+      expect(find.text(nbTypo('Регистратор начнёт первым. Отвечай и спрашивай сам.')), findsOneWidget);
     });
   });
 
@@ -221,7 +222,7 @@ void main() {
       expect(find.text('ДЕНЬ 2'), findsOneWidget);
       expect(find.textContaining('ДОГОНЯЕМ'), findsNothing);
       expect(find.textContaining('по подписке'), findsWidgets);
-      expect(find.text('Откроется с подпиской'), findsOneWidget);
+      expect(find.text(nbTypo('Откроется с подпиской')), findsOneWidget);
       final button = find.byKey(const ValueKey('day-plate-subscription'));
       expect(button, findsOneWidget);
       expect(find.text('Начать'), findsNothing);
@@ -243,7 +244,7 @@ void main() {
       final locked = plan.days.where((d) => d.lockedBySubscription).length;
       expect(locked, 2);
       expect(find.byKey(const ValueKey('route-subscription-node')), findsNWidgets(locked));
-      expect(find.textContaining('откроется с подпиской'), findsWidgets);
+      expect(find.textContaining(nbTypo('откроется с подпиской')), findsWidgets);
     });
 
     // ЛОВИТ: окно дня по подписке с «Начать», которое упрётся в 409, и «догоняем» в шапке плана, который догоняет.
@@ -254,7 +255,7 @@ void main() {
       expect(find.text('ДЕНЬ 2'), findsOneWidget);
       expect(find.textContaining('ДОГОНЯЕМ'), findsNothing);
       expect(find.text('Подписка'), findsOneWidget);
-      expect(find.text('Откроется с подпиской'), findsOneWidget);
+      expect(find.text(nbTypo('Откроется с подпиской')), findsOneWidget);
       expect(find.text('Начать'), findsNothing);
     });
 
@@ -262,7 +263,7 @@ void main() {
     testWidgets('сессия: 409 plan_day_locked · subscription — плита «по подписке», без тоста', (tester) async {
       await _openSession(tester, _LockedBackend());
       expect(find.byKey(const ValueKey('session-locked-subscription')), findsOneWidget);
-      expect(find.text('Откроется с подпиской'), findsOneWidget);
+      expect(find.text(nbTypo('Откроется с подпиской')), findsOneWidget);
       expect(find.byType(SnackBar), findsNothing);
       expect(find.text('День не загрузился'), findsNothing);
       await tester.pumpWidget(const SizedBox());
@@ -304,7 +305,7 @@ void main() {
     testWidgets('402 plan_subscription_required — «Второй план — по подписке» и «Подписка» → профиль', (tester) async {
       await toPreview(tester, _RefusingApi(402, 'plan_subscription_required'));
 
-      expect(find.text('Второй план — по подписке'), findsOneWidget);
+      expect(find.text(nbTypo('Второй план — по подписке')), findsOneWidget);
       expect(find.text('Попробовать ещё'), findsNothing);
       await tester.tap(find.byKey(const ValueKey('entry-refused-subscription')));
       for (var i = 0; i < 6; i++) {
@@ -316,7 +317,7 @@ void main() {
     testWidgets('409 plan_active_limit — «Не больше трёх планов сразу» и «К плану»', (tester) async {
       await toPreview(tester, _RefusingApi(409, 'plan_active_limit'));
 
-      expect(find.text('Не больше трёх планов сразу'), findsOneWidget);
+      expect(find.text(nbTypo('Не больше трёх планов сразу')), findsOneWidget);
       expect(find.byKey(const ValueKey('entry-refused-close')), findsOneWidget);
       expect(find.text('Попробовать ещё'), findsNothing);
     });
@@ -356,7 +357,7 @@ void main() {
     // ЛОВИТ: «Сеть пропала» у урока, не прошедшего ворота дважды (сборка (21)).
     testWidgets('«Не получилось собрать день» и «Повторить»; «Нет сети» — нет', (tester) async {
       await tab(tester);
-      expect(find.text('Не получилось собрать день'), findsOneWidget);
+      expect(find.text(nbTypo('Не получилось собрать день')), findsOneWidget);
       expect(find.text('Повторить'), findsOneWidget);
       expect(find.text('Нет сети'), findsNothing);
     });

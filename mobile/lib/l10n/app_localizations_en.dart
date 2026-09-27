@@ -1862,7 +1862,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileNativeLangConfirmBody =>
-      'New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.';
+      'New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.';
 
   @override
   String get tabPlan => 'Plan';
@@ -3689,11 +3689,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introStart => 'Start';
 
   @override
-  String get introATitle => 'A big conversation\nis coming.\nYou’ll be ready.';
+  String get introATitle => 'A big conversation\nis coming.\nYou’ll be ready.';
 
   @override
   String get introAThought =>
-      'A doctor, a landlord, an interview, the bank. Name the event — the plan builds itself around it.';
+      'A doctor, a landlord, an interview, the bank. Name the event — the plan builds itself around it.';
 
   @override
   String get introALineNative => '';
@@ -3714,14 +3714,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introSceneDoctor => 'doctor';
 
   @override
-  String get introBTitle => 'A language\nfor every conversation.';
+  String get introBTitle => 'A language\nfor every conversation.';
 
   @override
   String get introBThought =>
       'English, German, Romanian, Polish, Spanish, Italian, French. Pick it per plan; hints stay in your own language.';
 
   @override
-  String get introCBrow => '6 days · 20 min a day';
+  String get introCBrow => '6 days · 20 min a day';
 
   @override
   String get introCToday => 'today';
@@ -3751,7 +3751,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introStageTalk => 'Talk';
 
   @override
-  String get introCTitle => 'Twenty minutes a day\n— out loud.';
+  String get introCTitle => 'Twenty minutes a day —\nout loud.';
 
   @override
   String get introCThought =>
@@ -3764,11 +3764,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introDTap => 'tap to speak';
 
   @override
-  String get introDTitle => 'A live conversation\nwith AI — no script.';
+  String get introDTitle => 'A live conversation\nwith AI — no script.';
 
   @override
   String get introDThought =>
-      'It hears what you said and answers that. Ask again, wander off — it keeps up.';
+      'It hears what you said and answers that. Ask again, wander off — it keeps up.';
 
   @override
   String get introECaption => 'three sets from the store · your own words from plans';
@@ -3798,7 +3798,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get introEThought =>
-      'Your own collections and ready-made sets. Review between plans — nothing gets lost.';
+      'Your own collections and ready-made sets. Review between plans — nothing gets lost.';
 
   @override
   String get accountSignedInApple => 'Signed in with Apple';
@@ -3927,10 +3927,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountRemindersNote =>
-      'We remind you once a day, when the next day of the plan is waiting';
+      'We remind you once a day, when the next day of the plan is waiting';
 
   @override
-  String get accountRemindersDenied => 'Notifications are off in iOS Settings — turn them on there';
+  String get accountRemindersDenied => 'Notifications are off in iOS Settings — turn them on there';
 
   @override
   String notifyAskTitle(int day, String time) {
@@ -3938,7 +3938,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notifyAskBody => 'Once a day, nothing more';
+  String get notifyAskBody => 'Once a day, nothing more';
 
   @override
   String get notifyAskLater => 'Not now';
@@ -3963,19 +3963,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planPlateNoNetwork => 'No network';
 
   @override
-  String get planPlateBySubscription => 'with a subscription';
+  String get planPlateBySubscription => 'with a subscription';
 
   @override
-  String get planPlateOpensWithSubscription => 'Opens with a subscription';
+  String get planPlateOpensWithSubscription => 'Opens with a subscription';
 
   @override
   String get planPlateSubscription => 'Subscription';
 
   @override
-  String get planRouteMetaOpensWithSubscription => 'opens with a subscription';
+  String get planRouteMetaOpensWithSubscription => 'opens with a subscription';
 
   @override
-  String get planRouteMetaBySubscription => 'with a subscription';
+  String get planRouteMetaBySubscription => 'with a subscription';
 
   @override
   String get planKitLabel => 'Rescue kit';
@@ -4000,7 +4000,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planKitCollapse => 'collapse';
 
   @override
-  String get planEntrySubscriptionTitle => 'A second plan comes with a subscription';
+  String get planEntrySubscriptionTitle => 'A second plan comes with a subscription';
 
   @override
   String get planEntryActiveLimitTitle => 'No more than three plans at once';

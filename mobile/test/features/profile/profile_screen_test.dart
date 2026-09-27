@@ -10,6 +10,7 @@ import 'package:eng_std/data/start/account_device_store.dart';
 import 'package:eng_std/features/profile/account_providers.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
 
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 import '../../support/start_harness.dart';
 
@@ -78,7 +79,7 @@ void main() {
       ('profile-support', 'Поддержка'),
       ('profile-rate', 'Оценить Ritora'),
     ]) {
-      expect(inRow(key, label), findsOneWidget, reason: key);
+      expect(inRow(key, nbTypo(label)), findsOneWidget, reason: key);
     }
     expect(inRow('profile-time', '19:00'), findsOneWidget, reason: 'no plan, no choice — 19:00');
     // Both languages in one case — the server's endonyms («Русский», «English»).
@@ -189,7 +190,7 @@ void main() {
     expect(find.byKey(const ValueKey('reminders-sheet')), findsOneWidget);
     expect(find.byKey(const ValueKey('reminders-switch')), findsOneWidget);
     expect(find.byKey(const ValueKey('reminders-wheel')), findsOneWidget);
-    expect(find.text('Мы напоминаем раз в день, когда ждёт следующий день плана'), findsOneWidget);
+    expect(find.text(nbTypo('Мы напоминаем раз в день, когда ждёт следующий день плана')), findsOneWidget);
 
     // One hour up on the hours wheel (the first of the two): 19 → 20 — the wheel turned the way a finger turns it,
     // by its controller (a drag's first 20 px are the gesture's slop, not the wheel's).
@@ -239,8 +240,8 @@ void main() {
     final sheet = find.byKey(const ValueKey('delete-sheet'));
     expect(sheet, findsOneWidget);
     expect(find.text('Удалить аккаунт?'), findsOneWidget);
-    expect(find.text('Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.'), findsOneWidget);
-    expect(find.text('Подписку отмени в App Store'), findsOneWidget);
+    expect(find.text(nbTypo('Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.')), findsOneWidget);
+    expect(find.text(nbTypo('Подписку отмени в App Store')), findsOneWidget);
 
     await tester.tap(find.descendant(of: sheet, matching: find.text('Отмена')));
     await tester.pumpAndSettle();

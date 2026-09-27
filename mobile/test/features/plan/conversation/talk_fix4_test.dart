@@ -627,7 +627,7 @@ void main() {
 
       // 37-5b first: the constructions by scene; the receptionist is a woman on e2e (`partner_gender`, FIX-4c §3).
       expect(find.text('СЦЕНА 1 · ЗАПИСЬ К ВРАЧУ · РЕГИСТРАТОР'), findsOneWidget);
-      expect(find.text('Регистратор начнёт первой. Отвечай и спрашивай сам.'), findsOneWidget);
+      expect(find.text(nbTypo('Регистратор начнёт первой. Отвечай и спрашивай сам.')), findsOneWidget);
       await tester.tap(byKey('talk-entry-start'));
       await tester.pump();
       await tester.pump();

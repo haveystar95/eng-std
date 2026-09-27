@@ -2461,7 +2461,7 @@
       }
     }
   },
-  "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
+  "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
   "@profileNativeLangConfirmBody": {
     "description": "Тело подтверждения смены родного языка."
   },
@@ -2860,7 +2860,7 @@
   "@planPlateBuildingSub": {
     "description": "Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub)."
   },
-  "planPlateFailedTitle": "Не получилось собрать день",
+  "planPlateFailedTitle": "Не получилось собрать день",
   "@planPlateFailedTitle": {
     "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title): урок не прошёл ворота дважды (lesson_status = failed) — это не сеть (CLIENT-START §6)."
   },
@@ -4401,7 +4401,7 @@
       }
     }
   },
-  "planTalkEntryRuleStart": "Собеседник начнёт первым. Отвечай и спрашивай сам.",
+  "planTalkEntryRuleStart": "Собеседник начнёт первым. Отвечай и спрашивай сам.",
   "@planTalkEntryRuleStart": {
     "description": "Вход в разговор (37-5): первая строка правил. Роль без склонения — «собеседник»."
   },
@@ -4858,7 +4858,7 @@
   "@planTalkSceneContinue": {
     "description": "Карточка перехода между сценами (39-1): единственная кнопка — карточка сжимается в разделитель, здоровается роль следующей сцены."
   },
-  "planTalkEntryRuleStartRole": "{gender, select, female{{role} начнёт первой.} other{{role} начнёт первым.}} Отвечай и спрашивай сам.",
+  "planTalkEntryRuleStartRole": "{gender, select, female{{role} начнёт первой.} other{{role} начнёт первым.}} Отвечай и спрашивай сам.",
   "@planTalkEntryRuleStartRole": {
     "description": "Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»); род — window.sources[].partner_gender первой сцены (FIX-4c §3): «Медсестра начнёт первой».",
     "placeholders": { "role": { "type": "String" }, "gender": { "type": "String" } }
@@ -4900,19 +4900,19 @@
   "@startSlogan": {
     "description": "Заставка (41-1c) и вход на ней (41-4): слоган под словомарком Ritora. Inter 15 серым."
   },
-  "startSignInApple": "Войти с Apple",
+  "startSignInApple": "Войти с Apple",
   "@startSignInApple": {
     "description": "Вход на заставке (41-4): угольная кнопка с логотипом Apple. Формулировка из вариантов Apple HIG (sign in with Apple)."
   },
-  "startSignInGoogle": "Войти с Google",
+  "startSignInGoogle": "Войти с Google",
   "@startSignInGoogle": {
     "description": "Вход на заставке (41-4): карточка с контуром чернил и цветной «G»."
   },
-  "startSignInFailed": "Не удалось войти. Попробуй ещё раз",
+  "startSignInFailed": "Не удалось войти. Попробуй ещё раз",
   "@startSignInFailed": {
     "description": "Вход (41-4b): строка чернилами над кнопками, когда вход не удался (сеть, сервер, провайдер). Отмена своего окна Apple/Google — не ошибка, строки нет."
   },
-  "startLegal": "Продолжая, ты принимаешь {terms} и {privacy}",
+  "startLegal": "Продолжая, ты принимаешь {terms} и {privacy}",
   "@startLegal": {
     "description": "Вход (41-4): юрстрока под кнопками, 13 серым; {terms} и {privacy} — ссылки латунью (startLegalTerms, startLegalPrivacy).",
     "placeholders": {"terms": {"type": "String"}, "privacy": {"type": "String"}}
@@ -4937,11 +4937,11 @@
   "@introATitle": {
     "description": "Лист a (41-2a): заголовок Literata 30, три строки ручным переносом; точки латунью."
   },
-  "introAThought": "Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.",
+  "introAThought": "Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.",
   "@introAThought": {
     "description": "Лист a (41-2a): мысль под заголовком, Inter 15 серым."
   },
-  "introALineNative": "Я хочу записаться на приём.",
+  "introALineNative": "Я хочу записаться на приём.",
   "@introALineNative": {
     "description": "Лист a (41-2a): перевод реплики «I’d like to make an appointment.» под ней, 13 серым. В английском интерфейсе пусто — строки нет."
   },
@@ -4965,15 +4965,15 @@
   "@introSceneDoctor": {
     "description": "Лист a (41-2a): капитель на верхней карточке сцены."
   },
-  "introBTitle": "Язык —\nпод каждый разговор.",
+  "introBTitle": "Язык —\nпод каждый разговор.",
   "@introBTitle": {
     "description": "Лист b (41-2b): заголовок, две строки; точка латунью."
   },
-  "introBThought": "Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.",
+  "introBThought": "Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.",
   "@introBThought": {
     "description": "Лист b (41-2b): мысль — семь языков дословно по реестру канвы."
   },
-  "introCBrow": "6 дней · 20 минут в день",
+  "introCBrow": "6 дней · 20 минут в день",
   "@introCBrow": {
     "description": "Лист c (41-2c): бровь капителью над маршрутом (печатается прописными)."
   },
@@ -4985,7 +4985,7 @@
   "@introCDate": {
     "description": "Лист c (41-2c): капитель даты события над латунной точкой (печатается прописными)."
   },
-  "introCEvent": "приём у врача",
+  "introCEvent": "приём у врача",
   "@introCEvent": {
     "description": "Лист c (41-2c): название события под латунной точкой, 13 чернилами."
   },
@@ -5013,11 +5013,11 @@
   "@introStageTalk": {
     "description": "Лист c (41-2c): подпись иконки этапа «Разговор»."
   },
-  "introCTitle": "Двадцать минут\nв день — вслух.",
+  "introCTitle": "Двадцать минут\nв день — вслух.",
   "@introCTitle": {
     "description": "Лист c (41-2c): заголовок, две строки; точка латунью."
   },
-  "introCThought": "Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.",
+  "introCThought": "Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.",
   "@introCThought": {
     "description": "Лист c (41-2c): мысль под заголовком."
   },
@@ -5025,15 +5025,15 @@
   "@introDLineNative": {
     "description": "Лист d (41-2d): перевод реплики роли в её пузыре, 15 серым. В английском интерфейсе пусто — строки нет."
   },
-  "introDTap": "тап — говорить",
+  "introDTap": "тап — говорить",
   "@introDTap": {
     "description": "Лист d (41-2d): подпись у микрофона 30-3 в покое."
   },
-  "introDTitle": "Живой разговор с ИИ\n— не по сценарию.",
+  "introDTitle": "Живой разговор с ИИ —\nне по сценарию.",
   "@introDTitle": {
-    "description": "Лист d (41-2d): заголовок, две строки; точка латунью."
+    "description": "Лист d (41-2d): заголовок, две строки; точка латунью. Тире — в конце первой строки, перенос после него жёсткий: вторая строка с тире не начинается (доработка CLIENT-START п. 1)."
   },
-  "introDThought": "Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.",
+  "introDThought": "Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.",
   "@introDThought": {
     "description": "Лист d (41-2d): мысль под заголовком."
   },
@@ -5041,7 +5041,7 @@
   "@introECaption": {
     "description": "Лист e (41-2e): подпись 13 серым над заголовком."
   },
-  "introECoverCity": "Быт и город",
+  "introECoverCity": "Быт и город",
   "@introECoverCity": {
     "description": "Лист e (41-2e): название обложки подборки стора, Literata 17."
   },
@@ -5058,11 +5058,11 @@
     "description": "Лист e (41-2e): число слов под названием обложки, 13 серым.",
     "placeholders": {"count": {"type": "int"}}
   },
-  "introETitle": "Слова остаются\nс тобой.",
+  "introETitle": "Слова остаются\nс тобой.",
   "@introETitle": {
     "description": "Лист e (41-2e): заголовок, две строки; точка латунью."
   },
-  "introEThought": "Свои коллекции и готовые подборки. Повторяй между планами — ничего не пропадёт.",
+  "introEThought": "Свои коллекции и готовые подборки. Повторяй между планами — ничего не пропадёт.",
   "@introEThought": {
     "description": "Лист e (41-2e): мысль под заголовком."
   },
@@ -5123,7 +5123,7 @@
   "@accountVoiceFemale": {
     "description": "Профиль (42-1): значение строки «Голос ученика»."
   },
-  "accountSessionSounds": "Звуки в сессии",
+  "accountSessionSounds": "Звуки в сессии",
   "@accountSessionSounds": {
     "description": "Профиль (42-1): тумблер шести звуков сессии дня."
   },
@@ -5147,7 +5147,7 @@
   "@accountGroupReminders": {
     "description": "Профиль (42-1): капитель группы напоминаний."
   },
-  "accountRemind": "Напоминать о дне",
+  "accountRemind": "Напоминать о дне",
   "@accountRemind": {
     "description": "Профиль (42-1) и шит 42-4: тумблер напоминаний."
   },
@@ -5203,20 +5203,20 @@
   "@accountDeleteTitle": {
     "description": "Шит удаления (42-3): заголовок."
   },
-  "accountDeleteBodyPlan": "Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.",
+  "accountDeleteBodyPlan": "Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.",
   "@accountDeleteBodyPlan": {
     "description": "Шит удаления (42-3): что исчезнет, с названием текущего плана.",
     "placeholders": {"plan": {"type": "String"}}
   },
-  "accountDeleteBody": "Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.",
+  "accountDeleteBody": "Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.",
   "@accountDeleteBody": {
     "description": "Шит удаления (42-3): то же, когда плана нет."
   },
-  "accountDeleteNote": "Подписку отмени в App Store",
+  "accountDeleteNote": "Подписку отмени в App Store",
   "@accountDeleteNote": {
     "description": "Шит удаления (42-3): строка 13 серым под текстом."
   },
-  "accountDeleteFailed": "Не удалось удалить. Попробуй ещё раз",
+  "accountDeleteFailed": "Не удалось удалить. Попробуй ещё раз",
   "@accountDeleteFailed": {
     "description": "Шит удаления (42-3): DELETE /auth/me не прошёл (нет сети, 5xx) — ничего не удалено, кнопка снова живая."
   },
@@ -5228,24 +5228,24 @@
   "@accountRemindersTitle": {
     "description": "Шит напоминаний (42-4): заголовок."
   },
-  "accountRemindersNote": "Мы напоминаем раз в день, когда ждёт следующий день плана",
+  "accountRemindersNote": "Мы напоминаем раз в день, когда ждёт следующий день плана",
   "@accountRemindersNote": {
     "description": "Шит напоминаний (42-4): строка под колесом."
   },
-  "accountRemindersDenied": "Уведомления выключены в Настройках iOS — включить там",
+  "accountRemindersDenied": "Уведомления выключены в Настройках iOS — включить там",
   "@accountRemindersDenied": {
     "description": "Шит напоминаний (42-4): вместо колеса, когда iOS запретила уведомления; тап — Настройки."
   },
-  "notifyAskTitle": "Напомнить про день {day} завтра в {time}?",
+  "notifyAskTitle": "Напомнить про день {day} завтра в {time}?",
   "@notifyAskTitle": {
     "description": "Пред-запрос уведомлений (43-1): после итога дня 1 (и дня 2 после «Не сейчас»); день — следующий, время — своё из профиля или час сервера.",
     "placeholders": {"day": {"type": "int"}, "time": {"type": "String"}}
   },
-  "notifyAskBody": "Раз в день, без лишнего",
+  "notifyAskBody": "Раз в день, без лишнего",
   "@notifyAskBody": {
     "description": "Пред-запрос уведомлений (43-1): строка под вопросом."
   },
-  "notifyAskLater": "Не сейчас",
+  "notifyAskLater": "Не сейчас",
   "@notifyAskLater": {
     "description": "Пред-запрос уведомлений (43-1): латунью; после дня 1 — ещё раз после дня 2, потом не спрашивать."
   },
@@ -5257,7 +5257,7 @@
   "@micAskTitle": {
     "description": "Пред-запрос микрофона (41-3): на первой карточке с микрофоном."
   },
-  "micAskBody": "Микрофон нужен, чтобы говорить: в «Диалоге», «Говорю сам» и в разговоре",
+  "micAskBody": "Микрофон нужен, чтобы говорить: в «Диалоге», «Говорю сам» и в разговоре",
   "@micAskBody": {
     "description": "Пред-запрос микрофона (41-3): строка без обещаний."
   },
@@ -5277,7 +5277,7 @@
   "@planPlateBySubscription": {
     "description": "Плита дня, запертого подпиской (21-3 / 23-0a «по подписке»): начало строки под названием — «по подписке · 75 карточек»."
   },
-  "planPlateOpensWithSubscription": "Откроется с подпиской",
+  "planPlateOpensWithSubscription": "Откроется с подпиской",
   "@planPlateOpensWithSubscription": {
     "description": "Плита дня, запертого подпиской (21-3 / 23-0a): 13 серым вместо кнопки «Начать»."
   },
@@ -5285,7 +5285,7 @@
   "@planPlateSubscription": {
     "description": "Плита дня, запертого подпиской (21-3 / 23-0a), и экран «Второй план — по подписке»: кнопка контуром латуни → профиль, группа подписки (до PAY-1)."
   },
-  "planRouteMetaOpensWithSubscription": "откроется с подпиской",
+  "planRouteMetaOpensWithSubscription": "откроется с подпиской",
   "@planRouteMetaOpensWithSubscription": {
     "description": "Маршрут (22-5a / 21-3 «по подписке»): мета первого дня, запертого подпиской."
   },
@@ -5311,15 +5311,15 @@
   "@planKitCollapse": {
     "description": "Карточка набора (21-2b): свернуть до первой фразы."
   },
-  "planEntrySubscriptionTitle": "Второй план — по подписке",
+  "planEntrySubscriptionTitle": "Второй план — по подписке",
   "@planEntrySubscriptionTitle": {
     "description": "Вход в план: POST /plans ответил 402 plan_subscription_required — экран-заглушка до пейволла PAY-1, кнопка «Подписка» → профиль."
   },
-  "planEntryActiveLimitTitle": "Не больше трёх планов сразу",
+  "planEntryActiveLimitTitle": "Не больше трёх планов сразу",
   "@planEntryActiveLimitTitle": {
     "description": "Вход в план: POST /plans ответил 409 plan_active_limit — три плана уже в работе."
   },
-  "planEntryToTab": "К плану",
+  "planEntryToTab": "К плану",
   "@planEntryToTab": {
     "description": "Вход в план, заглушка «Не больше трёх планов сразу»: вернуться на таб «План»."
   }

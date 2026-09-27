@@ -13,6 +13,13 @@ String nb(String text) => text
 /// [nb] over a list of lines.
 List<String> nbAll(List<String> texts) => [for (final t in texts) nb(t)];
 
+/// A LINE OF CLIENT-START'S AS THE APP DRAWS IT (доработка п. 1): [nb], and a no-break space after a one-letter word
+/// («в», «и», «с», «к», «о», «у», «а», «я»; «a», «I») and after «не», and before «—» — a line neither ends on a one-letter
+/// word nor starts with a dash (the rule `test/l10n/nbsp_typography_test.dart` holds the work order's strings to).
+String nbTypo(String text) => nb(text)
+    .replaceAllMapped(RegExp(r'(?<![\p{L}\p{N}-])(\p{L}|[Нн]е) ', unicode: true), (m) => '${m[1]}$nbsp')
+    .replaceAll(' —', '$nbsp—');
+
 /// A STAGE SUMMARY'S TITLE (30-6) as the app draws it: [nb], and the dash kept with the stage's name, and the dot kept
 /// with the word before it too — «Говорю сам — / пройдено · 6 минут» breaks only after the dash (приёмка
 /// CLIENT-CONV-1c 22.09, третий заход; `planSessionPassedMinutes` and the `planSessionPassed*` titles).

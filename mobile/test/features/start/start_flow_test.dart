@@ -19,6 +19,7 @@ import 'package:eng_std/features/start/start_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart' show setUpPlanGoldens;
 import '../../support/start_harness.dart';
 
@@ -68,8 +69,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.byKey(const ValueKey('sign-in-apple')), findsOneWidget);
       expect(find.byKey(const ValueKey('sign-in-google')), findsOneWidget);
-      expect(find.text('Войти с Apple'), findsOneWidget);
-      expect(find.text('Войти с Google'), findsOneWidget);
+      expect(find.text(nbTypo('Войти с Apple')), findsOneWidget);
+      expect(find.text(nbTypo('Войти с Google')), findsOneWidget);
       expect(find.byKey(const ValueKey('sign-in-legal')), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('sign-in-apple')));
@@ -79,7 +80,7 @@ void main() {
 
       expect(find.byType(IntroScreen), findsOneWidget);
       expect(find.byType(StartScreen), findsNothing);
-      final titles = ['Скоро важный', 'Язык —', 'Двадцать минут', 'Живой разговор с ИИ', 'Слова остаются'];
+      final titles = [for (final t in ['Скоро важный', 'Язык —', 'Двадцать минут', 'Живой разговор с ИИ', 'Слова остаются']) nbTypo(t)];
       for (final (i, title) in titles.indexed) {
         expect(find.textContaining(title, findRichText: true), findsWidgets, reason: 'sheet ${i + 1}');
         if (i < titles.length - 1) {
@@ -159,7 +160,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.byKey(const ValueKey('sign-in-failed')), findsOneWidget);
-      expect(find.text('Не удалось войти. Попробуй ещё раз'), findsOneWidget);
+      expect(find.text(nbTypo('Не удалось войти. Попробуй ещё раз')), findsOneWidget);
       expect(_button(tester, 'sign-in-apple').state, SignInButtonState.ready);
       expect(_button(tester, 'sign-in-google').state, SignInButtonState.ready);
       expect(find.byType(IntroScreen), findsNothing);

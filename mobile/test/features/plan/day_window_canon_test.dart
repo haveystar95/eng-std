@@ -739,7 +739,7 @@ void main() {
     expect(find.byType(WindowPlate), findsOneWidget);
     expect(find.byType(WindowActionBar), findsOneWidget);
     expect(find.text('Подписка'), findsOneWidget);
-    expect(find.text('Откроется с подпиской'), findsOneWidget);
+    expect(find.text(nbTypo('Откроется с подпиской')), findsOneWidget);
     expect(find.text('Начать'), findsNothing);
   });
 }

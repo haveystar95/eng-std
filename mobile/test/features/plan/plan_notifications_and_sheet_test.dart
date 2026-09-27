@@ -11,6 +11,7 @@ import 'package:eng_std/features/plan/plan_providers.dart';
 import 'package:eng_std/features/plan/plan_sheets.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
 
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 import '../../support/start_harness.dart';
 
@@ -71,13 +72,13 @@ void main() {
 
       await closeDay(tester, 1);
       expect(find.byKey(const ValueKey('notify-ask')), findsOneWidget);
-      expect(find.text('Напомнить про день 2\u00A0завтра в 19:00?'), findsOneWidget);
-      await answer(tester, 'Не сейчас');
+      expect(find.text(nbTypo('Напомнить про день 2 завтра в 19:00?')), findsOneWidget);
+      await answer(tester, nbTypo('Не сейчас'));
       expect(find.byKey(const ValueKey('notify-ask')), findsNothing);
 
       await closeDay(tester, 2);
       expect(find.byKey(const ValueKey('notify-ask')), findsOneWidget, reason: 'второй и последний раз — после дня 2');
-      await answer(tester, 'Не сейчас');
+      await answer(tester, nbTypo('Не сейчас'));
 
       await closeDay(tester, 3);
       expect(find.byKey(const ValueKey('notify-ask')), findsNothing, reason: 'после двух «Не сейчас» — никогда');
