@@ -49,7 +49,7 @@ class EngStdApp extends ConsumerWidget {
     final option = ref.watch(localeControllerProvider).asData?.value ?? UiLanguageOption.system;
     final supportLang = ref.watch(authControllerProvider).value?.profile?.nativeLanguage;
     return MaterialApp(
-      title: 'Eng Std',
+      title: 'Ritora',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       locale: LocaleController.localeFor(option, supportLang),
