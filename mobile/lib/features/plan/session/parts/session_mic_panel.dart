@@ -537,7 +537,7 @@ class SessionNoMicView extends StatelessWidget {
             children: [
               Center(child: _Skip(onTap: onSkip)),
               const SizedBox(height: 14),
-              SessionDockButton(label: l.planSessionNoMicAllow, onTap: onAllow),
+              DockButton(label: l.planSessionNoMicAllow, onTap: onAllow),
             ],
           ),
         ),

@@ -535,7 +535,7 @@ mixin VoiceCardState<T extends StatefulWidget> on State<T> {
     final l = AppLocalizations.of(context);
     // Second attempt without a pass: «once more» is no longer offered — only «Next».
     if (skippedAfterMisses) {
-      return SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()));
+      return DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()));
     }
     return SessionMicPanel(
       mic: mic,
@@ -637,7 +637,7 @@ mixin ChoiceCardState<T extends StatefulWidget> on State<T> {
         ],
         if (answeredWrong) ...[
           const SizedBox(height: 8),
-          SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+          DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
         ],
       ],
     );

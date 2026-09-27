@@ -116,7 +116,7 @@ class _RecallScenesCardState extends State<RecallScenesCard> {
                 _PageDots(count: _scenes.length, current: _page),
                 const SizedBox(height: 20),
               ],
-              SessionDockButton(
+              DockButton(
                 key: const ValueKey('recall-next'),
                 label: _last ? l.planSessionRecallLast : l.planSessionNext,
                 busy: env.advancing,

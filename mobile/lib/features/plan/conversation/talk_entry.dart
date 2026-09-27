@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/paper_switch.dart';
 
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/plan/conversation/conversation_models.dart';
@@ -169,7 +170,7 @@ class TalkEntryView extends StatelessWidget {
                   ],
                   _NoHintsRow(value: noHints, onChanged: onNoHints),
                   const SizedBox(height: 14),
-                  SessionDockButton(
+                  DockButton(
                     key: const ValueKey('talk-entry-start'),
                     label: l.planTalkStart,
                     busy: starting,
@@ -369,27 +370,7 @@ class _NoHintsRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              AnimatedContainer(
-                key: const ValueKey('talk-entry-no-hints'),
-                duration: AppMotion.sessionChipSelect,
-                width: 44,
-                height: 26,
-                padding: const EdgeInsets.all(3),
-                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-                decoration: BoxDecoration(
-                  color: value ? AppColors.verdictKnown : AppColors.sessionToggleTrack,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.paper,
-                    boxShadow: [BoxShadow(color: AppColors.sessionToggleKnobShadow, blurRadius: 3, offset: Offset(0, 1))],
-                  ),
-                ),
-              ),
+              PaperSwitch(key: const ValueKey('talk-entry-no-hints'), value: value),
             ],
           ),
         ),

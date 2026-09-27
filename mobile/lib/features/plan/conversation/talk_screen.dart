@@ -175,7 +175,7 @@ class _TalkViewState extends State<TalkView> {
                   children: [
                     Text(_openFailure(l), textAlign: TextAlign.center, style: AppTextSession.body),
                     const SizedBox(height: 18),
-                    SessionDockButton(label: l.planTabRetry, onTap: () => unawaited(_talk.open())),
+                    DockButton(label: l.planTabRetry, onTap: () => unawaited(_talk.open())),
                     const SizedBox(height: 8),
                     TextButton(onPressed: widget.onClose, child: Text(l.planWindowBack, style: AppTextSession.skip)),
                   ],

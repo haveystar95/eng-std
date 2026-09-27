@@ -5,6 +5,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/paper_switch.dart';
+import 'package:eng_std/ui/paper_sheet.dart';
 
 import '../../../../data/plan/plan_models.dart';
 import '../session_texts.dart' show StageLine;
@@ -117,7 +119,7 @@ class SessionStageEntry extends StatelessWidget {
             ),
           ),
         ),
-        SessionDock(child: SessionDockButton(label: l.planSessionStart, enabled: onStart != null, onTap: onStart)),
+        SessionDock(child: DockButton(label: l.planSessionStart, enabled: onStart != null, onTap: onStart)),
       ],
     );
   }
@@ -240,26 +242,7 @@ class _NoHintsCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              AnimatedContainer(
-                duration: AppMotion.sessionChipSelect,
-                width: 44,
-                height: 26,
-                padding: const EdgeInsets.all(3),
-                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-                decoration: BoxDecoration(
-                  color: value ? AppColors.verdictKnown : AppColors.sessionToggleTrack,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.paper,
-                    boxShadow: [BoxShadow(color: AppColors.sessionToggleKnobShadow, blurRadius: 3, offset: Offset(0, 1))],
-                  ),
-                ),
-              ),
+              PaperSwitch(value: value),
             ],
           ),
         ),
@@ -384,7 +367,7 @@ class SessionStageSummary extends StatelessWidget {
             ),
           ),
         ),
-        SessionDock(child: SessionDockButton(label: l.planSessionNext, busy: busy, onTap: onNext)),
+        SessionDock(child: DockButton(label: l.planSessionNext, busy: busy, onTap: onNext)),
       ],
     );
   }
@@ -564,7 +547,7 @@ class SessionDaySummary extends StatelessWidget {
                 Text(l.planSessionCloseFailed, key: const ValueKey('day-summary-failed'), textAlign: TextAlign.center, style: AppTextSession.meta),
                 const SizedBox(height: 14),
               ],
-              SessionDockButton(key: const ValueKey('day-summary-close'), label: l.planSessionCloseDay, busy: closing, onTap: onCloseDay),
+              DockButton(key: const ValueKey('day-summary-close'), label: l.planSessionCloseDay, busy: closing, onTap: onCloseDay),
             ],
           ),
         ),
@@ -662,45 +645,15 @@ class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixi
 /// «Leave». Leaving loses nothing: the answers are already on the server. True — leave.
 Future<bool> showSessionExitSheet(BuildContext context, {required String stageName}) async {
   final l = AppLocalizations.of(context);
-  final leave = await showModalBottomSheet<bool>(
+  final leave = await showPaperSheet<bool>(
     context: context,
-    backgroundColor: AppColors.ground,
-    barrierColor: AppColors.windowSheetScrim,
-    elevation: 0,
-    isScrollControlled: true,
-    sheetAnimationStyle: const AnimationStyle(duration: AppMotion.sessionExitSheet, curve: AppMotion.windowEaseOutCubic),
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
-    builder: (context) => Padding(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.paddingOf(context).bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(color: AppColors.markerOutline, borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(l.planSessionExitTitle, style: AppTextSession.sheetTitle),
-          const SizedBox(height: 14),
-          Text(l.planSessionExitBody(stageName), style: AppTextSession.body),
-          const SizedBox(height: 32),
-          Center(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => Navigator.of(context).pop(false),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                child: Text(l.planSessionExitStay, style: AppTextSession.sheetStay),
-              ),
-            ),
-          ),
-          SessionDockButton(label: l.planSessionExitLeave, onTap: () => Navigator.of(context).pop(true)),
-        ],
-      ),
+    builder: (context) => PaperSheetBody(
+      title: l.planSessionExitTitle,
+      body: l.planSessionExitBody(stageName),
+      stayLabel: l.planSessionExitStay,
+      onStay: () => Navigator.of(context).pop(false),
+      actionLabel: l.planSessionExitLeave,
+      onAction: () => Navigator.of(context).pop(true),
     ),
   );
   return leave == true;

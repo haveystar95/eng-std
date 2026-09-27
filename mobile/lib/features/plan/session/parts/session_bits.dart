@@ -304,48 +304,6 @@ class SessionListenButton extends StatelessWidget {
   }
 }
 
-/// ACTION BUTTON 56 — `#1B1A18`, corner radius 18, 17/600 in paper; disabled — an 8 % backing.
-class SessionDockButton extends StatelessWidget {
-  const SessionDockButton({super.key, required this.label, required this.onTap, this.enabled = true, this.busy = false});
-
-  final String label;
-  final VoidCallback? onTap;
-  final bool enabled;
-
-  /// The answer is still being sent to the server — the button waits.
-  final bool busy;
-
-  @override
-  Widget build(BuildContext context) {
-    final on = enabled && onTap != null && !busy;
-    return Semantics(
-      button: true,
-      enabled: on,
-      label: label,
-      child: GestureDetector(
-        onTap: on
-            ? () {
-                AppHaptics.light();
-                onTap!();
-              }
-            : null,
-        child: AnimatedContainer(
-          duration: AppMotion.sessionChipSelect,
-          height: 56,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: enabled ? AppColors.windowInk : AppColors.sessionSheetShadow,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: busy
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.paper))
-              : Text(label, style: enabled ? AppTextSession.dock : AppTextSession.dock.copyWith(color: AppColors.tertiary)),
-        ),
-      ),
-    );
-  }
-}
-
 /// DOCK AT THE BOTTOM OF THE SCREEN — a paper gradient over the feed and padding 14 / 24 / 24 (+ safe area).
 class SessionDock extends StatelessWidget {
   const SessionDock({super.key, required this.child, this.fadeStop = 0.34});

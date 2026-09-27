@@ -275,7 +275,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
               children: [
                 Text(l.planSessionLoadFailed, textAlign: TextAlign.center, style: AppTextSession.body),
                 const SizedBox(height: 18),
-                SessionDockButton(label: l.planTabRetry, onTap: () => unawaited(_session.load())),
+                DockButton(label: l.planTabRetry, onTap: () => unawaited(_session.load())),
                 const SizedBox(height: 8),
                 TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l.planWindowBack, style: AppTextSession.skip)),
               ],
