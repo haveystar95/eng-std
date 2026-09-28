@@ -14,21 +14,16 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
  * schema.
  */
 
-/** The sha256 of `slot_judge.v3.md`: the file is frozen, and a change to it is a new version, never a new hash here. */
-const SLOT_JUDGE_V3_SHA256 = '035411394c79d4e6f3d814f96933eecf2f7b56323e32f2cd26525cff26d7b6e4';
-
 // Canon: «правится файл → меняется имя → меняется версия» (docs/plan-v2.md §0). Наряд CONV-2 gave the judge two modes —
 // an answer judged by its meaning (п. 7) and an own value that need not be the partner's (п. 8) — and a reason in the
-// words of the window's hint, so v2 became v3. Catches an edit made to a frozen prompt in place, which would leave
-// `plan_check_counters` and every stored verdict naming a version that no longer says what it said, and a v3 that lost
-// one of the three rules it was written for.
+// words of the window's hint, so v2 became v3. The file's bytes are frozen by its sha256 in docs/prompts/REGISTRY.md
+// (PromptRegistryTest). Catches a v3 that lost one of the three rules it was written for, and a system side that is not
+// the file as it is.
 it('keeps the prompt file frozen under its own version, and sends it as the system side unchanged', function () {
-    $path = dirname(__DIR__, 4).'/app/Modules/Plan/Infrastructure/Prompt/'.PlanPromptFiles::SLOT_JUDGE_FILE;
-    $raw = (string) file_get_contents($path);
+    $raw = (string) file_get_contents(PlanPromptFiles::path('slot_judge'));
     $prompts = new PlanPromptFiles;
 
-    expect(hash('sha256', $raw))->toBe(SLOT_JUDGE_V3_SHA256)
-        ->and($raw)->toStartWith("SLOT JUDGE — v3\n")
+    expect($raw)->toStartWith("SLOT JUDGE — v3\n")
         ->and($raw)->toEndWith("the first character { and the last }.\n")
         ->and(str_ends_with($raw, "\n\n"))->toBeFalse()
         ->and($raw)->not->toContain('TASK')
@@ -40,7 +35,7 @@ it('keeps the prompt file frozen under its own version, and sends it as the syst
         ->and($raw)->toContain('It does NOT have to be one of EXAMPLE_VALUES or anything the scene mentioned')
         // The reason names what is missing, never the gap the learner cannot see.
         ->and($raw)->toContain('in the words of SLOT_HINT')->toContain('"пропуск"')
-        ->and(hash('sha256', $prompts->slotJudgeSystem()))->toBe(SLOT_JUDGE_V3_SHA256)
+        ->and($prompts->slotJudgeSystem())->toBe($raw)
         ->and($prompts->slotJudgeVersion())->toBe('slot_judge.v3');
 });
 

@@ -10,7 +10,7 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The inputs of the lesson prompt (`lesson_day.v4.7`), exactly as its INPUTS section names them —
+ * The inputs of the lesson prompt (`lesson_day`), exactly as its INPUTS section names them —
  * plus the two language CODES beside the names: the prompt reads «Russian», the validator reads «ru».
  *
  * `topicDescription` is the scene's brief with the learner's own facts after it (their goal in their

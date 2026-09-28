@@ -254,20 +254,13 @@ reads plan tables.
 
 ## Notes
 
-- The prompt files under `Infrastructure/Prompt/` are FROZEN; the version is the file name
-  (`plan-builder-v2`, `lesson_day.v4.10`, `lesson_card_repair.v1.4`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`; `lesson_day.v4.7`
-  and `lesson_card_repair.v1.3` stay beside them — a rollback is one constant of `PlanPromptFiles`; `lesson_day.v4.6`, `v4.8`,
-  `v4.9` and `lesson_card_repair.v1.2` are gone, in git). `v4.8` (наряд LANG-1 §8, DECISIONS п. 435) was `v4.7` with ONE clause of FINAL INTERNAL
-  VALIDATION changed: a reading is written in the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian,
-  Ukrainian and Belarusian, Latin for the others) where `v4.7` said «Cyrillic only when NATIVE_LANGUAGE is Russian». `v4.9`
-  (наряд LANG-1b §5) is `v4.8` with the gender and the address of a target that has them: LEARNER_GENDER and role_gender
-  shape the lines in both languages, and one sentence of TEXT QUALITY — the partner addresses the learner formally in
-  TARGET_LANGUAGE, the learner never assumes the partner's gender (the repairs of a frame, an exchange and a line quote
-  TEXT QUALITY and read it; `docs/research/lang-1b/v4.9.diff`). `v4.10` (наряд LANG-1b §10.1, DECISIONS п. 447) is `v4.9` with
-  a word's definition in TARGET_LANGUAGE, never in English unless the target is English (VOCABULARY), a check's `text_target`
-  in TARGET_LANGUAGE (CHECK PER EXCHANGE) and an ask exchange as a real question, never the learner's skill turned into one
-  (EXCHANGE KINDS) — `docs/research/lang-1b/v4.10.diff`; `lesson_card_repair.v1.4` (§10.2, п. 448) keeps a word found only for
-  its definition's language (and at most its `used_in`) and writes the definition anew. The
+- The prompts live in `Infrastructure/Prompt/current/` and only there (наряд PROMPTS-1): one file per prompt, named as the
+  prompt and its version — `plan-builder-v2`, `lesson_day.v4.10`, `lesson_card_repair.v1.4`, `lesson_seam_judge.v1.1`,
+  `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES` is the one map from a prompt to its file;
+  `docs/prompts/REGISTRY.md` holds each one's name, version, path and sha256, and `PromptRegistryTest` holds the directory
+  and the registry to each other. The files are FROZEN; the version is the file name. A new version replaces the old file in
+  the same commit — no rollback file lies beside the current one; the history is `git log --follow` on the path, and what
+  each version changed is in DECISIONS and the reports of the наряды. The
   loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
   message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
   `LessonRequests` (roles, `EARLIER_DAYS`) for the build and for a repair alike; the repair wrapper

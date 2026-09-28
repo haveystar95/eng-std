@@ -18,7 +18,7 @@ use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
- * THE DAY'S WORDS (`lesson_day.v4.7`, VOCABULARY): `used_in` names places that exist and really
+ * THE DAY'S WORDS (`lesson_day`, VOCABULARY): `used_in` names places that exist and really
  * carry the term; at least half the items stand in the learner's frames or fillers; no item inside
  * another; no free combination of ordinary words as a «chunk», no plain everyday word as a word; an abbreviation or an
  * acronym only when the learner's language has an everyday word for it (ATM → банкомат, PIN → ПИН-код), never one with

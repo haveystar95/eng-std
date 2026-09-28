@@ -18,9 +18,6 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
  * scene when the server closed it, and carries REDO on the second try of a move — and only there.
  */
 
-/** The sha256 of `conversation_agent.v3.4.md`: the file is frozen, and a change to it is a new version, never a new hash. */
-const CONVERSATION_AGENT_V3_4_SHA256 = '8d8c414e6656d3911de55da4a65d42c52b1f3b23102b2f3c617e3b6b2874387d';
-
 /** @param list<string> $earlier */
 function cpRequest(?array $redo = null, ?string $leadTo = 'T2', array $earlier = [], bool $sceneEnd = false): ConversationAgentRequest
 {
@@ -66,24 +63,21 @@ function cpRequest(?array $redo = null, ?string $leadTo = 'T2', array $earlier =
  * Canon (наряд FIX-4b §3): «v3.2 = v3.1 + ровно эти правила» — сказанное учеником правда, заготовка — только для
  * несказанного, не поправлять и не оспаривать; роль в своей компетенции — одно правило с двумя примерами ✓, без ✗-реплик;
  * не спрашивать то, что есть в HISTORY или EARLIER; новая роль на start не повторяет реплик прежней и сразу открывает
- * LEAD_TO; из формы ответа убраны phrases_used и checkpoint_done. CATCHES a prompt edited in place under an old name, a
- * v3.2 without any of the rules of v3, v3.1 or its own, a model still asked for the two fields the server never read,
- * v3's «set checkpoint_done … and open the next checkpoint in the same reply» (the smear of scenes the owner's rehearsal
- * caught) — and v3.1 left beside it. Canon (наряд FIX-4c §6): «промт v3.3 = v3.2 + одна фраза в OUTPUT: reply_native —
- * перевод reply_target на родной язык ученика, дословно по смыслу, никогда не английский и не пересказ … v3.2 удалить».
- * CATCHES a v3.3 that is more than v3.2 and that one sentence, and v3.2 left beside it. Canon (наряд ACC-1 §6): «промт
- * conversation_agent.v3.4 = v3.3 + одна фраза в SCENES: при SCENE_END роль сначала принимает или благодарит за то, что
- * ученик только что сказал или предложил (не отклоняет), и только потом прощается одним предложением … v3.3 удалить».
- * CATCHES a v3.4 that is more than v3.3 and that one sentence, the sentence anywhere but after SCENE_END's own rule, and
- * v3.3 left beside it.
+ * LEAD_TO; из формы ответа убраны phrases_used и checkpoint_done. CATCHES a v3.2 without any of the rules of v3, v3.1 or
+ * its own, a model still asked for the two fields the server never read, and v3's «set checkpoint_done … and open the next
+ * checkpoint in the same reply» (the smear of scenes the owner's rehearsal caught). Canon (наряд FIX-4c §6): «промт v3.3 =
+ * v3.2 + одна фраза в OUTPUT: reply_native — перевод reply_target на родной язык ученика, дословно по смыслу, никогда не
+ * английский и не пересказ». Canon (наряд ACC-1 §6): «промт conversation_agent.v3.4 = v3.3 + одна фраза в SCENES: при
+ * SCENE_END роль сначала принимает или благодарит за то, что ученик только что сказал или предложил (не отклоняет), и
+ * только потом прощается одним предложением». CATCHES that sentence anywhere but after SCENE_END's own rule. The file's
+ * bytes are frozen by its sha256 in docs/prompts/REGISTRY.md, and an older version left beside it is caught there too
+ * (PromptRegistryTest: one file per prompt in current/).
  */
 it('keeps the role\'s prompt frozen under its own version, with every rule of v3, v3.1, v3.2, v3.3 and v3.4 in it', function () {
-    $path = dirname(__DIR__, 3).'/app/Modules/Plan/Infrastructure/Prompt/'.PlanPromptFiles::CONVERSATION_FILE;
-    $raw = (string) file_get_contents($path);
+    $raw = (string) file_get_contents(PlanPromptFiles::path('conversation'));
     $prompts = new PlanPromptFiles;
 
-    expect(hash('sha256', $raw))->toBe(CONVERSATION_AGENT_V3_4_SHA256)
-        ->and($raw)->toStartWith("CONVERSATION AGENT — v3.4\n")
+    expect($raw)->toStartWith("CONVERSATION AGENT — v3.4\n")
         // v3.4's one sentence, in SCENES straight after SCENE_END's own rule.
         ->and($raw)->toContain('and set end to "no" unless TURNS_LEFT is 0. On SCENE_END first accept what the learner has just said or offered, or thank them for it — never turn it down — and only then say goodbye, in one sentence. When TURN is `start`')
         // v3.3's one sentence, the last of OUTPUT.
@@ -128,13 +122,8 @@ it('keeps the role\'s prompt frozen under its own version, with every rule of v3
         ->and($raw)->toContain('`'.RoleLines::REDO_LEARNER_LINE.'`')->toContain('`'.RoleLines::REDO_SAME_WORDS.'`')->toContain('`'.RoleLines::REDO_LEARNER_ECHO.'`')->toContain('`'.RoleLines::REDO_OWN_LINE.'`')->toContain('`'.ConversationRules::REDO_EARLY_END.'`')
         ->and($raw)->toContain('"opens": null')
         ->and($raw)->not->toContain('next_hint_native')
-        ->and(hash('sha256', $prompts->conversationSystem()))->toBe(CONVERSATION_AGENT_V3_4_SHA256)
-        ->and($prompts->conversationVersion())->toBe('conversation_agent.v3.4')
-        ->and(is_file(dirname($path).'/conversation_agent.v3.3.md'))->toBeFalse()
-        ->and(is_file(dirname($path).'/conversation_agent.v3.2.md'))->toBeFalse()
-        ->and(is_file(dirname($path).'/conversation_agent.v3.1.md'))->toBeFalse()
-        ->and(is_file(dirname($path).'/conversation_agent.v3.md'))->toBeFalse()
-        ->and(is_file(dirname($path).'/conversation_agent.v2.1.md'))->toBeFalse();
+        ->and($prompts->conversationSystem())->toBe($raw)
+        ->and($prompts->conversationVersion())->toBe('conversation_agent.v3.4');
 });
 
 /**

@@ -23,7 +23,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE STORY SO FAR (`lesson_day.v4.7`, EARLIER_DAYS; наряд GEN-3): what day N of a plan is told of the days before it — the
+ * THE STORY SO FAR (`lesson_day`, EARLIER_DAYS; наряд GEN-3): what day N of a plan is told of the days before it — the
  * scene days whose lessons are written, in the calendar's order, each with its dialogue line by line, its frames in both
  * languages and its words — and in whose roles its lesson is spoken: the learner's of the plan, the partner's of the scene.
  */

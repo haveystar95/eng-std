@@ -290,9 +290,7 @@ final class PlanServiceProvider extends ServiceProvider
         // with no file is a language with no pack: its checks are skipped and counted, never guessed.
         $this->app->singleton(LanguagePacks::class, fn (): LanguagePacks => new LanguagePacks((array) config('lesson.lang', [])));
 
-        $this->app->singleton(PlanPromptFiles::class, fn (): PlanPromptFiles => new PlanPromptFiles(
-            dirname(__DIR__).'/Prompt',
-        ));
+        $this->app->singleton(PlanPromptFiles::class);
 
         // The model door. `fake` is the whole test suite and offline dev; anything else goes
         // through the catalogue, whose LiveModelGuard is what stops a test buying a plan.

@@ -46,7 +46,7 @@ function mcjAdapter(int $timeout = 180, int $retries = 4): OpenAiCompatibleConte
 
 function mcjPrompt(): RenderedPrompt
 {
-    return new RenderedPrompt(str_repeat('RULES ', 400), 'lesson_day.v4.7', PromptShape::Full, 'x');
+    return new RenderedPrompt(str_repeat('RULES ', 400), 'lesson_day.v4.10', PromptShape::Full, 'x');
 }
 
 /** @return array<string, mixed> */

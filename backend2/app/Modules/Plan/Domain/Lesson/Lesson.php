@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Domain\Lesson;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The lesson of one scene (`lesson_day.v4.7`): the visit as exchanges, the frames the learner's
+ * The lesson of one scene (`lesson_day`): the visit as exchanges, the frames the learner's
  * lines stand on, the questions about the whole visit, and the day's words.
  *
  * Immutable. Two of them exist per scene: the ANSWER — the model's JSON as written, what is stored

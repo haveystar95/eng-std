@@ -109,7 +109,7 @@ final class MtAnsweringCatalog implements ContentModelCatalog
 it('hands the plan an answer of the model without its invisible characters', function () {
     $builder = new ContentModelPlanBuilder(
         new MtAnsweringCatalog(['status' => 'ok', 'plan' => ['title_native' => "Собесе\u{00AD}дование", 'scenes' => [['title_native' => "Опы\u{0004}т и навыки"]]]]),
-        new PlanPromptFiles(dirname(__DIR__, 3).'/app/Modules/Plan/Infrastructure/Prompt'),
+        new PlanPromptFiles,
         ProviderId::OpenAi, 'gpt-5.4', 'gpt-5.4', 180, 180, 'gpt-5.4', 'gpt-5.4-mini',
     );
 

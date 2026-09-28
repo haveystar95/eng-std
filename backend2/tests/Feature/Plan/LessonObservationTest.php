@@ -98,7 +98,7 @@ it('writes a lesson with the learner\'s gender as the profile says it now and th
     planWalkDay($this, $token, $plan['id'], 1);
 
     [$first, $second] = $fake->lessonRequests;
-    $prompts = new PlanPromptFiles(app_path('Modules/Plan/Infrastructure/Prompt'));
+    $prompts = new PlanPromptFiles;
     $user = $prompts->lessonUser($first);
 
     expect($first->learnerGender)->toBeNull()
@@ -132,8 +132,8 @@ it('asks with a strict schema whose references are enums and whose lists have no
 // a rule. Catches a wrapper quoting a prompt that is no longer the lesson's, an exchange repaired without the rules
 // of a turn of the visit, and (наряд GEN-3) a frame, an exchange or a word repaired without the story so far.
 it('gives a card repair the lesson prompt\'s own sections for that card, word for word', function () {
-    $prompts = new PlanPromptFiles(app_path('Modules/Plan/Infrastructure/Prompt'));
-    $lesson = (string) file_get_contents(app_path('Modules/Plan/Infrastructure/Prompt/lesson_day.v4.10.md'));
+    $prompts = new PlanPromptFiles;
+    $lesson = (string) file_get_contents(PlanPromptFiles::path('lesson'));
 
     expect($prompts->repairVersion())->toBe('lesson_card_repair.v1.4')
         ->and($prompts->lessonVersion())->toBe('lesson_day.v4.10')

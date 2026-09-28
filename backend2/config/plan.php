@@ -8,7 +8,7 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 |
 | Two model calls — the plan builder and the lesson generator — read from versioned prompt files
-| (app/Modules/Plan/Infrastructure/Prompt), checked in code, dealt into days by the server.
+| (app/Modules/Plan/Infrastructure/Prompt/current), checked in code, dealt into days by the server.
 |
 */
 return [
@@ -146,7 +146,7 @@ return [
      * stage's, by {@see \App\Modules\Plan\Domain\Service\DayPace}.
      *
      * NINE HUNDRED, because the prices are honest now (наряд FIX-3 §2) and the rounds are never cut (§3): a lesson of
-     * `lesson_day.v4.7` costs 30–170 s more than the old ceiling, and a signal that fires on EVERY live day says
+     * the day prompt (measured on its v4.7) costs 30–170 s more than the old ceiling, and a signal that fires on EVERY live day says
      * nothing. The ceiling is for an anomaly, not for the ordinary day.
      *
      * Over it the stage is cut in ONE order, a rung at a time until it fits (наряд FIX-3 §3): the third recognitions

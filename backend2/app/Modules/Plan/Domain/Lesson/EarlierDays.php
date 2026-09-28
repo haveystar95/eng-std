@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * THE STORY SO FAR (`lesson_day.v4.7`, THE STORY SO FAR; наряд GEN-3): every content day of the plan before this one whose
+ * THE STORY SO FAR (`lesson_day`, THE STORY SO FAR; наряд GEN-3): every content day of the plan before this one whose
  * lesson is written, oldest first — none on the first day. What the next lesson is given to read and what its words and
  * frames may not repeat.
  */

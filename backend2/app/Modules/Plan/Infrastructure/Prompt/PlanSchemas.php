@@ -51,8 +51,8 @@ final class PlanSchemas
     }
 
     /**
-     * `lesson_day.v4.7`'s STRICT OUTPUT SCHEMA, keys in its order (the same structure as v4.4 and v4.5 — the versions changed
-     * rules and inputs, not fields). Enums hold what the vendor can hold: the kinds, the speakers, the gender, and every
+     * The lesson prompt's (`lesson_day`) STRICT OUTPUT SCHEMA, keys in its order (one structure since v4.4 — the versions
+     * changed rules and inputs, not fields). Enums hold what the vendor can hold: the kinds, the speakers, the gender, and every
      * reference — a frame id is one of `p1…pN` (N = DIALOGUE_COUNT, the most frames a day can have) or null, a
      * vocabulary id one of `v1…vM`, a `used_in` entry a frame id or a partner line `A1…AN`. `in_dialogue` is a
      * boolean; «exactly the fillers the dialogue says» is the validator's, the schema cannot say it. No list has a

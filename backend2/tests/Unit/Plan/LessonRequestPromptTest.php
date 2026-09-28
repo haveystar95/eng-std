@@ -22,7 +22,7 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * WHAT THE LESSON AND THE REPAIR OF A CARD SEND (`lesson_day.v4.7`, `lesson_card_repair.v1.3`; наряд GEN-3): the new inputs
+ * WHAT THE LESSON AND THE REPAIR OF A CARD SEND (`lesson_day`, `lesson_card_repair`; наряд GEN-3): the new inputs
  * of a day — the roles, the story so far — in the prompt's own format; a repair's NEIGHBOURS and the short story; and a
  * request built for the vendor's prompt cache — the rules and the schema first and byte for byte the same between two days,
  * everything that varies after them.
@@ -30,7 +30,7 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 function lrpPrompts(): PlanPromptFiles
 {
-    return new PlanPromptFiles(dirname(__DIR__, 3).'/app/Modules/Plan/Infrastructure/Prompt');
+    return new PlanPromptFiles;
 }
 
 function lrpRequest(string $topic, LessonRoles $roles, EarlierDays $earlier): LessonRequest
@@ -184,72 +184,6 @@ it('finds every section a repair of each kind quotes in the lesson prompt it quo
     }
     expect(lrpPrompts()->lessonVersion())->toBe('lesson_day.v4.10')
         ->and(lrpPrompts()->repairVersion())->toBe('lesson_card_repair.v1.4');
-});
-
-// Canon (наряд LANG-1 §8, DECISIONS п. 157): v4.8 was v4.7 with ONE clause of FINAL INTERNAL VALIDATION replaced — a reading
-// in the letters of NATIVE_LANGUAGE's own alphabet, where v4.7 said «Cyrillic only when NATIVE_LANGUAGE is Russian». Наряд
-// LANG-1b §5: v4.9 was v4.8 with two lines replaced — LEARNER_GENDER (INPUTS) and role_gender (ROLE GENDER) shape the lines in
-// both languages — and ONE sentence added to TEXT QUALITY: the partner's formal address in TARGET_LANGUAGE, the learner
-// never assuming the partner's gender. Наряд LANG-1b §10: v4.10 is v4.9 with the definition's language said in VOCABULARY
-// (one line replaced), the check's text_target in TARGET_LANGUAGE (one bullet added to CHECK PER EXCHANGE) and an ask exchange
-// as a real question, never the learner's own skill turned into one (one paragraph added to EXCHANGE KINDS, after a blank
-// line). v4.8 and v4.9 are gone; the rollback v4.7 stays — so v4.10 is read against v4.7: four lines replaced, four added.
-// Catches a further edit slipped into the frozen text, a clause lost or written elsewhere, and a change to a section a repair
-// quotes other than these: every other rule of P2R stays v4.7's byte for byte.
-it('writes v4.10 as v4.7 with the reading clause of v4.8, the gender and the address of v4.9 and the three rules of LANG-1b §10 — and nothing else', function () {
-    $dir = dirname(__DIR__, 3).'/app/Modules/Plan/Infrastructure/Prompt';
-    $old = explode("\n", (string) file_get_contents("{$dir}/lesson_day.v4.7.md"));
-    $new = explode("\n", (string) file_get_contents("{$dir}/lesson_day.v4.10.md"));
-    $address = "- In TARGET_LANGUAGE the partner addresses the learner formally (vous / Sie / usted / Lei / pan, pani / dumneavoastră) unless the scene is clearly casual; the learner's own lines never assume the partner's gender.";
-    $check = '- text_target of the question and of every option — in TARGET_LANGUAGE.';
-    $ask = 'In an ask exchange the learner asks a real question a person in this scene would ask the partner (schedule, duties, pay, documents, next steps) — never their own skill or fact turned into a question; skills are answer exchanges.';
-    $at = array_search($address, $new, true);
-    $atCheck = array_search($check, $new, true);
-    $atAsk = array_search($ask, $new, true);
-    expect($at)->toBeInt()
-        ->and($new[$at - 1])->toBe("- A's native lines follow role_gender.")
-        ->and($atCheck)->toBeInt()
-        ->and($new[$atCheck - 1])->toStartWith('- Exactly 3 options, text_target and text_native for the question and each option')
-        ->and($atAsk)->toBeInt()
-        ->and($new[$atAsk - 1])->toBe('')
-        ->and($new[$atAsk - 2])->toStartWith('Right: exchange 5:')
-        ->and($new[$atAsk + 2])->toBe('Requirements across the lesson:');
-    // The added lines out — the paragraph with the blank line before it.
-    $without = array_values(array_filter(
-        $new,
-        static fn (string $line, int $i): bool => ! in_array($line, [$address, $check, $ask], true) && $i !== $atAsk - 1,
-        ARRAY_FILTER_USE_BOTH,
-    ));
-    $changed = array_keys(array_diff_assoc($without, $old));
-    $replaced = [
-        '; Cyrillic only when NATIVE_LANGUAGE is Russian.' => "; only the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and Belarusian — each with its own letters; Latin for the others).",
-        "Affects only NATIVE_LANGUAGE grammar of the learner's lines (see TEXT QUALITY)." => "LEARNER_GENDER shapes the learner's lines in NATIVE_LANGUAGE and, where TARGET_LANGUAGE marks gender in agreement (adjectives, participles, profession nouns), in TARGET_LANGUAGE too; unknown → gender-neutral phrasing in both languages.",
-        'It never changes any TARGET_LANGUAGE text.' => "role_gender shapes A's lines the same way in both languages.",
-        'definition_target in TARGET_LANGUAGE.' => 'definition_target — a short definition in TARGET_LANGUAGE, never in English unless TARGET_LANGUAGE is English.',
-    ];
-
-    expect(count($new))->toBe(count($old) + 4)
-        ->and($changed)->toHaveCount(4);
-    foreach ($changed as $line) {
-        expect(str_replace(array_values($replaced), array_keys($replaced), $without[$line]))->toBe($old[$line]);
-    }
-    expect(lrpPrompts()->lessonSection('FINAL INTERNAL VALIDATION'))->toContain(array_values($replaced)[0])
-        ->and(lrpPrompts()->lessonSection('ROLE GENDER'))->toContain(array_values($replaced)[2])
-        ->and(lrpPrompts()->lessonSection('TEXT QUALITY'))->toContain($address)
-        // The example of PRONUNCIATION_NATIVE, which P2R quotes, is v4.7's: «(for Russian: Cyrillic)».
-        ->and(lrpPrompts()->lessonSection('PRONUNCIATION_NATIVE'))->toContain('(for Russian: Cyrillic)')
-        // Each §10 rule reaches the repairs that quote its section: the word, the check, the exchange and the line.
-        ->and(lrpPrompts()->repairSystem('line'))->toContain($address)->toContain($ask)
-        ->and(lrpPrompts()->repairSystem('term'))->toContain(array_values($replaced)[3])
-        ->and(lrpPrompts()->repairSystem('check'))->toContain($check)
-        ->and(lrpPrompts()->repairSystem('exchange'))->toContain($ask)->toContain($check);
-    $v47 = implode("\n", $old);
-    foreach (PlanPromptFiles::REPAIR_SECTIONS as $headings) {
-        foreach ($headings as $heading) {
-            $section = str_replace(["\n".$address, "\n".$check, "\n\n".$ask], '', lrpPrompts()->lessonSection($heading));
-            expect($v47)->toContain(str_replace(array_values($replaced), array_keys($replaced), $section));
-        }
-    }
 });
 
 /** The clean lesson told with p6 apart, so no exchange carries a warning of its own — the payload repairs are asked of. */

@@ -16,7 +16,7 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day.v4.7`, docs/plan-v2.md §4).
+ * THE LESSON VALIDATOR, CODE BY CODE (`lesson_day`, docs/plan-v2.md §4).
  *
  * The clean fixture lesson breaks nothing but the one v4.6 rule it predates ({@see planFixtureWarnings()}); every row below
  * breaks ONE rule of the prompt in it and names the code that must count the breach — the defect each code exists to

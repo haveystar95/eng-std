@@ -300,7 +300,7 @@ final class FakePlanModel implements PlanModelPort
     }
 
     /**
-     * THE CLEAN LESSON (`lesson_day.v4.7`): a doctor's visit with a child's back pain, written to break
+     * THE CLEAN LESSON (`lesson_day`): a doctor's visit with a child's back pain, written to break
      * no rule the validator counts — the fixture every plan test deals its days from, and the baseline a
      * test breaks one rule of.
      *

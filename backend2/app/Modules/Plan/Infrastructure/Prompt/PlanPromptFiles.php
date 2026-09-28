@@ -14,9 +14,13 @@ use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use RuntimeException;
 
 /**
- * THE PLAN'S PROMPT FILES, read from this directory. The version of each is its file stem
- * (`plan-builder-v2`, `lesson_day.v4.10`) — a rename is a version bump and nothing else is. The previous lesson and repair
- * files stay beside the current ones (`lesson_day.v4.7`, `lesson_card_repair.v1.3`): going back is one constant.
+ * THE PLAN'S PROMPT FILES, read from `current/` beside this class and from nowhere else (наряд PROMPTS-1). {@see self::FILES}
+ * is the one place that says which file a prompt is. `current/` holds exactly one file per prompt, named as the prompt and
+ * its version (`plan-builder-v2.md`, `lesson_day.v4.10.md`), and the version the plan's rows and the check counters record
+ * is that file's stem — a rename is a version bump and nothing else is. A new version replaces the old file in the same commit:
+ * no old version lies beside the current one, its text is in git (`git log --follow` on the path). What is current — name,
+ * version, path, sha256 — is `docs/prompts/REGISTRY.md`; `PromptRegistryTest` holds the directory and the registry to
+ * each other.
  *
  * The files are frozen: nothing here edits their text. Each ends with a «TEST INPUT» section the
  * author used to try the prompt by hand; that section is cut out and the real inputs go in the
@@ -30,57 +34,23 @@ use RuntimeException;
  */
 final class PlanPromptFiles
 {
-    private const PLAN_FILE = 'plan-builder-v2.md';
+    /** The one directory the prompts are read from. */
+    public const DIRECTORY = __DIR__.'/current';
 
     /**
-     * The lesson of a scene day. v4.8 — наряд LANG-1 §8 (DECISIONS п. 157): v4.7 and one clause of FINAL INTERNAL
-     * VALIDATION — a reading is written only in the letters of NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian,
-     * Ukrainian and Belarusian, each with its own letters; Latin for the others), where v4.7 said «Cyrillic only when
-     * NATIVE_LANGUAGE is Russian» and so told a Ukrainian or a Polish learner nothing. v4.9 — наряд LANG-1b §5: v4.8 and
-     * the gender and the address of a target language that has them — LEARNER_GENDER shapes the learner's lines in both
-     * languages where the target marks gender in agreement (INPUTS), role_gender shapes A's lines the same way in both
-     * (ROLE GENDER), and one sentence of TEXT QUALITY: the partner addresses the learner formally in TARGET_LANGUAGE unless
-     * the scene is clearly casual, and the learner's own lines never assume the partner's gender. TEXT QUALITY is quoted by
-     * the repair of a frame, an exchange and a line ({@see self::REPAIR_SECTIONS}), so those repairs read that sentence too.
-     * v4.10 — наряд LANG-1b §10, after a day of the owner's ru→ro plan wrote its definitions and its checks in English and
-     * turned the learner's skill into a question: v4.9 and three rules — `definition_target` is a short definition in
-     * TARGET_LANGUAGE, never in English unless the target is English (VOCABULARY, quoted by the repair of a word); the
-     * `text_target` of a check's question and options is in TARGET_LANGUAGE (CHECK PER EXCHANGE, quoted by the repair of a
-     * check and of an exchange); an ask exchange is a real question a person in the scene would ask the partner, never the
-     * learner's own skill or fact turned into one (EXCHANGE KINDS, quoted by the repair of an exchange and of a line).
-     * v4.7 stays beside it as the one rollback file (without the reading clause of v4.8); v4.8 and v4.9 are gone (in git).
+     * Every prompt of the plan and its file in {@see self::DIRECTORY}: the plan builder; the lesson of a scene day; the
+     * repair of one card of it — a wrapper that quotes the lesson's own sections ({@see self::REPAIR_SECTIONS}); the seam
+     * judge of the day's native frames; the slot judge of the day's spoken cards; the role the learner talks to in the
+     * sixth stage of a day.
      */
-    private const LESSON_FILE = 'lesson_day.v4.10.md';
-
-    /**
-     * The repair of one card. v1.4 — наряд LANG-1b §10: `vocab.definition_language` is fatal, and a word found only for its
-     * definition's language — and at most for its `used_in`, the warning that stood beside it on the owner's ru→ro day — is
-     * not a word to replace: the repair keeps the word, writes the definition anew in TARGET_LANGUAGE and lets `used_in` name
-     * where the word occurs (the rule of a word and one line of HOW TO FIX); a word of an earlier day is still replaced.
-     * v1.3 stays beside it as the one rollback file; v1.2 is gone (in git).
-     */
-    private const REPAIR_FILE = 'lesson_card_repair.v1.4.md';
-
-    private const JUDGE_FILE = 'lesson_seam_judge.v1.1.md';
-
-    /** The slot judge of the day's spoken cards (наряд SESSION-1a, разд. 4; v3 — наряд CONV-2, пп. 7–8: two modes). */
-    public const SLOT_JUDGE_FILE = 'slot_judge.v3.md';
-
-    /**
-     * The role the learner talks to in the sixth stage of a day (наряд CONV-1; v2 — наряд CONV-2: two sides, rescue, REDO;
-     * v2.1 — BACK-TAILS-2 §9: ECHO; v3 — наряд FIX-3 §7: the targets are constructions, the role opens a door to each in
-     * turn, one question a reply, an unfinished line is no misunderstanding, the talk ends on a goodbye or a cap; v3.1 —
-     * наряд FIX-4 §§3–4: the role is told only the scene it plays now and its targets under short ids, the server closes
-     * a scene and the role says goodbye in it, the next role greets the learner first; v3.2 — наряд FIX-4b §3: what the
-     * learner says is true and the prepared visit only fills what they have not said, the role keeps to its own job, asks
-     * nothing HISTORY or EARLIER already holds, a new role repeats no line of the one before, and the answer no longer
-     * carries `phrases_used` and `checkpoint_done`; v3.3 — наряд FIX-4c §6: v3.2 and one sentence in OUTPUT —
-     * `reply_native` is `reply_target` translated into the learner's language, faithful to its meaning, never in the target
-     * language and never a retelling; a translation that is none is asked for again with REDO `native_missing`; v3.4 —
-     * наряд ACC-1 §6: v3.3 and one sentence in SCENES — on SCENE_END the role first accepts what the learner has just said
-     * or offered, or thanks them for it, never turns it down, and only then says goodbye in one sentence).
-     */
-    public const CONVERSATION_FILE = 'conversation_agent.v3.4.md';
+    public const FILES = [
+        'plan' => 'plan-builder-v2.md',
+        'lesson' => 'lesson_day.v4.10.md',
+        'repair' => 'lesson_card_repair.v1.4.md',
+        'seam_judge' => 'lesson_seam_judge.v1.1.md',
+        'slot_judge' => 'slot_judge.v3.md',
+        'conversation' => 'conversation_agent.v3.4.md',
+    ];
 
     /**
      * The sections of the lesson prompt a repair of each card kind quotes — by the start of their
@@ -109,36 +79,44 @@ final class PlanPromptFiles
     /** @var array<string, string> */
     private array $texts = [];
 
-    public function __construct(private readonly string $directory = __DIR__) {}
+    /**
+     * The file of one prompt, as it lies in {@see self::DIRECTORY}.
+     *
+     * @param  key-of<self::FILES>  $prompt
+     */
+    public static function path(string $prompt): string
+    {
+        return self::DIRECTORY.'/'.self::FILES[$prompt];
+    }
 
     public function planVersion(): string
     {
-        return pathinfo(self::PLAN_FILE, PATHINFO_FILENAME);
+        return self::version('plan');
     }
 
     public function lessonVersion(): string
     {
-        return pathinfo(self::LESSON_FILE, PATHINFO_FILENAME);
+        return self::version('lesson');
     }
 
     public function repairVersion(): string
     {
-        return pathinfo(self::REPAIR_FILE, PATHINFO_FILENAME);
+        return self::version('repair');
     }
 
     public function judgeVersion(): string
     {
-        return pathinfo(self::JUDGE_FILE, PATHINFO_FILENAME);
+        return self::version('seam_judge');
     }
 
     public function slotJudgeVersion(): string
     {
-        return pathinfo(self::SLOT_JUDGE_FILE, PATHINFO_FILENAME);
+        return self::version('slot_judge');
     }
 
     public function conversationVersion(): string
     {
-        return pathinfo(self::CONVERSATION_FILE, PATHINFO_FILENAME);
+        return self::version('conversation');
     }
 
     /**
@@ -152,7 +130,7 @@ final class PlanPromptFiles
     {
         $sections = array_map($this->lessonSection(...), self::REPAIR_SECTIONS[$kind]);
 
-        return str_replace('{{rules}}', implode("\n\n---\n\n", $sections), $this->text(self::REPAIR_FILE));
+        return str_replace('{{rules}}', implode("\n\n---\n\n", $sections), $this->text('repair'));
     }
 
     /**
@@ -202,7 +180,7 @@ final class PlanPromptFiles
     /** The seam judge's rules — the file as it is. */
     public function judgeSystem(): string
     {
-        return $this->text(self::JUDGE_FILE);
+        return $this->text('seam_judge');
     }
 
     /** The seam judge's data: the learner's language by name and every sentence to read, with its id. */
@@ -219,7 +197,7 @@ final class PlanPromptFiles
     /** The slot judge's rules — the file as it is. */
     public function slotJudgeSystem(): string
     {
-        return $this->text(self::SLOT_JUDGE_FILE);
+        return $this->text('slot_judge');
     }
 
     /**
@@ -247,7 +225,7 @@ final class PlanPromptFiles
     /** The role's rules — the file as it is; it is the system message of every move, so the cache holds it. */
     public function conversationSystem(): string
     {
-        return $this->text(self::CONVERSATION_FILE);
+        return $this->text('conversation');
     }
 
     /**
@@ -344,7 +322,7 @@ final class PlanPromptFiles
      */
     public function lessonSection(string $heading): string
     {
-        foreach (explode("\n---\n", $this->text(self::LESSON_FILE)) as $part) {
+        foreach (explode("\n---\n", $this->text('lesson')) as $part) {
             $part = trim($part);
             if (str_starts_with($part, $heading)) {
                 return $part;
@@ -357,13 +335,13 @@ final class PlanPromptFiles
     /** The plan builder's rules — the file without its TEST INPUT tail. */
     public function planSystem(): string
     {
-        return $this->text(self::PLAN_FILE);
+        return $this->text('plan');
     }
 
     /** The lesson generator's rules — the file with its TEST INPUT section cut out, FINAL OUTPUT RULE kept. */
     public function lessonSystem(): string
     {
-        return $this->text(self::LESSON_FILE);
+        return $this->text('lesson');
     }
 
     public function planUser(PlanRequest $request): string
@@ -499,18 +477,29 @@ final class PlanPromptFiles
         return "[\n".implode(",\n", array_map(static fn (mixed $entry): string => json_encode($entry, $flags), $value))."\n]";
     }
 
-    private function text(string $file): string
+    /**
+     * The version a prompt is recorded under — its file's stem.
+     *
+     * @param  key-of<self::FILES>  $prompt
+     */
+    private static function version(string $prompt): string
     {
-        if (isset($this->texts[$file])) {
-            return $this->texts[$file];
+        return pathinfo(self::FILES[$prompt], PATHINFO_FILENAME);
+    }
+
+    /** @param  key-of<self::FILES>  $prompt */
+    private function text(string $prompt): string
+    {
+        if (isset($this->texts[$prompt])) {
+            return $this->texts[$prompt];
         }
-        $path = rtrim($this->directory, '/').'/'.$file;
+        $path = self::path($prompt);
         $raw = @file_get_contents($path);
         if ($raw === false) {
             throw new RuntimeException("Prompt file not found: {$path}");
         }
 
-        return $this->texts[$file] = self::withoutTestInput($raw);
+        return $this->texts[$prompt] = self::withoutTestInput($raw);
     }
 
     /**
