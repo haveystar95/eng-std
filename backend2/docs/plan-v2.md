@@ -29,12 +29,9 @@
   Зачёт выбора, сборки и покрытия речи остаётся у клиента, без сети. Шестой — **агент разговора**
   (`conversation_agent.v3.4`, наряд CONV-1; v2 — CONV-2, v2.1 — BACK-TAILS-2 §9, v3 — FIX-3 §7, v3.1 — FIX-4 §§3–4, v3.2 —
   FIX-4b §3, v3.3 — FIX-4c §6, v3.4 — ACC-1 §6): тоже синхронно, по ходу, на `mini`-модели.
-- Промпты лежат в `app/Modules/Plan/Infrastructure/Prompt/` и **заморожены**: версия = имя файла
-  (`plan-builder-v2`, `lesson_day.v4.10`, `lesson_card_repair.v1.4`, `lesson_seam_judge.v1.1`, `slot_judge.v3`,
-  `conversation_agent.v3.4`),
-  правится файл → меняется имя → меняется версия; прежние урок и починка (`lesson_day.v4.7`, `lesson_card_repair.v1.3`)
-  лежат рядом — откат одной константой `PlanPromptFiles`; файлы более старых версий сняты (в git; `lesson_day.v4.6` —
-  нарядом LANG-1, `lesson_day.v4.8` и `v4.9`, `lesson_card_repair.v1.2` — нарядом LANG-1b). `lesson_day.v4.8` (наряд LANG-1 §8, 26.09, DECISIONS п. 435) —
+- Промпты живут только в `app/Modules/Plan/Infrastructure/Prompt/current/` — по одному файлу на промпт, версия = имя файла, реестр — `docs/prompts/REGISTRY.md` (наряд PROMPTS-1).
+  Файлы **заморожены**: правится файл → меняется имя → меняется версия; новая версия заменяет файл старой тем же
+  коммитом, файла отката рядом нет — прежние тексты в git. `lesson_day.v4.8` (наряд LANG-1 §8, 26.09, DECISIONS п. 435) —
   v4.7 с одной заменой в FINAL INTERNAL VALIDATION: «Cyrillic only when NATIVE_LANGUAGE is Russian» → «only the letters of
   NATIVE_LANGUAGE's own alphabet (Cyrillic for Russian, Ukrainian and Belarusian — each with its own letters; Latin for the
   others)»; диф — `docs/research/lang-1/v4.8.diff`. **`lesson_day.v4.9`** (наряд LANG-1b §5, 26.09) — v4.8 с двумя
@@ -44,7 +41,7 @@
   same way in both languages», и в TEXT QUALITY — «In TARGET_LANGUAGE the partner addresses the learner formally (vous / Sie /
   usted / Lei / pan, pani / dumneavoastră) unless the scene is clearly casual; the learner's own lines never assume the
   partner's gender.» TEXT QUALITY цитирует починка каркаса, обмена и реплики — её правила эту фразу получили; диф —
-  `docs/research/lang-1b/v4.9.diff`. Откат — v4.7 (без правила чтения v4.8). Живьём на v4.9 (часть §8 наряда LANG-1b):
+  `docs/research/lang-1b/v4.9.diff`. Живьём на v4.9 (часть §8 наряда LANG-1b):
   чтение латиницей у родных pl и de; **у родного es — кириллицей в обоих ответах** (день failed после автопересборки),
   обращение на «ты» в испанских переводах реплик собеседника — правило обращения написано для TARGET_LANGUAGE.
   **`lesson_day.v4.10`** (наряд LANG-1b §10.1, 26.09, DECISIONS п. 447) — v4.9 с тремя правками после дня 1 «Собеседования»
@@ -53,10 +50,10 @@
   question and of every option — in TARGET_LANGUAGE»; EXCHANGE KINDS — «In an ask exchange the learner asks a real question a
   person in this scene would ask the partner (schedule, duties, pay, documents, next steps) — never their own skill or fact
   turned into a question; skills are answer exchanges.» Разделы цитирует P2R (слово; проверка и обмен; обмен и реплика); диф —
-  `docs/research/lang-1b/v4.10.diff`; откат — v4.7. Живьём (тот же день, скопированный с боя на e2e): определения и проверки
+  `docs/research/lang-1b/v4.10.diff`. Живьём (тот же день, скопированный с боя на e2e): определения и проверки
   румынские в обоих ответах, навык — answer-обмен; ask-обмены — просьба повторить вопрос и «можно и про компьютер?»
   (DECISIONS, «Спорное» п. 13). Сервер вырезает из файла урока раздел `TEST INPUT` и шлёт реальные входы отдельным сообщением.
-  История урока — в реестре промптов (`docs/prompts/REGISTRY.md`).
+  История версий — `git log --follow` по пути файла и DECISIONS.
 
 ## 1. Модель данных
 
