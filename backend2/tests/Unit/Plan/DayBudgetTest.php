@@ -2,14 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
 use App\Modules\Plan\Domain\Assembly\PhraseCards;
 use App\Modules\Plan\Domain\Assembly\PhrasesStage;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Entity\DayCard;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayBudget;
@@ -35,10 +32,8 @@ function dbDay(PlanLevel $level): array
 {
     $sceneId = PlanSceneId::fromString('01J8DAYBADGET0000000000001');
     $packs = lessonPacks();
-    $payload = FakePlanModel::lessonPayload(new LessonRequest(
-        'Приём у врача', 'x', 'English', 'Russian', $level, null, 8, 8, FakePlanModel::roles(), new EarlierDays,
-    ));
-    $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest());
+    $lesson = planServed((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
     $terms = planTermsOf($sceneId, $lesson);
     $scene = new SceneMaterial($sceneId, $lesson, $terms, $packs->for('en'), $packs->for('ru'));
 

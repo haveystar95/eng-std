@@ -1,0 +1,18 @@
+{
+  "must_say": [
+    "give your name — slot: the name",
+    "say which position you are applying for — slot: the position",
+    "say where you worked before — slot: the workplace",
+    "say how long you worked there — slot: the length of time",
+    "say what your main duties were — slot: the duties",
+    "ask whether this position includes a duty — slot: the duty",
+    "ask what the usual schedule is — slot: none"
+  ],
+  "must_understand": [
+    "asks your name and which position you want",
+    "asks where you worked before and for how long",
+    "asks what your main duties were",
+    "says what the job involves",
+    "tells you the usual schedule"
+  ]
+}

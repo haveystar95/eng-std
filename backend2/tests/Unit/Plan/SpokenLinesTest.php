@@ -2,19 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\SpokenLines;
-use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\Service\Words;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
+use App\Modules\Plan\Domain\Service\WordUsage;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
-use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Domain\ValueObject\Speaker;
+use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Plan\Domain\ValueObject\VoiceCast;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
@@ -23,9 +19,9 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 function slLesson(?Closure $edit = null): Lesson
 {
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём'));
 
-    return LessonAssembly::serve((new LessonParser)->parse($edit === null ? $payload : $edit($payload)), 'scene', lessonPacks()->for('en'));
+    return planServed((new LessonParser)->parse($edit === null ? $payload : $edit($payload)), 'scene', lessonPacks()->for('en'));
 }
 
 it('names every line of the dialogue by its exchange and speaker, in the order they are said', function () {

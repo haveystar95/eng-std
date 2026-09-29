@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| LANGUAGE PACK · ru — what the lesson validator reads of Russian
+| LANGUAGE PACK · ru — what the day's checks read of Russian
 |--------------------------------------------------------------------------
 |
 | docs/plan-v2.md §4 (наряд GEN-2b). Russian is written as the LEARNER'S OWN language: the reading of the
@@ -13,7 +13,7 @@ declare(strict_types=1);
 | spec's no-ops (наряд LANG-1: no key of a pack is null) — no plan has Russian as the language being learnt
 | (LanguageRoles::planTargets()), so nothing reads them, and a no-op reads exactly as the null it replaced did. Should
 | Russian ever become a target, these no-ops are to be written for real FIRST: unlike a null, an empty list is no
-| `lang.pack_missing` skip — the check would run and quietly find nothing.
+| rule switched off — the check would run and quietly find nothing.
 */
 return [
     // A reading of the target is written in the letters of the RUSSIAN alphabet, digits, punctuation, whitespace and the

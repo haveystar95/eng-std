@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Infrastructure\Adapter\FakeSpeechSynthesizer;
+use App\Modules\Plan\Domain\Lesson\CheckOption;
+use App\Modules\Plan\Domain\Lesson\Exchange;
+use App\Modules\Plan\Domain\Lesson\LessonParser;
+use App\Modules\Plan\Domain\Lesson\OptionShuffle;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -59,7 +63,43 @@ function s1fxPinScenes(string $planId): void
             DB::table($table)->where('scene_id', $old)->update(['scene_id' => $new]);
         }
         DB::table('plan_scenes')->where('id', $old)->delete();
+        s1fxReseat($new);
     }
+}
+
+/**
+ * THE OPTIONS WHERE THE BUILD WOULD HAVE PUT THEM FOR THE SCENE'S NEW ID. Since наряд GEN-4 the build shuffles every check
+ * and listening question by the scene's id (`OptionShuffle`), and the scene was built under the id it had before it was
+ * pinned — a new one on every run. Its options are set in an order of their own (by text) and shuffled again by the new id,
+ * so the stored day is the same on every run, as the served one was when the reading shuffled.
+ */
+function s1fxReseat(string $sceneId): void
+{
+    $raw = DB::table('plan_scenes')->where('id', $sceneId)->value('lesson_json');
+    if (! is_string($raw)) {
+        return;
+    }
+    $lesson = (new LessonParser)->parse(json_decode($raw, true, flags: JSON_THROW_ON_ERROR));
+    $exchanges = array_map(static function (Exchange $e) use ($sceneId): Exchange {
+        $right = $e->check->correctOption();
+        if ($right === null) {
+            return $e;
+        }
+        $options = $e->check->options;
+        usort($options, static fn (CheckOption $a, CheckOption $b): int => strcmp($a->textTarget, $b->textTarget));
+
+        return $e->withCheck(OptionShuffle::check($e->check->withOptions($options, (int) array_search($right, $options, true)), "{$sceneId}:x{$e->step}:check"));
+    }, $lesson->exchanges);
+    $listening = [];
+    foreach ($lesson->listening as $index => $question) {
+        $right = $question->correctOption();
+        $options = $question->optionsNative;
+        sort($options, SORT_STRING);
+        $listening[] = $right === null ? $question : OptionShuffle::listening($question->withOptions($options, (int) array_search($right, $options, true)), "{$sceneId}:listening:{$index}");
+    }
+    DB::table('plan_scenes')->where('id', $sceneId)->update([
+        'lesson_json' => json_encode($lesson->withExchanges($exchanges)->withListening($listening)->toArray(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+    ]);
 }
 
 /**

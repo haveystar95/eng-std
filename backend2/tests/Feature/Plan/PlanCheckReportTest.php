@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * `plan:check-report` (наряд CHECK-1): what the validator finds on the written days, by code — off the stored findings
- * and the counters, read-only.
+ * `plan:check-report` (наряд CHECK-1; since GEN-4 the checks of the skeleton and the dialogue): what the day's checks find
+ * on the written days, by code — off the stored findings and the counters, read-only.
  */
 
 // The rows of this test go with it (наряд ACC-1 §4): it used to keep its failed day and its counters in the test
@@ -34,21 +34,21 @@ it('reports every code with its findings, fatal ones, days, failed days, share, 
     $failed = $scenes->where('lesson_status', 'pending')->first();
     DB::table('plan_scenes')->where('id', $failed->id)->update([
         'lesson_status' => 'failed',
-        'fail_reason' => 'fatal: filler.ungrammatical',
+        'fail_reason' => 'fatal: line.ne_frame',
         'build_started_at' => now(),
         'checks_json' => json_encode([
-            ['code' => 'filler.ungrammatical', 'address' => 'p6.f1', 'detail' => '«I\'d like the 3 p.m. appointment.»: the filler carries its own punctuation'],
-            ['code' => 'filler.ungrammatical', 'address' => 'p6.f2', 'detail' => '«I\'d like the 5:30 p.m. appointment.»: the filler carries its own punctuation'],
-            ['code' => 'partner.too_long', 'address' => 'A5', 'detail' => '«We have 3 p.m. and 5:30 p.m. today.» has 3 sentences (max 2)'],
-            ['code' => 'partner.too_long', 'address' => 'A6', 'detail' => 'second'],
-            ['code' => 'partner.too_long', 'address' => 'A7', 'detail' => 'third'],
-            ['code' => 'partner.too_long', 'address' => 'A8', 'detail' => 'fourth'],
+            ['code' => 'line.ne_frame', 'address' => 'B6', 'detail' => 'the target line «I\'d like the 3 p.m. slot.» is not «I\'d like the 3 p.m. appointment» (p6 with «the 3 p.m.»)'],
+            ['code' => 'line.ne_frame', 'address' => 'B7', 'detail' => 'the target line «I\'d like 5:30.» is not «I\'d like the 5:30 p.m. appointment» (p6 with «the 5:30 p.m.»)'],
+            ['code' => 'partner.too_long', 'address' => 'a5', 'detail' => '«We have 3 p.m. and 5:30 p.m. today, and 6 p.m. is the last slot of the evening for a first visit.» has 19 words (at most 18)'],
+            ['code' => 'partner.too_long', 'address' => 'a6', 'detail' => 'second'],
+            ['code' => 'partner.too_long', 'address' => 'a7', 'detail' => 'third'],
+            ['code' => 'partner.too_long', 'address' => 'a8', 'detail' => 'fourth'],
         ], JSON_UNESCAPED_UNICODE),
     ]);
     // The counters of every attempt, two prompt versions — the report adds them up.
-    DB::table('plan_check_counters')->where('check_name', 'filler.ungrammatical')->delete();
-    foreach ([['lesson_day.v4.6', 'counted', 2], ['lesson_day.v4.7', 'counted', 3], ['lesson_day.v4.7', 'gated', 5], ['lesson_day.v4.7', 'failed', 2]] as [$version, $action, $hits]) {
-        DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => $version, 'check_name' => 'filler.ungrammatical', 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
+    DB::table('plan_check_counters')->where('check_name', 'line.ne_frame')->delete();
+    foreach ([['lesson_day.v4.10', 'counted', 2], ['lesson_dialogue.v1', 'counted', 3], ['lesson_dialogue.v1', 'gated', 5], ['lesson_dialogue.v1', 'failed', 2]] as [$version, $action, $hits]) {
+        DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => $version, 'check_name' => 'line.ne_frame', 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
     }
     $days = DB::table('plan_scenes')->whereIn('lesson_status', ['ready', 'failed'])->whereRaw('coalesce(generated_at, build_started_at, updated_at) >= ?', [$since])->count();
     $dayNumber = (int) DB::table('plan_days')->where('scene_id', $failed->id)->value('number');
@@ -57,29 +57,30 @@ it('reports every code with its findings, fatal ones, days, failed days, share, 
     $report = Artisan::output();
 
     expect($report)
-        ->toMatch('/filler\.ungrammatical\s*\|\s*2\s*\|\s*2\s*\|\s*1\s*\|\s*1\s*\|\s*'.preg_quote(number_format(100 / $days, 1), '/').' %\s*\|\s*5 \/ 5 \/ 2\s*\|/')
+        ->toMatch('/line\.ne_frame\s*\|\s*2\s*\|\s*2\s*\|\s*1\s*\|\s*1\s*\|\s*'.preg_quote(number_format(100 / $days, 1), '/').' %\s*\|\s*5 \/ 5 \/ 2\s*\|/')
         ->toMatch('/partner\.too_long\s*\|\s*4\s*\|\s*0\s*\|\s*1\s*\|\s*0\s*\|\s*[\d.]+ %\s*\|\s*0 \/ 0 \/ 0\s*\|/')
         ->toContain("Days with a lesson: {$days} since")
-        ->toContain('filler.ungrammatical (fatal)')
-        ->toContain("«I'd like the 3 p.m. appointment.»: the filler carries its own punctuation — «".$failed->title_native.'», day '.$dayNumber)
+        ->toContain('line.ne_frame (fatal)')
+        ->toContain('partner.too_long')->not->toContain('partner.too_long (fatal)')
+        ->toContain("the target line «I'd like the 3 p.m. slot.» is not «I'd like the 3 p.m. appointment» (p6 with «the 3 p.m.») — «".$failed->title_native.'», day '.$dayNumber)
         ->toContain('(failed)')
         ->toContain('second')->toContain('third')->not->toContain('fourth');
-    // The fixture's own warning stands on the ready days, on none of them failed.
-    expect($report)->toMatch('/frame\.adjacent_repeat\s*\|\s*\d+\s*\|\s*0\s*\|\s*\d+\s*\|\s*0\s*\|/');
+    // The fixture's day is clean (наряд GEN-4): its ready days add no finding of their own.
+    expect(preg_match_all('/^\|\s*[a-z_]+\.[a-z_.]+\s*\|/m', $report))->toBe(2);
 
-    // Наряд LANG-1b §1: the lesson built anew by the server is a counter, no finding — the report prints it under the table.
-    // CATCHES the rebuilds of the gate invisible to whoever reads the report.
+    // The seam judge that did not answer is a counter, no finding — the report prints it under the table. CATCHES a judge
+    // gone quiet invisible to whoever reads the report.
     foreach ([['counted', 3], ['failed', 1]] as [$action, $hits]) {
-        DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => 'lesson_day.v4.10', 'check_name' => 'lesson.auto_rebuild', 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
+        DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => 'lesson_seam_judge.v1.1', 'check_name' => App\Modules\Plan\Domain\Check\LessonCodes::JUDGE_UNAVAILABLE, 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
     }
     Artisan::call('plan:check-report', ['--since' => $since]);
-    expect(Artisan::output())->toContain('Counters that are no findings')->toContain('lesson.auto_rebuild: 3 / 0 / 1');
+    expect(Artisan::output())->toContain('The counter that is no finding')->toContain(App\Modules\Plan\Domain\Check\LessonCodes::JUDGE_UNAVAILABLE.': 3 / 0 / 1');
 
     Artisan::call('plan:check-report', ['--since' => '2099-01-01']);
     expect(Artisan::output())->toContain('No day with a lesson since 2099-01-01');
 
     Artisan::call('plan:check-report', ['--since' => '2000-01-01']);
-    expect(Artisan::output())->toContain('filler.ungrammatical');
+    expect(Artisan::output())->toContain('line.ne_frame');
 
     expect(Artisan::call('plan:check-report', ['--since' => 'not a date']))->toBe(1);
 });

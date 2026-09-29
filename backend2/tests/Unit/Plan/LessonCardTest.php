@@ -2,155 +2,156 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
+use App\Modules\Plan\Application\Dto\DialogueRequest;
 use App\Modules\Plan\Domain\Check\LessonViolation;
-use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
+use App\Modules\Plan\Domain\Lesson\Dialogue;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
+use App\Modules\Plan\Domain\Lesson\Skeleton;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
- * P2R — ONE CARD BY ITS ADDRESS (наряды GEN-2a, GEN-2b, GEN-3): which addresses are cards a repair can take, which findings
- * belong to a card, and what putting a repaired card back changes — that card, and for a frame the lines that
- * stand on it, nothing else.
+ * ONE CARD BY ITS ADDRESS (`lesson_card_repair.v1.5`, наряд GEN-4): which addresses are cards a repair can take — of the
+ * skeleton a frame, a partner line, a word; of the dialogue an exchange, its check, a listening question — which findings
+ * belong to a card, and what putting a repaired card back changes: that card, what the server holds of it kept, and the
+ * lines of the dialogue that say it — nothing else.
  */
 
-function lcAnswer(): Lesson
+/** @return array{0: Skeleton, 1: Dialogue} the fake's clean day, its two stages as the model writes them */
+function lcStages(): array
 {
-    return (new LessonParser)->parse(FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays)));
+    $request = FakePlanModel::lessonRequest('Приём');
+    $parser = new LessonParser;
+    $skeleton = $parser->skeleton(FakePlanModel::skeletonPayload($request));
+
+    return [$skeleton, $parser->dialogue(FakePlanModel::dialoguePayload(new DialogueRequest($request, $skeleton)))];
 }
 
-it('takes a frame, a filler of it, a whole exchange, a learner line, a check, a listening question and a word — and nothing else', function () {
+it('takes a frame, a filler of it, a partner line, a word, an exchange, a message of it, a check and a listening question — and nothing else', function () {
+    [$skeleton, $dialogue] = lcStages();
+    $covers = static fn (string $card, string $at): bool => LessonCard::at($card)?->covers(new LessonViolation('x', $at, '')) ?? false;
+
     expect(LessonCard::at('p3')?->kind)->toBe(LessonCard::FRAME)
         ->and(LessonCard::at('p3.f2')?->address)->toBe('p3')
+        ->and(LessonCard::at('a3')?->kind)->toBe(LessonCard::PARTNER_LINE)
+        ->and(LessonCard::at('v4')?->kind)->toBe(LessonCard::TERM)
         ->and(LessonCard::at('x3')?->kind)->toBe(LessonCard::EXCHANGE)
-        ->and(LessonCard::at('B3')?->kind)->toBe(LessonCard::LINE)
+        ->and([LessonCard::at('A3')?->address, LessonCard::at('B3')?->address])->toBe(['x3', 'x3'])
         ->and(LessonCard::at('x3.check')?->kind)->toBe(LessonCard::CHECK)
         ->and(LessonCard::at('L2')?->kind)->toBe(LessonCard::LISTENING)
-        ->and(LessonCard::at('A3'))->toBeNull()
-        ->and(LessonCard::at('v4')?->kind)->toBe(LessonCard::TERM)
-        ->and(LessonCard::at('v4')?->covers(new LessonViolation('vocab.known_repeat', 'v4', '')))->toBeTrue()
-        ->and(LessonCard::at('v4')?->covers(new LessonViolation('vocab.known_repeat', 'v40', '')))->toBeFalse()
-        ->and(LessonCard::at('v2')?->of(lcAnswer())['term_target'] ?? null)->toBe('sharp')
-        ->and(LessonCard::at('lesson'))->toBeNull()
-        ->and(LessonCard::at('p3')?->covers(new LessonViolation('filler.count', 'p3.f1', '')))->toBeTrue()
-        ->and(LessonCard::at('p3')?->covers(new LessonViolation('filler.count', 'p30', '')))->toBeFalse()
-        // An exchange card holds its two messages and its check, and nothing of another exchange.
-        ->and(array_map(static fn (string $at): bool => LessonCard::at('x3')?->covers(new LessonViolation('x', $at, '')) ?? false, ['x3', 'A3', 'B3', 'x3.check', 'B30', 'x4']))
-        ->toBe([true, true, true, true, false, false])
-        ->and(LessonCard::at('B3')?->of(lcAnswer())['text_target'] ?? null)->toBe('The pain is sharp when he bends.')
-        ->and(LessonCard::at('x3')?->of(lcAnswer())['kind'] ?? null)->toBe('answer');
+        ->and([LessonCard::at('L0'), LessonCard::at('skeleton'), LessonCard::at('dialogue'), LessonCard::at('p')])->toBe([null, null, null, null])
+        ->and(array_map(static fn (string $at): bool => LessonCard::at($at)?->ofSkeleton() ?? false, ['p3', 'a3', 'v4', 'x3', 'x3.check', 'L2']))
+        ->toBe([true, true, true, false, false, false])
+        // A frame holds its fillers; an exchange its two messages, not its check.
+        ->and([$covers('p3', 'p3.f1'), $covers('p3', 'p30'), $covers('v4', 'v4'), $covers('v4', 'v40')])->toBe([true, false, true, false])
+        ->and(array_map(static fn (string $at): bool => $covers('x3', $at), ['x3', 'A3', 'B3', 'x3.check', 'B30', 'x4']))->toBe([true, true, true, false, false, false])
+        // Each card read out of its stage, in that stage's own shape.
+        ->and(LessonCard::at('v2')?->of($skeleton, null)['term_target'] ?? null)->toBe('sharp')
+        ->and(LessonCard::at('a3')?->of($skeleton, null)['text_target'] ?? null)->toBe('Is the pain sudden, or more like a slow ache?')
+        ->and(LessonCard::at('p3')?->of($skeleton, null)['must_say'] ?? null)->toBe([3])
+        ->and(LessonCard::at('x3')?->of($skeleton, $dialogue)['partner_line'] ?? null)->toBe('a3')
+        ->and(LessonCard::at('x4.check')?->of($skeleton, $dialogue)['text_target'] ?? null)->toBe('What symptom does the doctor ask about?')
+        ->and(LessonCard::at('L2')?->of($skeleton, $dialogue)['text_native'] ?? null)->toBe('Что врач советует делать дома?')
+        ->and(LessonCard::at('x3')?->of($skeleton, null))->toBeNull()
+        ->and(LessonCard::at('p9')?->of($skeleton, $dialogue))->toBeNull();
 });
 
-// Canon GEN-2b: «P2R получает новый вид карточки exchange и поле frame_update — сборка применяет его атомарно (обмен +
-// каркас)». Catches an exchange put in without the frame it came with (its new filler never marked), a frame put in
-// without its exchange, and a pair that does not fit — a frame the repaired line does not stand on — half-applied.
-it('puts a repaired exchange back together with the frame it came with, or nothing at all', function () {
-    $answer = lcAnswer();
-    $parser = new LessonParser;
-    $card = LessonCard::at('x8');
-    $exchange = $card?->of($answer);
-    $exchange['messages'][0]['filler'] = 'a sick note';
-    $exchange['messages'][0]['text_target'] = 'Do we need a sick note?';
-    $frame = LessonCard::at('p6')?->of($answer);
-    $frame['slot']['fillers'][2]['in_dialogue'] = true;
-
-    $repaired = $card->replaceExchange($answer, $parser->card(LessonCard::EXCHANGE, $exchange), $parser->frameUpdate($frame));
-    $alien = $frame;
-    $alien['id'] = 'p5';
-
-    expect(LessonAssembly::fillerOf($repaired ?? throw new LogicException, $repaired->exchange(8)?->learner() ?? throw new LogicException)?->target)->toBe('a sick note')
-        ->and(array_map(static fn ($f): bool => $f->inDialogue, $repaired?->phrase('p6')->slot->fillers ?? []))->toBe([true, true, true])
-        ->and($repaired?->exchange(7)?->toArray())->toBe($answer->exchange(7)?->toArray())
-        ->and($card->replaceExchange($answer, $parser->card(LessonCard::EXCHANGE, $exchange), $parser->frameUpdate($alien)))->toBeNull()
-        ->and($card->replaceExchange($answer, $parser->card(LessonCard::EXCHANGE, $exchange), null)?->phrase('p6'))->toEqual($answer->phrase('p6'));
-});
-
-// A repaired frame keeps the dialogue true to it. Catches a frame repaired under lines that still say the old frame
-// — the served line and the phrase card would teach two different sentences — and a line that loses its closing mark
-// to a frame written without one.
-it('puts a repaired frame back and says its dialogue lines with the new frame, glue and all', function () {
-    $answer = lcAnswer();
+// v1.5: «a frame (card kind "frame"): keep its id, kind and must_say». Catches a frame put back under the id or with the items
+// the model wrote, and a frame repaired under dialogue lines that still say the old frame — the served line and the phrase
+// card would teach two different sentences — or a line that loses its closing mark to a frame written without one.
+it('puts a repaired frame back with its id, kind and must_say, and says the dialogue\'s lines with the new frame, glue and all', function () {
+    [$skeleton, $dialogue] = lcStages();
     $card = LessonCard::at('p5');
-    $raw = $card?->of($answer);
-    $raw['frame_target'] = 'He will stay ___.';
-    $repaired = $card->replace($answer, (new LessonParser)->card(LessonCard::FRAME, $raw));
-    $unmarked = $raw;
-    $unmarked['frame_target'] = 'He will stay ___';
+    $raw = $card?->of($skeleton, $dialogue) ?? [];
+    $raw = [...$raw, 'id' => 'p9', 'kind' => 'ask', 'must_say' => [9], 'frame_target' => 'He will stay ___.'];
+    $parser = new LessonParser;
+    [$fixed, $said] = $card->replace($skeleton, $dialogue, $parser->card(LessonCard::FRAME, $raw));
+    [, $unmarked] = $card->replace($skeleton, $dialogue, $parser->card(LessonCard::FRAME, [...$raw, 'frame_target' => 'He will stay ___']));
 
-    expect($repaired->phrase('p5')?->frameTarget)->toBe('He will stay ___.')
-        ->and($repaired->exchange(5)?->learner()?->textTarget)->toBe('Okay, he will stay at home.')
-        ->and(LessonAssembly::serve($repaired, 's', lessonPacks()->for('en'))->exchange(5)?->learner()?->textTarget)->toBe('Okay, he will stay at home.')
-        ->and($card->replace($answer, (new LessonParser)->card(LessonCard::FRAME, $unmarked))->exchange(5)?->learner()?->textTarget)->toBe('Okay, he will stay at home.')
+    expect($fixed->frame('p5')?->phrase->frameTarget)->toBe('He will stay ___.')
+        ->and($fixed->frame('p5')?->mustSay)->toBe([5])
+        ->and($fixed->frame('p5')?->phrase->kind->value)->toBe('answer')
+        ->and($fixed->frame('p9'))->toBeNull()
+        ->and($said?->exchange(5)?->exchange->learner()?->textTarget)->toBe('Okay, he will stay at home.')
+        ->and($unmarked?->exchange(5)?->exchange->learner()?->textTarget)->toBe('Okay, he will stay at home.')
         // Nothing else moved.
-        ->and($repaired->exchange(1)?->toArray())->toBe($answer->exchange(1)?->toArray())
-        ->and($repaired->listening)->toEqual($answer->listening);
+        ->and($said?->exchange(1)?->toArray())->toBe($dialogue->exchange(1)?->toArray())
+        ->and($fixed->partnerLines)->toEqual($skeleton->partnerLines)
+        ->and($fixed->vocabulary)->toEqual($skeleton->vocabulary);
 });
 
-it('puts a repaired line, check or listening question back in its place and nowhere else', function () {
-    $answer = lcAnswer();
-    $parser = new LessonParser;
+// v1.5: «a partner line (card kind "partner_line"): keep its id, must_understand, kind and pairs_with»; наряд GEN-4, 3.9:
+// «после починки partner_line код заменяет реплику A в её обмене». Catches a partner line put back with the item or the
+// pairing the model wrote, and a repaired line the dialogue still says the old way — `partner.changed` on a day that is right.
+it('puts a repaired partner line back under its id, item and pairing, and says it anew in the exchange that carries it', function () {
+    [$skeleton, $dialogue] = lcStages();
+    $card = LessonCard::at('a3');
+    $raw = [...($card?->of($skeleton, $dialogue) ?? []), 'id' => 'a9', 'must_understand' => 1, 'pairs_with' => [1], 'kind' => 'statement',
+        'text_target' => 'Is the pain sudden, or slow?', 'text_native' => 'Боль резкая или медленная?'];
+    [$fixed, $said] = $card->replace($skeleton, $dialogue, (new LessonParser)->card(LessonCard::PARTNER_LINE, $raw));
+    $line = $fixed->partnerLine('a3');
 
-    $line = LessonCard::at('B2')?->of($answer);
-    $line['speaking_key'] = 'started';
-    $check = LessonCard::at('x4.check')?->of($answer);
+    expect([$line?->textTarget, $line?->textNative])->toBe(['Is the pain sudden, or slow?', 'Боль резкая или медленная?'])
+        ->and([$line?->mustUnderstand, $line?->pairsWith, $line?->kind])->toBe([$skeleton->partnerLine('a3')?->mustUnderstand, [3], 'question'])
+        ->and($fixed->partnerLine('a9'))->toBeNull()
+        ->and($said?->exchange(3)?->exchange->partner()?->textTarget)->toBe('Is the pain sudden, or slow?')
+        ->and($said?->exchange(3)?->exchange->partner()?->textNative)->toBe('Боль резкая или медленная?')
+        ->and($said?->exchange(3)?->exchange->learner()?->toArray())->toBe($dialogue->exchange(3)?->exchange->learner()?->toArray())
+        ->and($said?->exchange(4)?->toArray())->toBe($dialogue->exchange(4)?->toArray())
+        // Before the dialogue exists, only the skeleton moves.
+        ->and($card->replace($skeleton, null, (new LessonParser)->card(LessonCard::PARTNER_LINE, $raw))[1])->toBeNull();
+});
+
+// v1.5: «an exchange (card kind "exchange"): keep its step, kind, initiator, partner_line and must_understand». Catches an
+// exchange put back at the step the model wrote, or re-pointed to another line of the skeleton.
+it('puts a repaired exchange back at its step, with its kind, opener, partner line and item', function () {
+    [$skeleton, $dialogue] = lcStages();
+    $card = LessonCard::at('B3');
+    $raw = $card?->of($skeleton, $dialogue) ?? [];
+    $raw = [...$raw, 'step' => 9, 'kind' => 'ask', 'initiator' => 'B', 'partner_line' => 'a1', 'must_understand' => 1];
+    $raw['messages'][1]['speaking_key'] = 'The pain is';
+    [$fixed, $said] = $card->replace($skeleton, $dialogue, (new LessonParser)->card(LessonCard::EXCHANGE, $raw));
+    $exchange = $said?->exchange(3);
+
+    expect([$exchange?->step(), $exchange?->exchange->kind->value, $exchange?->exchange->initiator, $exchange?->partnerLine, $exchange?->mustUnderstand])
+        ->toBe([3, 'answer', 'A', 'a3', $dialogue->exchange(3)?->mustUnderstand])
+        ->and($exchange?->exchange->learner()?->speakingKey)->toBe('The pain is')
+        ->and($said?->exchange(9))->toBeNull()
+        ->and($said?->exchange(2)?->toArray())->toBe($dialogue->exchange(2)?->toArray())
+        ->and($fixed)->toBe($skeleton);
+});
+
+it('puts a repaired check or listening question back in its place and nowhere else', function () {
+    [$skeleton, $dialogue] = lcStages();
+    $parser = new LessonParser;
+    $check = LessonCard::at('x4.check')?->of($skeleton, $dialogue) ?? [];
     $check['text_target'] = 'Which symptom is the doctor asking about?';
-    $question = LessonCard::at('L3')?->of($answer);
+    $question = LessonCard::at('L3')?->of($skeleton, $dialogue) ?? [];
     $question['text_native'] = 'Когда стоит прийти ещё раз?';
 
-    $repaired = LessonCard::at('B2')->replace($answer, $parser->card(LessonCard::LINE, $line));
-    $repaired = LessonCard::at('x4.check')->replace($repaired, $parser->card(LessonCard::CHECK, $check));
-    $repaired = LessonCard::at('L3')->replace($repaired, $parser->card(LessonCard::LISTENING, $question));
+    [, $said] = LessonCard::at('x4.check')->replace($skeleton, $dialogue, $parser->card(LessonCard::CHECK, $check));
+    [, $said] = LessonCard::at('L3')->replace($skeleton, $said, $parser->card(LessonCard::LISTENING, $question));
 
-    expect($repaired->exchange(2)?->learner()?->speakingKey)->toBe('started')
-        ->and($repaired->exchange(2)?->partner()?->textTarget)->toBe($answer->exchange(2)?->partner()?->textTarget)
-        ->and($repaired->exchange(4)?->check->textTarget)->toBe('Which symptom is the doctor asking about?')
-        ->and($repaired->listening[2]->textNative)->toBe('Когда стоит прийти ещё раз?')
-        ->and($repaired->listening[0])->toEqual($answer->listening[0])
-        ->and($repaired->phrases)->toEqual($answer->phrases);
+    expect($said?->exchange(4)?->exchange->check->textTarget)->toBe('Which symptom is the doctor asking about?')
+        ->and($said?->exchange(4)?->exchange->messages)->toEqual($dialogue->exchange(4)?->exchange->messages)
+        ->and($said?->listening[2]->textNative)->toBe('Когда стоит прийти ещё раз?')
+        ->and($said?->listening[0])->toEqual($dialogue->listening[0])
+        ->and($said?->exchange(3)?->toArray())->toBe($dialogue->exchange(3)?->toArray());
 });
 
-// Наряд GEN-3, P2R v1.2: «vocabulary item (card kind "term"): keep its id. Replace the item with a different word». Catches a
-// repaired word put in under the id the model wrote (two v2 in a day, v4 gone), at another place of the list, or over
-// another word.
+// P2R v1.2 (наряд GEN-3), v1.5: «vocabulary item (card kind "term"): keep its id». Catches a repaired word put in under the id
+// the model wrote (two v7 in a day, v4 gone), at another place of the list, or over another word.
 it('puts a repaired word back under its own id, at its place, and nowhere else', function () {
-    $answer = lcAnswer();
-    $card = LessonCard::at('v4');
+    [$skeleton, $dialogue] = lcStages();
     $word = (new LessonParser)->card(LessonCard::TERM, [
         'id' => 'v7', 'term_target' => 'rest', 'translation_native' => 'отдых', 'pronunciation_native' => 'рэст',
         'definition_target' => 'time to relax', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['p5'],
     ]);
 
-    $repaired = $card?->replace($answer, $word);
+    [$fixed, $said] = LessonCard::at('v4')->replace($skeleton, $dialogue, $word);
 
-    expect(array_map(static fn ($v): string => "{$v->id}:{$v->termTarget}", $repaired?->vocabulary ?? []))
+    expect(array_map(static fn ($v): string => "{$v->id}:{$v->termTarget}", $fixed->vocabulary))
         ->toBe(['v1:lower back', 'v2:sharp', 'v3:fever', 'v4:rest', 'v5:heating pad', 'v6:X-ray', 'v7:follow-up appointment', 'v8:sick note'])
-        ->and($repaired?->exchanges)->toEqual($answer->exchanges)
-        ->and($repaired?->phrases)->toEqual($answer->phrases);
-});
-
-// Доработка GEN-3, P2R v1.3: «тождество при починке только по TARGET_LANGUAGE, родной каркас — перевод»; решение архитектора:
-// «лишними были только находки о тождестве родного шаблона (known_native_repeat, twin по родному)». Catches a frame repair told
-// its native pattern is another's, a twin of the TARGET pattern kept from it (that one is the repair's to fix), any other
-// finding of the frame dropped, and the filter reaching a card that is not a frame.
-it('tells a frame repair every finding but that its native pattern is another frame\'s', function () {
-    $answer = (new LessonParser)->parse((static function (): array {
-        $p = FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
-        $p['phrases'][4]['frame_native'] = $p['phrases'][1]['frame_native'];
-        $p['phrases'][5]['frame_target'] = $p['phrases'][0]['frame_target'];
-
-        return $p;
-    })());
-    $cites = static fn (string $address, string $code, string $at): bool => LessonCard::at($address)?->cites(new LessonViolation($code, $at, ''), $answer) ?? false;
-
-    expect($cites('p5', 'frame.twin', 'p5'))->toBeFalse()
-        ->and($cites('p6', 'frame.twin', 'p6'))->toBeTrue()
-        ->and($cites('p5', 'frame.known_native_repeat', 'p5'))->toBeFalse()
-        ->and($cites('p5', 'frame.known_repeat', 'p5'))->toBeTrue()
-        ->and($cites('p5', 'frame.native_agreement', 'p5'))->toBeTrue()
-        ->and($cites('p5', 'filler.ungrammatical', 'p5.f2'))->toBeTrue()
-        ->and($cites('x5', 'frame.known_native_repeat', 'x5'))->toBeTrue();
+        ->and($fixed->frames)->toEqual($skeleton->frames)
+        ->and($said)->toBe($dialogue);
 });

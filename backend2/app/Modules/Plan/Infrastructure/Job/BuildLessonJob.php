@@ -7,7 +7,6 @@ namespace App\Modules\Plan\Infrastructure\Job;
 use App\Modules\Plan\Application\Command\BuildLesson;
 use App\Modules\Plan\Application\Command\BuildLessonHandler;
 use App\Modules\Plan\Application\Service\LessonBuildService;
-use App\Modules\Plan\Domain\Check\LessonGate;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Infrastructure\Eloquent\PlanSceneModel;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,14 +15,13 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * The lesson call for one scene — one try, for the reason {@see BuildPlanJob} gives; a job that ran out of time fails, and
- * the lesson waits for the learner's retry (наряд GEN-3).
+ * The day of one scene — one try, for the reason {@see BuildPlanJob} gives; a job that ran out of time fails, and the lesson
+ * waits for the learner's retry (наряд GEN-3).
  *
  * Its timeout covers every model call the build may make, each waited for as long as the plan's config says, and a minute
- * for the writes: the lesson and its one retry, a repair of each card the gate may ask for — and all of that once more for
- * the one lesson the server builds anew when the first failed the gate (наряд LANG-1b §1) — and the seam judge. Anything
- * shorter kills a healthy build between two paid calls; the queue's `retry_after` and the stale window of a build
- * (`plan.build_stale_seconds`) stay above it.
+ * for the writes (наряд GEN-4): each of the two stages with its one repeat, the repairs of each stage's cards, the seam judge
+ * and its second read of the repaired frames. Anything shorter kills a healthy build between two paid calls; the queue's
+ * `retry_after` and the stale window of a build (`plan.build_stale_seconds`) stay above it.
  */
 final class BuildLessonJob implements ShouldQueue
 {
@@ -44,7 +42,7 @@ final class BuildLessonJob implements ShouldQueue
     /** The job's timeout for a lesson whose every call waits `$callTimeout` seconds for its answer. */
     public static function timeoutSeconds(int $callTimeout): int
     {
-        $calls = (LessonBuildService::MAX_ATTEMPTS + LessonGate::MAX_CARDS) * (1 + LessonBuildService::AUTO_REBUILDS) + 1;
+        $calls = 2 * (LessonBuildService::STAGE_ATTEMPTS + LessonBuildService::REPAIR_CARDS) + 2;
 
         return $calls * $callTimeout + self::MARGIN_SECONDS;
     }

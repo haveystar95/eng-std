@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\DayAssembler;
@@ -15,7 +13,6 @@ use App\Modules\Plan\Domain\Assembly\WordsStage;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Entity\DayCard;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\Shuffle;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
@@ -55,11 +52,11 @@ function s1wScene(?callable $edit = null, ?array $only = null, string $sceneId =
 {
     $id = PlanSceneId::fromString($sceneId);
     $packs = lessonPacks();
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём у врача'));
     if ($edit !== null) {
         $payload = $edit($payload);
     }
-    $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $id->value, $packs->for('en'));
+    $lesson = planServed((new LessonParser)->parse($payload), $id->value, $packs->for('en'));
     $terms = planTermsOf($id, $lesson);
     if ($only !== null) {
         $terms = array_values(array_filter($terms, static fn (PlanTerm $t): bool => in_array($t->ref(), $only, true)));
@@ -132,6 +129,26 @@ function s1wEditTerm(array $payload, string $ref, array $fields): array
     }
 
     return $payload;
+}
+
+/**
+ * The fixture day with partner lines that say the learner's fillers, as the day read before GEN-4: «sharp» in x3's question,
+ * «an X-ray» in x7's answer, the words' `used_in` naming them. The skeleton's check finds it (`partner.names_filler`, a
+ * warning a repair may leave standing), and a day that keeps it is still dealt: the word goes to the partner's line, where
+ * it stands outside any window.
+ *
+ * @param  array<string, mixed>  $p
+ * @return array<string, mixed>
+ */
+function s1wPartnerSaysFillers(array $p): array
+{
+    $p['dialogue'][2]['messages'][0]['text_target'] = 'Is the pain sharp, or more of a dull ache?';
+    $p['dialogue'][2]['messages'][0]['text_native'] = 'Боль острая или скорее ноющая?';
+    $p['dialogue'][6]['messages'][1]['text_target'] = 'No, an X-ray is not needed for a muscle strain.';
+    $p['dialogue'][6]['messages'][1]['text_native'] = 'Нет, при растяжении мышцы рентген не нужен.';
+    $p = s1wEditTerm($p, 'v2', ['used_in' => ['p3', 'A3']]);
+
+    return s1wEditTerm($p, 'v6', ['used_in' => ['p6', 'A7']]);
 }
 
 /**
@@ -600,7 +617,7 @@ it('returns a word as word_choose — the very card the day deals it, or asked a
 
 it('gives every kind exactly its keys, and the line of the day where the word is said', function () {
     // «use a heating pad» counts three words: a long term is said by most of it.
-    $scene = s1wScene(static fn (array $p): array => s1wEditTerm($p, 'v5', ['term_target' => 'use a heating pad']));
+    $scene = s1wScene(static fn (array $p): array => s1wEditTerm(s1wPartnerSaysFillers($p), 'v5', ['term_target' => 'use a heating pad']));
     $cards = new WordCards;
     $term = ['ref', 'text_target', 'pronunciation_native', 'text_native', 'definition_target', 'image'];
 
@@ -736,12 +753,12 @@ it('puts word_in_line on a line where the word stands outside a window — a par
 it('keeps the whole translation under the line and never offers a filler of the frame the word itself fills', function () {
     $cards = new WordCards;
     // «X-ray» fills p6 («an X-ray»); «follow-up appointment» and «sick note» are p6's other fillers, «sharp» fills p3.
-    $scene = s1wScene(only: ['v2', 'v6', 'v7', 'v8']);
+    $scene = s1wScene(s1wPartnerSaysFillers(...), only: ['v2', 'v6', 'v7', 'v8']);
     $card = $cards->inLine($scene, $scene->term('v6'))->payload;
 
     expect(array_keys($card['line']))->toBe(['ref', 'line_ref', 'text_target', 'text_native', 'audio'])
         ->and($card['line']['text_native'])->toBe('Нет, при растяжении мышцы рентген не нужен.')
         ->and(array_column($card['options'], 'text'))->toEqualCanonicalizing(['X-ray', 'sharp'])
         // Nothing but the frame's own fillers to offer: no choice, no card.
-        ->and($cards->inLine(s1wScene(only: ['v6', 'v7', 'v8']), $scene->term('v6')))->toBeNull();
+        ->and($cards->inLine(s1wScene(s1wPartnerSaysFillers(...), only: ['v6', 'v7', 'v8']), $scene->term('v6')))->toBeNull();
 });

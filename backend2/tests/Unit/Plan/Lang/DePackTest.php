@@ -2,19 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
 use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
-use App\Modules\Plan\Domain\Check\Lesson\FillerRules;
-use App\Modules\Plan\Domain\Check\LessonCodes;
-use App\Modules\Plan\Domain\Check\LessonGate;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Check\LessonViolation;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
-use App\Modules\Plan\Domain\Lesson\LessonRoles;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
@@ -22,8 +12,6 @@ use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpeechMatch;
@@ -37,27 +25,15 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * ({@see lessonPacks()}); a row that needs a neighbour's pack skips until that pack writes its letters and frequent words.
  */
 
-// Canon (pack-keys §7.2, the pairs of the order: ru → de and de → en): no check of either side goes unrun for want of a key,
-// and every reader outside the validator reads the pack in the shape it reads it. CATCHES a key written as null or in the
-// wrong shape (a `LanguagePackKeyMissing` from a reader), and a key LANG-1 asks of a pack that is both sides left out.
+// Canon (pack-keys §7.2, the pairs of the order: ru → de and de → en): every reader of either side reads the pack in the
+// shape it reads it. CATCHES a key written as null or in the wrong shape (a `LanguagePackKeyMissing` from a reader), and a
+// key LANG-1 asks of a pack that is both sides left out.
 it('gives every reader of the pack what it reads, in the shape it reads it', function (string $code) {
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     expect(LanguageRoles::planTargets())->toContain($code)
-        ->and(LanguageRoles::planNatives())->toContain($code)
-        ->and($gaps('target'))->toBe([])
-        ->and($gaps('native'))->toBe([]);
+        ->and(LanguageRoles::planNatives())->toContain($code);
     foreach (['abbreviations', 'question_word_order', 'unstressed_words', 'number_words', 'number_joiners', 'number_tens_joiners', 'irregular_forms', 'inflection_rules', 'person_swap', 'contractions', 'contractions_before', 'intro_words', 'clause_starters', 'negation', 'partitive', 'dangling_words', 'rescue_line', 'neutral_reply', 'script_letters', 'common_words', 'amount_pattern', 'amount_prefix', 'talk_title_template'] as $key) {
         expect($pack->has($key))->toBeTrue("the pack reads `{$key}`");
     }
@@ -69,16 +45,8 @@ it('gives every reader of the pack what it reads, in the shape it reads it', fun
     (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
     WordBases::of('abc', $pack);
     $words->isQuestion('a b');
-    $words->asksTwice('a, b?');
-    $words->isCloser('a');
-    $words->clause('a b c');
-    $words->articleMismatch('a', 'b');
-    $words->unresolvedPronoun('a b ___.');
-    $words->valueKind('a 2');
-    $words->agreeingWithSlot('a b ___ c d.');
     $words->genderedPast('a b');
     $words->foreignLetters('ab');
-    $words->readsInScript('ab');
 })->with(['de']);
 
 // Canon (CHECK-1, LANG-1 §1): an abbreviation's dot ends no sentence inside a text and closes a text at its very end; the
@@ -228,35 +196,13 @@ it('titles a German learner\'s talk with its roles as German writes them', funct
         ->and($title->talkTitle([], $de))->toBe('Gespräch');
 });
 
-// Canon (FATAL keys, pack-keys §6): every filler of ru-de day 1 seams into its frame with no problem — `filler.ungrammatical`
-// is fatal — and a German question is known by its word order narrowly: «Können Sie…», «Tut es…» ask without a mark, a
-// doctor's imperative «Haben Sie keine Angst.» and a statement do not (`exchange.second_question` is fatal). CATCHES a list
-// that fails the live plan ru → de on healthy German: «Ist das das Rezept?» read as a doubled word, «seit drei Tagen» read
-// as a clause, «haben» + «Sie» read as a question, the condition «Sollten Sie Fragen haben, …» read as a question.
-it('fails no healthy German seam and reads a German question by its order narrowly', function () {
+// Canon (FATAL keys, pack-keys §6): a German question is known by its word order narrowly: «Können Sie…», «Tut es…» ask
+// without a mark, a doctor's imperative «Haben Sie keine Angst.» and a statement do not. CATCHES a list that misreads
+// healthy German: «haben» + «Sie» read as a question, the condition «Sollten Sie Fragen haben, …» read as a question.
+it('reads a German question by its order narrowly', function () {
     $words = new LanguageWords(lessonPacks()->for('de'));
-    $frames = [
-        'Ich brauche ___.' => ['einen Termin', 'einen Arzt'],
-        'Ich habe ___.' => ['Halsschmerzen', 'Fieber', 'Husten'],
-        'Das habe ich ___.' => ['seit drei Tagen', 'seit gestern', 'seit heute Morgen'],
-        '___ passt besser.' => ['um elf', 'am Morgen', 'am Abend'],
-        'Haben Sie etwas ___?' => ['am Nachmittag', 'für heute', 'am Freitag'],
-        'Das ist gut, ___.' => ['morgen um vier', 'heute um fünf'],
-        'Ich bringe ___ mit.' => ['meine Versicherungskarte', 'meinen Ausweis'],
-        'Können Sie mir ___ sagen?' => ['die Adresse', 'den Namen des Arztes'],
-        // Natural: the doublings German allows at a seam.
-        'Ist das ___?' => ['das Rezept'],
-        'Können Sie ___?' => ['sie mitbringen'],
-    ];
-    foreach ($frames as $frame => $fillers) {
-        foreach ($fillers as $filler) {
-            expect(FillerRules::seams($frame, $filler, $words))->toBe([], "«{$frame}» + «{$filler}»");
-        }
-    }
 
-    expect(FillerRules::seams('Ich glaube, ___.', 'es ist dringend', $words))->toBe(['the filler is a whole clause, and the frame already has its verb'])
-        ->and(FillerRules::seams('Ich brauche ___.', 'brauche einen Termin', $words))->toBe(['a word is doubled at the seam'])
-        ->and($words->isQuestion('Können Sie mir die Adresse sagen'))->toBeTrue()
+    expect($words->isQuestion('Können Sie mir die Adresse sagen'))->toBeTrue()
         ->and($words->isQuestion('Tut es noch weh'))->toBeTrue()
         ->and($words->isQuestion('Haben Sie etwas am Nachmittag?'))->toBeTrue()
         ->and($words->isQuestion('Haben Sie keine Angst.'))->toBeFalse()
@@ -267,36 +213,24 @@ it('fails no healthy German seam and reads a German question by its order narrow
         ->and($words->isQuestion('Sollten Sie Fragen haben, rufen Sie uns an.'))->toBeFalse()
         ->and($words->isQuestion('Sollte es schlimmer werden, kommen Sie bitte wieder.'))->toBeFalse()
         ->and($words->isQuestion('Hat mich gefreut.'))->toBeFalse()
-        ->and($words->isQuestion('Soll ich meine Versicherungskarte mitbringen'))->toBeTrue()
-        ->and($words->asksTwice('Seit wann haben Sie das, und haben Sie Fieber?'))->toBeTrue()
-        ->and($words->asksTwice('Seit wann haben Sie das?'))->toBeFalse()
-        ->and($words->asksTwice('Das ist Ihr erster Termin, oder?'))->toBeFalse();
+        ->and($words->isQuestion('Soll ich meine Versicherungskarte mitbringen'))->toBeTrue();
 
-    // Warnings, read here for their meaning: the frame p3 of ru-de leans on «das» (like en «I've had it for ___»); the
-    // dummy «es» of a time or a matter leans on nothing (natural frames); the polite «hätte», «wäre» carry no content.
-    expect($words->unresolvedPronoun('Das habe ich ___.'))->toBe('das')
-        ->and($words->unresolvedPronoun('Geht es ___?'))->toBeNull()
-        ->and($words->unresolvedPronoun('Worum geht es ___?'))->toBeNull()
-        ->and($words->unresolvedPronoun('Gibt es ___?'))->toBeNull()
-        ->and($words->unresolvedPronoun('Ist das ___?'))->toBeNull()
-        ->and($words->content('Ich hätte gern einen Arzttermin.'))->toBe(['arzttermin'])
+    // The polite «hätte», «wäre» carry no content.
+    expect($words->content('Ich hätte gern einen Arzttermin.'))->toBe(['arzttermin'])
         ->and($words->content('Wäre das möglich?'))->toBe(['möglich']);
 });
 
 // Canon (BACK-TAILS-1 §3.2, LANG-1 §8): a German learner reads the target in Latin letters — a Cyrillic letter in the reading
-// is fatal (`script_letters`), a Latin letter outside German's alphabet only a warning (`script`). The Cyrillic reading is
-// the scouting run's own (de-en B4, written under v4.7). CATCHES a strict alphabet in the fatal key (an IPA «ə» failing a
-// day) and a Latin pattern that lets Cyrillic through.
-it('reads a German learner\'s reading in Latin letters, the German alphabet only as a warning', function () {
+// is fatal (`script_letters`), a Latin letter outside German's alphabet is none. The Cyrillic reading is the scouting run's
+// own (de-en B4, written under v4.7). CATCHES a strict alphabet in the fatal key (an IPA «ə» failing a day) and a Latin
+// pattern that lets Cyrillic through.
+it('reads a German learner\'s reading in Latin letters', function () {
     $words = new LanguageWords(lessonPacks()->for('de'));
 
     expect($words->foreignLetters('tu oklokk is better fo ми'))->toBe(['м', 'и'])
         ->and($words->foreignLetters('ai laik e doktors äpointment'))->toBe([])
-        ->and($words->readsInScript('ai laik e doktors äpointment'))->toBeTrue()
-        ->and($words->readsInScript('ai häw ___, bitte!'))->toBeTrue()
         ->and($words->foreignLetters('ə sor θrout'))->toBe(['θ'])
-        ->and($words->foreignLetters('ə sor srout'))->toBe([])
-        ->and($words->readsInScript('ə sor srout'))->toBeFalse();
+        ->and($words->foreignLetters('ə sor srout'))->toBe([]);
 });
 
 // Canon (BACK-TAILS-2 §9): the role that says the learner's move back — «Ich habe seit drei Tagen Halsschmerzen» answered
@@ -327,9 +261,6 @@ it('reads the amounts of a German line as the listening offers them', function (
         ->and($values?->value('Bitte kommen Sie fünfzehn Minuten früher wegen des Formulars.'))->toBe(['text' => 'Fünfzehn Minuten früher', 'number' => true])
         ->and($values?->value('Ich habe das seit einer Woche.'))->toBe(['text' => 'Seit einer Woche', 'number' => false])
         ->and($values?->value('Haben Sie etwas am Freitag?'))->toBeNull()
-        ->and((new LanguageWords(lessonPacks()->for('de')))->valueKind('Seit drei Tagen'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        // de-en L2 offers «Seit einem Tag» beside «Seit drei Tagen»: a time, like the right one.
-        ->and((new LanguageWords(lessonPacks()->for('de')))->valueKind('Seit einem Tag'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
         // The greeting is no amount to offer (natural): the option is the hour, never «Tag».
         ->and($values?->value('Guten Tag, ich habe um vier einen Termin.'))->toBe(['text' => 'Um vier', 'number' => true])
         // The verb «achten» is no ordinal (natural doctor's line): the line says no number, and so it cannot become the line
@@ -337,32 +268,4 @@ it('reads the amounts of a German line as the listening offers them', function (
         ->and($values?->says('Bitte achten Sie darauf, viel zu trinken.'))->toBeFalse()
         ->and($values?->value('Kommen Sie morgen früh um acht.'))->toBe(['text' => 'Um acht', 'number' => true])
         ->and($values?->runs('Kommen Sie morgen früh um acht.')[0]['text'] ?? null)->toBe('morgen früh');
-});
-
-// Canon (pack-keys §6, наряд LANG-1 «новые фатальные на разведке»): the model's raw answers of the scouting run, replayed
-// through the validator with the deployment's packs. With German the TARGET (ru-de) the only fatal finding a German key
-// makes is the real one — the receptionist's closing «Gern. Worum geht es?» asks (x1); with German the LEARNER'S language
-// (de-en) the fatal readings are the real ones — the model wrote the readings in Cyrillic. CATCHES a German list that
-// makes the healthy German of the day fail: a seam read as ungrammatical, a statement read as a question, a Latin letter
-// of a reading read as foreign.
-it('adds no false fatal finding to the scouting days of German', function () {
-    $replay = static function (string $pair, LessonRoles $roles): array {
-        [$native, $target] = explode('-', $pair);
-        $payload = json_decode((string) file_get_contents(dirname(__DIR__, 4)."/docs/research/lang-1/answers/{$pair}.json"), true);
-        $found = (new LessonValidator)->run((new LessonParser)->parse($payload)->withRoles($roles), lessonContext($native, $target, partnerRole: $roles->partnerTarget));
-
-        return array_map(static fn (LessonViolation $v): array => $v->toArray(), LessonGate::fatal($found));
-    };
-    $byGerman = [LessonCodes::FILLER_UNGRAMMATICAL, LessonCodes::EXCHANGE_SECOND_QUESTION, LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT];
-
-    $target = array_values(array_filter($replay('ru-de', new LessonRoles('Patient', 'Пациент', 'Receptionist', 'Администратор')), static fn (array $v): bool => in_array($v['code'], $byGerman, true)));
-    expect(array_map(static fn (array $v): string => $v['code'].'@'.$v['address'], $target))->toBe(['exchange.second_question@x1']);
-
-    $native = array_values(array_filter($replay('de-en', new LessonRoles('Patient', 'Patient', 'Receptionist', 'Empfangskraft')), static fn (array $v): bool => $v['code'] === LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT));
-    expect($native)->not->toBe([]);
-    foreach ($native as $finding) {
-        preg_match_all('/«(\p{L})»/u', $finding['detail'], $letters);
-        expect($letters[1])->not->toBe([])
-            ->and(array_filter($letters[1], static fn (string $l): bool => preg_match('/^\p{Cyrillic}$/u', $l) !== 1))->toBe([], $finding['detail']);
-    }
 });

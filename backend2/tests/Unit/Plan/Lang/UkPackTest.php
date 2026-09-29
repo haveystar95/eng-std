@@ -2,13 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
@@ -16,8 +11,6 @@ use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpokenNumbers;
@@ -28,44 +21,26 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * raw answer `answers/uk-en.json`) and on a few written lines where that day has none (abbreviations, numbers).
  */
 
-// Canon (key spec §7.2): «пропусков нет на каждой стороне, которой язык бывает; ни один читатель не бросает». CATCHES a key
-// left null or missing (`lang.pack_missing` on every uk→en day) and a key written in a shape its reader throws on.
+// Canon (key spec §7.2): «ни один читатель не бросает». CATCHES a key left null or missing and a key written in a shape
+// its reader throws on.
 it('gives every reader of the pack what it reads, in the shape it reads it', function (string $code) {
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     expect(in_array($code, LanguageRoles::planTargets(), true))->toBeFalse('uk is a learner\'s language only')
         ->and(in_array($code, LanguageRoles::planNatives(), true))->toBeTrue();
-    expect($gaps('native'))->toBe([]);
     foreach (['abbreviations', 'amount_pattern', 'amount_prefix', 'neutral_reply', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the native side reads `{$key}`");
     }
     expect(NumberValues::of($pack))->not->toBeNull();
-    $words->agreeingWithSlot('a b ___ c d.');
     $words->genderedPast('a b');
     $words->foreignLetters('ab');
-    $words->readsInScript('ab');
-    $words->valueKind('a 2');
     // The target side is never read for uk; its no-ops are still readable as the spec writes them.
     (new FrameJudge)->move('a b c', [new ConversationPhrase('x', 'p1', 'A ___.', '', null, null)], $pack);
     (new FrameJudge)->breaksOff('a b', [], $pack);
     (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
     WordBases::of('abc', $pack);
     $words->isQuestion('a b');
-    $words->asksTwice('a, b?');
-    $words->clause('a b c');
-    $words->articleMismatch('a', 'b');
-    $words->unresolvedPronoun('a b ___.');
 })->with(['uk']);
 
 // Canon (наряд CHECK-1, key `abbreviations`): «точка сокращения не кончает предложение внутри текста, а в самом конце текста
@@ -191,39 +166,23 @@ it('writes frequent words no Cyrillic neighbour says as its own', function () {
         ->and(array_values(array_filter($uk, static fn (string $word): bool => preg_match('/^[\p{L}\p{M}]+$/u', $word) !== 1)))->toBe([]);
 });
 
-// Canon (наряд BACK-TAILS-1 §3.2): «буква чужой письменности — фатально, всё прочее вне письменности — предупреждение». The
-// scouting day uk→en wrote the Russian «э» in five readings. CATCHES a strict alphabet in `script_letters` (the day failed
-// for a Russian letter) and a `script` that lets «э», «ы», «ё» pass as Ukrainian spelling.
-it('warns of a Russian letter in a Ukrainian reading and never fails it', function () {
+// Canon (наряд BACK-TAILS-1 §3.2): «буква чужой письменности — фатально». The scouting day uk→en wrote the Russian «э» in
+// five readings — a letter of another Cyrillic alphabet, not of another writing. CATCHES a strict alphabet in
+// `script_letters` (the day failed for a Russian letter), and a Latin «o» among the Cyrillic let through.
+it('never fails a Ukrainian reading for a Russian letter, and fails it for a Latin one', function () {
     $words = new LanguageWords(lessonPacks()->for('uk'));
 
-    expect($words->readsInScript('Айд лайк ту бук е докторз епойнтмент.'))->toBeTrue()
-        ->and($words->readsInScript('___ воркс бетер фор мі.'))->toBeTrue()
-        ->and($words->readsInScript('лі́кар, п’ятниця'))->toBeTrue()
-        ->and($words->readsInScript('Ай хев э сор сроут энд э фівер.'))->toBeFalse()
-        ->and($words->foreignLetters('Ай хев э сор сроут энд э фівер.'))->toBe([])
-        ->and($words->readsInScript('Зетс файн эт срі.'))->toBeFalse()
+    expect($words->foreignLetters('Ай хев э сор сроут энд э фівер.'))->toBe([])
         ->and($words->foreignLetters('Зетс файн эт срі.'))->toBe([])
-        ->and($words->readsInScript('ёлка, ы, ъ'))->toBeFalse()
         ->and($words->foreignLetters('фoр'))->toBe(['o']);
 });
 
-// Canon (FRAMES v4.5, TEXT QUALITY): «нативный каркас без слова, согласованного со слотом», «мужской род о ученике — только
-// когда иначе нельзя». CATCHES a frame of the scouting day flagged for a word that agrees with nothing («У нього ___», «Чому
-// ___?» end like adjectives), a real agreement missed, and «Я б хотів» — the day's own masculine line — passed.
-it('reads the learner\'s gender and a word agreeing with the slot in a Ukrainian line', function () {
+// Canon (TEXT QUALITY): «мужской род о ученике — только когда иначе нельзя». CATCHES «Я б хотів» — the day's own masculine
+// line — passed, a masculine form without «-в» or a feminine one missed, and a line that says no gender read as one.
+it('reads the learner\'s gender in a Ukrainian line', function () {
     $words = new LanguageWords(lessonPacks()->for('uk'));
 
-    foreach (['Я б хотів записатися на ___.', 'У мене ___.', '___ мені підходить краще.', 'Не могли б ви дати мені ___?', 'Я прийду ___.', 'Ви працюєте ___?', 'Добре, ___ мені підходить.', 'Я принесу ___.', 'У нього ___.', 'Чому ___?', 'Мені потрібно ___.', 'Це почалося ___ тому.', 'Що таке ___?', 'Я оплачу карткою ___.'] as $frame) {
-        expect($words->agreeingWithSlot($frame))->toBe([], $frame);
-    }
-    expect($words->agreeingWithSlot('Мені потрібен ___.'))->toBe(['потрібен'])
-        ->and($words->agreeingWithSlot('Який ___ вам потрібен?'))->toBe(['який', 'потрібен'])
-        ->and($words->agreeingWithSlot('Я хочу новий ___.'))->toBe(['новий'])
-        ->and($words->agreeingWithSlot('Аптека ___ відчинена?'))->toBe(['відчинена'])
-        ->and($words->agreeingWithSlot('Чи ___ обовʼязкове?'))->toBe(['обовʼязкове'])
-        ->and($words->agreeingWithSlot('Чи ___ обов’язкове?'))->toBe(["обов'язкове"])
-        ->and($words->genderedPast('Я б хотів записатися на прийом до лікаря.'))->toBe(['хотів'])
+    expect($words->genderedPast('Я б хотів записатися на прийом до лікаря.'))->toBe(['хотів'])
         ->and($words->genderedPast('Я вже записалася на завтра.'))->toBe(['записалася'])
         ->and($words->genderedPast('Я не міг прийти вчора.'))->toBe(['міг'])
         // The masculine forms without «-в», a particle or an object pronoun between «я» and the verb.
@@ -239,24 +198,15 @@ it('reads the learner\'s gender and a word agreeing with the slot in a Ukrainian
         ->and($words->genderedPast('Моє ім’я Павла, я знов тут.'))->toBe([]);
 });
 
-// Canon (LISTENING, `listening.distractor_not_filler`; «Поймай число», 34-7): a value is a number or a time by the learner's
-// language. CATCHES «На третю» / «На четверту» of the scouting day read as no number (ordinals), «Точно вчасно» — the frame's
-// other filler — read as another kind than «На десять хвилин», and an option «Неділе»-style bare noun without its
-// preposition.
+// Canon («Поймай число», 34-7): a value is a number or a time by the learner's language, offered with its preposition.
+// CATCHES «сім’я» (family) or «п’ятницю» read as a number, a weekday read as no time word, and an option «Неділе»-style
+// bare noun without its preposition.
 it('reads the numbers and times of a Ukrainian line', function () {
     $uk = lessonPacks()->for('uk');
     $words = new LanguageWords($uk);
     $values = NumberValues::of($uk);
 
-    expect($words->valueKind('На третю'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('На четверту'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('О дев’ятій ранку'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('На десять хвилин'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('Точно вчасно'))->toBe(LanguageWords::VALUE_MIXED)
-        ->and($words->valueKind('Вдень'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('Після полудня'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->isNumber('сім’я'))->toBeFalse()
-        ->and($words->valueKind('Болить спина'))->toBe(LanguageWords::VALUE_OTHER)
+    expect($words->isNumber('сім’я'))->toBeFalse()
         ->and($words->isNumber('п’ятницю'))->toBeFalse()
         ->and($words->isTime('п’ятницю'))->toBeTrue()
         ->and($values?->value('Будь ласка, прийдіть на десять хвилин раніше для реєстрації.'))->toBe(['text' => 'На десять хвилин раніше', 'number' => true])

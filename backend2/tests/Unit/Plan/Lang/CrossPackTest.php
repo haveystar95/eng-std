@@ -2,22 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\ReplyNative;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 
 /**
  * THE PACKS TOGETHER (наряд LANG-1, the cross-pack integrator). Each language's own test holds its pack to its own
  * lines; what no single pack can see is what the packs do to EACH OTHER — the guard of the role's translation
  * ({@see ReplyNative}) reads a learner's line against the frequent words of every other pack in the same letters, so a
- * word one pack lists can refuse the ordinary lines of another. And every pair of the plan must find every key its
- * checks read, on both sides.
+ * word one pack lists can refuse the ordinary lines of another.
  *
  * The lines are the model's own, from the order's scouting run (`docs/research/lang-1/answers/<pair>.json` and
  * `final/<pair>.json`, the `text_native` fields where the language is the learner's, the `text_target` ones where it is
@@ -545,24 +537,4 @@ it('keeps the learner\'s neutral reply a translation of the target\'s, for every
     }
 
     expect($wrong)->toBe([]);
-});
-
-// Canon (pack-keys §7, «пропусков нет на каждой стороне, которой язык бывает»): every pair the plan reads a language in
-// finds every key its checks ask for — a taught language as the target of a Russian learner (ru → T), a learner's language
-// with English taught (N → en). The whole pair is asked, so the other side (ru, en) is held too. The fake lesson is
-// English-Russian: its findings mean nothing for another pair, the skips — which check does not run for want of a key —
-// do not depend on the text. CATCHES a key of any pack left out or null (`lang.pack_missing` on every day of the pair).
-it('leaves no check of a plan pair without its key', function (string $native, string $target) {
-    $context = lessonContext($native, $target);
-    $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-    (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-    expect(array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()))->toBe([]);
-})->with(static function (): Generator {
-    foreach (LanguageRoles::planTargets() as $target) {
-        yield "ru → {$target}, the target side of {$target}" => ['ru', $target];
-    }
-    foreach (LanguageRoles::planNatives() as $native) {
-        yield "{$native} → en, the learner's side of {$native}" => [$native, 'en'];
-    }
 });

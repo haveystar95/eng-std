@@ -9,15 +9,16 @@ use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonViolation;
-use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\NativeSeams;
+use App\Modules\Plan\Domain\Lesson\Phrase;
 use Throwable;
 
 /**
  * THE SEAM JUDGE (`filler.native_seam`, наряд GEN-2b): whether a native frame said with its filler reads as the
  * learner's language is no code's to say — «Можно с ___?» + «собакой» reads, «___ разрешён?» + «собака» does not,
- * and every language breaks differently. So a cheap model reads them: ONE call a day, every sentence the day's
- * frames make listed in it, a yes or a no for each. No rule of any language is written here or in the prompt.
+ * and every language breaks differently. So a cheap model reads them: every sentence the frames make listed in one call, a
+ * yes or a no for each. No rule of any language is written here or in the prompt. Since наряд GEN-4 it reads the SKELETON's
+ * frames, before the dialogue — what does not read sends its frame to a repair — and once more the frames a repair changed.
  *
  * A warning, never fatal: a judge that fails or answers off the shape leaves the day as it is — nothing found,
  * `judge.unavailable` counted by the caller.
@@ -26,9 +27,10 @@ final readonly class LessonSeamJudge
 {
     public function __construct(private PlanModelPort $model) {}
 
-    public function judge(Lesson $answer, string $nativeLanguage): LessonSeamVerdict
+    /** @param list<Phrase> $phrases */
+    public function judge(array $phrases, string $nativeLanguage): LessonSeamVerdict
     {
-        $items = NativeSeams::of($answer);
+        $items = NativeSeams::of($phrases);
         if ($items === []) {
             return new LessonSeamVerdict(LessonSeamVerdict::NOTHING, [], 0, 0, '0.000000', 0);
         }

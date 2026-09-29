@@ -13,13 +13,29 @@ use App\Modules\Shared\Domain\Service\Clock;
 
 /**
  * WHICH MODEL CALLS ARE THIS PLAN'S (наряд ADM-1). The journal names no plan, so a call is read as the plan's when it
- * started inside one of the plan's own windows under that window's purposes: the plan's build (`plan`), a scene's lesson
- * build (`lesson`, `repair`, `judge` — the seam judge), a talk (`conversation`). What this cannot know it says: every
+ * started inside one of the plan's own windows under that window's purposes: the plan's build (`plan`, `plan_line_repair`),
+ * a scene's lesson build (`skeleton`, `dialogue`, `repair`, `seam_judge` — наряд GEN-4; `lesson` and `judge` on older rows),
+ * a talk (`conversation`). What this cannot know it says: every
  * window carries how many windows of OTHER plans overlap it (a call inside may be theirs), and only the LAST build of a
  * scene has a window — `build_started_at` is overwritten by a rebuild.
  */
 final readonly class CallAttribution
 {
+    /**
+     * The journal's names of a plan build's calls: the plan and its line repairs (наряд GEN-4).
+     */
+    public const PLAN_PURPOSES = ['plan', 'plan_line_repair'];
+
+    /**
+     * The journal's names of a scene build's calls (наряд GEN-4: the day's two stages, their repairs, the seam judge) — and
+     * the names the one call of a lesson and its judge had before, which the rows of older builds carry: `lesson`, `judge`.
+     */
+    public const LESSON_PURPOSES = ['skeleton', 'dialogue', 'lesson'];
+
+    public const REPAIR_PURPOSES = ['repair'];
+
+    public const JUDGE_PURPOSES = ['seam_judge', 'judge'];
+
     public function __construct(
         private PlanInspectionReader $reader,
         private PlanCallJournal $journal,
@@ -69,7 +85,7 @@ final readonly class CallAttribution
             default => null,
         };
         if ($to !== null) {
-            $windows[] = new BuildWindow(BuildWindow::PLAN, $row->id, $from, max($from, $to), ['plan']);
+            $windows[] = new BuildWindow(BuildWindow::PLAN, $row->id, $from, max($from, $to), self::PLAN_PURPOSES);
         }
 
         foreach ($data->scenes as $scene) {
@@ -89,7 +105,7 @@ final readonly class CallAttribution
             if ($to === null) {
                 continue;
             }
-            $windows[] = new BuildWindow(BuildWindow::SCENE, $scene->id, $scene->buildStartedAt, max($scene->buildStartedAt, $to), ['lesson', 'repair', 'judge']);
+            $windows[] = new BuildWindow(BuildWindow::SCENE, $scene->id, $scene->buildStartedAt, max($scene->buildStartedAt, $to), [...self::LESSON_PURPOSES, ...self::REPAIR_PURPOSES, ...self::JUDGE_PURPOSES]);
         }
 
         foreach ($data->talks() as $talk) {

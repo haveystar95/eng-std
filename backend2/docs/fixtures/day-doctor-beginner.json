@@ -78,8 +78,8 @@
         "lesson_fail_reason": null,
         "day_number": 1,
         "cost_usd": "0.000000",
-        "latency_ms": 9,
-        "prompt_version": "lesson_day.v4.10"
+        "latency_ms": 11,
+        "prompt_version": "lesson_skeleton.v1+lesson_dialogue.v1"
     },
     "stages": [
         {
@@ -296,7 +296,7 @@
                                 22,
                                 27
                             ],
-                            "text_native": "Нет, температуры нет.",
+                            "text_native": "Нет, температуры у него нет.",
                             "text_target": "No, he doesn't have a fever."
                         },
                         "scene_id": "ulid-0003"
@@ -519,16 +519,16 @@
                     "retry_of": null,
                     "payload": {
                         "line": {
-                            "ref": "A3",
+                            "ref": "p3",
                             "audio": {
-                                "ref": "x3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                "duration_ms": 2940,
-                                "voice": "partner"
+                                "ref": "x3b",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0008",
+                                "duration_ms": 2240,
+                                "voice": "learner"
                             },
-                            "line_ref": "x3",
-                            "text_native": "Боль острая или скорее ноющая?",
-                            "text_target": "Is the pain ___, or more of a dull ache?"
+                            "line_ref": "x3b",
+                            "text_native": "Боль острая, когда он наклоняется.",
+                            "text_target": "The pain is ___ when he bends."
                         },
                         "correct": "o2",
                         "options": [
@@ -537,7 +537,7 @@
                                 "text": "heating pad",
                                 "audio": {
                                     "ref": "v5",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0022",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0021",
                                     "duration_ms": 770,
                                     "voice": "learner"
                                 }
@@ -585,7 +585,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0023",
+                    "id": "ulid-0022",
                     "stage": "words",
                     "position": 10,
                     "kind": "word_intro",
@@ -617,7 +617,7 @@
                             },
                             "term": {
                                 "ref": "v5",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0022",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
                                 "duration_ms": 770,
                                 "voice": "learner"
                             }
@@ -644,7 +644,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0024",
+                    "id": "ulid-0023",
                     "stage": "words",
                     "position": 11,
                     "kind": "word_repeat",
@@ -689,7 +689,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0025",
+                    "id": "ulid-0024",
                     "stage": "words",
                     "position": 12,
                     "kind": "word_choose",
@@ -746,7 +746,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0026",
+                    "id": "ulid-0025",
                     "stage": "words",
                     "position": 13,
                     "kind": "word_intro",
@@ -772,13 +772,13 @@
                         "audio": {
                             "line": {
                                 "ref": "x7b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0026",
                                 "duration_ms": 1400,
                                 "voice": "learner"
                             },
                             "term": {
                                 "ref": "v6",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0028",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0027",
                                 "duration_ms": 350,
                                 "voice": "learner"
                             }
@@ -805,7 +805,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0029",
+                    "id": "ulid-0028",
                     "stage": "words",
                     "position": 14,
                     "kind": "word_repeat",
@@ -831,7 +831,7 @@
                         "audio": {
                             "term": {
                                 "ref": "v5",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0022",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
                                 "duration_ms": 770,
                                 "voice": "learner"
                             }
@@ -850,7 +850,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0030",
+                    "id": "ulid-0029",
                     "stage": "words",
                     "position": 15,
                     "kind": "word_listen",
@@ -900,7 +900,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0031",
+                    "id": "ulid-0030",
                     "stage": "words",
                     "position": 16,
                     "kind": "word_intro",
@@ -926,13 +926,13 @@
                         "audio": {
                             "line": {
                                 "ref": "x8b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0031",
                                 "duration_ms": 2450,
                                 "voice": "learner"
                             },
                             "term": {
                                 "ref": "v7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0033",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0032",
                                 "duration_ms": 1470,
                                 "voice": "learner"
                             }
@@ -959,7 +959,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0034",
+                    "id": "ulid-0033",
                     "stage": "words",
                     "position": 17,
                     "kind": "word_repeat",
@@ -985,7 +985,7 @@
                         "audio": {
                             "term": {
                                 "ref": "v6",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0028",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0027",
                                 "duration_ms": 350,
                                 "voice": "learner"
                             }
@@ -1004,7 +1004,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0035",
+                    "id": "ulid-0034",
                     "stage": "words",
                     "position": 18,
                     "kind": "word_in_line",
@@ -1035,7 +1035,7 @@
                                 "text": "heating pad",
                                 "audio": {
                                     "ref": "v5",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0022",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0021",
                                     "duration_ms": 770,
                                     "voice": "learner"
                                 }
@@ -1065,7 +1065,7 @@
                                 "text": "X-ray",
                                 "audio": {
                                     "ref": "v6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0028",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
                                     "duration_ms": 350,
                                     "voice": "learner"
                                 }
@@ -1083,7 +1083,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0036",
+                    "id": "ulid-0035",
                     "stage": "words",
                     "position": 19,
                     "kind": "word_intro",
@@ -1110,7 +1110,7 @@
                             "line": null,
                             "term": {
                                 "ref": "v8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0037",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0036",
                                 "duration_ms": 630,
                                 "voice": "learner"
                             }
@@ -1128,7 +1128,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0038",
+                    "id": "ulid-0037",
                     "stage": "words",
                     "position": 20,
                     "kind": "word_repeat",
@@ -1154,7 +1154,7 @@
                         "audio": {
                             "term": {
                                 "ref": "v7",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0033",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0032",
                                 "duration_ms": 1470,
                                 "voice": "learner"
                             }
@@ -1173,7 +1173,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0039",
+                    "id": "ulid-0038",
                     "stage": "words",
                     "position": 21,
                     "kind": "word_choose",
@@ -1199,7 +1199,7 @@
                                 "text": "heating pad",
                                 "audio": {
                                     "ref": "v5",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0022",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0021",
                                     "duration_ms": 770,
                                     "voice": "learner"
                                 }
@@ -1209,7 +1209,7 @@
                                 "text": "X-ray",
                                 "audio": {
                                     "ref": "v6",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0028",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
                                     "duration_ms": 350,
                                     "voice": "learner"
                                 }
@@ -1229,7 +1229,7 @@
                                 "text": "sick note",
                                 "audio": {
                                     "ref": "v8",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0037",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0036",
                                     "duration_ms": 630,
                                     "voice": "learner"
                                 }
@@ -1248,7 +1248,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0040",
+                    "id": "ulid-0039",
                     "stage": "words",
                     "position": 22,
                     "kind": "word_repeat",
@@ -1274,7 +1274,7 @@
                         "audio": {
                             "term": {
                                 "ref": "v8",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0037",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0036",
                                 "duration_ms": 630,
                                 "voice": "learner"
                             }
@@ -1293,7 +1293,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0041",
+                    "id": "ulid-0040",
                     "stage": "words",
                     "position": 23,
                     "kind": "word_assemble",
@@ -1339,7 +1339,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0042",
+                    "id": "ulid-0041",
                     "stage": "words",
                     "position": 24,
                     "kind": "word_listen",
@@ -1353,7 +1353,7 @@
                     "payload": {
                         "audio": {
                             "ref": "v8",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0037",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0036",
                             "duration_ms": 630,
                             "voice": "learner"
                         },
@@ -1397,7 +1397,7 @@
             "state": "locked",
             "cards": [
                 {
-                    "id": "ulid-0043",
+                    "id": "ulid-0042",
                     "stage": "phrases",
                     "position": 1,
                     "kind": "phrase_intro",
@@ -1412,7 +1412,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                 "duration_ms": 1890,
                                 "voice": "learner"
                             },
@@ -1429,7 +1429,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                             "duration_ms": 1890,
                                             "voice": "learner"
                                         },
@@ -1443,7 +1443,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -1457,7 +1457,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                             "duration_ms": 1750,
                                             "voice": "learner"
                                         },
@@ -1498,12 +1498,12 @@
                                 "ref": "x1",
                                 "audio": {
                                     "ref": "x1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                    "duration_ms": 3710,
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                    "duration_ms": 3640,
                                     "voice": "partner"
                                 },
-                                "text_native": "Где болит: вверху спины или в пояснице?",
-                                "text_target": "Where does it hurt: his upper back or his lower back?"
+                                "text_native": "Где болит: вверху спины или ниже?",
+                                "text_target": "Where does it hurt: in his upper back or lower down?"
                             }
                         },
                         "scene_id": "ulid-0003"
@@ -1518,7 +1518,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0048",
+                    "id": "ulid-0047",
                     "stage": "phrases",
                     "position": 2,
                     "kind": "phrase_intro",
@@ -1533,7 +1533,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -1550,7 +1550,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -1564,7 +1564,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -1578,7 +1578,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -1601,7 +1601,7 @@
                                 "ref": "x2b",
                                 "audio": {
                                     "ref": "x2b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                     "duration_ms": 1820,
                                     "voice": "learner"
                                 },
@@ -1619,7 +1619,7 @@
                                 "ref": "x2",
                                 "audio": {
                                     "ref": "x2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                     "duration_ms": 2870,
                                     "voice": "partner"
                                 },
@@ -1639,7 +1639,7 @@
                     "returns": false
                 },
                 {
-                    "id": "ulid-0054",
+                    "id": "ulid-0053",
                     "stage": "phrases",
                     "position": 3,
                     "kind": "phrase_intro",
@@ -1654,7 +1654,7 @@
                         "said": {
                             "audio": {
                                 "ref": "p3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                 "duration_ms": 2240,
                                 "voice": "learner"
                             },
@@ -1671,7 +1671,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -1685,7 +1685,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -1699,7 +1699,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -1740,12 +1740,12 @@
                                 "ref": "x3",
                                 "audio": {
                                     "ref": "x3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                    "duration_ms": 2940,
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Боль острая или скорее ноющая?",
-                                "text_target": "Is the pain sharp, or more of a dull ache?"
+                                "text_native": "Боль резкая или скорее тянущая?",
+                                "text_target": "Is the pain sudden, or more like a slow ache?"
                             }
                         },
                         "scene_id": "ulid-0003"
@@ -1774,7 +1774,7 @@
                     "payload": {
                         "audio": {
                             "ref": "p1",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                             "duration_ms": 1890,
                             "voice": "learner"
                         },
@@ -1786,7 +1786,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                             "duration_ms": 1890,
                                             "voice": "learner"
                                         },
@@ -1800,7 +1800,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -1814,7 +1814,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                             "duration_ms": 1750,
                                             "voice": "learner"
                                         },
@@ -1879,7 +1879,7 @@
                         "prompt": {
                             "audio": {
                                 "ref": "p2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -1959,7 +1959,7 @@
                                     "duration_ms": 1960,
                                     "voice": "learner"
                                 },
-                                "text_native": "Нет, температуры нет.",
+                                "text_native": "Нет, температуры у него нет.",
                                 "text_target": "No, he doesn't have a fever."
                             },
                             "length": 23,
@@ -2009,7 +2009,7 @@
                             {
                                 "audio": {
                                     "ref": "p1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                     "duration_ms": 1890,
                                     "voice": "learner"
                                 },
@@ -2023,7 +2023,7 @@
                             {
                                 "audio": {
                                     "ref": "p1.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                     "duration_ms": 1470,
                                     "voice": "learner"
                                 },
@@ -2037,7 +2037,7 @@
                             {
                                 "audio": {
                                     "ref": "p1.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                     "duration_ms": 1750,
                                     "voice": "learner"
                                 },
@@ -2057,7 +2057,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                             "duration_ms": 1890,
                                             "voice": "learner"
                                         },
@@ -2071,7 +2071,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -2085,7 +2085,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                             "duration_ms": 1750,
                                             "voice": "learner"
                                         },
@@ -2148,7 +2148,7 @@
                     "payload": {
                         "audio": {
                             "ref": "p3",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                             "duration_ms": 2240,
                             "voice": "learner"
                         },
@@ -2160,7 +2160,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -2174,7 +2174,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -2188,7 +2188,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -2252,7 +2252,7 @@
                     "payload": {
                         "audio": {
                             "ref": "p2.f2",
-                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                             "duration_ms": 1540,
                             "voice": "learner"
                         },
@@ -2264,7 +2264,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -2278,7 +2278,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -2292,7 +2292,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -2362,7 +2362,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                             "duration_ms": 1890,
                                             "voice": "learner"
                                         },
@@ -2376,7 +2376,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -2390,7 +2390,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                             "duration_ms": 1750,
                                             "voice": "learner"
                                         },
@@ -2415,7 +2415,7 @@
                                 "text": "lower back",
                                 "audio": {
                                     "ref": "p1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                     "duration_ms": 1890,
                                     "voice": "learner"
                                 }
@@ -2425,7 +2425,7 @@
                                 "text": "neck",
                                 "audio": {
                                     "ref": "p1.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                     "duration_ms": 1470,
                                     "voice": "learner"
                                 }
@@ -2435,7 +2435,7 @@
                                 "text": "three days ago",
                                 "audio": {
                                     "ref": "p2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                     "duration_ms": 1820,
                                     "voice": "learner"
                                 }
@@ -2445,7 +2445,7 @@
                                 "text": "shoulder",
                                 "audio": {
                                     "ref": "p1.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                     "duration_ms": 1750,
                                     "voice": "learner"
                                 }
@@ -2655,7 +2655,7 @@
                             {
                                 "audio": {
                                     "ref": "p3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                     "duration_ms": 2240,
                                     "voice": "learner"
                                 },
@@ -2669,7 +2669,7 @@
                             {
                                 "audio": {
                                     "ref": "p3.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                     "duration_ms": 2170,
                                     "voice": "learner"
                                 },
@@ -2683,7 +2683,7 @@
                             {
                                 "audio": {
                                     "ref": "p3.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 },
@@ -2703,7 +2703,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -2717,7 +2717,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -2731,7 +2731,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -2800,7 +2800,7 @@
                             {
                                 "audio": {
                                     "ref": "p2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                     "duration_ms": 1820,
                                     "voice": "learner"
                                 },
@@ -2814,7 +2814,7 @@
                             {
                                 "audio": {
                                     "ref": "p2.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                     "duration_ms": 1540,
                                     "voice": "learner"
                                 },
@@ -2828,7 +2828,7 @@
                             {
                                 "audio": {
                                     "ref": "p2.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                     "duration_ms": 1680,
                                     "voice": "learner"
                                 },
@@ -2848,7 +2848,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -2862,7 +2862,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -2876,7 +2876,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -2942,7 +2942,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                             "duration_ms": 1890,
                                             "voice": "learner"
                                         },
@@ -2956,7 +2956,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -2970,7 +2970,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                             "duration_ms": 1750,
                                             "voice": "learner"
                                         },
@@ -3016,12 +3016,12 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                "duration_ms": 3710,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                "duration_ms": 3640,
                                 "voice": "partner"
                             },
-                            "text_native": "Где болит: вверху спины или в пояснице?",
-                            "text_target": "Where does it hurt: his upper back or his lower back?"
+                            "text_native": "Где болит: вверху спины или ниже?",
+                            "text_target": "Where does it hurt: in his upper back or lower down?"
                         }
                     },
                     "result": null,
@@ -3117,7 +3117,7 @@
                                 "ref": "x7b",
                                 "audio": {
                                     "ref": "x7b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0026",
                                     "duration_ms": 1400,
                                     "voice": "learner"
                                 },
@@ -3136,11 +3136,11 @@
                                 "audio": {
                                     "ref": "x7",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                    "duration_ms": 3290,
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                                "text_target": "No, an X-ray is not needed for a muscle strain."
+                                "text_native": "Нет, при растяжении мышцы это не нужно.",
+                                "text_target": "No, you do not need that for a muscle strain."
                             }
                         },
                         "scene_id": "ulid-0003"
@@ -3375,7 +3375,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -3389,7 +3389,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -3403,7 +3403,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -3428,7 +3428,7 @@
                                 "text": "dull",
                                 "audio": {
                                     "ref": "p3.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                     "duration_ms": 2170,
                                     "voice": "learner"
                                 }
@@ -3438,7 +3438,7 @@
                                 "text": "sharp",
                                 "audio": {
                                     "ref": "p3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                     "duration_ms": 2240,
                                     "voice": "learner"
                                 }
@@ -3448,7 +3448,7 @@
                                 "text": "constant",
                                 "audio": {
                                     "ref": "p3.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 }
@@ -3741,7 +3741,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -3755,7 +3755,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -3769,7 +3769,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -3815,7 +3815,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -4075,7 +4075,7 @@
                                 "text": "lower back",
                                 "audio": {
                                     "ref": "p1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                     "duration_ms": 1890,
                                     "voice": "learner"
                                 }
@@ -4115,7 +4115,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -4129,7 +4129,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -4143,7 +4143,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -4189,12 +4189,12 @@
                             "ref": "x3",
                             "audio": {
                                 "ref": "x3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                "duration_ms": 2940,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Боль острая или скорее ноющая?",
-                            "text_target": "Is the pain sharp, or more of a dull ache?"
+                            "text_native": "Боль резкая или скорее тянущая?",
+                            "text_target": "Is the pain sudden, or more like a slow ache?"
                         }
                     },
                     "result": null,
@@ -4416,11 +4416,11 @@
                             "audio": {
                                 "ref": "x7",
                                 "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                "duration_ms": 3290,
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                            "text_target": "No, an X-ray is not needed for a muscle strain."
+                            "text_native": "Нет, при растяжении мышцы это не нужно.",
+                            "text_target": "No, you do not need that for a muscle strain."
                         }
                     },
                     "result": null,
@@ -4449,7 +4449,7 @@
                             {
                                 "audio": {
                                     "ref": "p1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                     "duration_ms": 1890,
                                     "voice": "learner"
                                 },
@@ -4463,7 +4463,7 @@
                             {
                                 "audio": {
                                     "ref": "p1.f2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                     "duration_ms": 1470,
                                     "voice": "learner"
                                 },
@@ -4477,7 +4477,7 @@
                             {
                                 "audio": {
                                     "ref": "p1.f3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                     "duration_ms": 1750,
                                     "voice": "learner"
                                 },
@@ -4527,7 +4527,7 @@
                                 "said": {
                                     "audio": {
                                         "ref": "p1",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                         "duration_ms": 1890,
                                         "voice": "learner"
                                     },
@@ -4549,12 +4549,12 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                "duration_ms": 3710,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                "duration_ms": 3640,
                                 "voice": "partner"
                             },
-                            "text_native": "Где болит: вверху спины или в пояснице?",
-                            "text_target": "Where does it hurt: his upper back or his lower back?"
+                            "text_native": "Где болит: вверху спины или ниже?",
+                            "text_target": "Where does it hurt: in his upper back or lower down?"
                         },
                         "correct_frame": "p1",
                         "correct_filler": 0
@@ -4597,11 +4597,11 @@
                             },
                             {
                                 "id": "o2",
-                                "text": "Шея или голова"
+                                "text": "Колени или ступни"
                             },
                             {
                                 "id": "o3",
-                                "text": "Колени или ступни"
+                                "text": "Шея или голова"
                             }
                         ],
                         "exchange": {
@@ -4614,12 +4614,12 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                "duration_ms": 3710,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                "duration_ms": 3640,
                                 "voice": "partner"
                             },
-                            "text_native": "Где болит: вверху спины или в пояснице?",
-                            "text_target": "Where does it hurt: his upper back or his lower back?"
+                            "text_native": "Где болит: вверху спины или ниже?",
+                            "text_target": "Where does it hurt: in his upper back or lower down?"
                         },
                         "question_native": "О каких двух местах спрашивает врач?"
                     },
@@ -4653,7 +4653,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                             "duration_ms": 1890,
                                             "voice": "learner"
                                         },
@@ -4667,7 +4667,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -4681,7 +4681,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                             "duration_ms": 1750,
                                             "voice": "learner"
                                         },
@@ -4704,7 +4704,7 @@
                                 {
                                     "audio": {
                                         "ref": "p1",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                         "duration_ms": 1890,
                                         "voice": "learner"
                                     },
@@ -4718,7 +4718,7 @@
                                 {
                                     "audio": {
                                         "ref": "p1.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                         "duration_ms": 1470,
                                         "voice": "learner"
                                     },
@@ -4732,7 +4732,7 @@
                                 {
                                     "audio": {
                                         "ref": "p1.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                         "duration_ms": 1750,
                                         "voice": "learner"
                                     },
@@ -4772,12 +4772,12 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                "duration_ms": 3710,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                "duration_ms": 3640,
                                 "voice": "partner"
                             },
-                            "text_native": "Где болит: вверху спины или в пояснице?",
-                            "text_target": "Where does it hurt: his upper back or his lower back?"
+                            "text_native": "Где болит: вверху спины или ниже?",
+                            "text_target": "Where does it hurt: in his upper back or lower down?"
                         }
                     },
                     "result": null,
@@ -4810,7 +4810,7 @@
                             },
                             {
                                 "id": "o2",
-                                "text": "Сегодня или на днях"
+                                "text": "Недавно, в последние дни"
                             },
                             {
                                 "id": "o3",
@@ -4827,7 +4827,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -4866,7 +4866,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -4880,7 +4880,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -4894,7 +4894,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -4917,7 +4917,7 @@
                                 {
                                     "audio": {
                                         "ref": "p2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                         "duration_ms": 1820,
                                         "voice": "learner"
                                     },
@@ -4931,7 +4931,7 @@
                                 {
                                     "audio": {
                                         "ref": "p2.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                         "duration_ms": 1540,
                                         "voice": "learner"
                                     },
@@ -4945,7 +4945,7 @@
                                 {
                                     "audio": {
                                         "ref": "p2.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                         "duration_ms": 1680,
                                         "voice": "learner"
                                     },
@@ -4970,7 +4970,7 @@
                             "ref": "x2b",
                             "audio": {
                                 "ref": "x2b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -4985,7 +4985,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -5023,11 +5023,11 @@
                             },
                             {
                                 "id": "o2",
-                                "text": "Сколько она длится"
+                                "text": "Где она началась"
                             },
                             {
                                 "id": "o3",
-                                "text": "Где она началась"
+                                "text": "Сколько она длится"
                             }
                         ],
                         "exchange": {
@@ -5040,12 +5040,12 @@
                             "ref": "x3",
                             "audio": {
                                 "ref": "x3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                "duration_ms": 2940,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Боль острая или скорее ноющая?",
-                            "text_target": "Is the pain sharp, or more of a dull ache?"
+                            "text_native": "Боль резкая или скорее тянущая?",
+                            "text_target": "Is the pain sudden, or more like a slow ache?"
                         },
                         "question_native": "Что врач хочет узнать о боли?"
                     },
@@ -5079,7 +5079,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -5093,7 +5093,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -5107,7 +5107,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -5130,7 +5130,7 @@
                                 {
                                     "audio": {
                                         "ref": "p3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                         "duration_ms": 2240,
                                         "voice": "learner"
                                     },
@@ -5144,7 +5144,7 @@
                                 {
                                     "audio": {
                                         "ref": "p3.f2",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                         "duration_ms": 2170,
                                         "voice": "learner"
                                     },
@@ -5158,7 +5158,7 @@
                                 {
                                     "audio": {
                                         "ref": "p3.f3",
-                                        "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                        "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                         "duration_ms": 2450,
                                         "voice": "learner"
                                     },
@@ -5198,12 +5198,12 @@
                             "ref": "x3",
                             "audio": {
                                 "ref": "x3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                "duration_ms": 2940,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Боль острая или скорее ноющая?",
-                            "text_target": "Is the pain sharp, or more of a dull ache?"
+                            "text_native": "Боль резкая или скорее тянущая?",
+                            "text_target": "Is the pain sudden, or more like a slow ache?"
                         }
                     },
                     "result": null,
@@ -5312,7 +5312,7 @@
                                 "voice": "learner"
                             },
                             "frame_ref": "p4",
-                            "text_native": "Нет, температуры нет.",
+                            "text_native": "Нет, температуры у него нет.",
                             "text_target": "No, he doesn't have a fever.",
                             "filler_index": null
                         },
@@ -5757,7 +5757,7 @@
                             "ref": "x7b",
                             "audio": {
                                 "ref": "x7b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0026",
                                 "duration_ms": 1400,
                                 "voice": "learner"
                             },
@@ -5773,11 +5773,11 @@
                             "audio": {
                                 "ref": "x7",
                                 "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                "duration_ms": 3290,
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                            "text_target": "No, an X-ray is not needed for a muscle strain."
+                            "text_native": "Нет, при растяжении мышцы это не нужно.",
+                            "text_target": "No, you do not need that for a muscle strain."
                         },
                         "question_native": "Почему рентген не нужен?"
                     },
@@ -5930,7 +5930,7 @@
                             "ref": "x8b",
                             "audio": {
                                 "ref": "x8b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0031",
                                 "duration_ms": 2450,
                                 "voice": "learner"
                             },
@@ -5990,12 +5990,12 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                    "duration_ms": 3710,
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                    "duration_ms": 3640,
                                     "voice": "partner"
                                 },
-                                "text_native": "Где болит: вверху спины или в пояснице?",
-                                "text_target": "Where does it hurt: his upper back or his lower back?",
+                                "text_native": "Где болит: вверху спины или ниже?",
+                                "text_target": "Where does it hurt: in his upper back or lower down?",
                                 "exchange_step": 1
                             },
                             {
@@ -6016,7 +6016,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                     "duration_ms": 2870,
                                     "voice": "partner"
                                 },
@@ -6029,7 +6029,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x2b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                     "duration_ms": 1820,
                                     "voice": "learner"
                                 },
@@ -6042,12 +6042,12 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                    "duration_ms": 2940,
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Боль острая или скорее ноющая?",
-                                "text_target": "Is the pain sharp, or more of a dull ache?",
+                                "text_native": "Боль резкая или скорее тянущая?",
+                                "text_target": "Is the pain sudden, or more like a slow ache?",
                                 "exchange_step": 3
                             },
                             {
@@ -6085,7 +6085,7 @@
                                     "duration_ms": 1960,
                                     "voice": "learner"
                                 },
-                                "text_native": "Нет, температуры нет.",
+                                "text_native": "Нет, температуры у него нет.",
                                 "text_target": "No, he doesn't have a fever.",
                                 "exchange_step": 4
                             },
@@ -6146,7 +6146,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x7b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0026",
                                     "duration_ms": 1400,
                                     "voice": "learner"
                                 },
@@ -6160,11 +6160,11 @@
                                 "audio": {
                                     "ref": "x7",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                    "duration_ms": 3290,
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                                "text_target": "No, an X-ray is not needed for a muscle strain.",
+                                "text_native": "Нет, при растяжении мышцы это не нужно.",
+                                "text_target": "No, you do not need that for a muscle strain.",
                                 "exchange_step": 7
                             },
                             {
@@ -6172,7 +6172,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x8b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0031",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 },
@@ -6223,11 +6223,11 @@
                         "options": [
                             {
                                 "id": "o1",
-                                "text": "Плечо"
+                                "text": "Шея"
                             },
                             {
                                 "id": "o2",
-                                "text": "Шея"
+                                "text": "Плечо"
                             },
                             {
                                 "id": "o3",
@@ -6331,7 +6331,7 @@
                             },
                             {
                                 "id": "o4",
-                                "text": "Шея"
+                                "text": "Плечо"
                             }
                         ],
                         "question": {
@@ -6369,12 +6369,12 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x1",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                    "duration_ms": 3710,
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                    "duration_ms": 3640,
                                     "voice": "partner"
                                 },
-                                "text_native": "Где болит: вверху спины или в пояснице?",
-                                "text_target": "Where does it hurt: his upper back or his lower back?",
+                                "text_native": "Где болит: вверху спины или ниже?",
+                                "text_target": "Where does it hurt: in his upper back or lower down?",
                                 "exchange_step": 1
                             },
                             {
@@ -6395,7 +6395,7 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x2",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                     "duration_ms": 2870,
                                     "voice": "partner"
                                 },
@@ -6408,7 +6408,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x2b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                     "duration_ms": 1820,
                                     "voice": "learner"
                                 },
@@ -6421,12 +6421,12 @@
                                 "role": "partner",
                                 "audio": {
                                     "ref": "x3",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                    "duration_ms": 2940,
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Боль острая или скорее ноющая?",
-                                "text_target": "Is the pain sharp, or more of a dull ache?",
+                                "text_native": "Боль резкая или скорее тянущая?",
+                                "text_target": "Is the pain sudden, or more like a slow ache?",
                                 "exchange_step": 3
                             },
                             {
@@ -6464,7 +6464,7 @@
                                     "duration_ms": 1960,
                                     "voice": "learner"
                                 },
-                                "text_native": "Нет, температуры нет.",
+                                "text_native": "Нет, температуры у него нет.",
                                 "text_target": "No, he doesn't have a fever.",
                                 "exchange_step": 4
                             },
@@ -6525,7 +6525,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x7b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0026",
                                     "duration_ms": 1400,
                                     "voice": "learner"
                                 },
@@ -6539,11 +6539,11 @@
                                 "audio": {
                                     "ref": "x7",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                    "duration_ms": 3290,
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                                "text_target": "No, an X-ray is not needed for a muscle strain.",
+                                "text_native": "Нет, при растяжении мышцы это не нужно.",
+                                "text_target": "No, you do not need that for a muscle strain.",
                                 "exchange_step": 7
                             },
                             {
@@ -6551,7 +6551,7 @@
                                 "role": "learner",
                                 "audio": {
                                     "ref": "x8b",
-                                    "url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                                    "url": "http://localhost/api/v1/plans/audio/ulid-0031",
                                     "duration_ms": 2450,
                                     "voice": "learner"
                                 },
@@ -6653,11 +6653,11 @@
                                 "audio": {
                                     "ref": "x7",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                    "duration_ms": 3290,
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                                "text_target": "No, an X-ray is not needed for a muscle strain."
+                                "text_native": "Нет, при растяжении мышцы это не нужно.",
+                                "text_target": "No, you do not need that for a muscle strain."
                             }
                         ],
                         "exchange": {
@@ -6669,7 +6669,7 @@
                             "ref": "x7b",
                             "audio": {
                                 "ref": "x7b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0026",
                                 "duration_ms": 1400,
                                 "voice": "learner"
                             },
@@ -6682,11 +6682,11 @@
                             "audio": {
                                 "ref": "x7",
                                 "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                "duration_ms": 3290,
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                            "text_target": "No, an X-ray is not needed for a muscle strain."
+                            "text_native": "Нет, при растяжении мышцы это не нужно.",
+                            "text_target": "No, you do not need that for a muscle strain."
                         }
                     },
                     "result": null,
@@ -6719,11 +6719,11 @@
                                 "audio": {
                                     "ref": "x7",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0080",
-                                    "duration_ms": 3290,
+                                    "duration_ms": 3150,
                                     "voice": "partner"
                                 },
-                                "text_native": "Нет, при растяжении мышцы рентген не нужен.",
-                                "text_target": "No, an X-ray is not needed for a muscle strain."
+                                "text_native": "Нет, при растяжении мышцы это не нужно.",
+                                "text_target": "No, you do not need that for a muscle strain."
                             },
                             {
                                 "id": "o2",
@@ -6759,7 +6759,7 @@
                             "ref": "x8b",
                             "audio": {
                                 "ref": "x8b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0031",
                                 "duration_ms": 2450,
                                 "voice": "learner"
                             },
@@ -6815,12 +6815,12 @@
                             "ref": "x3",
                             "audio": {
                                 "ref": "x3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                "duration_ms": 2940,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Боль острая или скорее ноющая?",
-                            "text_target": "Is the pain sharp, or more of a dull ache?"
+                            "text_native": "Боль резкая или скорее тянущая?",
+                            "text_target": "Is the pain sudden, or more like a slow ache?"
                         }
                     },
                     "result": null,
@@ -6919,7 +6919,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0043",
                                             "duration_ms": 1890,
                                             "voice": "learner"
                                         },
@@ -6933,7 +6933,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0044",
                                             "duration_ms": 1470,
                                             "voice": "learner"
                                         },
@@ -6947,7 +6947,7 @@
                                     {
                                         "audio": {
                                             "ref": "p1.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0045",
                                             "duration_ms": 1750,
                                             "voice": "learner"
                                         },
@@ -6992,12 +6992,12 @@
                             "ref": "x1",
                             "audio": {
                                 "ref": "x1",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0047",
-                                "duration_ms": 3710,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0046",
+                                "duration_ms": 3640,
                                 "voice": "partner"
                             },
-                            "text_native": "Где болит: вверху спины или в пояснице?",
-                            "text_target": "Where does it hurt: his upper back or his lower back?"
+                            "text_native": "Где болит: вверху спины или ниже?",
+                            "text_target": "Where does it hurt: in his upper back or lower down?"
                         },
                         "task_clause_native": "у него болит поясница"
                     },
@@ -7033,7 +7033,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0048",
                                             "duration_ms": 1820,
                                             "voice": "learner"
                                         },
@@ -7047,7 +7047,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0049",
                                             "duration_ms": 1540,
                                             "voice": "learner"
                                         },
@@ -7061,7 +7061,7 @@
                                     {
                                         "audio": {
                                             "ref": "p2.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0051",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0050",
                                             "duration_ms": 1680,
                                             "voice": "learner"
                                         },
@@ -7090,7 +7090,7 @@
                             "ref": "x2b",
                             "audio": {
                                 "ref": "x2b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0051",
                                 "duration_ms": 1820,
                                 "voice": "learner"
                             },
@@ -7106,7 +7106,7 @@
                             "ref": "x2",
                             "audio": {
                                 "ref": "x2",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0053",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0052",
                                 "duration_ms": 2870,
                                 "voice": "partner"
                             },
@@ -7147,7 +7147,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0054",
                                             "duration_ms": 2240,
                                             "voice": "learner"
                                         },
@@ -7161,7 +7161,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f2",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0055",
                                             "duration_ms": 2170,
                                             "voice": "learner"
                                         },
@@ -7175,7 +7175,7 @@
                                     {
                                         "audio": {
                                             "ref": "p3.f3",
-                                            "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                            "url": "http://localhost/api/v1/plans/audio/ulid-0056",
                                             "duration_ms": 2450,
                                             "voice": "learner"
                                         },
@@ -7220,12 +7220,12 @@
                             "ref": "x3",
                             "audio": {
                                 "ref": "x3",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0021",
-                                "duration_ms": 2940,
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0057",
+                                "duration_ms": 3150,
                                 "voice": "partner"
                             },
-                            "text_native": "Боль острая или скорее ноющая?",
-                            "text_target": "Is the pain sharp, or more of a dull ache?"
+                            "text_native": "Боль резкая или скорее тянущая?",
+                            "text_target": "Is the pain sudden, or more like a slow ache?"
                         },
                         "task_clause_native": "боль острая, когда он наклоняется"
                     },
@@ -7277,13 +7277,13 @@
                                 "voice": "learner"
                             },
                             "frame_ref": "p4",
-                            "text_native": "Нет, температуры нет.",
+                            "text_native": "Нет, температуры у него нет.",
                             "text_target": "No, he doesn't have a fever.",
                             "filler_index": null
                         },
                         "scene_id": "ulid-0003",
                         "speech_mode": "free",
-                        "task_native": "Нет, температуры нет.",
+                        "task_native": "Нет, температуры у него нет.",
                         "partner_line": {
                             "ref": "x4",
                             "audio": {
@@ -7295,7 +7295,7 @@
                             "text_native": "У него есть температура?",
                             "text_target": "Does he have a fever?"
                         },
-                        "task_clause_native": "нет, температуры нет"
+                        "task_clause_native": "нет, температуры у него нет"
                     },
                     "result": null,
                     "attempts": 0,
@@ -7500,7 +7500,7 @@
                             "ref": "x7b",
                             "audio": {
                                 "ref": "x7b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0026",
                                 "duration_ms": 1400,
                                 "voice": "learner"
                             },
@@ -7593,7 +7593,7 @@
                             "ref": "x8b",
                             "audio": {
                                 "ref": "x8b",
-                                "url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                                "url": "http://localhost/api/v1/plans/audio/ulid-0031",
                                 "duration_ms": 2450,
                                 "voice": "learner"
                             },
@@ -7940,7 +7940,7 @@
                         "example_native": null,
                         "said": false,
                         "value_target": null,
-                        "line_native": "Нет, температуры нет.",
+                        "line_native": "Нет, температуры у него нет.",
                         "state": "none"
                     },
                     {
@@ -8013,8 +8013,7 @@
                         "state": "pending",
                         "returns_day": null,
                         "used_in": [
-                            "p1",
-                            "A1"
+                            "p1"
                         ],
                         "source": "own",
                         "scene": {
@@ -8047,8 +8046,7 @@
                         "state": "pending",
                         "returns_day": null,
                         "used_in": [
-                            "p3",
-                            "A3"
+                            "p3"
                         ],
                         "source": "own",
                         "scene": {
@@ -8073,7 +8071,7 @@
                         "audio_url": "http://localhost/api/v1/plans/audio/ulid-0013",
                         "usage": {
                             "text": "No, he doesn't have a fever.",
-                            "translation": "Нет, температуры нет.",
+                            "translation": "Нет, температуры у него нет.",
                             "offset": 22,
                             "length": 5,
                             "audio_url": "http://localhost/api/v1/plans/audio/ulid-0012"
@@ -8138,7 +8136,7 @@
                             "tone": "#F454FE"
                         },
                         "image_tone": "#F454FE",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0022",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0021",
                         "usage": {
                             "text": "It looks like a muscle strain, so he should rest and use a heating pad.",
                             "translation": "Похоже на растяжение мышцы, так что ему нужен покой и грелка.",
@@ -8149,8 +8147,7 @@
                         "state": "pending",
                         "returns_day": null,
                         "used_in": [
-                            "A5",
-                            "A6"
+                            "A5"
                         ],
                         "source": "own",
                         "scene": {
@@ -8172,19 +8169,18 @@
                             "tone": "#DBC926"
                         },
                         "image_tone": "#DBC926",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0028",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0027",
                         "usage": {
                             "text": "Do we need an X-ray?",
                             "translation": "Нам нужно сделать рентген?",
                             "offset": 14,
                             "length": 5,
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0027"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0026"
                         },
                         "state": "pending",
                         "returns_day": null,
                         "used_in": [
-                            "p6",
-                            "A7"
+                            "p6"
                         ],
                         "source": "own",
                         "scene": {
@@ -8206,13 +8202,13 @@
                             "tone": "#2D1D32"
                         },
                         "image_tone": "#2D1D32",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0033",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0032",
                         "usage": {
                             "text": "Do we need a follow-up appointment?",
                             "translation": "Нам нужно прийти на повторный приём?",
                             "offset": 13,
                             "length": 21,
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0032"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0031"
                         },
                         "state": "pending",
                         "returns_day": null,
@@ -8239,7 +8235,7 @@
                             "tone": "#3C2F17"
                         },
                         "image_tone": "#3C2F17",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0037",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0036",
                         "usage": null,
                         "state": "pending",
                         "returns_day": null,
@@ -8267,7 +8263,7 @@
                         "text": "It hurts in his lower back.",
                         "translation": "У него болит поясница.",
                         "pronunciation": "ит хёртс ин хиз лоуэр бэк",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0044",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0043",
                         "state": "pending",
                         "frame": {
                             "target": "It hurts in his ___.",
@@ -8282,21 +8278,21 @@
                                         "native": "поясница",
                                         "pronunciation": "лоуэр бэк",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0044"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0043"
                                     },
                                     {
                                         "target": "neck",
                                         "native": "шея",
                                         "pronunciation": "нэк",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0045"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0044"
                                     },
                                     {
                                         "target": "shoulder",
                                         "native": "плечо",
                                         "pronunciation": "шоулдер",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0046"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0045"
                                     }
                                 ]
                             }
@@ -8313,7 +8309,7 @@
                         "text": "It started three days ago.",
                         "translation": "Началось три дня назад.",
                         "pronunciation": "ит стартид сри дэйз эгоу",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0049",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0048",
                         "state": "pending",
                         "frame": {
                             "target": "It started ___.",
@@ -8328,21 +8324,21 @@
                                         "native": "три дня назад",
                                         "pronunciation": "сри дэйз эгоу",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0049"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0048"
                                     },
                                     {
                                         "target": "last night",
                                         "native": "вчера вечером",
                                         "pronunciation": "ласт найт",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0050"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0049"
                                     },
                                     {
                                         "target": "this morning",
                                         "native": "сегодня утром",
                                         "pronunciation": "зис морнинг",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0051"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0050"
                                     }
                                 ]
                             }
@@ -8359,7 +8355,7 @@
                         "text": "The pain is sharp when he bends.",
                         "translation": "Боль острая, когда он наклоняется.",
                         "pronunciation": "зэ пэйн из шарп уэн хи бэндз",
-                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0055",
+                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0054",
                         "state": "pending",
                         "frame": {
                             "target": "The pain is ___ when he bends.",
@@ -8374,21 +8370,21 @@
                                         "native": "острая",
                                         "pronunciation": "шарп",
                                         "in_dialogue": true,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0055"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0054"
                                     },
                                     {
                                         "target": "dull",
                                         "native": "ноющая",
                                         "pronunciation": "дал",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0056"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0055"
                                     },
                                     {
                                         "target": "constant",
                                         "native": "постоянная",
                                         "pronunciation": "констант",
                                         "in_dialogue": false,
-                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0057"
+                                        "audio_url": "http://localhost/api/v1/plans/audio/ulid-0056"
                                     }
                                 ]
                             }
@@ -8526,9 +8522,9 @@
                         "step": 1,
                         "kind": "answer",
                         "partner": {
-                            "text": "Where does it hurt: his upper back or his lower back?",
-                            "translation": "Где болит: вверху спины или в пояснице?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0047"
+                            "text": "Where does it hurt: in his upper back or lower down?",
+                            "translation": "Где болит: вверху спины или ниже?",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0046"
                         },
                         "learner": {
                             "text": "It hurts in his lower back.",
@@ -8551,12 +8547,12 @@
                         "partner": {
                             "text": "Did it start today, or earlier this week?",
                             "translation": "Началось сегодня или раньше на этой неделе?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0053"
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0052"
                         },
                         "learner": {
                             "text": "It started three days ago.",
                             "translation": "Началось три дня назад.",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0052",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0051",
                             "state": "pending",
                             "phrase_ref": "p2",
                             "filler": "three days ago"
@@ -8572,9 +8568,9 @@
                         "step": 3,
                         "kind": "answer",
                         "partner": {
-                            "text": "Is the pain sharp, or more of a dull ache?",
-                            "translation": "Боль острая или скорее ноющая?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0021"
+                            "text": "Is the pain sudden, or more like a slow ache?",
+                            "translation": "Боль резкая или скорее тянущая?",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0057"
                         },
                         "learner": {
                             "text": "The pain is sharp when he bends.",
@@ -8601,7 +8597,7 @@
                         },
                         "learner": {
                             "text": "No, he doesn't have a fever.",
-                            "translation": "Нет, температуры нет.",
+                            "translation": "Нет, температуры у него нет.",
                             "audio_url": "http://localhost/api/v1/plans/audio/ulid-0012",
                             "state": "pending",
                             "phrase_ref": "p4",
@@ -8664,14 +8660,14 @@
                         "step": 7,
                         "kind": "ask",
                         "partner": {
-                            "text": "No, an X-ray is not needed for a muscle strain.",
-                            "translation": "Нет, при растяжении мышцы рентген не нужен.",
+                            "text": "No, you do not need that for a muscle strain.",
+                            "translation": "Нет, при растяжении мышцы это не нужно.",
                             "audio_url": "http://localhost/api/v1/plans/audio/ulid-0080"
                         },
                         "learner": {
                             "text": "Do we need an X-ray?",
                             "translation": "Нам нужно сделать рентген?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0027",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0026",
                             "state": "pending",
                             "phrase_ref": "p6",
                             "filler": "an X-ray"
@@ -8694,7 +8690,7 @@
                         "learner": {
                             "text": "Do we need a follow-up appointment?",
                             "translation": "Нам нужно прийти на повторный приём?",
-                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0032",
+                            "audio_url": "http://localhost/api/v1/plans/audio/ulid-0031",
                             "state": "pending",
                             "phrase_ref": "p6",
                             "filler": "a follow-up appointment"
@@ -8716,11 +8712,11 @@
                 "question": "Что болит у ребёнка?",
                 "options": [
                     {
-                        "text": "Шея",
+                        "text": "Плечо",
                         "correct": false
                     },
                     {
-                        "text": "Плечо",
+                        "text": "Шея",
                         "correct": false
                     },
                     {
@@ -8734,16 +8730,16 @@
                 "question": "Что врач советует делать дома?",
                 "options": [
                     {
+                        "text": "Отдыхать и греть спину",
+                        "correct": true
+                    },
+                    {
                         "text": "Много бегать",
                         "correct": false
                     },
                     {
                         "text": "Лечь в больницу",
                         "correct": false
-                    },
-                    {
-                        "text": "Отдыхать и греть спину",
-                        "correct": true
                     }
                 ],
                 "explanation_native": "Врач советует покой и грелку."
@@ -8752,16 +8748,16 @@
                 "question": "Когда нужно прийти снова?",
                 "options": [
                     {
-                        "text": "Если через неделю ещё болит",
-                        "correct": true
-                    },
-                    {
                         "text": "Через месяц",
                         "correct": false
                     },
                     {
                         "text": "Завтра",
                         "correct": false
+                    },
+                    {
+                        "text": "Если через неделю ещё болит",
+                        "correct": true
                     }
                 ],
                 "explanation_native": "Прийти снова, если через неделю ещё болит."

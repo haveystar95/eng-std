@@ -11,12 +11,13 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * The model's JSON → a {@see Lesson} (`lesson_day.v4.10`; its rollback `v4.7` answers the same schema).
+ * JSON → the day's values: the model's SKELETON ({@see skeleton()}, `lesson_skeleton.v1`) and DIALOGUE ({@see dialogue()},
+ * `lesson_dialogue.v1`), one repaired card of either ({@see card()}, `lesson_card_repair.v1.5`), and a stored {@see Lesson}
+ * ({@see parse()} — the lesson assembled from the two, in the shape every day of the plan has been stored in).
  * Strict about SHAPE only: a missing key, a wrong type, an unknown kind or speaker, an empty required
  * string is a reply that is not the requested schema, and that is the model's refusal, not a finding
  * ({@see ModelAnswerOffSchema}).
- * Everything about CONTENT — counts, frames, fillers, keys, checks, listening — is the validator's,
- * and the validator runs on the parsed lesson.
+ * Everything about CONTENT is the stages' checks' (`SkeletonCheck`, `DialogueCheck`), run on the parsed values.
  *
  * THREE things are put right on the way, and only three. A frame — `frame_target` and `frame_native` — and a filler's
  * native text lose the space before the mark they end with (доработка GEN-3; both sides since наряд BACK-TAILS-1 §3.1,
@@ -76,39 +77,116 @@ final class LessonParser
     }
 
     /**
-     * One card of a lesson on its own — what a repair answers with: a frame, a whole exchange, a learner line,
-     * an exchange's check, a listening question or a word, held to the same shape as inside a whole lesson.
+     * THE SKELETON of a day (`lesson_skeleton.v1`, OUTPUT SCHEMA): topic, learner role, the partner's gender, the frames with
+     * the `must_say` numbers they serve, the partner lines, the vocabulary.
      *
-     * @param  'frame'|'exchange'|'line'|'check'|'listening'|'term'  $kind
-     * @param  array<string, mixed>  $row
+     * @param  array<string, mixed>  $payload
      */
-    public function card(string $kind, array $row): Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion|VocabularyItem
+    public function skeleton(array $payload): Skeleton
     {
-        return match ($kind) {
-            LessonCard::FRAME => $this->phrase($row, 'card'),
-            LessonCard::EXCHANGE => $this->exchange($row, 'card'),
-            LessonCard::LINE => $this->learnerLine($row),
-            LessonCard::CHECK => $this->check($row, 'card'),
-            LessonCard::LISTENING => $this->listeningQuestion($row, 'card'),
-            LessonCard::TERM => $this->vocabularyItem($row, 'card'),
-        };
+        $topic = $this->object($payload, 'topic');
+        $role = $this->object($payload, 'learner_role');
+
+        $frames = [];
+        foreach ($this->list($payload, 'phrases') as $index => $frame) {
+            $frames[] = $this->skeletonFrame($this->objectAt($frame, "phrases[{$index}]"), "phrases[{$index}]");
+        }
+        $lines = [];
+        foreach ($this->list($payload, 'partner_lines') as $index => $line) {
+            $lines[] = $this->partnerLine($this->objectAt($line, "partner_lines[{$index}]"), "partner_lines[{$index}]");
+        }
+        $vocabulary = [];
+        foreach ($this->list($payload, 'vocabulary') as $index => $item) {
+            $vocabulary[] = $this->vocabularyItem($this->objectAt($item, "vocabulary[{$index}]"), "vocabulary[{$index}]");
+        }
+
+        return new Skeleton(
+            titleTarget: $this->stringOrEmpty($topic, 'title_target'),
+            titleNative: $this->stringOrEmpty($topic, 'title_native'),
+            descriptionTarget: $this->stringOrEmpty($topic, 'description_target'),
+            descriptionNative: $this->stringOrEmpty($topic, 'description_native'),
+            learnerRoleTarget: $this->stringOrEmpty($role, 'role_target'),
+            learnerRoleNative: $this->stringOrEmpty($role, 'role_native'),
+            roleGender: VoiceGender::tryFromAny($payload['role_gender'] ?? null),
+            frames: $frames,
+            partnerLines: $lines,
+            vocabulary: $vocabulary,
+        );
     }
 
     /**
-     * The frame a repaired exchange comes with (P2R v1.1, `frame_update`): absent or null — none; anything else is
-     * held to a frame's shape.
+     * THE DIALOGUE of a day (`lesson_dialogue.v1`, OUTPUT SCHEMA): the exchanges — each with the partner line it carries and
+     * the item that line delivers — and the listening questions.
+     *
+     * @param  array<string, mixed>  $payload
      */
-    public function frameUpdate(mixed $raw): ?Phrase
+    public function dialogue(array $payload): Dialogue
     {
-        if ($raw === null) {
-            return null;
+        $exchanges = [];
+        foreach ($this->list($payload, 'dialogue') as $index => $exchange) {
+            $exchanges[] = $this->dialogueExchange($this->objectAt($exchange, "dialogue[{$index}]"), "dialogue[{$index}]");
         }
-        if (! is_array($raw)) {
-            throw ModelAnswerOffSchema::at('frame_update', 'not an object');
+        $listening = [];
+        foreach ($this->list($this->object($payload, 'listening'), 'questions') as $index => $question) {
+            $listening[] = $this->listeningQuestion($this->objectAt($question, "listening.questions[{$index}]"), "listening.questions[{$index}]");
         }
 
-        /** @var array<string, mixed> $raw */
-        return $this->phrase($raw, 'frame_update');
+        return new Dialogue($exchanges, $listening);
+    }
+
+    /**
+     * One card on its own — what a repair (`lesson_card_repair.v1.5`) answers with, held to the shape the card has in its
+     * stage: of the skeleton a frame, a partner line or a word; of the dialogue a whole exchange, its check or a listening
+     * question.
+     *
+     * @param  LessonCard::FRAME|LessonCard::TERM|LessonCard::PARTNER_LINE|LessonCard::EXCHANGE|LessonCard::CHECK|LessonCard::LISTENING  $kind
+     * @param  array<string, mixed>  $row
+     */
+    public function card(string $kind, array $row): SkeletonFrame|VocabularyItem|PartnerLine|DialogueExchange|ExchangeCheck|ListeningQuestion
+    {
+        return match ($kind) {
+            LessonCard::FRAME => $this->skeletonFrame($row, 'card'),
+            LessonCard::TERM => $this->vocabularyItem($row, 'card'),
+            LessonCard::PARTNER_LINE => $this->partnerLine($row, 'card'),
+            LessonCard::EXCHANGE => $this->dialogueExchange($row, 'card'),
+            LessonCard::CHECK => $this->check($row, 'card'),
+            LessonCard::LISTENING => $this->listeningQuestion($row, 'card'),
+        };
+    }
+
+    /** @param array<string, mixed> $row */
+    private function skeletonFrame(array $row, string $path): SkeletonFrame
+    {
+        return new SkeletonFrame($this->phrase($row, $path), $this->intList($row, 'must_say', $path));
+    }
+
+    /** @param array<string, mixed> $row */
+    private function partnerLine(array $row, string $path): PartnerLine
+    {
+        $kind = $this->string($row, 'kind', $path);
+        if (! in_array($kind, [PartnerLine::QUESTION, PartnerLine::STATEMENT], true)) {
+            throw ModelAnswerOffSchema::at("{$path}.kind", 'not question or statement');
+        }
+
+        return new PartnerLine(
+            id: $this->string($row, 'id', $path),
+            mustUnderstand: $this->int($row, 'must_understand', $path),
+            kind: $kind,
+            pairsWith: $this->intList($row, 'pairs_with', $path),
+            textTarget: FrameText::withoutDoubledStop($this->string($row, 'text_target', $path)),
+            textNative: FrameText::withoutDoubledStop($this->string($row, 'text_native', $path)),
+        );
+    }
+
+    /** @param array<string, mixed> $row */
+    private function dialogueExchange(array $row, string $path): DialogueExchange
+    {
+        $item = $row['must_understand'] ?? null;
+        if ($item !== null && ! is_int($item)) {
+            throw ModelAnswerOffSchema::at("{$path}.must_understand", 'not an integer or null');
+        }
+
+        return new DialogueExchange($this->exchange($row, $path), $item, $this->nullableString($row, 'partner_line'));
     }
 
     /** @param array<string, mixed> $row */
@@ -129,17 +207,6 @@ final class LessonParser
             imagePrompt: $this->nullableString($row, 'image_prompt'),
             usedIn: $this->stringList($row, 'used_in'),
         );
-    }
-
-    /** @param array<string, mixed> $row */
-    private function learnerLine(array $row): Message
-    {
-        $message = $this->message($row, 'card');
-        if (! $message->isLearner()) {
-            throw ModelAnswerOffSchema::at('card.speaker', 'a learner line is spoken by B');
-        }
-
-        return $message;
     }
 
     /** @param array<string, mixed> $row */
@@ -332,6 +399,30 @@ final class LessonParser
         }
 
         return $value;
+    }
+
+    /**
+     * A list of whole numbers — `must_say`, `pairs_with`; empty when absent. Anything that is not a whole number is not the
+     * schema.
+     *
+     * @param  array<string, mixed>  $row
+     * @return list<int>
+     */
+    private function intList(array $row, string $key, string $path): array
+    {
+        $value = $row[$key] ?? [];
+        if (! is_array($value)) {
+            throw ModelAnswerOffSchema::at("{$path}.{$key}", 'not a list');
+        }
+        $out = [];
+        foreach ($value as $item) {
+            if (! is_int($item)) {
+                throw ModelAnswerOffSchema::at("{$path}.{$key}", 'not a list of integers');
+            }
+            $out[] = $item;
+        }
+
+        return $out;
     }
 
     /** @param array<string, mixed> $row */

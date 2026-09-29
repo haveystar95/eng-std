@@ -29,8 +29,9 @@ beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 // drawing `word_in_line` and `word_assemble`, and no choice among translations being dealt at all. That was the test
 // asking for something the rule does not promise, not a defect: so the day here is made of two SINGLE words the visit
 // never says, which can be neither assembled nor found in a line. The circle is then «выбор → на слух» and both words
-// get a check among translations, whatever the scene's id. (`vocab.used_in_wrong` and `vocab.count` are warnings and
-// do not hold the day back.)
+// get a check among translations, whatever the scene's id. Since GEN-4 a word of the day stands in the skeleton
+// (`vocab.not_found` is fatal): the two words are fillers of `p6` the dialogue does not pick; and a day of two words is
+// under VOCABULARY_COUNT (`vocab.count`, fatal) — the level's range is let down to two for this day alone.
 it('tops up an Intermediate small day\'s choices among translations from the catalogue', function () {
     $catalogue = new class implements NativeDistractorSource
     {
@@ -45,13 +46,16 @@ it('tops up an Intermediate small day\'s choices among translations from the cat
         }
     };
     app()->instance(NativeDistractorSource::class, $catalogue);
+    config(['plan.counts.intermediate.vocabulary' => [2, 12]]);
     app()->instance(PlanModelPort::class, new FakePlanModel(lesson: static function ($request): array {
         $payload = FakePlanModel::lessonPayload($request);
+        $payload['phrases'][5]['slot']['fillers'][2] = ['target' => 'an ointment', 'native' => 'купить мазь', 'pronunciation_native' => 'эн ойнтмент', 'in_dialogue' => false];
+        $payload['phrases'][5]['slot']['fillers'][3] = ['target' => 'a crutch', 'native' => 'взять костыль', 'pronunciation_native' => 'э крач', 'in_dialogue' => false];
         $payload['vocabulary'] = [
             ['id' => 'v1', 'term_target' => 'ointment', 'translation_native' => 'мазь', 'pronunciation_native' => 'ойнтмент',
-                'definition_target' => 'a soft substance rubbed on the skin', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['A5']],
+                'definition_target' => 'a soft substance rubbed on the skin', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['p6']],
             ['id' => 'v2', 'term_target' => 'crutch', 'translation_native' => 'костыль', 'pronunciation_native' => 'крач',
-                'definition_target' => 'a stick to lean on while walking', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['A5']],
+                'definition_target' => 'a stick to lean on while walking', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['p6']],
         ];
 
         return $payload;

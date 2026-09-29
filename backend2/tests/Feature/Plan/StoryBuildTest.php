@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -15,9 +14,9 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
- * DAY N KNOWS THE DAYS BEFORE IT (наряд GEN-3) — through the build as production runs it: the next day's lesson is asked with
- * the story so far and spoken in the plan's roles; a word the learner already learned holds the day for a repair of that
- * word, and a repaired word the server's own check refuses is no repair.
+ * DAY N KNOWS THE DAYS BEFORE IT (наряд GEN-3; since GEN-4 in two stages) — through the build as production runs it: the next
+ * day's skeleton is asked with the story so far and the day is spoken in the plan's roles; a frame an earlier day taught asks
+ * the skeleton once more (`frame.known_repeat`, fatal), and a repair of the day is told the story too.
  */
 
 /** A two-day plan of the given fake, started, day 1 walked — day 2's lesson written by then. */
@@ -33,19 +32,6 @@ function sbTwoDays(object $ctx, FakePlanModel $fake): array
     return [$token, $id, $scenes];
 }
 
-/** Day 2's lesson with its second word said as day 1 said it — «sharp», a word the learner has learned. */
-function sbTeachesSharpAgain(LessonRequest $request): array
-{
-    $p = planCleanLesson($request);
-    if (! $request->earlierDays->isEmpty()) {
-        $p['vocabulary'][1]['term_target'] = 'sharp';
-        // An acronym the day says, so that a repair may take it for a word.
-        $p['dialogue'][2]['messages'][0]['text_target'] .= ' An MRI is not needed yet.';
-    }
-
-    return $p;
-}
-
 // Наряд GEN-3, §0 and §2: «причина одна: промт дня получает только описание своей сцены и не знает ни материала, ни фактов прошлых
 // дней»; §3: «роли сервер перезаписывает из плана». Catches a day 2 asked without day 1's lines, frames and words, a day 1 asked
 // with a story, and a lesson stored in the roles the model named — the strip of the scene and the bubbles saying two names.
@@ -57,7 +43,7 @@ it('asks day 2 with day 1\'s lines, frames and words, and stores both days in th
         return $p;
     });
     [, , $scenes] = sbTwoDays($this, $fake);
-    [$dayOne, $dayTwo] = $fake->lessonRequests;
+    [$dayOne, $dayTwo] = $fake->skeletonRequests;
     $roles = static function (object $scene): array {
         $lesson = json_decode((string) $scene->lesson_json, true);
         $said = ['learner_role' => $lesson['learner_role']['role_target']];
@@ -82,110 +68,54 @@ it('asks day 2 with day 1\'s lines, frames and words, and stores both days in th
         ->and($scenes[1]->lesson_status)->toBe('ready');
 });
 
-// Наряд GEN-3, §4: «vocab.known_repeat — термин любого прошлого готового дня плана → P2R, вид карточки term»; §5: «после ответа
-// сервер перепроверяет словарь». Catches a day 2 dealt with a word day 1 taught, a repair asked for another card or without
-// what day 1 taught, and a repaired word stored under the model's id.
-it('holds day 2 for a word day 1 taught, repairs that word and stores the day', function () {
-    $fake = new FakePlanModel(
-        lesson: sbTeachesSharpAgain(...),
-        repair: static fn (LessonCardRepairRequest $request): array => ['card' => [
-            'id' => 'v5', 'term_target' => 'bend', 'translation_native' => 'наклоняться', 'pronunciation_native' => 'бэнд',
-            'definition_target' => 'to move the body forward and down', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['p3'],
-        ]],
-    );
+// Наряд GEN-4, 3.3: «каркас равен Frame из EARLIER_DAYS (строковое равенство в любом языке)» — fatal, the stage is asked once
+// more with the finding quoted; a repeat that says it again fails the day, and no dialogue is paid for. Catches a day 2 dealt
+// with a frame day 1 taught, a repeat asked without the reason, and a dialogue written over a skeleton the check refused.
+it('asks day 2\'s skeleton again for a frame day 1 taught, and fails the day when the repeat says it too', function (bool $again) {
+    $fake = new FakePlanModel(skeleton: static function (LessonRequest $request) use ($again): array {
+        $skeleton = FakePlanModel::skeletonPayload($request);
+        if (! $request->earlierDays->isEmpty() && ($again || $request->previousViolations === [])) {
+            $skeleton['phrases'][0]['frame_target'] = 'It hurts in his ___';
+        }
+
+        return $skeleton;
+    });
     [, , $scenes] = sbTwoDays($this, $fake);
-    $words = array_column(json_decode((string) $scenes[1]->lesson_json, true)['vocabulary'], 'term_target', 'id');
+    $asked = $fake->skeletonRequests;
+
+    expect($fake->skeletonCalls)->toBe(3)
+        ->and($asked[1]->previousViolations)->toBe([])
+        ->and($asked[2]->previousViolations)->toHaveCount(1)
+        ->and($asked[2]->previousViolations[0])->toStartWith('frame.known_repeat · p1: ')
+        ->and($scenes[1]->lesson_status)->toBe($again ? 'failed' : 'ready')
+        ->and($scenes[1]->fail_reason)->toBe($again ? 'fatal: frame.known_repeat' : null)
+        // Day 1's dialogue, and day 2's only over a skeleton the check let through.
+        ->and($fake->dialogueCalls)->toBe($again ? 1 : 2);
+})->with(['the repeat is clean' => [false], 'the repeat says it again' => [true]]);
+
+// Наряд GEN-4, 3.9: «вход … EARLIER_DAYS». Catches a repair of a later day asked without the story so far — the card
+// written again into a word or a frame an earlier day taught — and a skeleton card sent with a dialogue it does not have yet.
+it('tells a repair of day 2 the story so far', function () {
+    $fake = new FakePlanModel(lesson: static function (LessonRequest $request): array {
+        $p = planCleanLesson($request);
+        if (! $request->earlierDays->isEmpty()) {
+            // A partner line naming a filler of the frame it pairs with — a warning, its card sent to a repair.
+            $p['dialogue'][2]['messages'][0]['text_target'] = 'Is the pain dull, or more like a slow ache?';
+        }
+
+        return $p;
+    });
+    [, , $scenes] = sbTwoDays($this, $fake);
+    $repair = $fake->repairRequests[0] ?? null;
 
     expect($fake->repairCalls)->toBe(1)
-        ->and($fake->repairRequests[0]->kind)->toBe('term')
-        ->and($fake->repairRequests[0]->address)->toBe('v2')
-        ->and(array_column($fake->repairRequests[0]->findings, 'code'))->toBe(['vocab.known_repeat'])
-        ->and($fake->repairRequests[0]->earlierDays->days[0]->words)->toContain('sharp')
-        ->and($fake->repairRequests[0]->neighbours)->toBeNull()
-        ->and($scenes[1]->lesson_status)->toBe('ready')
-        ->and($words['v2'])->toBe('bend')
-        ->and($words['v5'])->toBe('heating pad-2');
-});
-
-// Наряд GEN-3, §5: «перепроверка после term: used_in точен, термина нет среди прошлых дней и в словаре дня дважды»; «иначе — как
-// любая неудавшаяся починка». Catches a repaired word stored that is a word of day 1, a word the day already has, or a word the
-// lesson never says — each one a card that teaches nothing or teaches twice. The day fails after the one rebuild the server
-// makes on its own (наряд LANG-1b §1): the fake writes the same lesson again and its repair is refused again — a card a build.
-it('refuses a repaired word that is a learned word, a word the day already has or a word the lesson never says', function (array $word) {
-    $fake = new FakePlanModel(
-        lesson: sbTeachesSharpAgain(...),
-        repair: static fn (): array => ['card' => [
-            'id' => 'v2', 'translation_native' => 'x', 'pronunciation_native' => 'x', 'definition_target' => 'x', 'kind' => 'word', 'image_prompt' => null,
-        ] + $word],
-    );
-    [$token, $id, $scenes] = sbTwoDays($this, $fake);
-
-    expect($fake->repairCalls)->toBe(2)
-        ->and($scenes[1]->lesson_status)->toBe('failed')
-        ->and($scenes[1]->fail_reason)->toBe('fatal: vocab.known_repeat')
-        ->and(planRead($this, $token, $id)['scenes'][1]['lesson_status'])->toBe('failed');
-})->with([
-    'a word of day 1' => [['term_target' => 'lower back', 'used_in' => ['p1', 'A1']]],
-    'a word of the day under another id' => [['term_target' => 'fever-2', 'used_in' => ['p4', 'A7']]],
-    'a word the lesson never says' => [['term_target' => 'crutches', 'used_in' => ['p3']]],
-]);
-
-// Доработка GEN-3: «vocab.abbreviation — из фатальных в предупреждения: аббревиатура допустима словом дня, если в NATIVE_LANGUAGE
-// есть обычное слово (ATM → банкомат, PIN → ПИН-код); судит модель по правилу v4.7, код только считает». Catches a repaired word
-// refused for being an acronym — a paid repair thrown away and the day failed over a word the model was allowed to choose — and
-// an acronym left uncounted.
-it('takes a repaired word that is an abbreviation, and only counts it', function () {
-    $fake = new FakePlanModel(
-        lesson: sbTeachesSharpAgain(...),
-        repair: static fn (): array => ['card' => [
-            'id' => 'v2', 'term_target' => 'MRI', 'translation_native' => 'МРТ', 'pronunciation_native' => 'эм-ар-ай',
-            'definition_target' => 'a scan that shows the inside of the body', 'kind' => 'word', 'image_prompt' => null, 'used_in' => ['A3'],
-        ]],
-    );
-    [, , $scenes] = sbTwoDays($this, $fake);
-    $words = array_column(json_decode((string) $scenes[1]->lesson_json, true)['vocabulary'] ?? [], 'term_target', 'id');
-    $found = array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", json_decode((string) $scenes[1]->checks_json, true) ?? []);
-
-    expect($fake->repairCalls)->toBe(1)
-        ->and($scenes[1]->lesson_status)->toBe('ready')
-        ->and($words['v2'] ?? null)->toBe('MRI')
-        ->and($found)->toContain('vocab.abbreviation@v2');
-});
-
-// Доработка GEN-3: «в FINDINGS починки каркаса по frame.known_repeat цитировать только совпадение frame_target — в v1.3 тождество
-// при починке только по TARGET_LANGUAGE, родной каркас — перевод»; решение архитектора: «лишними были только находки о тождестве
-// родного шаблона (known_native_repeat, twin по родному) — они и толкали модель выдумывать „Что с ним? — ___.“; швы и фатальные
-// находки наполнений резать нельзя». Catches a frame repair told that its native pattern is another frame's — the model then
-// bends a plain translation into a device — and a repair not told what else is wrong with the frame.
-it('tells the repair of a learned frame its target match and the frame\'s other findings, not a native pattern it shares', function () {
-    $fake = new FakePlanModel(
-        lesson: static function (LessonRequest $request): array {
-            $p = planCleanLesson($request);
-            if (! $request->earlierDays->isEmpty()) {
-                // Day 1's frame said again, with no closing mark, and with the native pattern of day 2's own p2.
-                $p['phrases'][4]['frame_target'] = 'He will rest ___';
-                $p['phrases'][4]['frame_native'] = $p['phrases'][1]['frame_native'];
-                $p['dialogue'][4]['messages'][1]['text_target'] = 'Okay, he will rest at home.';
-            }
-
-            return $p;
-        },
-        repair: static function (LessonCardRepairRequest $request): array {
-            $card = $request->card;
-            $card['frame_target'] = 'He is going to rest ___.';
-
-            return ['card' => $card];
-        },
-    );
-    [, , $scenes] = sbTwoDays($this, $fake);
-    $told = $fake->repairRequests[0]->findings ?? [];
-    $stored = array_map(static fn (array $f): string => "{$f['code']}@{$f['address']}", json_decode((string) $scenes[1]->checks_json, true));
-
-    // The native twin is there — it outlives the repair as the warning it is — and still the repair was not told it.
-    expect($stored)->toContain('frame.twin@p5')
-        ->and($fake->repairCalls)->toBe(1)
-        ->and($fake->repairRequests[0]->address)->toBe('p5')
-        ->and(array_column($told, 'code'))->toEqualCanonicalizing(['frame.no_end_punct', 'frame.known_repeat'])
-        ->and(implode(' ', array_column($told, 'detail')))->toContain('«He will rest ___»')->not->toContain('Началось')
+        ->and($repair?->kind)->toBe('partner_line')
+        ->and($repair?->address)->toBe('a3')
+        ->and(array_column($repair->findings ?? [], 'code'))->toBe(['partner.names_filler'])
+        ->and($repair?->earlierDays->days[0]->words)->toContain('sharp')
+        ->and($repair?->dialogue)->toBeNull()
+        ->and($repair?->neighbours)->toBeNull()
+        // The fake's repair gives the card back as it was: the warning stays, stored with the day, and the day is dealt.
+        ->and(array_column(json_decode((string) $scenes[1]->checks_json, true), 'code'))->toBe(['partner.names_filler'])
         ->and($scenes[1]->lesson_status)->toBe('ready');
 });

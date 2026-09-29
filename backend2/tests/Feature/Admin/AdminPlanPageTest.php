@@ -93,13 +93,13 @@ it('shows the days as the client is told them, with their stored money', functio
         ->and($days[0]['cost_usd']['voice'])->toEqualWithDelta((float) DB::table('plan_line_audios')->where('scene_id', $scene1->id)->sum('cost_usd'), 0.000001);
 });
 
-it('lays the conveyor out stage by stage, the validator\'s findings marked fatal by the gate\'s own list', function () {
+it('lays the conveyor out stage by stage, the checks\' findings marked fatal by their rule', function () {
     $day = planPage($this, '/pipeline?day=1')['days'][0];
 
     expect(array_column($day['stages'], 'key'))->toBe(['lesson', 'validator', 'repair', 'seam_judge', 'images', 'voice', 'served']);
     $validator = $day['stages'][1]['facts'];
     foreach ($validator['findings'] as $finding) {
-        expect($finding['fatal'])->toBe(App\Modules\Plan\Domain\Check\LessonGate::isFatal($finding['code']));
+        expect($finding['fatal'])->toBe(App\Modules\Plan\Domain\Check\LessonCodes::isFatal($finding['code']));
     }
     expect($day['stages'][5]['facts']['lines'])->toBe(DB::table('plan_line_audios')->where('scene_id', $day['scene_id'])->count())
         ->and($day['stages'][2]['not_stored'])->not->toBeEmpty();

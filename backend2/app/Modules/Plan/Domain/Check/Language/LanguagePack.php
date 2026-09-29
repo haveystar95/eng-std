@@ -10,15 +10,17 @@ use App\Modules\Shared\Domain\Service\TextNormalizer;
 use App\Modules\Shared\Domain\ValueObject\SpeechPack;
 
 /**
- * WHAT THE LESSON VALIDATOR KNOWS OF ONE LANGUAGE (наряд GEN-2b, `docs/plan-v2.md` §4) — its words, marks and
- * patterns, read from `config/lesson/lang/<code>.php`. A rule is about the PAIR of languages and asks the pack of
- * the side it reads: the target's for what the learner says and hears, the learner's own for readings, native
- * frames and listening.
+ * WHAT THE DAY'S CHECKS, THE SERVED DAY AND THE SESSION READ OF ONE LANGUAGE (наряд GEN-2b, `docs/plan-v2.md` §4) — its
+ * words, marks and patterns, read from `config/lesson/lang/<code>.php`. The checks are the skeleton's and the dialogue's
+ * ({@see \App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck}, {@see \App\Modules\Plan\Domain\Check\Dialogue\DialogueCheck},
+ * наряд GEN-4). A rule is about the PAIR of languages and asks the pack of the side it reads: the target's for what the
+ * learner says and hears, the learner's own for readings, native fields and listening.
  *
  * A key that holds null — or a language with no pack at all — is a key nobody has written for that language: the
- * rule that needs it does not run and says so ({@see \App\Modules\Plan\Domain\Check\LessonValidationContext::reads()}),
- * it never guesses and never borrows another language's words. Asking for such a key without asking first is a
- * bug, and throws.
+ * rule that needs it does not run — a check's context hands such a language no reading
+ * ({@see \App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext::targetReading()}, `nativeReading()`,
+ * {@see \App\Modules\Plan\Domain\Check\Dialogue\DialogueContext::nativeReading()}) —, it never guesses and never borrows
+ * another language's words. Asking for such a key without asking first is a bug, and throws.
  *
  * THE PACK KNOWS ITS NEIGHBOURS (наряд LANG-1 §5). With seven languages taught and nine spoken, a line may be in the
  * wrong language and still in the right letters — a Polish learner's grey line is in Latin letters, and so is the

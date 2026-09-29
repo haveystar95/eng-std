@@ -2,14 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
-use App\Modules\Plan\Domain\Check\Lesson\FillerRules;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
@@ -17,8 +11,6 @@ use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpokenNumbers;
@@ -30,29 +22,16 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * the translations of the es→en day. A line not taken from there is marked so where it stands.
  */
 
-// Canon (pack-keys §7.2, the order: «пропусков нет на каждой стороне, которой язык бывает»): Spanish is in both lists of
-// the plan, the validator skips nothing for want of a key on either side of its scouting pairs (ru→es and es→en), and
-// every reader outside the validator takes its key in the shape it reads. CATCHES a key left null or unwritten — a check
-// the live day of the pair never runs — and a key in a shape that throws in the talk, the speech or the cards.
-it('gives every reader of the Spanish pack what it reads, on both sides, with no skip for ru→es and es→en', function () {
+// Canon (pack-keys §7.2): Spanish is in both lists of the plan, and every reader of either side (ru→es and es→en) takes
+// its key in the shape it reads. CATCHES a key left null or unwritten, and a key in a shape that throws in the talk, the
+// speech or the cards.
+it('gives every reader of the Spanish pack what it reads, on both sides', function () {
     $code = 'es';
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     expect(LanguageRoles::planTargets())->toContain($code)
-        ->and(LanguageRoles::planNatives())->toContain($code)
-        ->and($gaps('target'))->toBe([])
-        ->and($gaps('native'))->toBe([]);
+        ->and(LanguageRoles::planNatives())->toContain($code);
 
     // The target side.
     foreach (['abbreviations', 'question_word_order', 'unstressed_words', 'number_words', 'number_joiners', 'number_tens_joiners', 'irregular_forms', 'inflection_rules', 'person_swap', 'contractions', 'contractions_before', 'intro_words', 'clause_starters', 'negation', 'partitive', 'dangling_words', 'rescue_line', 'neutral_reply', 'script_letters', 'common_words'] as $key) {
@@ -66,12 +45,6 @@ it('gives every reader of the Spanish pack what it reads, on both sides, with no
     (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
     WordBases::of('abc', $pack);
     $words->isQuestion('a b');
-    $words->asksTwice('a, b?');
-    $words->isCloser('a');
-    $words->clause('a b c');
-    $words->articleMismatch('a', 'b');
-    $words->unresolvedPronoun('a b ___.');
-    $words->valueKind('a 2');
 
     // The learner's side.
     foreach (['abbreviations', 'amount_pattern', 'amount_prefix', 'neutral_reply', 'common_words'] as $key) {
@@ -79,12 +52,10 @@ it('gives every reader of the Spanish pack what it reads, on both sides, with no
     }
     expect($pack->talkTitleTemplate())->not->toBeNull()
         ->and((new NativeStrings($code))->talkTitle(['Recepcionista', 'MRI'], $pack))->toContain('MRI');
-    $words->agreeingWithSlot('a b ___ c d.');
     $words->genderedPast('a b');
     $words->foreignLetters('ab');
-    $words->readsInScript('ab');
 
-    // No key is null: a null reads as unwritten (`lang.pack_missing`), the spec's no-op never does.
+    // No key is null: a null reads as unwritten (the rule that needs it does not run), the spec's no-op never does.
     $written = require dirname(__DIR__, 4).'/config/lesson/lang/es.php';
     expect(array_keys(array_filter($written, static fn (mixed $value): bool => $value === null)))->toBe([]);
 });
@@ -239,30 +210,6 @@ it('keeps the es→en day\'s Spanish translations and refuses its English lines 
         ->and(ReplyNative::missing('—', 'Can I have your name, please?', $es))->toBeTrue();
 });
 
-// Canon (`lesson_day` PARTNER: one question a bubble, `partner.two_questions`; `partner.closer`): the role's lines of the
-// ru→es day ask once each and none of them is a mere «we are done»; a question that goes on after a comma with «y» and
-// asks again — its question word, its verb, or a clitic before one — is two, and «Bien, ¿y desde cuándo?» (the ¿ after
-// the comma) and an alternative «¿Prefiere hoy o mañana?» are one. The last four lines are the review's, not the model's.
-// CATCHES a pattern that misses the Spanish opening mark (every «Claro, ¿…?» two questions) or a clinic's «Que se
-// mejore» read as a line with content.
-it('reads the role\'s Spanish lines: one question a bubble, and the lines that only close', function () {
-    $words = new LanguageWords(lessonPacks()->for('es'));
-    $day = [
-        'Claro. ¿Para qué día la necesita?', 'Tenemos hoy a las cuatro o mañana a las diez.', 'Bien. ¿Cuál es el problema?',
-        'Entiendo. Entonces es una cita urgente.', 'Necesito su nombre completo.', 'Gracias. ¿Cuál es su número de teléfono?',
-        'Sí, hoy a las cuatro de la tarde.', 'Perfecto. Su cita está confirmada para hoy.',
-    ];
-
-    expect(array_values(array_filter($day, $words->asksTwice(...))))->toBe([])
-        ->and(array_values(array_filter($day, $words->isCloser(...))))->toBe([])
-        ->and($words->isCloser('Muchas gracias.'))->toBeTrue()
-        ->and($words->isCloser('¡Que se mejore!'))->toBeTrue()
-        ->and($words->asksTwice('¿Le duele la garganta, y desde cuándo tiene fiebre?'))->toBeTrue()
-        ->and($words->asksTwice('¿Tiene fiebre, y le duele la cabeza?'))->toBeTrue()
-        ->and($words->asksTwice('Bien, ¿y desde cuándo le duele?'))->toBeFalse()
-        ->and($words->asksTwice('¿Prefiere hoy o mañana?'))->toBeFalse();
-});
-
 // Canon (наряд LANG-1 §6, `talk_title_template`): a Spanish talk is named without putting a role in a case —
 // «Conversación: recepcionista y médico» (the es→en plan's roles), the first letters lowered, an acronym kept; «y» is
 // «e» before the sound i- («médico e internista»), and the title is «Conversación» when no role is named. CATCHES the
@@ -278,44 +225,13 @@ it('names a talk in Spanish by its roles, «y» turning «e» before i-', functi
         ->and($title->talkTitle([], $es))->toBe('Conversación');
 });
 
-// Canon (`lesson_day` FILLERS, the fatal `filler.ungrammatical`; FRAMES, the warning `frame.native_agreement`): every
-// filler of the ru→es day put into its frame is Spanish at the seam — and an article after an article, or a subject and
-// its verb where the frame has its verb, is not. On the learner's side (es→en): «¿Está libre ___?» agrees with its slot
-// («¿Está libre las dos?» — the seam judge said «нет» on the day), «Quisiera ___», «Llevo ___ con eso», «___ no me viene
-// bien» do not; a reading in Cyrillic (the day's readings) is another writing, fatal, and one with IPA «ə» is only out of
-// the Spanish alphabet. CATCHES a list that makes the day's own fillers fatal, and a Spanish `script` or `script_letters`
-// that fails an honest Latin reading or passes a Cyrillic one.
-it('reads the seams of the ru→es fillers, the es→en native frames and readings the way Spanish is written', function () {
+// Canon (READINGS on the learner's side, es→en): a reading in Cyrillic (the day's readings) is another writing, fatal; an
+// honest Latin reading with its accents and the Spanish ¿ is none; a Spanish line says no gendered past of the learner.
+// CATCHES a Spanish `script_letters` that fails an honest Latin reading or passes a Cyrillic one.
+it('reads the es→en readings and native lines the way Spanish is written', function () {
     $words = new LanguageWords(lessonPacks()->for('es'));
-    $fillers = [
-        'Necesito ___.' => ['una cita', 'una consulta'], 'Prefiero ___.' => ['hoy', 'mañana'],
-        'Tengo ___.' => ['dolor de garganta', 'tos', 'fiebre'], 'También tengo ___.' => ['temperatura', 'tos'],
-        'Mi nombre es ___.' => ['Ivan Petrov', 'Anna Sokolova'], 'Mi número es ___.' => ['912 555 381', '640 218 907'],
-        '¿La cita es ___?' => ['a las cuatro', 'a las diez'],
-    ];
-    $problems = [];
-    foreach ($fillers as $frame => $each) {
-        foreach ($each as $filler) {
-            foreach (FillerRules::seams($frame, $filler, $words) as $problem) {
-                $problems[] = "{$frame} + {$filler}: {$problem}";
-            }
-        }
-    }
 
-    expect($problems)->toBe([])
-        // A filler with the dots of an abbreviation is a value (the review's fillers, not the model's).
-        ->and(FillerRules::seams('Vivo en ___.', 'EE. UU.', $words))->toBe([])
-        ->and(FillerRules::seams('Tengo cita con ___.', 'la Dra. Ruiz', $words))->toBe([])
-        ->and(FillerRules::seams('Tengo cita ___.', 'a las 4 p. m.', $words))->toBe([])
-        ->and(FillerRules::seams('Necesito una ___.', 'una cita', $words))->toContain('«una una» — an article after an article')
-        ->and(FillerRules::seams('Prefiero ___.', 'él es mi médico', $words))->toContain('the filler is a whole clause, and the frame already has its verb')
-        ->and($words->agreeingWithSlot('¿Está libre ___?'))->toBe(['libre'])
-        ->and($words->agreeingWithSlot('Quisiera ___'))->toBe([])
-        ->and($words->agreeingWithSlot('Llevo ___ con eso'))->toBe([])
-        ->and($words->agreeingWithSlot('___ no me viene bien'))->toBe([])
-        ->and($words->foreignLetters('ай хэв ___'))->toBe(['а', 'й', 'х', 'э', 'в'])
+    expect($words->foreignLetters('ай хэв ___'))->toBe(['а', 'й', 'х', 'э', 'в'])
         ->and($words->foreignLetters('ái jav a sor zróut, ¿sí? ___'))->toBe([])
-        ->and($words->readsInScript('ái jav a sor zróut, ¿sí? ___'))->toBeTrue()
-        ->and($words->readsInScript('ai jav ə sor'))->toBeFalse()
         ->and($words->genderedPast('Yo fui al médico ayer.'))->toBe([]);
 });

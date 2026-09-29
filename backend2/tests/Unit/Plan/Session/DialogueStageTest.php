@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\CardObjects;
@@ -12,11 +10,9 @@ use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Lesson\CheckOption;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\ExchangeCheck;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\ValueObject\CardSource;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -36,8 +32,8 @@ function s1dlgScene(?callable $edit = null): SceneMaterial
 {
     $sceneId = PlanSceneId::fromString(S1DLG_SCENE);
     $packs = lessonPacks();
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
-    $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём у врача'));
+    $lesson = planServed((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
     $terms = planTermsOf($sceneId, $lesson);
     if ($edit !== null) {
         $lesson = $lesson->withExchanges($edit($lesson->exchanges));
@@ -231,7 +227,7 @@ it('deals a rescue once — inside the answer before it, at its own place after 
         s1dlgStep($x, 1), s1dlgStep($x, 7)->withStep(2), s1dlgStep($x, 6)->withStep(3),
     ]));
     expect(s1dlgOrder($afterAsk))->toBe(['dialogue_partner:x1', 'dialogue_answer:x1', 'dialogue_ask:x2', 'dialogue_rescue:x3'])
-        ->and(s1dlgCard($afterAsk, 'dialogue_rescue', 'x3')->payload['asked_line']['text_target'])->toBe('No, an X-ray is not needed for a muscle strain.')
+        ->and(s1dlgCard($afterAsk, 'dialogue_rescue', 'x3')->payload['asked_line']['text_target'])->toBe('No, you do not need that for a muscle strain.')
         ->and(s1dlgCard($afterAsk, 'dialogue_rescue', 'x3')->payload['asked_line']['ref'])->toBe('x2');
 
     // A rescue that opens the visit has asked nothing yet.

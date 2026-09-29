@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Domain\Blueprint\BlueprintParser;
 use App\Modules\Plan\Domain\Entity\Plan;
@@ -46,7 +45,7 @@ function ssPlan(): Plan
     );
     $request = new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, PlanCalendar::scenesCount(5));
     $plan->beginBuild(new DateTimeImmutable('2026-09-17T10:00:00Z'));
-    $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
+    $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2.1', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
 
     return $plan;
 }
@@ -61,9 +60,9 @@ function ssSceneOfDay(Plan $plan, int $number): PlanScene
 function ssWrite(PlanScene $scene, int $story, VoiceGender $gender = VoiceGender::Female): void
 {
     $earlier = new EarlierDays(array_fill(0, $story - 1, planEarlierDay()));
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), $earlier));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('x', $earlier));
     $payload['role_gender'] = $gender->value;
-    $scene->acceptLesson((new LessonParser)->parse($payload), lessonPacks()->for('en'), new ModelCall('lesson_day.v4.10', 'test', 'fake', '0.000000', 1, 1), [], new DateTimeImmutable('2026-09-17T10:00:00Z'));
+    $scene->acceptLesson((new LessonParser)->parse($payload), planSkeletonOf($payload), lessonPacks()->for('en'), new ModelCall('lesson_skeleton.v1+lesson_dialogue.v1', 'test', 'fake', '0.000000', 1, 2), [], new DateTimeImmutable('2026-09-17T10:00:00Z'));
 }
 
 // Наряд GEN-3, §2: «EARLIER_DAYS — все содержательные дни этого плана с готовым уроком, раньше текущего, по порядку; на первый
@@ -101,7 +100,7 @@ it('tells each earlier day its lines in the order of the visit, its frames in bo
     $day = $plan->earlierDaysOf(ssSceneOfDay($plan, 2)->id())->days[0];
 
     expect(array_slice($day->lines, 0, 3))->toBe([
-        ['speaker' => 'A', 'text' => 'Where does it hurt: his upper back or his lower back?'],
+        ['speaker' => 'A', 'text' => 'Where does it hurt: in his upper back or lower down?'],
         ['speaker' => 'B', 'text' => 'It hurts in his lower back.'],
         ['speaker' => 'A', 'text' => 'Did it start today, or earlier this week?'],
     ])
@@ -119,7 +118,7 @@ it('speaks a lesson in the plan\'s learner role and the scene\'s partner role, w
     $plan = ssPlan();
     $scene = ssSceneOfDay($plan, 2);
     $roles = $plan->lessonRoles($scene);
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('x'));
     $payload['learner_role'] = ['role_target' => 'Worried parent', 'role_native' => 'Взволнованный родитель'];
     $payload['dialogue'][2]['messages'][0]['role_target'] = 'Physician';
 

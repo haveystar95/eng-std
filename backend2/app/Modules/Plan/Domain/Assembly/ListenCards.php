@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Assembly;
 
-use App\Modules\Plan\Domain\Check\Lesson\ListeningExchange;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
 use App\Modules\Plan\Domain\Lesson\Message;
@@ -303,8 +302,8 @@ final class ListenCards
     }
 
     /**
-     * The exchange a question is about — the validator's own reading ({@see ListeningExchange}), off the learner's
-     * pack; null when that pack has not the words it needs.
+     * The exchange a question is about ({@see ListeningExchange}), read off the learner's pack; null when that pack has not
+     * the words it needs.
      */
     public static function exchangeStep(SceneMaterial $scene, ListeningQuestion $question): ?int
     {

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Application\Service\ConversationMaterial;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
@@ -26,7 +25,7 @@ function thlPhrases(?callable $edit = null): array
         $answer = $edit($answer);
     }
     $scene = PlanSceneId::fromString('01M3DGF01S1YRDQGA7NB4HWBS9');
-    $served = LessonAssembly::serve((new LessonParser)->parse($answer), $scene->value, lessonPacks()->for('de'));
+    $served = planServed((new LessonParser)->parse($answer), $scene->value, lessonPacks()->for('de'));
     $out = [];
     foreach (PlanTerm::fromLesson($scene, $served, static fn (): PlanTermId => PlanTermId::generate(), lessonPacks()->for('de')->sentenceEnds(), lessonPacks()->for('ru')->sentenceEnds()) as $term) {
         if ($term->kind() === TermKind::Phrase) {

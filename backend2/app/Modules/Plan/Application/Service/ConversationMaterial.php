@@ -182,8 +182,8 @@ final readonly class ConversationMaterial
      * learner line the lesson says the frame with — stored beside the phrase as its example (`PlanTerm::fromLesson`). The
      * frame and its value put together read otherwise where the value agrees with the frame: «Мне нужно ___.» with «запись на
      * приём» gave the talk's hint «Мне нужно запись на приём», while the lesson said «Мне нужна запись на приём.». A frame no
-     * line of the lesson stands on has no such line — the frame said with its value is what is left, and the build of the
-     * day names it in its log ({@see \App\Modules\Plan\Application\Port\DayBuildLog::hintsAssembled()}).
+     * line of the lesson stands on has no such line — the frame said with its value is what is left. A lesson built since
+     * GEN-4 says every frame (`frame.unused` is fatal); a day built before it may not.
      */
     public static function lessonLine(PlanTerm $term): string
     {

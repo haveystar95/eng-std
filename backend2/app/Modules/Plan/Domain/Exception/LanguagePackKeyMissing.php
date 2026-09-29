@@ -8,7 +8,7 @@ use LogicException;
 
 /**
  * A rule read a key of a language pack without asking whether the pack has it. Not a state of the data — a
- * missing key is normal and counted as `lang.pack_missing` — but a rule that forgot to ask.
+ * missing key is normal, and the rule that needs it does not run — but a rule that forgot to ask.
  */
 final class LanguagePackKeyMissing extends LogicException
 {

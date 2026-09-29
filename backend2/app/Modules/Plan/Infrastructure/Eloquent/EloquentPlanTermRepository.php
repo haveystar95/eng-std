@@ -60,17 +60,6 @@ final class EloquentPlanTermRepository implements PlanTermRepository
         });
     }
 
-    public function rewriteTexts(PlanSceneId $sceneId, array $terms): void
-    {
-        DB::transaction(function () use ($sceneId, $terms): void {
-            foreach ($terms as $term) {
-                $columns = $this->columns($term);
-                unset($columns['scene_id'], $columns['kind'], $columns['ref'], $columns['position'], $columns['image_url'], $columns['image_author'], $columns['image_author_url'], $columns['image_tone']);
-                PlanTermModel::query()->where('scene_id', $sceneId->value)->where('ref', $term->ref())->update([...$columns, 'updated_at' => now()]);
-            }
-        });
-    }
-
     public function attachImage(PlanTermId $id, Image $image): void
     {
         PlanTermModel::query()->whereKey($id->value)->whereNull('image_url')->update([

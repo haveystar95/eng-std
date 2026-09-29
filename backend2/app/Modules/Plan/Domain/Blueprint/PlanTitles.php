@@ -17,4 +17,13 @@ final readonly class PlanTitles
         public string $learnerRoleTarget,
         public string $learnerRoleNative,
     ) {}
+
+    /** The same strings with the plan's name written anew — what a line repair puts back (наряд GEN-4). */
+    public function withTitleNative(string $title): self
+    {
+        return new self(
+            $title, $this->titleTarget, $this->eventNative, $this->untilPhraseNative, $this->overdueNative,
+            $this->coverImagePrompt, $this->learnerRoleTarget, $this->learnerRoleNative,
+        );
+    }
 }

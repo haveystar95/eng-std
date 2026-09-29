@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| LANGUAGE PACK · uk — what the lesson validator reads of Ukrainian
+| LANGUAGE PACK · uk — what the day's checks read of Ukrainian
 |--------------------------------------------------------------------------
 |
 | docs/plan-v2.md §4 (наряд GEN-2b), written in full by наряд LANG-1 (key spec: docs/research/lang-1/pack-keys.md).
 | Ukrainian is written as the LEARNER'S OWN language only (LanguageRoles::planNatives()): the reading of the target,
 | the listening questions and their options, the native frames and fillers, the grey translation of the role. No plan
 | teaches Ukrainian, so every key only a TARGET reads is written as the spec's explicit no-op — never null, which would
-| count `lang.pack_missing` — and is dead data here. Two target-side keys hold real Ukrainian all the same, never read
+| switch its rule off — and is dead data here. Two target-side keys hold real Ukrainian all the same, never read
 | for this side: `number_words` (as the Russian pack writes its own, and so the numbers of a Ukrainian line are pinned
 | by UkPackTest) and `negation` (the order's «uk/be ['не','ні']»). `talk_title_template` is the no-op `[]`, as ru writes
 | it: the title of a talk declines Ukrainian roles in code (NativeStrings::TALK_TITLE).

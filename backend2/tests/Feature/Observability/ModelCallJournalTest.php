@@ -9,13 +9,15 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiCompatibleContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\VendorCall;
 use App\Modules\Observability\Application\Port\ModelCallJournal;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Plan\Application\Dto\DialogueRequest;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
+use App\Modules\Plan\Application\Dto\PlanLineRepairRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Lesson\EarlierDays;
+use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Job\BuildLessonJob;
 use App\Modules\Plan\Infrastructure\Job\BuildPlanJob;
@@ -152,10 +154,11 @@ it('marks lost the calls still started past their caller\'s wait, and leaves the
         ->and(DB::table('model_calls')->orderBy('id')->pluck('status')->all())->toBe(['lost', 'started', 'completed']);
 });
 
-// Addendum C: «таймаут ожидания ответа в адаптере — 180 с для всех вызовов (план, урок, P2R, судья), connect timeout 10 с».
+// Addendum C: «таймаут ожидания ответа в адаптере — 180 с для всех вызовов (план, урок, P2R, судья), connect timeout 10 с»;
+// наряд GEN-4: the day's two stages and their repairs the same, a line repair of the plan — a line in, a line out — 30 s.
 // Catches «вызов оборван на 60 с, модель досчитала, деньги списаны, ответа нет»: a plan call built with a wait shorter than
 // the slowest lesson (51 s) three times over, or a connection wait left to the library's default.
-it('waits 180 seconds for the answer of every plan call and 10 seconds for the connection', function () {
+it('waits 180 seconds for the answer of every plan call, 30 for a line repair, and 10 seconds for the connection', function () {
     config(['plan.model.driver' => 'openai', 'services.openai.api_key' => 'test-key']);
     app()->forgetInstance(PlanModelPort::class);
     $options = [];
@@ -165,55 +168,88 @@ it('waits 180 seconds for the answer of every plan call and 10 seconds for the c
         return Http::response(mcjAnswer(), 200);
     });
     $model = app(PlanModelPort::class);
-    $lesson = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
+    $lesson = FakePlanModel::lessonRequest('x');
+    $skeleton = (new LessonParser)->skeleton(FakePlanModel::skeletonPayload($lesson));
 
     $model->buildPlan(new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, 2));
-    $model->buildLesson($lesson);
-    $model->repairLessonCard(new LessonCardRepairRequest('p1', 'frame', [], [], [], null, new EarlierDays, 'English', 'Russian', PlanLevel::Beginner, null, 8, 8));
+    $model->repairPlanLine(new PlanLineRepairRequest('teaches_native', 'Russian', 34, 'рассказать про опыт работы и понять обязанности'));
+    $model->buildSkeleton($lesson);
+    $model->buildDialogue(new DialogueRequest($lesson, $skeleton));
+    $model->repairLessonCard(new LessonCardRepairRequest('p1', 'frame', [], [], $skeleton->toArray(), null, null, new EarlierDays, 'English', 'Russian', PlanLevel::Beginner, null));
     $model->judgeNativeSeams(new NativeSeamJudgeRequest('Russian', [['id' => 'p1.f1', 'pattern' => 'x', 'value' => 'y', 'sentence' => 'z']]));
 
-    expect($options)->toBe([[180, 10], [180, 10], [180, 10], [180, 10]]);
+    expect($options)->toBe([[180, 10], [30, 10], [180, 10], [180, 10], [180, 10], [180, 10]]);
 });
 
-// Canon (наряд BACK-TAILS-1 §3.3): «назначение вызова различать — plan / lesson / repair / judge, а не «plan» на всё».
+// Canon (наряд BACK-TAILS-1 §3.3; наряд GEN-4 — a name per purpose): «назначение вызова различать, а не «plan» на всё».
 // The MONEY is one budget and stays `plan` in the request log — the cost screen must not split in two — but the journal
-// names each call for what it is. Catches a journal that says «plan» on every row, where a lost call cannot be told
-// from the lesson it was, and catches the finer name leaking into `api_request_logs`, whose CHECK constraint would
-// drop the row and lose the spend (the same hole the `term_reading` whitelist migration was written to close).
-it('names each plan call in the journal — plan, lesson, repair, judge — while the spend stays one purpose', function () {
+// names each call for what it is: plan, plan_line_repair, skeleton, dialogue, repair, seam_judge, slot_judge. Catches a
+// journal that says «plan» on every row, where a lost call cannot be told from the stage it was, the two judges under one
+// name, and the finer name leaking into `api_request_logs`, whose CHECK constraint would drop the row and lose the spend
+// (the same hole the `term_reading` whitelist migration was written to close).
+it('names each plan call in the journal by its purpose while the spend stays one purpose', function () {
     config(['plan.model.driver' => 'openai', 'services.openai.api_key' => 'test-key']);
     app()->forgetInstance(PlanModelPort::class);
     Http::fake(fn () => Http::response(mcjAnswer(), 200));
     $model = app(PlanModelPort::class);
-    $lesson = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
+    $lesson = FakePlanModel::lessonRequest('x');
+    $skeleton = (new LessonParser)->skeleton(FakePlanModel::skeletonPayload($lesson));
 
     $model->buildPlan(new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, 2));
-    $model->buildLesson($lesson);
-    $model->repairLessonCard(new LessonCardRepairRequest('p1', 'frame', [], [], [], null, new EarlierDays, 'English', 'Russian', PlanLevel::Beginner, null, 8, 8));
+    $model->repairPlanLine(new PlanLineRepairRequest('teaches_native', 'Russian', 34, 'рассказать про опыт работы и понять обязанности'));
+    $model->buildSkeleton($lesson);
+    $model->buildDialogue(new DialogueRequest($lesson, $skeleton));
+    $model->repairLessonCard(new LessonCardRepairRequest('p1', 'frame', [], [], $skeleton->toArray(), null, null, new EarlierDays, 'English', 'Russian', PlanLevel::Beginner, null));
     $model->judgeNativeSeams(new NativeSeamJudgeRequest('Russian', [['id' => 'p1.f1', 'pattern' => 'x', 'value' => 'y', 'sentence' => 'z']]));
     $model->judgeSlot(new SlotJudgeRequest(SlotJudgeRequest::MODE_ANSWER, 'English', 'Russian', 'beginner', 'Where?', 'Где?', 'It hurts ___.', 'Болит ___.', 'где', 'neck', 'it hurts here'));
 
     expect(DB::table('model_calls')->orderBy('started_at')->pluck('purpose')->all())
-        ->toBe(['plan', 'lesson', 'repair', 'judge', 'judge'])
-        // The request log knows one purpose, the one its CHECK constraint allows — and it recorded ALL FIVE calls.
+        ->toBe(['plan', 'plan_line_repair', 'skeleton', 'dialogue', 'repair', 'seam_judge', 'slot_judge'])
+        // The request log knows one purpose, the one its CHECK constraint allows — and it recorded ALL SEVEN calls.
         // A finer name reaching this column does not raise: the writer swallows the CHECK violation and the spend of
         // that call is simply not recorded, which is the hole the `term_reading` whitelist migration was written for.
         ->and(DB::table('api_request_logs')->where('direction', 'outbound')->pluck('purpose')->all())
-        ->toBe(['plan', 'plan', 'plan', 'plan', 'plan']);
+        ->toBe(['plan', 'plan', 'plan', 'plan', 'plan', 'plan', 'plan']);
+});
+
+// Наряд GEN-4, 4: «модель и reasoning_effort на каждое назначение». Catches an effort named in the config that never reaches
+// the vendor, an effort sent with every call once one purpose names it, and a model of one purpose leaking into another's.
+it('asks every purpose with its own model and reasoning effort, and sends no effort where none is named', function () {
+    config([
+        'plan.model.driver' => 'openai', 'services.openai.api_key' => 'test-key',
+        'plan.model.purposes.skeleton' => ['model' => 'gpt-5.6-luna', 'reasoning_effort' => 'high'],
+        'plan.model.purposes.dialogue' => ['model' => 'gpt-5.4', 'reasoning_effort' => ''],
+    ]);
+    app()->forgetInstance(PlanModelPort::class);
+    $bodies = [];
+    Http::fake(function (Request $request) use (&$bodies) {
+        $bodies[] = $request->data();
+
+        return Http::response(mcjAnswer(), 200);
+    });
+    $model = app(PlanModelPort::class);
+    $lesson = FakePlanModel::lessonRequest('x');
+    $skeleton = (new LessonParser)->skeleton(FakePlanModel::skeletonPayload($lesson));
+
+    $model->buildSkeleton($lesson);
+    $model->buildDialogue(new DialogueRequest($lesson, $skeleton));
+
+    expect([$bodies[0]['model'], $bodies[0]['reasoning_effort'] ?? null])->toBe(['gpt-5.6-luna', 'high'])
+        ->and([$bodies[1]['model'], array_key_exists('reasoning_effort', $bodies[1])])->toBe(['gpt-5.4', false]);
 });
 
 // Addendum C: «таймаут job'а выше таймаута клиента с запасом; автоповтора job'а после таймаута нет». Catches a job killed
-// between two paid calls of one build (the lesson, its retry, two repairs — twice since the server builds a lesson that
-// failed the gate anew once, наряд LANG-1b §1 — and the judge), a job handed to a second worker while the first still
-// waits for its answer (the queue's retry_after under the job's timeout), a stale window a learner's retry can open under
-// a live job, and a job the queue runs again.
+// between two paid calls of one build (наряд GEN-4: each stage and its one repeat, two repairs a stage, the seam judge and
+// its second read), a plan job killed amid its line repairs, a job handed to a second worker while the first still waits
+// for its answer (the queue's retry_after under the job's timeout), a stale window a learner's retry can open under a live
+// job, and a job the queue runs again.
 it('lets a lesson job outlive every call it makes, and never runs it twice', function () {
     $lesson = new BuildLessonJob('01M2GEN3SCENE0000000000001');
     $plan = new BuildPlanJob('01M2GEN3PLAN00000000000001');
 
-    expect(BuildLessonJob::timeoutSeconds(180))->toBe(((2 + 2) * 2 + 1) * 180 + 60)
-        ->and($lesson->timeout)->toBe(1680)
-        ->and($plan->timeout)->toBe(2 * 180 + 60)
+    expect(BuildLessonJob::timeoutSeconds(180))->toBe((2 * (2 + 2) + 2) * 180 + 60)
+        ->and($lesson->timeout)->toBe(1860)
+        ->and($plan->timeout)->toBe(2 * 180 + 12 * 30 + 60)
         ->and([$lesson->tries, $plan->tries])->toBe([1, 1])
         ->and((int) config('queue.connections.redis.retry_after'))->toBeGreaterThan($lesson->timeout)
         ->and((int) config('plan.build_stale_seconds'))->toBeGreaterThan($lesson->timeout)

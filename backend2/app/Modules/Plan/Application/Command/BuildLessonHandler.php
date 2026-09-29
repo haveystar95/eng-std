@@ -6,7 +6,6 @@ namespace App\Modules\Plan\Application\Command;
 
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
-use App\Modules\Plan\Application\Port\DayBuildLog;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Service\LessonBuildService;
 use App\Modules\Plan\Application\Service\LessonRequests;
@@ -17,18 +16,16 @@ use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\ValueObject\PlanTermId;
-use App\Modules\Plan\Domain\ValueObject\TermKind;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
- * Runs the lesson call for one scene. Idempotent: the scene is CLAIMED (`building`) inside a
- * transaction before the model is asked, so a second job for the same scene finds it claimed and
- * stops; a stale claim (a worker that died mid-call) is re-claimable after the configured window.
- * What is stored has passed the gate ({@see \App\Modules\Plan\Application\Service\LessonGateKeeper}): no
- * fatal finding is ever written as a lesson — its card was repaired, or the lesson failed with its code.
- * On success the terms are written from the served lesson and the scene waits for its photos
- * (`illustrating`): the photo job and the voice job are queued together and run side by side. The
+ * Builds the day of one scene — its two stages, their checks and repairs ({@see LessonBuildService}, наряд GEN-4).
+ * Idempotent: the scene is CLAIMED (`building`) inside a transaction before the model is asked, so a second job for the same
+ * scene finds it claimed and stops; a stale claim (a worker that died mid-call) is re-claimable after the configured window.
+ * No fatal finding is ever written as a lesson — its stage was asked again, or the day failed with its codes. The lesson is
+ * stored with the skeleton it was built from. On success the terms are written from the served lesson and the scene waits
+ * for its photos (`illustrating`): the photo job and the voice job are queued together and run side by side. The
  * photo job makes the day ready — and writes its `day_ready` line — when the pictures are in
  * ({@see IllustrateSceneHandler}); the voice never holds the day back (DAY-UI-3).
  *
@@ -61,7 +58,6 @@ final readonly class BuildLessonHandler
         private TransactionManager $tx,
         private LanguagePacks $packs,
         private PartnerVoices $voices,
-        private DayBuildLog $buildLog,
     ) {}
 
     public function __invoke(BuildLesson $command): void
@@ -105,7 +101,7 @@ final readonly class BuildLessonHandler
         $targetPack = $this->packs->for($plan->targetLang()->value);
         $nativePack = $this->packs->for($plan->nativeLang()->value);
         $this->tx->run(function () use ($plan, $scene, $outcome, $now, $targetPack, $nativePack): void {
-            if ($outcome->lesson === null || $outcome->call === null) {
+            if ($outcome->lesson === null || $outcome->skeleton === null || $outcome->call === null) {
                 $scene->failLesson($outcome->failReason ?? 'unknown', $outcome->call, $outcome->findings);
                 $this->plans->saveScene($scene);
 
@@ -113,21 +109,13 @@ final readonly class BuildLessonHandler
             }
             // Locked BEFORE this scene's row is written: every lesson job of the plan takes the rows in the same order.
             $voices = $this->plans->sceneVoicesForUpdate($scene->planId());
-            $scene->acceptLesson($outcome->lesson, $targetPack, $outcome->call, $outcome->findings, $now);
+            $scene->acceptLesson($outcome->lesson, $outcome->skeleton, $targetPack, $outcome->call, $outcome->findings, $now);
             $this->voices->cast($scene, $plan->targetLang()->value, $voices);
             $this->plans->saveScene($scene);
             $served = $scene->lesson();
             if ($served !== null) {
                 $terms = PlanTerm::fromLesson($scene->id(), $served, static fn (): PlanTermId => PlanTermId::generate(), $targetPack->sentenceEnds(), $nativePack->sentenceEnds());
                 $this->terms->replaceForScene($scene->id(), $terms);
-                // A frame no learner line of the lesson stands on gives the talk no line to hint with (наряд LANG-1b §3).
-                $assembled = array_values(array_map(
-                    static fn (PlanTerm $term): string => $term->ref(),
-                    array_filter($terms, static fn (PlanTerm $term): bool => $term->kind() === TermKind::Phrase && trim((string) $term->exampleNative()) === ''),
-                ));
-                if ($assembled !== []) {
-                    $this->buildLog->hintsAssembled($plan->id(), $scene->id(), $assembled);
-                }
             }
         });
 

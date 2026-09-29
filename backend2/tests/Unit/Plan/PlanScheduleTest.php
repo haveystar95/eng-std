@@ -43,7 +43,7 @@ function psPlan(int $days, string $made, ?string $event = null, bool $lessons = 
         dayIds: static fn (): PlanDayId => PlanDayId::generate(),
     );
     $request = new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, PlanCalendar::scenesCount($plan->daysTotal()));
-    $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
+    $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2.1', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
     if ($lessons) {
         planWriteLessons($plan);
     }

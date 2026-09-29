@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Console;
 
 use App\Modules\Plan\Domain\Check\LessonCodes;
-use App\Modules\Plan\Domain\Check\LessonGate;
 use DateTimeImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +12,9 @@ use stdClass;
 use Throwable;
 
 /**
- * `plan:check-report {--since=}` — WHAT THE LESSON VALIDATOR FINDS ON THE DAYS IT WROTE (наряд CHECK-1), read off the
- * findings stored beside every lesson (`plan_scenes.checks_json`, the answer that passed the gate — or, of a failed day,
- * the answer as the model wrote it) and the counters (`plan_check_counters`).
+ * `plan:check-report {--since=}` — WHAT THE DAY'S CHECKS FIND ON THE DAYS THEY BUILT (наряд CHECK-1; наряд GEN-4 — the two
+ * stages' rules and the seam judge), read off the findings stored beside every lesson (`plan_scenes.checks_json`, what was
+ * left after the repairs — or, of a failed day, what failed it) and the counters (`plan_check_counters`).
  *
  * One row a code: how many findings the stored lessons hold, how many of them are of a fatal code, on how many days the
  * code stands, how many of those days failed with it (`fail_reason`), the share of all days with a lesson the code
@@ -23,10 +22,8 @@ use Throwable;
  * the finding's text, the plan and the day. `--since` reads the days written from that moment (`generated_at`, or the
  * build's start of a failed day); the counters know no time and are printed whole.
  *
- * Under the examples, THE COUNTERS THAT ARE NO FINDINGS — a check not run for want of a pack (`lang.pack_missing`), a seam
- * judge that did not answer (`judge.unavailable`), a lesson the server built anew because the first failed the gate
- * (`lesson.auto_rebuild`: `counted` — asked, `failed` — failed again; наряд LANG-1b §1): nothing of them is in `checks_json`,
- * so the table cannot show them.
+ * Under the examples, THE COUNTER THAT IS NO FINDING — a judge that did not answer (`judge.unavailable`): nothing of it is
+ * in `checks_json`, so the table cannot show it.
  *
  * Read-only.
  */
@@ -34,7 +31,7 @@ final class PlanCheckReportCommand extends Command
 {
     protected $signature = 'plan:check-report {--since= : only the days written since this moment (any date PHP reads)}';
 
-    protected $description = 'What the lesson validator finds — by code: findings, fatal ones, days, failed days, share, counters, three examples';
+    protected $description = 'What the day\'s checks find — by code: findings, fatal ones, days, failed days, share, counters, three examples';
 
     private const EXAMPLES = 3;
 
@@ -90,7 +87,7 @@ final class PlanCheckReportCommand extends Command
             array_map(static fn (string $code, array $c): array => [
                 $code,
                 $c['findings'],
-                LessonGate::isFatal($code) ? $c['findings'] : 0,
+                LessonCodes::isFatal($code) ? $c['findings'] : 0,
                 count($c['days']),
                 count($c['failed']),
                 $days === 0 ? '—' : number_format(count($c['days']) * 100 / $days, 1).' %',
@@ -100,16 +97,15 @@ final class PlanCheckReportCommand extends Command
         $this->line("Days with a lesson: {$days}".($from === null ? '' : ' since '.$from->format(DATE_ATOM)).'. Counters are over every attempt and every date.');
         $this->newLine();
         foreach ($byCode as $code => $c) {
-            $this->line($code.(LessonGate::isFatal($code) ? ' (fatal)' : ''));
+            $this->line($code.(LessonCodes::isFatal($code) ? ' (fatal)' : ''));
             foreach ($c['examples'] as $example) {
                 $this->line('  · '.$example);
             }
         }
         $this->newLine();
-        $this->line('Counters that are no findings (counted / gated / failed, every attempt and every date):');
-        foreach ([LessonCodes::LANG_PACK_MISSING, LessonCodes::JUDGE_UNAVAILABLE, LessonCodes::AUTO_REBUILD] as $code) {
-            $this->line(sprintf('  %s: %s', $code, implode(' / ', [$counters[$code]['counted'] ?? 0, $counters[$code]['gated'] ?? 0, $counters[$code]['failed'] ?? 0])));
-        }
+        $this->line('The counter that is no finding (counted / gated / failed, every attempt and every date):');
+        $code = LessonCodes::JUDGE_UNAVAILABLE;
+        $this->line(sprintf('  %s: %s', $code, implode(' / ', [$counters[$code]['counted'] ?? 0, $counters[$code]['gated'] ?? 0, $counters[$code]['failed'] ?? 0])));
 
         return self::SUCCESS;
     }
@@ -162,7 +158,7 @@ final class PlanCheckReportCommand extends Command
     }
 
     /**
-     * The codes a failed day names — `fatal: filler.ungrammatical, check.shape` ({@see LessonGate::failReason()}).
+     * The codes a failed day names — `fatal: frame.count, vocab.not_found` ({@see LessonCodes::failReason()}).
      *
      * @return list<string>
      */

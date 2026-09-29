@@ -40,7 +40,7 @@ function ndAskedDays(FakePlanModel $fake, string $planId): array
     $dayOf = DB::table('plan_days')->where('plan_id', $planId)->whereNotNull('scene_id')->pluck('number', 'scene_id')->all();
     $titles = DB::table('plan_scenes')->where('plan_id', $planId)->pluck('id', 'title_native')->all();
 
-    return array_map(static fn ($request): int => $dayOf[$titles[$request->topic]], $fake->lessonRequests);
+    return array_map(static fn ($request): int => $dayOf[$titles[$request->topic]], $fake->skeletonRequests);
 }
 
 // Наряд GEN-3 §11.2: «единственный триггер: ЗАКРЫТИЕ дня N; идемпотентно: одна сборка на день; повторное закрытие / 409 plan_day_not_open
@@ -138,12 +138,12 @@ it('asks again for a failed lesson only when the learner retries it', function (
     [, $token] = planLearner();
     $id = planCreate($this, $token, ['days_total' => 2])['id'];
     $plan = planRead($this, $token, $id);
-    expect($plan['scenes'][0]['lesson_status'])->toBe('failed')->and($fake->lessonCalls)->toBe(1);
+    expect($plan['scenes'][0]['lesson_status'])->toBe('failed')->and($fake->skeletonCalls)->toBe(1);
 
     $this->withHeader('Authorization', "Bearer {$token}")->patchJson("/api/v1/plans/{$id}/schedule", ['event_date' => now()->addDays(20)->toDateString()])->assertOk();
-    expect($fake->lessonCalls)->toBe(1);
+    expect($fake->skeletonCalls)->toBe(1);
 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$id}/scenes/{$plan['scenes'][0]['id']}/lesson/retry")->assertStatus(202);
-    expect($fake->lessonCalls)->toBe(2)
+    expect($fake->skeletonCalls)->toBe(2)
         ->and(planRead($this, $token, $id)['scenes'][0]['lesson_status'])->toBe('ready');
 });

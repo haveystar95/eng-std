@@ -100,7 +100,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         return $out;
     }
 
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ?ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null, ?string $reasoningEffort = null): ?ContentModelPort
     {
         $row = $this->config[$provider->value];
         $key = trim($row['key']);
@@ -165,6 +165,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 purpose: $purpose,
                 journalPurpose: $journalPurpose,
                 retries: $attempts,
+                reasoningEffort: $reasoningEffort !== null && trim($reasoningEffort) !== '' ? trim($reasoningEffort) : null,
             ),
         };
     }

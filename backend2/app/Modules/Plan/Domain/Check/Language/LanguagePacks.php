@@ -6,8 +6,8 @@ namespace App\Modules\Plan\Domain\Check\Language;
 
 /**
  * Every language pack the deployment has, by code (`config/lesson/lang/*.php`). A code with no pack is a pack
- * with nothing in it — {@see LanguagePack::none()} — not an error: a lesson in that language is checked by the
- * rules that need no language, and the rest count as missing.
+ * with nothing in it — {@see LanguagePack::none()} — not an error: a day in that language is checked by the
+ * rules that need no language, and the rest do not run.
  *
  * Every pack handed out — a code with no pack too — knows its NEIGHBOURS (наряд LANG-1 §5): each other pack's letters
  * and most frequent words ({@see LanguagePack::asNeighbour()}), so a rule holding one pack can tell that language from

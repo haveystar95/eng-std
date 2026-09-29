@@ -124,7 +124,7 @@ it('gives the day read every key the phone reads, of the kind it reads — a day
     expect(dccMissing(dccFixture('room_window_in_progress'), $room))->toBe([])
         // The additive fields are there for whoever reads them next.
         ->and($room['window']['program']['phrases']['items'][0]['frame']['slot']['fillers'][0])->toHaveKeys(['target', 'native', 'pronunciation', 'in_dialogue'])
-        ->and($room['window']['program']['words']['items'][0]['used_in'])->toBe(['p1', 'A1'])
+        ->and($room['window']['program']['words']['items'][0]['used_in'])->toBe(['p1'])
         ->and($room['window']['program']['dialogue']['items'][0]['kind'])->toBe('answer')
         ->and($room['window']['program']['dialogue']['items'][0]['learner'])->toHaveKeys(['phrase_ref', 'filler'])
         ->and($room['window']['listening'])->toHaveCount(3);

@@ -9,6 +9,12 @@ use App\Modules\Plan\Domain\Check\Blueprint\CharLimitsCheck;
 use App\Modules\Plan\Domain\Check\Blueprint\GoalsCountCheck;
 use App\Modules\Plan\Domain\Check\Blueprint\PlanShapeCheck;
 use App\Modules\Plan\Domain\Check\Blueprint\PrioritiesCheck;
+use App\Modules\Plan\Domain\Check\Blueprint\SurvivalAsksCheck;
+use App\Modules\Plan\Domain\Check\Blueprint\SurvivalSetCheck;
+use App\Modules\Plan\Domain\Check\Blueprint\SurvivalSlotAnswerCheck;
+use App\Modules\Plan\Domain\Check\Blueprint\SurvivalSlotNoneCheck;
+use App\Modules\Plan\Domain\Check\Blueprint\SurvivalUnansweredCheck;
+use App\Modules\Plan\Domain\Check\Blueprint\SurvivalVerbsCheck;
 use App\Modules\Plan\Domain\Check\Blueprint\TopicPartsCheck;
 use App\Modules\Plan\Domain\ValueObject\CheckAction;
 use App\Modules\Plan\Domain\ValueObject\CheckMode;
@@ -36,6 +42,12 @@ final readonly class BlueprintChecker
             new TopicPartsCheck,
             new GoalsCountCheck,
             new CharLimitsCheck,
+            new SurvivalSetCheck,
+            new SurvivalVerbsCheck,
+            new SurvivalAsksCheck,
+            new SurvivalSlotNoneCheck,
+            new SurvivalUnansweredCheck,
+            new SurvivalSlotAnswerCheck,
         ];
     }
 

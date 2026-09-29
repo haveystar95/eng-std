@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\Options;
@@ -13,13 +11,11 @@ use App\Modules\Plan\Domain\Assembly\Rotation;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Assembly\Spacing;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameParts;
 use App\Modules\Plan\Domain\Service\Shuffle;
 use App\Modules\Plan\Domain\Service\SpokenLines;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -48,8 +44,8 @@ function s1hScene(): SceneMaterial
 {
     $sceneId = PlanSceneId::fromString('01J8SESS10N1AHE1PERS000000');
     $packs = lessonPacks();
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
-    $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём у врача'));
+    $lesson = planServed((new LessonParser)->parse($payload), $sceneId->value, $packs->for('en'));
 
     return new SceneMaterial(
         $sceneId, $lesson, planTermsOf($sceneId, $lesson),

@@ -2,12 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameText;
 use App\Modules\Plan\Domain\Service\SpokenLines;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
@@ -41,7 +38,7 @@ it('leaves one dot when the filler ends with an abbreviation and the frame ends 
 // said with is its file, not a second one (TTS-2). CATCHES a term «…p.m.» beside a filler sentence «…p.m..», which would
 // buy the phrase's own sentence again under `p5.f1`.
 it('writes the phrase and its fillers by the same rule, so the phrase keeps its own file', function () {
-    $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
+    $request = FakePlanModel::lessonRequest('x');
     $payload = FakePlanModel::lessonPayload($request);
     foreach ($payload['phrases'] as $i => $phrase) {
         if ($phrase['id'] === 'p5') {

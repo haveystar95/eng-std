@@ -452,7 +452,7 @@ it('says every line of a day on a call of its own — each dialogue line in its 
     expect($vendor->calls)->toBe(16 + 6 + 10 + 8 + 6)
         ->and(windowDayLines($vendor))->toHaveCount(40)
         ->and(array_unique(array_map(static fn ($l): string => $l->voice->model, $vendor->lines)))->toBe(['eleven_v3_conversational'])
-        ->and($voiceOf('Where does it hurt: his upper back or his lower back?'))->toBe([$partner])
+        ->and($voiceOf('Where does it hurt: in his upper back or lower down?'))->toBe([$partner])
         ->and($voiceOf('It hurts in his lower back.'))->toBe([$learner])
         ->and($partner)->not->toBe($learner);
 });
@@ -926,7 +926,7 @@ it('paints a word nothing was found for with its scene’s tone, counts image_mi
     expect($row->image_url)->toBeNull()
         ->and($row->image_tone)->toBe($scene['image']['tone'])
         ->and(array_count_values($finder->asked)["sharp, {$theme}"] ?? 0)->toBe(1)
-        ->and(DB::table('plan_check_counters')->where('check_name', 'image_missing')->where('prompt_version', 'lesson_day.v4.10')->value('hits'))->toBe(1)
+        ->and(DB::table('plan_check_counters')->where('check_name', 'image_missing')->where('prompt_version', 'lesson_skeleton.v1+lesson_dialogue.v1')->value('hits'))->toBe(1)
         ->and($word['image'])->toBeNull()
         ->and($word['image_tone'])->toBe($scene['image']['tone']);
 });

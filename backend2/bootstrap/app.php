@@ -8,37 +8,36 @@ use App\Modules\Admin\Presentation\Console\AdminCreateCommand;
 use App\Modules\Collections\Presentation\Console\StorePublishCommand;
 use App\Modules\Generation\Presentation\Console\ApplyEnrichmentReviewCommand;
 use App\Modules\Generation\Presentation\Console\AuditDistractorsCommand;
-use App\Modules\Generation\Presentation\Console\AuditTranslationsCommand;
-use App\Modules\Generation\Presentation\Console\RegenerateShowcaseCommand;
 use App\Modules\Generation\Presentation\Console\AuditTranslationKeysCommand;
+use App\Modules\Generation\Presentation\Console\AuditTranslationsCommand;
 use App\Modules\Generation\Presentation\Console\BackfillEnrichmentSuppressionsCommand;
 use App\Modules\Generation\Presentation\Console\BakeoffCommand;
 use App\Modules\Generation\Presentation\Console\EnrichBackfillCommand;
-use App\Modules\Generation\Presentation\Console\RepairEchoExamplesCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
 use App\Modules\Generation\Presentation\Console\RecoverLostTermsCommand;
+use App\Modules\Generation\Presentation\Console\RegenerateShowcaseCommand;
 use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
+use App\Modules\Generation\Presentation\Console\RepairEchoExamplesCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\AccessGrantCommand;
 use App\Modules\Identity\Presentation\Console\AccessRevokeCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanAudioDurationsCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanReconcileTalksCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanCheckReportCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanImagesBackfillCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanSpeakBackfillCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanSpeakReportCommand;
-use App\Modules\Plan\Infrastructure\Console\PlanShiftDayCommand;
-use App\Modules\Plan\Presentation\Console\PlanNotifyTestCommand;
-use App\Modules\Plan\Presentation\Console\PlanRepairCardCommand;
-use App\Modules\Plan\Presentation\Console\PlanNotifyTickCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
 use App\Modules\Observability\Infrastructure\Console\SweepLostModelCallsCommand;
-use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanAudioDurationsCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanCheckReportCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanImagesBackfillCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanReconcileTalksCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanSeedLoadCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanShiftDayCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanSpeakBackfillCommand;
+use App\Modules\Plan\Infrastructure\Console\PlanSpeakReportCommand;
+use App\Modules\Plan\Presentation\Console\PlanNotifyTestCommand;
+use App\Modules\Plan\Presentation\Console\PlanNotifyTickCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
+use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -80,7 +79,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // the QA «send one letter now».
         PlanNotifyTickCommand::class,
         // P2R by hand (GEN-2a): one card of a lesson repaired for what the validator finds at it.
-        PlanRepairCardCommand::class,
         PlanNotifyTestCommand::class,
         PlanImagesBackfillCommand::class,
         PlanSpeakBackfillCommand::class,

@@ -21,6 +21,7 @@ use App\Modules\Plan\Infrastructure\Adapter\ArraySlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\RedisSlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Model\ContentModelPlanBuilder;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
+use App\Modules\Plan\Infrastructure\Model\PlanModelChoice;
 use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
@@ -123,7 +124,7 @@ function sjSpeakAnswer(): array
 
     return [
         'exchange' => ['ref' => 'x1', 'step' => 1, 'kind' => 'answer'],
-        'partner_line' => ['ref' => 'x1', 'text_target' => 'Where does it hurt: his upper back or his lower back?', 'text_native' => 'Где болит: вверху спины или в пояснице?', 'audio' => sjAudio('x1')],
+        'partner_line' => ['ref' => 'x1', 'text_target' => 'Where does it hurt: in his upper back or lower down?', 'text_native' => 'Где болит: вверху спины или ниже?', 'audio' => sjAudio('x1')],
         'own_line' => ['ref' => 'x1b', 'text_target' => 'It hurts in his lower back.', 'text_native' => 'У него болит поясница.', 'frame_ref' => 'p1', 'filler_index' => 0, 'key' => 'It hurts', 'audio' => sjAudio('x1b')],
         'task_native' => 'У него болит поясница.',
         'frame' => $frame,
@@ -253,7 +254,7 @@ function sjJudgeCatalog(ContentModelPort $port): ContentModelCatalog
             return [$this->port];
         }
 
-        public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ?ContentModelPort
+        public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null, ?string $reasoningEffort = null): ?ContentModelPort
         {
             $this->asked[] = ['provider' => $provider, 'model' => $model, 'purpose' => $purpose, 'timeout' => $timeoutSeconds, 'retries' => $retries, 'journal' => $journalPurpose];
 
@@ -463,8 +464,8 @@ it('asks the model about a value the lesson does not know — with the inputs of
         ->and($request->targetLanguage)->toBe('English')
         ->and($request->nativeLanguage)->toBe('Russian')
         ->and($request->level)->toBe('intermediate')
-        ->and($request->partnerLine)->toBe('Where does it hurt: his upper back or his lower back?')
-        ->and($request->partnerLineNative)->toBe('Где болит: вверху спины или в пояснице?')
+        ->and($request->partnerLine)->toBe('Where does it hurt: in his upper back or lower down?')
+        ->and($request->partnerLineNative)->toBe('Где болит: вверху спины или ниже?')
         ->and($request->pattern)->toBe('It hurts in his ___.')
         ->and($request->patternNative)->toBe('У него болит ___.')
         ->and($request->slotHint)->toBe('где болит')
@@ -634,19 +635,16 @@ it('builds the call on the judge model with one attempt, its own timeout, the st
         catalog: $catalog,
         prompts: new PlanPromptFiles,
         provider: ProviderId::OpenAi,
-        planModel: 'gpt-5.4',
-        lessonModel: 'gpt-5.4',
+        choices: [ContentModelPlanBuilder::SLOT_JUDGE => new PlanModelChoice('gpt-5.4-mini')],
         planTimeout: 90,
         lessonTimeout: 90,
-        repairModel: 'gpt-5.4',
-        judgeModel: 'gpt-5.4-mini',
         slotJudgeTimeout: 8,
     );
     $request = new SlotJudgeRequest(SlotJudgeRequest::MODE_ANSWER, 'English', 'Russian', 'intermediate', 'Where?', 'Где?', 'It hurts in his ___.', 'У него болит ___.', 'где болит', 'neck; shoulder', 'It hurts in his knee');
     $reply = $builder->judgeSlot($request);
 
     $system = (new PlanPromptFiles)->slotJudgeSystem();
-    expect($catalog->asked)->toBe([['provider' => ProviderId::OpenAi, 'model' => 'gpt-5.4-mini', 'purpose' => 'plan', 'timeout' => 8, 'retries' => 1, 'journal' => 'judge']])
+    expect($catalog->asked)->toBe([['provider' => ProviderId::OpenAi, 'model' => 'gpt-5.4-mini', 'purpose' => 'plan', 'timeout' => 8, 'retries' => 1, 'journal' => 'slot_judge']])
         ->and($port->calls)->toHaveCount(1)
         ->and($port->calls[0]['prompt']->text)->toBe($system)
         ->and($port->calls[0]['prompt']->version)->toBe('slot_judge.v3')

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\CardObjects;
@@ -15,12 +13,10 @@ use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\Service\Shuffle;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
-use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\Stage;
@@ -45,7 +41,7 @@ function s1pSceneId(): string
 /** @return array<string, mixed> the clean fake lesson as the model writes it */
 function s1pPayload(): array
 {
-    return FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    return FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём у врача'));
 }
 
 /** @param  (Closure(array<string, mixed>): array<string, mixed>)|null  $edit  a change to the model's answer before it is served */
@@ -57,7 +53,7 @@ function s1pScene(?Closure $edit = null, ?string $sceneId = null): SceneMaterial
     if ($edit !== null) {
         $payload = $edit($payload);
     }
-    $lesson = LessonAssembly::serve((new LessonParser)->parse($payload), $id->value, $packs->for('en'));
+    $lesson = planServed((new LessonParser)->parse($payload), $id->value, $packs->for('en'));
 
     return new SceneMaterial(
         $id, $lesson, planTermsOf($id, $lesson),
@@ -548,8 +544,8 @@ it('says every frame with a window as «Скажи целиком» at both leve
         ])
         // The frame is said next to the line it is said in — read by the JUDGE, not shown (кадр 32-7 has no partner line).
         ->and($whole($beginner, 'p1')['partner_line'])->toBe([
-            'ref' => 'x1', 'text_target' => 'Where does it hurt: his upper back or his lower back?',
-            'text_native' => 'Где болит: вверху спины или в пояснице?', 'audio' => Audio::of('x1'),
+            'ref' => 'x1', 'text_target' => 'Where does it hurt: in his upper back or lower down?',
+            'text_native' => 'Где болит: вверху спины или ниже?', 'audio' => Audio::of('x1'),
         ]);
 
     // A frame of ONE value says it once and then the learner's own — the level cannot cut it below that.
@@ -897,8 +893,8 @@ it('lays out the frame, every filler with the file it sounds as, and the said ph
             'offset' => 0,
             'length' => 26,
             'partner_line' => [
-                'ref' => 'x1', 'text_target' => 'Where does it hurt: his upper back or his lower back?',
-                'text_native' => 'Где болит: вверху спины или в пояснице?', 'audio' => Audio::of('x1'),
+                'ref' => 'x1', 'text_target' => 'Where does it hurt: in his upper back or lower down?',
+                'text_native' => 'Где болит: вверху спины или ниже?', 'audio' => Audio::of('x1'),
             ],
         ],
     ]);

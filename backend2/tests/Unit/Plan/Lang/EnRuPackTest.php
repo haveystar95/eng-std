@@ -2,17 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
 use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
-use App\Modules\Plan\Domain\Check\Lesson\FillerRules;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
@@ -20,8 +14,6 @@ use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpokenNumbers;
@@ -42,25 +34,14 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * neighbour's pack — Polish, Ukrainian… — skips until that pack writes its letters and its frequent words.
  */
 
-// Canon (pack-keys §7.2, the pair ru → en of the order): no check of either side goes unrun for want of a key, and every
-// reader outside the validator reads the pack in the shape it reads it. CATCHES a key of the pack written as null or in the
-// wrong shape (a `LanguagePackKeyMissing` from a reader), and a pack that lost a key LANG-1 asks of it.
+// Canon (pack-keys §7.2, the pair ru → en of the order): every reader of either side reads the pack in the shape it reads
+// it. CATCHES a key of the pack written as null or in the wrong shape (a `LanguagePackKeyMissing` from a reader), and a
+// pack that lost a key LANG-1 asks of it.
 it('gives every reader of the pack what it reads, in the shape it reads it', function (string $code) {
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     if (in_array($code, LanguageRoles::planTargets(), true)) {
-        expect($gaps('target'))->toBe([]);
         foreach (['abbreviations', 'question_word_order', 'unstressed_words', 'number_words', 'number_joiners', 'number_tens_joiners', 'irregular_forms', 'inflection_rules', 'person_swap', 'contractions', 'contractions_before', 'intro_words', 'clause_starters', 'negation', 'partitive', 'dangling_words', 'rescue_line', 'neutral_reply', 'script_letters', 'common_words'] as $key) {
             expect($pack->has($key))->toBeTrue("the target side reads `{$key}`");
         }
@@ -71,37 +52,17 @@ it('gives every reader of the pack what it reads, in the shape it reads it', fun
         (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
         WordBases::of('abc', $pack);
         $words->isQuestion('a b');
-        $words->asksTwice('a, b?');
-        $words->isCloser('a');
-        $words->clause('a b c');
-        $words->articleMismatch('a', 'b');
-        $words->unresolvedPronoun('a b ___.');
-        $words->valueKind('a 2');
     }
     if (in_array($code, LanguageRoles::planNatives(), true)) {
-        expect($gaps('native'))->toBe([]);
         foreach (['abbreviations', 'amount_pattern', 'amount_prefix', 'neutral_reply', 'script_letters', 'common_words'] as $key) {
             expect($pack->has($key))->toBeTrue("the native side reads `{$key}`");
         }
         expect(NumberValues::of($pack))->not->toBeNull();
-        $words->agreeingWithSlot('a b ___ c d.');
         $words->genderedPast('a b');
         $words->foreignLetters('ab');
-        $words->readsInScript('ab');
-        $words->valueKind('a 2');
     }
     expect($pack->commonWords())->not->toBe([]);
 })->with(['en', 'ru']);
-
-// The order: «ru→en (both sides) must stay empty». CATCHES any skip of the live pair at all — of either language, of
-// either side — whatever the filter of the row above lets through.
-it('leaves no check of the pair ru → en unrun for want of a key', function () {
-    $context = lessonContext('ru', 'en');
-    $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-    (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-    expect(array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()))->toBe([]);
-});
 
 // Canon (LANG-1: «en/ru behaviour byte-identical except the guard»). The new keys are no-ops for every reader but the guard:
 // the speech block the phone is served has no `number_tens_joiners` (an empty list goes out as none), neither pack hands
@@ -467,39 +428,22 @@ it('finds none of its frequent words in the learners\' own lines of the scouting
     'ru' => ['ru', ['uk-en', 'be-en']],
 ]);
 
-// Canon (the order's update to LANG-1: `script` — the STRICT alphabet, a WARNING; `script_letters` — the whole writing, the
-// FATAL one): a Russian reading with a Ukrainian «і» is readable Cyrillic — never fatal — but no Russian spelling, and says
-// so as `pronunciation.script`; a Latin «í» is both; «ё», the stress mark, digits, marks and the slot are Russian script.
-// CATCHES a strict alphabet written into `script_letters` (a fatal day for an «і»), and a `script` as loose as the letters.
-it('reads a reading with another Cyrillic alphabet\'s letter as untidy, never as unreadable', function (string $reading, bool $inScript, array $foreign) {
+// Canon (the order's update to LANG-1: `script_letters` — the whole writing, the FATAL one): a Russian reading with a
+// Ukrainian «і» or a Belarusian «ў» is readable Cyrillic — never fatal; a Latin «í» is another writing; «ё», the stress
+// mark, digits, marks and the slot are no letters of another writing. CATCHES a strict alphabet written into
+// `script_letters` (a fatal day for an «і»).
+it('never reads a reading with another Cyrillic alphabet\'s letter as unreadable', function (string $reading, array $foreign) {
     $words = new LanguageWords(lessonPacks()->for('ru'));
 
-    expect($words->readsInScript($reading))->toBe($inScript)
-        ->and($words->foreignLetters($reading))->toBe($foreign);
+    expect($words->foreignLetters($reading))->toBe($foreign);
 })->with([
-    'ru-fr B2' => ['Жэ маль а ла горж.', true, []],
-    'ru-fr B3, an «ё»' => ['Дёпюи труа жур.', true, []],
-    'ru-pl B4, the stress mark' => ['чы ест цось по полу́дню', true, []],
-    'the slot, digits, a dash' => ['Мон нюмэро, сэ ___ — 06 12.', true, []],
-    'a Ukrainian «і»' => ['ай хэв э фівер', false, []],
-    'a Belarusian «ў»' => ['ўэн', false, []],
-    'a Latin «í»' => ['ай хэв э фíвер', false, ['í']],
-]);
-
-// Canon (the review of LANG-1; FRAMES/FILLERS — «a» before a consonant SOUND): «a one-way ticket», «a once-daily tablet», «a
-// euro account», «a European health insurance card» are English, and `filler.ungrammatical` is FATAL — the day fails
-// unless a repair rewrites a healthy card. The spelling rule stays for everything else: «a earache», «an bandage» are still
-// the seam's fault. CATCHES an `article_sound.exception` that lost «once» or «eu» (a bank or a travel day failing on «I'd
-// like to open a ___» + «euro account»), and one so wide it forgives a real mismatch.
-it('reads «a» before a «w» or a «y» sound as English at the seam', function (string $frame, string $filler, array $problems) {
-    expect(FillerRules::seams($frame, $filler, new LanguageWords(lessonPacks()->for('en'))))->toBe($problems);
-})->with([
-    'a euro account' => ["I'd like to open a ___.", 'euro account', []],
-    'a European card' => ['I have a ___.', 'European health insurance card', []],
-    'a once-daily tablet' => ['Please take a ___.', 'once-daily tablet', []],
-    'a one-way ticket' => ['I need a ___.', 'one-way ticket', []],
-    'a earache — still wrong' => ['I have a ___.', 'earache', ['«a earache» before a vowel']],
-    'an bandage — still wrong' => ['I need an ___.', 'bandage', ['«an bandage» before a consonant']],
+    'ru-fr B2' => ['Жэ маль а ла горж.', []],
+    'ru-fr B3, an «ё»' => ['Дёпюи труа жур.', []],
+    'ru-pl B4, the stress mark' => ['чы ест цось по полу́дню', []],
+    'the slot, digits, a dash' => ['Мон нюмэро, сэ ___ — 06 12.', []],
+    'a Ukrainian «і»' => ['ай хэв э фівер', []],
+    'a Belarusian «ў»' => ['ўэн', []],
+    'a Latin «í»' => ['ай хэв э фíвер', ['í']],
 ]);
 
 // The order's update to LANG-1: «NO key may be null (null counts lang.pack_missing); use the spec's no-op values». English

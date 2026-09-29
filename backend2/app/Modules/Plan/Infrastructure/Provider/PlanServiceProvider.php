@@ -8,62 +8,73 @@ use App\Modules\Generation\Application\Port\ContentModelCatalog;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\SpeechSynthesizerPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Plan\Application\Dto\PlanConfig;
 use App\Modules\Plan\Application\Inspection\InspectionCanon;
-use App\Modules\Plan\Application\Port\PlanCallJournal;
-use App\Modules\Plan\Application\Port\PlanInspectionReader;
-use App\Modules\Plan\Infrastructure\Adapter\DiskRescueAudioStore;
-use App\Modules\Plan\Infrastructure\Adapter\ObservabilityPlanCallJournal;
-use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanInspectionReader;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\ConversationAudioStore;
 use App\Modules\Plan\Application\Port\DayBuildLog;
-use App\Modules\Plan\Application\Port\LearnerCalendar;
 use App\Modules\Plan\Application\Port\LearnerAccess;
+use App\Modules\Plan\Application\Port\LearnerCalendar;
+use App\Modules\Plan\Application\Port\LearnerDevices;
 use App\Modules\Plan\Application\Port\LearnerGender;
+use App\Modules\Plan\Application\Port\LearnerHabits;
 use App\Modules\Plan\Application\Port\LineAudioStore;
 use App\Modules\Plan\Application\Port\LineSpeaker;
-use App\Modules\Plan\Application\Service\Paywalls;
-use App\Modules\Plan\Application\Service\VoiceCap;
-use App\Modules\Plan\Application\Service\VoiceFuse;
 use App\Modules\Plan\Application\Port\NativeDistractorSource;
+use App\Modules\Plan\Application\Port\NextDayAccess;
+use App\Modules\Plan\Application\Port\NotifiablePlans;
+use App\Modules\Plan\Application\Port\NotificationDispatcher;
+use App\Modules\Plan\Application\Port\NotificationLog;
 use App\Modules\Plan\Application\Port\PlanAccountEraser;
+use App\Modules\Plan\Application\Port\PlanCallJournal;
 use App\Modules\Plan\Application\Port\PlanCollectionWriter;
 use App\Modules\Plan\Application\Port\PlanDispatcher;
 use App\Modules\Plan\Application\Port\PlanImageFinder;
+use App\Modules\Plan\Application\Port\PlanInspectionReader;
 use App\Modules\Plan\Application\Port\PlanListReader;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Application\Port\PushSender;
 use App\Modules\Plan\Application\Port\RescueAudioStore;
 use App\Modules\Plan\Application\Port\SceneImageStore;
 use App\Modules\Plan\Application\Port\SceneLocator;
 use App\Modules\Plan\Application\Port\SlotJudgeQuota;
 use App\Modules\Plan\Application\Port\TurnSpeaker;
+use App\Modules\Plan\Application\Service\Paywalls;
+use App\Modules\Plan\Application\Service\VoiceCap;
+use App\Modules\Plan\Application\Service\VoiceFuse;
+use App\Modules\Plan\Domain\Assembly\PhraseCards;
+use App\Modules\Plan\Domain\Assembly\PhrasesStage;
 use App\Modules\Plan\Domain\Check\BlueprintChecker;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Repository\ConversationRepository;
-use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Repository\DayCardRepository;
+use App\Modules\Plan\Domain\Repository\PlanEventRepository;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
-use App\Modules\Plan\Domain\Assembly\PhraseCards;
-use App\Modules\Plan\Domain\Assembly\PhrasesStage;
-use App\Modules\Plan\Domain\Service\PlanAllowance;
+use App\Modules\Plan\Domain\Repository\StagePassageRepository;
 use App\Modules\Plan\Domain\Service\ConversationRules;
 use App\Modules\Plan\Domain\Service\DayBudget;
 use App\Modules\Plan\Domain\Service\DayPace;
+use App\Modules\Plan\Domain\Service\PlanAllowance;
 use App\Modules\Plan\Domain\ValueObject\CheckModes;
-use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Plan\Infrastructure\Adapter\ArraySlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\CdnSceneImageStore;
 use App\Modules\Plan\Infrastructure\Adapter\DiskConversationAudioStore;
+use App\Modules\Plan\Infrastructure\Adapter\DiskRescueAudioStore;
+use App\Modules\Plan\Infrastructure\Adapter\EveryNextDayAllowed;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationLineSpeaker;
 use App\Modules\Plan\Infrastructure\Adapter\GenerationTurnSpeaker;
-use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerCalendar;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerAccess;
+use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerCalendar;
+use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerDevices;
 use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerGender;
+use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerHabits;
 use App\Modules\Plan\Infrastructure\Adapter\LogDayBuildLog;
+use App\Modules\Plan\Infrastructure\Adapter\ObservabilityPlanCallJournal;
 use App\Modules\Plan\Infrastructure\Adapter\PexelsPlanImageFinder;
+use App\Modules\Plan\Infrastructure\Adapter\QueuedNotificationDispatcher;
 use App\Modules\Plan\Infrastructure\Adapter\QueuedPlanDispatcher;
 use App\Modules\Plan\Infrastructure\Adapter\RedisSlotJudgeQuota;
 use App\Modules\Plan\Infrastructure\Adapter\StampedBuildVersion;
@@ -76,36 +87,26 @@ use App\Modules\Plan\Infrastructure\Console\PlanRepaceCommand;
 use App\Modules\Plan\Infrastructure\Console\PlanRevoiceLearnerCommand;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentCheckCounters;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentConversationRepository;
-use App\Modules\Plan\Infrastructure\Eloquent\EloquentStagePassageRepository;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentDayCardRepository;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentLineAudioStore;
-use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanAccountEraser;
-use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanRepository;
-use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanTermRepository;
-use App\Modules\Plan\Infrastructure\Model\ContentModelPlanBuilder;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
-use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
-use App\Modules\Shared\Domain\Service\Clock;
-use App\Modules\Shared\Domain\Service\LanguageRoles;
-use App\Modules\Shared\Domain\Service\VoiceCatalog;
-use App\Modules\Plan\Application\Port\LearnerDevices;
-use App\Modules\Plan\Application\Port\LearnerHabits;
-use App\Modules\Plan\Application\Port\NextDayAccess;
-use App\Modules\Plan\Application\Port\NotifiablePlans;
-use App\Modules\Plan\Application\Port\NotificationDispatcher;
-use App\Modules\Plan\Application\Port\NotificationLog;
-use App\Modules\Plan\Application\Port\PushSender;
-use App\Modules\Plan\Domain\Repository\PlanEventRepository;
-use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerDevices;
-use App\Modules\Plan\Infrastructure\Adapter\EveryNextDayAllowed;
-use App\Modules\Plan\Infrastructure\Adapter\IdentityLearnerHabits;
-use App\Modules\Plan\Infrastructure\Adapter\QueuedNotificationDispatcher;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentNotifiablePlans;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentNotificationLog;
+use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanAccountEraser;
 use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanEventRepository;
+use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanInspectionReader;
+use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanRepository;
+use App\Modules\Plan\Infrastructure\Eloquent\EloquentPlanTermRepository;
+use App\Modules\Plan\Infrastructure\Eloquent\EloquentStagePassageRepository;
+use App\Modules\Plan\Infrastructure\Model\ContentModelPlanBuilder;
+use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
+use App\Modules\Plan\Infrastructure\Model\PlanModelChoice;
+use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Push\ApnsProviderToken;
 use App\Modules\Plan\Infrastructure\Push\ApnsPushSender;
 use App\Modules\Plan\Infrastructure\Push\DryRunPushSender;
+use App\Modules\Shared\Domain\Service\Clock;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
+use App\Modules\Shared\Domain\Service\VoiceCatalog;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Filesystem\Factory as Disks;
@@ -201,8 +202,13 @@ final class PlanServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(PlanConfig::class, function (): PlanConfig {
-            /** @var array<string, array{vocabulary: int, dialogue: int}> $counts */
-            $counts = (array) config('plan.counts', []);
+            $counts = [];
+            foreach ((array) config('plan.counts', []) as $level => $row) {
+                $range = is_array($row) ? ($row['vocabulary'] ?? null) : null;
+                if (is_string($level) && is_array($range) && count($range) === 2) {
+                    $counts[$level] = ['vocabulary' => [(int) array_values($range)[0], (int) array_values($range)[1]]];
+                }
+            }
             $languages = self::planLanguages((array) config('plan.languages', []));
 
             $pace = [];
@@ -281,13 +287,13 @@ final class PlanServiceProvider extends ServiceProvider
             : $app->make(RedisSlotJudgeQuota::class));
 
         // THE PLAN CHECKS' MODES come from config and nowhere else: a mode flipped in code is a mode
-        // nobody can flip back without a deploy. The lesson validator has no modes — it only counts.
+        // nobody can flip back without a deploy. The day's two stages have no modes — their rules are fatal or warnings.
         $this->app->singleton(BlueprintChecker::class, fn (): BlueprintChecker => new BlueprintChecker(
             CheckModes::fromArray(array_map('strval', (array) config('plan.checks.plan', []))),
         ));
 
-        // WHAT THE LESSON VALIDATOR KNOWS OF EACH LANGUAGE — `config/lesson/lang/<code>.php` (наряд GEN-2b). A code
-        // with no file is a language with no pack: its checks are skipped and counted, never guessed.
+        // WHAT THE DAY'S CHECKS KNOW OF EACH LANGUAGE — `config/lesson/lang/<code>.php` (наряд GEN-2b). A code
+        // with no file is a language with no pack: the rules that need it do not run, never guess.
         $this->app->singleton(LanguagePacks::class, fn (): LanguagePacks => new LanguagePacks((array) config('lesson.lang', [])));
 
         $this->app->singleton(PlanPromptFiles::class);
@@ -299,16 +305,24 @@ final class PlanServiceProvider extends ServiceProvider
                 return new FakePlanModel;
             }
 
+            // A model and a reasoning effort per purpose (наряд GEN-4); an effort unset or empty sends none.
+            $choices = [];
+            foreach (ContentModelPlanBuilder::PURPOSES as $purpose) {
+                $row = (array) config("plan.model.purposes.{$purpose}", []);
+                $model = trim((string) ($row['model'] ?? ''));
+                $effort = trim((string) ($row['reasoning_effort'] ?? ''));
+                if ($model !== '') {
+                    $choices[$purpose] = new PlanModelChoice($model, $effort === '' ? null : $effort);
+                }
+            }
+
             return new ContentModelPlanBuilder(
                 catalog: $app->make(ContentModelCatalog::class),
                 prompts: $app->make(PlanPromptFiles::class),
                 provider: ProviderId::tryFrom((string) config('plan.model.provider', 'openai')) ?? ProviderId::OpenAi,
-                planModel: (string) config('plan.model.plan_model', 'gpt-5.4'),
-                lessonModel: (string) config('plan.model.lesson_model', 'gpt-5.4'),
+                choices: $choices,
                 planTimeout: (int) config('plan.model.plan_timeout'),
                 lessonTimeout: (int) config('plan.model.lesson_timeout'),
-                repairModel: (string) config('plan.model.repair_model', 'gpt-5.4'),
-                judgeModel: (string) config('plan.model.judge_model', 'gpt-5.4-mini'),
                 slotJudgeTimeout: (int) config('plan.slot_judge.timeout', ContentModelPlanBuilder::SLOT_JUDGE_TIMEOUT),
                 conversationModel: (string) config('plan.conversation.model', 'gpt-5.4-mini'),
                 conversationTimeout: (int) config('plan.conversation.timeout', ContentModelPlanBuilder::CONVERSATION_TIMEOUT),

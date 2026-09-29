@@ -12,7 +12,7 @@ namespace App\Modules\Plan\Domain\Lesson;
  *
  * In the model's ANSWER `filler` and `speaking_key` are what the model wrote — kept in the stored JSON and read by
  * nobody. In the SERVED lesson they are the server's: the filler found in the line's text, the key taken from its
- * frame ({@see LessonAssembly::said()}).
+ * frame ({@see LessonAssembly::serve()}).
  */
 final readonly class Message
 {
@@ -50,6 +50,29 @@ final readonly class Message
         return new self(
             $this->speaker, $this->roleTarget, $this->roleNative, $textTarget, $this->textNative,
             $this->pronunciationNative, $this->speakingKey, $this->simplifiedVariants, $this->phraseId, $this->filler,
+        );
+    }
+
+    /** The same line with both its texts written anew — a partner line repaired in the skeleton, said in its exchange. */
+    public function withTexts(string $textTarget, string $textNative): self
+    {
+        return new self(
+            $this->speaker, $this->roleTarget, $this->roleNative, $textTarget, $textNative,
+            $this->pronunciationNative, $this->speakingKey, $this->simplifiedVariants, $this->phraseId, $this->filler,
+        );
+    }
+
+    /**
+     * The same learner line with its texts, its reading and its variants as the lesson serves them (наряд GEN-4: the
+     * assembly closes a line without its mark).
+     *
+     * @param  list<string>  $simplifiedVariants
+     */
+    public function withLineTexts(string $textTarget, string $textNative, array $simplifiedVariants): self
+    {
+        return new self(
+            $this->speaker, $this->roleTarget, $this->roleNative, $textTarget, $textNative,
+            $this->pronunciationNative, $this->speakingKey, $simplifiedVariants, $this->phraseId, $this->filler,
         );
     }
 

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
@@ -11,7 +9,6 @@ use App\Modules\Plan\Domain\Assembly\SpeakStage;
 use App\Modules\Plan\Domain\Entity\PlanTerm;
 use App\Modules\Plan\Domain\Lesson\Exchange;
 use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\Message;
 use App\Modules\Plan\Domain\Service\Shuffle;
@@ -20,7 +17,6 @@ use App\Modules\Plan\Domain\Service\UnitStates;
 use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -40,9 +36,9 @@ function s1spSceneId(int $n = 1): PlanSceneId
 
 function s1spLesson(PlanSceneId $sceneId): Lesson
 {
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём у врача'));
 
-    return LessonAssembly::serve((new LessonParser)->parse($payload), $sceneId->value, lessonPacks()->for('en'));
+    return planServed((new LessonParser)->parse($payload), $sceneId->value, lessonPacks()->for('en'));
 }
 
 /**
@@ -180,8 +176,8 @@ it('writes speak_answer with exactly its keys: the exchange, the line answered, 
         ->and($payload['exchange'])->toBe(['ref' => 'x1', 'step' => 1, 'kind' => 'answer'])
         ->and($payload['partner_line'])->toBe([
             'ref' => 'x1',
-            'text_target' => 'Where does it hurt: his upper back or his lower back?',
-            'text_native' => 'Где болит: вверху спины или в пояснице?',
+            'text_target' => 'Where does it hurt: in his upper back or lower down?',
+            'text_native' => 'Где болит: вверху спины или ниже?',
             'audio' => Audio::of('x1'),
         ])
         ->and($payload['own_line'])->toBe([

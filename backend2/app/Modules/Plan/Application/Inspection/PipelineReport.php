@@ -7,16 +7,15 @@ namespace App\Modules\Plan\Application\Inspection;
 use App\Modules\Plan\Application\Dto\Inspection\InspectedScene;
 use App\Modules\Plan\Application\Port\PlanCallJournal;
 use App\Modules\Plan\Domain\Check\LessonCodes;
-use App\Modules\Plan\Domain\Check\LessonGate;
 use App\Modules\Plan\Domain\Entity\PlanDay;
 use App\Modules\Plan\Domain\ValueObject\DayType;
 use App\Modules\Plan\Domain\ValueObject\PlanEventKind;
 use DateTimeImmutable;
 
 /**
- * THE CONVEYOR, DAY BY DAY (наряд ADM-1, «Конвейер генерации»): the plan's job → the day's lesson, every attempt the journal
- * holds → the validator's findings, fatal or not by the gate's own list ({@see LessonGate::FATAL}) → the P2R repairs → the
- * seam judge → the photos → the voice → served to the client. Each stage says what is stored and, where the store has
+ * THE CONVEYOR, DAY BY DAY (наряд ADM-1, «Конвейер генерации»): the plan's job → the day's lesson — its two stages, every
+ * call the journal holds (наряд GEN-4) → the findings left, fatal or not by their rule ({@see LessonCodes::isFatal()}) → the
+ * repairs → the seam judge → the photos → the voice → served to the client. Each stage says what is stored and, where the store has
  * nothing, says that («не хранится»), never a guess.
  */
 final readonly class PipelineReport
@@ -89,14 +88,14 @@ final readonly class PipelineReport
             ];
         }
 
-        $lessonCalls = self::callsOf($calls, 'scene', $scene->id, 'lesson');
-        $repairCalls = self::callsOf($calls, 'scene', $scene->id, 'repair');
-        $judgeCalls = self::callsOf($calls, 'scene', $scene->id, 'judge');
+        $lessonCalls = self::callsOf($calls, 'scene', $scene->id, CallAttribution::LESSON_PURPOSES);
+        $repairCalls = self::callsOf($calls, 'scene', $scene->id, CallAttribution::REPAIR_PURPOSES);
+        $judgeCalls = self::callsOf($calls, 'scene', $scene->id, CallAttribution::JUDGE_PURPOSES);
         $findings = array_map(static fn (array $f): array => [
             'code' => (string) ($f['code'] ?? ''),
             'address' => $f['address'] ?? null,
             'detail' => $f['detail'] ?? null,
-            'fatal' => LessonGate::isFatal((string) ($f['code'] ?? '')),
+            'fatal' => LessonCodes::isFatal((string) ($f['code'] ?? '')),
         ], $scene->findings);
         $seams = array_values(array_filter($findings, static fn (array $f): bool => $f['code'] === LessonCodes::FILLER_NATIVE_SEAM));
 
@@ -112,21 +111,21 @@ final readonly class PipelineReport
                     'attempts' => $scene->attempts,
                     'latency_ms' => $scene->latencyMs,
                     'cost_usd' => $scene->costUsd,
-                    'cost_note' => 'cost_usd сцены — все попытки урока, починки P2R и судья швов вместе',
+                    'cost_note' => 'cost_usd сцены — обе ступени дня с повторами, починки и судья швов вместе',
                     'fail_reason' => $scene->failReason,
                 ], $lessonCalls, [
                     'окно вызовов — только последняя сборка сцены (build_started_at перезаписывается)',
-                    'автопересборка урока, не прошедшего ворота (LANG-1b §1), — в том же окне: второй вызов урока со своими починками; attempts и cost_usd — обеих сборок, счётчик lesson.auto_rebuild',
+                    'день — две ступени (наряд GEN-4): вызовы skeleton и dialogue, у каждой один повтор по фатальной находке; attempts — вызовы обеих ступеней',
                     'время конца урока — plan_scenes.built_at (сцена стала ready, фото на месте); generated_at — момент НАЧАЛА сборки; у сцен без built_at окна нет',
                 ]),
                 self::stage('validator', 'Валидатор', $scene->failReason === null ? ($findings === [] ? 'clean' : 'warnings') : 'failed', null, null, [
                     'findings' => $findings,
                     'fatal' => count(array_filter($findings, static fn (array $f): bool => $f['fatal'])),
                     'warnings' => count(array_filter($findings, static fn (array $f): bool => ! $f['fatal'])),
-                ], [], ['находки до починок не хранятся — checks_json держит только то, что осталось после последней попытки']),
+                ], [], ['находки до починок не хранятся — checks_json держит только то, что осталось после починок обеих ступеней']),
                 self::stage('repair', 'Починки P2R', $repairCalls === [] ? 'none' : 'done', self::first($repairCalls), self::last($repairCalls), [
                     'calls' => count($repairCalls),
-                ], $repairCalls, ['какую карточку чинили и «было/стало» — не хранится (lesson_json перезаписан починкой)', 'версия промта P2R — не хранится']),
+                ], $repairCalls, ['какую карточку чинили и «было/стало» — не хранится (lesson_json и skeleton_json — после починок)', 'версия промта починки — не хранится']),
                 self::stage('seam_judge', 'Судья швов', $judgeCalls === [] ? 'none' : 'done', self::first($judgeCalls), self::last($judgeCalls), [
                     'rejected' => $seams,
                 ], $judgeCalls, ['версия промта судьи швов — не хранится', 'judge.unavailable — только в счётчиках plan_check_counters, не по сцене']),
@@ -199,12 +198,13 @@ final readonly class PipelineReport
 
     /**
      * @param  list<AttributedCall>  $calls
+     * @param  list<string>|null  $purposes
      * @return list<AttributedCall>
      */
-    private static function callsOf(array $calls, string $kind, string $subject, ?string $purpose): array
+    private static function callsOf(array $calls, string $kind, string $subject, ?array $purposes): array
     {
         return array_values(array_filter($calls, static fn (AttributedCall $c): bool => $c->window->kind === $kind
-            && $c->window->subjectId === $subject && ($purpose === null || $c->call->purpose === $purpose)));
+            && $c->window->subjectId === $subject && ($purposes === null || in_array($c->call->purpose, $purposes, true))));
     }
 
     /** @param list<AttributedCall> $calls */

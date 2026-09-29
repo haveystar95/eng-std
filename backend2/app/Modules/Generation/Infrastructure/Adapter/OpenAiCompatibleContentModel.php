@@ -58,6 +58,11 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
         private int $retries = 4,
         /** What the JOURNAL calls this call — finer than the money label when the caller needs it (наряд BACK-TAILS-1 §3.3). */
         private ?string $journalPurpose = null,
+        /**
+         * The model's `reasoning_effort`, sent only when a caller names one (наряд GEN-4: the plan sets it per purpose). Null
+         * sends nothing — the model's own default, as every call before it had.
+         */
+        private ?string $reasoningEffort = null,
     ) {}
 
     public function provider(): ProviderId
@@ -84,6 +89,9 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
                 'json_schema' => ['name' => 'content', 'strict' => true, 'schema' => $schema],
             ],
         ];
+        if ($this->reasoningEffort !== null) {
+            $body['reasoning_effort'] = $this->reasoningEffort;
+        }
 
         $sent = $this->calls->send(
             $this->provider,

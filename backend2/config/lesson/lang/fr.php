@@ -8,10 +8,10 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 |
 | docs/plan-v2.md §4 (наряд GEN-2b), keys by `docs/research/lang-1/pack-keys.md` (наряд LANG-1). French is BOTH sides of
-| a plan: the language taught (ru→fr — what the learner says and hears: the lesson validator's target rules, the judge of
+| a plan: the language taught (ru→fr — what the learner says and hears: the day's checks' target rules, the judge of
 | the talk's constructions, the comparison of speech) and the learner's own (fr→en — the readings, the native frames, the
 | listening, the guard of the role's translation, the title of the talk). Every key of both sides is written; a rule that
-| is no rule of French is the spec's explicit no-op, never null (null counts `lang.pack_missing` on every day of a pair).
+| is no rule of French is the spec's explicit no-op, never null (null would switch its rule off on every day of a pair).
 |
 | HOW THE WORDS ARE SPELT. Every list is written in the standard spelling (accents kept — «à» and «a», «où» and «ou» are
 | two words each) and read through {@see \App\Modules\Plan\Domain\Check\Language\LanguagePack::normal()} or the kernel's

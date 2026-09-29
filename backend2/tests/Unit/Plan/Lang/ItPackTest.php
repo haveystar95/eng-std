@@ -2,15 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
-use App\Modules\Plan\Domain\Check\Lesson\FillerRules;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
@@ -18,8 +12,6 @@ use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpeechMatch;
@@ -33,27 +25,15 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * native frames, the Italian the lesson drills.
  */
 
-// Canon (pack-keys §7.2, the order's pairs ru→it and it→en): every check of both sides runs — no `lang.pack_missing` of
-// Italian — and every reader outside the validator takes the pack in the shape it reads. CATCHES a key left null or
-// missing, and one written in a shape its reader throws on.
+// Canon (pack-keys §7.2, the order's pairs ru→it and it→en): every reader of both sides takes the pack in the shape it
+// reads. CATCHES a key left null or missing, and one written in a shape its reader throws on.
 it('gives every reader of the pack what it reads, in the shape it reads it', function (string $code) {
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     expect(LanguageRoles::planTargets())->toContain($code)
         ->and(LanguageRoles::planNatives())->toContain($code);
 
-    expect($gaps('target'))->toBe([]);
     foreach (['abbreviations', 'question_word_order', 'unstressed_words', 'number_words', 'number_joiners', 'irregular_forms', 'inflection_rules', 'person_swap', 'contractions', 'contractions_before', 'intro_words', 'clause_starters', 'negation', 'partitive', 'dangling_words', 'rescue_line', 'neutral_reply', 'script_letters', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the target side reads `{$key}`");
     }
@@ -63,25 +43,16 @@ it('gives every reader of the pack what it reads, in the shape it reads it', fun
     (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
     WordBases::of('abc', $pack);
     $words->isQuestion('a b');
-    $words->asksTwice('a, b?');
-    $words->isCloser('a');
-    $words->clause('a b c');
-    $words->articleMismatch('a', 'b');
-    $words->unresolvedPronoun('a b ___.');
-    $words->valueKind('a 2');
 
-    expect($gaps('native'))->toBe([]);
     foreach (['abbreviations', 'amount_pattern', 'amount_prefix', 'neutral_reply', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the native side reads `{$key}`");
     }
     expect($pack->talkTitleTemplate())->not->toBeNull()
         ->and((new NativeStrings($code))->talkTitle(['Recepcjonistka', 'MRI'], $pack))->toContain('MRI');
-    $words->agreeingWithSlot('a b ___ c d.');
     $words->genderedPast('a b');
     $words->foreignLetters('ab');
-    $words->readsInScript('ab');
 
-    // No key is null: null is «not written» and counts `lang.pack_missing` (the order's rule).
+    // No key is null: null is «not written», and the rule that needs it does not run (the order's rule).
     $written = require dirname(__DIR__, 4).'/config/lesson/lang/it.php';
     expect(array_keys(array_filter($written, static fn (mixed $value): bool => $value === null)))->toBe([])
         ->and($pack->rescueLine())->toBe('Scusi?')
@@ -118,50 +89,6 @@ it('ends Italian sentences where they end, never at an abbreviation\'s dot', fun
         ->and($ends->carriesSentence('Arrivo domani.'))->toBeTrue()
         // The Italian quotes: «Va bene.» ends where its guillemet closes.
         ->and($ends->count('«Va bene.» Poi arrivo alle 3.'))->toBe(2);
-});
-
-// Canon (FILLERS, the fatal `filler.ungrammatical`, and the warning `filler.is_clause`): the it→en day's seven frames with
-// every filler the model wrote — the Italian a ru→it lesson drills — are read by the Italian pack as a TARGET's, and no
-// seam of them is broken; nor are ordinary Italian seams of other visits (an article in the filler after a verb, «c'è» +
-// «un bagno», «Ne vorrei» + «due»). A filler opening with «che» is a clause (the warning), a subject with its verb
-// after the frame's own verb is a whole sentence (fatal), a word said twice or an article after an article is fatal.
-// CATCHES a list that makes an honest Italian filler fatal (an article or a clitic read wrong, a subject list too wide),
-// and a pack that lets a doubled word or «un un caffè» through.
-it('breaks no seam of the day\'s Italian frames and their fillers, and still catches a broken one', function () {
-    $words = new LanguageWords(lessonPacks()->for('it'));
-    $day = [
-        'Ho bisogno di ___.' => ['un appuntamento dal medico', 'una visita urgente'],
-        'Ho ___.' => ['mal di gola e la febbre', 'una brutta tosse', 'mal d\'orecchio'],
-        'Li ho ___.' => ['da tre giorni', 'da ieri'],
-        'Che ___ avete?' => ['orari disponibili', 'appuntamenti questa settimana'],
-        'Posso prendere ___?' => ['le 3 di domani', 'le 10 di oggi'],
-        'Arriverò ___.' => ['dieci minuti prima', 'puntuale'],
-        '___ va bene.' => ['domani alle 3', 'venerdì mattina'],
-        // Other visits, ordinary seams.
-        'Vorrei ___.' => ['un caffè', 'una camera doppia', 'lo stesso'],
-        "C'è ___?" => ['un bagno', "un'altra taglia"],
-        'Ne vorrei ___.' => ['due', 'uno'],
-        'Mi fa male ___.' => ['la schiena', 'il ginocchio'],
-        'Ho un appuntamento con ___.' => ['il dott. Rossi', 'la sig.ra Bianchi'],
-        'Lavoro alla ___.' => ['Rossi S.p.A.', 'Banca Intesa'],
-        'Ho ___ di esperienza.' => ['un anno', 'tre anni'],
-    ];
-    foreach ($day as $frame => $fillers) {
-        foreach ($fillers as $filler) {
-            expect(FillerRules::seams($frame, $filler, $words))->toBe([], "«{$frame}» + «{$filler}»")
-                ->and($words->clause($filler))->toBeNull("«{$filler}»");
-        }
-    }
-
-    // A clause where a value should stand: the warning, not the fatal code.
-    expect($words->clause('che sono paziente'))->toBe(LanguageWords::CLAUSE)
-        ->and(FillerRules::seams('Il mio punto di forza è ___.', 'che sono paziente', $words))->toBe([])
-        ->and($words->clause('se la febbre torna'))->toBe(LanguageWords::CLAUSE)
-        // Broken seams stay fatal.
-        ->and(FillerRules::seams('Il problema è ___.', 'io sono allergico', $words))->toBe(['the filler is a whole clause, and the frame already has its verb'])
-        ->and(FillerRules::seams('Vorrei prenotare per ___.', 'per due persone', $words))->toBe(['a word is doubled at the seam'])
-        ->and(FillerRules::seams('Vorrei un ___.', 'un caffè', $words))->toBe(['a word is doubled at the seam', '«un un» — an article after an article'])
-        ->and(FillerRules::seams('Vorrei il ___.', 'un caffè', $words))->toBe(['«il un» — an article after an article']);
 });
 
 // Canon (наряд FIX-4 §2, LANG-1 §1): a frame is said as a coherent phrase; «non» is free anywhere (the negation of the
@@ -327,39 +254,13 @@ it('titles an Italian talk with its roles, uninflected', function () {
         ->and($strings->talkTitle([], $it))->toBe('Conversazione');
 });
 
-// Canon (CHECK PER EXCHANGE, the warning `check.about_learner`): a check names who SAID something with «dire», «rispondere»,
-// «volere» as en with «say», «answer», «want» — never with «chiedere» (en writes no «ask»): «Che cosa chiede il medico al
-// paziente?» asks about the partner's question and names the learner's role. CATCHES that check read as about the
-// learner.
-it('names the saying verbs of an Italian check, not «chiedere»', function () {
-    $words = new LanguageWords(lessonPacks()->for('it'));
-
-    expect($words->isSaying('dice'))->toBeTrue()
-        ->and($words->isSaying('risponde'))->toBeTrue()
-        ->and($words->isSaying('vuole'))->toBeTrue()
-        ->and($words->isSaying('chiede'))->toBeFalse()
-        ->and($words->isAlternative('oppure'))->toBeTrue()
-        ->and($words->isCloser('Perfetto, grazie.'))->toBeTrue()
-        ->and($words->isCloser('A domani.'))->toBeTrue()
-        ->and($words->isCloser('Da quanto tempo ha la febbre?'))->toBeFalse();
-});
-
-// Canon (FRAMES, TEXT QUALITY, READINGS, LISTENING — the learner's side): the it→en day's native frames agree with nothing
-// at their slot, its readings are in the learner's letters, none of its learner lines says the learner's gender, and its
-// listening options read as the values they are; «sono stata», «sono arrivato», «sono allergica» do say the gender, «È
-// prenotato» (the role's line about the learner, not the learner's own) and «I sintomi sono iniziati» do not. CATCHES a
-// native check of Italian firing on the scouting day, an adjective ending read as agreement (every Italian word ends in a
-// vowel), an English reading with «ò» refused, IPA let through, and «Alle sei», «All'una» read as no time at all.
+// Canon (TEXT QUALITY, READINGS — the learner's side): the it→en day's readings are in the learner's letters and none of
+// its learner lines says the learner's gender; «sono stata», «sono arrivato», «sono allergica» do say the gender, «È
+// prenotato» (the role's line about the learner, not the learner's own) and «I sintomi sono iniziati» do not; «uno» and
+// «una» are no numbers, «ventitrè» is one. CATCHES a native check of Italian firing on the scouting day, an English reading
+// with «ò» refused, and the Greek «θ» of an IPA reading let through.
 it('reads the learner\'s Italian side of it→en as the canon says', function () {
     $words = new LanguageWords(lessonPacks()->for('it'));
-
-    foreach (['Ho bisogno di ___.', 'Ho ___.', 'Li ho ___.', 'Che ___ avete?', 'Posso prendere ___?', 'Arriverò ___.', '___ va bene.'] as $frame) {
-        expect($words->agreeingWithSlot($frame))->toBe([], $frame);
-    }
-    expect($words->agreeingWithSlot('Vorrei una ___.'))->toBe(['una'])
-        ->and($words->agreeingWithSlot('Ho bisogno del ___.'))->toBe(['del'])
-        ->and($words->agreeingWithSlot('___ è incluso?'))->toBe(['incluso'])
-        ->and($words->agreeingWithSlot('___ è rotto?'))->toBe(['rotto']);
 
     foreach (['Ho bisogno di un appuntamento dal medico.', 'Ho mal di gola e la febbre.', 'Li ho da tre giorni.', 'Arriverò dieci minuti prima.', 'Va bene, domani alle 3 va bene.', 'È prenotato per domani alle 3.', 'I sintomi sono iniziati ieri.', 'Ci sono sabato e domenica.', 'Sono subito da lei.', 'Sono in ritardo.'] as $line) {
         expect($words->genderedPast($line))->toBe([], $line);
@@ -371,19 +272,11 @@ it('reads the learner\'s Italian side of it→en as the canon says', function ()
         ->and($words->genderedPast('Sono allergica alla penicillina.'))->toBe(['allergica']);
 
     foreach (['ai niid a dottorz appòintment', 'ai hav a sor thròut end fìiver', 'ail aràiv ___', 'an ììreik', 'okèi, tomòrou at thrii pii em uorks'] as $reading) {
-        expect($words->readsInScript($reading))->toBeTrue($reading)
-            ->and($words->foreignLetters($reading))->toBe([]);
+        expect($words->foreignLetters($reading))->toBe([], $reading);
     }
-    expect($words->readsInScript('ai hæv ə sor θroat'))->toBeFalse()
-        ->and($words->foreignLetters('ai hæv ə sor θroat'))->toBe(['θ']);
+    expect($words->foreignLetters('ai hæv ə sor θroat'))->toBe(['θ']);
 
-    // The day's listening options (L2, L3) and the numbers and hours an option names.
-    foreach (['Da ieri', 'Da tre giorni', 'Da una settimana', 'Oggi alle 10', 'Domani alle 3', 'Venerdì mattina', 'Alle sei', 'All\'una', 'Dall\'otto maggio', 'Ventun anni', 'Un quarto d\'ora'] as $value) {
-        expect($words->valueKind($value))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME, $value);
-    }
-    foreach (['Ha mal di gola e la febbre', 'Deve ritirare una ricetta', 'Secondo me'] as $value) {
-        expect($words->valueKind($value))->toBe(LanguageWords::VALUE_OTHER, $value);
-    }
+    // The numbers an option names: an article is none, «ventitrè» with its accent is one.
     expect($words->isNumber('uno'))->toBeFalse()
         ->and($words->isNumber('una'))->toBeFalse()
         ->and($words->isNumber('ventitrè'))->toBeTrue();

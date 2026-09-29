@@ -7,7 +7,7 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 /*
  * WHERE A PROMPT LIVES (наряд PROMPTS-1). A module that calls a model keeps its prompts in
  * app/Modules/<Module>/Infrastructure/Prompt/current/ and nowhere else: one file per prompt, named as the prompt and its
- * version (`lesson_day.v4.10.md`, `plan-builder-v2.md`), each with a row in docs/prompts/REGISTRY.md whose path and sha256
+ * version (`lesson_skeleton.v1.md`, `plan-builder-v2.1.md`), each with a row in docs/prompts/REGISTRY.md whose path and sha256
  * are the file's. A new version replaces the old file; the old text is in git, never beside the new one, in a fixture, in
  * an incoming folder or in a draft. docs/research/ is the archive of the наряды and is not read.
  */

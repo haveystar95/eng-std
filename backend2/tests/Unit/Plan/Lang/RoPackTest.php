@@ -2,23 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
 use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
-use App\Modules\Plan\Domain\Check\Lesson\FillerRules;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
 use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpokenNumbers;
@@ -31,28 +23,17 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * day, the numbers it says, the translations of the role — and a few written lines where those days have none.
  */
 
-// Canon (pack-keys §7.2): no check of the ru→ro target side and none of the ro→en native side is skipped for a key the
-// pack does not write, and no reader throws on a key written in the wrong shape. CATCHES a key left null or absent
-// (`lang.pack_missing` on every day of the pair) and a key the reader cannot read (a string for a list, a missing field).
+// Canon (pack-keys §7.2): the ru→ro target side and the ro→en native side find every key they read, and no reader throws
+// on a key written in the wrong shape. CATCHES a key left null or absent and a key the reader cannot read (a string for a
+// list, a missing field).
 it('gives every reader of the pack what it reads, in the shape it reads it', function (string $code) {
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     expect(LanguageRoles::planTargets())->toContain($code)
         ->and(LanguageRoles::planNatives())->toContain($code);
 
     // The target side (ru→ro).
-    expect($gaps('target'))->toBe([]);
     foreach (['abbreviations', 'question_word_order', 'unstressed_words', 'number_words', 'number_joiners', 'irregular_forms', 'inflection_rules', 'person_swap', 'contractions', 'contractions_before', 'intro_words', 'clause_starters', 'negation', 'partitive', 'dangling_words', 'rescue_line', 'neutral_reply', 'script_letters', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the target side reads `{$key}`");
     }
@@ -62,28 +43,18 @@ it('gives every reader of the pack what it reads, in the shape it reads it', fun
     (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
     WordBases::of('abc', $pack);
     $words->isQuestion('a b');
-    $words->asksTwice('a, b?');
-    $words->isCloser('a');
-    $words->clause('a b c');
-    $words->articleMismatch('a', 'b');
-    $words->unresolvedPronoun('a b ___.');
-    $words->valueKind('a 2');
 
     // The native side (ro→en).
-    expect($gaps('native'))->toBe([]);
     foreach (['abbreviations', 'amount_pattern', 'amount_prefix', 'neutral_reply', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the native side reads `{$key}`");
     }
     expect($pack->talkTitleTemplate())->not->toBeNull()
         ->and((new NativeStrings($code))->talkTitle(['Recepcjonistka', 'MRI'], $pack))->toContain('MRI');
-    $words->agreeingWithSlot('a b ___ c d.');
     $words->genderedPast('a b');
     $words->foreignLetters('ab');
-    $words->readsInScript('ab');
-    $words->valueKind('a 2');
 
-    // No key is null: null is «not written» and counts `lang.pack_missing` (наряд LANG-1 §4.6); the letters are the
-    // reference string of every Latin pack, character for character (the guard's neighbours).
+    // No key is null: null is «not written», and the rule that needs it does not run (наряд LANG-1 §4.6); the letters are
+    // the reference string of every Latin pack, character for character (the guard's neighbours).
     $written = require dirname(__DIR__, 4).'/config/lesson/lang/ro.php';
     expect(array_keys(array_filter($written, static fn (mixed $value): bool => $value === null)))->toBe([])
         ->and($written['script_letters'])->toBe('/^[\p{Latin}]$/u');
@@ -116,11 +87,6 @@ it('ends a Romanian sentence where Romanian ends it — never at the dot of an a
         ->and($ends->carriesSentence('10 min.'))->toBeFalse()
         ->and($ends->carriesSentence('ora 10 a.m.'))->toBeFalse()
         ->and($ends->carriesSentence('Mâine la zece.'))->toBeTrue();
-    // The seam of a frame of the ru→ro day and such a filler: nothing fatal; the model's own «la la zece» still is.
-    $words = new LanguageWords(lessonPacks()->for('ro'));
-    expect(FillerRules::seams('Pot mâine ___.', 'la ora 10 a.m.', $words))->toBe([])
-        ->and(FillerRules::seams('Am simptome ___.', 'de trei zile', $words))->toBe([])
-        ->and(FillerRules::seams('Pot mâine la ___.', 'la zece', $words))->toBe(['a word is doubled at the seam']);
 });
 
 // Canon FIX-4 §2 + LANG-1 §1 on the frames of the ru→ro scouting day (scene «Запись к врачу», the stored frames): each
@@ -327,33 +293,20 @@ it('finds the gender a Romanian learner\'s own line says about them', function (
     }
 });
 
-// Canon (FRAMES: «the native frame contains NO word that agrees with the slot») and «Поймай число» on the learner's side,
-// on the native frames and lines of the ro→en day: its frames agree with nothing; the article (also inside «într-un»), a
-// possessive or a participle at the slot do; the value of a line is the amount as the line says it, with its preposition.
-// CATCHES a frame «Lucrez într-un ___» let through, a frame of the day flagged for nothing, and an option «Cincisprezece
-// minute» without its «cu» or «Cu 10» without its «min».
+// Canon («Поймай число» and READINGS on the learner's side), on the lines of the ro→en day: the value of a line is the
+// amount as the line says it, with its preposition; a reading in Latin letters — an IPA «ə» among them — has no letter
+// of another writing. CATCHES an option «Cincisprezece minute» without its «cu» or «Cu 10» without its «min», and a Latin
+// reading read as foreign.
 it('reads the native side of a ro→en day', function () {
     $ro = lessonPacks()->for('ro');
     $words = new LanguageWords($ro);
-
-    foreach (['Aș vrea să fac ___', 'Am ___', 'O am ___', '___ este bine pentru mine', 'Ce trebuie să ___?', 'Ar trebui să vin ___?', 'Iată ___', 'Ne vedem ___'] as $frame) {
-        expect($words->agreeingWithSlot($frame))->toBe([], "«{$frame}»");
-    }
-    expect($words->agreeingWithSlot('Lucrez într-un ___.'))->toBe(['într-un'])
-        ->and($words->agreeingWithSlot('Am nevoie de o ___.'))->toBe(['o'])
-        ->and($words->agreeingWithSlot('___ meu are febră.'))->toBe(['meu'])
-        ->and($words->agreeingWithSlot('___ este inclus?'))->toBe(['inclus']);
 
     $values = NumberValues::of($ro);
     expect($values?->value('Da, te rog să vii cu cincisprezece minute mai devreme.'))->toBe(['text' => 'Cu cincisprezece minute', 'number' => true])
         ->and($values?->value('Ești programat azi la patru la doamna doctor Lee.'))->toBe(['text' => 'La patru', 'number' => true])
         ->and($values?->value('Veniți cu 10 min. înainte.'))->toBe(['text' => 'Cu 10 min', 'number' => true])
         ->and($values?->value('Te rog să aduci actul de identitate și cardul de asigurare.'))->toBeNull()
-        ->and($words->valueKind('Mâine dimineață la nouă'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('Pentru dureri de spate'))->toBe(LanguageWords::VALUE_OTHER)
-        ->and($words->foreignLetters('ai hv ə sor throuăt'))->toBe([])
-        ->and($words->readsInScript('ai hv ə sor throuăt'))->toBeFalse()
-        ->and($words->readsInScript('șud ai cam ărli'))->toBeTrue();
+        ->and($words->foreignLetters('ai hv ə sor throuăt'))->toBe([]);
 });
 
 // Canon (LANG-1 §6, `talk_title_template`): a Romanian learner's talk names its roles in no case, lower-cased but an

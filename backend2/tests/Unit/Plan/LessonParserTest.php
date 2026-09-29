@@ -2,17 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Check\LessonCodes;
-use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
+use App\Modules\Plan\Domain\Check\Skeleton\Rule\PronunciationForeignScript;
+use App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck;
+use App\Modules\Plan\Domain\Lesson\DialogueExchange;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
-use App\Modules\Plan\Domain\Lesson\Message;
-use App\Modules\Plan\Domain\Lesson\Phrase;
+use App\Modules\Plan\Domain\Lesson\SkeletonFrame;
 use App\Modules\Plan\Domain\Lesson\VocabularyItem;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
@@ -25,7 +22,7 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 /** @return array<string, mixed> the fake's lesson for a Russian learner of English */
 function lpPayload(): array
 {
-    return FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    return FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём у врача'));
 }
 
 /** The reading a frame is read with when the model wrote `$reading` for it. */
@@ -108,21 +105,28 @@ it('reads every reading of a lesson and of a repaired card so, and no other text
         ->and($line?->textNative)->toBe('У него болит поясницa.');
 
     $parser = new LessonParser;
-    $frame = $parser->card(LessonCard::FRAME, ['id' => 'p1', 'kind' => 'answer', 'frame_target' => 'I need ___.', 'frame_native' => 'Мне нужно ___.', 'pronunciation_native' => 'aй нид ___', 'slot' => [
+    $frame = $parser->card(LessonCard::FRAME, ['id' => 'p1', 'kind' => 'answer', 'must_say' => [1], 'frame_target' => 'I need ___.', 'frame_native' => 'Мне нужно ___.', 'pronunciation_native' => 'aй нид ___', 'slot' => [
         'hint_native' => 'что', 'fillers' => [['target' => 'a form', 'native' => 'бланк', 'pronunciation_native' => 'э фoрм', 'in_dialogue' => true]],
     ]]);
     $term = $parser->card(LessonCard::TERM, ['id' => 'v1', 'term_target' => 'form', 'translation_native' => 'бланк', 'pronunciation_native' => 'фoрм', 'kind' => 'word']);
-    $learner = $parser->card(LessonCard::LINE, ['speaker' => 'B', 'text_target' => 'I need a form.', 'text_native' => 'Мне нужен бланк.', 'pronunciation_native' => 'aй нид э фoрм']);
+    $exchange = $parser->card(LessonCard::EXCHANGE, [
+        'step' => 1, 'kind' => 'answer', 'initiator' => 'A', 'must_understand' => 1, 'partner_line' => 'a1',
+        'messages' => [
+            ['speaker' => 'A', 'text_target' => 'What do you need?', 'text_native' => 'Что вам нужно?'],
+            ['speaker' => 'B', 'phrase_id' => 'p1', 'filler' => 'a form', 'text_target' => 'I need a form.', 'text_native' => 'Мне нужен бланк.', 'pronunciation_native' => 'aй нид э фoрм'],
+        ],
+        'check' => ['text_target' => 'What?', 'text_native' => 'Что?', 'options' => [], 'correct_option_index' => 0, 'explanation_native' => ''],
+    ]);
 
-    expect($frame)->toBeInstanceOf(Phrase::class)
-        ->and($frame instanceof Phrase ? [$frame->pronunciationNative, $frame->fillers()[0]->pronunciationNative] : null)->toBe(['ай нид ___', 'э форм'])
+    expect($frame)->toBeInstanceOf(SkeletonFrame::class)
+        ->and($frame instanceof SkeletonFrame ? [$frame->phrase->pronunciationNative, $frame->phrase->fillers()[0]->pronunciationNative] : null)->toBe(['ай нид ___', 'э форм'])
         ->and($term instanceof VocabularyItem ? $term->pronunciationNative : null)->toBe('форм')
-        ->and($learner instanceof Message ? $learner->pronunciationNative : null)->toBe('ай нид э форм');
+        ->and($exchange instanceof DialogueExchange ? $exchange->exchange->learner()?->pronunciationNative : null)->toBe('ай нид э форм');
 });
 
 // The point of the fix: the day the scouting ru→pl answer failed on is not failed by the fatal code any more, and a
-// letter of another writing still is. CATCHES a repair that leaves the validator reading the model's text unmended.
-it('leaves the validator no foreign_script to find in a homoglyph, and still the finding in another writing', function () {
+// letter of another writing still is. CATCHES a repair that leaves the skeleton's check reading the model's text unmended.
+it('leaves the skeleton\'s check no foreign_script to find in a homoglyph, and still the finding in another writing', function () {
     $homoglyph = lpPayload();
     $homoglyph['phrases'][0]['pronunciation_native'] = 'ит хёртс ин хиз ___ oу';
     $homoglyph['vocabulary'][0]['pronunciation_native'] = 'лоуэр бáк';
@@ -131,8 +135,8 @@ it('leaves the validator no foreign_script to find in a homoglyph, and still the
     $foreign = static fn (array $p): array => array_values(array_map(
         static fn (LessonViolation $v): string => $v->address,
         array_filter(
-            (new LessonValidator)->run((new LessonParser)->parse($p), lessonContext('ru', 'en')),
-            static fn (LessonViolation $v): bool => $v->code === LessonCodes::PRONUNCIATION_FOREIGN_SCRIPT,
+            (new SkeletonCheck)->run(planSkeletonOf($p), dayCanonSkeletonContext(null, null, FakePlanModel::survival(), 'ru', 'en')),
+            static fn (LessonViolation $v): bool => $v->code === PronunciationForeignScript::CODE,
         ),
     ));
 

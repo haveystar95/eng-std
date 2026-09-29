@@ -7,9 +7,11 @@ namespace App\Modules\Plan\Infrastructure\Job;
 use App\Modules\Plan\Application\Command\BuildPlan;
 use App\Modules\Plan\Application\Command\BuildPlanHandler;
 use App\Modules\Plan\Application\Service\PlanBuildService;
+use App\Modules\Plan\Application\Service\PlanLineRepairer;
 use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Infrastructure\Eloquent\PlanModel;
 use App\Modules\Plan\Infrastructure\Eloquent\PlanSceneModel;
+use App\Modules\Plan\Infrastructure\Model\ContentModelPlanBuilder;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +20,8 @@ use Throwable;
 /**
  * The plan call. ONE try: the handler already retries the model once on a refused answer, and a
  * queue retry on top would be a third paid call for the same plan. A job that dies outright leaves
- * the plan `building`; the stale-build window turns that into `failed` for the client.
+ * the plan `building`; the stale-build window turns that into `failed` for the client. Its timeout covers the plan and its
+ * one retry, and the line repairs of the plan that passed (наряд GEN-4) — each waited for its own short time.
  */
 final class BuildPlanJob implements ShouldQueue
 {
@@ -32,7 +35,8 @@ final class BuildPlanJob implements ShouldQueue
         private readonly string $planId,
         private readonly int $scenesToAdd = 0,
     ) {
-        $this->timeout = PlanBuildService::MAX_ATTEMPTS * (int) config('plan.model.plan_timeout') + BuildLessonJob::MARGIN_SECONDS;
+        $this->timeout = PlanBuildService::MAX_ATTEMPTS * (int) config('plan.model.plan_timeout')
+            + PlanLineRepairer::MAX_LINES * ContentModelPlanBuilder::PLAN_LINE_TIMEOUT + BuildLessonJob::MARGIN_SECONDS;
     }
 
     public function handle(BuildPlanHandler $handler): void

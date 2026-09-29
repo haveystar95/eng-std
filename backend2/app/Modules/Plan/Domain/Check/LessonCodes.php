@@ -4,212 +4,72 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check;
 
+use App\Modules\Plan\Domain\Check\Dialogue\DialogueCheck;
+use App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck;
+
 /**
- * EVERY CODE THE LESSON VALIDATOR COUNTS (`lesson_day.v4.10`; наряды GEN-2a, GEN-2b и его доработка, GEN-3,
- * BACK-TAILS-1, FIX-3, LANG-1b) — sixty-one.
- * Every breach is counted by code; TWELVE of them are fatal — the day is not dealt until a repair takes their card
- * ({@see LessonGate}) — and the other 49 are warnings: counted and kept. Наряд LANG-1b added two codes: a warning, an option
- * of a check copied out of the partner's line ({@see OPTIONS_PARTNER_FRAGMENT} — once a sub-rule of the fatal
- * `options.form_mismatch`), and a word defined in another language than the target ({@see VOCAB_DEFINITION_LANGUAGE}) — a
- * warning in its §4, FATAL since its §10: the owner's ru→ro day defined every Romanian word in English. One code is not the validator's but the seam
- * judge's — a model reads the native sentences a frame makes with its fillers ({@see JUDGED}). Six codes read the story
- * so far or the day as a whole (GEN-3): a word or a frame an earlier day taught, a frame whose native pattern an earlier
- * day taught, two frames of one pattern, one frame in two exchanges in a row, a partner who changed gender; and one reads a
- * word of the day itself — an abbreviation, a word only when the learner's language has an everyday word for it.
+ * EVERY CODE A DAY'S BUILD COUNTS (наряд GEN-4): the codes of the two stages' rules — {@see SkeletonCheck}, {@see DialogueCheck},
+ * each rule's code the name of its finding and FATAL or not by its rule — and the one code a model finds, not the code: a
+ * native frame said with a filler that does not read, by the seam judge ({@see JUDGED}). One counter is no finding at all: a
+ * judge that did not answer ({@see JUDGE_UNAVAILABLE}).
  *
- * No code is about the speaking key: the key is the server's, taken from the frame (`docs/plan-v2.md` §3а).
- *
- * Three counters are no findings at all: a check that did not run for want of a language pack
- * ({@see LANG_PACK_MISSING}), a seam judge that did not answer ({@see JUDGE_UNAVAILABLE}), and a lesson the server built
- * a second time on its own because the first failed the gate ({@see AUTO_REBUILD}, наряд LANG-1b §1).
- *
- * Canon with the exact rule of every code — `docs/plan-v2.md` §4.
+ * Canon with the rule of every code — `docs/plan-v2.md` §4.
  */
 final class LessonCodes
 {
-    // Shape of the visit.
-    public const DIALOGUE_COUNT = 'dialogue.count';
-
-    public const VOCAB_COUNT = 'vocab.count';
-
-    public const EXCHANGE_SHAPE = 'exchange.shape';
-
-    public const EXCHANGE_SECOND_QUESTION = 'exchange.second_question';
-
-    public const EXCHANGE_REPEATS = 'exchange.repeats';
-
-    public const CHECK_SHAPE = 'check.shape';
-
-    public const LISTENING_SHAPE = 'listening.shape';
-
-    public const PRONUNCIATION_SCRIPT = 'pronunciation.script';
-
-    /** A reading spelled with the LETTERS of another writing — «ֆоутoуз» (наряд BACK-TAILS-1 §3.2). Fatal. */
-    public const PRONUNCIATION_FOREIGN_SCRIPT = 'pronunciation.foreign_script';
-
-    // Frames.
-    public const FRAME_COUNT = 'frame.count';
-
-    public const FRAME_UNUSED = 'frame.unused';
-
-    public const FRAME_TOO_LONG = 'frame.too_long';
-
-    public const FRAME_NO_SLOT_SHARE = 'frame.no_slot_share';
-
-    public const FRAME_NATIVE_ALTERNATIVES = 'frame.native_alternatives';
-
-    public const FRAME_NO_END_PUNCT = 'frame.no_end_punct';
-
-    public const FRAME_NATIVE_PUNCT = 'frame.native_punct';
-
-    public const FRAME_UNRESOLVED_PRONOUN = 'frame.unresolved_pronoun';
-
-    public const FRAME_NATIVE_AGREEMENT = 'frame.native_agreement';
-
-    public const FRAME_TWIN = 'frame.twin';
-
-    public const FRAME_ADJACENT_REPEAT = 'frame.adjacent_repeat';
-
-    // The story so far — what earlier days of the plan taught and how their partner sounded (наряд GEN-3).
-    public const VOCAB_KNOWN_REPEAT = 'vocab.known_repeat';
-
-    public const FRAME_KNOWN_REPEAT = 'frame.known_repeat';
-
-    public const FRAME_KNOWN_NATIVE_REPEAT = 'frame.known_native_repeat';
-
-    public const ROLE_GENDER_CHANGED = 'role_gender.changed';
-
-    // Fillers.
-    public const FILLER_COUNT = 'filler.count';
-
-    public const FILLER_UNGRAMMATICAL = 'filler.ungrammatical';
-
-    public const FILLER_ONE_IN_DIALOGUE = 'filler.one_in_dialogue';
-
-    public const FILLER_IS_CLAUSE = 'filler.is_clause';
-
-    public const FILLER_ARTICLE_SEAM = 'filler.article_seam';
-
+    /** A native frame said with one of its fillers does not read — the seam judge's, once a day, before the dialogue. */
     public const FILLER_NATIVE_SEAM = 'filler.native_seam';
 
-    // The learner's lines.
-    public const LINE_NE_FRAME = 'line.ne_frame';
-
-    public const LINE_TOO_LONG = 'line.too_long';
-
-    public const LINE_NO_FRAME = 'line.no_frame';
-
-    public const VARIANT_LONGER = 'variant.longer';
-
-    public const LEARNER_RESTATES_PARTNER = 'learner.restates_partner';
-
-    // Kinds of exchange.
-    public const KIND_ASK_COUNT = 'kind.ask_count';
-
-    public const KIND_RESCUE_COUNT = 'kind.rescue_count';
-
-    public const RESCUE_NOT_FIRST = 'rescue.not_first';
-
-    public const RESCUE_NEW_FACT = 'rescue.new_fact';
-
-    public const RESCUE_NO_PREV = 'rescue.no_prev';
-
-    // The partner.
-    public const PARTNER_TWO_QUESTIONS = 'partner.two_questions';
-
-    public const PARTNER_TOO_LONG = 'partner.too_long';
-
-    public const PARTNER_CLOSER = 'partner.closer';
-
-    // Checks.
-    public const CHECK_ABOUT_LEARNER = 'check.about_learner';
-
-    public const CHECK_VERBATIM = 'check.verbatim';
-
-    public const CHECK_LISTED_ALTERNATIVE_AS_WRONG = 'check.listed_alternative_as_wrong';
-
-    /** The options of one check are not of one form with the right one — length, a lower-case start (наряд FIX-3 §5). Fatal. */
-    public const OPTIONS_FORM_MISMATCH = 'options.form_mismatch';
-
-    /** An option of one check is a piece of the partner's line in the learner's language, word for word (наряд LANG-1b §1). */
-    public const OPTIONS_PARTNER_FRAGMENT = 'options.partner_fragment';
-
-    // Listening.
-    public const LISTENING_COUNT = 'listening.count';
-
-    public const LISTENING_SAME_EXCHANGE = 'listening.same_exchange';
-
-    public const LISTENING_NO_LEARNER_VALUE = 'listening.no_learner_value';
-
-    public const LISTENING_DISTRACTOR_NOT_FILLER = 'listening.distractor_not_filler';
-
-    // Vocabulary.
-    public const VOCAB_FREE_COMBINATION = 'vocab.free_combination';
-
-    public const VOCAB_EVERYDAY_WORD = 'vocab.everyday_word';
-
-    public const VOCAB_USED_IN_WRONG = 'vocab.used_in_wrong';
-
-    public const VOCAB_LEARNER_SHARE = 'vocab.learner_share';
-
-    public const VOCAB_NESTED = 'vocab.nested';
-
-    public const VOCAB_ABBREVIATION = 'vocab.abbreviation';
-
-    /**
-     * A word's `definition_target` is not in the target language — by its letters and its frequent words (наряд LANG-1b §4);
-     * fatal, repaired by P2R on the word's card with the definition written anew (§10).
-     */
-    public const VOCAB_DEFINITION_LANGUAGE = 'vocab.definition_language';
-
-    // Native text, image prompts.
-    public const NATIVE_GENDERED_PAST = 'native.gendered_past';
-
-    public const IMAGE_PROMPT_RULE_TEXT = 'image_prompt.rule_text';
-
-    /** A check that did not run: the language of its side has no pack for it. One per code a validation skipped. */
-    public const LANG_PACK_MISSING = 'lang.pack_missing';
-
-    /** The seam judge was asked and gave no usable answer: the day's native seams went unread. */
+    /** A judge was asked and gave no usable answer: the day's native seams, or a learner's slot, went unread. */
     public const JUDGE_UNAVAILABLE = 'judge.unavailable';
 
-    /**
-     * The lesson failed the gate and the server asked the model for a NEW lesson once, on its own (наряд LANG-1b §1): counted
-     * when the rebuild is asked, and `failed` too when the rebuilt lesson failed the gate as well — the day is then `failed`.
-     */
-    public const AUTO_REBUILD = 'lesson.auto_rebuild';
-
-    /** The codes a model finds, not the validator: the native seams, read by the seam judge once a day. */
+    /** The codes a model finds, not the code: the native seams, read by the seam judge. */
     public const JUDGED = [self::FILLER_NATIVE_SEAM];
 
-    /** @return list<string> every code, in the order the report lists them */
+    /** @return list<string> every code of a finding, in the order the report lists them: the skeleton's, the dialogue's, the judge's */
     public static function all(): array
     {
         return [
-            self::DIALOGUE_COUNT, self::VOCAB_COUNT, self::EXCHANGE_SHAPE, self::EXCHANGE_SECOND_QUESTION, self::EXCHANGE_REPEATS,
-            self::CHECK_SHAPE, self::LISTENING_SHAPE, self::PRONUNCIATION_SCRIPT, self::PRONUNCIATION_FOREIGN_SCRIPT,
-            self::FRAME_COUNT, self::FRAME_UNUSED, self::FRAME_TOO_LONG, self::FRAME_NO_SLOT_SHARE,
-            self::FRAME_NATIVE_ALTERNATIVES, self::FRAME_NO_END_PUNCT, self::FRAME_NATIVE_PUNCT, self::FRAME_UNRESOLVED_PRONOUN,
-            self::FRAME_NATIVE_AGREEMENT, self::FRAME_TWIN, self::FRAME_ADJACENT_REPEAT,
-            self::VOCAB_KNOWN_REPEAT, self::FRAME_KNOWN_REPEAT, self::FRAME_KNOWN_NATIVE_REPEAT, self::ROLE_GENDER_CHANGED,
-            self::FILLER_COUNT, self::FILLER_UNGRAMMATICAL, self::FILLER_ONE_IN_DIALOGUE, self::FILLER_IS_CLAUSE,
-            self::FILLER_ARTICLE_SEAM, self::FILLER_NATIVE_SEAM,
-            self::LINE_NE_FRAME, self::LINE_TOO_LONG, self::LINE_NO_FRAME, self::VARIANT_LONGER,
-            self::LEARNER_RESTATES_PARTNER,
-            self::KIND_ASK_COUNT, self::KIND_RESCUE_COUNT, self::RESCUE_NOT_FIRST, self::RESCUE_NEW_FACT, self::RESCUE_NO_PREV,
-            self::PARTNER_TWO_QUESTIONS, self::PARTNER_TOO_LONG, self::PARTNER_CLOSER,
-            self::CHECK_ABOUT_LEARNER, self::CHECK_VERBATIM, self::CHECK_LISTED_ALTERNATIVE_AS_WRONG, self::OPTIONS_FORM_MISMATCH,
-            self::OPTIONS_PARTNER_FRAGMENT,
-            self::LISTENING_COUNT, self::LISTENING_SAME_EXCHANGE, self::LISTENING_NO_LEARNER_VALUE, self::LISTENING_DISTRACTOR_NOT_FILLER,
-            self::VOCAB_FREE_COMBINATION, self::VOCAB_EVERYDAY_WORD, self::VOCAB_USED_IN_WRONG, self::VOCAB_LEARNER_SHARE, self::VOCAB_NESTED, self::VOCAB_ABBREVIATION,
-            self::VOCAB_DEFINITION_LANGUAGE,
-            self::NATIVE_GENDERED_PAST, self::IMAGE_PROMPT_RULE_TEXT,
+            ...array_map(static fn (StageRule $r): string => $r->code(), SkeletonCheck::rules()),
+            ...array_map(static fn (StageRule $r): string => $r->code(), DialogueCheck::rules()),
+            ...self::JUDGED,
         ];
     }
 
-    /** @return list<string> the codes the validator itself finds — every code but the judged ones */
-    public static function validated(): array
+    /** @return list<string> the codes whose finding asks its stage once more */
+    public static function fatal(): array
     {
-        return array_values(array_diff(self::all(), self::JUDGED));
+        return array_values(array_map(
+            static fn (StageRule $r): string => $r->code(),
+            array_filter([...SkeletonCheck::rules(), ...DialogueCheck::rules()], static fn (StageRule $r): bool => $r->fatal()),
+        ));
+    }
+
+    public static function isFatal(string $code): bool
+    {
+        return in_array($code, self::fatal(), true);
+    }
+
+    /**
+     * The fatal findings among `$findings`.
+     *
+     * @param  list<LessonViolation>  $findings
+     * @return list<LessonViolation>
+     */
+    public static function fatalOf(array $findings): array
+    {
+        $fatal = self::fatal();
+
+        return array_values(array_filter($findings, static fn (LessonViolation $v): bool => in_array($v->code, $fatal, true)));
+    }
+
+    /**
+     * Why a stage failed: the fatal codes left, each once, in the order found — `fatal: frame.count, vocab.not_found`.
+     *
+     * @param  list<LessonViolation>  $fatal
+     */
+    public static function failReason(array $fatal): string
+    {
+        return 'fatal: '.implode(', ', array_values(array_unique(array_map(static fn (LessonViolation $v): string => $v->code, $fatal))));
     }
 }

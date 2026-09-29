@@ -2,22 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
 use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
 use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpokenNumbers;
@@ -29,28 +22,17 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * learner's lines against the frames of that day, the numbers it says, the translations of the role.
  */
 
-// Canon (pack-keys §7.2): no check of the ru→pl target side and none of the pl→en native side is skipped for a key the
-// pack does not write, and no reader throws on a key written in the wrong shape. CATCHES a key left null or absent
-// (`lang.pack_missing` on every day of the pair) and a key the reader cannot read (a string for a list, a missing field).
+// Canon (pack-keys §7.2): the ru→pl target side and the pl→en native side find every key they read, and no reader throws
+// on a key written in the wrong shape. CATCHES a key left null or absent and a key the reader cannot read (a string for a
+// list, a missing field).
 it('gives every reader of the pack what it reads, in the shape it reads it', function (string $code) {
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     expect(LanguageRoles::planTargets())->toContain($code)
         ->and(LanguageRoles::planNatives())->toContain($code);
 
     // The target side (ru→pl).
-    expect($gaps('target'))->toBe([]);
     foreach (['abbreviations', 'question_word_order', 'unstressed_words', 'number_words', 'number_joiners', 'irregular_forms', 'inflection_rules', 'person_swap', 'contractions', 'contractions_before', 'intro_words', 'clause_starters', 'negation', 'partitive', 'dangling_words', 'rescue_line', 'neutral_reply', 'script_letters', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the target side reads `{$key}`");
     }
@@ -60,27 +42,17 @@ it('gives every reader of the pack what it reads, in the shape it reads it', fun
     (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
     WordBases::of('abc', $pack);
     $words->isQuestion('a b');
-    $words->asksTwice('a, b?');
-    $words->isCloser('a');
-    $words->clause('a b c');
-    $words->articleMismatch('a', 'b');
-    $words->unresolvedPronoun('a b ___.');
-    $words->valueKind('a 2');
 
     // The native side (pl→en).
-    expect($gaps('native'))->toBe([]);
     foreach (['abbreviations', 'amount_pattern', 'amount_prefix', 'neutral_reply', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the native side reads `{$key}`");
     }
     expect($pack->talkTitleTemplate())->not->toBeNull()
         ->and((new NativeStrings($code))->talkTitle(['Recepcjonistka', 'MRI'], $pack))->toContain('MRI');
-    $words->agreeingWithSlot('a b ___ c d.');
     $words->genderedPast('a b');
     $words->foreignLetters('ab');
-    $words->readsInScript('ab');
-    $words->valueKind('a 2');
 
-    // No key is null: null is «not written» and counts `lang.pack_missing` (наряд LANG-1 §4.6).
+    // No key is null: null is «not written», and the rule that needs it does not run (наряд LANG-1 §4.6).
     $written = require dirname(__DIR__, 4).'/config/lesson/lang/pl.php';
     expect(array_keys(array_filter($written, static fn (mixed $value): bool => $value === null)))->toBe([]);
 })->with(['pl']);
@@ -117,25 +89,6 @@ it('ends a Polish sentence where Polish ends it — never at the dot of an abbre
         // «OK.» is a reply, not «około»; «im» is a pronoun: each ends its sentence.
         ->and($ends->count('Ok. Przyjdę dziesięć minut wcześniej.'))->toBe(2)
         ->and($ends->count('Proszę to powiedzieć im. Dziękuję.'))->toBe(2);
-});
-
-// Canon (partner.two_questions) on Polish: one sentence that opens with a question word and asks again after «i / a /
-// oraz / albo / lub» and another one — a comma before it or not, Polish puts none before «i». Partner lines of the ru→pl
-// day and lines of the talk. CATCHES the English «, and …» rule read into Polish, where «Rozumiem, a od kiedy?» — assent
-// and ONE question — is how every partner asks, and a second question joined by «i» with no comma, which that rule missed.
-it('reads two questions in one Polish sentence, and one question after a word of assent as one', function () {
-    $words = new LanguageWords(lessonPacks()->for('pl'));
-
-    foreach (['Dobrze. Jaki jest powód wizyty?', 'Tak, mamy jutro o piętnastej.', 'Proszę przynieść dokument i kartę ubezpieczenia.',
-        'Rozumiem, a od kiedy ma pan gorączkę?', 'Dobrze, a jak się pan nazywa?', 'Czy woli pan rano, czy po południu?',
-        'Czy jest coś po południu albo jutro rano?', 'Czy ma pan gorączkę, a może kaszel?', 'Czy to coś pilnego na dziś?'] as $one) {
-        expect($words->asksTwice($one))->toBeFalse("«{$one}» asks once");
-    }
-    foreach (['Czy ma pan gorączkę i czy boli gardło?', 'Od kiedy to trwa i czy ma pan gorączkę?',
-        'Kiedy to się zaczęło, a jak się pan czuje teraz?', 'Jak się pan nazywa i jaki jest pana numer telefonu?',
-        'Dobrze, czy ma pan skierowanie i czy ma pan dowód?', 'Czy ma pan gorączkę? A czy boli gardło?'] as $two) {
-        expect($words->asksTwice($two))->toBeTrue("«{$two}» asks twice");
-    }
 });
 
 // Canon FIX-4 §2 + LANG-1 §1 on the frames of the ru→pl scouting day (scene «Запись к врачу», p1–p6): each learner line of
@@ -255,35 +208,16 @@ it('takes an ordinary Polish line for a translation and a neighbour\'s line for 
         ->and(ReplyNative::missing('—', 'Vă rog să aduceți actul de identitate și cardul de asigurare.', $pl))->toBeTrue();
 });
 
-// The learner's own language (pl→en): the readings, the native frames of the day and what a native line says of the
-// learner's gender. CATCHES a strict `script_letters` (a Polish reading with a «v» failing a day), a Georgian «იან» let
-// through, an agreement read off every «-a» of a verb («To trwa ___», «Do zobaczenia ___»), off «temu» («ago»), «ci» («to
-// you») or «dlaczego», a gendered past missed or read off a noun («z gardłem» on the sore-throat day, «z Michałem»), and a
-// Polish time word («przed południem», «dziennie», «godz.») read as no time.
-it('reads a Polish learner\'s readings, native frames and lines', function () {
+// The learner's own language (pl→en): the readings and what a native line says of the learner's gender. CATCHES a strict
+// `script_letters` (a Polish reading with a «v» failing a day), a Georgian «იან» let through, a gendered past missed or
+// read off a noun («z gardłem» on the sore-throat day, «z Michałem»), and «zimny» read as a time word or «jednak» as a
+// number.
+it('reads a Polish learner\'s readings and lines', function () {
     $words = new LanguageWords(lessonPacks()->for('pl'));
 
     expect($words->foreignLetters('ajd lajk tu mejk en apojntment'))->toBe([])
         ->and($words->foreignLetters('wizit do doktora'))->toBe([])
         ->and($words->foreignLetters('maj nejm iz იან kowalski'))->toBe(['ი', 'ა', 'ნ'])
-        ->and($words->readsInScript('okej, ajl bring maj aj-di'))->toBeTrue()
-        ->and($words->readsInScript('ken aj haww ___'))->toBeTrue()
-        ->and($words->readsInScript('ai hv ə sor trołt'))->toBeFalse()
-        // The native frames of the pl→en day agree with nothing; an adjective or a determiner before the slot does.
-        ->and(array_merge(...array_map($words->agreeingWithSlot(...), [
-            'Chcę umówić ___', 'Mam ___', 'To trwa ___', 'Czy mogę przyjść ___', 'Nazywam się ___', 'Wezmę ___',
-            'Czy mogę dostać ___', 'Do zobaczenia ___', 'Czy to ___?',
-        ])))->toBe([])
-        ->and($words->agreeingWithSlot('Mam wysoką ___.'))->toBe(['wysoką'])
-        ->and($words->agreeingWithSlot('Czy jest wolny ___?'))->toBe(['wolny'])
-        ->and($words->agreeingWithSlot('___ jest wolny?'))->toBe(['wolny'])
-        ->and($words->agreeingWithSlot('Jaki ___ pan woli?'))->toBe(['jaki'])
-        ->and($words->agreeingWithSlot('Szukam dobrego ___.'))->toBe(['dobrego'])
-        ->and($words->agreeingWithSlot('Mam kilka wysokich ___.'))->toBe(['wysokich'])
-        // «ago», «to you», «why» agree with nothing.
-        ->and($words->agreeingWithSlot('Zaczęło się ___ temu.'))->toBe([])
-        ->and($words->agreeingWithSlot('Czy mogę ci ___?'))->toBe([])
-        ->and($words->agreeingWithSlot('Nie wiem, dlaczego ___.'))->toBe([])
         // The learner's gender in a line of their own — never the instrumental of a noun, the throat of the day first.
         ->and($words->genderedPast('Chcę umówić wizytę.'))->toBe([])
         ->and($words->genderedPast('Byłam u lekarza wczoraj.'))->toBe(['byłam'])
@@ -292,10 +226,6 @@ it('reads a Polish learner\'s readings, native frames and lines', function () {
         ->and($words->genderedPast('Leży pod stołem.'))->toBe([])
         ->and($words->genderedPast('Mam problem z gardłem.'))->toBe([])
         ->and($words->genderedPast('Rozmawiałem z Michałem z oddziałem ratunkowym.'))->toBe(['rozmawiałem'])
-        // Time words of a Polish option: a part of the day in its case, a dose, an hour abbreviated — «number or time».
-        ->and($words->valueKind('przed południem'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('trzy razy dziennie'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
-        ->and($words->valueKind('o godz. 15'))->toBe(LanguageWords::VALUE_NUMBER_OR_TIME)
         ->and($words->isTime('zimny'))->toBeFalse()
         ->and($words->isNumber('jednak'))->toBeFalse();
 });

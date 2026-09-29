@@ -582,48 +582,49 @@ function lessonPacks(): App\Modules\Plan\Domain\Check\Language\LanguagePacks
 }
 
 /**
- * What the validator is given for a lesson of the pair (`$native`, `$target`) ordered with 8 words and 8 exchanges — and,
- * for a later day of a plan (наряд GEN-3), the story so far with the scene's partner role.
- */
-function lessonContext(
-    string $native = 'ru',
-    string $target = 'en',
-    ?App\Modules\Shared\Domain\ValueObject\VoiceGender $gender = null,
-    ?App\Modules\Plan\Domain\Lesson\EarlierDays $earlierDays = null,
-    string $partnerRole = 'Doctor',
-): App\Modules\Plan\Domain\Check\LessonValidationContext {
-    $packs = lessonPacks();
-
-    return new App\Modules\Plan\Domain\Check\LessonValidationContext(
-        8, 8, $packs->for($native), $packs->for($target), $gender,
-        $earlierDays ?? new App\Modules\Plan\Domain\Lesson\EarlierDays, $partnerRole,
-    );
-}
-
-/**
- * WHAT THE FAKE'S CLEAN LESSON STILL BREAKS UNDER v4.6 (наряд GEN-3) — `code@address` of each finding. It was written to
- * v4.5 and says frame p6 in exchanges 7 and 8, one after the other; every test of the day's dealing reads that order, so
- * the lesson keeps it, and a test that asks for «no findings» of it asks for exactly these.
+ * THE FAKE'S DAY AS THE BUILD STORES IT (наряд GEN-4) — its skeleton, and its lesson assembled from the skeleton and the
+ * dialogue with the options shuffled by the scene's seed, spoken in the fake's roles: exactly what {@see
+ * App\Modules\Plan\Application\Service\LessonBuildService} writes for a clean day.
  *
- * @return list<string>
+ * @return array{0: App\Modules\Plan\Domain\Lesson\Skeleton, 1: App\Modules\Plan\Domain\Lesson\Lesson}
  */
-function planFixtureWarnings(): array
+function planFixtureDay(App\Modules\Plan\Application\Dto\LessonRequest $request): array
 {
-    return ['frame.adjacent_repeat@x8'];
+    $parser = new App\Modules\Plan\Domain\Lesson\LessonParser;
+    $skeleton = $parser->skeleton(App\Modules\Plan\Infrastructure\Model\FakePlanModel::skeletonPayload($request));
+    $dialogue = $parser->dialogue(App\Modules\Plan\Infrastructure\Model\FakePlanModel::dialoguePayload(new App\Modules\Plan\Application\Dto\DialogueRequest($request, $skeleton)));
+    $dialogue = App\Modules\Plan\Domain\Lesson\OptionShuffle::of($dialogue, $request->sceneId);
+
+    return [$skeleton, App\Modules\Plan\Domain\Lesson\LessonAssembler::assemble($skeleton, $dialogue)->withRoles($request->roles)];
 }
 
 /**
- * Every scene of a plan in hand gets the fake's clean lesson, its photos found — a plan whose days may be opened as far as
+ * The skeleton a day written as one lesson stands on — the lesson split as the fake splits it
+ * ({@see App\Modules\Plan\Infrastructure\Model\FakePlanModel::stagesOf()}): what a scene stores beside a lesson a test
+ * writes by hand.
+ *
+ * @param  array<string, mixed>  $payload
+ */
+function planSkeletonOf(array $payload, ?App\Modules\Plan\Application\Dto\LessonRequest $request = null): App\Modules\Plan\Domain\Lesson\Skeleton
+{
+    $request ??= App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonRequest();
+
+    return (new App\Modules\Plan\Domain\Lesson\LessonParser)->skeleton(App\Modules\Plan\Infrastructure\Model\FakePlanModel::stagesOf($payload, $request)['skeleton']);
+}
+
+/**
+ * Every scene of a plan in hand gets the fake's clean day, its photos found — a plan whose days may be opened as far as
  * their lessons go (наряд GEN-3 §11: a day next in line without its lesson is `building`).
  */
 function planWriteLessons(App\Modules\Plan\Domain\Entity\Plan $plan): void
 {
     foreach ($plan->scenes() as $scene) {
-        $request = new App\Modules\Plan\Application\Dto\LessonRequest('x', 'x', 'English', 'Russian', $plan->level(), null, 8, 8, App\Modules\Plan\Infrastructure\Model\FakePlanModel::roles(), $plan->earlierDaysOf($scene->id()));
+        [$skeleton, $lesson] = planFixtureDay(App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonRequest('x', $plan->earlierDaysOf($scene->id()), $scene->id()->value));
         $scene->acceptLesson(
-            (new App\Modules\Plan\Domain\Lesson\LessonParser)->parse(App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload($request)),
+            $lesson,
+            $skeleton,
             lessonPacks()->for('en'),
-            new App\Modules\Plan\Domain\ValueObject\ModelCall('lesson_day.v4.10', 'test', 'fake', '0.000000', 1, 1),
+            new App\Modules\Plan\Domain\ValueObject\ModelCall('lesson_skeleton.v1+lesson_dialogue.v1', 'test', 'fake', '0.000000', 1, 2),
             [],
             new DateTimeImmutable('2026-09-10T09:00:00Z'),
         );
@@ -632,23 +633,22 @@ function planWriteLessons(App\Modules\Plan\Domain\Entity\Plan $plan): void
 }
 
 /**
- * The fake's lesson for a request told so that it breaks no rule of v4.6 either: its exchanges 4 and 7 change places (and
- * the words' `used_in` with them), so frame p6 is said in exchanges 4 and 8, never twice in a row. The lesson a test asks
- * for «no findings» of.
- *
- * @return array<string, mixed>
+ * A STORED LESSON SERVED AS THE BUILD WOULD HAVE STORED IT (наряд GEN-4): the options of every check and every listening
+ * question put where the seed puts them ({@see App\Modules\Plan\Domain\Lesson\OptionShuffle}) — a lesson built by the
+ * two stages is stored so — and then served. A fixture written as a model writes it reads here as the day deals it.
  */
-function planCleanLesson(App\Modules\Plan\Application\Dto\LessonRequest $request): array
+function planServed(App\Modules\Plan\Domain\Lesson\Lesson $answer, string $seed, App\Modules\Plan\Domain\Check\Language\LanguagePack $target): App\Modules\Plan\Domain\Lesson\Lesson
 {
-    $p = App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload($request);
-    [$p['dialogue'][3], $p['dialogue'][6]] = [$p['dialogue'][6], $p['dialogue'][3]];
-    $p['dialogue'][3]['step'] = 4;
-    $p['dialogue'][6]['step'] = 7;
-    foreach ($p['vocabulary'] as $i => $item) {
-        $p['vocabulary'][$i]['used_in'] = array_map(static fn (string $ref): string => ['A4' => 'A7', 'A7' => 'A4'][$ref] ?? $ref, $item['used_in']);
+    $exchanges = array_map(
+        static fn (App\Modules\Plan\Domain\Lesson\Exchange $e): App\Modules\Plan\Domain\Lesson\Exchange => $e->withCheck(App\Modules\Plan\Domain\Lesson\OptionShuffle::check($e->check, "{$seed}:x{$e->step}:check")),
+        $answer->exchanges,
+    );
+    $listening = [];
+    foreach ($answer->listening as $index => $question) {
+        $listening[] = App\Modules\Plan\Domain\Lesson\OptionShuffle::listening($question, "{$seed}:listening:{$index}");
     }
 
-    return $p;
+    return App\Modules\Plan\Domain\Lesson\LessonAssembly::serve($answer->withExchanges($exchanges)->withListening($listening), $target);
 }
 
 /**
@@ -664,10 +664,7 @@ function planEarlierDay(
     App\Modules\Shared\Domain\ValueObject\VoiceGender $gender = App\Modules\Shared\Domain\ValueObject\VoiceGender::Female,
     string $title = 'Consultation',
 ): App\Modules\Plan\Domain\Lesson\EarlierDay {
-    $payload ??= App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload(new App\Modules\Plan\Application\Dto\LessonRequest(
-        'Приём у врача', 'x', 'English', 'Russian', App\Modules\Plan\Domain\ValueObject\PlanLevel::Beginner, null, 8, 8,
-        App\Modules\Plan\Infrastructure\Model\FakePlanModel::roles(), new App\Modules\Plan\Domain\Lesson\EarlierDays,
-    ));
+    $payload ??= App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload(App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonRequest());
 
     return App\Modules\Plan\Domain\Lesson\EarlierDay::of($number, $title, $partnerRole, $gender, (new App\Modules\Plan\Domain\Lesson\LessonParser)->parse($payload));
 }
@@ -686,7 +683,7 @@ function planLiveDoctorScene(string $sceneId = '01M2H13KSAS23K4YPF1M65SJQD', arr
     $id = App\Modules\Plan\Domain\ValueObject\PlanSceneId::fromString($sceneId);
     $packs = lessonPacks();
     $payload = json_decode((string) file_get_contents(__DIR__.'/Fixtures/plan-lesson/doctor-e2e-v4.4.json'), true, flags: JSON_THROW_ON_ERROR);
-    $lesson = App\Modules\Plan\Domain\Lesson\LessonAssembly::serve((new App\Modules\Plan\Domain\Lesson\LessonParser)->parse($payload), $id->value, $packs->for('en'));
+    $lesson = planServed((new App\Modules\Plan\Domain\Lesson\LessonParser)->parse($payload), $id->value, $packs->for('en'));
     $terms = planTermsOf($id, $lesson);
 
     return new App\Modules\Plan\Domain\Assembly\SceneMaterial($id, $lesson, $terms, $packs->for('en'), $packs->for('ru'), $unreadable);
@@ -794,4 +791,167 @@ function planGymLoad(string $userId): string
     }
 
     return (string) $data['plan']['id'];
+}
+
+/**
+ * THE CANON DAY OF THE STAGES' CHECKS (наряд GEN-4) — the day of the architect's own TEST INPUT (`lesson_dialogue.v1`: ru→ro,
+ * the candidate's work experience, a male learner): its survival set, its skeleton, and a dialogue written to it that breaks
+ * no rule, in `tests/Fixtures/plan-day/`. Every rule of `SkeletonCheck` and `DialogueCheck` is tested on it with one defect.
+ *
+ * @return array<string, mixed>
+ */
+/**
+ * THE CLEAN FIXTURE DAY as one lesson — the doctor's visit the default fake writes
+ * ({@see \App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload()}):
+ * for `new FakePlanModel(lesson: …)`, a test that changes what a day says and reads it back.
+ *
+ * @return array<string, mixed>
+ */
+function planCleanLesson(App\Modules\Plan\Application\Dto\LessonRequest $request): array
+{
+    return App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload($request);
+}
+
+function dayCanonJson(string $part): array
+{
+    return json_decode((string) file_get_contents(__DIR__."/Fixtures/plan-day/interview-ro-{$part}.json"), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/** @param (Closure(array<string, mixed>): array<string, mixed>)|null $edit */
+function dayCanonSkeleton(?Closure $edit = null): App\Modules\Plan\Domain\Lesson\Skeleton
+{
+    $raw = dayCanonJson('skeleton');
+
+    return (new App\Modules\Plan\Domain\Lesson\LessonParser)->skeleton($edit === null ? $raw : $edit($raw));
+}
+
+/** @param (Closure(array<string, mixed>): array<string, mixed>)|null $edit */
+function dayCanonDialogue(?Closure $edit = null): App\Modules\Plan\Domain\Lesson\Dialogue
+{
+    $raw = dayCanonJson('dialogue');
+
+    return (new App\Modules\Plan\Domain\Lesson\LessonParser)->dialogue($edit === null ? $raw : $edit($raw));
+}
+
+/**
+ * The canon skeleton's raw JSON with one frame, partner line or word replaced by what `$edit` makes of it.
+ *
+ * @param  Closure(array<string, mixed>): array<string, mixed>  $edit
+ * @return Closure(array<string, mixed>): array<string, mixed>
+ */
+function scAt(string $list, string $id, Closure $edit): Closure
+{
+    return static function (array $raw) use ($list, $id, $edit): array {
+        foreach ($raw[$list] as $i => $row) {
+            if ($row['id'] === $id) {
+                $raw[$list][$i] = $edit($row);
+            }
+        }
+
+        return $raw;
+    };
+}
+
+/**
+ * The canon dialogue's raw JSON with the exchange of `$step` replaced by what `$edit` makes of it.
+ *
+ * @param  Closure(array<string, mixed>): array<string, mixed>  $edit
+ * @return Closure(array<string, mixed>): array<string, mixed>
+ */
+function dcAt(int $step, Closure $edit): Closure
+{
+    return static function (array $raw) use ($step, $edit): array {
+        foreach ($raw['dialogue'] as $i => $exchange) {
+            if ($exchange['step'] === $step) {
+                $raw['dialogue'][$i] = $edit($exchange);
+            }
+        }
+
+        return $raw;
+    };
+}
+
+/**
+ * The same, with one message of the exchange — the learner's (`B`) or the partner's (`A`) — edited.
+ *
+ * @param  Closure(array<string, mixed>): array<string, mixed>  $edit
+ * @return Closure(array<string, mixed>): array<string, mixed>
+ */
+function dcSaid(int $step, string $speaker, Closure $edit): Closure
+{
+    return dcAt($step, static function (array $exchange) use ($speaker, $edit): array {
+        foreach ($exchange['messages'] as $i => $message) {
+            if ($message['speaker'] === $speaker) {
+                $exchange['messages'][$i] = $edit($message);
+            }
+        }
+
+        return $exchange;
+    });
+}
+
+/**
+ * The same, with the listening question `$number` (from 1) edited.
+ *
+ * @param  Closure(array<string, mixed>): array<string, mixed>  $edit
+ * @return Closure(array<string, mixed>): array<string, mixed>
+ */
+function dcHeard(int $number, Closure $edit): Closure
+{
+    return static function (array $raw) use ($number, $edit): array {
+        $raw['listening']['questions'][$number - 1] = $edit($raw['listening']['questions'][$number - 1]);
+
+        return $raw;
+    };
+}
+
+function dayCanonSurvival(): App\Modules\Plan\Domain\Blueprint\SurvivalSet
+{
+    $raw = dayCanonJson('survival');
+
+    return App\Modules\Plan\Domain\Blueprint\SurvivalSet::fromModel($raw['must_say'], $raw['must_understand']);
+}
+
+function dayCanonSkeletonContext(
+    ?App\Modules\Shared\Domain\ValueObject\VoiceGender $gender = App\Modules\Shared\Domain\ValueObject\VoiceGender::Male,
+    ?App\Modules\Plan\Domain\Lesson\EarlierDays $earlier = null,
+    ?App\Modules\Plan\Domain\Blueprint\SurvivalSet $survival = null,
+    string $native = 'ru',
+    string $target = 'ro',
+): App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext {
+    return new App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext(
+        $survival ?? dayCanonSurvival(), 8, 12, lessonPacks()->for($native), lessonPacks()->for($target), $gender,
+        $earlier ?? new App\Modules\Plan\Domain\Lesson\EarlierDays,
+    );
+}
+
+function dayCanonDialogueContext(?App\Modules\Plan\Domain\Lesson\Skeleton $skeleton = null): App\Modules\Plan\Domain\Check\Dialogue\DialogueContext
+{
+    return new App\Modules\Plan\Domain\Check\Dialogue\DialogueContext($skeleton ?? dayCanonSkeleton(), lessonPacks()->for('ru'), lessonPacks()->for('ro'));
+}
+
+/**
+ * What the skeleton's check finds, as `code@address` — each once, in the order found.
+ *
+ * @return list<string>
+ */
+function skeletonFound(App\Modules\Plan\Domain\Lesson\Skeleton $skeleton, ?App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext $context = null): array
+{
+    return array_values(array_unique(array_map(
+        static fn (App\Modules\Plan\Domain\Check\LessonViolation $v): string => "{$v->code}@{$v->address}",
+        (new App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck)->run($skeleton, $context ?? dayCanonSkeletonContext()),
+    )));
+}
+
+/**
+ * What the dialogue's check finds, as `code@address` — each once, in the order found.
+ *
+ * @return list<string>
+ */
+function dialogueFound(App\Modules\Plan\Domain\Lesson\Dialogue $dialogue, ?App\Modules\Plan\Domain\Check\Dialogue\DialogueContext $context = null): array
+{
+    return array_values(array_unique(array_map(
+        static fn (App\Modules\Plan\Domain\Check\LessonViolation $v): string => "{$v->code}@{$v->address}",
+        (new App\Modules\Plan\Domain\Check\Dialogue\DialogueCheck)->run($dialogue, $context ?? dayCanonDialogueContext()),
+    )));
 }

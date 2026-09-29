@@ -51,7 +51,7 @@ function shrBlueprint(Plan $plan): void
 {
     $request = new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, PlanCalendar::scenesCount($plan->daysTotal()));
     $blueprint = (new BlueprintParser)->parse(FakePlanModel::planPayload($request));
-    $plan->acceptBlueprint($blueprint, new ModelCall('plan-builder-v2', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
+    $plan->acceptBlueprint($blueprint, new ModelCall('plan-builder-v2.1', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
 }
 
 function shrTitles(Plan $plan): array
@@ -202,7 +202,7 @@ it('appends extension scenes after the existing ones whatever the model numbered
     expect(array_map(static fn ($s): int => $s->order, $more))->toBe([1, 2])
         ->and(array_map(static fn ($s): int => $s->priority, $more))->toContain(1);
 
-    $plan->appendScenes($more, new ModelCall('plan-builder-v2', 'test', 'fake', '0.010000', 1, 1), static fn (): PlanSceneId => PlanSceneId::generate());
+    $plan->appendScenes($more, new ModelCall('plan-builder-v2.1', 'test', 'fake', '0.010000', 1, 1), static fn (): PlanSceneId => PlanSceneId::generate());
 
     $orders = array_map(static fn (PlanScene $s): int => $s->order(), $plan->scenes());
     $priorities = array_map(static fn (PlanScene $s): int => $s->priority(), $plan->scenes());

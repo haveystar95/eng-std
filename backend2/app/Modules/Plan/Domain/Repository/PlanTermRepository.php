@@ -24,14 +24,6 @@ interface PlanTermRepository
     /** @param list<PlanTerm> $terms replaces the scene's terms wholesale */
     public function replaceForScene(PlanSceneId $sceneId, array $terms): void;
 
-    /**
-     * What a revised lesson says in the scene's units, written over their rows by `ref` — texts, readings,
-     * examples, keys, frames, `used_in` — while every row keeps its id and its photo (P2R `--apply`).
-     *
-     * @param  list<PlanTerm>  $terms
-     */
-    public function rewriteTexts(PlanSceneId $sceneId, array $terms): void;
-
     /** The term's photo and its tone into their own columns, only while it has no photo — see {@see PlanRepository}. */
     public function attachImage(PlanTermId $id, Image $image): void;
 

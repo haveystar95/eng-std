@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| LANGUAGE PACK · pl — what the lesson validator, the judge of the talk and the speech comparison read of Polish
+| LANGUAGE PACK · pl — what the day's checks, the judge of the talk and the speech comparison read of Polish
 |--------------------------------------------------------------------------
 |
 | docs/plan-v2.md §4 (наряд GEN-2b), keys by `docs/research/lang-1/pack-keys.md` (наряд LANG-1). Polish is BOTH sides of a
 | plan: the language taught (ru→pl — what the learner says and hears, the frames, the talk) and the learner's own (pl→en —
 | the readings, the native frames, the listening questions, the grey translation of the role). So every key of both sides
-| is written; a rule that does not apply to Polish is an explicit no-op, never null (null counts `lang.pack_missing` on
+| is written; a rule that does not apply to Polish is an explicit no-op, never null (null would switch its rule off on
 | every day of the pair).
 |
 | Polish has no articles, no contractions and no elisions; it drops the subject pronoun, marks a question with «czy» or

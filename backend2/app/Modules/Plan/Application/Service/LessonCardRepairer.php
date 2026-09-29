@@ -10,143 +10,66 @@ use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\PlanModelPort;
-use App\Modules\Plan\Application\Port\SceneLocator;
-use App\Modules\Plan\Domain\Check\LessonCodes;
-use App\Modules\Plan\Domain\Check\LessonValidationContext;
-use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
-use App\Modules\Plan\Domain\Exception\SceneNotFound;
-use App\Modules\Plan\Domain\Lesson\Exchange;
+use App\Modules\Plan\Domain\Lesson\Dialogue;
+use App\Modules\Plan\Domain\Lesson\DialogueExchange;
 use App\Modules\Plan\Domain\Lesson\ExchangeCheck;
-use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
-use App\Modules\Plan\Domain\Lesson\LessonCardContext;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
-use App\Modules\Plan\Domain\Lesson\Message;
-use App\Modules\Plan\Domain\Lesson\Phrase;
+use App\Modules\Plan\Domain\Lesson\OptionShuffle;
+use App\Modules\Plan\Domain\Lesson\PartnerLine;
+use App\Modules\Plan\Domain\Lesson\Skeleton;
+use App\Modules\Plan\Domain\Lesson\SkeletonFrame;
 use App\Modules\Plan\Domain\Lesson\VocabularyItem;
-use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Service\FrameText;
-use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use Throwable;
 
 /**
- * P2R — THE REPAIR OF ONE CARD (наряды GEN-2a, GEN-2b, GEN-3). Asked two ways: by the lesson build for a card a fatal
- * finding holds ({@see LessonGateKeeper}, before the lesson is stored), and by the `plan:repair-card` command for a
- * stored lesson.
+ * THE REPAIR OF ONE CARD (`lesson_card_repair.v1.5`, наряд GEN-4, 3.9) — asked by the day's build for a card a warning of its
+ * stage (or the seam judge) stands at.
  *
- * The findings at the card (or only the named codes) go to the model with the card and the part of the lesson the
- * card needs ({@see LessonCardContext}) — the English detail of each finding, never another card's text; a frame is not
- * told that its NATIVE pattern is the same as another's ({@see LessonCard::cites()}) — a whole
- * exchange's NEIGHBOURS, and what the earlier days of the plan taught (EARLIER_DAYS: their frames and words). Card and
- * context are the answer as the server reads it ({@see LessonAssembly::said()}): the filler found in each line, the
- * marks of what the lines say, the key of the frame — the model's own `filler`, marks and key are shown to nobody.
- * The model answers with the card — an exchange may bring the frame its line stands on (`frame_update`), and the two
- * go in together or not at all; a learner line must stand on a frame of the lesson (the schema no longer names the
- * day's frames — its ids are the same for every call, so the vendor's prompt cache holds it). The card is parsed to its
- * shape, put into the answer, spoken in the plan's roles, and the whole answer is validated again. A word REPLACED by
- * another is checked again by the server before it counts: `used_in` true, not a word of an earlier day, not twice in the
- * day — else the repair is refused like one off the card's shape. A word kept, its definition written anew in the target
- * language (P2R v1.4, наряд LANG-1b §10), is judged by the validator alone. Nothing is written here: the build stores what passed its
- * gate, the command writes only on `--apply` ({@see \App\Modules\Plan\Application\Command\ReviseLessonHandler}).
+ * The model is shown the card at its ADDRESS, the FINDINGS at it (code and English detail), the SKELETON whole, the DIALOGUE
+ * whole for a card of the dialogue, a whole exchange's NEIGHBOURS, and EARLIER_DAYS in the short form; the rules it is given
+ * are the sections of the prompt the card was written with ({@see \App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles::REPAIR_SECTIONS}).
+ * It answers with the card; the card is parsed to its shape and put back by {@see LessonCard::replace()} — which keeps what
+ * the card may not change whatever the model wrote, and, once the dialogue exists, says a repaired partner line anew in its
+ * exchange. The server refuses what the schema cannot say: a learner line on no frame of the skeleton, a frame that drops a
+ * filler the dialogue says, a word the day already has. A check, a listening question or a whole exchange is shuffled
+ * again by the day's seed ({@see OptionShuffle}): the model's own order is never the served one. Nothing is judged here — the
+ * build checks the stage again and keeps the repair only if it breaks nothing fatal.
  */
 final readonly class LessonCardRepairer
 {
     public function __construct(
-        private SceneLocator $scenes,
-        private PlanRepository $plans,
         private PlanModelPort $model,
-        private LessonValidator $validator,
         private LessonParser $parser,
-        private LessonRequests $requests,
-        private LessonContexts $contexts,
     ) {}
 
-    /**
-     * A card of a stored lesson, by its address. The native seams the stored lesson was judged with stay with it
-     * — every one but those of a frame the repair put in (the judge is asked once a day, not per repair).
-     *
-     * @param  list<string>  $codes  only these codes; all the card's findings when empty
-     */
-    public function repair(PlanSceneId $sceneId, string $address, array $codes = []): LessonCardRepairOutcome
+    /** @param list<LessonViolation> $findings the findings at the card */
+    public function repair(Skeleton $skeleton, ?Dialogue $dialogue, LessonCard $card, array $findings, LessonRequest $request): LessonCardRepairOutcome
     {
-        $planId = $this->scenes->planIdOf($sceneId);
-        $plan = $planId === null ? null : $this->plans->findById($planId);
-        if ($plan === null) {
-            throw SceneNotFound::withId($sceneId);
-        }
-        $scene = $plan->scene($sceneId);
-        $answer = $scene->answer();
-        $card = LessonCard::at($address);
-        if ($answer === null || $card === null || $card->of($answer) === null) {
-            return self::nothing(LessonCardRepairOutcome::NOT_A_CARD, $address, $card?->kind, 'no lesson, or no repairable card at this address');
+        $before = $card->of($skeleton, $dialogue);
+        if ($before === null || (! $card->ofSkeleton() && $dialogue === null)) {
+            return new LessonCardRepairOutcome(LessonCardRepairOutcome::NOT_A_CARD, $card->address, $card->kind, $before, null, self::rows($findings), null, null, '0.000000', 0, '', 'no card at this address');
         }
 
-        $request = $this->requests->for($plan, $scene);
-        $context = $this->contexts->of($request);
-
-        $outcome = $this->repairIn($answer, $card, $this->validator->run($answer, $context), $context, $request, $codes);
-        if ($outcome->status !== LessonCardRepairOutcome::REPAIRED) {
-            return $outcome;
-        }
-        $changed = array_values(array_filter([$card->kind === LessonCard::FRAME ? $card->frameId : null, $outcome->frameUpdate['id'] ?? null], is_string(...)));
-        $judged = array_values(array_filter(
-            $scene->findings(),
-            static fn (array $f): bool => in_array($f['code'], LessonCodes::JUDGED, true)
-                && ! in_array(explode('.', $f['address'])[0], $changed, true),
-        ));
-
-        return $outcome->withLessonFindings($judged);
-    }
-
-    /**
-     * A card of an answer in hand — the build's, before it is stored.
-     *
-     * @param  list<LessonViolation>  $found  the validator's findings over `$answer`
-     * @param  list<string>  $codes  only these codes; all the card's findings when empty
-     */
-    public function repairIn(Lesson $answer, LessonCard $card, array $found, LessonValidationContext $context, LessonRequest $request, array $codes = []): LessonCardRepairOutcome
-    {
-        $read = LessonAssembly::said($answer, $context->target);
-        $before = $card->of($read);
-        if ($before === null) {
-            return self::nothing(LessonCardRepairOutcome::NOT_A_CARD, $card->address, $card->kind, 'no repairable card at this address');
-        }
-        $atCard = array_values(array_filter(
-            $found,
-            static fn (LessonViolation $v): bool => $card->covers($v) && ($codes === [] || in_array($v->code, $codes, true)),
-        ));
-        if ($atCard === [] && $codes === []) {
-            return self::nothing(LessonCardRepairOutcome::NOTHING_TO_REPAIR, $card->address, $card->kind, 'the validator finds nothing at this card', $before, count($found));
-        }
-        $cited = array_values(array_filter($atCard, static fn (LessonViolation $v): bool => $card->cites($v, $answer)));
-        if ($cited === [] && $atCard !== []) {
-            return self::nothing(LessonCardRepairOutcome::NOTHING_TO_REPAIR, $card->address, $card->kind, 'only the native pattern is the same as another frame\'s — a native rendering is a translation (P2R v1.3)', $before, count($found));
-        }
-        $findings = $atCard === []
-            ? array_map(static fn (string $code): array => ['code' => $code, 'detail' => 'named by the session'], $codes)
-            : array_map(static fn (LessonViolation $v): array => ['code' => $v->code, 'detail' => "{$v->address}: {$v->detail}"], $cited);
-
-        $repairRequest = new LessonCardRepairRequest(
-            address: $card->address,
-            kind: $card->kind,
-            card: $before,
-            context: LessonCardContext::of($read, $card),
-            findings: $findings,
-            neighbours: $card->kind === LessonCard::EXCHANGE ? LessonCardContext::neighbours($read, $card) : null,
-            earlierDays: $request->earlierDays,
-            targetLanguage: $request->targetLanguage,
-            nativeLanguage: $request->nativeLanguage,
-            level: $request->level,
-            learnerGender: $request->learnerGender,
-            dialogueCount: $request->dialogueCount,
-            vocabularyCount: $request->vocabularyCount,
-        );
         try {
-            $reply = $this->model->repairLessonCard($repairRequest);
+            $reply = $this->model->repairLessonCard(new LessonCardRepairRequest(
+                address: $card->address,
+                kind: $card->kind,
+                card: $before,
+                findings: array_map(static fn (LessonViolation $v): array => ['code' => $v->code, 'detail' => "{$v->address}: {$v->detail}"], $findings),
+                skeleton: $skeleton->toArray(),
+                dialogue: $card->ofSkeleton() ? null : $dialogue?->toArray(),
+                neighbours: $card->kind === LessonCard::EXCHANGE && $dialogue !== null ? self::neighbours($dialogue, $card->number) : null,
+                earlierDays: $request->earlierDays,
+                targetLanguage: $request->targetLanguage,
+                nativeLanguage: $request->nativeLanguage,
+                level: $request->level,
+                learnerGender: $request->learnerGender,
+            ));
         } catch (PlanModelUnavailable $e) {
             throw $e;
         } catch (Throwable $e) {
@@ -154,134 +77,102 @@ final readonly class LessonCardRepairer
         }
 
         $raw = $reply->payload['card'] ?? null;
-        $rawFrame = $reply->payload['frame_update'] ?? null;
-        $frameUpdate = null;
         try {
             if (! is_array($raw)) {
                 throw ModelAnswerOffSchema::at('card', 'missing object');
             }
             /** @var array<string, mixed> $raw */
-            $repairedCard = $this->parser->card($card->kind, $raw);
-            $frameUpdate = $card->kind === LessonCard::EXCHANGE ? $this->parser->frameUpdate($rawFrame) : null;
-            self::assertStandsOnAFrame($answer, $repairedCard);
-            $repaired = $repairedCard instanceof Exchange
-                ? $card->replaceExchange($answer, $repairedCard, $frameUpdate)
-                : $card->replace($answer, $repairedCard);
-            if ($repaired === null) {
-                throw ModelAnswerOffSchema::at('frame_update', 'names no frame the repaired learner line stands on');
-            }
+            $repaired = self::shuffled($this->parser->card($card->kind, $raw), $card, $request->sceneId);
+            self::assertFits($repaired, $card, $skeleton, $dialogue);
         } catch (ModelAnswerOffSchema $e) {
-            return self::offSchema($card, $before, $raw, $atCard, $found, $reply, $e->getMessage(), is_array($rawFrame) ? $rawFrame : null);
+            return self::outcome(LessonCardRepairOutcome::OFF_SCHEMA, $card, $before, $raw, $findings, null, null, $reply, $e->getMessage());
         }
 
-        $repaired = $repaired->withRoles($request->roles);
-        $after = $this->validator->run($repaired, $context);
-        if ($card->kind === LessonCard::TERM && self::replacesWord($answer, $repaired, $card)
-            && ($refused = self::wordRefused($repaired, $card, $after)) !== []) {
-            return new LessonCardRepairOutcome(
-                LessonCardRepairOutcome::REFUSED, $card->address, $card->kind, $before, $card->of($repaired),
-                self::rows($atCard), [], null, [], count($found), $reply->costUsd, $reply->latencyMs, $reply->promptVersion,
-                implode('; ', $refused),
-            );
+        $refused = $repaired instanceof VocabularyItem ? self::wordRefused($skeleton, $card, $repaired) : null;
+        if ($refused !== null) {
+            return self::outcome(LessonCardRepairOutcome::REFUSED, $card, $before, $raw, $findings, null, null, $reply, $refused);
         }
 
-        return new LessonCardRepairOutcome(
-            status: LessonCardRepairOutcome::REPAIRED,
-            address: $card->address,
-            kind: $card->kind,
-            before: $before,
-            after: $card->of(LessonAssembly::said($repaired, $context->target)),
-            findingsBefore: self::rows($atCard),
-            findingsAfter: self::rows(array_values(array_filter($after, static fn (LessonViolation $v): bool => $card->covers($v)))),
-            answer: $repaired,
-            lessonFindings: self::rows($after),
-            lessonFindingsBefore: count($found),
-            costUsd: $reply->costUsd,
-            latencyMs: $reply->latencyMs,
-            promptVersion: $reply->promptVersion,
-            frameUpdate: $frameUpdate?->toArray(),
-        );
+        [$newSkeleton, $newDialogue] = $card->replace($skeleton, $dialogue, $repaired);
+
+        return self::outcome(LessonCardRepairOutcome::REPAIRED, $card, $before, $card->of($newSkeleton, $newDialogue), $findings, $newSkeleton, $newDialogue, $reply);
     }
 
     /**
-     * A learner line of a repaired card stands on a frame of THIS lesson, or on none when it is a rescue — the schema holds
-     * only the ids a day may have, so the server holds the rest.
+     * A repaired card whose options the model ordered — a check, a listening question, the check of a whole exchange —
+     * shuffled by the seed the day's dialogue was shuffled with.
      */
-    private static function assertStandsOnAFrame(Lesson $answer, Phrase|Exchange|Message|ExchangeCheck|ListeningQuestion|VocabularyItem $card): void
+    private static function shuffled(SkeletonFrame|VocabularyItem|PartnerLine|DialogueExchange|ExchangeCheck|ListeningQuestion $card, LessonCard $at, string $seed): SkeletonFrame|VocabularyItem|PartnerLine|DialogueExchange|ExchangeCheck|ListeningQuestion
     {
-        $line = match (true) {
-            $card instanceof Exchange => $card->learner(),
-            $card instanceof Message => $card,
-            default => null,
+        return match (true) {
+            $card instanceof ExchangeCheck => OptionShuffle::check($card, "{$seed}:x{$at->number}:check"),
+            $card instanceof ListeningQuestion => OptionShuffle::listening($card, "{$seed}:listening:".($at->number - 1)),
+            $card instanceof DialogueExchange => $card->withExchange($card->exchange->withCheck(OptionShuffle::check($card->exchange->check, "{$seed}:x{$at->number}:check"))),
+            default => $card,
         };
-        if ($line?->phraseId !== null && $answer->phrase($line->phraseId) === null) {
-            throw ModelAnswerOffSchema::at('card.phrase_id', "«{$line->phraseId}» names no frame of the lesson");
-        }
     }
 
     /**
-     * Did the repair put ANOTHER word in the card's place? A word kept as it was — its definition written anew in the target
-     * language (P2R v1.4, наряд LANG-1b §10) — is no new word: whatever the day already said of it (a `used_in` warning) was
-     * there before the repair and is no reason to refuse the definition the repair fixed.
+     * What the schema cannot hold and the server does: a learner line of a repaired exchange stands on a frame of the skeleton
+     * (a rescue on none); a repaired frame keeps, word for word, every filler the dialogue already says.
      */
-    private static function replacesWord(Lesson $answer, Lesson $repaired, LessonCard $card): bool
+    private static function assertFits(SkeletonFrame|VocabularyItem|PartnerLine|DialogueExchange|ExchangeCheck|ListeningQuestion $card, LessonCard $at, Skeleton $skeleton, ?Dialogue $dialogue): void
     {
-        $was = $answer->vocabularyItem($card->frameId)?->termTarget;
-        $now = $repaired->vocabularyItem($card->frameId)?->termTarget;
-
-        return $was === null || $now === null || FrameText::identity($was) !== FrameText::identity($now);
+        if ($card instanceof DialogueExchange) {
+            $line = $card->exchange->learner();
+            if ($line?->phraseId !== null && $skeleton->frame($line->phraseId) === null) {
+                throw ModelAnswerOffSchema::at('card.messages', "«{$line->phraseId}» names no frame of the skeleton");
+            }
+        }
+        if ($card instanceof SkeletonFrame && $dialogue !== null) {
+            $old = $skeleton->frame($at->id);
+            foreach ($dialogue->exchanges as $exchange) {
+                $learner = $exchange->exchange->learner();
+                if ($old === null || $learner === null || $learner->phraseId !== $at->id) {
+                    continue;
+                }
+                $said = FrameText::line($old->phrase, $learner->textTarget)['filler'];
+                if ($said !== null && $card->phrase->filler($said->target) === null) {
+                    throw ModelAnswerOffSchema::at('card.slot', "the filler «{$said->target}» the dialogue says is gone");
+                }
+            }
+        }
     }
 
-    /**
-     * Why the server refuses a repaired word (P2R v1.2, наряд GEN-3): what its own check of the word still finds — a
-     * `used_in` that is not true, a word an earlier day taught — and a word the day already lists under another id. An
-     * abbreviation is no reason (доработка GEN-3): whether the learner's language has an everyday word for it is the
-     * model's to judge (P2R v1.3), the validator only counts it.
-     *
-     * @param  list<LessonViolation>  $after  the validator's findings over the lesson with the repaired word
-     * @return list<string>
-     */
-    private static function wordRefused(Lesson $repaired, LessonCard $card, array $after): array
+    /** Why a word put in the place of another is not taken: the day already has it under another id. */
+    private static function wordRefused(Skeleton $skeleton, LessonCard $card, VocabularyItem $word): ?string
     {
-        $out = [];
-        foreach ($after as $violation) {
-            if ($violation->address === $card->address && in_array($violation->code, [LessonCodes::VOCAB_USED_IN_WRONG, LessonCodes::VOCAB_KNOWN_REPEAT], true)) {
-                $out[] = "{$violation->code}: {$violation->detail}";
-            }
-        }
-        $word = $repaired->vocabularyItem($card->frameId);
-        foreach ($repaired->vocabulary as $other) {
-            if ($word !== null && $other->id !== $word->id && FrameText::identity($other->termTarget) === FrameText::identity($word->termTarget)) {
-                $out[] = "«{$word->termTarget}» is already the day's word {$other->id}";
+        foreach ($skeleton->vocabulary as $other) {
+            if ($other->id !== $card->id && FrameText::identity($other->termTarget) === FrameText::identity($word->termTarget)) {
+                return "«{$word->termTarget}» is already the day's word {$other->id}";
             }
         }
 
-        return $out;
+        return null;
+    }
+
+    /** @return array{before: array<string, mixed>|null, after: array<string, mixed>|null} */
+    private static function neighbours(Dialogue $dialogue, int $step): array
+    {
+        return [
+            'before' => $dialogue->exchange($step - 1)?->toArray(),
+            'after' => $dialogue->exchange($step + 1)?->toArray(),
+        ];
     }
 
     /**
      * @param  array<string, mixed>  $before
-     * @param  list<LessonViolation>  $atCard
-     * @param  list<LessonViolation>  $found
-     * @param  array<string, mixed>|null  $frameUpdate
+     * @param  list<LessonViolation>  $findings
      */
-    private static function offSchema(LessonCard $card, array $before, mixed $raw, array $atCard, array $found, ModelReply $reply, string $why, ?array $frameUpdate): LessonCardRepairOutcome
+    private static function outcome(string $status, LessonCard $card, array $before, mixed $after, array $findings, ?Skeleton $skeleton, ?Dialogue $dialogue, ModelReply $reply, string $note = ''): LessonCardRepairOutcome
     {
-        /** @var array<string, mixed>|null $after */
-        $after = is_array($raw) ? $raw : null;
+        /** @var array<string, mixed>|null $shown */
+        $shown = is_array($after) ? $after : null;
 
         return new LessonCardRepairOutcome(
-            LessonCardRepairOutcome::OFF_SCHEMA, $card->address, $card->kind, $before, $after,
-            self::rows($atCard), [], null, [], count($found), $reply->costUsd, $reply->latencyMs, $reply->promptVersion, $why, $frameUpdate,
+            $status, $card->address, $card->kind, $before, $shown, self::rows($findings), $skeleton, $dialogue,
+            $reply->costUsd, $reply->latencyMs, $reply->promptVersion, $note,
         );
-    }
-
-    /**
-     * @param  array<string, mixed>|null  $before
-     */
-    private static function nothing(string $status, string $address, ?string $kind, string $note, ?array $before = null, int $findings = 0): LessonCardRepairOutcome
-    {
-        return new LessonCardRepairOutcome($status, $address, $kind, $before, null, [], [], null, [], $findings, '0.000000', 0, '', $note);
     }
 
     /**

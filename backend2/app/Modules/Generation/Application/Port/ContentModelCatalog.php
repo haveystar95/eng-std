@@ -55,6 +55,8 @@ interface ContentModelCatalog
      *        finer than the spend label. The learning plan's every call is `plan` money, but four different things
      *        (наряд BACK-TAILS-1 §3.3) — the plan, a lesson, a repair, a judge — and a journal that called them all
      *        `plan` could not say which of them a lost call had been. Null: the journal says what the log says.
+     * @param  string|null  $reasoningEffort  the model's `reasoning_effort` for this call (наряд GEN-4: the learning plan sets
+     *        one per purpose). Only the OpenAI-compatible wire has the field; null sends nothing — the model's own default.
      */
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ?ContentModelPort;
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null, ?string $reasoningEffort = null): ?ContentModelPort;
 }

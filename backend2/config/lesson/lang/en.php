@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| LANGUAGE PACK · en — what the lesson validator reads of English
+| LANGUAGE PACK · en — what the day's checks read of English
 |--------------------------------------------------------------------------
 |
-| docs/plan-v2.md §4 (наряд GEN-2b). A rule of the validator is about the PAIR of languages (the lesson's
-| target, the learner's own), never about English or Russian: everything a rule has to know about a language
-| lives in that language's pack. A key set to null is not written for this language yet — the rule that needs
-| it does not run and counts `lang.pack_missing`; it never borrows another language's words.
+| docs/plan-v2.md §4 (наряд GEN-2b; the day's checks since GEN-4). A rule is about the PAIR of languages (the
+| lesson's target, the learner's own), never about English or Russian: everything a rule has to know about a language
+| lives in that language's pack. A key set to null is not written for this language yet — the rule that needs it does
+| not run; it never borrows another language's words.
 |
 | English is written as a TARGET language: what the learner says and hears. The keys only a learner's own
 | language needs (`script`, `time_pattern`, `amount_pattern`, `amount_prefix`, `gendered_past_pattern`,

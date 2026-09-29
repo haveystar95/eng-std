@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Entity;
 
 use App\Modules\Plan\Domain\Blueprint\SceneBrief;
+use App\Modules\Plan\Domain\Blueprint\SurvivalSet;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Lesson\Lesson;
 use App\Modules\Plan\Domain\Lesson\LessonAssembly;
+use App\Modules\Plan\Domain\Lesson\Skeleton;
 use App\Modules\Plan\Domain\ValueObject\Image;
 use App\Modules\Plan\Domain\ValueObject\LessonStatus;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
@@ -19,15 +21,16 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 use DateTimeImmutable;
 
 /**
- * One scene of the plan: the brief the plan builder wrote, and — once the lesson generator has
- * answered — the lesson with the cost and version it was written at, spoken in the roles the plan gives
- * (the learner's of the plan, the partner's of the scene — наряд GEN-3).
+ * One scene of the plan: the brief the plan builder wrote — with its SURVIVAL SET, what the learner must say and understand
+ * (`plan-builder-v2.1`) — and, once the day is built, the lesson with the cost and version it was written at, spoken in the
+ * roles the plan gives (the learner's of the plan, the partner's of the scene — наряд GEN-3), and the SKELETON it was built
+ * from (наряд GEN-4: the day's first stage, kept beside the lesson — a repair of the dialogue and the admin read it).
  *
- * The scene keeps the model's ANSWER (what is stored and what the validator judged) and serves the
- * lesson put together from it ({@see LessonAssembly}, seeded by the scene): the filler of every learner
- * line and the in-dialogue marks are what the server finds in the lines, the speaking keys come from the
- * frames — which words are content is the plan's target language's pack — and right answers stand at
- * shuffled places. Every reader deals from {@see lesson()}; only the store and a repair read {@see answer()}.
+ * The scene keeps the lesson as stored — assembled from the skeleton and the dialogue, the options already shuffled
+ * ({@see \App\Modules\Plan\Domain\Lesson\OptionShuffle}) — and serves it ({@see LessonAssembly}): the filler of every
+ * learner line and the in-dialogue marks are what the server finds in the lines, the speaking keys come from the frames —
+ * which words are content is the plan's target language's pack. Every reader deals from {@see lesson()}; only the store
+ * reads {@see answer()}.
  *
  * A lesson written is not yet a ready day (DAY-UI-3): the scene is `illustrating` until its photos
  * are found, and only then `ready` — a day opens with its pictures on it. The partner's voice
@@ -73,8 +76,10 @@ final class PlanScene
         ?LanguagePack $targetPack,
         private ?DateTimeImmutable $builtAt = null,
         private ?string $partnerVoiceId = null,
+        private readonly SurvivalSet $survival = new SurvivalSet,
+        private ?Skeleton $skeleton = null,
     ) {
-        $this->lesson = $answer === null || $targetPack === null ? null : LessonAssembly::serve($answer, $id->value, $targetPack);
+        $this->lesson = $answer === null || $targetPack === null ? null : LessonAssembly::serve($answer, $targetPack);
     }
 
     /** A scene of the plan's brief: no lesson yet, nothing to serve — the lesson comes with its language ({@see acceptLesson()}). */
@@ -84,7 +89,7 @@ final class PlanScene
             $id, $planId, $brief->order, $brief->kind, $brief->priority, $brief->titleNative, $brief->titleTarget,
             $brief->teachesNative, $brief->goalsNative, $brief->learnerRoleTarget, $brief->learnerRoleNative,
             $brief->partnerRoleTarget, $brief->partnerRoleNative, $brief->topicDescription, $brief->imagePrompt,
-            null, null, LessonStatus::Pending, null, [], null, null, null, null, null,
+            null, null, LessonStatus::Pending, null, [], null, null, null, null, null, survival: $brief->survival,
         );
     }
 
@@ -121,12 +126,14 @@ final class PlanScene
         ?VoiceGender $partnerVoiceGender = null,
         ?DateTimeImmutable $builtAt = null,
         ?string $partnerVoiceId = null,
+        SurvivalSet $survival = new SurvivalSet,
+        ?Skeleton $skeleton = null,
     ): self {
         return new self(
             $id, $planId, $order, $kind, $priority, $titleNative, $titleTarget, $teachesNative, $goalsNative,
             $learnerRoleTarget, $learnerRoleNative, $partnerRoleTarget, $partnerRoleNative, $topicDescription,
             $imagePrompt, $image, $answer, $lessonStatus, $lessonCall, $findings, $failReason, $buildStartedAt, $generatedAt,
-            $partnerVoiceGender, $targetPack, $builtAt, $partnerVoiceId,
+            $partnerVoiceGender, $targetPack, $builtAt, $partnerVoiceId, $survival, $skeleton,
         );
     }
 
@@ -139,17 +146,19 @@ final class PlanScene
     }
 
     /**
-     * The lesson is written: the scene waits for its photos (`illustrating`) and knows its voices — the
-     * partner's gender the lesson imagined for the role, the default when it said none. A voice cast for another gender
-     * (a lesson written twice, the second with the role's other sex) is let go, to be cast anew ({@see castPartnerVoice()}).
+     * The lesson is written: the scene keeps it with the skeleton it was built from, waits for its photos (`illustrating`)
+     * and knows its voices — the partner's gender the lesson imagined for the role, the default when it said none. A voice
+     * cast for another gender (a lesson written twice, the second with the role's other sex) is let go, to be cast anew
+     * ({@see castPartnerVoice()}).
      *
      * @param  LanguagePack  $targetPack  the plan's target language, which the served lesson's keys are read in
      * @param list<array{code: string, address: string, detail: string}> $findings
      */
-    public function acceptLesson(Lesson $answer, LanguagePack $targetPack, ModelCall $call, array $findings, DateTimeImmutable $now): void
+    public function acceptLesson(Lesson $answer, Skeleton $skeleton, LanguagePack $targetPack, ModelCall $call, array $findings, DateTimeImmutable $now): void
     {
         $this->answer = $answer;
-        $this->lesson = LessonAssembly::serve($answer, $this->id->value, $targetPack);
+        $this->skeleton = $skeleton;
+        $this->lesson = LessonAssembly::serve($answer, $targetPack);
         $this->lessonStatus = LessonStatus::Illustrating;
         $this->lessonCall = $call;
         $this->findings = $findings;
@@ -172,21 +181,6 @@ final class PlanScene
         if ($this->partnerVoiceId === null && trim($voice) !== '') {
             $this->partnerVoiceId = trim($voice);
         }
-    }
-
-    /**
-     * One card of the answer was repaired (P2R): the repaired answer replaces the old one, the findings
-     * are the validator's over it, and what the repair cost is added to the lesson's cost.
-     *
-     * @param  LanguagePack  $targetPack  the plan's target language, which the served lesson's keys are read in
-     * @param list<array{code: string, address: string, detail: string}> $findings
-     */
-    public function reviseLesson(Lesson $answer, LanguagePack $targetPack, array $findings, string $repairCostUsd): void
-    {
-        $this->answer = $answer;
-        $this->lesson = LessonAssembly::serve($answer, $this->id->value, $targetPack);
-        $this->findings = $findings;
-        $this->lessonCall = $this->lessonCall?->plusCost($repairCostUsd);
     }
 
     /**
@@ -375,10 +369,22 @@ final class PlanScene
         return $this->lesson;
     }
 
-    /** The model's answer as written — what is stored, validated and repaired. */
+    /** The lesson as stored — assembled from the day's two stages. */
     public function answer(): ?Lesson
     {
         return $this->answer;
+    }
+
+    /** What the learner must say and understand in this scene (`plan-builder-v2.1`); empty for a scene built before it. */
+    public function survival(): SurvivalSet
+    {
+        return $this->survival;
+    }
+
+    /** The skeleton the lesson was built from (наряд GEN-4); null before the lesson and for a lesson built in one call. */
+    public function skeleton(): ?Skeleton
+    {
+        return $this->skeleton;
     }
 
     public function lessonStatus(): LessonStatus

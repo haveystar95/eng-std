@@ -32,4 +32,9 @@ final readonly class Blueprint
     {
         return new self($this->status, $this->unclearReason, $this->titles, $scenes);
     }
+
+    public function withTitles(PlanTitles $titles): self
+    {
+        return new self($this->status, $this->unclearReason, $titles, $this->scenes);
+    }
 }

@@ -11,8 +11,8 @@ use App\Modules\Plan\Application\Service\PlanBuildService;
 use App\Modules\Plan\Application\Service\PlanEventJournal;
 use App\Modules\Plan\Application\Service\PlanNotifier;
 use App\Modules\Plan\Domain\Blueprint\Blueprint;
-use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Entity\Plan;
+use App\Modules\Plan\Domain\Entity\PlanEvent;
 use App\Modules\Plan\Domain\Entity\PlanScene;
 use App\Modules\Plan\Domain\Repository\PlanRepository;
 use App\Modules\Plan\Domain\Service\PlanCalendar;
@@ -122,7 +122,7 @@ final readonly class BuildPlanHandler
 
     private function extend(Plan $plan, int $scenesToAdd): void
     {
-        $existing = array_map(static fn (PlanScene $s): string => $s->titleNative(), $plan->scenes());
+        $existing = array_map(static fn (PlanScene $s): array => ['title' => $s->titleNative(), 'must_say' => $s->survival()->sayLines()], $plan->scenes());
         $request = $this->request($plan, $scenesToAdd, $existing);
 
         try {
@@ -168,7 +168,7 @@ final readonly class BuildPlanHandler
         }
     }
 
-    /** @param list<string> $existing */
+    /** @param list<array{title: string, must_say: list<string>}> $existing */
     private function request(Plan $plan, int $scenesCount, array $existing): PlanRequest
     {
         return new PlanRequest(

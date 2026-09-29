@@ -8,10 +8,10 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 |
 | docs/plan-v2.md §4 (наряд GEN-2b), наряд LANG-1 (key spec: docs/research/lang-1/pack-keys.md). Spanish is written on
-| BOTH sides: as a TARGET (what the learner says and hears — the lesson validator's target rules, the judge of the
+| BOTH sides: as a TARGET (what the learner says and hears — the day's checks' target rules, the judge of the
 | talk's constructions, the comparison of speech) and as the LEARNER'S OWN language (readings, native frames, the
 | listening, the translation guard, the title of the talk). No key is null: a rule that is no rule of Spanish is written
-| as the spec's no-op, so its absence is a decision and never a `lang.pack_missing`.
+| as the spec's no-op, so its absence is a decision and never a rule switched off.
 |
 | How the words are written. Every list is read through {@see \App\Modules\Plan\Domain\Check\Language\LanguagePack::normal()}
 | (folded, lower case, the plain apostrophe) or through the kernel's canonical form: the normal spelling of the language

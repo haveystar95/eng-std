@@ -2,14 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Check\Language\LanguageWords;
-use App\Modules\Plan\Domain\Check\Language\PackSkip;
-use App\Modules\Plan\Domain\Check\Lesson\FillerRules;
-use App\Modules\Plan\Domain\Check\LessonValidator;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
-use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Service\FrameJudge;
 use App\Modules\Plan\Domain\Service\LineShare;
 use App\Modules\Plan\Domain\Service\NativeStrings;
@@ -17,8 +11,6 @@ use App\Modules\Plan\Domain\Service\ReplyNative;
 use App\Modules\Plan\Domain\Service\WordBases;
 use App\Modules\Plan\Domain\ValueObject\ConversationPhrase;
 use App\Modules\Plan\Domain\ValueObject\MoveVerdict;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
-use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\Service\SpokenNumbers;
@@ -31,28 +23,17 @@ use App\Modules\Shared\Domain\Service\SpokenNumbers;
  * that day, the numbers it says, the translations of the role.
  */
 
-// Canon (pack-keys §7.2): no check of the ru→fr target side and none of the fr→en native side is skipped for a key the
-// pack does not write, and no reader throws on a key written in the wrong shape. CATCHES a key left null or absent
-// (`lang.pack_missing` on every day of the pair) and a key the reader cannot read (a string for a list, a missing field).
+// Canon (pack-keys §7.2): the ru→fr target side and the fr→en native side find every key they read, and no reader throws
+// on a key written in the wrong shape. CATCHES a key left null or absent and a key the reader cannot read (a string for a
+// list, a missing field).
 it('gives every reader of the pack what it reads, in the shape it reads it', function (string $code) {
     $pack = lessonPacks()->for($code);
     $words = new LanguageWords($pack);
-    $gaps = static function (string $side) use ($code): array {
-        $context = $side === 'target' ? lessonContext('ru', $code) : lessonContext($code, 'en');
-        $request = new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays);
-        (new LessonValidator)->run((new LessonParser)->parse(FakePlanModel::lessonPayload($request)), $context);
-
-        return array_values(array_filter(
-            array_map(static fn (PackSkip $skip): array => $skip->toArray(), $context->skips->all()),
-            static fn (array $skip): bool => $skip['language'] === $code,
-        ));
-    };
 
     expect(LanguageRoles::planTargets())->toContain($code)
         ->and(LanguageRoles::planNatives())->toContain($code);
 
     // The target side (ru→fr).
-    expect($gaps('target'))->toBe([]);
     foreach (['abbreviations', 'question_word_order', 'unstressed_words', 'number_words', 'number_joiners', 'irregular_forms', 'inflection_rules', 'person_swap', 'contractions', 'contractions_before', 'intro_words', 'clause_starters', 'negation', 'partitive', 'dangling_words', 'rescue_line', 'neutral_reply', 'script_letters', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the target side reads `{$key}`");
     }
@@ -62,28 +43,18 @@ it('gives every reader of the pack what it reads, in the shape it reads it', fun
     (new LineShare)->share('a b', 'b a', $pack, swapPersons: true);
     WordBases::of('abc', $pack);
     $words->isQuestion('a b');
-    $words->asksTwice('a, b?');
-    $words->isCloser('a');
-    $words->clause('a b c');
-    $words->articleMismatch('a', 'b');
-    $words->unresolvedPronoun('a b ___.');
-    $words->valueKind('a 2');
 
     // The native side (fr→en).
-    expect($gaps('native'))->toBe([]);
     foreach (['abbreviations', 'amount_pattern', 'amount_prefix', 'neutral_reply', 'common_words'] as $key) {
         expect($pack->has($key))->toBeTrue("the native side reads `{$key}`");
     }
     expect($pack->talkTitleTemplate())->not->toBeNull()
         ->and((new NativeStrings($code))->talkTitle(['Recepcjonistka', 'MRI'], $pack))->toContain('MRI');
-    $words->agreeingWithSlot('a b ___ c d.');
     $words->genderedPast('a b');
     $words->foreignLetters('ab');
-    $words->readsInScript('ab');
-    $words->valueKind('a 2');
 
-    // No key is null: null is «not written» and counts `lang.pack_missing` (наряд LANG-1 §4.6). The two keys a neighbour
-    // is compared by are the spec's reference string and one run of letters per word.
+    // No key is null: null is «not written», and the rule that needs it does not run (наряд LANG-1 §4.6). The two keys a
+    // neighbour is compared by are the spec's reference string and one run of letters per word.
     $written = require dirname(__DIR__, 4).'/config/lesson/lang/fr.php';
     expect(array_keys(array_filter($written, static fn (mixed $value): bool => $value === null)))->toBe([])
         ->and($written['script_letters'])->toBe('/^[\p{Latin}]$/u')
@@ -299,24 +270,16 @@ it('titles a talk for a French learner', function () {
         ->and($strings->talkTitle([], $fr))->toBe('Conversation');
 });
 
-// The learner's-language keys on the fr→en scouting day and the seam of the ru→fr one. CATCHES a native frame of that day
-// flagged for agreeing with its slot where nothing agrees («Quels horaires sont disponibles ___ ?» + «aujourd'hui»), a
-// frame whose article changes with the filler let through («Je voudrais un ___»), a gendered «je suis désolé» missed or
-// «je suis ici» taken for one, the amount of «Поймай число» cut from its preposition, a Cyrillic reading of a French
-// learner let through, and «ce» before a vowel at a seam («ce après-midi») let through while «ce matin» is flagged — and
-// the fatal false alarms of the first cut of the pack: the PRONOUN «ce» before «à», «au» read as the determiner that
-// should have been «cet» («Je ne sais pas ce ___» + «à quoi ça sert», «Sur ce, ___ !» + «à demain»), a first name after
-// «je suis» read as a gendered participle («Je suis Marie Dupont»), and the shop's «Et avec ceci ?» missed as a closer.
-it('reads the learner\'s keys and the seam on French lines', function () {
+// The learner's-language keys on the fr→en scouting day. CATCHES a gendered «je suis désolé» missed or «je suis ici» taken
+// for one, the amount of «Поймай число» cut from its preposition, a Cyrillic reading of a French learner let through — and
+// the false alarm of the first cut of the pack: a first name after «je suis» read as a gendered participle («Je suis Marie
+// Dupont»).
+it('reads the learner\'s keys on French lines', function () {
     $fr = lessonPacks()->for('fr');
     $words = new LanguageWords($fr);
     $values = NumberValues::of($fr);
 
-    expect($words->agreeingWithSlot('Quels horaires sont disponibles ___ ?'))->toBe([])
-        ->and($words->agreeingWithSlot("J'ai ça depuis ___."))->toBe([])
-        ->and($words->agreeingWithSlot('Je voudrais un ___.'))->toBe(['un'])
-        ->and($words->agreeingWithSlot('___ est inclus ?'))->toBe(['inclus'])
-        ->and($words->genderedPast('Je suis désolé, je suis arrivée en retard.'))->toBe(['désolé', 'arrivée'])
+    expect($words->genderedPast('Je suis désolé, je suis arrivée en retard.'))->toBe(['désolé', 'arrivée'])
         ->and($words->genderedPast('Je suis ici depuis trois jours, je suis aussi fatigué.'))->toBe(['fatigué'])
         ->and($words->genderedPast("J'ai mal à la gorge depuis trois jours."))->toBe([])
         // A first name after «je suis» is no participle: the line is read lower-cased, «marie» ends like «mariée».
@@ -329,22 +292,5 @@ it('reads the learner\'s keys and the seam on French lines', function () {
         ->and($words->isNumber('quatre-vingt-dix'))->toBeTrue()
         ->and($words->isNumber('une'))->toBeFalse()
         ->and($words->foreignLetters('айд лайк ту мейк эн эпойнтмэнт'))->not->toBe([])
-        ->and($words->foreignLetters('aïde laïke tou méïke'))->toBe([])
-        ->and($words->readsInScript('aïde laïke tou méïke ___'))->toBeTrue()
-        ->and($words->readsInScript('ai hv ə sor throut'))->toBeFalse()
-        ->and(FillerRules::seams('Je peux venir ce ___.', 'après-midi', $words))->not->toBe([])
-        ->and(FillerRules::seams('Je peux venir ce ___.', 'matin', $words))->toBe([])
-        ->and(FillerRules::seams("J'ai ___", 'mal à la gorge', $words))->toBe([])
-        ->and(FillerRules::seams('Je voudrais ___.', 'M. Dupont', $words))->toBe([])
-        ->and(FillerRules::seams('Oui, ___.', "c'est bon", $words))->not->toBe([])
-        // The PRONOUN «ce» before a preposition or «où» is no determiner that should have been «cet»: a healthy seam.
-        ->and(FillerRules::seams('Je ne sais pas ce ___.', 'à quoi ça sert', $words))->toBe([])
-        ->and(FillerRules::seams('Sur ce, ___ !', 'à demain', $words))->toBe([])
-        ->and(FillerRules::seams('Sur ce, ___ !', 'au revoir', $words))->toBe([])
-        ->and(FillerRules::seams('Je voudrais un ___.', 'une place', $words))->not->toBe([])
-        ->and(FillerRules::seams('Vous ___ ?', 'vous appelez comment', $words))->toBe([])
-        // An empty closer of a French partner — the shop's «Et avec ceci ?» among them — and a line that says something.
-        ->and($words->isCloser('Et avec ceci ?'))->toBeTrue()
-        ->and($words->isCloser('Nous avons une place demain à dix heures.'))->toBeFalse()
-        ->and($words->isCloser("C'est noté."))->toBeTrue();
+        ->and($words->foreignLetters('aïde laïke tou méïke'))->toBe([]);
 });

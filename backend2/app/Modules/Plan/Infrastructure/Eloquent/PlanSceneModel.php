@@ -27,7 +27,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $image_author
  * @property string|null $image_author_url
  * @property string|null $image_tone
+ * @property list<mixed>|null $must_say
+ * @property list<mixed>|null $must_understand
  * @property array<string, mixed>|null $lesson_json
+ * @property array<string, mixed>|null $skeleton_json
  * @property string $lesson_status
  * @property string|null $prompt_version_lesson
  * @property string|null $build_version
@@ -54,7 +57,8 @@ final class PlanSceneModel extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'goals_native' => 'array', 'lesson_json' => 'array', 'checks_json' => 'array',
+        'goals_native' => 'array', 'lesson_json' => 'array', 'checks_json' => 'array', 'skeleton_json' => 'array',
+        'must_say' => 'array', 'must_understand' => 'array',
         'order' => 'int', 'priority' => 'int', 'latency_ms_lesson' => 'int', 'attempts_lesson' => 'int',
     ];
 }

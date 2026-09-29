@@ -9,7 +9,7 @@ use App\Modules\Plan\Domain\Service\DayPace;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 
 /**
- * The knobs of the plan, read from `config/plan.php` once by the provider: how much a lesson
+ * The knobs of the plan, read from `config/plan.php` once by the provider: how many words a day
  * orders per level, how long a build may take before it counts as dead, the
  * languages a plan may be built in, the seconds a card of each kind takes, how long «Фразы» may take before it
  * cuts itself, how many slot-judge calls a learner has per day, and how much of a line on the screen may go
@@ -17,8 +17,11 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
  */
 final readonly class PlanConfig
 {
+    /** VOCABULARY_COUNT when the config names none for a level. */
+    public const VOCABULARY = [8, 12];
+
     /**
-     * @param  array<string, array{vocabulary: int, dialogue: int}>  $counts  by level
+     * @param  array<string, array{vocabulary: array{0: int, 1: int}}>  $counts  by level: VOCABULARY_COUNT as its range
      * @param  list<string>  $languages  the EFFECTIVE plan targets — `LanguageRoles::planTargets()` narrowed by
      *                                  `plan.languages` (наряд LANG-1 §7), in the order the entry screen offers
      *                                  them; what `GET /plans/languages` lists and `POST /plans` accepts
@@ -39,13 +42,13 @@ final readonly class PlanConfig
     ) {}
 
     /**
-     * What a lesson orders at this level. The number of frames is not ordered: the model takes it from
-     * the dialogue it writes (`lesson_day.v4.5`).
+     * VOCABULARY_COUNT at this level — the range the skeleton takes its words within (наряд GEN-4). Frames and exchanges are
+     * not ordered: the frames are the scene's survival set, DIALOGUE_COUNT is counted off the skeleton.
      *
-     * @return array{vocabulary: int, dialogue: int}
+     * @return array{0: int, 1: int}
      */
-    public function countsFor(PlanLevel $level): array
+    public function vocabularyRange(PlanLevel $level): array
     {
-        return $this->counts[$level->value] ?? ['vocabulary' => 8, 'dialogue' => 8];
+        return $this->counts[$level->value]['vocabulary'] ?? self::VOCABULARY;
     }
 }

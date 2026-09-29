@@ -5,35 +5,60 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Model;
 
 use App\Modules\Plan\Application\Dto\ConversationAgentRequest;
+use App\Modules\Plan\Application\Dto\DialogueRequest;
 use App\Modules\Plan\Application\Dto\LessonCardRepairRequest;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\ModelReply;
 use App\Modules\Plan\Application\Dto\NativeSeamJudgeRequest;
+use App\Modules\Plan\Application\Dto\PlanLineRepairRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Blueprint\SurvivalSet;
+use App\Modules\Plan\Domain\Check\Dialogue\LearnerLine;
+use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
+use App\Modules\Plan\Domain\Lesson\EarlierDays;
+use App\Modules\Plan\Domain\Lesson\LessonCard;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\LessonRoles;
+use App\Modules\Plan\Domain\Lesson\Skeleton;
 use App\Modules\Plan\Domain\Service\FrameText;
+use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use Closure;
 
 /**
  * Deterministic answers without a network — `PLAN_MODEL_DRIVER=fake` and the whole test suite.
  *
- * The default answers are a valid plan of exactly SCENES_COUNT scenes and a clean lesson — every rule
- * the lesson validator counts honoured — so a day can be dealt from them; the seam judge reads every native
- * sentence as fine; the slot judge accepts every attempt, taking what was heard for the slot. A goal containing
- * «unclear» comes back `unclear`, the way the prompt answers a non-situation. A test that wants a BROKEN answer hands
- * in its own closure for any call — or a closure that throws, for a model that does not answer.
+ * The default answers are a valid plan of exactly SCENES_COUNT scenes, each with its survival set, and a clean day in two
+ * stages — a skeleton and a dialogue that break no rule of their checks and assemble into THE FIXTURE LESSON
+ * ({@see lessonPayload()}): the day every plan test deals from. The two stages are read off that lesson ({@see
+ * skeletonPayload()}, {@see dialoguePayload()}), so the fixture has one source. The seam judge reads every native sentence as
+ * fine; a repair gives the card back as it was; a line repair cuts the line to its limit; the slot judge accepts every attempt,
+ * taking what was heard for the slot. A goal containing «unclear» comes back `unclear`, the way the prompt answers a
+ * non-situation. A test that wants a BROKEN answer hands in its own closure for any call — or a closure that throws, for a
+ * model that does not answer.
  */
 final class FakePlanModel implements PlanModelPort
 {
     public const MODEL = 'fake-plan-model';
 
-    /** How many times each call was made — the assertion behind «one retry, not two». */
+    /** The version of every prompt, as the files in `current/` name them. */
+    public const PLAN_VERSION = 'plan-builder-v2.1';
+
+    public const SKELETON_VERSION = 'lesson_skeleton.v1';
+
+    public const DIALOGUE_VERSION = 'lesson_dialogue.v1';
+
+    public const REPAIR_VERSION = 'lesson_card_repair.v1.5';
+
+    /** How many times each call was made — the assertion behind «one repeat, not two». */
     public int $planCalls = 0;
 
-    public int $lessonCalls = 0;
+    public int $planLineCalls = 0;
+
+    public int $skeletonCalls = 0;
+
+    public int $dialogueCalls = 0;
 
     public int $repairCalls = 0;
 
@@ -58,26 +83,40 @@ final class FakePlanModel implements PlanModelPort
     /** @var list<PlanRequest> */
     public array $planRequests = [];
 
+    /** @var list<PlanLineRepairRequest> */
+    public array $planLineRequests = [];
+
     /** @var list<LessonRequest> */
-    public array $lessonRequests = [];
+    public array $skeletonRequests = [];
+
+    /** @var list<DialogueRequest> */
+    public array $dialogueRequests = [];
 
     /**
      * @param  (Closure(PlanRequest, int): array<string, mixed>)|null  $plan  attempt number is the second argument
-     * @param  (Closure(LessonRequest, int): array<string, mixed>)|null  $lesson
+     * @param  (Closure(LessonRequest, int): array<string, mixed>)|null  $skeleton
+     * @param  (Closure(DialogueRequest, int): array<string, mixed>)|null  $dialogue
      * @param  (Closure(LessonCardRepairRequest, int): array<string, mixed>)|null  $repair  the default returns the card as written
      * @param  (Closure(NativeSeamJudgeRequest, int): array<string, mixed>)|null  $judge  the default reads every sentence as fine
      * @param  (Closure(SlotJudgeRequest, int): array<string, mixed>)|null  $slotJudge  the default accepts; a closure that throws is a silent model
      * @param  (Closure(ConversationAgentRequest, int): array<string, mixed>)|null  $conversation  the default plays the role by the book; a closure that throws is a silent agent
+     * @param  (Closure(PlanLineRepairRequest, int): array<string, mixed>)|null  $planLine  the default cuts the line to its limit
+     * @param  (Closure(LessonRequest, int): array<string, mixed>)|null  $lesson  a day written as ONE lesson (the shape a scene stores),
+     *                                                                            split into its two stages by {@see stagesOf()} — for a test
+     *                                                                            that reads a day, not one that builds it; the number is the
+     *                                                                            build's (its skeleton call's), the same for both halves;
+     *                                                                            `$skeleton` and `$dialogue` go first
      */
     public function __construct(
         private readonly ?Closure $plan = null,
-        private readonly ?Closure $lesson = null,
+        private readonly ?Closure $skeleton = null,
+        private readonly ?Closure $dialogue = null,
         private readonly ?Closure $repair = null,
-        private readonly string $planVersion = 'plan-builder-v2',
-        private readonly string $lessonVersion = 'lesson_day.v4.10',
         private readonly ?Closure $judge = null,
         private readonly ?Closure $slotJudge = null,
         private readonly ?Closure $conversation = null,
+        private readonly ?Closure $planLine = null,
+        private readonly ?Closure $lesson = null,
     ) {}
 
     public function buildPlan(PlanRequest $request): ModelReply
@@ -86,16 +125,43 @@ final class FakePlanModel implements PlanModelPort
         $this->planRequests[] = $request;
         $payload = $this->plan !== null ? ($this->plan)($request, $this->planCalls) : self::planPayload($request);
 
-        return new ModelReply($payload, $this->planVersion, self::MODEL, 1200, 800, '0.000000', 5, '');
+        return new ModelReply($payload, self::PLAN_VERSION, self::MODEL, 1200, 800, '0.000000', 5, '');
     }
 
-    public function buildLesson(LessonRequest $request): ModelReply
+    public function repairPlanLine(PlanLineRepairRequest $request): ModelReply
     {
-        $this->lessonCalls++;
-        $this->lessonRequests[] = $request;
-        $payload = $this->lesson !== null ? ($this->lesson)($request, $this->lessonCalls) : self::lessonPayload($request);
+        $this->planLineCalls++;
+        $this->planLineRequests[] = $request;
+        $payload = $this->planLine !== null ? ($this->planLine)($request, $this->planLineCalls) : ['line' => mb_substr($request->line, 0, $request->limit)];
 
-        return new ModelReply($payload, $this->lessonVersion, self::MODEL, 3000, 2500, '0.000000', 7, '');
+        return new ModelReply($payload, 'plan_line_repair.v1', self::MODEL, 200, 20, '0.000000', 1, '');
+    }
+
+    public function buildSkeleton(LessonRequest $request): ModelReply
+    {
+        $this->skeletonCalls++;
+        $this->skeletonRequests[] = $request;
+        $payload = match (true) {
+            $this->skeleton !== null => ($this->skeleton)($request, $this->skeletonCalls),
+            $this->lesson !== null => self::stagesOf(($this->lesson)($request, $this->skeletonCalls), $request)['skeleton'],
+            default => self::skeletonPayload($request),
+        };
+
+        return new ModelReply($payload, self::SKELETON_VERSION, self::MODEL, 2000, 1500, '0.000000', 4, '');
+    }
+
+    public function buildDialogue(DialogueRequest $request): ModelReply
+    {
+        $this->dialogueCalls++;
+        $this->dialogueRequests[] = $request;
+        $payload = match (true) {
+            $this->dialogue !== null => ($this->dialogue)($request, $this->dialogueCalls),
+            // Both halves of one build see the same call number: the day's, counted by its skeletons.
+            $this->lesson !== null => self::spoken(self::stagesOf(($this->lesson)($request->lesson, $this->skeletonCalls), $request->lesson), $request->skeleton),
+            default => self::dialoguePayload($request),
+        };
+
+        return new ModelReply($payload, self::DIALOGUE_VERSION, self::MODEL, 3000, 2000, '0.000000', 5, '');
     }
 
     public function repairLessonCard(LessonCardRepairRequest $request): ModelReply
@@ -104,7 +170,7 @@ final class FakePlanModel implements PlanModelPort
         $this->repairRequests[] = $request;
         $payload = $this->repair !== null ? ($this->repair)($request, $this->repairCalls) : ['card' => $request->card];
 
-        return new ModelReply($payload, 'lesson_card_repair.v1.4', self::MODEL, 900, 300, '0.000000', 3, '');
+        return new ModelReply($payload, self::REPAIR_VERSION, self::MODEL, 900, 300, '0.000000', 3, '');
     }
 
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
@@ -206,12 +272,27 @@ final class FakePlanModel implements PlanModelPort
 
     public function planPromptVersion(): string
     {
-        return $this->planVersion;
+        return self::PLAN_VERSION;
+    }
+
+    public function skeletonPromptVersion(): string
+    {
+        return self::SKELETON_VERSION;
+    }
+
+    public function dialoguePromptVersion(): string
+    {
+        return self::DIALOGUE_VERSION;
+    }
+
+    public function lessonPromptVersion(): string
+    {
+        return self::SKELETON_VERSION.'+'.self::DIALOGUE_VERSION;
     }
 
     public function repairPromptVersion(): string
     {
-        return 'lesson_card_repair.v1.4';
+        return self::REPAIR_VERSION;
     }
 
     public function judgePromptVersion(): string
@@ -229,15 +310,36 @@ final class FakePlanModel implements PlanModelPort
         return 'conversation_agent.v3.4';
     }
 
-    public function lessonPromptVersion(): string
-    {
-        return $this->lessonVersion;
-    }
-
     /** The roles of the fake's plan and of its clean lesson — the plan's parent, the doctor of the visit. */
     public static function roles(): LessonRoles
     {
         return new LessonRoles('Parent', 'Родитель', 'Doctor', 'Врач');
+    }
+
+    /**
+     * THE SURVIVAL SET OF EVERY SCENE OF THE FAKE'S PLAN (`plan-builder-v2.1`) — the doctor's visit the fixture lesson is: one
+     * item a frame, the two asks of `p6` two items of one pattern.
+     */
+    public static function survival(): SurvivalSet
+    {
+        return SurvivalSet::fromModel(
+            [
+                'say where it hurts — slot: the part of the body',
+                'say when it started — slot: the time',
+                'say what the pain is like — slot: the kind of pain',
+                'answer whether he has a fever — slot: none',
+                'confirm how he will rest — slot: the place or time',
+                'ask whether a test is needed — slot: the test',
+                'ask whether another visit is needed — slot: the visit',
+            ],
+            [
+                'asks where exactly it hurts',
+                'asks when it started',
+                'asks what the pain is like and whether there is a fever',
+                'says the likely cause and gives instructions',
+                'says what is needed next',
+            ],
+        );
     }
 
     /** @return array<string, mixed> */
@@ -256,6 +358,7 @@ final class FakePlanModel implements PlanModelPort
             ['Оплата', 'Payment', 'спросить цену и оплатить', 'Cashier', 'Кассир'],
             ['Справка', 'Certificate', 'попросить справку для школы', 'Receptionist', 'Регистратор'],
         ];
+        $survival = self::survival();
         $offset = count($request->existingScenes);
         $scenes = [];
         for ($i = 0; $i < $request->scenesCount; $i++) {
@@ -264,7 +367,9 @@ final class FakePlanModel implements PlanModelPort
             $scenes[] = [
                 'order' => $order,
                 'kind' => $i < 3 ? 'situation' : 'variant',
-                'priority' => $i === 1 || $request->scenesCount === 1 ? 1 : ($i === 0 ? 2 : $i + 1),
+                'priority' => $offset > 0 ? $order : ($i === 1 || $request->scenesCount === 1 ? 1 : ($i === 0 ? 2 : $i + 1)),
+                'must_say' => $survival->sayLines(),
+                'must_understand' => $survival->mustUnderstand,
                 'title_native' => $row[0].($offset > 0 ? ' '.$order : ''),
                 'title_target' => $row[1],
                 'teaches_native' => $row[2],
@@ -273,10 +378,8 @@ final class FakePlanModel implements PlanModelPort
                 'learner_role_native' => 'Родитель',
                 'partner_role_target' => $row[3],
                 'partner_role_native' => $row[4],
-                'topic_description' => "Situation: {$row[1]} at a local clinic with a child who has back pain, first visit. "
-                    ."Learner: Parent. Partner: {$row[3]}. "
-                    .'Learner must be able to: describe the pain, answer questions, understand instructions. '
-                    .'Partner will: ask about symptoms, give instructions. '
+                'topic_description' => "Situation: {$row[1]} at a local clinic with a child who has back pain, first visit; the parent wants to understand what to do next.\n"
+                    ."Learner: Parent. Partner: {$row[3]}.\n"
                     .'Not in this scene: booking, payment, buying medicine.',
                 'image_prompt' => 'reception desk of a small clinic, warm light',
             ];
@@ -300,37 +403,219 @@ final class FakePlanModel implements PlanModelPort
     }
 
     /**
-     * THE CLEAN LESSON (`lesson_day`): a doctor's visit with a child's back pain, written to break
-     * no rule the validator counts — the fixture every plan test deals its days from, and the baseline a
-     * test breaks one rule of.
+     * A day's inputs as the fixture reads them — the doctor's visit of the fake's plan, day `count($earlier) + 1` of the story.
+     */
+    public static function lessonRequest(string $topic = 'Приём у врача', EarlierDays $earlier = new EarlierDays, string $sceneId = ''): LessonRequest
+    {
+        return new LessonRequest(
+            topic: $topic,
+            topicDescription: 'Situation: Consultation at a local clinic with a child who has back pain.',
+            survival: self::survival(),
+            targetLanguage: 'English',
+            nativeLanguage: 'Russian',
+            level: PlanLevel::Beginner,
+            learnerGender: null,
+            vocabularyMin: 8,
+            vocabularyMax: 12,
+            roles: self::roles(),
+            earlierDays: $earlier,
+            targetLangCode: 'en',
+            nativeLangCode: 'ru',
+            sceneId: $sceneId,
+        );
+    }
+
+    /**
+     * THE SKELETON OF THE FIXTURE DAY, read off its lesson ({@see lessonPayload()}, {@see stagesOf()}).
      *
-     * Eight exchanges: five answers, one rescue after the long partner line of exchange 5, two asks that
-     * say the SAME frame with two different fillers (`p6`, «Do we need ___?», exchanges 7 and 8). Written to v4.5: v4.6 asks
-     * a frame not to stand in two exchanges in a row, so the validator counts one warning here, `frame.adjacent_repeat` at
-     * `x8` — kept, because every test of the day's dealing reads this order.
-     * Six frames for seven answer/ask exchanges, one of them without a slot; eight vocabulary items, six of them in the
-     * learner's frames or fillers; three listening questions, the first asking the learner's own value.
-     * The right answers stand at varied places, as a model would put them before the server shuffles.
+     * @return array<string, mixed>
+     */
+    public static function skeletonPayload(LessonRequest $request): array
+    {
+        return self::stagesOf(self::lessonPayload($request), $request)['skeleton'];
+    }
+
+    /**
+     * THE DIALOGUE OF THE FIXTURE DAY, read off its lesson ({@see lessonPayload()}, {@see stagesOf()}) and said over the
+     * skeleton the request carries ({@see spoken()}).
      *
-     * Other counts are served by cycling the same material — such a lesson is dealt fine but is no
-     * longer clean.
+     * @return array<string, mixed>
+     */
+    public static function dialoguePayload(DialogueRequest $request): array
+    {
+        return self::spoken(self::stagesOf(self::lessonPayload($request->lesson), $request->lesson), $request->skeleton);
+    }
+
+    /**
+     * A DIALOGUE SAID OVER THE SKELETON IT IS GIVEN — as a model writes it from the skeleton the request carries: a frame or a
+     * partner line a repair of the skeleton changed is said in its new words wherever the lesson said it
+     * ({@see LessonCard::replace()}); the rest as the lesson wrote it. A lesson a test broke past reading goes as it is.
+     *
+     * @param  array{skeleton: array<string, mixed>, dialogue: array<string, mixed>}  $stages
+     * @return array<string, mixed>
+     */
+    private static function spoken(array $stages, Skeleton $given): array
+    {
+        $parser = new LessonParser;
+        try {
+            $written = $parser->skeleton($stages['skeleton']);
+            $said = $parser->dialogue($stages['dialogue']);
+        } catch (ModelAnswerOffSchema) {
+            return $stages['dialogue'];
+        }
+        foreach ($given->frames as $frame) {
+            $was = $written->frame($frame->id());
+            $card = LessonCard::at($frame->id());
+            if ($was !== null && $card !== null && $said !== null && $was->toArray() !== $frame->toArray()) {
+                $said = $card->replace($written, $said, $frame)[1];
+            }
+        }
+        foreach ($given->partnerLines as $line) {
+            $was = $written->partnerLine($line->id);
+            $card = LessonCard::at($line->id);
+            if ($was !== null && $card !== null && $said !== null && [$was->textTarget, $was->textNative] !== [$line->textTarget, $line->textNative]) {
+                $said = $card->replace($written, $said, $line)[1];
+            }
+        }
+
+        return $said?->toArray() ?? $stages['dialogue'];
+    }
+
+    /**
+     * A DAY WRITTEN AS ONE LESSON, SPLIT INTO THE TWO STAGES A MODEL WRITES — what {@see \App\Modules\Plan\Domain\Lesson\LessonAssembler} puts
+     * back together:
+     *
+     *  - the SKELETON: the lesson's topic, role and frames; each frame serves the next items of `must_say`, one for every
+     *    exchange that stands on it (`p6` said twice serves two); every exchange but the rescue gives a partner line (`a1`…,
+     *    A's message), which delivers an item of `must_understand` — spread over the lines in order, the first line the
+     *    first item, the last the last — and pairs with the item its exchange's learner line says; the words, `used_in`
+     *    naming a partner line by its own id where the lesson names the message (`A5` → the line exchange 5 carries);
+     *  - the DIALOGUE: every exchange with the line it carries and the item it delivers (none for the rescue), and the
+     *    listening as it is.
+     *
+     * No meaning, no check: a lesson a test breaks comes out as broken stages.
+     *
+     * @param  array<string, mixed>  $lesson
+     * @return array{skeleton: array<string, mixed>, dialogue: array<string, mixed>}
+     */
+    public static function stagesOf(array $lesson, LessonRequest $request): array
+    {
+        /** @var list<array<string, mixed>> $exchanges */
+        $exchanges = $lesson['dialogue'];
+        $carrying = array_values(array_filter($exchanges, static fn (array $e): bool => $e['kind'] !== 'rescue' && self::said($e, 'A') !== null));
+        $items = max(1, count($request->survival->mustUnderstand));
+
+        $says = [];
+        $next = 1;
+        foreach ($exchanges as $e) {
+            $frame = self::said($e, 'B')['phrase_id'] ?? null;
+            if ($e['kind'] !== 'rescue' && is_string($frame)) {
+                $says[$e['step']] = [$frame, $next++];
+            }
+        }
+
+        $lines = [];
+        $ids = [];
+        $dialogue = [];
+        foreach ($exchanges as $e) {
+            $index = array_search($e, $carrying, true);
+            $id = $index === false ? null : 'a'.($index + 1);
+            $item = $index === false ? null : (int) ceil(($index + 1) * $items / count($carrying));
+            if ($id !== null) {
+                $partner = self::said($e, 'A') ?? [];
+                $ids['A'.$e['step']] = $id;
+                $lines[] = [
+                    'id' => $id,
+                    'must_understand' => $item,
+                    'kind' => str_ends_with(trim((string) ($partner['text_target'] ?? '')), '?') ? 'question' : 'statement',
+                    'pairs_with' => isset($says[$e['step']]) ? [$says[$e['step']][1]] : [],
+                    'text_target' => $partner['text_target'] ?? '',
+                    'text_native' => $partner['text_native'] ?? '',
+                ];
+            }
+            $dialogue[] = [
+                'step' => $e['step'],
+                'kind' => $e['kind'],
+                'initiator' => $e['initiator'],
+                'must_understand' => $item,
+                'partner_line' => $id,
+                'messages' => $e['messages'],
+                'check' => $e['check'],
+            ];
+        }
+
+        $serves = [];
+        foreach ($says as [$frame, $number]) {
+            $serves[$frame][] = $number;
+        }
+
+        return [
+            'skeleton' => [
+                'topic' => $lesson['topic'],
+                'learner_role' => $lesson['learner_role'],
+                'role_gender' => $lesson['role_gender'],
+                'phrases' => array_map(static fn (array $p): array => [
+                    'id' => $p['id'], 'kind' => $p['kind'], 'must_say' => $serves[$p['id']] ?? [],
+                    'frame_target' => $p['frame_target'], 'frame_native' => $p['frame_native'],
+                    'pronunciation_native' => $p['pronunciation_native'], 'slot' => $p['slot'],
+                ], $lesson['phrases']),
+                'partner_lines' => $lines,
+                'vocabulary' => array_map(static fn (array $v): array => [
+                    ...$v,
+                    'used_in' => array_values(array_filter(array_map(
+                        static fn (string $ref): ?string => str_starts_with($ref, 'A') ? ($ids[$ref] ?? null) : $ref,
+                        $v['used_in'],
+                    ))),
+                ], $lesson['vocabulary']),
+            ],
+            'dialogue' => ['dialogue' => $dialogue, 'listening' => $lesson['listening']],
+        ];
+    }
+
+    /**
+     * The message of `$speaker` in an exchange of a lesson, or null.
+     *
+     * @param  array<string, mixed>  $exchange
+     * @return array<string, mixed>|null
+     */
+    private static function said(array $exchange, string $speaker): ?array
+    {
+        foreach ($exchange['messages'] as $message) {
+            if ($message['speaker'] === $speaker) {
+                return $message;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * THE FIXTURE LESSON (`lesson_day` shape — what a scene stores and every reader deals from): a doctor's visit with a
+     * child's back pain, what the fake's two stages assemble into. The fixture every plan test deals its days from, and the
+     * baseline a test breaks one rule of.
+     *
+     * Eight exchanges: five answers, one rescue after the long partner line of exchange 5, two asks that say the SAME frame
+     * with two different fillers (`p6`, «Do we need ___?», exchanges 7 and 8 — two items of the survival set of one pattern).
+     * Six frames for seven answer/ask exchanges, one of them without a slot; eight vocabulary items; three listening
+     * questions, the first asking the learner's own value. The right answers stand at varied places, as a model would put
+     * them before the server shuffles. No partner line names a filler of the learner's (наряд GEN-4).
      *
      * A LATER DAY OF THE STORY (EARLIER_DAYS not empty, наряд GEN-3) keeps what it learned: the same visit, told with every
      * word and every frame of the day marked by the day's number ({@see laterDay()}) — no word or frame of an earlier day
-     * comes back, as the prompt asks, and the day breaks what the first breaks and nothing more.
+     * comes back.
      *
      * @return array<string, mixed>
      */
     public static function lessonPayload(LessonRequest $request): array
     {
-        $payload = self::firstDayPayload($request);
+        $payload = self::firstDayPayload($request->topic);
         $day = count($request->earlierDays->days) + 1;
 
         return $day === 1 ? $payload : self::laterDay($payload, $day);
     }
 
     /** @return array<string, mixed> */
-    private static function firstDayPayload(LessonRequest $request): array
+    private static function firstDayPayload(string $topic): array
     {
         $doctor = ['role_target' => 'Doctor', 'role_native' => 'Врач'];
         $parent = ['role_target' => 'Parent', 'role_native' => 'Родитель'];
@@ -349,26 +634,26 @@ final class FakePlanModel implements PlanModelPort
 
         $exchanges = [
             ['answer', 'A', [
-                $a('Where does it hurt: his upper back or his lower back?', 'Где болит: вверху спины или в пояснице?'),
+                $a('Where does it hurt: in his upper back or lower down?', 'Где болит: вверху спины или ниже?'),
                 $b('p1', 'lower back', 'It hurts in his lower back.', 'У него болит поясница.', 'ит хёртс ин хиз лоуэр бэк', 'It hurts', ['His lower back hurts.']),
             ], $check('Which two places does the doctor ask about?', 'О каких двух местах спрашивает врач?', [
                 ['The top or the bottom of the back', 'Верх или низ спины'], ['The neck or the head', 'Шея или голова'], ['The knees or the feet', 'Колени или ступни'],
-            ], 0, 'Врач спрашивает, болит вверху спины или в пояснице.')],
+            ], 0, 'Врач спрашивает, болит вверху спины или ниже.')],
             ['answer', 'A', [
                 $a('Did it start today, or earlier this week?', 'Началось сегодня или раньше на этой неделе?'),
                 $b('p2', 'three days ago', 'It started three days ago.', 'Началось три дня назад.', 'ит стартид сри дэйз эгоу', 'It started', ['Three days ago.']),
             ], $check('Which two times does the doctor mention?', 'Какие два варианта времени называет врач?', [
-                ['Last month or last year', 'В прошлом месяце или году'], ['Now or a few days before', 'Сегодня или на днях'], ['At night or in the morning', 'Ночью или утром'],
+                ['Last month or last year', 'В прошлом месяце или году'], ['Now or a few days before', 'Недавно, в последние дни'], ['At night or in the morning', 'Ночью или утром'],
             ], 1, 'Врач спрашивает про сегодня или начало недели.')],
             ['answer', 'A', [
-                $a('Is the pain sharp, or more of a dull ache?', 'Боль острая или скорее ноющая?'),
+                $a('Is the pain sudden, or more like a slow ache?', 'Боль резкая или скорее тянущая?'),
                 $b('p3', 'sharp', 'The pain is sharp when he bends.', 'Боль острая, когда он наклоняется.', 'зэ пэйн из шарп уэн хи бэндз', 'when he bends', ['It is sharp when he bends.']),
             ], $check('What does the doctor want to know about the pain?', 'Что врач хочет узнать о боли?', [
                 ['How long it lasts', 'Сколько она длится'], ['Where it started', 'Где она началась'], ['What kind of pain it is', 'Какая это боль'],
-            ], 2, 'Врач спрашивает, острая боль или ноющая.')],
+            ], 2, 'Врач спрашивает, резкая боль или тянущая.')],
             ['answer', 'A', [
                 $a('Does he have a fever?', 'У него есть температура?'),
-                $b('p4', null, 'No, he doesn\'t have a fever.', 'Нет, температуры нет.', 'ноу хи дазнт хэв э фивер', 'have a fever', ['No fever.']),
+                $b('p4', null, 'No, he doesn\'t have a fever.', 'Нет, температуры у него нет.', 'ноу хи дазнт хэв э фивер', 'have a fever', ['No fever.']),
             ], $check('What symptom does the doctor ask about?', 'О каком симптоме спрашивает врач?', [
                 ['A high temperature', 'Высокая температура'], ['A bad cough', 'Сильный кашель'], ['A skin rash', 'Сыпь на коже'],
             ], 0, 'Врач спрашивает про температуру.')],
@@ -386,7 +671,7 @@ final class FakePlanModel implements PlanModelPort
             ], 2, 'Врач советует грелку.')],
             ['ask', 'B', [
                 $b('p6', 'an X-ray', 'Do we need an X-ray?', 'Нам нужно сделать рентген?', 'ду уи нид эн экс-рэй', 'Do we need', ['Is an X-ray needed?']),
-                $a('No, an X-ray is not needed for a muscle strain.', 'Нет, при растяжении мышцы рентген не нужен.'),
+                $a('No, you do not need that for a muscle strain.', 'Нет, при растяжении мышцы это не нужно.'),
             ], $check('Why is an X-ray not needed?', 'Почему рентген не нужен?', [
                 ['The bone is broken', 'Сломана кость'], ['It is only a pulled muscle', 'Это просто растяжение мышцы'], ['The clinic is closed', 'Клиника закрыта'],
             ], 1, 'При растяжении мышцы рентген не нужен.')],
@@ -399,8 +684,7 @@ final class FakePlanModel implements PlanModelPort
         ];
 
         $dialogue = [];
-        for ($i = 0; $i < $request->dialogueCount; $i++) {
-            [$kind, $initiator, $messages, $question] = $exchanges[$i % count($exchanges)];
+        foreach ($exchanges as $i => [$kind, $initiator, $messages, $question]) {
             $dialogue[] = ['step' => $i + 1, 'kind' => $kind, 'initiator' => $initiator, 'messages' => $messages, 'check' => $question];
         }
 
@@ -431,21 +715,20 @@ final class FakePlanModel implements PlanModelPort
         ];
 
         $vocabulary = [
-            ['lower back', 'поясница', 'лоуэр бэк', 'the part of the back above the hips', 'chunk', 'a parent pressing a hand on a child\'s lower back', ['p1', 'A1']],
-            ['sharp', 'острая', 'шарп', 'sudden and strong, like a cut', 'word', null, ['p3', 'A3']],
+            ['lower back', 'поясница', 'лоуэр бэк', 'the part of the back above the hips', 'chunk', 'a parent pressing a hand on a child\'s lower back', ['p1']],
+            ['sharp', 'острая', 'шарп', 'sudden and strong, like a cut', 'word', null, ['p3']],
             ['fever', 'температура', 'фивер', 'a body temperature higher than normal', 'word', 'a digital thermometer showing a high temperature', ['p4', 'A4']],
             ['muscle strain', 'растяжение мышцы', 'масл стрэйн', 'an injury to a muscle from stretching it too far', 'chunk', 'a physiotherapist touching a child\'s back muscle', ['A5', 'A7']],
-            ['heating pad', 'грелка', 'хитинг пэд', 'a warm pad you put on a painful place', 'chunk', 'an electric heating pad on a sofa', ['A5', 'A6']],
-            ['X-ray', 'рентген', 'экс-рэй', 'a picture of the inside of the body', 'word', 'a doctor looking at a spine x-ray on a light box', ['p6', 'A7']],
+            ['heating pad', 'грелка', 'хитинг пэд', 'a warm pad you put on a painful place', 'chunk', 'an electric heating pad on a sofa', ['A5']],
+            ['X-ray', 'рентген', 'экс-рэй', 'a picture of the inside of the body', 'word', 'a doctor looking at a spine x-ray on a light box', ['p6']],
             ['follow-up appointment', 'повторный приём', 'фоллоу-ап эпойнтмент', 'a second visit to check how you are', 'chunk', 'a calendar page with a clinic visit marked', ['p6']],
             ['sick note', 'справка', 'сик ноут', 'a note from a doctor saying someone was ill', 'chunk', 'a doctor\'s note lying on a school desk', ['p6']],
         ];
         $items = [];
-        for ($i = 0; $i < $request->vocabularyCount; $i++) {
-            $row = $vocabulary[$i % count($vocabulary)];
+        foreach ($vocabulary as $i => $row) {
             $items[] = [
                 'id' => 'v'.($i + 1),
-                'term_target' => $i < count($vocabulary) ? $row[0] : $row[0].' '.($i + 1),
+                'term_target' => $row[0],
                 'translation_native' => $row[1],
                 'pronunciation_native' => $row[2],
                 'definition_target' => $row[3],
@@ -458,7 +741,7 @@ final class FakePlanModel implements PlanModelPort
         return [
             'topic' => [
                 'title_target' => 'At the doctor\'s with a child',
-                'title_native' => $request->topic,
+                'title_native' => $topic,
                 'description_target' => 'Describing a child\'s back pain to a doctor and understanding the advice.',
                 'description_native' => 'Рассказать врачу о боли в спине у ребёнка и понять советы.',
             ],
@@ -477,9 +760,9 @@ final class FakePlanModel implements PlanModelPort
 
     /**
      * The same lesson as day `$day` of the story: every word of the day gets «-{day}» wherever the target text says it
-     * (frames, fillers, lines, variants, the word itself), and every frame gets «-{day}» on its first word — in both
-     * languages — and so does every line that stands on it, after its glue. No word is added: the day breaks what the first
-     * day breaks and nothing more.
+     * (frames, fillers, lines, variants, keys, the word itself), and every frame gets «-{day}» on its first word — in both
+     * languages — and so does every line that stands on it, after its glue, in both languages. No word is added: the day
+     * breaks what the first day breaks and nothing more.
      *
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
@@ -514,6 +797,7 @@ final class FakePlanModel implements PlanModelPort
                 if ($message['speaker'] === 'B') {
                     $payload['dialogue'][$x]['messages'][$m]['filler'] = $message['filler'] === null ? null : $marked((string) $message['filler']);
                     $payload['dialogue'][$x]['messages'][$m]['simplified_variants'] = array_map($marked, $message['simplified_variants']);
+                    $payload['dialogue'][$x]['messages'][$m]['speaking_key'] = $message['speaking_key'] === null ? null : $marked((string) $message['speaking_key']);
                 }
             }
         }
@@ -529,6 +813,18 @@ final class FakePlanModel implements PlanModelPort
                 $text = (string) $message['text_target'];
                 $glue = FrameText::line($phrase, $text)['glue'];
                 $payload['dialogue'][$x]['messages'][$m]['text_target'] = $glue.$firstWord(mb_substr($text, mb_strlen($glue)));
+                // A key that opens the frame opens it marked too — a key is words of the line, as the line says them.
+                $key = (string) ($payload['dialogue'][$x]['messages'][$m]['speaking_key'] ?? '');
+                if ($key !== '' && mb_stripos(mb_substr($text, mb_strlen($glue)), $key) === 0) {
+                    $payload['dialogue'][$x]['messages'][$m]['speaking_key'] = $firstWord($key);
+                }
+                // The native line is the native frame with its filler after a glue of its own: the frame's first word gets the mark.
+                $native = (string) $message['text_native'];
+                $core = LearnerLine::core($phrase, $phrase->filler($message['filler']), 'native');
+                $glueNative = $core !== null && LearnerLine::says($native, $core)
+                    ? mb_substr($native, 0, mb_strlen(FrameText::withoutEndMark($native)) - mb_strlen(FrameText::withoutEndMark($core)))
+                    : '';
+                $payload['dialogue'][$x]['messages'][$m]['text_native'] = $glueNative.$firstWord(mb_substr($native, mb_strlen($glueNative)));
             }
         }
         foreach ($payload['phrases'] as $i => $phrase) {

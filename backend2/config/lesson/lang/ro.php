@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| LANGUAGE PACK · ro — what the lesson validator, the judge of the talk and the speech comparison read of Romanian
+| LANGUAGE PACK · ro — what the day's checks, the judge of the talk and the speech comparison read of Romanian
 |--------------------------------------------------------------------------
 |
 | docs/plan-v2.md §4 (наряд GEN-2b), keys by `docs/research/lang-1/pack-keys.md` (наряд LANG-1). Romanian is BOTH sides
 | of a plan: the language taught (ru→ro — what the learner says and hears, the frames, the talk) and the learner's own
 | (ro→en — the readings, the native frames, the listening questions, the translation of the role). So every key of both
-| sides is written; a rule that does not apply to Romanian is an explicit no-op, never null (null counts
-| `lang.pack_missing` on every day of the pair).
+| sides is written; a rule that does not apply to Romanian is an explicit no-op, never null (null would
+| switch its rule off on every day of the pair).
 |
 | HOW THE WORDS ARE SPELT. Every list is written in the standard spelling — ș ț with the comma below, ă â î — and read
 | through `LanguagePack::normal()` / the kernel's canonical form, which fold the cedilla letters a model or a keyboard

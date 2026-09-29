@@ -1242,9 +1242,9 @@ it('asks the role again when it says a line of its own a second time, naming the
     $fake = convAgentSays(static function (ConversationAgentRequest $request): array {
         $payload = FakePlanModel::conversationPayload($request);
         if ($request->turn === 'start') {
-            $payload['reply_target'] = 'Hello. Where does it hurt: his upper back or his lower back?';
+            $payload['reply_target'] = 'Hello. Where does it hurt: in his upper back or lower down?';
         } elseif ($request->turn === 'said') {
-            $payload['reply_target'] = $request->redo === null ? 'Where exactly does it hurt: his upper back or his lower back?' : 'I see. When did it start?';
+            $payload['reply_target'] = $request->redo === null ? 'Where exactly does it hurt: in his upper back or lower down?' : 'I see. When did it start?';
         }
 
         return $payload;
@@ -1256,7 +1256,7 @@ it('asks the role again when it says a line of its own a second time, naming the
 
     expect($after['turns'][2]['text_target'])->toBe('I see. When did it start?')
         ->and($fake->conversationCalls)->toBe(3)
-        ->and($fake->conversationRequests[2]->redo)->toBe(['reason' => 'own_line', 'said' => 'Where exactly does it hurt: his upper back or his lower back?', 'line' => 'Where does it hurt: his upper back or his lower back?'])
+        ->and($fake->conversationRequests[2]->redo)->toBe(['reason' => 'own_line', 'said' => 'Where exactly does it hurt: in his upper back or lower down?', 'line' => 'Where does it hurt: in his upper back or lower down?'])
         ->and(convHits('conversation.own_line'))->toBe(1)
         ->and(convHits('conversation.own_line_kept'))->toBe(0);
 
@@ -1492,7 +1492,9 @@ it('hints with the lesson\'s own line in the learner\'s language, and carries it
     $fake = new FakePlanModel(
         lesson: static function ($request): array {
             $p = planCleanLesson($request);
-            $p['dialogue'][0]['messages'][1]['text_native'] = 'Поясница у него болит.';
+            // The native line is its frame with the value after a glue of its own (наряд GEN-4: `line.ne_frame` allows no
+            // other difference) — still a line of the lesson's own, not the frame filled.
+            $p['dialogue'][0]['messages'][1]['text_native'] = 'Да, у него болит поясница.';
 
             return $p;
         },
@@ -1508,15 +1510,15 @@ it('hints with the lesson\'s own line in the learner\'s language, and carries it
     $talk = convStart($this, $token, $id);
     $first = array_values(array_filter($talk['targets'], static fn (array $t): bool => $t['ref'] === 'p1'))[0];
 
-    expect($talk['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'Поясница у него болит.'])
-        ->and($first['line_native'])->toBe('Поясница у него болит.')
+    expect($talk['hints'])->toMatchArray(['ref' => 'p1', 'sentence' => 'Да, у него болит поясница.'])
+        ->and($first['line_native'])->toBe('Да, у него болит поясница.')
         ->and($first['frame_native'])->toBe('У него болит ___.')
         ->and($first['example_native'])->toBe('поясница')
         // A construction the lesson says as its frame with the value says the same both ways.
         ->and(array_values(array_filter($talk['targets'], static fn (array $t): bool => $t['ref'] === 'p2'))[0]['line_native'])->toBe('Началось три дня назад.');
 
     $ended = planTalkThrough($this, $token, $id, 1);
-    expect(array_column($ended['summary']['phrases'], 'line_native', 'ref')['p1'])->toBe('Поясница у него болит.');
+    expect(array_column($ended['summary']['phrases'], 'line_native', 'ref')['p1'])->toBe('Да, у него болит поясница.');
 });
 
 /**

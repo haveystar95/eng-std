@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Application\Service;
 
+use App\Modules\Plan\Application\Dto\DialogueRequest;
+use App\Modules\Plan\Application\Dto\LessonCardRepairOutcome;
 use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\LessonSeamVerdict;
 use App\Modules\Plan\Application\Dto\ModelReply;
@@ -11,136 +13,361 @@ use App\Modules\Plan\Application\Exception\PlanModelUnavailable;
 use App\Modules\Plan\Application\Port\BuildVersion;
 use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Domain\Check\Dialogue\DialogueCheck;
+use App\Modules\Plan\Domain\Check\Dialogue\DialogueContext;
 use App\Modules\Plan\Domain\Check\LessonCodes;
-use App\Modules\Plan\Domain\Check\LessonValidator;
 use App\Modules\Plan\Domain\Check\LessonViolation;
+use App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck;
+use App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
+use App\Modules\Plan\Domain\Lesson\Dialogue;
+use App\Modules\Plan\Domain\Lesson\LessonAssembler;
+use App\Modules\Plan\Domain\Lesson\LessonCard;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
+use App\Modules\Plan\Domain\Lesson\OptionShuffle;
+use App\Modules\Plan\Domain\Lesson\Phrase;
+use App\Modules\Plan\Domain\Lesson\Skeleton;
 use App\Modules\Plan\Domain\ValueObject\CheckAction;
 use App\Modules\Plan\Domain\ValueObject\ModelCall;
+use Closure;
 use Throwable;
 
 /**
- * THE LESSON CALL (`lesson_day.v4.10`). One retry, and only for an answer that is not the schema — the model's
- * refusal; a call that got no answer at all (a timeout) is not retried here or anywhere (наряд GEN-3). The answer is spoken
- * in the roles the plan gives, whatever roles the model wrote (the learner's of the plan, the partner's of the scene).
- * Everything the validator finds — with the story so far, the earlier days of the plan — is counted and written beside the
- * lesson; warnings never hold the day, the eleven fatal codes do — the answer goes through {@see LessonGateKeeper}: P2R for
- * at most two cards, the repaired answer stored, or the lesson failed with the fatal code. A check the pair's language
- * packs cannot run is counted as `lang.pack_missing` (once a code, over the model's answer), never as a finding.
+ * THE DAY, BUILT IN TWO STAGES (наряд GEN-4, `docs/plan-v2.md` §2) — the conveyor of one scene's lesson:
  *
- * ONE AUTOMATIC REBUILD (наряд LANG-1b §1). A lesson that failed THE GATE — a fatal finding left after the repairs, or one
- * at no card a repair can take — is asked for anew, once, by the server itself: a new answer of the model, validated and
- * gated from scratch with its own two cards. Only the second failure fails the day. The rebuild is counted
- * (`lesson.auto_rebuild`, `counted`; `failed` too when the rebuilt lesson failed as well), and it is the same build of
- * the scene: one job, one claim, one window of calls — the admin's conveyor lists both lesson calls and their repairs, and
- * the scene's price, time and lesson calls are the two builds' together. A lesson whose model gave no answer, or an answer
- * off the schema twice, is not rebuilt: a lost call may have been billed (наряд GEN-3). A rebuild that got no answer
- * leaves the day failed as the first build failed it, at the first build's price.
+ *   skeleton → SkeletonCheck → seam judge → repair of the skeleton → dialogue → DialogueCheck → shuffle of the options →
+ *   repair of the dialogue → the lesson assembled.
  *
- * The lesson that passed the gate is read by the seam judge — once a day, every native sentence of its frames in
- * one call ({@see LessonSeamJudge}); what does not read is a warning `filler.native_seam`. A failed lesson is not
- * judged. The repairs' and the judge's cost and time are the lesson's.
+ *  - THE SKELETON (`lesson_skeleton.v1`) turns the scene's survival set into frames, partner lines and words. {@see SkeletonCheck}
+ *    reads it; a FATAL finding asks the skeleton once more with the findings quoted (`PREVIOUS_ATTEMPT_REJECTED_FOR`), an
+ *    answer off the schema the same — one repeat a stage, no more; still fatal, the day fails with its codes.
+ *  - THE SEAM JUDGE reads the skeleton's native frames said with their fillers, before the dialogue exists.
+ *  - THE SKELETON'S REPAIRS: the cards its warnings — and the seam judge's «does not read» — stand at, at most
+ *    {@see REPAIR_CARDS}, frames first ({@see LessonCard::SKELETON_KINDS}); each repair is checked again and kept only if it
+ *    brings no fatal finding. The frames a repair changed are read by the seam judge once more.
+ *  - THE DIALOGUE (`lesson_dialogue.v1`) puts the repaired skeleton into DIALOGUE_COUNT exchanges; {@see DialogueCheck}, one
+ *    repeat for a fatal finding, as the skeleton.
+ *  - THE SHUFFLE: the server puts the right option of every check and every listening question where the scene's seed says
+ *    ({@see OptionShuffle}) — the model's index says only which option is right.
+ *  - THE DIALOGUE'S REPAIRS — exchanges, checks, listening questions — as the skeleton's.
+ *  - THE LESSON is assembled from the two ({@see LessonAssembler}) in the shape every reader of a scene deals from, spoken in
+ *    the roles the plan gives.
+ *
+ * A call that got no answer at all (a timeout) is not retried here or anywhere (наряд GEN-3): the day fails, the learner
+ * asks again. Every finding is counted by its code under the version of the prompt it was found in (`gated` when it asked
+ * its stage again, `failed` when it failed the day); the warnings left are stored with the lesson.
  */
 final readonly class LessonBuildService
 {
-    public const MAX_ATTEMPTS = 2;
+    /** How many times a stage is asked: once, and once more for a fatal finding or an answer off the schema. */
+    public const STAGE_ATTEMPTS = 2;
 
-    /** How many times the server asks anew for a lesson that failed the gate, on its own (наряд LANG-1b §1). */
-    public const AUTO_REBUILDS = 1;
+    /** How many cards of a stage are sent to a repair, at most, each once. */
+    public const REPAIR_CARDS = 2;
 
     public function __construct(
         private PlanModelPort $model,
-        private LessonValidator $validator,
         private LessonParser $parser,
-        private CheckCounters $counters,
-        private BuildVersion $build,
-        private LessonGateKeeper $gate,
+        private SkeletonCheck $skeletons,
+        private DialogueCheck $dialogues,
         private LessonContexts $contexts,
         private LessonSeamJudge $seams,
+        private LessonCardRepairer $repairer,
+        private CheckCounters $counters,
+        private BuildVersion $build,
     ) {}
 
     public function build(LessonRequest $request): LessonBuildOutcome
     {
-        $outcome = $this->once($request);
-        for ($rebuild = 0; $rebuild < self::AUTO_REBUILDS && $outcome->failedOnGate && $outcome->call !== null; $rebuild++) {
-            $earlier = $outcome->call;
-            $this->counters->recordCodes($earlier->promptVersion, [LessonCodes::AUTO_REBUILD]);
-            try {
-                $next = $this->once($request);
-            } catch (PlanModelUnavailable) {
-                return $outcome;
-            }
-            $outcome = $next->after($earlier);
-            if ($outcome->lesson === null) {
-                $this->counters->recordCodes(($outcome->call ?? $earlier)->promptVersion, [LessonCodes::AUTO_REBUILD], CheckAction::Failed);
-            }
+        $log = new LessonBuildLog;
+        $bill = new LessonBill;
+
+        $skeletonContext = $this->contexts->skeleton($request);
+        [$skeleton, $found, $failed] = $this->skeletonStage($request, $skeletonContext, $log, $bill);
+        if ($skeleton === null) {
+            return LessonBuildOutcome::failed((string) $failed, $this->call($bill), self::rows($found), $log);
         }
 
-        return $outcome;
+        $seams = $this->judge($skeleton->phrases(), $request, $log, $bill);
+        [$skeleton, $found, $seams] = $this->repairSkeleton($skeleton, $found, $seams, $request, $skeletonContext, $log, $bill);
+
+        $dialogueContext = $this->contexts->dialogue($request, $skeleton);
+        [$dialogue, $spoken, $failed] = $this->dialogueStage(new DialogueRequest($request, $skeleton), $dialogueContext, $log, $bill);
+        if ($dialogue === null) {
+            return LessonBuildOutcome::failed((string) $failed, $this->call($bill), self::rows([...$found, ...$seams, ...$spoken]), $log);
+        }
+        $dialogue = OptionShuffle::of($dialogue, $request->sceneId);
+        [$dialogue, $spoken] = $this->repairDialogue($skeleton, $dialogue, $spoken, $request, $dialogueContext, $log, $bill);
+
+        $lesson = LessonAssembler::assemble($skeleton, $dialogue)->withRoles($request->roles);
+
+        return LessonBuildOutcome::ok($lesson, $skeleton, $this->call($bill), self::rows([...$found, ...$seams, ...$spoken]), $log);
     }
 
-    /** One build of the lesson: the call (and its one retry off the schema), the gate with its repairs, the seam judge. */
-    private function once(LessonRequest $request): LessonBuildOutcome
+    /**
+     * The skeleton, asked once and once more for a fatal finding.
+     *
+     * @return array{0: Skeleton|null, 1: list<LessonViolation>, 2: string|null}
+     */
+    private function skeletonStage(LessonRequest $request, SkeletonContext $context, LessonBuildLog $log, LessonBill $bill): array
     {
-        $cost = '0.000000';
-        $latency = 0;
         $violations = [];
-        $context = $this->contexts->of($request);
-
-        $attempt = 0;
-        while (true) {
-            $attempt++;
-            $reply = $this->ask($request, $violations);
-            $cost = ModelCall::addCosts($cost, $reply->costUsd);
-            $latency += $reply->latencyMs;
-            $call = new ModelCall($reply->promptVersion, $this->build->current(), $reply->model, $cost, $latency, $attempt);
-
+        $found = [];
+        $failed = null;
+        for ($attempt = 1; $attempt <= self::STAGE_ATTEMPTS; $attempt++) {
+            $reply = $this->ask(fn (): ModelReply => $this->model->buildSkeleton($request->withViolations($violations)));
+            $bill->stage($reply);
+            $log->call('skeleton', $attempt, $reply);
             try {
-                $answer = $this->parser->parse($reply->payload)->withRoles($request->roles);
+                $skeleton = $this->parser->skeleton($reply->payload);
             } catch (ModelAnswerOffSchema $e) {
-                $violations = [$e->getMessage()];
-                if ($attempt >= self::MAX_ATTEMPTS) {
-                    return LessonBuildOutcome::failed($e->getMessage(), $call);
-                }
+                $log->attempt('skeleton', $attempt, [], [], $e->getMessage());
+                [$violations, $found, $failed] = [[$e->getMessage()], [], $e->getMessage()];
 
                 continue;
             }
-
-            $found = $this->validator->run($answer, $context);
-            $this->counters->recordCodes($reply->promptVersion, self::codes($found));
-            $this->counters->recordCodes($reply->promptVersion, array_map(static fn (): string => LessonCodes::LANG_PACK_MISSING, $context->skips->codes()));
-
-            $passed = $this->gate->pass($answer, $found, $context, $request);
-            $this->counters->recordCodes($reply->promptVersion, self::codes($passed->gated), CheckAction::Gated);
-            $call = $call->plusCost($passed->repairCostUsd, $passed->repairLatencyMs);
-            if ($passed->answer === null) {
-                $this->counters->recordCodes($reply->promptVersion, self::codes($passed->failedOn), CheckAction::Failed);
-
-                return LessonBuildOutcome::failedOnGate((string) $passed->failReason, $call, self::rows($passed->findings));
+            $found = $this->skeletons->run($skeleton, $context);
+            [$violations, $failed] = $this->counted($reply->promptVersion, $found, 'skeleton', $attempt, $log);
+            if ($failed === null) {
+                return [$skeleton, $found, null];
             }
-
-            $judged = $this->seams->judge($passed->answer, $request->nativeLanguage);
-            $this->counters->recordCodes($reply->promptVersion, self::codes($judged->violations));
-            if ($judged->status === LessonSeamVerdict::UNAVAILABLE) {
-                $this->counters->recordCodes($reply->promptVersion, [LessonCodes::JUDGE_UNAVAILABLE]);
-            }
-            $call = $call->plusCost($judged->costUsd, $judged->latencyMs);
-
-            return LessonBuildOutcome::ok($passed->answer, $call, self::rows([...$passed->findings, ...$judged->violations]));
         }
+        $this->counters->recordCodes($this->model->skeletonPromptVersion(), self::codes(LessonCodes::fatalOf($found)), CheckAction::Failed);
+
+        return [null, $found, $failed];
     }
 
-    /** @param list<string> $violations */
-    private function ask(LessonRequest $request, array $violations): ModelReply
+    /**
+     * The dialogue, asked once and once more for a fatal finding.
+     *
+     * @return array{0: Dialogue|null, 1: list<LessonViolation>, 2: string|null}
+     */
+    private function dialogueStage(DialogueRequest $request, DialogueContext $context, LessonBuildLog $log, LessonBill $bill): array
+    {
+        $violations = [];
+        $found = [];
+        $failed = null;
+        for ($attempt = 1; $attempt <= self::STAGE_ATTEMPTS; $attempt++) {
+            $reply = $this->ask(fn (): ModelReply => $this->model->buildDialogue($request->withViolations($violations)));
+            $bill->stage($reply);
+            $log->call('dialogue', $attempt, $reply);
+            try {
+                $dialogue = $this->parser->dialogue($reply->payload);
+            } catch (ModelAnswerOffSchema $e) {
+                $log->attempt('dialogue', $attempt, [], [], $e->getMessage());
+                [$violations, $found, $failed] = [[$e->getMessage()], [], $e->getMessage()];
+
+                continue;
+            }
+            $found = $this->dialogues->run($dialogue, $context);
+            [$violations, $failed] = $this->counted($reply->promptVersion, $found, 'dialogue', $attempt, $log);
+            if ($failed === null) {
+                return [$dialogue, $found, null];
+            }
+        }
+        $this->counters->recordCodes($this->model->dialoguePromptVersion(), self::codes(LessonCodes::fatalOf($found)), CheckAction::Failed);
+
+        return [null, $found, $failed];
+    }
+
+    /**
+     * A stage's answer counted: every code found, the fatal ones `gated` too. Null when nothing fatal was found; else the
+     * findings to quote on the repeat and why the stage fails if the repeat finds them too.
+     *
+     * @param  list<LessonViolation>  $found
+     * @return array{0: list<string>, 1: string|null}
+     */
+    private function counted(string $version, array $found, string $stage, int $attempt, LessonBuildLog $log): array
+    {
+        $this->counters->recordCodes($version, self::codes($found));
+        $fatal = LessonCodes::fatalOf($found);
+        $log->attempt($stage, $attempt, $found, $fatal);
+        if ($fatal === []) {
+            return [[], null];
+        }
+        $this->counters->recordCodes($version, self::codes($fatal), CheckAction::Gated);
+
+        return [
+            array_map(static fn (LessonViolation $v): string => "{$v->code} · {$v->address}: {$v->detail}", $fatal),
+            LessonCodes::failReason($fatal),
+        ];
+    }
+
+    /**
+     * The skeleton's warnings sent to repairs — the seam judge's among them — and the frames a repair changed read again.
+     *
+     * @param  list<LessonViolation>  $found
+     * @param  list<LessonViolation>  $seams
+     * @return array{0: Skeleton, 1: list<LessonViolation>, 2: list<LessonViolation>}
+     */
+    private function repairSkeleton(Skeleton $skeleton, array $found, array $seams, LessonRequest $request, SkeletonContext $context, LessonBuildLog $log, LessonBill $bill): array
+    {
+        $changed = [];
+        foreach (self::cards([...$found, ...$seams], LessonCard::SKELETON_KINDS) as $card) {
+            $sent = self::at($card, [...$found, ...$seams]);
+            $outcome = $this->repairer->repair($skeleton, null, $card, $sent, $request);
+            $bill->repair($outcome);
+            $after = $outcome->skeleton === null ? null : $this->skeletons->run($outcome->skeleton, $context);
+            if (! $this->kept($outcome, $after, 'skeleton', $card, $sent, $log) || $outcome->skeleton === null || $after === null) {
+                continue;
+            }
+            $skeleton = $outcome->skeleton;
+            $found = $after;
+            if ($card->kind === LessonCard::FRAME) {
+                $changed[] = $card->id;
+                $seams = array_values(array_filter($seams, static fn (LessonViolation $v): bool => ! $card->covers($v)));
+            }
+        }
+        if ($changed !== []) {
+            $again = $this->judge(array_values(array_filter($skeleton->phrases(), static fn (Phrase $p): bool => in_array($p->id, $changed, true))), $request, $log, $bill);
+            $seams = [...$seams, ...$again];
+            foreach ($changed as $frameId) {
+                $card = LessonCard::at($frameId);
+                $left = $card === null ? [] : self::codes(self::at($card, [...$found, ...$again]));
+                $log->helped($frameId, array_intersect($left, self::sentCodes($log, $frameId)) === [], $left);
+            }
+        }
+
+        return [$skeleton, $found, $seams];
+    }
+
+    /**
+     * The dialogue's warnings sent to repairs.
+     *
+     * @param  list<LessonViolation>  $found
+     * @return array{0: Dialogue, 1: list<LessonViolation>}
+     */
+    private function repairDialogue(Skeleton $skeleton, Dialogue $dialogue, array $found, LessonRequest $request, DialogueContext $context, LessonBuildLog $log, LessonBill $bill): array
+    {
+        foreach (self::cards($found, LessonCard::DIALOGUE_KINDS) as $card) {
+            $sent = self::at($card, $found);
+            $outcome = $this->repairer->repair($skeleton, $dialogue, $card, $sent, $request);
+            $bill->repair($outcome);
+            $after = $outcome->dialogue === null ? null : $this->dialogues->run($outcome->dialogue, $context);
+            if (! $this->kept($outcome, $after, 'dialogue', $card, $sent, $log) || $outcome->dialogue === null || $after === null) {
+                continue;
+            }
+            $dialogue = $outcome->dialogue;
+            $found = $after;
+        }
+
+        return [$dialogue, $found];
+    }
+
+    /**
+     * Is a repair kept? It came back as a card, and its stage checked again has no fatal finding. Written down either way,
+     * with whether it helped: the codes it was sent for are gone from its card (a frame's seams are known only after the
+     * judge reads it again).
+     *
+     * @param  list<LessonViolation>|null  $after
+     * @param  list<LessonViolation>  $sent
+     */
+    private function kept(LessonCardRepairOutcome $outcome, ?array $after, string $stage, LessonCard $card, array $sent, LessonBuildLog $log): bool
+    {
+        $sentFor = self::codes($sent);
+        if ($outcome->status !== LessonCardRepairOutcome::REPAIRED || $after === null) {
+            $log->repair($stage, $card->address, $card->kind, $sentFor, $outcome->status, false, [], $sentFor, false, $outcome->note);
+
+            return false;
+        }
+        $broke = self::codes(LessonCodes::fatalOf($after));
+        if ($broke !== []) {
+            $log->repair($stage, $card->address, $card->kind, $sentFor, $outcome->status, false, $broke, $sentFor, false, 'the repair brings a fatal finding');
+
+            return false;
+        }
+        $left = self::codes(self::at($card, $after));
+        $waiting = $card->kind === LessonCard::FRAME && in_array(LessonCodes::FILLER_NATIVE_SEAM, $sentFor, true);
+        $log->repair($stage, $card->address, $card->kind, $sentFor, $outcome->status, true, [], $left, $waiting ? null : array_intersect($left, $sentFor) === []);
+
+        return true;
+    }
+
+    /**
+     * The seam judge over some frames: what does not read, as findings at the fillers.
+     *
+     * @param  list<Phrase>  $phrases
+     * @return list<LessonViolation>
+     */
+    private function judge(array $phrases, LessonRequest $request, LessonBuildLog $log, LessonBill $bill): array
+    {
+        $verdict = $this->seams->judge($phrases, $request->nativeLanguage);
+        $bill->judge($verdict);
+        $version = $this->model->skeletonPromptVersion();
+        $this->counters->recordCodes($version, self::codes($verdict->violations));
+        if ($verdict->status === LessonSeamVerdict::UNAVAILABLE) {
+            $this->counters->recordCodes($version, [LessonCodes::JUDGE_UNAVAILABLE]);
+        }
+        $log->judgement(
+            array_map(static fn (Phrase $p): string => $p->id, $phrases),
+            $verdict->items,
+            $verdict->judged,
+            $verdict->status,
+            array_map(static fn (LessonViolation $v): string => $v->address, $verdict->violations),
+        );
+
+        return $verdict->violations;
+    }
+
+    /** @param Closure(): ModelReply $call */
+    private function ask(Closure $call): ModelReply
     {
         try {
-            return $this->model->buildLesson($request->withViolations($violations));
+            return $call();
         } catch (PlanModelUnavailable $e) {
             throw $e;
         } catch (Throwable $e) {
             throw PlanModelUnavailable::because($e->getMessage());
         }
+    }
+
+    private function call(LessonBill $bill): ModelCall
+    {
+        return new ModelCall($this->model->lessonPromptVersion(), $this->build->current(), $bill->models(), $bill->costUsd, $bill->latencyMs, $bill->stageCalls);
+    }
+
+    /**
+     * The cards the non-fatal findings stand at, each once, in the order of their stage's kinds, then by address; at most
+     * {@see REPAIR_CARDS}. A finding about a stage as a whole stands at no card.
+     *
+     * @param  list<LessonViolation>  $findings
+     * @param  list<string>  $kinds
+     * @return list<LessonCard>
+     */
+    private static function cards(array $findings, array $kinds): array
+    {
+        $cards = [];
+        foreach ($findings as $finding) {
+            $card = LessonCodes::isFatal($finding->code) ? null : LessonCard::at($finding->address);
+            if ($card !== null && in_array($card->kind, $kinds, true)) {
+                $cards[$card->address] = $card;
+            }
+        }
+        $cards = array_values($cards);
+        usort($cards, static fn (LessonCard $a, LessonCard $b): int => array_search($a->kind, $kinds, true) <=> array_search($b->kind, $kinds, true) ?: strnatcmp($a->address, $b->address));
+
+        return array_slice($cards, 0, self::REPAIR_CARDS);
+    }
+
+    /**
+     * @param  list<LessonViolation>  $findings
+     * @return list<LessonViolation>
+     */
+    private static function at(LessonCard $card, array $findings): array
+    {
+        return array_values(array_filter($findings, static fn (LessonViolation $v): bool => $card->covers($v)));
+    }
+
+    /** @return list<string> the codes a frame was sent to its repair for */
+    private static function sentCodes(LessonBuildLog $log, string $address): array
+    {
+        foreach ($log->repairs as $repair) {
+            if ($repair['address'] === $address && $repair['kept']) {
+                return $repair['sent_for'];
+            }
+        }
+
+        return [];
     }
 
     /**

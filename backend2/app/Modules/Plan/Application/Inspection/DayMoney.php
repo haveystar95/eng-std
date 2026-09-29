@@ -61,19 +61,20 @@ final readonly class DayMoney
     {
         $own = array_values(array_filter($calls, static fn (AttributedCall $c): bool => $c->window->kind === 'scene' && $c->window->subjectId === $sceneId));
         $certain = $own !== [] && array_reduce($own, static fn (bool $ok, AttributedCall $c): bool => $ok && $c->certain(), true);
-        $sum = static function (string $purpose) use ($own, $certain): ?float {
+        /** @param list<string> $purposes */
+        $sum = static function (array $purposes) use ($own, $certain): ?float {
             if (! $certain) {
                 return null;
             }
 
-            return round(array_sum(array_map(static fn (AttributedCall $c): float => $c->call->purpose === $purpose ? (float) $c->call->costUsd : 0.0, $own)), 6);
+            return round(array_sum(array_map(static fn (AttributedCall $c): float => in_array($c->call->purpose, $purposes, true) ? (float) $c->call->costUsd : 0.0, $own)), 6);
         };
 
         return [
             'cost_usd' => $costUsd === null ? null : round((float) $costUsd, 6),
-            'lesson_usd' => $sum('lesson'),
-            'repair_usd' => $sum('repair'),
-            'judge_usd' => $sum('judge'),
+            'lesson_usd' => $sum(CallAttribution::LESSON_PURPOSES),
+            'repair_usd' => $sum(CallAttribution::REPAIR_PURPOSES),
+            'judge_usd' => $sum(CallAttribution::JUDGE_PURPOSES),
             'tokens_in' => $certain ? array_sum(array_map(static fn (AttributedCall $c): int => (int) $c->call->tokensIn, $own)) : null,
             'tokens_out' => $certain ? array_sum(array_map(static fn (AttributedCall $c): int => (int) $c->call->tokensOut, $own)) : null,
             'calls' => count($own),

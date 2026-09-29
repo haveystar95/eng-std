@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * A word or a chunk of the day, and where the lesson says it (`used_in`): frame ids (`p3` — the frame
- * or one of its fillers) and partner lines (`A3` — the partner's message of exchange 3).
+ * A word or a chunk of the day, and where it is said (`used_in`): frame ids (`p3` — the frame or one of its fillers) and
+ * partner lines — in the skeleton a partner line's own id (`a4`), in the lesson the partner's message of the exchange that
+ * carries it (`A3`, {@see LessonAssembler}).
  */
 final readonly class VocabularyItem
 {
@@ -30,6 +31,12 @@ final readonly class VocabularyItem
     public function withId(string $id): self
     {
         return new self($id, $this->termTarget, $this->translationNative, $this->pronunciationNative, $this->definitionTarget, $this->kind, $this->imagePrompt, $this->usedIn);
+    }
+
+    /** @param list<string> $usedIn */
+    public function withUsedIn(array $usedIn): self
+    {
+        return new self($this->id, $this->termTarget, $this->translationNative, $this->pronunciationNative, $this->definitionTarget, $this->kind, $this->imagePrompt, $usedIn);
     }
 
     /** @return array<string, mixed> */

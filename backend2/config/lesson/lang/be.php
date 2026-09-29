@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| LANGUAGE PACK · be — what the lesson validator reads of Belarusian
+| LANGUAGE PACK · be — what the day's checks read of Belarusian
 |--------------------------------------------------------------------------
 |
 | Наряд LANG-1 (key spec: docs/research/lang-1/pack-keys.md). Belarusian is written as the LEARNER'S OWN language only

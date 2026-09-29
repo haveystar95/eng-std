@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| LANGUAGE PACK · de — what the lesson validator reads of German
+| LANGUAGE PACK · de — what the day's checks read of German
 |--------------------------------------------------------------------------
 |
 | docs/plan-v2.md §4 (наряд GEN-2b), наряд LANG-1: German is written as BOTH sides. As the TARGET (ru → de) it is what
@@ -17,9 +17,9 @@ declare(strict_types=1);
 |  - THE ARTICLE CARRIES THE GENDER (DECISIONS п. 89: «для de не снимать»): `articles` is empty, and no article stands
 |    in `unstressed_words` either — «der Termin» for «den Termin» is not forgiven anywhere, and «ein», «eine», «einen» are
 |    no number words (folding them into «1» would forgive the gender through the back door).
-|  - EVERY NOUN IS WRITTEN WITH A CAPITAL: `LanguageWords::names()` reads each capitalised word inside a sentence as a
-|    name, so `check.verbatim` lets a repeated pair with a German noun go as «no paraphrase can avoid it» — a check
-|    under-fires on German; no key of the pack can change that (a code question, not a list).
+|  - EVERY NOUN IS WRITTEN WITH A CAPITAL: a rule that took a capitalised word inside a sentence for a name would read
+|    every German noun as one (the lesson validator's `check.verbatim` did, until it went in GEN-4; the dialogue's
+|    `check.verbatim` reads no names) — no key of the pack can change that (a code question, not a list).
 |  - A WORD LIST MAY BE WRITTEN IN ITS OWN SPELLING, A PATTERN MAY NOT: `LanguagePack::normal()` folds before it lower-
 |    cases (ß → ss), on the list and on the word asked of it, and `speech()` folds the lists handed down — so «dreißig»,
 |    «weiß», «heißen» stand here as German writes them. The regular expressions meet the FOLDED word: they write «ss»

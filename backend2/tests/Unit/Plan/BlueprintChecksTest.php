@@ -102,14 +102,20 @@ it('priorities: no priority 1 at all is caught and drop makes the first situatio
     expect($priorities)->toBe([2, 1, 3, 4, 5]);
 });
 
-it('topic_parts: a brief missing one of the five labelled parts is counted or refused', function () {
+it('topic_parts: a brief that is not the three labelled lines of v2.1 is counted or refused', function (string $brief) {
     $p = bpPayload();
-    $p['scenes'][1]['topic_description'] = 'Situation: consultation. Learner: parent. Partner: doctor. Partner will: ask.';
+    $p['scenes'][1]['topic_description'] = $brief;
 
-    expect(bpFindingsOf(bpRun($p, 'topic_parts', CheckMode::Observe), 'topic_parts'))->toHaveCount(2)
+    expect(bpFindingsOf(bpRun($p, 'topic_parts', CheckMode::Observe), 'topic_parts'))->toHaveCount(1)
         ->and(bpRun($p, 'topic_parts', CheckMode::Gate)->gated)->toBeTrue()
-        ->and(bpRun($p, 'topic_parts', CheckMode::Drop)->gated)->toBeFalse();
-});
+        ->and(bpRun($p, 'topic_parts', CheckMode::Drop)->gated)->toBeFalse()
+        ->and(bpFindingsOf(bpRun(bpPayload(), 'topic_parts', CheckMode::Observe), 'topic_parts'))->toBe([]);
+})->with([
+    'one line' => ['Situation: consultation. Learner: parent. Partner: doctor. Not in this scene: payment.'],
+    'the five parts of v2' => ["Situation: consultation.\nLearner: parent.\nPartner: doctor.\nPartner will: ask.\nLearner must: answer."],
+    'no partner' => ["Situation: consultation.\nLearner: parent.\nNot in this scene: payment."],
+    'out of order' => ["Learner: parent. Partner: doctor.\nSituation: consultation.\nNot in this scene: payment."],
+]);
 
 it('goals_count: five goals are cut to four in drop; two goals are only counted', function () {
     $p = bpPayload();

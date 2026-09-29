@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Infrastructure\Eloquent;
 
 use App\Modules\Plan\Domain\Blueprint\PlanTitles;
+use App\Modules\Plan\Domain\Blueprint\SurvivalSet;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\Plan;
 use App\Modules\Plan\Domain\Entity\PlanDay;
@@ -119,6 +120,10 @@ final class PlanMapper
         if (is_array($row->lesson_json)) {
             $answer = $this->lessons->parse($row->lesson_json);
         }
+        $skeleton = null;
+        if (is_array($row->skeleton_json)) {
+            $skeleton = $this->lessons->skeleton($row->skeleton_json);
+        }
 
         return PlanScene::reconstitute(
             id: PlanSceneId::fromString($row->id),
@@ -148,6 +153,8 @@ final class PlanMapper
             partnerVoiceGender: VoiceGender::tryFromAny($row->partner_voice_gender),
             builtAt: self::instant($row->built_at),
             partnerVoiceId: $row->partner_voice_id,
+            survival: SurvivalSet::fromColumns($row->must_say, $row->must_understand),
+            skeleton: $skeleton,
         );
     }
 
@@ -248,7 +255,10 @@ final class PlanMapper
             'image_author' => $scene->image()?->author,
             'image_author_url' => $scene->image()?->authorUrl,
             'image_tone' => $scene->image()?->tone,
+            'must_say' => $scene->survival()->isEmpty() ? null : $scene->survival()->mustSayColumn(),
+            'must_understand' => $scene->survival()->isEmpty() ? null : $scene->survival()->mustUnderstandColumn(),
             'lesson_json' => $scene->answer()?->toArray(),
+            'skeleton_json' => $scene->skeleton()?->toArray(),
             'lesson_status' => $scene->lessonStatus()->value,
             'prompt_version_lesson' => $call?->promptVersion,
             'build_version' => $call?->buildVersion,

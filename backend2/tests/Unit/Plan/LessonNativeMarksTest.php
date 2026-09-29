@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\NativeSeams;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 
 /**
@@ -18,7 +15,7 @@ use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
 /** The fake's lesson with the natives given, parsed as the server parses a model's answer. */
 function nmParsed(Closure $break): App\Modules\Plan\Domain\Lesson\Lesson
 {
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('Приём', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём'));
 
     return (new LessonParser)->parse($break($payload));
 }
@@ -40,7 +37,7 @@ it('reads a frame of either language and a filler\'s native text without the spa
 
         return $p;
     });
-    $seams = array_column(NativeSeams::of($lesson), 'pattern', 'id');
+    $seams = array_column(NativeSeams::of($lesson->phrases), 'pattern', 'id');
 
     expect($lesson->phrase('p1')?->frameTarget)->toBe('It hurts in his ___.')
         ->and($lesson->phrase('p1')?->toArray()['frame_target'])->toBe('It hurts in his ___.')

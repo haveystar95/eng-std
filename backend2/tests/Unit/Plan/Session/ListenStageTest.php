@@ -2,23 +2,19 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Assembly\Audio;
 use App\Modules\Plan\Domain\Assembly\CardDraft;
+use App\Modules\Plan\Domain\Assembly\ListeningExchange;
 use App\Modules\Plan\Domain\Assembly\ListenStage;
 use App\Modules\Plan\Domain\Assembly\NumberValues;
 use App\Modules\Plan\Domain\Assembly\SceneMaterial;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
-use App\Modules\Plan\Domain\Check\Lesson\ListeningExchange;
 use App\Modules\Plan\Domain\Lesson\Lesson;
-use App\Modules\Plan\Domain\Lesson\LessonAssembly;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Lesson\ListeningQuestion;
 use App\Modules\Plan\Domain\Service\Words;
 use App\Modules\Plan\Domain\ValueObject\CardKind;
 use App\Modules\Plan\Domain\ValueObject\CardSource;
-use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Plan\Domain\ValueObject\UnitKind;
 use App\Modules\Plan\Infrastructure\Model\FakePlanModel;
@@ -38,11 +34,11 @@ function s1lScene(?Closure $payload = null, ?Closure $lesson = null, string $nat
 {
     $sceneId = PlanSceneId::fromString('01J8SESS10N1A4EAR000000000');
     $packs = lessonPacks();
-    $answer = FakePlanModel::lessonPayload(new LessonRequest('Приём у врача', 'x', 'English', 'Russian', PlanLevel::Intermediate, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
+    $answer = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('Приём у врача'));
     if ($payload !== null) {
         $answer = $payload($answer);
     }
-    $served = LessonAssembly::serve((new LessonParser)->parse($answer), $sceneId->value, $packs->for('en'));
+    $served = planServed((new LessonParser)->parse($answer), $sceneId->value, $packs->for('en'));
     if ($lesson !== null) {
         $served = $lesson($served);
     }

@@ -13,7 +13,7 @@ declare(strict_types=1);
 | `docs/research/lang-1/pack-keys.md`, with the main session's updates over it (common_words «частые и отличительные»,
 | the exact `script_letters`, `number_tens_joiners`, the fold in `LanguagePack::normal()`).
 |
-| No key is null (null counts `lang.pack_missing`): a rule that does not hold for Italian is written as the spec's no-op.
+| No key is null (null would switch its rule off): a rule that does not hold for Italian is written as the spec's no-op.
 | Every list is a counter's reading of a rule, not the rule: the codes built on them are heuristics.
 |
 | HOW THE WORDS ARE WRITTEN. Lists are standard Italian spelling, lower case, the plain apostrophe; the pack's words and

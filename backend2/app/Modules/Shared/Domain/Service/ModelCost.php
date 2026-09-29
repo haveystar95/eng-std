@@ -45,7 +45,8 @@ final class ModelCost
         'gpt-4o-mini' => [0.00015, 0.0006],
         'gpt-5.6-sol' => [0.005, 0.03],
         'gpt-5.6-terra' => [0.002, 0.012],
-        'gpt-5.6-luna' => [0.0002, 0.0012],
+        // Luna — the model of the day's two stages and the repairs (наряд GEN-4): $1 / $6 per 1M, cached input $0.10.
+        'gpt-5.6-luna' => [0.001, 0.006],
         'gpt-5.5' => [0.005, 0.03],
         'gpt-5.4' => [0.0025, 0.015],
         'gpt-5.4-mini' => [0.00075, 0.0045],
@@ -104,6 +105,7 @@ final class ModelCost
      * @var array<string, float>
      */
     private const CACHED_INPUT_SHARE = [
+        'gpt-5.6-luna' => 0.1,
         'gpt-5.5' => 0.1,
         'gpt-5.4' => 0.1,
         'gpt-5.4-mini' => 0.1,

@@ -7,55 +7,66 @@ declare(strict_types=1);
 | THE LEARNING PLAN (docs/plan-v2.md)
 |--------------------------------------------------------------------------
 |
-| Two model calls — the plan builder and the lesson generator — read from versioned prompt files
-| (app/Modules/Plan/Infrastructure/Prompt/current), checked in code, dealt into days by the server.
+| The plan builder, and a day built in two stages — the skeleton and the dialogue (наряд GEN-4) — read from versioned
+| prompt files (app/Modules/Plan/Infrastructure/Prompt/current), checked in code, dealt into days by the server.
 |
 */
 return [
     'model' => [
-        // 'openai' | 'anthropic' | 'xai' | 'gemini' — one provider for both calls, or 'fake'
+        // 'openai' | 'anthropic' | 'xai' | 'gemini' — one provider for every call, or 'fake'
         // (deterministic, no network; the whole test suite runs on it, see phpunit.xml).
         'driver' => env('PLAN_MODEL_DRIVER', env('GENERATION_DRIVER', 'openai')),
         'provider' => env('PLAN_MODEL_PROVIDER', 'openai'),
-        // The plan is written once and read for its whole life; the lesson is the day's material.
-        // Both default to the same strong model the card core runs on (bakeoff-v11-ab, К2).
-        'plan_model' => env('PLAN_BUILDER_MODEL', 'gpt-5.4'),
-        'lesson_model' => env('PLAN_LESSON_MODEL', 'gpt-5.4'),
-        // The repair of ONE card (P2R) — a few lines and the part of the lesson they need. A step cheaper was the
-        // order of GEN-2b «if it repairs no worse», and it did not pass: `gpt-5.4-mini` answered a closing question by
-        // deleting its question mark and broke the dialogue's fillers where the lesson's model did not (report GEN-2b
-        // §4) — so the lesson's model stays until the architect says otherwise; the knob is here.
-        'repair_model' => env('PLAN_REPAIR_MODEL', 'gpt-5.4'),
-        // The seam judge — one yes or no per native sentence of the day, one call a day: a step cheaper.
-        'judge_model' => env('PLAN_JUDGE_MODEL', 'gpt-5.4-mini'),
-        // How long our client waits for the vendor's ANSWER, seconds (the connection itself — ten, VendorCall). Both calls
-        // are asynchronous jobs the client polls; the repair and the seam judge run inside the lesson's job and take the
-        // lesson's. 180 is three times the slowest lesson seen (51 s, наряд GEN-3): a client that gave up at 60 s paid
-        // for a lesson the model finished and nobody read.
+        /*
+         * A MODEL AND A REASONING EFFORT PER PURPOSE (наряд GEN-4) — the purpose is also the call's name in the journal of
+         * model calls (`model_calls.purpose`). `reasoning_effort` unset or empty sends nothing: the model's own default.
+         *
+         *  - `plan` — the plan is written once and read for its whole life: the strong model (bakeoff-v11-ab, К2);
+         *  - `plan_line_repair` — ONE screen line of the plan over its limit of characters, shortened;
+         *  - `skeleton`, `dialogue` — the day's two stages; `repair` — one card of either;
+         *  - `seam_judge` — one yes or no per native sentence of the day's frames, one call a day;
+         *  - `slot_judge` — the learner's spoken slot, synchronously inside their request (its timeout: `slot_judge`).
+         */
+        'purposes' => [
+            'plan' => ['model' => env('PLAN_BUILDER_MODEL', 'gpt-5.4'), 'reasoning_effort' => env('PLAN_BUILDER_REASONING')],
+            'plan_line_repair' => ['model' => env('PLAN_LINE_REPAIR_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_LINE_REPAIR_REASONING')],
+            'skeleton' => ['model' => env('PLAN_SKELETON_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_SKELETON_REASONING')],
+            'dialogue' => ['model' => env('PLAN_DIALOGUE_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_DIALOGUE_REASONING')],
+            'repair' => ['model' => env('PLAN_REPAIR_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_REPAIR_REASONING')],
+            'seam_judge' => ['model' => env('PLAN_SEAM_JUDGE_MODEL', 'gpt-5.4-mini'), 'reasoning_effort' => env('PLAN_SEAM_JUDGE_REASONING')],
+            'slot_judge' => ['model' => env('PLAN_SLOT_JUDGE_MODEL', 'gpt-5.4-mini'), 'reasoning_effort' => env('PLAN_SLOT_JUDGE_REASONING')],
+        ],
+        // How long our client waits for the vendor's ANSWER, seconds (the connection itself — ten, VendorCall). The plan
+        // and its line repairs take `plan_timeout`; the day's calls — both stages, the repairs and the seam judge, all
+        // inside the lesson's job — take `lesson_timeout`. 180 is three times the slowest lesson seen (51 s, наряд GEN-3):
+        // a client that gave up at 60 s paid for a lesson the model finished and nobody read.
         'plan_timeout' => (int) env('PLAN_BUILDER_TIMEOUT', 180),
         'lesson_timeout' => (int) env('PLAN_LESSON_TIMEOUT', 180),
     ],
 
     // A build that started and never came back in this many seconds counts as dead: the client sees `failed` and may ask
-    // for a retry — by hand, nothing retries a DEAD build on its own (the one rebuild the server makes is inside the build,
-    // for a lesson that failed the gate — наряд LANG-1b §1). Longer than the lesson's job may run (every call it can make ×
-    // the timeout, plus a minute — BuildLessonJob, 1 680 s), so a retry never races a job that is still waiting for its answer.
-    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 1740),
+    // for a retry — by hand, nothing retries a DEAD build on its own (the repeats the server makes are inside the build: a
+    // stage asked once more for a fatal finding — наряд GEN-4). Longer than the lesson's job may run (every call it can
+    // make × the timeout, plus a minute — BuildLessonJob, 1 860 s), so a retry never races a job still waiting for an answer.
+    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 1920),
 
-    // What a lesson orders, per level: VOCABULARY_COUNT and DIALOGUE_COUNT. The number of frames is
-    // not ordered — `lesson_day.v4.6` takes it from the dialogue (half to all of its answer/ask exchanges).
+    // What a day orders, per level: VOCABULARY_COUNT — a range, «min–max» in the skeleton's input; the skeleton takes as
+    // many words as its frames and lines yield within it (наряд GEN-4). Frames and exchanges are not ordered: the frames
+    // are the scene's survival set, DIALOGUE_COUNT the server counts off the skeleton.
     'counts' => [
-        'beginner' => ['vocabulary' => 8, 'dialogue' => 8],
-        'intermediate' => ['vocabulary' => 8, 'dialogue' => 8],
+        'beginner' => ['vocabulary' => [8, 12]],
+        'intermediate' => ['vocabulary' => [8, 12]],
     ],
 
     /*
      * THE PLAN CHECKS (docs/plan-v2.md §4): `observe` counts and keeps, `drop` erases the broken mark
-     * or field, `gate` refuses the answer and buys one retry. Every check ships as `observe`; the
+     * or field, `gate` refuses the answer and buys one retry. A check ships as `observe`; the
      * admin panel shows the counters per prompt version, and a mode is switched HERE, after real
-     * plans, never in code. Checks marked «observe навсегда» in the canon ignore this table. The
-     * lesson validator has no modes: it only counts (наряд GEN-2a); what it knows of a language is that
-     * language's pack, `config/lesson/lang/<code>.php` (наряд GEN-2b).
+     * plans, never in code. Checks marked «observe навсегда» in the canon ignore this table. The one check that
+     * ships as `gate` is the SHAPE of a scene's survival set (наряд GEN-4: a fatal finding is a new plan call) — the
+     * day is built from that set. The day's two stages have no modes: their checks are fatal or warnings by rule
+     * (`SkeletonCheck`, `DialogueCheck`); what they know of a language is that language's pack,
+     * `config/lesson/lang/<code>.php` (наряд GEN-2b).
      */
     'checks' => [
         'plan' => [
@@ -63,6 +74,7 @@ return [
             'priorities' => env('PLAN_CHECK_PRIORITIES', 'observe'),
             'topic_parts' => env('PLAN_CHECK_TOPIC_PARTS', 'observe'),
             'goals_count' => env('PLAN_CHECK_GOALS_COUNT', 'observe'),
+            'survival_set' => env('PLAN_CHECK_SURVIVAL_SET', 'gate'),
         ],
     ],
 

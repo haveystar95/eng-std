@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-use App\Modules\Plan\Application\Dto\LessonRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Service\ConversationMaterial;
 use App\Modules\Plan\Domain\Blueprint\BlueprintParser;
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\LanguagePacks;
 use App\Modules\Plan\Domain\Entity\Plan;
-use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Plan\Domain\Lesson\LessonParser;
 use App\Modules\Plan\Domain\Repository\PlanTermRepository;
 use App\Modules\Plan\Domain\Service\ConversationTargets;
@@ -259,10 +257,10 @@ function ctMaterialTitle(string $native, LanguagePacks $packs): array
     );
     $plan->beginBuild($now);
     $request = new PlanRequest('врач', 'English', 'Russian', PlanLevel::Beginner, PlanCalendar::scenesCount(3));
-    $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
+    $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2.1', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
     $scene = $plan->sceneOf($plan->day(1)) ?? throw new RuntimeException('day 1 holds no scene');
-    $payload = FakePlanModel::lessonPayload(new LessonRequest('x', 'x', 'English', 'Russian', PlanLevel::Beginner, null, 8, 8, FakePlanModel::roles(), new EarlierDays));
-    $scene->acceptLesson((new LessonParser)->parse($payload), lessonPacks()->for('en'), new ModelCall('lesson_day.v4.10', 'test', 'fake', '0.000000', 1, 1), [], $now);
+    $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('x'));
+    $scene->acceptLesson((new LessonParser)->parse($payload), planSkeletonOf($payload), lessonPacks()->for('en'), new ModelCall('lesson_skeleton.v1+lesson_dialogue.v1', 'test', 'fake', '0.000000', 1, 2), [], $now);
     $scene->finishIllustration($now);
 
     // The talk's title needs no term: a repository that holds none, and fails loudly if asked to write.
@@ -279,11 +277,6 @@ function ctMaterialTitle(string $native, LanguagePacks $packs): array
         }
 
         public function replaceForScene(PlanSceneId $sceneId, array $terms): void
-        {
-            throw new LogicException('read only');
-        }
-
-        public function rewriteTexts(PlanSceneId $sceneId, array $terms): void
         {
             throw new LogicException('read only');
         }

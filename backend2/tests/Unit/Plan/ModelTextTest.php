@@ -77,7 +77,7 @@ final class MtAnsweringCatalog implements ContentModelCatalog
         return [];
     }
 
-    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null): ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null, ?int $timeoutSeconds = null, ?int $retries = null, ?string $journalPurpose = null, ?string $reasoningEffort = null): ContentModelPort
     {
         $answer = $this->answer;
 
@@ -110,7 +110,7 @@ it('hands the plan an answer of the model without its invisible characters', fun
     $builder = new ContentModelPlanBuilder(
         new MtAnsweringCatalog(['status' => 'ok', 'plan' => ['title_native' => "Собесе\u{00AD}дование", 'scenes' => [['title_native' => "Опы\u{0004}т и навыки"]]]]),
         new PlanPromptFiles,
-        ProviderId::OpenAi, 'gpt-5.4', 'gpt-5.4', 180, 180, 'gpt-5.4', 'gpt-5.4-mini',
+        ProviderId::OpenAi, [], 180, 180,
     );
 
     $reply = $builder->buildPlan(new PlanRequest('Собеседование в пятницу', 'English', 'Russian', PlanLevel::Beginner, 2));
