@@ -194,6 +194,65 @@ return [
     // keeping «Haut» and «Haus» apart.
     'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],
 
+    // THE FORMS OF A DICTIONARY WORD (наряд GEN-4 — `vocab.not_found`, FATAL, and `vocab.used_in_wrong`; {@see TermForms}):
+    // the vocabulary of a day writes a word in its dictionary form, the frames and lines say it inflected; the forms no
+    // rule of letters reaches are listed here under the word as a term's content word. Read by the day's checks only —
+    // not the talk's `irregular_forms` (a form → its base, in the canonical form of speech, read by `WordBases`).
+    // German: the strong and modal verbs by the infinitive («können» — «kann», «nehmen» — «nimmt»); keyed folded, ß as ss.
+    'lemma_forms' => [
+        'sein' => ['bin', 'bist', 'ist', 'sind', 'seid', 'war', 'warst', 'waren', 'wart', 'gewesen', 'wäre', 'wären', 'sei'],
+        'haben' => ['habe', 'hast', 'hat', 'habt', 'hatte', 'hattest', 'hatten', 'gehabt', 'hätte', 'hätten'],
+        'werden' => ['werde', 'wirst', 'wird', 'werdet', 'wurde', 'wurden', 'geworden', 'würde', 'würden'],
+        'können' => ['kann', 'kannst', 'könnt', 'konnte', 'konnten', 'könnte', 'könnten', 'gekonnt'],
+        'wollen' => ['will', 'willst', 'wollt', 'wollte', 'wollten', 'gewollt'],
+        'müssen' => ['muss', 'musst', 'müsst', 'musste', 'mussten', 'müsste', 'gemusst'],
+        'dürfen' => ['darf', 'darfst', 'dürft', 'durfte', 'durften', 'dürfte'],
+        'sollen' => ['soll', 'sollst', 'sollt', 'sollte', 'sollten'],
+        'mögen' => ['mag', 'magst', 'mögt', 'mochte', 'möchte', 'möchtest', 'möchten', 'möchtet'],
+        'wissen' => ['weiß', 'weißt', 'wisst', 'wusste', 'wussten', 'gewusst'],
+        'gehen' => ['ging', 'gingen', 'gegangen'],
+        'geben' => ['gibt', 'gibst', 'gab', 'gaben', 'gegeben'],
+        'nehmen' => ['nimmt', 'nimmst', 'nahm', 'nahmen', 'genommen'],
+        'sehen' => ['sieht', 'siehst', 'sah', 'sahen', 'gesehen'],
+        'sprechen' => ['spricht', 'sprichst', 'sprach', 'gesprochen'],
+        'helfen' => ['hilft', 'hilfst', 'half', 'geholfen'],
+        'tun' => ['tut', 'tat', 'getan'],
+        'wehtun' => ['tut', 'tun', 'weh'],
+        'bringen' => ['brachte', 'gebracht'],
+        'kommen' => ['kam', 'kamen', 'gekommen'],
+        'fahren' => ['fährt', 'fährst', 'fuhr', 'gefahren'],
+        'essen' => ['isst', 'aß', 'gegessen'],
+        'lesen' => ['liest', 'las', 'gelesen'],
+        'schlafen' => ['schläft', 'schlief'],
+        'laufen' => ['läuft', 'lief'],
+        'tragen' => ['trägt', 'trug'],
+        'finden' => ['fand', 'gefunden'],
+        'bleiben' => ['blieb', 'geblieben'],
+        'heissen' => ['heiße', 'heißt', 'hieß'],
+        'schreiben' => ['schrieb', 'geschrieben'],
+        'treffen' => ['trifft', 'traf', 'getroffen'],
+        'vergessen' => ['vergisst', 'vergaß'],
+        'beginnen' => ['begann', 'begonnen'],
+        'verstehen' => ['verstand', 'verstanden'],
+        'stehen' => ['stand', 'gestanden'],
+        'liegen' => ['lag', 'gelegen'],
+        'sitzen' => ['saß', 'gesessen'],
+        'ziehen' => ['zog', 'gezogen'],
+        'bekommen' => ['bekam'],
+        'denken' => ['dachte', 'gedacht'],
+        'kennen' => ['kannte', 'gekannt'],
+        'anrufen' => ['rufe', 'ruft', 'rief', 'angerufen'],
+        'anfangen' => ['fange', 'fängt', 'fing', 'angefangen'],
+        'mitbringen' => ['brachte', 'mitgebracht'],
+        'erziehen' => ['erzieht', 'erzog', 'erzogen'], 'einziehen' => ['zog', 'eingezogen'], 'umziehen' => ['zog', 'umgezogen'],
+        'anziehen' => ['zog', 'angezogen'], 'bieten' => ['bot', 'geboten'], 'anbieten' => ['bot', 'angeboten'],
+        'empfehlen' => ['empfiehlt', 'empfahl', 'empfohlen'], 'gefallen' => ['gefällt', 'gefiel'], 'verlieren' => ['verlor', 'verloren'],
+        'unterschreiben' => ['unterschrieb', 'unterschrieben'], 'halten' => ['hält', 'hielt'],
+        'lassen' => ['lässt', 'ließ'], 'fallen' => ['fällt', 'fiel'], 'rufen' => ['rief', 'gerufen'], 'schliessen' => ['schloss', 'geschlossen'],
+        'waschen' => ['wäscht', 'wusch'], 'steigen' => ['stieg', 'gestiegen'], 'umsteigen' => ['stieg', 'umgestiegen'],
+        'aussteigen' => ['stieg', 'ausgestiegen'], 'einsteigen' => ['stieg', 'eingestiegen'],
+    ],
+
     // A number, one word (folded: «dreißig» is `dreissig` here): a digit anywhere («0176», «14a»), a cardinal made of the
     // number words (dreizehn, einundzwanzig, zweihundert), an ordinal of them (zweite, dritten, zwanzigste, achter), a
     // multiple (einmal, dreimal), a half or a quarter. Never «ein», «eine», «einen» (the article) nor a bare «und» — and

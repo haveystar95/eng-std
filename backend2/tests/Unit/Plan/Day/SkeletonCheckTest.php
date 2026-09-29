@@ -83,6 +83,19 @@ it('vocab.not_found — finds the dictionary form in the inflected one, and a ch
         ->not->toContain('vocab.not_found@v9');
 });
 
+// The gate run of GEN-4 failed a day of ro→fr on «vouloir» said only as «Je veux»: a form the target's pack lists
+// (`lemma_forms`) is the word — «a putea» said as «Pot» —, and another verb in its place is still no form of it.
+it('vocab.not_found — an irregular form the target\'s pack lists is the word, another verb is not', function (string $frame, bool $found) {
+    $skeleton = dayCanonSkeleton(static fn (array $raw): array => scAt('phrases', 'p7', static fn (array $f): array => [...$f, 'frame_target' => $frame])(
+        scAt('vocabulary', 'v5', static fn (array $v): array => [...$v, 'term_target' => 'a putea'])($raw),
+    ));
+    $findings = skeletonFound($skeleton);
+    $found ? expect($findings)->toContain('vocab.not_found@v5') : expect($findings)->not->toContain('vocab.not_found@v5');
+})->with([
+    '«Pot» for «a putea»' => ['Pot începe de luni?', false],
+    '«Vreau» in its place' => ['Vreau să încep de luni?', true],
+]);
+
 it('vocab.count — fewer words than VOCABULARY_COUNT allows', function () {
     $skeleton = dayCanonSkeleton(static function (array $raw): array {
         $raw['vocabulary'] = array_slice($raw['vocabulary'], 0, 7);
@@ -135,22 +148,39 @@ it('skeleton.ids — two words under one id', function () {
 });
 
 // The gate run of GEN-4 (Luna, plan 04): «Für Sie passt das Basiskonto. Es kostet vier Euro im Monat» paired with two ask frames
-// — the day failed on frame.unused after two paid dialogues. Catches a line of two frames let through to a dialogue that
-// cannot be written from it, and two items of ONE frame read as two frames.
-it('partner.pairs_many — a partner line paired with two frames, never with two items of one', function () {
-    $two = dayCanonSkeleton(scAt('partner_lines', 'a6', static fn (array $l): array => [...$l, 'pairs_with' => [6, 7]]));
-    $one = dayCanonSkeleton(static function (array $raw): array {
-        // p6 says both asks — the same pattern — and a6 replies to both items of it.
-        $raw['phrases'][5]['must_say'] = [6, 7];
-        $raw['phrases'] = array_values(array_filter($raw['phrases'], static fn (array $f): bool => $f['id'] !== 'p7'));
+// and no other line with either — the day failed on frame.unused after two paid dialogues. Catches frames left with no line
+// of their own let through to a dialogue that cannot be written from them — and a line of two frames refused when another
+// line takes the other (plan 06: two questions, each pairing with both answers), or two items of ONE frame read as two.
+it('partner.pairs_many — frames the partner lines pair with, left without a line of their own', function (Closure $edit, bool $found) {
+    $findings = skeletonFound(dayCanonSkeleton($edit));
+    $found ? expect($findings)->toContain('partner.pairs_many@skeleton') : expect($findings)->not->toContain('partner.pairs_many@skeleton');
+})->with([
+    'one line for two frames, the other line pairing with none' => [static function (array $raw): array {
+        $raw['partner_lines'][5]['pairs_with'] = [6, 7];
+        $raw['partner_lines'][6]['pairs_with'] = [];
+
+        return $raw;
+    }, true],
+    'one line for two frames, another line for one of them' => [static function (array $raw): array {
         $raw['partner_lines'][5]['pairs_with'] = [6, 7];
 
         return $raw;
-    });
+    }, false],
+    'two lines, each for both frames' => [static function (array $raw): array {
+        $raw['partner_lines'][5]['pairs_with'] = [6, 7];
+        $raw['partner_lines'][6]['pairs_with'] = [6, 7];
 
-    expect(skeletonFound($two))->toContain('partner.pairs_many@a6')
-        ->and(skeletonFound($one))->not->toContain('partner.pairs_many@a6');
-});
+        return $raw;
+    }, false],
+    'two items of one frame' => [static function (array $raw): array {
+        $raw['phrases'][5]['must_say'] = [6, 7];
+        $raw['phrases'] = array_values(array_filter($raw['phrases'], static fn (array $f): bool => $f['id'] !== 'p7'));
+        $raw['partner_lines'][5]['pairs_with'] = [6, 7];
+        $raw['partner_lines'][6]['pairs_with'] = [];
+
+        return $raw;
+    }, false],
+]);
 
 it('pronunciation.near_native — a filler\'s reading close to its native text', function () {
     $skeleton = dayCanonSkeleton(static function (array $raw): array {

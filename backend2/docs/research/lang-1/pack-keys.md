@@ -101,6 +101,7 @@
 | `number_joiners` | target | list — соединитель **после масштаба** | Ⓒ | нет | `[]` |
 | `number_tens_joiners` | target | list — соединитель **после десятков** (§3.9а) | Ⓒ | нет | `[]` |
 | `word_forms` | both | map {stem_min, stem_tail, content_min_letters} int | Ⓐ | да | — |
+| `lemma_forms` (**наряд GEN-4**) | target | map словарное слово → list его форм | Ⓐ | нет | нет ключа — формы только по буквам (§3.10а) |
 | `number_pattern` | both | regex (слово) | Ⓔ | да | — |
 | `time_pattern` | native (target — по желанию) | regex (слово) | Ⓔ | да (native) | target: `'/(?!)/u'` |
 | `amount_pattern` | native (target — по желанию) | regex (слово) | Ⓔ | нет | `'/(?!)/u'` |
@@ -279,6 +280,15 @@
 - no-op — нет.
 - en: `['stem_min' => 3, 'stem_tail' => 3, 'content_min_letters' => 1]`; ru: `['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2]`.
 - Грабли: флективным языкам (pl, ro, it, es, de, fr) — ближе к ru (4/2/2), иначе «un»/«una», «dzień»/«dnia» расходятся.
+
+### 3.10а. `lemma_forms` (наряд GEN-4)
+- **target** · `LanguageWords::irregular()`, читает `TermForms::form()` — правила скелета `vocab.not_found` (ФАТАЛЬНО) и
+  `vocab.used_in_wrong`. Необязательный: без ключа находятся только формы «по буквам» (`sameStem`, общее начало, приставка).
+- map: словарное слово — как знаменательное слово термина словаря, в `LanguagePack::normal()` (ro — глагол без «a», de — ß
+  как ss) → list форм, которых не достают правила букв: «vouloir» → «veux», «putea» → «pot», «go» → «going», «ząb» → «zęby».
+- Пишут семь целей (en, pl, ro, es, it, de, fr); ru, uk, be — не цели.
+- Грабли: не `irregular_forms` разговора (форма → основа, в каноне речи без апострофа, у fr/pl/es/ro/uk/be намеренно пуст) —
+  другой читатель и другое направление. Прогон ворот GEN-4 уронил день ro→fr на «vouloir», сказанном «Je veux».
 
 ### 3.11. `number_pattern`
 - **both** · `LanguageWords::isNumber()` `:141` (к `normal(токен Ⓐ)`), `NumberValues::of()` `NumberValues.php:52` (target —

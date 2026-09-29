@@ -155,6 +155,52 @@ return [
     // of the shorter («cita» — «citas», «médico» — «médica», «necesito» — «necesita»). One letter is no content word.
     'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],
 
+    // THE FORMS OF A DICTIONARY WORD (наряд GEN-4 — `vocab.not_found`, FATAL, and `vocab.used_in_wrong`; {@see TermForms}):
+    // the vocabulary of a day writes a word in its dictionary form, the frames and lines say it inflected; the forms no
+    // rule of letters reaches are listed here under the word as a term's content word. Read by the day's checks only —
+    // not the talk's `irregular_forms` (a form → its base, in the canonical form of speech, read by `WordBases`).
+    // Spanish: the irregular and stem-changing verbs by the infinitive («tener» — «tengo», «doler» — «duele», «ir» — «voy»).
+    'lemma_forms' => [
+        'ser' => ['soy', 'eres', 'es', 'somos', 'sois', 'son', 'era', 'eras', 'éramos', 'eran', 'fui', 'fue', 'fuimos', 'fueron', 'sido', 'sea', 'sean', 'será', 'sería'],
+        'estar' => ['estoy', 'estás', 'está', 'estamos', 'estáis', 'están', 'estaba', 'estaban', 'estuve', 'estuvo', 'esté'],
+        'ir' => ['voy', 'vas', 'va', 'vamos', 'vais', 'van', 'iba', 'ibas', 'íbamos', 'iban', 'fui', 'fue', 'fueron', 'ido', 'vaya', 'irá', 'iría'],
+        'tener' => ['tengo', 'tienes', 'tiene', 'tenemos', 'tenéis', 'tienen', 'tuve', 'tuvo', 'tenga', 'tendré', 'tendrá', 'tendría'],
+        'poder' => ['puedo', 'puedes', 'puede', 'podemos', 'podéis', 'pueden', 'pude', 'pudo', 'pueda', 'podré', 'podrá', 'podría', 'podrías'],
+        'querer' => ['quiero', 'quieres', 'quiere', 'queremos', 'queréis', 'quieren', 'quise', 'quiso', 'quisiera', 'querría'],
+        'hacer' => ['hago', 'haces', 'hace', 'hacemos', 'hacéis', 'hacen', 'hice', 'hizo', 'hecho', 'haga', 'haré', 'hará', 'haría'],
+        'decir' => ['digo', 'dices', 'dice', 'decimos', 'decís', 'dicen', 'dije', 'dijo', 'dicho', 'diga', 'diré', 'dirá'],
+        'venir' => ['vengo', 'vienes', 'viene', 'venimos', 'venís', 'vienen', 'vine', 'vino', 'venga', 'vendré'],
+        'saber' => ['sé', 'sabes', 'sabe', 'sabemos', 'sabéis', 'saben', 'supe', 'supo', 'sepa', 'sabré'],
+        'haber' => ['he', 'has', 'ha', 'hemos', 'habéis', 'han', 'hay', 'había', 'habría', 'haya'],
+        'dar' => ['doy', 'das', 'da', 'damos', 'dais', 'dan', 'di', 'dio', 'dé'],
+        'ver' => ['veo', 'ves', 've', 'vemos', 'veis', 'ven', 'vi', 'vio', 'visto', 'vea'],
+        'poner' => ['pongo', 'pones', 'pone', 'ponemos', 'ponen', 'puse', 'puso', 'puesto', 'ponga'],
+        'salir' => ['salgo', 'saldré', 'salga'],
+        'traer' => ['traigo', 'trae', 'traje', 'trajo'],
+        'oír' => ['oigo', 'oye', 'oyen', 'oído'],
+        'pedir' => ['pido', 'pides', 'pide', 'piden', 'pidió'],
+        'preferir' => ['prefiero', 'prefieres', 'prefiere', 'prefieren'],
+        'sentir' => ['siento', 'sientes', 'siente', 'sienten', 'sintió'],
+        'dormir' => ['duermo', 'duermes', 'duerme', 'durmió'],
+        'doler' => ['duele', 'duelen', 'dolió', 'dolía'],
+        'costar' => ['cuesta', 'cuestan'],
+        'volver' => ['vuelvo', 'vuelves', 'vuelve', 'vuelven', 'vuelto'],
+        'empezar' => ['empiezo', 'empiezas', 'empieza', 'empiezan'],
+        'entender' => ['entiendo', 'entiendes', 'entiende', 'entienden'],
+        'pensar' => ['pienso', 'piensas', 'piensa', 'piensan'],
+        'encontrar' => ['encuentro', 'encuentras', 'encuentra', 'encuentran'],
+        'recordar' => ['recuerdo', 'recuerdas', 'recuerda'],
+        'mostrar' => ['muestro', 'muestra'],
+        'contar' => ['cuento', 'cuentas', 'cuenta'],
+        'seguir' => ['sigo', 'sigues', 'sigue', 'siguen'],
+        'elegir' => ['elijo', 'eliges', 'elige'],
+        'repetir' => ['repito', 'repites', 'repite'],
+        'servir' => ['sirvo', 'sirve'],
+        'jugar' => ['juego', 'juegas', 'juega'],
+        'conducir' => ['conduzco', 'conduje'],
+        'traducir' => ['traduzco', 'traduje'],
+    ],
+
     // A number: a digit anywhere in the word («2», «14A», «10:30»), a cardinal, an ordinal. Not «un»/«una» — the
     // articles, every «una cita» would be a count — nor «media» (the «y media» of an hour is no amount of its own), nor
     // «cuarto» (a room as often as a quarter).

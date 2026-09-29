@@ -71,6 +71,23 @@ final readonly class LanguageWords
         return $prefix >= max($least, $min - $tail);
     }
 
+    /**
+     * Is `$form` a form of `$lemma` that no rule of letters finds — the pack lists it (`lemma_forms`, наряд GEN-4):
+     * «vouloir» — «veux», «putea» — «pot», «go» — «went». The lemma is a content word of a term as the vocabulary writes
+     * it (the Romanian verb without its «a»). Optional, unlike the keys above: the targets write it, the learner's
+     * languages need not — a pack without it finds no such form, and every other reading of its words stands. Not the
+     * talk's `irregular_forms` ({@see \App\Modules\Plan\Domain\Service\WordBases}: a form → its base, in the canonical
+     * form of speech).
+     */
+    public function irregular(string $lemma, string $form): bool
+    {
+        if (! $this->pack->has('lemma_forms')) {
+            return false;
+        }
+
+        return in_array(LanguagePack::normal($form), $this->pack->mapWords('lemma_forms', LanguagePack::normal($lemma)), true);
+    }
+
     /** How many content words of `$a` have a content word of the same stem in `$b`. */
     public function shared(string $a, string $b): int
     {

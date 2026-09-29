@@ -138,6 +138,44 @@ return [
     // «wizytę»). One letter is no content word (every one-letter Polish word is a preposition or a conjunction).
     'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],
 
+    // THE FORMS OF A DICTIONARY WORD (наряд GEN-4 — `vocab.not_found`, FATAL, and `vocab.used_in_wrong`; {@see TermForms}):
+    // the vocabulary of a day writes a word in its dictionary form, the frames and lines say it inflected; the forms no
+    // rule of letters reaches are listed here under the word as a term's content word. Read by the day's checks only —
+    // not the talk's `irregular_forms` (a form → its base, in the canonical form of speech, read by `WordBases`).
+    // Polish: the irregular verbs by the infinitive («móc» — «mogę», «iść» — «idę»), a noun whose stem changes («ząb» — «zęby»).
+    'lemma_forms' => [
+        'być' => ['jestem', 'jesteś', 'jest', 'jesteśmy', 'jesteście', 'są', 'byłem', 'byłam', 'był', 'była', 'było', 'byli', 'były', 'będę', 'będziesz', 'będzie', 'będziemy', 'będą', 'bądź'],
+        'mieć' => ['mam', 'masz', 'ma', 'mamy', 'macie', 'mają', 'miałem', 'miałam', 'miał', 'miała', 'miało', 'mieli'],
+        'móc' => ['mogę', 'możesz', 'może', 'możemy', 'możecie', 'mogą', 'mógł', 'mogła', 'mogłem', 'mogłam', 'mógłbym', 'mogłabym', 'mógłby', 'mogłaby', 'można'],
+        'chcieć' => ['chcę', 'chcesz', 'chce', 'chcemy', 'chcecie', 'chcą', 'chciał', 'chciała', 'chciałem', 'chciałam', 'chciałbym', 'chciałabym', 'chciałby', 'chciałaby'],
+        'iść' => ['idę', 'idziesz', 'idzie', 'idziemy', 'idziecie', 'idą', 'szedł', 'szła', 'szedłem', 'szłam', 'pójdę', 'pójdzie', 'idź'],
+        'jechać' => ['jadę', 'jedziesz', 'jedzie', 'jedziemy', 'jadą'],
+        'brać' => ['biorę', 'bierzesz', 'bierze', 'bierzemy', 'biorą'],
+        'wziąć' => ['wezmę', 'weźmiesz', 'weźmie', 'wezmą', 'wziął', 'wzięła', 'weź'],
+        'dać' => ['dam', 'dasz', 'da', 'damy', 'dadzą', 'dał', 'dała'],
+        'jeść' => ['jem', 'jesz', 'je', 'jemy', 'jedzą', 'jadł'],
+        'wiedzieć' => ['wiem', 'wiesz', 'wie', 'wiemy', 'wiedzą'],
+        'musieć' => ['muszę', 'musisz', 'musi', 'musimy', 'muszą'],
+        'boleć' => ['boli', 'bolą'],
+        'płacić' => ['płacę', 'płacisz', 'płaci', 'płacą'],
+        'zapłacić' => ['zapłacę', 'zapłaci'],
+        'pomóc' => ['pomogę', 'pomożesz', 'pomoże', 'pomógł', 'pomogła'],
+        'powiedzieć' => ['powiem', 'powiesz', 'powie'],
+        'pisać' => ['piszę', 'piszesz', 'pisze', 'piszą'],
+        'woleć' => ['wolę', 'wolisz', 'woli'],
+        'spać' => ['śpię', 'śpisz', 'śpi'],
+        'pić' => ['piję', 'pijesz', 'pije'],
+        'czuć' => ['czuję', 'czujesz', 'czuje'],
+        'zacząć' => ['zacznę', 'zacznie', 'zaczął', 'zaczęła', 'zaczęło'],
+        'przyjść' => ['przyjdę', 'przyjdzie', 'przyszedł', 'przyszła'],
+        'wyjść' => ['wyjdę', 'wyjdzie', 'wyszedł', 'wyszła'],
+        'znaleźć' => ['znajdę', 'znajdzie', 'znalazł'],
+        'ząb' => ['zęby', 'zęba', 'zębów', 'zębem'],
+        'dziecko' => ['dzieci'],
+        'człowiek' => ['ludzie'],
+        'ręka' => ['ręce'],
+    ],
+
     // A number: a digit anywhere in the word, or a numeral in any of its cases — cardinals, the collective «dwoje»,
     // ordinals («o piętnastej», «drugi»), «pół / półtora / połowa / ćwierć», «raz / razy». Where a stem is shared with
     // another word the forms are named one by one: «jednak» (however) is no «jedn…», «czwartek» and «piątek» (weekdays)

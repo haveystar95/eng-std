@@ -144,6 +144,42 @@ return [
     // of the shorter («giorno» — «giorni», «prendere» — «prendo»). One letter is no content word.
     'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],
 
+    // THE FORMS OF A DICTIONARY WORD (наряд GEN-4 — `vocab.not_found`, FATAL, and `vocab.used_in_wrong`; {@see TermForms}):
+    // the vocabulary of a day writes a word in its dictionary form, the frames and lines say it inflected; the forms no
+    // rule of letters reaches are listed here under the word as a term's content word. Read by the day's checks only —
+    // not the talk's `irregular_forms` (a form → its base, in the canonical form of speech, read by `WordBases`).
+    // Italian: the irregular verbs by the infinitive («volere» — «vorrei», «andare» — «vado»), irregular participles.
+    'lemma_forms' => [
+        'essere' => ['sono', 'sei', 'è', 'siamo', 'siete', 'ero', 'eri', 'era', 'eravamo', 'erano', 'stato', 'stata', 'sarò', 'sarà', 'sarei', 'sarebbe', 'sia'],
+        'avere' => ['ho', 'hai', 'ha', 'abbiamo', 'avete', 'hanno', 'avevo', 'aveva', 'avuto', 'avrò', 'avrà', 'avrei', 'avrebbe', 'abbia'],
+        'andare' => ['vado', 'vai', 'va', 'andiamo', 'andate', 'vanno', 'andrò', 'andrà', 'andrei', 'vada'],
+        'fare' => ['faccio', 'fai', 'fa', 'facciamo', 'fate', 'fanno', 'fatto', 'farò', 'farà', 'farei', 'faccia', 'facevo'],
+        'potere' => ['posso', 'puoi', 'può', 'possiamo', 'potete', 'possono', 'potrei', 'potrebbe', 'potrò', 'potuto', 'possa'],
+        'volere' => ['voglio', 'vuoi', 'vuole', 'vogliamo', 'volete', 'vogliono', 'vorrei', 'vorrebbe', 'vorrò', 'voluto'],
+        'dovere' => ['devo', 'devi', 'deve', 'dobbiamo', 'dovete', 'devono', 'dovrei', 'dovrebbe', 'dovrò', 'dovuto'],
+        'sapere' => ['so', 'sai', 'sa', 'sappiamo', 'sapete', 'sanno', 'saprei', 'saputo'],
+        'venire' => ['vengo', 'vieni', 'viene', 'veniamo', 'venite', 'vengono', 'verrò', 'verrà', 'venuto'],
+        'dire' => ['dico', 'dici', 'dice', 'diciamo', 'dite', 'dicono', 'detto', 'dirò'],
+        'dare' => ['do', 'dai', 'dà', 'diamo', 'date', 'danno', 'darò', 'dato'],
+        'stare' => ['sto', 'stai', 'sta', 'stiamo', 'state', 'stanno', 'starò'],
+        'uscire' => ['esco', 'esci', 'esce', 'usciamo', 'uscite', 'escono'],
+        'bere' => ['bevo', 'bevi', 'beve', 'bevono', 'bevuto'],
+        'rimanere' => ['rimango', 'rimane', 'rimangono', 'rimasto'],
+        'tenere' => ['tengo', 'tieni', 'tiene', 'tengono'],
+        'scegliere' => ['scelgo', 'sceglie', 'scelgono', 'scelto'],
+        'prendere' => ['presi', 'preso'],
+        'mettere' => ['messo'],
+        'chiedere' => ['chiesto'],
+        'rispondere' => ['risposto'],
+        'vedere' => ['visto'],
+        'leggere' => ['letto'],
+        'scrivere' => ['scritto'],
+        'aprire' => ['aperto'],
+        'spendere' => ['speso'],
+        'decidere' => ['deciso'],
+        'succedere' => ['successo'],
+    ],
+
     // A number: a digit anywhere in the word; a numeral made of the parts of Italian numerals («ventitré», «ventun»,
     // «duecento», «tremila»), an elided article or preposition before it taken with it («l'otto maggio», «dall'undici») —
     // a lone «uno», «un», «una» is not: it is the article as often as the number —; the hour «l'una» / «all'una»; the

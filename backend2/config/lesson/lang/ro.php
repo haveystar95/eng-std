@@ -141,6 +141,36 @@ return [
     // no content word («zi», «an» are).
     'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],
 
+    // THE FORMS OF A DICTIONARY WORD (наряд GEN-4 — `vocab.not_found`, FATAL, and `vocab.used_in_wrong`; {@see TermForms}):
+    // the vocabulary of a day writes a word in its dictionary form, the frames and lines say it inflected; the forms no
+    // rule of letters reaches are listed here under the word as a term's content word. Read by the day's checks only —
+    // not the talk's `irregular_forms` (a form → its base, in the canonical form of speech, read by `WordBases`).
+    // Romanian: the verb without its «a» («putea» — «pot», «fi» — «sunt», «durea» — «doare»); ș ț with the comma below.
+    'lemma_forms' => [
+        'fi' => ['sunt', 'ești', 'este', 'e', 'suntem', 'sunteți', 'eram', 'erai', 'era', 'erați', 'erau', 'fost', 'fie'],
+        'avea' => ['am', 'ai', 'are', 'avem', 'aveți', 'au', 'aveam', 'avut', 'aș', 'ar', 'aibă'],
+        'putea' => ['pot', 'poți', 'poate', 'putem', 'puteți', 'putut', 'poată'],
+        'vrea' => ['vreau', 'vrei', 'vrem', 'vreți', 'vor', 'vrut', 'voiam', 'voia'],
+        'merge' => ['merg', 'mergi', 'mergem', 'mergeți', 'mers'],
+        'face' => ['fac', 'faci', 'facem', 'faceți', 'făcut', 'făcea'],
+        'da' => ['dau', 'dai', 'dă', 'dăm', 'dați', 'dat', 'dea'],
+        'lua' => ['iau', 'iei', 'ia', 'luăm', 'luați', 'luat'],
+        'ști' => ['știu', 'știi', 'știe', 'știm', 'știți', 'știut'],
+        'veni' => ['vin', 'vii', 'vine', 'venim', 'veniți', 'venit'],
+        'spune' => ['spun', 'spui', 'spus'],
+        'trebui' => ['trebuie', 'trebuia'],
+        'sta' => ['stau', 'stai', 'stă', 'stăm', 'stați', 'stat'],
+        'bea' => ['beau', 'bei', 'bem', 'beți', 'băut'],
+        'vedea' => ['văd', 'vezi', 'vede', 'vedem', 'vedeți', 'văzut'],
+        'cere' => ['cer', 'ceri', 'cerut'],
+        'duce' => ['duc', 'duci', 'dus'],
+        'durea' => ['doare', 'dor', 'durut'],
+        'ține' => ['țin', 'ții', 'ținut'],
+        'pune' => ['pun', 'pui', 'pus'],
+        'scrie' => ['scriu', 'scris'],
+        'mânca' => ['mănânc', 'mănânci', 'mănâncă'],
+    ],
+
     // A number: a digit anywhere in the word, a number word, an ordinal («al doilea», «a treia», «prima»), «jumătate»,
     // «sfert». Not «un» / «o» (the articles), not «mie» (also «to me»), not «noua» («the new»): a line with one of them
     // says no number. «nouă» stays — «la nouă» is nine — though it is also «new» and «to us». Matched against the folded

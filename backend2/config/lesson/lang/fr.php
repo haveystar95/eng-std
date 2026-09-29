@@ -241,6 +241,51 @@ return [
     // of the shorter («horaire» — «horaires», «réservé» — «réservée», «arrive» — «arrivez»). One letter is no content word.
     'word_forms' => ['stem_min' => 4, 'stem_tail' => 2, 'content_min_letters' => 2],
 
+    // THE FORMS OF A DICTIONARY WORD (наряд GEN-4 — `vocab.not_found`, FATAL, and `vocab.used_in_wrong`; {@see TermForms}):
+    // the vocabulary of a day writes a word in its dictionary form, the frames and lines say it inflected; the forms no
+    // rule of letters reaches are listed here under the word as a term's content word. Read by the day's checks only —
+    // not the talk's `irregular_forms` (a form → its base, in the canonical form of speech, read by `WordBases`).
+    // French: the irregular verbs by the infinitive («vouloir» — «veux», «falloir» — «faut», «être» — «suis»).
+    'lemma_forms' => [
+        'être' => ['suis', 'es', 'est', 'sommes', 'êtes', 'sont', 'étais', 'était', 'étions', 'étiez', 'étaient', 'été', 'serai', 'seras', 'sera', 'serons', 'serez', 'seront', 'serais', 'serait', 'soit', 'soyez'],
+        'avoir' => ['ai', 'as', 'a', 'avons', 'avez', 'ont', 'avais', 'avait', 'avions', 'aviez', 'avaient', 'eu', 'aurai', 'aura', 'aurons', 'aurez', 'auront', 'aurais', 'aurait', 'ayez'],
+        'aller' => ['vais', 'vas', 'va', 'allons', 'allez', 'vont', 'irai', 'ira', 'irons', 'irez', 'iront', 'irais', 'irait'],
+        'faire' => ['fais', 'fait', 'faisons', 'faites', 'font', 'ferai', 'fera', 'ferons', 'ferez', 'feront', 'ferais', 'ferait', 'faisais', 'faisait', 'fasse'],
+        'vouloir' => ['veux', 'veut', 'voulons', 'voulez', 'veulent', 'voudrais', 'voudrait', 'voudrions', 'voudriez', 'voudraient', 'voulu', 'voulais', 'voulait', 'veuillez'],
+        'pouvoir' => ['peux', 'peut', 'pouvons', 'pouvez', 'peuvent', 'pourrai', 'pourra', 'pourrais', 'pourrait', 'pourrions', 'pourriez', 'pourraient', 'pu', 'pouvais', 'pouvait', 'puisse'],
+        'devoir' => ['dois', 'doit', 'devons', 'devez', 'doivent', 'devrai', 'devra', 'devrais', 'devrait', 'devrions', 'devriez', 'devraient', 'dû', 'due', 'devais', 'devait'],
+        'falloir' => ['faut', 'faudra', 'faudrait', 'fallait', 'fallu'],
+        'savoir' => ['sais', 'sait', 'savons', 'savez', 'savent', 'saurai', 'saura', 'saurais', 'saurait', 'su', 'sachez'],
+        'venir' => ['viens', 'vient', 'venons', 'venez', 'viennent', 'viendrai', 'viendra', 'viendrais', 'viendrait', 'venu', 'venue'],
+        'tenir' => ['tiens', 'tient', 'tenons', 'tenez', 'tiennent', 'tenu'],
+        'prendre' => ['prends', 'prend', 'prenons', 'prenez', 'prennent', 'pris', 'prise'],
+        'comprendre' => ['comprends', 'comprend', 'comprenons', 'comprenez', 'comprennent', 'compris'],
+        'apprendre' => ['apprends', 'apprend', 'apprenons', 'apprenez', 'apprennent', 'appris'],
+        'mettre' => ['mets', 'met', 'mettons', 'mettez', 'mettent', 'mis', 'mise'],
+        'dire' => ['dis', 'dit', 'disons', 'dites', 'disent'],
+        'voir' => ['vois', 'voit', 'voyons', 'voyez', 'voient', 'vu', 'vue', 'verrai', 'verra'],
+        'payer' => ['paie', 'paies', 'paient', 'paierai', 'paiera'],
+        'envoyer' => ['envoie', 'envoies', 'envoient', 'enverrai', 'enverra'],
+        'écrire' => ['écris', 'écrit', 'écrivons', 'écrivez', 'écrivent'],
+        'lire' => ['lis', 'lit', 'lisons', 'lisez', 'lisent', 'lu'],
+        'boire' => ['bois', 'boit', 'buvons', 'buvez', 'boivent', 'bu'],
+        'connaître' => ['connais', 'connaît', 'connaissons', 'connaissez', 'connaissent', 'connu'],
+        'recevoir' => ['reçois', 'reçoit', 'recevons', 'recevez', 'reçoivent', 'reçu'],
+        'suivre' => ['suis', 'suit', 'suivons', 'suivez', 'suivent', 'suivi'],
+        'partir' => ['pars', 'part', 'partons', 'partez', 'partent'],
+        'sortir' => ['sors', 'sort', 'sortons', 'sortez', 'sortent'],
+        'dormir' => ['dors', 'dort'],
+        'sentir' => ['sens', 'sent', 'sentons', 'sentez', 'sentent'],
+        'servir' => ['sers', 'sert'],
+        'ouvrir' => ['ouvre', 'ouvres', 'ouvrent', 'ouvert'],
+        'offrir' => ['offre', 'offres', 'offrent', 'offert'],
+        'plaire' => ['plaît', 'plu'],
+        'valoir' => ['vaut', 'vaudrait'],
+        'croire' => ['crois', 'croit', 'croyons', 'croyez', 'cru'],
+        'vivre' => ['vis', 'vit', 'vécu'],
+        'asseoir' => ['assieds', 'assied', 'asseyez', 'assis'],
+    ],
+
     // A number (Ⓐ, one word, folded): a digit anywhere in the word («2», «15h», «06»), a cardinal — hyphenated compounds
     // too («vingt-deux», «quatre-vingt-dix», «vingt-et-un») —, an ordinal («premier», «deuxième»), «demi», «moitié»,
     // «quart», a round amount («dizaine», «quinzaine»). Not «un» / «une» — the articles, every «une place» would be a
