@@ -1,0 +1,172 @@
+{
+    "plan": {
+        "id": "01M3QE73BF7R1KDW9XY7D86E75",
+        "status": "ready",
+        "goal": "Собеседование в пятницу, боюсь вопросов про опыт",
+        "title_native": "Собеседование",
+        "title_target": "Interviu de angajare",
+        "overdue_native": "Собеседование было вчера",
+        "prompt_version_plan": "plan-builder-v2.1",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.025057",
+        "attempts_plan": 1,
+        "findings": [
+            {
+                "mode": "observe",
+                "check": "survival_slot_answer",
+                "action": "counted",
+                "detail": "scene 2: must_say 7 «ask what the work schedule is» — slot «the schedule» is what the answer names (schedule)"
+            }
+        ]
+    },
+    "days": [
+        {
+            "number": 1,
+            "type": "scene",
+            "scene_id": "01M3QE7GJ3532PP1MNM9E5TF8C",
+            "status": "locked"
+        },
+        {
+            "number": 2,
+            "type": "scene",
+            "scene_id": "01M3QE7GJ5XPC9WJHWFTJ7XTZE",
+            "status": "locked"
+        }
+    ],
+    "scenes": [
+        {
+            "id": "01M3QE7GJ3532PP1MNM9E5TF8C",
+            "order": 1,
+            "priority": 2,
+            "title_native": "Перед интервью",
+            "title_target": "Înainte de interviu",
+            "teaches_native": "назваться и ждать дальше",
+            "goals_native": [
+                "назвать своё имя",
+                "сказать, на какую вакансию",
+                "спросить, сколько ждать"
+            ],
+            "topic_description": "Situation: You arrive for a job interview on Friday and first speak to the person at reception before meeting the interviewer. This is a short check-in to announce yourself and get basic instructions so you reach the right room and do not miss the start.\nLearner: Job candidate. Partner: Receptionist.\nNot in this scene: talking about work experience, answering job questions, discussing salary or schedule.",
+            "must_say": [
+                {
+                    "slot": "the name",
+                    "text": "give your name"
+                },
+                {
+                    "slot": "the position",
+                    "text": "say which position you are applying for"
+                },
+                {
+                    "slot": "the time or never",
+                    "text": "answer whether you have been interviewed before"
+                },
+                {
+                    "slot": null,
+                    "text": "ask how long the interview will take"
+                },
+                {
+                    "slot": "the place",
+                    "text": "ask whether you should wait here"
+                },
+                {
+                    "slot": null,
+                    "text": "confirm you are ready to begin"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks for your name and the position"
+                },
+                {
+                    "text": "asks whether this is your first interview here"
+                },
+                {
+                    "text": "says the interviewer will be ready soon"
+                },
+                {
+                    "text": "tells you where to wait or where to go next"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.140111",
+            "latency_ms_lesson": 81659,
+            "attempts_lesson": 2
+        },
+        {
+            "id": "01M3QE7GJ5XPC9WJHWFTJ7XTZE",
+            "order": 2,
+            "priority": 1,
+            "title_native": "С работодателем",
+            "title_target": "Cu angajatorul",
+            "teaches_native": "рассказать про опыт работы",
+            "goals_native": [
+                "сказать, кем вы работали",
+                "сказать, где работали",
+                "сказать, как долго работали",
+                "спросить про обязанности"
+            ],
+            "topic_description": "Situation: In the main interview, you speak with the employer who decides whether your background fits the role. Your main worry is questions about experience, so this scene focuses on simple ways to describe past work and understand what the job requires.\nLearner: Job candidate. Partner: Employer.\nNot in this scene: reception check-in, waiting instructions, signing papers or starting work.",
+            "must_say": [
+                {
+                    "slot": "the job title",
+                    "text": "say which job you do now or did last"
+                },
+                {
+                    "slot": "the workplace",
+                    "text": "say where you worked before"
+                },
+                {
+                    "slot": "the length of time",
+                    "text": "say how long you worked there"
+                },
+                {
+                    "slot": "the duty",
+                    "text": "explain what your main duty was"
+                },
+                {
+                    "slot": "the tool or skill",
+                    "text": "answer whether you have used a tool or skill"
+                },
+                {
+                    "slot": "the duty area",
+                    "text": "ask what duties this job includes"
+                },
+                {
+                    "slot": "the schedule",
+                    "text": "ask what the work schedule is"
+                },
+                {
+                    "slot": "the next step",
+                    "text": "confirm you understood the next step"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks what work you do now or did before"
+                },
+                {
+                    "text": "asks where you worked, for how long, and what your duties were"
+                },
+                {
+                    "text": "asks whether you have used a tool or skill needed for the job"
+                },
+                {
+                    "text": "says what the job involves and the work schedule"
+                },
+                {
+                    "text": "tells you the next step after the interview"
+                }
+            ],
+            "lesson_status": "pending",
+            "fail_reason": null,
+            "prompt_version_lesson": null,
+            "model_lesson": null,
+            "cost_usd_lesson": null,
+            "latency_ms_lesson": null,
+            "attempts_lesson": null
+        }
+    ]
+}

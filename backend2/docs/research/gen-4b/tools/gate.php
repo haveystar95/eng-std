@@ -25,6 +25,7 @@ declare(strict_types=1);
  *   docker exec -e DB_DATABASE=wordtrainer_gen4 wt_gen4 php docs/research/gen-4b/tools/gate.php days --run=luna|gpt54 [--only=]
  *   docker exec -e DB_DATABASE=wordtrainer_gen4 wt_gen4 php docs/research/gen-4b/tools/gate.php skeletons --run=luna-high [--only=]
  *   docker exec -e DB_DATABASE=wordtrainer_gen4 wt_gen4 php docs/research/gen-4b/tools/gate.php recheck   (no model call)
+ *   docker exec -e RECHECK_FILE=recheck-c.json wt_gen4c php docs/research/gen-4b/tools/gate.php recheck   (GEN-4c: + both e2e days)
  *   docker exec wt_gen4 php docs/research/gen-4b/tools/gate.php table                  (no model call, no database)
  *
  * Writes into docs/research/gen-4b/runs/: `plans/<nn>.json` (the plan's build: inputs, the outcome, the survival sets, every
@@ -87,10 +88,12 @@ const SPEND_FILE = OUT.'/spend.json';
 define('RECHECK_FILE', RUNS.'/'.(getenv('RECHECK_FILE') ?: 'recheck.json'));
 
 /**
- * The caps on OpenAI, one `spend.json` for both: GEN-4's $5 (spent $4.9341, the e2e of §6 in it — unit `e2e`, its calls read
- * off the e2e journal) and GEN-4b's $1 on top — the three failed days again and its e2e (unit `e2e-b`).
+ * The caps on OpenAI, one `spend.json` for all: GEN-4's $5 (spent $4.9341, the e2e of §6 in it — unit `e2e`, its calls read
+ * off the e2e journal), GEN-4b's $1 on top — the three failed days again and its e2e (unit `e2e-b`; spent $0.4701) — and
+ * GEN-4c's $1 on top of what the two spent ($5.4042): the seam judge v1.2 on the recorded replies (unit `judge-c`) and both
+ * e2e days (units `e2e-c-ro`, `e2e-c-en`, read off the e2e journal).
  */
-const CAP_USD = 5.9341;
+const CAP_USD = 6.4042;
 
 /** The dearest one unit of each kind may cost, seen or feared: a plan, a day of either model, a skeleton thought hard about. */
 const WORST_USD = ['plan' => 0.08, 'luna' => 0.25, 'gpt54' => 0.30, 'gpt54-b' => 0.30, 'luna-high' => 0.10];
@@ -548,10 +551,43 @@ function dayRequest(string $id, array $plan): ?LessonRequest
     );
 }
 
+/**
+ * The day 1 of an e2e plan (GEN-4c: its stored skeleton read again) as `LessonRequests` asked it — the plan's scene of day 1,
+ * its survival set as the columns hold it, the learner's goal after the brief, ru→ro Beginner, the male QA learner.
+ */
+function e2eRequest(array $plan): LessonRequest
+{
+    $day = array_values(array_filter($plan['days'], static fn (array $d): bool => (int) $d['number'] === 1))[0];
+    $scene = array_values(array_filter($plan['scenes'], static fn (array $s): bool => $s['id'] === $day['scene_id']))[0];
+    [$min, $max] = app(PlanConfig::class)->vocabularyRange(PlanLevel::Beginner);
+
+    return new LessonRequest(
+        topic: $scene['title_native'],
+        topicDescription: LessonRequests::topicDescription($scene['topic_description'], (string) $plan['plan']['goal']),
+        survival: App\Modules\Plan\Domain\Blueprint\SurvivalSet::fromColumns($scene['must_say'], $scene['must_understand']),
+        targetLanguage: LanguageName::of('ro'),
+        nativeLanguage: LanguageName::of('ru'),
+        level: PlanLevel::Beginner,
+        learnerGender: App\Modules\Shared\Domain\ValueObject\VoiceGender::Male,
+        vocabularyMin: $min,
+        vocabularyMax: $max,
+        roles: new LessonRoles('Candidat', 'Кандидат', 'Intervievator', 'Интервьюер'),
+        earlierDays: new EarlierDays,
+        targetLangCode: 'ro',
+        nativeLangCode: 'ru',
+        sceneId: (string) $scene['id'],
+    );
+}
+
 /** @param list<LessonViolation> $found @return list<array{code: string, address: string, detail: string, fatal: bool}> */
 function rows(array $found): array
 {
     return array_map(static fn (LessonViolation $v): array => [...$v->toArray(), 'fatal' => LessonCodes::isFatal($v->code)], $found);
+}
+
+// GEN-4c: `gen4c.php` requires this file for its recorder, its builder and its requests — the commands run only when it is called.
+if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) !== __FILE__) {
+    return;
 }
 
 $command = $argv[1] ?? '';
@@ -772,6 +808,20 @@ switch ($command) {
                 }
                 $out['runs'][$dir][$id] = $answers;
             }
+        }
+        // GEN-4c: the day 1 of both e2e plans (GEN-4 §6, GEN-4b) — its skeleton as the day stored it, after its repairs (the
+        // API path keeps no stage answer of its own), read with the plan's own scene and the learner's goal.
+        foreach (['e2e', 'e2e-b'] as $dir) {
+            $plan = readJson(OUT."/{$dir}/plan.json");
+            $stored = readJson(OUT."/{$dir}/day1-skeleton.json");
+            if ($plan === null || $stored === null) {
+                continue;
+            }
+            $out['runs']['e2e'][$dir] = ['skeleton' => [[
+                'attempt' => 'stored',
+                'off_schema' => null,
+                'findings' => rows((new SkeletonCheck)->run($parser->skeleton($stored), $contexts->skeleton(e2eRequest($plan)))),
+            ]], 'dialogue' => []];
         }
         write(RECHECK_FILE, $out);
         fwrite(STDERR, 'written '.RECHECK_FILE."\n");

@@ -1,0 +1,642 @@
+{
+    "topic": {
+        "title_native": "Перед собеседованием",
+        "title_target": "Înainte de interviu",
+        "description_native": "Представиться на ресепшене, сказать, на какую должность вы претендуете, и понять, где ждать.",
+        "description_target": "Să vă prezentați la recepție, să spuneți pentru ce post candidați și să înțelegeți unde să așteptați."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "Андрей Попеску",
+                        "target": "Andrei Popescu",
+                        "in_dialogue": true,
+                        "pronunciation_native": "андрей попеску"
+                    },
+                    {
+                        "native": "Михай Ионеску",
+                        "target": "Mihai Ionescu",
+                        "in_dialogue": false,
+                        "pronunciation_native": "михай йонеску"
+                    }
+                ],
+                "hint_native": "имя"
+            },
+            "frame_native": "Меня зовут ___.",
+            "frame_target": "Mă numesc ___.",
+            "pronunciation_native": "мэ нумеск ___"
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "продавца",
+                        "target": "vânzător",
+                        "in_dialogue": true,
+                        "pronunciation_native": "вынзэтор"
+                    },
+                    {
+                        "native": "администратора",
+                        "target": "recepționer",
+                        "in_dialogue": false,
+                        "pronunciation_native": "речепционер"
+                    },
+                    {
+                        "native": "кассира",
+                        "target": "casier",
+                        "in_dialogue": false,
+                        "pronunciation_native": "касиер"
+                    }
+                ],
+                "hint_native": "должность"
+            },
+            "frame_native": "Я претендую на должность ___.",
+            "frame_target": "Candidez pentru postul de ___.",
+            "pronunciation_native": "кандидез пентру постул де ___"
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "в прошлом году",
+                        "target": "anul trecut",
+                        "in_dialogue": true,
+                        "pronunciation_native": "анул трекут"
+                    },
+                    {
+                        "native": "один раз",
+                        "target": "o dată",
+                        "in_dialogue": false,
+                        "pronunciation_native": "о датэ"
+                    },
+                    {
+                        "native": "никогда",
+                        "target": "niciodată",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ничодатэ"
+                    }
+                ],
+                "hint_native": "когда или никогда"
+            },
+            "frame_native": "У меня уже было такое ___.",
+            "frame_target": "Am mai avut unul ___.",
+            "pronunciation_native": "ам май авут унул ___"
+        },
+        {
+            "id": "p4",
+            "kind": "ask",
+            "slot": null,
+            "frame_native": "Сколько длится собеседование?",
+            "frame_target": "Cât durează interviul?",
+            "pronunciation_native": "кыт дурязэ интервюл"
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "у двери",
+                        "target": "ușă",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ушэ"
+                    },
+                    {
+                        "native": "в зале",
+                        "target": "sală",
+                        "in_dialogue": false,
+                        "pronunciation_native": "салэ"
+                    },
+                    {
+                        "native": "в кабинете",
+                        "target": "birou",
+                        "in_dialogue": false,
+                        "pronunciation_native": "бироу"
+                    }
+                ],
+                "hint_native": "место"
+            },
+            "frame_native": "Мне ждать здесь или ___?",
+            "frame_target": "Aștept aici sau la ___?",
+            "pronunciation_native": "аштепт айчь сау ла ___"
+        },
+        {
+            "id": "p6",
+            "kind": "answer",
+            "slot": null,
+            "frame_native": "Да, я готов.",
+            "frame_target": "Da, sunt gata.",
+            "pronunciation_native": "да, сынт гата"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "answer",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Где вам ждать",
+                        "text_target": "Unde să așteptați"
+                    },
+                    {
+                        "text_native": "Каково ваше имя",
+                        "text_target": "Care este numele dumneavoastră"
+                    },
+                    {
+                        "text_native": "На какую должность вы претендуете",
+                        "text_target": "Ce post doriți"
+                    }
+                ],
+                "text_native": "Что хочет узнать администратор?",
+                "text_target": "Ce vrea să afle recepționerul?",
+                "explanation_native": "Администратор спрашивает ваше имя.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Как вас зовут?",
+                    "text_target": "Cum vă numiți?"
+                },
+                {
+                    "filler": "Andrei Popescu",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Меня зовут Андрей Попеску.",
+                    "text_target": "Mă numesc Andrei Popescu.",
+                    "speaking_key": "Mă numesc",
+                    "simplified_variants": [
+                        "Sunt Andrei Popescu."
+                    ],
+                    "pronunciation_native": "мэ нумеск андрей попеску"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Ваше полное имя",
+                        "text_target": "Numele dumneavoastră complet"
+                    },
+                    {
+                        "text_native": "Желаемая должность",
+                        "text_target": "Rolul pentru care aplicați"
+                    },
+                    {
+                        "text_native": "Где вам нужно стоять",
+                        "text_target": "Locul unde trebuie să stați"
+                    }
+                ],
+                "text_native": "Какую информацию просит администратор?",
+                "text_target": "Ce informație cere recepționerul?",
+                "explanation_native": "Администратор хочет узнать, на какую должность вы претендуете.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "На какую должность вы претендуете?",
+                    "text_target": "Pentru ce post candidați?"
+                },
+                {
+                    "filler": "vânzător",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Я претендую на должность продавца.",
+                    "text_target": "Candidez pentru postul de vânzător.",
+                    "speaking_key": "Candidez pentru postul",
+                    "simplified_variants": [
+                        "Pentru postul de vânzător."
+                    ],
+                    "pronunciation_native": "кандидез пентру постул де вынзэтор"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Не пришли ли вы слишком рано",
+                        "text_target": "Dacă ați venit prea devreme"
+                    },
+                    {
+                        "text_native": "Знакомы ли вы уже со зданием",
+                        "text_target": "Dacă mai cunoașteți clădirea"
+                    },
+                    {
+                        "text_native": "Это ли ваша первая такая встреча здесь",
+                        "text_target": "Dacă aceasta este prima întâlnire de acest fel aici"
+                    }
+                ],
+                "text_native": "Что хочет узнать администратор?",
+                "text_target": "Ce vrea să știe recepționerul?",
+                "explanation_native": "Администратор спрашивает, первое ли это собеседование у вас здесь.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Это ваше первое собеседование здесь?",
+                    "text_target": "Este primul interviu aici?"
+                },
+                {
+                    "filler": "anul trecut",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "У меня уже было такое в прошлом году.",
+                    "text_target": "Am mai avut unul anul trecut.",
+                    "speaking_key": "Am mai avut unul",
+                    "simplified_variants": [
+                        "Am mai avut unul o dată."
+                    ],
+                    "pronunciation_native": "ам май авут унул анул трекут"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Завтра утром",
+                        "text_target": "Mâine dimineață"
+                    },
+                    {
+                        "text_native": "Через час",
+                        "text_target": "Peste o oră"
+                    },
+                    {
+                        "text_native": "Очень скоро",
+                        "text_target": "Foarte curând"
+                    }
+                ],
+                "text_native": "Когда будет готов интервьюер?",
+                "text_target": "Când va fi pregătit intervievatorul?",
+                "explanation_native": "Администратор говорит, что интервьюер будет готов через несколько минут.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Сколько длится собеседование?",
+                    "text_target": "Cât durează interviul?",
+                    "speaking_key": "Cât durează interviul?",
+                    "simplified_variants": [
+                        "Cât ține interviul?"
+                    ],
+                    "pronunciation_native": "кыт дурязэ интервюл"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Интервьюер будет готов через несколько минут.",
+                    "text_target": "Intervievatorul va fi gata în câteva minute."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "rescue",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "О кандидате на ресепшене",
+                        "text_target": "Despre candidatul de la recepție"
+                    },
+                    {
+                        "text_native": "О другом посетителе",
+                        "text_target": "Despre alt vizitator"
+                    },
+                    {
+                        "text_native": "О человеке, который проводит собеседование",
+                        "text_target": "Despre persoana care face interviul"
+                    }
+                ],
+                "text_native": "О ком администратор говорит, что он будет готов?",
+                "text_target": "Despre cine spune recepționerul că va fi gata?",
+                "explanation_native": "В повторе речь идёт об интервьюере.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": null,
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Повторите, пожалуйста.",
+                    "text_target": "Puteți repeta, vă rog?",
+                    "speaking_key": "repeta, vă rog",
+                    "simplified_variants": [
+                        "Mai încet, vă rog."
+                    ],
+                    "pronunciation_native": "путець репета, вэ рог"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Через несколько минут он будет готов.",
+                    "text_target": "În câteva minute, va fi gata."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "У лифта",
+                        "text_target": "În fața liftului"
+                    },
+                    {
+                        "text_native": "У двери слева",
+                        "text_target": "Lângă intrarea din stânga"
+                    },
+                    {
+                        "text_native": "Справа, возле входа",
+                        "text_target": "În dreapta, lângă intrare"
+                    }
+                ],
+                "text_native": "Где вам нужно ждать?",
+                "text_target": "Unde trebuie să așteptați?",
+                "explanation_native": "Администратор просит вас подождать у двери справа.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": "ușă",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Мне ждать здесь или у двери?",
+                    "text_target": "Aștept aici sau la ușă?",
+                    "speaking_key": "Aștept aici sau",
+                    "simplified_variants": [
+                        "Aștept la ușă?"
+                    ],
+                    "pronunciation_native": "аштепт айчь сау ла ушэ"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Пожалуйста, подождите у двери справа.",
+                    "text_target": "Vă rog să așteptați lângă ușa din dreapta."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "answer",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Сразу войти, когда вас позовут",
+                        "text_target": "Să intrați fără întârziere când sunteți chemat"
+                    },
+                    {
+                        "text_native": "Вернуться завтра",
+                        "text_target": "Să reveniți mâine"
+                    },
+                    {
+                        "text_native": "Заполнить форму",
+                        "text_target": "Să completați un formular"
+                    }
+                ],
+                "text_native": "Какую инструкцию даёт администратор?",
+                "text_target": "Ce instrucțiune dă recepționerul?",
+                "explanation_native": "Администратор говорит войти без задержки, когда вас позовут.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Администратор",
+                    "role_target": "Recepționer",
+                    "text_native": "Если вас сейчас позовут, заходите сразу.",
+                    "text_target": "Dacă vă cheamă acum, intrați direct."
+                },
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Да, я готов.",
+                    "text_target": "Da, sunt gata.",
+                    "speaking_key": "Da, sunt gata",
+                    "simplified_variants": [
+                        "Sunt gata."
+                    ],
+                    "pronunciation_native": "да, сынт гата"
+                }
+            ],
+            "initiator": "A"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Как вас зовут на ресепшене?",
+                "options_native": [
+                    "Андрей Попеску",
+                    "Михай Ионеску",
+                    "Ион Андрей"
+                ],
+                "explanation_native": "В диалоге вы представляетеcь как Андрей Попеску.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "На какую должность вы претендуете?",
+                "options_native": [
+                    "администратора",
+                    "кассира",
+                    "продавца"
+                ],
+                "explanation_native": "Вы говорите, что претендуете на должность продавца.",
+                "correct_option_index": 2
+            },
+            {
+                "text_native": "Что администратор сказал об интервьюере?",
+                "options_native": [
+                    "Он ждёт в кабинете сейчас",
+                    "Он будет готов через несколько минут",
+                    "Он уже ушёл"
+                ],
+                "explanation_native": "Администратор говорит, что интервьюер будет готов через несколько минут.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Где вам нужно ждать?",
+                "options_native": [
+                    "У двери справа",
+                    "В кабинете",
+                    "В зале"
+                ],
+                "explanation_native": "Администратор просит вас подождать у двери справа.",
+                "correct_option_index": 0
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p2",
+                "A2"
+            ],
+            "term_target": "a candida",
+            "image_prompt": "person at a reception desk applying for a job",
+            "definition_target": "a cere un post",
+            "translation_native": "претендовать",
+            "pronunciation_native": "а кандидА"
+        },
+        {
+            "id": "v2",
+            "kind": "word",
+            "used_in": [
+                "p2",
+                "A2"
+            ],
+            "term_target": "post",
+            "image_prompt": "job vacancy notice on an office board",
+            "definition_target": "loc de muncă disponibil",
+            "translation_native": "должность",
+            "pronunciation_native": "пост"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "A3"
+            ],
+            "term_target": "interviu",
+            "image_prompt": "job interview in an office room",
+            "definition_target": "discuție pentru un loc de muncă",
+            "translation_native": "собеседование",
+            "pronunciation_native": "интервю"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "p4"
+            ],
+            "term_target": "a dura",
+            "image_prompt": null,
+            "definition_target": "a ține un anumit timp",
+            "translation_native": "длиться",
+            "pronunciation_native": "а дура"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "p5",
+                "A6"
+            ],
+            "term_target": "a aștepta",
+            "image_prompt": "person waiting near an office door",
+            "definition_target": "a rămâne până vine cineva",
+            "translation_native": "ждать",
+            "pronunciation_native": "а ашьтепта"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "p6",
+                "A4"
+            ],
+            "term_target": "gata",
+            "image_prompt": "person standing ready near an office doorway",
+            "definition_target": "pregătit să înceapă",
+            "translation_native": "готов",
+            "pronunciation_native": "гата"
+        },
+        {
+            "id": "v7",
+            "kind": "word",
+            "used_in": [
+                "A1"
+            ],
+            "term_target": "a se numi",
+            "image_prompt": null,
+            "definition_target": "a avea un nume",
+            "translation_native": "называться",
+            "pronunciation_native": "а се нумИ"
+        },
+        {
+            "id": "v8",
+            "kind": "chunk",
+            "used_in": [
+                "A4"
+            ],
+            "term_target": "în câteva minute",
+            "image_prompt": "office reception area with a wall clock showing a short wait",
+            "definition_target": "după un timp foarte scurt",
+            "translation_native": "через несколько минут",
+            "pronunciation_native": "ын кытева минуте"
+        },
+        {
+            "id": "v9",
+            "kind": "chunk",
+            "used_in": [
+                "A6"
+            ],
+            "term_target": "din dreapta",
+            "image_prompt": "office hallway with a door on the right side",
+            "definition_target": "în partea dreaptă",
+            "translation_native": "справа",
+            "pronunciation_native": "дин дрепта"
+        }
+    ],
+    "role_gender": "male",
+    "learner_role": {
+        "role_native": "Кандидат",
+        "role_target": "Candidat"
+    }
+}

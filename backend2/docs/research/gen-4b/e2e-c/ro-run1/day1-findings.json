@@ -1,0 +1,22 @@
+[
+    {
+        "code": "partner.names_filler",
+        "detail": "the line names «у двери», a filler of p5",
+        "address": "a5"
+    },
+    {
+        "code": "partner.names_filler_meaning",
+        "detail": "the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («Vă rog să așteptați lângă ușa din dreapta.» to «Aștept aici sau la ___?» with «ușă», «sală», «birou», the seam judge says)",
+        "address": "a5"
+    },
+    {
+        "code": "native.foreign_letters",
+        "detail": "«В диалоге вы представляетеcь как Андрей Попеску.» has letters of another alphabet: c",
+        "address": "L1"
+    },
+    {
+        "code": "listening.distractor_not_filler",
+        "detail": "«Ион Андрей» is no other filler of p1, whose value «Андрей Попеску» the question asks",
+        "address": "L1"
+    }
+]

@@ -1,0 +1,12 @@
+[
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Собеседование на кухне» repeats «собеседование на» of A's «Следующий этап — собеседование на кухне, и мы примем решение к пятнице.»",
+        "address": "x6.check"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «By Friday» repeats «by friday» of A's «We will decide by Friday.»",
+        "address": "x7.check"
+    }
+]

@@ -11,6 +11,12 @@ the voice off:
       php -d max_execution_time=0 -S 0.0.0.0:8020 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
   python3 docs/research/gen-4b/tools/e2e-api.py http://localhost:8020 qa-gen4b-ru-ro-0929@wt.test
 
+GEN-4c: the goal, the target and the learner's gender may be given after the e-mail (its two e2e: ru→ro with the goal above,
+ru→en «Собеседование, я повар, работал в ресторане три года»):
+
+  python3 docs/research/gen-4b/tools/e2e-api.py http://localhost:8030 qa-gen4c-ru-en-0929@wt.test \
+      'Собеседование, я повар, работал в ресторане три года' en male
+
 Prints every step with its status and time, and the plan's id last.
 """
 import json
@@ -20,7 +26,9 @@ import urllib.request
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8020'
 EMAIL = sys.argv[2] if len(sys.argv) > 2 else 'qa-gen4b-ru-ro-0929@wt.test'
-GOAL = 'Собеседование в пятницу, боюсь вопросов про опыт'
+GOAL = sys.argv[3] if len(sys.argv) > 3 else 'Собеседование в пятницу, боюсь вопросов про опыт'
+TARGET = sys.argv[4] if len(sys.argv) > 4 else 'ro'
+GENDER = sys.argv[5] if len(sys.argv) > 5 else 'male'
 
 
 def call(method, path, body=None, token=None, timeout=900):
@@ -46,9 +54,9 @@ def call(method, path, body=None, token=None, timeout=900):
 status, auth = call('POST', '/auth/dev', {'email': EMAIL, 'device_name': 'gen4b-e2e', 'timezone': 'Europe/Chisinau'})
 assert status == 200, auth
 token = auth['data']['token'] if 'data' in auth else auth['token']
-status, profile = call('PATCH', '/profile', {'native_language': 'ru', 'gender': 'male', 'timezone': 'Europe/Chisinau'}, token)
+status, profile = call('PATCH', '/profile', {'native_language': 'ru', 'gender': GENDER, 'timezone': 'Europe/Chisinau'}, token)
 assert status == 200, profile
-status, created = call('POST', '/plans', {'goal_text': GOAL, 'target_lang': 'ro', 'level': 'beginner', 'days_total': 2}, token)
+status, created = call('POST', '/plans', {'goal_text': GOAL, 'target_lang': TARGET, 'level': 'beginner', 'days_total': 2}, token)
 assert status in (200, 202), created
 plan_id = created['data']['id']
 day1 = None

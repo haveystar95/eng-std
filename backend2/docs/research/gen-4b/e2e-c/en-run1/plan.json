@@ -1,0 +1,178 @@
+{
+    "plan": {
+        "id": "01M3QEZPDKMGHGTF86QPA06YXW",
+        "status": "ready",
+        "goal": "Собеседование, я повар, работал в ресторане три года",
+        "title_native": "Собеседование",
+        "title_target": "Job Interview",
+        "overdue_native": "Собеседование было вчера",
+        "prompt_version_plan": "plan-builder-v2.1",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.015120",
+        "attempts_plan": 1,
+        "findings": [
+            {
+                "mode": "observe",
+                "check": "survival_slot_answer",
+                "action": "counted",
+                "detail": "scene 1: must_say 7 «ask what hours the job has» — slot «the schedule» is what the answer names (schedule)"
+            },
+            {
+                "mode": "observe",
+                "check": "survival_slot_answer",
+                "action": "counted",
+                "detail": "scene 2: must_say 2 «ask when work can start» — slot «the time» is what the answer names (time)"
+            }
+        ]
+    },
+    "days": [
+        {
+            "number": 1,
+            "type": "scene",
+            "scene_id": "01M3QF01CB6KV07M4MNNHZ1AAN",
+            "status": "locked"
+        },
+        {
+            "number": 2,
+            "type": "scene",
+            "scene_id": "01M3QF01CBCY24YHHRFQE14669",
+            "status": "locked"
+        }
+    ],
+    "scenes": [
+        {
+            "id": "01M3QF01CB6KV07M4MNNHZ1AAN",
+            "order": 1,
+            "priority": 1,
+            "title_native": "Собеседование",
+            "title_target": "Interview",
+            "teaches_native": "рассказать про опыт и график",
+            "goals_native": [
+                "назвать нужную должность",
+                "сказать, где работали",
+                "сказать, сколько работали",
+                "спросить про график"
+            ],
+            "topic_description": "Situation: You are at a job interview for a cook position in a restaurant kitchen. You have three years of restaurant experience, and this meeting decides whether your background fits the role and daily work.\nLearner: Cook. Partner: Manager.\nNot in this scene: salary, start date, documents, uniform, next steps after the interview.",
+            "must_say": [
+                {
+                    "slot": "the name",
+                    "text": "give your name"
+                },
+                {
+                    "slot": "the position",
+                    "text": "say what job you want"
+                },
+                {
+                    "slot": "the workplace",
+                    "text": "say where you worked before"
+                },
+                {
+                    "slot": "the length of time",
+                    "text": "say how long you worked there"
+                },
+                {
+                    "slot": "the dishes or cuisine",
+                    "text": "say what food you made"
+                },
+                {
+                    "slot": "the duty",
+                    "text": "ask what duties the job includes"
+                },
+                {
+                    "slot": "the schedule",
+                    "text": "ask what hours the job has"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks your name and what position you want"
+                },
+                {
+                    "text": "asks where you worked and for how long"
+                },
+                {
+                    "text": "asks what kind of food you made before"
+                },
+                {
+                    "text": "says the main duties in this kitchen"
+                },
+                {
+                    "text": "explains the work schedule"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.125645",
+            "latency_ms_lesson": 75619,
+            "attempts_lesson": 2
+        },
+        {
+            "id": "01M3QF01CBCY24YHHRFQE14669",
+            "order": 2,
+            "priority": 2,
+            "title_native": "Условия работы",
+            "title_target": "Job Terms",
+            "teaches_native": "спросить про оплату и старт",
+            "goals_native": [
+                "спросить про оплату",
+                "спросить, когда выходить",
+                "уточнить про документы",
+                "понять следующий шаг"
+            ],
+            "topic_description": "Situation: The manager is interested and moves to practical details of the offer. You need to understand the pay, the starting time, and what documents or arrangements are needed before you can begin work.\nLearner: Cook. Partner: Manager.\nNot in this scene: introducing yourself, work history, past duties, cuisine experience, detailed discussion of kitchen tasks.",
+            "must_say": [
+                {
+                    "slot": "the pay period",
+                    "text": "ask how much the job pays"
+                },
+                {
+                    "slot": "the time",
+                    "text": "ask when work can start"
+                },
+                {
+                    "slot": "the benefit",
+                    "text": "ask whether meals are included"
+                },
+                {
+                    "slot": "the document",
+                    "text": "ask whether a document is needed"
+                },
+                {
+                    "slot": "the time",
+                    "text": "confirm you can start at that time"
+                },
+                {
+                    "slot": "the next step",
+                    "text": "confirm you understand the next step"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "says the pay for the job"
+                },
+                {
+                    "text": "asks when you can start"
+                },
+                {
+                    "text": "says whether meals or other benefits are included"
+                },
+                {
+                    "text": "tells you which documents to bring"
+                },
+                {
+                    "text": "explains the next step in the hiring process"
+                }
+            ],
+            "lesson_status": "pending",
+            "fail_reason": null,
+            "prompt_version_lesson": null,
+            "model_lesson": null,
+            "cost_usd_lesson": null,
+            "latency_ms_lesson": null,
+            "attempts_lesson": null
+        }
+    ]
+}

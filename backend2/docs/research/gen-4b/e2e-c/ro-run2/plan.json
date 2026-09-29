@@ -1,0 +1,176 @@
+{
+    "plan": {
+        "id": "01M3QEF55YKG52SWGYS4FD9EMK",
+        "status": "ready",
+        "goal": "Собеседование в пятницу, боюсь вопросов про опыт",
+        "title_native": "Собеседование",
+        "title_target": "Interviu de angajare",
+        "overdue_native": "Собеседование было вчера",
+        "prompt_version_plan": "plan-builder-v2.1",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.016403",
+        "attempts_plan": 1,
+        "findings": [
+            {
+                "mode": "observe",
+                "check": "survival_unanswered",
+                "action": "counted",
+                "detail": "scene 1: must_understand 4 «asks whether you have experience with a task» has no answer in must_say"
+            }
+        ]
+    },
+    "days": [
+        {
+            "number": 1,
+            "type": "scene",
+            "scene_id": "01M3QEFGT3MC580ACN244A8GKC",
+            "status": "locked"
+        },
+        {
+            "number": 2,
+            "type": "scene",
+            "scene_id": "01M3QEFGT3P5B0GS6WZ2J8QKET",
+            "status": "locked"
+        }
+    ],
+    "scenes": [
+        {
+            "id": "01M3QEFGT3MC580ACN244A8GKC",
+            "order": 1,
+            "priority": 2,
+            "title_native": "Опыт работы",
+            "title_target": "Experiența",
+            "teaches_native": "рассказать про опыт работы",
+            "goals_native": [
+                "сказать, где работали",
+                "сказать, как долго",
+                "описать свои задачи",
+                "спросить про требования"
+            ],
+            "topic_description": "Situation: You are at a job interview on Friday, speaking with the interviewer. The main concern is questions about your previous experience, so this scene focuses on presenting past work clearly and understanding basic experience questions at a beginner level.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: discussing salary, work schedule, next steps after the interview.",
+            "must_say": [
+                {
+                    "slot": "the name",
+                    "text": "give your name"
+                },
+                {
+                    "slot": "the position",
+                    "text": "say which job you are applying for"
+                },
+                {
+                    "slot": "the workplace",
+                    "text": "say where you worked before"
+                },
+                {
+                    "slot": "the length of time",
+                    "text": "say how long you worked there"
+                },
+                {
+                    "slot": "the duty",
+                    "text": "say what your main duties were"
+                },
+                {
+                    "slot": "the task or field",
+                    "text": "ask whether experience in something is required"
+                },
+                {
+                    "slot": "the word",
+                    "text": "ask what a word in the question means"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks your name and which position you want"
+                },
+                {
+                    "text": "asks where you worked before and for how long"
+                },
+                {
+                    "text": "asks what your main duties were"
+                },
+                {
+                    "text": "asks whether you have experience with a task"
+                },
+                {
+                    "text": "explains a word or a question in simpler terms"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.130818",
+            "latency_ms_lesson": 87302,
+            "attempts_lesson": 2
+        },
+        {
+            "id": "01M3QEFGT3P5B0GS6WZ2J8QKET",
+            "order": 2,
+            "priority": 1,
+            "title_native": "Вопросы по работе",
+            "title_target": "Întrebări despre post",
+            "teaches_native": "ответить и спросить про работу",
+            "goals_native": [
+                "сказать, почему эта работа",
+                "сказать, что умеете",
+                "спросить про график",
+                "спросить про решение"
+            ],
+            "topic_description": "Situation: Later in the same interview, the conversation turns to fit for the role: motivation, basic abilities, availability, and practical conditions. This is the core interaction because it decides whether you match the job and whether the offer can work for you.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introducing yourself, describing previous workplaces, length of experience.",
+            "must_say": [
+                {
+                    "slot": "the reason",
+                    "text": "say why you want this job"
+                },
+                {
+                    "slot": "the skill",
+                    "text": "say what you can do well"
+                },
+                {
+                    "slot": "the task",
+                    "text": "answer whether you can do a task"
+                },
+                {
+                    "slot": "the time or shift",
+                    "text": "answer whether you can work at a time"
+                },
+                {
+                    "slot": null,
+                    "text": "ask what the usual work schedule is"
+                },
+                {
+                    "slot": "the task",
+                    "text": "ask whether training is provided"
+                },
+                {
+                    "slot": null,
+                    "text": "ask when they will make a decision"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks why you want this job"
+                },
+                {
+                    "text": "asks what you can do well"
+                },
+                {
+                    "text": "asks whether you can do a task or work certain hours"
+                },
+                {
+                    "text": "says what the schedule is and whether training is given"
+                },
+                {
+                    "text": "tells you when they will contact you"
+                }
+            ],
+            "lesson_status": "pending",
+            "fail_reason": null,
+            "prompt_version_lesson": null,
+            "model_lesson": null,
+            "cost_usd_lesson": null,
+            "latency_ms_lesson": null,
+            "attempts_lesson": null
+        }
+    ]
+}

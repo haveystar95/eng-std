@@ -1,0 +1,585 @@
+{
+    "e2e/e2e-b": {
+        "replies": [
+            {
+                "id": "a6",
+                "question": "Postul include ___?",
+                "values": [
+                    "lucrul cu marfa",
+                    "lucrul cu clienții",
+                    "pregătirea actelor"
+                ],
+                "reply": "Postul include lucru cu clienții și pregătirea documentelor."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a6"
+        ],
+        "note": "",
+        "cost_usd": "0.000886",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a6\"]}"
+    },
+    "days/gpt54/02": {
+        "replies": [
+            {
+                "id": "a6",
+                "question": "How often for ___?",
+                "values": [
+                    "this syrup",
+                    "these drops",
+                    "this tablet"
+                ],
+                "reply": "Give the medicine three times a day and let the child rest."
+            },
+            {
+                "id": "a7",
+                "question": "Can my child ___?",
+                "values": [
+                    "go to school",
+                    "play sports",
+                    "swim"
+                ],
+                "reply": "Avoid sports for one week."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a7"
+        ],
+        "note": "",
+        "cost_usd": "0.000905",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a7\"]}"
+    },
+    "days/gpt54/03": {
+        "replies": [
+            {
+                "id": "a1",
+                "question": "Is ___ included in the rent?",
+                "values": [
+                    "heating",
+                    "internet",
+                    "parking"
+                ],
+                "reply": "The rent includes heating, but electricity and internet are separate."
+            },
+            {
+                "id": "a2",
+                "question": "Are ___ allowed here?",
+                "values": [
+                    "small dogs",
+                    "cats",
+                    "pets"
+                ],
+                "reply": "Small pets are allowed, but there is a limit of one animal per flat."
+            },
+            {
+                "id": "a3",
+                "question": "Are there extra charges for ___?",
+                "values": [
+                    "water",
+                    "garbage collection",
+                    "maintenance"
+                ],
+                "reply": "You also pay for water, electricity, and the building maintenance fee."
+            },
+            {
+                "id": "a4",
+                "question": "Can ___ be changed?",
+                "values": [
+                    "the sofa",
+                    "the curtains",
+                    "the shower head"
+                ],
+                "reply": "Small changes are possible with the owner's approval and at your expense."
+            },
+            {
+                "id": "a5",
+                "question": "Is there ___ nearby?",
+                "values": [
+                    "a park",
+                    "a grocery store",
+                    "public transport"
+                ],
+                "reply": "There is a park nearby, and the nearest supermarket is five minutes away."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a1",
+            "a2",
+            "a3",
+            "a4",
+            "a5"
+        ],
+        "note": "",
+        "cost_usd": "0.001069",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a1\",\"a2\",\"a3\",\"a4\",\"a5\"]}"
+    },
+    "days/gpt54/04": {
+        "replies": [
+            {
+                "id": "a4",
+                "question": "Geht auch ___?",
+                "values": [
+                    "eine temporäre Adresse",
+                    "eine Anmeldung auf Zeit"
+                ],
+                "reply": "Ja, eine temporäre Adresse geht. Wir brauchen aber einen Nachweis."
+            },
+            {
+                "id": "a5",
+                "question": "Welches Konto passt für ___?",
+                "values": [
+                    "mich",
+                    "junge Leute",
+                    "den Alltag"
+                ],
+                "reply": "Wir haben ein Basiskonto und ein Studentenkonto. Das Basiskonto kostet monatlich eine Gebühr."
+            },
+            {
+                "id": "a6",
+                "question": "Wann kommt ___?",
+                "values": [
+                    "die Karte",
+                    "der PIN-Brief"
+                ],
+                "reply": "Nach dem Antrag bekommen Sie eine Bestätigung. Die Karte kommt später per Post."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a4"
+        ],
+        "note": "",
+        "cost_usd": "0.000956",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a4\"]}"
+    },
+    "days/gpt54/06": {
+        "replies": [
+            {
+                "id": "a5",
+                "question": "What does success look like in ___?",
+                "values": [
+                    "the first six months",
+                    "the first year"
+                ],
+                "reply": "In the first six months, we expect stable team results and better delivery speed."
+            },
+            {
+                "id": "a6",
+                "question": "What's the salary range for ___?",
+                "values": [
+                    "this role",
+                    "the manager position"
+                ],
+                "reply": "The salary range depends on experience, and the package includes paid vacation."
+            },
+            {
+                "id": "a7",
+                "question": "Does the package include ___?",
+                "values": [
+                    "health insurance",
+                    "annual bonus",
+                    "paid training"
+                ],
+                "reply": "The package includes health insurance, and bonuses are reviewed once a year."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a5",
+            "a7"
+        ],
+        "note": "",
+        "cost_usd": "0.000963",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a5\",\"a7\"]}"
+    },
+    "days/gpt54/07": {
+        "replies": [
+            {
+                "id": "a2",
+                "question": "Ha notato ___?",
+                "values": [
+                    "interruzioni in classe",
+                    "litigi coi compagni",
+                    "mancanza di attenzione"
+                ],
+                "reply": "Il problema principale è che interrompe spesso durante la lezione."
+            },
+            {
+                "id": "a3",
+                "question": "Succede di solito ___?",
+                "values": [
+                    "durante la ricreazione",
+                    "all'inizio della lezione",
+                    "nei corridoi"
+                ],
+                "reply": "Succede soprattutto in classe e a volte anche durante la ricreazione."
+            },
+            {
+                "id": "a6",
+                "question": "Quanto è grave ___?",
+                "values": [
+                    "durante le lezioni",
+                    "durante le pause"
+                ],
+                "reply": "A scuola è una difficoltà seria, soprattutto nelle lezioni, e può dipendere da frustrazione o stanchezza."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a3"
+        ],
+        "note": "",
+        "cost_usd": "0.000972",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a3\"]}"
+    },
+    "days/gpt54/08": {
+        "replies": [
+            {
+                "id": "a6",
+                "question": "Do I need a ___?",
+                "values": [
+                    "blood test",
+                    "X-ray",
+                    "urine test"
+                ],
+                "reply": "You need a blood test today."
+            },
+            {
+                "id": "a7",
+                "question": "How often for ___?",
+                "values": [
+                    "these tablets",
+                    "this syrup",
+                    "the антибиотик"
+                ],
+                "reply": "I will also give you some medicine."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a6"
+        ],
+        "note": "",
+        "cost_usd": "0.000903",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a6\"]}"
+    },
+    "days/gpt54/09": {
+        "replies": [
+            {
+                "id": "a6",
+                "question": "Czy dziś potrzebuję ___?",
+                "values": [
+                    "leczenia kanałowego",
+                    "plomby",
+                    "usunięcia zęba"
+                ],
+                "reply": "Dziś potrzebne jest leczenie kanałowe. Zabieg potrwa około godziny."
+            },
+            {
+                "id": "a7",
+                "question": "Czy mogę po tym ___?",
+                "values": [
+                    "jeść",
+                    "pić"
+                ],
+                "reply": "Po zabiegu proszę nie jeść przez dwie godziny."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a6"
+        ],
+        "note": "",
+        "cost_usd": "0.000923",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a6\"]}"
+    },
+    "days/gpt54/11": {
+        "replies": [
+            {
+                "id": "a1",
+                "question": "¿Cuánto cuesta ___?",
+                "values": [
+                    "este piso",
+                    "el estudio",
+                    "el ático"
+                ],
+                "reply": "Son novecientos euros al mes, un mes de fianza, y el agua está incluida."
+            },
+            {
+                "id": "a3",
+                "question": "¿Cuántos ___ hay?",
+                "values": [
+                    "dormitorios",
+                    "baños",
+                    "habitaciones"
+                ],
+                "reply": "Tiene dos dormitorios, un baño y balcón interior."
+            },
+            {
+                "id": "a4",
+                "question": "¿Se permite ___?",
+                "values": [
+                    "un niño",
+                    "un perro"
+                ],
+                "reply": "Se admiten niños, pero no se admiten mascotas."
+            },
+            {
+                "id": "a5",
+                "question": "¿Se puede reservar ___?",
+                "values": [
+                    "este piso",
+                    "el apartamento",
+                    "la vivienda"
+                ],
+                "reply": "Si le interesa, el siguiente paso es enviar la solicitud hoy."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a3",
+            "a4"
+        ],
+        "note": "",
+        "cost_usd": "0.000995",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a3\",\"a4\"]}"
+    },
+    "days/gpt54/12": {
+        "replies": [
+            {
+                "id": "a5",
+                "question": "Do you need my ___?",
+                "values": [
+                    "passport",
+                    "ID card",
+                    "appointment email"
+                ],
+                "reply": "First, I need your passport."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a5"
+        ],
+        "note": "",
+        "cost_usd": "0.000871",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a5\"]}"
+    },
+    "days/gpt54/13": {
+        "replies": [
+            {
+                "id": "a1",
+                "question": "What's the salary range for ___?",
+                "values": [
+                    "this role",
+                    "the position",
+                    "the job"
+                ],
+                "reply": "For this role, the range is between thirty-two and thirty-eight thousand a year."
+            },
+            {
+                "id": "a2",
+                "question": "Is ___ gross or net?",
+                "values": [
+                    "that amount",
+                    "the salary",
+                    "this figure"
+                ],
+                "reply": "That amount is gross, before tax and social contributions."
+            },
+            {
+                "id": "a3",
+                "question": "Is salary paid ___?",
+                "values": [
+                    "monthly",
+                    "every two weeks",
+                    "weekly"
+                ],
+                "reply": "Employees are paid monthly, at the end of each month."
+            },
+            {
+                "id": "a4",
+                "question": "Are there ___?",
+                "values": [
+                    "bonuses",
+                    "meal vouchers",
+                    "health insurance"
+                ],
+                "reply": "There is a performance bonus and private health insurance."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a1",
+            "a2",
+            "a3",
+            "a4"
+        ],
+        "note": "",
+        "cost_usd": "0.001016",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a1\",\"a2\",\"a3\",\"a4\"]}"
+    },
+    "days/gpt54/14": {
+        "replies": [
+            {
+                "id": "a5",
+                "question": "Ce face ___?",
+                "values": [
+                    "un casier",
+                    "un recepționer",
+                    "un asistent"
+                ],
+                "reply": "Postul include lucru cu clienții, marfa și casa de marcat."
+            }
+        ],
+        "status": "judged",
+        "naming": [],
+        "note": "",
+        "cost_usd": "0.000869",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[]}"
+    },
+    "days/gpt54/15": {
+        "replies": [
+            {
+                "id": "a5",
+                "question": "Ist ___ erlaubt?",
+                "values": [
+                    "ein Hund",
+                    "eine Katze"
+                ],
+                "reply": "Haustiere sind erlaubt, aber nur mit Zustimmung des Vermieters."
+            },
+            {
+                "id": "a6",
+                "question": "Brauchen Sie mehr Infos zu ___?",
+                "values": [
+                    "meinem Hund",
+                    "Referenzen"
+                ],
+                "reply": "Der Vermieter möchte vorab Informationen oder eine kurze Beschreibung."
+            },
+            {
+                "id": "a7",
+                "question": "Gibt es Regeln zu ___?",
+                "values": [
+                    "Haustieren",
+                    "Lärm"
+                ],
+                "reply": "Es gibt Hausregeln, und Hunde dürfen die Nachbarn nicht stören."
+            },
+            {
+                "id": "a8",
+                "question": "Gibt es Extrakosten für ___?",
+                "values": [
+                    "einen Hund",
+                    "die Erlaubnis"
+                ],
+                "reply": "Für einen Hund kann eine zusätzliche Monatsgebühr anfallen."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a5",
+            "a8"
+        ],
+        "note": "",
+        "cost_usd": "0.000993",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a5\",\"a8\"]}"
+    },
+    "days/gpt54/16": {
+        "replies": [
+            {
+                "id": "a3",
+                "question": "Should we continue ___?",
+                "values": [
+                    "this medicine",
+                    "the cream",
+                    "these exercises"
+                ],
+                "reply": "Please continue the treatment. Use it for three more days."
+            },
+            {
+                "id": "a4",
+                "question": "Do we need ___?",
+                "values": [
+                    "an X-ray",
+                    "a blood test",
+                    "an MRI"
+                ],
+                "reply": "You need another visit, but you do not need a test now."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a3"
+        ],
+        "note": "",
+        "cost_usd": "0.000911",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a3\"]}"
+    },
+    "days/gpt54-b/02": {
+        "replies": [
+            {
+                "id": "a5",
+                "question": "What does ___ mean?",
+                "values": [
+                    "strain",
+                    "swelling",
+                    "muscle"
+                ],
+                "reply": "It is likely a muscle strain."
+            },
+            {
+                "id": "a6",
+                "question": "How often for ___?",
+                "values": [
+                    "this syrup",
+                    "these drops",
+                    "this medicine"
+                ],
+                "reply": "Give it three times a day after food."
+            },
+            {
+                "id": "a7",
+                "question": "Can my child ___?",
+                "values": [
+                    "go to school",
+                    "play sports",
+                    "swim"
+                ],
+                "reply": "Avoid sports for one week and come back if the pain stays."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a5",
+            "a7"
+        ],
+        "note": "",
+        "cost_usd": "0.000949",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a5\",\"a7\"]}"
+    },
+    "days/gpt54-b/14": {
+        "replies": [
+            {
+                "id": "a5",
+                "question": "Care sunt sarcinile pentru ___?",
+                "values": [
+                    "acest post",
+                    "rolul acesta"
+                ],
+                "reply": "Postul include lucru cu clienții și sarcini administrative în fiecare zi."
+            }
+        ],
+        "status": "judged",
+        "naming": [
+            "a5"
+        ],
+        "note": "",
+        "cost_usd": "0.000880",
+        "raw": "{\"verdicts\":[],\"replies_naming_values\":[\"a5\"]}"
+    }
+}

@@ -1,0 +1,45 @@
+{
+    "carried": [
+        "keep clean"
+    ],
+    "sent": [
+        {
+            "code": "partner.yes_no_missing",
+            "address": "a6",
+            "detail": "a yes-or-no question: start with Yes. or No., then one general fact (the reply to p6 «Does this job include ___?»)"
+        },
+        {
+            "code": "partner.names_filler_meaning",
+            "address": "a6",
+            "detail": "the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked (the seam judge says, as in the run)"
+        },
+        {
+            "code": "vocab.carried",
+            "address": "a6",
+            "detail": "not a finding: this card alone says the words of the day «keep clean» (v8) — keep each of them in the card you write, or the day loses it"
+        }
+    ],
+    "trials": [
+        {
+            "status": "repaired",
+            "line": "Yes. Staff must keep the kitchen clean and follow safety rules.",
+            "fatal": [],
+            "at_a6": [],
+            "cost_usd": "0.006064"
+        },
+        {
+            "status": "repaired",
+            "line": "Yes. The job requires you to keep clean while cooking.",
+            "fatal": [],
+            "at_a6": [],
+            "cost_usd": "0.004096"
+        },
+        {
+            "status": "repaired",
+            "line": "Yes. The job includes cooking, and you must keep the kitchen clean.",
+            "fatal": [],
+            "at_a6": [],
+            "cost_usd": "0.003484"
+        }
+    ]
+}

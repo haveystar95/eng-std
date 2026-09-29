@@ -1,0 +1,32 @@
+[
+    {
+        "code": "partner.yes_no_missing",
+        "detail": "a yes-or-no question: start with Yes. or No., then one general fact (the reply to p6 «Does this job include ___?»)",
+        "address": "a6"
+    },
+    {
+        "code": "vocab.stop_word",
+        "detail": "«hours» is a word of the stop list («hours»)",
+        "address": "v6"
+    },
+    {
+        "code": "partner.names_filler_meaning",
+        "detail": "the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («The main duties are prep, cooking, and keeping the kitchen clean.» to «Does this job include ___?» with «prep work», «grill work», «plating», the seam judge says)",
+        "address": "a6"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Cleaning the kitchen» repeats «the kitchen» of A's «The main duties are prep, cooking, and keeping the kitchen clean.»",
+        "address": "x6.check"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Kitchen cleaning» repeats «kitchen cleaning» of A's «Prep, cooking, and kitchen cleaning.»",
+        "address": "x7.check"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Five days weekly» repeats «five days» of A's «The schedule is five days a week, morning and evening shifts.»",
+        "address": "x8.check"
+    }
+]

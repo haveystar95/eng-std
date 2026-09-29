@@ -1,0 +1,4047 @@
+[
+    {
+        "run": "days/luna",
+        "plan": "01",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p5",
+        "question": "Oferiți instruire?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Da. Instruirea are loc în prima săptămână.",
+                "opens_with": "da"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "01",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p6",
+        "question": "Care este pasul următor?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Următorul pas este o a doua întâlnire.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does ___ mean?",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can we ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Avoid sports and come back in three days.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often should I give ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Let the child rest and give the medicine twice a day.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "02",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does ___ mean?",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "02",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can the child ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a8",
+                "text": "The child must avoid sports for three days.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "02",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often should I give ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Give the medicine twice a day after food.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p1",
+        "question": "Is ___ included in the rent?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a1",
+                "text": "Yes. The rent includes building maintenance and rubbish collection, but electricity is separate.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p2",
+        "question": "Is ___ allowed here?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a2",
+                "text": "Pets are allowed only with the owner's written permission and an additional deposit.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p3",
+        "question": "Do I pay ___ extra each month?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Yes. They are billed separately each month, and the amount depends on usage.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "How old is ___?",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can ___ be changed?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Changes are possible with the owner's written permission, and the flat must be restored later.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Is there a ___ nearby?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "There is a supermarket, a pharmacy, and a tram stop within ten minutes.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p4",
+        "question": "Akzeptieren Sie ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Eine vorläufige Adresse wird akzeptiert.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p5",
+        "question": "Welches Konto passt zu ___?",
+        "asks": "fact",
+        "word": "welches",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Das Basiskonto kostet fünf Euro im Monat.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p6",
+        "question": "Wie hoch ist die Monatsgebühr für ___?",
+        "asks": "fact",
+        "word": "wie",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Das Basiskonto kostet fünf Euro im Monat.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p7",
+        "question": "Wann bekomme ich ___?",
+        "asks": "fact",
+        "word": "wann",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Die Karte kommt nach sieben Tagen.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p4",
+        "question": "Ist ___ akzeptiert?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Ja. Eine vorläufige Adresse reicht für den Antrag.",
+                "opens_with": "ja"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p5",
+        "question": "Welches Konto passt zu ___?",
+        "asks": "fact",
+        "word": "welches",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Für Sie passt das Basiskonto. Es kostet vier Euro im Monat.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p6",
+        "question": "Was kostet ___ im Monat?",
+        "asks": "fact",
+        "word": "was",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Für Sie passt das Basiskonto. Es kostet vier Euro im Monat.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p7",
+        "question": "Wann kommt ___?",
+        "asks": "fact",
+        "word": "wann",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Nach dem Antrag kommt die Karte in sieben Tagen.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "05",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is everything okay?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Yes, everything is fine. You may go through to the exit.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "05",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Do I go to ___ next?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Yes, everything is fine. You may go through to the exit.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "05",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is everything okay?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Everything is fine. You can go through now.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "05",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "I go to ___ now, right?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does success look like after ___",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "How do you evaluate ___",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "What salary range is planned for ___",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p8",
+        "question": "Does the package include ___",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Yes. The package includes paid annual leave.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does success look like in ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "How do you evaluate ___?",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "What salary range is planned for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "The planned salary range is discussed according to experience.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "06",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p8",
+        "question": "Does the package include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "The package includes health insurance and paid leave.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p3",
+        "question": "Che cosa ha notato riguardo a ___?",
+        "asks": "fact",
+        "word": "che cosa",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p4",
+        "question": "Quando e dove succede ___?",
+        "asks": "fact",
+        "word": "quando",
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Succede soprattutto durante le lezioni, in classe e durante le pause.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p6",
+        "question": "Quanto è grave a scuola, soprattutto ___?",
+        "asks": "fact",
+        "word": "quanto",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "È un problema serio, forse legato alla stanchezza.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p7",
+        "question": "Secondo lei, dipende ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "È un problema serio, forse legato alla stanchezza.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p3",
+        "question": "Ha notato questo comportamento: ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Durante le lezioni interrompe spesso e litiga con i compagni.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p4",
+        "question": "Quando e dove succede ___?",
+        "asks": "fact",
+        "word": "quando",
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Succede soprattutto durante la ricreazione, nel cortile.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p6",
+        "question": "Quanto è serio il problema ___?",
+        "asks": "fact",
+        "word": "quanto",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "È un problema serio, soprattutto durante le lezioni.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p7",
+        "question": "Può dipendere da ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a8",
+                "text": "Potrebbe dipendere dalla stanchezza.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What is the problem?",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Do I need to take ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Yes. The examination takes about ten minutes.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often should I take ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Take the medicine twice a day.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "08",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p5",
+        "question": "What is the problem?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "It may be a viral infection.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "08",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Do I need ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Yes. You need a test before starting treatment.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "08",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often should I take ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Take the medicine twice a day and come back in three days.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "09",
+        "attempt": 1,
+        "target": "pl",
+        "frame": "p5",
+        "question": "Co mi jest?",
+        "asks": "fact",
+        "word": "co",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "09",
+        "attempt": 1,
+        "target": "pl",
+        "frame": "p6",
+        "question": "Czy potrzebuję ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Tak. Dziś leczenie będzie krótkie.",
+                "opens_with": "tak"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "09",
+        "attempt": 1,
+        "target": "pl",
+        "frame": "p7",
+        "question": "Czy mogę jeść ___ po zabiegu?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "09",
+        "attempt": 2,
+        "target": "pl",
+        "frame": "p5",
+        "question": "Co się dzieje?",
+        "asks": "fact",
+        "word": "co",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "09",
+        "attempt": 2,
+        "target": "pl",
+        "frame": "p6",
+        "question": "Czy dziś potrzebne jest ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Tak. Dziś trzeba zrobić wypełnienie.",
+                "opens_with": "tak"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "09",
+        "attempt": 2,
+        "target": "pl",
+        "frame": "p7",
+        "question": "Czy mogę jeść lub pić ___?",
+        "asks": "choice",
+        "word": "lub",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Po zabiegu proszę nie jeść przez godzinę.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p5",
+        "question": "Est-ce qu’il faut ___ pour ce poste?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p6",
+        "question": "Comment est ___ dans votre équipe?",
+        "asks": "fact",
+        "word": "comment",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p7",
+        "question": "Quand prendrez-vous votre décision?",
+        "asks": "fact",
+        "word": "quand",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "10",
+        "attempt": 2,
+        "target": "fr",
+        "frame": "p5",
+        "question": "Est-ce que ___ compte pour ce poste?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "10",
+        "attempt": 2,
+        "target": "fr",
+        "frame": "p6",
+        "question": "Pouvez-vous me parler de ___ dans l’équipe?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "10",
+        "attempt": 2,
+        "target": "fr",
+        "frame": "p7",
+        "question": "Quand prendrez-vous votre décision?",
+        "asks": "fact",
+        "word": "quand",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Nous contacterons les candidats la semaine prochaine.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p1",
+        "question": "¿Cuál es el alquiler de ___?",
+        "asks": "fact",
+        "word": "cuál",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "El alquiler son 1.200 euros; la fianza es de dos meses e incluye el agua.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p2",
+        "question": "¿Qué incluye ___?",
+        "asks": "fact",
+        "word": "qué",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "El alquiler son 1.200 euros; la fianza es de dos meses e incluye el agua.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p3",
+        "question": "¿Cuántas ___ hay?",
+        "asks": "fact",
+        "word": "cuántas",
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Tiene dos habitaciones, un balcón y mucha luz.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p4",
+        "question": "¿Se permite ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Sí. Se exige autorización para ciertos casos.",
+                "opens_with": "sí"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p6",
+        "question": "¿Hay algún problema con ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p7",
+        "question": "¿A qué distancia está ___?",
+        "asks": "fact",
+        "word": "qué",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p8",
+        "question": "¿Se puede reservar ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Si le interesa, puede presentar la solicitud esta semana.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p1",
+        "question": "¿Cuál es el alquiler de ___?",
+        "asks": "fact",
+        "word": "cuál",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "El alquiler es de 1.200 euros; la fianza son dos meses e incluye el agua.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p2",
+        "question": "¿Qué incluye ___?",
+        "asks": "fact",
+        "word": "qué",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "El alquiler es de 1.200 euros; la fianza son dos meses e incluye el agua.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p3",
+        "question": "¿Cuántas ___ hay?",
+        "asks": "fact",
+        "word": "cuántas",
+        "replies": [
+            {
+                "id": "a3",
+                "text": "El piso tiene tres habitaciones, un balcón y mucha luz.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p4",
+        "question": "¿Se permite ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "No se permiten mascotas.",
+                "opens_with": "no"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p6",
+        "question": "¿Hay algún problema con ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p7",
+        "question": "¿Qué distancia hay hasta ___?",
+        "asks": "fact",
+        "word": "qué",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p8",
+        "question": "¿Se puede reservar ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Sí. La reserva mantiene el piso disponible durante tres días.",
+                "opens_with": "sí"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "12",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "Do I need ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Please show your identity document first.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "12",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Where should I wait?",
+        "asks": "fact",
+        "word": "where",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Please wait in the seating area.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p1",
+        "question": "What salary range is offered for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "The salary range for this role is €2,500 to €3,000 per month.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p2",
+        "question": "Is ___ gross or net?",
+        "asks": "choice",
+        "word": "or",
+        "replies": [
+            {
+                "id": "a2",
+                "text": "The quoted amount is gross, before taxes.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p3",
+        "question": "How often is ___ paid?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Employees are paid once a month.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "Are there ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Yes. The package includes additional pay after the trial period.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is ___ negotiable?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Does the offer include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p1",
+        "question": "What salary range do you offer for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "The salary range for this role is between thirty-five and forty thousand euros per year.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p2",
+        "question": "Is ___ gross or net?",
+        "asks": "choice",
+        "word": "or",
+        "replies": [
+            {
+                "id": "a2",
+                "text": "The figure is gross, before taxes and social contributions.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p3",
+        "question": "How often is ___ paid?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Employees are paid monthly, on the last working day.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p4",
+        "question": "Are there any ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Yes. A performance bonus is available after the probation period.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can ___ be negotiated?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "Could you confirm that ___ is part of the offer?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p6",
+        "question": "Care sunt atribuțiile pentru ___?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Da, postul include apeluri și programări.",
+                "opens_with": "da"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p7",
+        "question": "Oferiți instruire pentru ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p8",
+        "question": "Care este următorul pas?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Următorul pas este o discuție scurtă online.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p1",
+        "question": "Ist ___ erlaubt?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Ja, Haustiere sind erlaubt, wenn sie die Nachbarn nicht stören.",
+                "opens_with": "ja"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p3",
+        "question": "Gibt es Regeln für ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Ja, Haustiere sind erlaubt, wenn sie die Nachbarn nicht stören.",
+                "opens_with": "ja"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p4",
+        "question": "Kostet ___ extra?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Für Haustiere fällt keine zusätzliche Gebühr an.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p5",
+        "question": "Braucht der Vermieter noch ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Der Vermieter braucht eine kurze Beschreibung und eine Genehmigung.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p1",
+        "question": "Darf ich ___ haben?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Ja. Haustiere sind erlaubt, wenn sie angemeldet sind.",
+                "opens_with": "ja"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p3",
+        "question": "Gibt es Regeln für ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Für Haustiere gelten Anmeldepflicht und keine monatlichen Zusatzkosten.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p4",
+        "question": "Kostet ___ extra?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Für Haustiere gelten Anmeldepflicht und keine monatlichen Zusatzkosten.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p5",
+        "question": "Braucht der Vermieter noch Informationen über ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Der Vermieter braucht eine kurze Beschreibung und eine Bestätigung der Haftpflichtversicherung.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p7",
+        "question": "Wie lange ist ___ allein?",
+        "asks": "fact",
+        "word": "wie lange",
+        "replies": []
+    },
+    {
+        "run": "days/luna",
+        "plan": "16",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "Should I continue ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Yes. Continue the treatment for three more days.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "16",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "Do I need another visit?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Yes. You need another visit if the pain continues.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "16",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Do I need to have ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "You do not need a test today.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/luna",
+        "plan": "16",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Should I come back ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Come back in one week if the problem continues.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "01",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p5",
+        "question": "Oferiți instruire?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Da. Aveți instruire în prima săptămână.",
+                "opens_with": "da"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "01",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p6",
+        "question": "Care este pasul următor?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "După interviu, vă sunăm în două zile.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does ___ mean?",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can my child ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Avoid sports for one week.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often for ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Give the medicine three times a day and let the child rest.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p1",
+        "question": "Is ___ included in the rent?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a1",
+                "text": "The rent includes heating, but electricity and internet are separate.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p2",
+        "question": "Are ___ allowed here?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a2",
+                "text": "Small pets are allowed, but there is a limit of one animal per flat.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p3",
+        "question": "Are there extra charges for ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "You also pay for water, electricity, and the building maintenance fee.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "How old is the ___?",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can ___ be changed?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Small changes are possible with the owner's approval and at your expense.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Is there ___ nearby?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "There is a park nearby, and the nearest supermarket is five minutes away.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p1",
+        "question": "Is ___ included in the rent?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a1",
+                "text": "The rent includes heating, but electricity and internet are separate.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p2",
+        "question": "Are ___ allowed?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a2",
+                "text": "Small pets are allowed, but the owner wants an extra deposit.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p3",
+        "question": "Is there a monthly fee for ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "There is a monthly fee for water and building maintenance.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p4",
+        "question": "How old is the ___?",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can ___ be changed?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Changes are possible with the owner's approval, and they must be reversible.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "03",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "Is there a ___ nearby?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "There is a park nearby, and the nearest grocery store is five minutes away.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p4",
+        "question": "Geht auch ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Ja, eine temporäre Adresse geht. Wir brauchen aber einen Nachweis.",
+                "opens_with": "ja"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p5",
+        "question": "Welches Konto passt für ___?",
+        "asks": "fact",
+        "word": "welches",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Wir haben ein Basiskonto und ein Studentenkonto. Das Basiskonto kostet monatlich eine Gebühr.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p6",
+        "question": "Wie viel kostet ___ im Monat?",
+        "asks": "fact",
+        "word": "wie viel",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Wir haben ein Basiskonto und ein Studentenkonto. Das Basiskonto kostet monatlich eine Gebühr.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p7",
+        "question": "Wann kommt ___?",
+        "asks": "fact",
+        "word": "wann",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Nach dem Antrag bekommen Sie eine Bestätigung. Die Karte kommt später per Post.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p4",
+        "question": "Geht auch ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Ja, eine Meldeadresse reicht. Wir brauchen aber einen Ausweis.",
+                "opens_with": "ja"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p5",
+        "question": "Welches Konto passt für ___?",
+        "asks": "fact",
+        "word": "welches",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Für den Alltag haben wir ein Basiskonto und ein Onlinekonto, beide mit Monatsgebühr.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p6",
+        "question": "Was kostet ___ im Monat?",
+        "asks": "fact",
+        "word": "was",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Das Basiskonto kostet monatlich eine feste Gebühr.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "04",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p7",
+        "question": "Wann kommt ___?",
+        "asks": "fact",
+        "word": "wann",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Die Karte kommt per Post nach der Bestätigung.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "05",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is everything okay?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "You can go through. Then go to gate four.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "05",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is everything okay?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Yes. You can go through now.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does success look like in ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "In the first six months, we expect stable team results and better delivery speed.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "How is ___ evaluated?",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "What's the salary range for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "The salary range depends on experience, and the package includes paid vacation.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p8",
+        "question": "Does the package include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "The package includes health insurance, and bonuses are reviewed once a year.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p3",
+        "question": "Ha notato ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a2",
+                "text": "Il problema principale è che interrompe spesso durante la lezione.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p4",
+        "question": "Succede di solito ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Succede soprattutto in classe e a volte anche durante la ricreazione.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p6",
+        "question": "Quanto è grave ___?",
+        "asks": "fact",
+        "word": "quanto",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "A scuola è una difficoltà seria, soprattutto nelle lezioni, e può dipendere da frustrazione o stanchezza.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p7",
+        "question": "Può dipendere da ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "A scuola è una difficoltà seria, soprattutto nelle lezioni, e può dipendere da frustrazione o stanchezza.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p3",
+        "question": "Ha notato ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a2",
+                "text": "Il problema principale sono spinte e discussioni con altri bambini.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p4",
+        "question": "Succede di solito ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Succede soprattutto durante la ricreazione e all'inizio delle lezioni.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p6",
+        "question": "Quanto è grave ___?",
+        "asks": "fact",
+        "word": "quanto",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "In classe è serio perché interrompe il lavoro del gruppo.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "07",
+        "attempt": 2,
+        "target": "it",
+        "frame": "p7",
+        "question": "Può dipendere da ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Potrebbe esserci difficoltà a gestire la frustrazione con i compagni.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What is the problem?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "I think it is a stomach infection.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Do I need a ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "You need a blood test today.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often for ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "I will also give you some medicine.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "09",
+        "attempt": 1,
+        "target": "pl",
+        "frame": "p5",
+        "question": "Co to jest?",
+        "asks": "fact",
+        "word": "co",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "To wygląda na stan zapalny. Ząb jest wrażliwy przy dotyku.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "09",
+        "attempt": 1,
+        "target": "pl",
+        "frame": "p6",
+        "question": "Czy dziś potrzebuję ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Dziś potrzebne jest leczenie kanałowe. Zabieg potrwa około godziny.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "09",
+        "attempt": 1,
+        "target": "pl",
+        "frame": "p7",
+        "question": "Czy mogę po tym ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Po zabiegu proszę nie jeść przez dwie godziny.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "09",
+        "attempt": 2,
+        "target": "pl",
+        "frame": "p5",
+        "question": "Co to jest?",
+        "asks": "fact",
+        "word": "co",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "To jest stan zapalny. Ząb jest bardzo wrażliwy.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "09",
+        "attempt": 2,
+        "target": "pl",
+        "frame": "p6",
+        "question": "Czy dziś potrzebne jest ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Dziś potrzebne jest leczenie kanałowe. Potem założę opatrunek.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "09",
+        "attempt": 2,
+        "target": "pl",
+        "frame": "p7",
+        "question": "Czy mogę potem ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Po leczeniu proszę nic nie jeść przez dwie godziny.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p5",
+        "question": "___ est important pour ce poste?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p6",
+        "question": "Comment est l'équipe pour ___?",
+        "asks": "fact",
+        "word": "comment",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p7",
+        "question": "Quand prendrez-vous votre décision?",
+        "asks": "fact",
+        "word": "quand",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Nous contacterons les candidats en fin de semaine.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "10",
+        "attempt": 2,
+        "target": "fr",
+        "frame": "p5",
+        "question": "___ est important pour ce poste?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "10",
+        "attempt": 2,
+        "target": "fr",
+        "frame": "p6",
+        "question": "Comment est l'équipe pour ___?",
+        "asks": "fact",
+        "word": "comment",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "10",
+        "attempt": 2,
+        "target": "fr",
+        "frame": "p7",
+        "question": "Quand prendrez-vous votre décision?",
+        "asks": "fact",
+        "word": "quand",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Nous contacterons les candidats d'ici vendredi.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p1",
+        "question": "¿Cuánto cuesta ___?",
+        "asks": "fact",
+        "word": "cuánto",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "Son novecientos euros al mes, un mes de fianza, y el agua está incluida.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p2",
+        "question": "¿Qué incluye ___?",
+        "asks": "fact",
+        "word": "qué",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "Son novecientos euros al mes, un mes de fianza, y el agua está incluida.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p3",
+        "question": "¿Cuántos ___ hay?",
+        "asks": "fact",
+        "word": "cuántos",
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Tiene dos dormitorios, un baño y balcón interior.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p4",
+        "question": "¿Se permite ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Se admiten niños, pero no se admiten mascotas.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p6",
+        "question": "¿Hay problema con ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Se admiten niños, pero no se admiten mascotas.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p7",
+        "question": "¿Qué tan lejos está ___?",
+        "asks": "fact",
+        "word": "qué tan",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 1,
+        "target": "es",
+        "frame": "p8",
+        "question": "¿Se puede reservar ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Si le interesa, el siguiente paso es enviar la solicitud hoy.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p1",
+        "question": "¿Cuánto cuesta ___?",
+        "asks": "fact",
+        "word": "cuánto",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "El alquiler es de novecientos euros, la fianza es de un mes, y el agua está incluida.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p2",
+        "question": "¿Qué incluye ___?",
+        "asks": "fact",
+        "word": "qué",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p3",
+        "question": "¿Cuántos ___ hay?",
+        "asks": "fact",
+        "word": "cuántos",
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Tiene dos dormitorios, un baño y balcón.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p4",
+        "question": "¿Se permite ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Sí, se admiten niños, pero no mascotas.",
+                "opens_with": "sí"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p6",
+        "question": "¿Hay problema con ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p7",
+        "question": "¿Qué tan lejos está ___?",
+        "asks": "fact",
+        "word": "qué tan",
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "11",
+        "attempt": 2,
+        "target": "es",
+        "frame": "p8",
+        "question": "¿Se puede reservar ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Si le interesa, el siguiente paso es enviar la solicitud hoy.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "12",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "Do you need my ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "First, I need your passport.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "12",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Where should I wait?",
+        "asks": "fact",
+        "word": "where",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Please wait over there, near desk three.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "12",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p5",
+        "question": "Do you need my ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "First, I need your passport.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "12",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Where should I wait?",
+        "asks": "fact",
+        "word": "where",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Please wait over there, near the chairs.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p1",
+        "question": "What's the salary range for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "For this role, the range is between thirty-two and thirty-eight thousand a year.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p2",
+        "question": "Is ___ gross or net?",
+        "asks": "choice",
+        "word": "or",
+        "replies": [
+            {
+                "id": "a2",
+                "text": "That amount is gross, before tax and social contributions.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p3",
+        "question": "Is salary paid ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Employees are paid monthly, at the end of each month.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "Are there ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "There is a performance bonus and private health insurance.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is ___ negotiable?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Does the offer include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "There is a performance bonus and private health insurance.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p1",
+        "question": "What salary range is offered for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "For this role, the range is between thirty-two and thirty-six thousand a year.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p2",
+        "question": "Is ___ gross or net?",
+        "asks": "choice",
+        "word": "or",
+        "replies": [
+            {
+                "id": "a2",
+                "text": "That figure is gross, before taxes and social contributions.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p3",
+        "question": "Is salary paid ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Employees are paid monthly, at the end of each month.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p4",
+        "question": "Are there ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "There is an annual bonus and private health insurance.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is ___ negotiable?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "Does the offer include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p6",
+        "question": "Ce face ___?",
+        "asks": "fact",
+        "word": "ce",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Postul include lucru cu clienții, marfa și casa de marcat.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p7",
+        "question": "Oferiți instruire pentru ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p8",
+        "question": "Care este pasul următor?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Următorul pas este un răspuns până luni.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "14",
+        "attempt": 2,
+        "target": "ro",
+        "frame": "p6",
+        "question": "Ce face ___?",
+        "asks": "fact",
+        "word": "ce",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Postul include lucru cu clienții, actualizarea stocului și ture de dimineață sau de seară.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "14",
+        "attempt": 2,
+        "target": "ro",
+        "frame": "p7",
+        "question": "Oferiți instruire pentru ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Postul include lucru cu clienții, actualizarea stocului și ture de dimineață sau de seară.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "14",
+        "attempt": 2,
+        "target": "ro",
+        "frame": "p8",
+        "question": "Care este pasul următor?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Următorul pas este un răspuns până luni și, posibil, o probă scurtă.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p1",
+        "question": "Ist ___ erlaubt?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Haustiere sind erlaubt, aber nur mit Zustimmung des Vermieters.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p3",
+        "question": "Gibt es Regeln zu ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Es gibt Hausregeln, und Hunde dürfen die Nachbarn nicht stören.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p4",
+        "question": "Gibt es Extrakosten für ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a8",
+                "text": "Für einen Hund kann eine zusätzliche Monatsgebühr anfallen.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 1,
+        "target": "de",
+        "frame": "p5",
+        "question": "Brauchen Sie mehr Infos zu ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Der Vermieter möchte vorab Informationen oder eine kurze Beschreibung.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p1",
+        "question": "Ist ___ erlaubt?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Ja, Haustiere sind erlaubt, aber nur mit Zustimmung des Vermieters.",
+                "opens_with": "ja"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p3",
+        "question": "Gibt es Regeln zu ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Es gibt Hausregeln zu Haustieren im Treppenhaus.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p4",
+        "question": "Gibt es Kosten für ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a8",
+                "text": "Für einen Hund kann eine zusätzliche Gebühr anfallen.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "15",
+        "attempt": 2,
+        "target": "de",
+        "frame": "p5",
+        "question": "Brauchen Sie Infos zu ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Der Vermieter möchte kurze Infos zum Hund und manchmal eine Bestätigung.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "16",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "Should we continue ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Please continue the treatment. Use it for three more days.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "16",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "Do we need another visit?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "You need another visit, but you do not need a test now.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "16",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Do we need ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "You need another visit, but you do not need a test now.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "16",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p4",
+        "question": "Should we continue ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Stop this treatment. Use heat twice a day instead.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "16",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p5",
+        "question": "Do we need another visit?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Yes, you need another visit. I want to check the pain again.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54",
+        "plan": "16",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Do we need ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "No test is needed now. We will watch it for a few days.",
+                "opens_with": "no"
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-b",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does ___ mean?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "It is likely a muscle strain.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-b",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can my child ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Avoid sports for one week and come back if the pain stays.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-b",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often for ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Give it three times a day after food.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-b",
+        "plan": "05",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is everything okay?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54-b",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p6",
+        "question": "Care sunt sarcinile pentru ___?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Postul include lucru cu clienții și sarcini administrative în fiecare zi.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-b",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p7",
+        "question": "Oferiți instruire pentru ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54-b",
+        "plan": "14",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p8",
+        "question": "Care este următorul pas?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Următorul pas este un răspuns prin e-mail până luni.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p1",
+        "question": "What salary range is offered for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "For this role, the range is between thirty and thirty-five thousand a year.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p2",
+        "question": "Is ___ gross or net?",
+        "asks": "choice",
+        "word": "or",
+        "replies": [
+            {
+                "id": "a2",
+                "text": "That figure is gross, before taxes and social contributions.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p3",
+        "question": "Is salary paid ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Employees are paid once a month, at the end of the month.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "Are there ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "We also offer annual bonuses, meal vouchers, and private health insurance.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is ___ negotiable?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Does the offer include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "We also offer annual bonuses, meal vouchers, and private health insurance.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p1",
+        "question": "What salary range is offered for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a1",
+                "text": "For this role, the range is between twenty-eight and thirty-two thousand a year.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p2",
+        "question": "Is ___ gross or net?",
+        "asks": "choice",
+        "word": "or",
+        "replies": [
+            {
+                "id": "a2",
+                "text": "That amount is gross, before taxes and contributions.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p3",
+        "question": "Is salary paid ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Employees are paid monthly, at the end of each month.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p4",
+        "question": "Are there ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "There is a yearly bonus and private health insurance.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is ___ negotiable?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "days/gpt54-interrupted",
+        "plan": "13",
+        "attempt": 2,
+        "target": "en",
+        "frame": "p7",
+        "question": "Does the offer include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Yes, the offer also includes paid holidays from the first year.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "01",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p5",
+        "question": "Oferiți instruire?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Da, oferim instruire în prima săptămână.",
+                "opens_with": "da"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "01",
+        "attempt": 1,
+        "target": "ro",
+        "frame": "p6",
+        "question": "Care este următorul pas?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Următorul pas este un test scurt online.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does ___ mean?",
+        "asks": "fact",
+        "word": "what",
+        "replies": []
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is it okay to ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "No. Avoid sports until you come back in three days.",
+                "opens_with": "no"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "02",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often should I give ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Let the patient rest and give the medicine twice a day.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p1",
+        "question": "Does the monthly payment include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a1",
+                "text": "Yes. Basic building services are included; internet is separate.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p2",
+        "question": "Can I keep ___ here?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a2",
+                "text": "Yes. Pets are allowed with the owner's written approval; dogs must be on a lead in shared areas.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p3",
+        "question": "Is there an extra cost for ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Yes. Utility charges are billed separately, and waste collection is a fixed monthly fee.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p4",
+        "question": "How old is ___?",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Can ___ be changed?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Yes. Changes need the owner's written approval and must be paid for by the tenant.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "03",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "Is there ___ nearby?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Yes. Several everyday services are within a five-minute walk.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "05",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Is everything okay?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Yes. You can go through now.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What does success look like after ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "In this role, the company expects clear goals, steady progress, and reliable delivery.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "How is performance evaluated in ___?",
+        "asks": "fact",
+        "word": "how",
+        "replies": []
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "What salary range is planned for ___?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "The planned salary range is thirty to forty thousand hryvnias per month. No, the package includes professional-development support.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "06",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p8",
+        "question": "Does the package include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "The planned salary range is thirty to forty thousand hryvnias per month. No, the package includes professional-development support.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p3",
+        "question": "Ha notato ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a3",
+                "text": "Durante le lezioni, interrompe spesso gli altri.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p4",
+        "question": "Succede di solito ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a4",
+                "text": "Succede soprattutto durante le lezioni e in corridoio.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p6",
+        "question": "Quanto è serio il problema ___?",
+        "asks": "fact",
+        "word": "quanto",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "È abbastanza serio; sì, potrebbe dipendere da un cambiamento recente.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "07",
+        "attempt": 1,
+        "target": "it",
+        "frame": "p7",
+        "question": "Potrebbe dipendere da ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a7",
+                "text": "È abbastanza serio; sì, potrebbe dipendere da un cambiamento recente.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p5",
+        "question": "What is the problem?",
+        "asks": "fact",
+        "word": "what",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "It looks like inflammation. Please rest today.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p6",
+        "question": "Do I need ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Yes. The examination can be done here today.",
+                "opens_with": "yes"
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "08",
+        "attempt": 1,
+        "target": "en",
+        "frame": "p7",
+        "question": "How often should I take ___?",
+        "asks": "fact",
+        "word": "how often",
+        "replies": [
+            {
+                "id": "a8",
+                "text": "Take it twice a day.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p5",
+        "question": "Est-ce que ___ compte pour ce poste?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": []
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p6",
+        "question": "Quel rôle joue ___ dans l'équipe?",
+        "asks": "fact",
+        "word": "quel",
+        "replies": []
+    },
+    {
+        "run": "skeletons/luna-high",
+        "plan": "10",
+        "attempt": 1,
+        "target": "fr",
+        "frame": "p7",
+        "question": "Quand prendrez-vous votre décision?",
+        "asks": "fact",
+        "word": "quand",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Vous aurez de nos nouvelles la semaine prochaine, après les derniers entretiens.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "e2e",
+        "plan": "e2e",
+        "attempt": "stored",
+        "target": "ro",
+        "frame": "p5",
+        "question": "Care sunt sarcinile principale?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a5",
+                "text": "Da. Principalele sarcini includ verificarea documentelor și comunicarea cu clienții.",
+                "opens_with": "da"
+            }
+        ]
+    },
+    {
+        "run": "e2e",
+        "plan": "e2e",
+        "attempt": "stored",
+        "target": "ro",
+        "frame": "p6",
+        "question": "Care este programul de lucru?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Da. Programul este de luni până vineri, dimineața și după-amiaza.",
+                "opens_with": "da"
+            }
+        ]
+    },
+    {
+        "run": "e2e",
+        "plan": "e2e-b",
+        "attempt": "stored",
+        "target": "ro",
+        "frame": "p6",
+        "question": "Postul include ___?",
+        "asks": "yes_no",
+        "word": null,
+        "replies": [
+            {
+                "id": "a6",
+                "text": "Postul include lucru cu clienții și pregătirea documentelor.",
+                "opens_with": null
+            }
+        ]
+    },
+    {
+        "run": "e2e",
+        "plan": "e2e-b",
+        "attempt": "stored",
+        "target": "ro",
+        "frame": "p7",
+        "question": "Care este programul?",
+        "asks": "fact",
+        "word": "care",
+        "replies": [
+            {
+                "id": "a7",
+                "text": "Programul este de luni până vineri, de dimineață.",
+                "opens_with": null
+            }
+        ]
+    }
+]

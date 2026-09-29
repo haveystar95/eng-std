@@ -1,0 +1,759 @@
+{
+    "topic": {
+        "title_native": "Опыт работы",
+        "title_target": "Experiență de muncă",
+        "description_native": "Чётко рассказать на собеседовании, где вы работали, как долго и какие у вас были обязанности.",
+        "description_target": "Să spuneți clar unde ați lucrat, cât timp și ce sarcini ați avut la un interviu."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "Андрей",
+                        "target": "Andrei",
+                        "in_dialogue": true,
+                        "pronunciation_native": "андрей"
+                    },
+                    {
+                        "native": "Михай",
+                        "target": "Mihai",
+                        "in_dialogue": false,
+                        "pronunciation_native": "михай"
+                    },
+                    {
+                        "native": "Серджиу",
+                        "target": "Sergiu",
+                        "in_dialogue": false,
+                        "pronunciation_native": "серджиу"
+                    }
+                ],
+                "hint_native": "имя"
+            },
+            "frame_native": "Меня зовут ___.",
+            "frame_target": "Mă numesc ___.",
+            "pronunciation_native": "мэ нумеск ___"
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "продавца",
+                        "target": "vânzător",
+                        "in_dialogue": true,
+                        "pronunciation_native": "вынзэтор"
+                    },
+                    {
+                        "native": "администратора на ресепшене",
+                        "target": "recepționer",
+                        "in_dialogue": false,
+                        "pronunciation_native": "речепционер"
+                    },
+                    {
+                        "native": "кассира",
+                        "target": "casier",
+                        "in_dialogue": false,
+                        "pronunciation_native": "касиер"
+                    }
+                ],
+                "hint_native": "должность"
+            },
+            "frame_native": "Я претендую на должность ___.",
+            "frame_target": "Candidez pentru postul de ___.",
+            "pronunciation_native": "кандидез пентру постул дэ ___"
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "на складе",
+                        "target": "un depozit",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ун депозит"
+                    },
+                    {
+                        "native": "в отеле",
+                        "target": "un hotel",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ун хотел"
+                    },
+                    {
+                        "native": "в офисе",
+                        "target": "un birou",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ун бироу"
+                    }
+                ],
+                "hint_native": "место работы"
+            },
+            "frame_native": "Я работал ___.",
+            "frame_target": "Am lucrat la ___.",
+            "pronunciation_native": "ам лукрат ла ___"
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "два года",
+                        "target": "doi ani",
+                        "in_dialogue": true,
+                        "pronunciation_native": "дой ань"
+                    },
+                    {
+                        "native": "шесть месяцев",
+                        "target": "șase luni",
+                        "in_dialogue": false,
+                        "pronunciation_native": "шасе лунь"
+                    },
+                    {
+                        "native": "один год",
+                        "target": "un an",
+                        "in_dialogue": false,
+                        "pronunciation_native": "ун ан"
+                    }
+                ],
+                "hint_native": "срок"
+            },
+            "frame_native": "Я работал там ___.",
+            "frame_target": "Am lucrat acolo ___.",
+            "pronunciation_native": "ам лукрат аколо ___"
+        },
+        {
+            "id": "p5",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "товаром",
+                        "target": "marfă",
+                        "in_dialogue": true,
+                        "pronunciation_native": "марфэ"
+                    },
+                    {
+                        "native": "клиентами",
+                        "target": "clienți",
+                        "in_dialogue": false,
+                        "pronunciation_native": "клиенць"
+                    },
+                    {
+                        "native": "документами",
+                        "target": "documente",
+                        "in_dialogue": false,
+                        "pronunciation_native": "документе"
+                    }
+                ],
+                "hint_native": "обязанность"
+            },
+            "frame_native": "Я занимался ___.",
+            "frame_target": "Mă ocupam de ___.",
+            "pronunciation_native": "мэ окупам дэ ___"
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "продажах",
+                        "target": "vânzări",
+                        "in_dialogue": true,
+                        "pronunciation_native": "вынзэрь"
+                    },
+                    {
+                        "native": "логистике",
+                        "target": "logistică",
+                        "in_dialogue": false,
+                        "pronunciation_native": "лоджистикэ"
+                    },
+                    {
+                        "native": "работе на ресепшене",
+                        "target": "recepție",
+                        "in_dialogue": false,
+                        "pronunciation_native": "речепцие"
+                    }
+                ],
+                "hint_native": "задача или сфера"
+            },
+            "frame_native": "Требуется опыт в ___?",
+            "frame_target": "Se cere experiență în ___?",
+            "pronunciation_native": "сэ чере експериенцэ ын ___"
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "sarcini",
+                        "target": "sarcini",
+                        "in_dialogue": true,
+                        "pronunciation_native": "сарчинь"
+                    },
+                    {
+                        "native": "experiență",
+                        "target": "experiență",
+                        "in_dialogue": false,
+                        "pronunciation_native": "експериенцэ"
+                    },
+                    {
+                        "native": "depozit",
+                        "target": "depozit",
+                        "in_dialogue": false,
+                        "pronunciation_native": "депозит"
+                    }
+                ],
+                "hint_native": "слово"
+            },
+            "frame_native": "Что значит ___?",
+            "frame_target": "Ce înseamnă ___?",
+            "pronunciation_native": "че ынсямнэ ___"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "answer",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Предыдущее место работы",
+                        "text_target": "Locul de muncă anterior"
+                    },
+                    {
+                        "text_native": "Желаемую должность",
+                        "text_target": "Postul dorit"
+                    },
+                    {
+                        "text_native": "Ваше имя",
+                        "text_target": "Numele dumneavoastră"
+                    }
+                ],
+                "text_native": "Что хочет узнать интервьюер?",
+                "text_target": "Ce vrea să afle intervievatorul?",
+                "explanation_native": "Интервьюер спрашивает, как вас зовут.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "Как вас зовут?",
+                    "text_target": "Cum vă numiți?"
+                },
+                {
+                    "filler": "Andrei",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Меня зовут Андрей.",
+                    "text_target": "Mă numesc Andrei.",
+                    "speaking_key": "Mă numesc",
+                    "simplified_variants": [
+                        "Sunt Andrei."
+                    ],
+                    "pronunciation_native": "мэ нумеск андрей"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Ежедневные обязанности",
+                        "text_target": "Responsabilitățile zilnice"
+                    },
+                    {
+                        "text_native": "Продолжительность опыта",
+                        "text_target": "Durata experienței"
+                    },
+                    {
+                        "text_native": "Название должности",
+                        "text_target": "Denumirea funcției"
+                    }
+                ],
+                "text_native": "О чём спрашивает интервьюер?",
+                "text_target": "Ce întreabă intervievatorul?",
+                "explanation_native": "Интервьюер хочет узнать, на какую должность вы претендуете.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "На какую должность вы претендуете?",
+                    "text_target": "Pentru ce post candidați?"
+                },
+                {
+                    "filler": "vânzător",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Я претендую на должность продавца.",
+                    "text_target": "Candidez pentru postul de vânzător.",
+                    "speaking_key": "Candidez pentru postul de",
+                    "simplified_variants": [
+                        "Pentru postul de vânzător."
+                    ],
+                    "pronunciation_native": "кандидез пентру постул дэ вынзэтор"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Полное имя",
+                        "text_target": "Numele complet"
+                    },
+                    {
+                        "text_native": "Открытую должность",
+                        "text_target": "Postul disponibil"
+                    },
+                    {
+                        "text_native": "Предыдущее место работы",
+                        "text_target": "Locul de muncă de dinainte"
+                    }
+                ],
+                "text_native": "Что хочет узнать интервьюер?",
+                "text_target": "Ce vrea să știe intervievatorul?",
+                "explanation_native": "Интервьюер спрашивает, где вы работали раньше.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "Где вы работали раньше?",
+                    "text_target": "Unde ați lucrat înainte?"
+                },
+                {
+                    "filler": "un depozit",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Я работал на складе.",
+                    "text_target": "Am lucrat la un depozit.",
+                    "speaking_key": "Am lucrat la",
+                    "simplified_variants": [
+                        "Am lucrat într-un depozit."
+                    ],
+                    "pronunciation_native": "ам лукрат ла ун депозит"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Тип компании",
+                        "text_target": "Tipul companiei"
+                    },
+                    {
+                        "text_native": "Причины ухода",
+                        "text_target": "Motivele plecării"
+                    },
+                    {
+                        "text_native": "Срок работы там",
+                        "text_target": "Perioada muncii acolo"
+                    }
+                ],
+                "text_native": "Что именно спрашивает интервьюер?",
+                "text_target": "Ce anume întreabă intervievatorul?",
+                "explanation_native": "Интервьюер хочет узнать, как долго вы там работали.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "Как долго вы там работали?",
+                    "text_target": "Cât timp ați lucrat acolo?"
+                },
+                {
+                    "filler": "doi ani",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Я работал там два года.",
+                    "text_target": "Am lucrat acolo doi ani.",
+                    "speaking_key": "Am lucrat acolo",
+                    "simplified_variants": [
+                        "Acolo am lucrat doi ani."
+                    ],
+                    "pronunciation_native": "ам лукрат аколо дой ань"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Дату начала",
+                        "text_target": "Data începerii"
+                    },
+                    {
+                        "text_native": "График работы",
+                        "text_target": "Programul de lucru"
+                    },
+                    {
+                        "text_native": "Круг рабочих обязанностей",
+                        "text_target": "Responsabilitățile principale"
+                    }
+                ],
+                "text_native": "Что хочет узнать интервьюер?",
+                "text_target": "Ce dorește să afle intervievatorul?",
+                "explanation_native": "Интервьюер спрашивает об основных обязанностях на работе.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "Какие у вас были основные обязанности?",
+                    "text_target": "Care erau sarcinile dumneavoastră principale?"
+                },
+                {
+                    "filler": "marfă",
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Я занимался товаром.",
+                    "text_target": "Mă ocupam de marfă.",
+                    "speaking_key": "Mă ocupam de",
+                    "simplified_variants": [
+                        "Lucram cu marfă."
+                    ],
+                    "pronunciation_native": "мэ окупам дэ марфэ"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Об опыте руководства командой",
+                        "text_target": "Despre conducerea unei echipe"
+                    },
+                    {
+                        "text_native": "Об опыте работы на складе",
+                        "text_target": "Despre munca în depozit"
+                    },
+                    {
+                        "text_native": "Об общении с клиентами",
+                        "text_target": "Despre interacțiunea cu clienții"
+                    }
+                ],
+                "text_native": "О каком опыте спрашивает интервьюер?",
+                "text_target": "Despre ce experiență întreabă intervievatorul?",
+                "explanation_native": "Интервьюер спрашивает, есть ли у вас опыт работы с клиентами.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": "vânzări",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Требуется опыт в продажах?",
+                    "text_target": "Se cere experiență în vânzări?",
+                    "speaking_key": "Se cere experiență în",
+                    "simplified_variants": [
+                        "Trebuie experiență în vânzări?"
+                    ],
+                    "pronunciation_native": "сэ чере експериенцэ ын вынзэрь"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "У вас есть опыт работы с клиентами?",
+                    "text_target": "Aveți experiență cu lucrul cu clienții?"
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "К ежедневной работе",
+                        "text_target": "La activitatea zilnică la serviciu"
+                    },
+                    {
+                        "text_native": "К сроку контракта",
+                        "text_target": "La durata contractului"
+                    },
+                    {
+                        "text_native": "К необходимому образованию",
+                        "text_target": "La studiile necesare"
+                    }
+                ],
+                "text_native": "К чему относится объяснение интервьюера?",
+                "text_target": "La ce se referă explicația intervievatorului?",
+                "explanation_native": "Интервьюер объясняет, что речь о том, что вы делали на работе каждый день.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": "sarcini",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Что значит sarcini?",
+                    "text_target": "Ce înseamnă sarcini?",
+                    "speaking_key": "Ce înseamnă",
+                    "simplified_variants": [
+                        "Sarcini, ce înseamnă?"
+                    ],
+                    "pronunciation_native": "че ынсямнэ сарчинь"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "То есть что вы делали на работе каждый день.",
+                    "text_target": "Adică ce făceați la muncă în fiecare zi."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "rescue",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "О выходных",
+                        "text_target": "Despre weekend"
+                    },
+                    {
+                        "text_native": "О первом годе",
+                        "text_target": "Despre primul an"
+                    },
+                    {
+                        "text_native": "О ежедневных делах",
+                        "text_target": "Despre activitatea zilnică"
+                    }
+                ],
+                "text_native": "О каком времени говорит повтор?",
+                "text_target": "Despre ce timp vorbește repetarea?",
+                "explanation_native": "В повторе говорится о том, что вы делали каждый день.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": null,
+                    "role_native": "Кандидат",
+                    "role_target": "Candidat",
+                    "text_native": "Повторите, пожалуйста.",
+                    "text_target": "Puteți repeta, vă rog?",
+                    "speaking_key": "repeta, vă rog",
+                    "simplified_variants": [
+                        "Mai încet, vă rog."
+                    ],
+                    "pronunciation_native": "пуць репета, вэ рог"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Интервьюер",
+                    "role_target": "Intervievator",
+                    "text_native": "Что вы делали на работе каждый день.",
+                    "text_target": "Ce făceați la muncă în fiecare zi."
+                }
+            ],
+            "initiator": "B"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "На какую должность претендует кандидат?",
+                "options_native": [
+                    "кассира",
+                    "продавца",
+                    "администратора на ресепшене"
+                ],
+                "explanation_native": "Кандидат сказал, что претендует на должность продавца.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Где кандидат работал раньше?",
+                "options_native": [
+                    "в офисе",
+                    "на складе",
+                    "в отеле"
+                ],
+                "explanation_native": "Кандидат сказал, что работал на складе.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "О чём интервьюер спросил кандидата после вопроса о продажах?",
+                "options_native": [
+                    "О размере зарплаты",
+                    "О следующем этапе собеседования",
+                    "Об опыте работы с клиентами"
+                ],
+                "explanation_native": "Интервьюер спросил, есть ли у кандидата опыт работы с клиентами.",
+                "correct_option_index": 2
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p2",
+                "A2"
+            ],
+            "term_target": "a candida",
+            "image_prompt": "a person at a desk handing papers to an interviewer",
+            "definition_target": "a cere oficial un post",
+            "translation_native": "претендовать",
+            "pronunciation_native": "а кандида"
+        },
+        {
+            "id": "v2",
+            "kind": "word",
+            "used_in": [
+                "p2",
+                "A2"
+            ],
+            "term_target": "post",
+            "image_prompt": "a printed job title on an office desk",
+            "definition_target": "loc de muncă într-o companie",
+            "translation_native": "должность",
+            "pronunciation_native": "пост"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "A5"
+            ],
+            "term_target": "principal",
+            "image_prompt": null,
+            "definition_target": "cel mai important dintre mai multe lucruri",
+            "translation_native": "основной",
+            "pronunciation_native": "принчипал"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "A5",
+                "p7"
+            ],
+            "term_target": "sarcină",
+            "image_prompt": "a worker checking a list of tasks on paper",
+            "definition_target": "lucru pe care trebuie să-l faci",
+            "translation_native": "обязанность",
+            "pronunciation_native": "сарчынэ"
+        },
+        {
+            "id": "v5",
+            "kind": "chunk",
+            "used_in": [
+                "p5"
+            ],
+            "term_target": "a se ocupa de",
+            "image_prompt": "a worker arranging products on shelves",
+            "definition_target": "a avea ceva ca responsabilitate",
+            "translation_native": "заниматься",
+            "pronunciation_native": "а сэ окупа дэ"
+        },
+        {
+            "id": "v6",
+            "kind": "chunk",
+            "used_in": [
+                "p1"
+            ],
+            "term_target": "a se numi",
+            "image_prompt": null,
+            "definition_target": "a avea un anumit nume",
+            "translation_native": "называться",
+            "pronunciation_native": "а сэ нумИ"
+        },
+        {
+            "id": "v7",
+            "kind": "word",
+            "used_in": [
+                "p6",
+                "A6"
+            ],
+            "term_target": "experiență",
+            "image_prompt": null,
+            "definition_target": "cunoștințe din muncă făcută înainte",
+            "translation_native": "опыт",
+            "pronunciation_native": "експериенцэ"
+        },
+        {
+            "id": "v8",
+            "kind": "word",
+            "used_in": [
+                "p6"
+            ],
+            "term_target": "vânzări",
+            "image_prompt": "a shop employee helping a customer at a counter",
+            "definition_target": "activitatea de a vinde produse sau servicii",
+            "translation_native": "продажи",
+            "pronunciation_native": "вынзэрь"
+        },
+        {
+            "id": "v9",
+            "kind": "word",
+            "used_in": [
+                "p7"
+            ],
+            "term_target": "a însemna",
+            "image_prompt": null,
+            "definition_target": "a avea un sens",
+            "translation_native": "значить",
+            "pronunciation_native": "а ынсемна"
+        }
+    ],
+    "role_gender": "male",
+    "learner_role": {
+        "role_native": "Кандидат",
+        "role_target": "Candidat"
+    }
+}

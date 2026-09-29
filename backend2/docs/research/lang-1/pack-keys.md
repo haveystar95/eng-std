@@ -110,7 +110,9 @@
 | `ordinary_heads` | target | list | Ⓐ | да | — |
 | `closers` | target | list фраз | Ⓐ | да | — |
 | `saying_verbs` | target | list | Ⓐ | да | — |
-| `alternative_words` | target | list | Ⓐ | да | — |
+| `alternative_words` | target | list | Ⓐ | нет (с GEN-4c — `targetReading()` правил да/нет) | — |
+| `yes_no` (**наряд GEN-4c**) | target | list: «да» первым, «нет» вторым, дальше прочие | Ⓐ | нет (`targetReading()`) | — (обязателен у семи целей) |
+| `question_words` (**наряд GEN-4c**) | target | list слов и оборотов (несколько слов подряд) | Ⓐ | нет (`targetReading()`) | — (обязателен у семи целей) |
 | `second_question_pattern` | target | regex (сырой текст) | Ⓔ | да | `'/(?!)/u'` |
 | `articles` | target | list | Ⓐ Ⓑ Ⓒ | да | `[]` |
 | `dangling_words` | target | list | Ⓑ | нет | `[]` |
@@ -344,9 +346,14 @@
 - no-op — нет. en: `say says said tell tells told answer … want wants wanted`.
 
 ### 3.19. `alternative_words`
-- **target** · `isAlternative()` `:261`; `reads`: `CheckRules.php:45`.
+- **target** · `isAlternative()` `:261`; `reads`: `CheckRules.php:45` — оба сняты с валидатором урока (GEN-4). С **GEN-4c** —
+  `LanguageWords::alternative()` ← `AskedFor` (`partner.yes_no_missing`, `partner.yes_no_extra`): слово списка **между двумя
+  словами** вопроса ученика (окно `___` — тоже слово; не первое и не последнее) — вопрос-выбор («Is ___ gross or net?»), его не
+  проверяет ни одно из двух правил; «…, oder?» в конце — да/нет.
 - list (Ⓐ): слово, которым собеседник перечисляет варианты («or»).
-- no-op — нет. en: `['or']` (es «o», «u»; fr «ou»; it «o», «oppure»; de «oder»; pl «albo», «lub», «czy»; ro «sau»).
+- no-op — нет. en: `['or']` (es «o», «u»; fr «ou»; it «o», «oppure»; de «oder»; pl «albo», «lub», «bądź»; ro «sau»). Грабли
+  GEN-4c: pl «czy» в списке нет — вопрос-выбор «brutto czy netto?» читается да/нет; «jeść lub pić» внутри да/нет-вопроса
+  читается выбором (спорные, отчёт GEN-4c).
 
 ### 3.20. `second_question_pattern`
 - **target** · `asksTwice()` `:271` — к **сырому тексту**; `reads`: `PartnerRules.php:31`.
@@ -493,6 +500,39 @@
 - no-op `[]`. en: `['word' => 'of', 'determiners' => ['no', 'any', 'some', 'much', 'little', 'enough', 'more', 'less']]`.
 
 ### 3.40. `common_words` — §4.1. · 3.41 `talk_title_template` — §4.2.
+
+### 3.42. `yes_no` (наряд GEN-4c)
+- **target** · `LanguageWords::yesNoOpening()`, `yesNoWords()` ← `partner.yes_no_missing` / `partner.yes_no_extra`
+  (`SkeletonContext::targetReading('yes_no', 'question_words', 'alternative_words')` — без любого из трёх правила не бегут).
+- list (Ⓐ): слова, которыми ответ на вопрос да/нет **начинается** — «да» **первым**, «нет» **вторым** (причина находки называет
+  эти два с заглавной: «start with Da. or Nu.»), дальше прочие (de «doch», fr «si» — «да» на отрицательный вопрос). Сравнивается
+  **первое слово** реплики (`Words::tokens`, `normal()`: регистр, знаки, «¡ ¿» не в счёт) — «No test is needed now.»
+  начинается с «no», «Nu este nevoie…» — с «nu».
+- no-op — нет; ru, uk, be (не цели) — не пишут.
+- ro `['da', 'nu']`, en `['yes', 'no']`, fr `['oui', 'non', 'si']`, es `['sí', 'no']`, it `['sì', 'no']`, de `['ja', 'nein', 'doch']`,
+  pl `['tak', 'nie']`.
+- Грабли: акцент обязателен там, где он отличает слово — es «Si le interesa…» (если) и it «Si può…» (местоимение) не «да»;
+  fr «Si vous…» (если) читается как «да» — предел списка. Отрицание, совпадающее с «нет» (ro «nu», es «no», pl «nie»), в
+  начале реплики читается как ответ «нет».
+
+### 3.43. `question_words` (наряд GEN-4c)
+- **target** · `LanguageWords::questionWord()` ← `AskedFor` (те же два правила).
+- list (Ⓐ): слова и **обороты** вопроса о факте (что, какой, кто, где, когда, как, сколько, почему); оборот — слова подряд
+  («how many», «cât de», «à quelle heure», «wie viel», «o której», «por qué»). Ищется **где угодно** в каркасе (fr «Je commence
+  à quelle heure ?», «C'est combien ?» — слово вопроса в конце): слово текста — целиком и по частям при апострофе и дефисе
+  («What's» даёт «what», «Dov'è» — «dov», «qu'est-ce que» — одно слово «qu'est-ce» и «que»). Находится самый длинный оборот.
+- Нет ни одного и нет выбора (`alternative_words`) — вопрос да/нет. **Не писать** то, что само спрашивает да/нет: fr «que»
+  («Est-ce que ___ compte ?»), pl «czy».
+- Семь целей: ro `ce care cine cui unde încotro când cum cât câtă câți câte`, «de ce», «cât de», «de când», «până când», «cât
+  timp», «la ce oră», «ce fel de»; en `what which who whom whose where when why how`, «how many», «how much», «how long», «how
+  often», «what time», «what kind of»; de — w-слова и «wie viel(e)», «wieviel», «wie lange», «wie oft», «wie spät», «um wie viel
+  uhr», «was für», wo-наречия; fr — `qui quoi quel(s) quelle(s) lequel… où quand comment combien pourquoi`, «qu'est-ce que/qui», «à
+  quelle heure», «combien de temps», «depuis quand», «jusqu'à quand»; es — с акцентами (`qué cuál quién dónde cuándo cómo cuánto…`),
+  «por qué», «a qué hora», «qué tan»; it — `che cosa chi quale qual dove quando come perché quanto…` и усечённые `dov com cos
+  quant`; pl — `co kto gdzie kiedy jak dlaczego ile jaki… który…`, «po co», «o której», «od kiedy», «jak długo».
+- Грабли: слово списка в придаточном ничего не спрашивает — it «Posso lavorare come ___?» (как), pl «co miesiąc» (каждый), de
+  «so schnell wie möglich» — такой каркас читается вопросом о факте (сторона, где «да/нет» не требуется). Прогон GEN-4c: 136
+  каркасов записанных ответов — ни одного ложного «да/нет» или «факт» (отчёт GEN-4c).
 
 ---
 
