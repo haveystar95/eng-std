@@ -3113,8 +3113,8 @@ components:
       required: [build, prompt_plan, prompt_lesson]
       properties:
         build: { type: string, description: 'The server build (commit), `unknown` when not stamped' }
-        prompt_plan: { type: string, description: 'The plan builder prompt file''s version, e.g. `plan-builder-v2`' }
-        prompt_lesson: { type: string, description: 'The lesson prompt file''s version, e.g. `lesson_day.v4.5`' }
+        prompt_plan: { type: string, description: 'The plan builder prompt file''s version, e.g. `plan-builder-v2.1`' }
+        prompt_lesson: { type: string, description: 'The day''s prompt versions — since GEN-4 its two stages joined by «+», `lesson_skeleton.v1+lesson_dialogue.v1`; a day written before, the one lesson prompt, e.g. `lesson_day.v4.10`' }
 
     PlanBuild:
       type: object
@@ -3577,7 +3577,7 @@ components:
       type: object
       description: >-
         A phrase of the phrases tab — the phrase, how it reads, its translation and its voice (the learner's of
-        the scene, DAY-UI-3). A phrase is a frame (`lesson_day.v4.5`): `text`, `translation` and `pronunciation`
+        the scene, DAY-UI-3). A phrase is a frame (GEN-2a): `text`, `translation` and `pronunciation`
         are the frame said with the filler of its first dialogue line; `frame` is the frame itself (GEN-2a,
         additive — the client does not read it yet).
       required: [ref, text, translation, pronunciation, audio_url, state, frame, source, scene]
@@ -3600,7 +3600,7 @@ components:
 
     PlanWindowFrame:
       type: object
-      description: 'The frame behind a phrase (`lesson_day.v4.5`, GEN-2a): the pattern with its `___`, in both languages and read aloud, its kind, and its slot — null for a frame without one.'
+      description: 'The frame behind a phrase (GEN-2a): the pattern with its `___`, in both languages and read aloud, its kind, and its slot — null for a frame without one.'
       required: [target, native, pronunciation, kind, slot]
       properties:
         target: { type: string, description: '«It hurts in his ___.»' }
@@ -3632,7 +3632,7 @@ components:
         One exchange of the dialogue tab. Both bubbles carry their voice (DAY-UI-3: every line is
         voiced, the partner's in the partner's voice, the learner's in the learner's — two voices of
         different gender); the learner's also carries its state. The learner's line is the server's
-        assembly of its frame and filler (`lesson_day.v4.5`). `kind`, `phrase_ref` and `filler` are
+        assembly of its frame and filler (GEN-2a). `kind`, `phrase_ref` and `filler` are
         additive (GEN-2a) — the client does not read them yet.
       required: [step, kind, partner, learner, source, scene]
       properties:
@@ -3772,8 +3772,8 @@ components:
         listening:
           type: array
           description: >-
-            The questions about the day's whole visit, heard once without text (`lesson_day.v4.5`, LISTENING):
-            in the learner's language, three options, the right one marked where the server shuffled it. Empty
+            The questions about the day's whole visit, heard once without text (GEN-2a, LISTENING):
+            in the learner's language, three options, the right one marked where the server put it when it built the day (GEN-4). Empty
             on a review and the rehearsal. Additive (GEN-2a) — the client does not read it yet.
           items:
             type: object

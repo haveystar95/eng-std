@@ -66,25 +66,32 @@ their own columns instead (`saveScene` — never the photo columns, `attachScene
 11.09 a lesson job and a photo job put their pre-start snapshot back over a started plan, and the
 plan fell to `ready` with no start date and day 1 locked again (`docs/research/plan-api-fix-1/`).
 | `DayCard` | answered once; what may be written is the KIND's (`CardKind::allows`, наряд SESSION-1a: a judged card only ever takes `skipped` from the client, a walkthrough is walked or skipped, the voice never fails, a choice takes all four); a first failure of a choice requeues, a second returns the unit tomorrow — and a `day` unit (the listening) returns never; a skip has no consequence; the judge writes its own pass (`judge()`: attempts up, the ruling and what was heard into `response`, the result only when accepted) |
-| `PlanTerm` | written once from the served lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms; a phrase keeps its frame (`frame_*`, `slot`) and reads as the frame said with its dialogue filler, a word keeps `used_in`; a P2R `--apply` rewrites the texts by ref, never the row or its photo |
+| `PlanTerm` | written once from the served lesson (`fromLesson`), refs `v*`/`p*` are how cards point at terms; a phrase keeps its frame (`frame_*`, `slot`) and reads as the frame said with its dialogue filler, a word keeps `used_in` |
 | `Conversation` (+ `ConversationTurn`) | the talk with the agent (наряд CONV-1): the journal is APPEND-ONLY and numbered by the aggregate (a client cannot insert, reorder or rewrite a line it is shown); a move is taken only when the state IS `your_turn` (a second `POST …/turn` in flight does not buy a second reply); an ended talk takes nothing more — «Ещё раз» is a NEW talk (`replayed`), never this one reopened; checkpoints walk FORWARD and a scene marked done stays done; the money — model plus voice — is added up in one place so the cap is asked of one number. Turns of the scene and money are two budgets: a rescue spends the money and none of the turns. Since CONV-2: whether a talk walks the stage is the talk's own answer (`passesStage()` — ended of its own, never `replayed`), its minutes are the time it was talked (`activeSeconds()`: gaps between lines, each up to `MAX_GAP_SECONDS` = 60), and the line a rescue asks to hear again is `lineBeforeLastMove()` |
 | `PlanEvent` | a journal line, written once and never changed (no mutator; `PlanEventRepository` has `append`/`has`/`forPlan` only); a day event names its day; a rebuild carries `{from, to}` with `to < from`. Written inside the transaction of the handler whose change it records (`BuildPlanHandler`, `BuildLessonHandler`, `CloseDayHandler`, `ReschedulePlanHandler`) or by the tick; the letter is queued after the commit |
 
-The lesson (`Domain/Lesson`, `lesson_day.v4.10`; the rollback `v4.7` answers the same schema): `Lesson` — exchanges (`answer`/`ask`/`rescue`, each with its
-`check`), phrases as frames (`Phrase` + `Slot` + `Filler`), the listening (`ListeningQuestion`, the lesson's own,
-not an exchange's), vocabulary with `used_in`; `LessonParser` (shape only — and three things put right: a frame and a filler's native text lose the space before the mark they end with (доработка GEN-3, BACK-TAILS-1 §3.1); a text ending in two full stops keeps one (CONV-1); and — LANG-1, DECISIONS п. 437 — in a READING (`pronunciation_native` of a frame, a filler, a word, a learner line) every run of letters that holds a Cyrillic letter has its Latin look-alikes put back into Cyrillic, and a Latin acute vowel becomes the Cyrillic vowel with U+0301: «телефoн» → «телефон», «лекáжа» → «лека́жа»; a run with no Cyrillic, and letters of other writings, stay what `pronunciation.foreign_script` finds); `LessonAssembly` — the SERVED lesson
-every reader deals from: the filler of a learner line is the one the server finds in its text among its frame's
-fillers, the closing mark aside (`FrameText`), the `in_dialogue` marks are what the lines say, the speaking key comes
-from the frame (`SpeakingKey`, the target's pack says which words are content) — the model's `filler`, marks and key
-are read by nobody but `filler.one_in_dialogue` (the marks); the right answers of checks and listening stand at seeded
-shuffled places; `LessonCard` — one repairable card by its address (P2R: a frame, a whole exchange — with the frame
-its line stands on, together or not at all — a learner line, a check, a listening question); `LessonCardContext` — the
-part of the lesson a repair of that card is shown, as the server reads it; `NativeSeams` — every native sentence a
-frame makes with its fillers (what the seam judge reads). A scene keeps the model's answer (stored, validated,
-repaired) and serves the assembled lesson in the plan's target language. The story so far (GEN-3): `EarlierDay` / `EarlierDays` —
-the scene days before this one whose lesson is written, read from their served lessons (`Plan::earlierDaysOf`), the words and
-frames they taught (what `StoryRules` holds a new day to); `LessonRoles` — the plan's learner role and the scene's partner role,
-written over the model's (`Lesson::withRoles`) after the answer and after every repair.
+The day (`Domain/Lesson`, наряд GEN-4): built in TWO STAGES from the scene's survival set (`Domain/Blueprint/SurvivalSet`
+— `must_say` items `{text, slot}`, `must_understand` items). `Skeleton` — frames (`SkeletonFrame`: a `Phrase` with the
+`must_say` items it serves), partner lines (`PartnerLine`: the item it delivers, its kind, the items it `pairs_with`) and the
+vocabulary; `dialogueCount()` is DIALOGUE_COUNT — the partner lines, the frames no line pairs with, and the rescue.
+`Dialogue` — the exchanges (`DialogueExchange`: an `Exchange` with the partner line it carries and the item it delivers)
+and the listening. `LessonParser` reads both (and a card of either, and a stored `Lesson`) — shape only, and three things put
+right: a frame and a filler's native text lose the space before the mark they end with (доработка GEN-3, BACK-TAILS-1
+§3.1); a text ending in two full stops keeps one (CONV-1); a READING has its Latin look-alikes and the letters of other
+Cyrillic alphabets put back (`ReadingLetters`, LANG-1, LANG-1b §10.3). `OptionShuffle` puts the right option of every
+check and listening question where the scene's seed says, at the build. `LessonAssembler` puts the two stages together
+into the `Lesson` every reader deals from — the shape a scene has always stored: `in_dialogue` by what the learner's lines
+say, `used_in` of a partner line as the message that says it, a full stop on a frame or a line without a mark, the stages'
+own fields left out. `LessonCard` — one repairable card by its address (`lesson_card_repair.v1.5`: of the skeleton a frame,
+a partner line, a word; of the dialogue an exchange, a check, a listening question): read out of its stage and put back
+with what the server holds of it kept — a repaired frame says the dialogue's lines on it anew, a repaired partner line
+the A line of its exchange. `LessonAssembly` — the SERVED lesson at read: the filler of a learner line is the one the
+server finds in its text among its frame's fillers, the closing mark aside (`FrameText`), the `in_dialogue` marks are what
+the lines say, the speaking key comes from the frame (`SpeakingKey`); options are not moved any more. `NativeSeams` —
+every native sentence a frame makes with its fillers (what the seam judge reads). The story so far (GEN-3): `EarlierDay` /
+`EarlierDays` — the scene days before this one whose lesson is written, read from their served lessons
+(`Plan::earlierDaysOf`); `LessonRoles` — the plan's learner role and the scene's partner role, written over the model's
+(`Lesson::withRoles`).
 
 Pure services: `PlanCalendar` (layout 1…10, days until the event), `DayAssembler` + the stages of the
 REGISTRY OF DAY TRAINERS (наряды SESSION-1a, CONV-1: `WordsStage`, `PhrasesStage`, `DialogueStage`, `ListenStage`,
@@ -121,21 +128,21 @@ articles left out by the pack; the model is not asked),
 — and the hint: the whole sentence of the target just opened, else the first not said, with its exact line after an
 almost; on the wire as the lesson has it, `hints.sentence`, FIX-4b §2), `ConversationTargets` (CONV-2: the up to seven phrases a talk is FOR, over its checkpoints in order — one list for the entry card, the ribbon's strip, the summary and — BACK-TAILS-2 §4 — the talk's row of the day window), `RoleLines` (CONV-2: the role's reply that says a learner line, or a rescue that says the rescued line again; BACK-TAILS-2: a sentence that says the learner's last move back — the guards `ConversationMoves` asks once more on, cuts, and replaces with the pack's neutral line), `IntentClause` (the line as the clause after «Скажи, что …» — the task of «Говорю сам», `task_clause_native`; the talk's `hints.native` of the build (20) is gone, ACC-1 §5), `InstrumentalRole` (the role in the instrumental for «Поговори с врачом», ru/uk, null where the ending hangs on stress),
 `DayHighlights` («Что было хорошо», кадр 37-13), `BlueprintChecker` (the plan
-checks in observe/drop/gate), `LessonValidator` + `Check/Lesson/*Rules` (the lesson's codes, each with its
-card's address, `LessonCodes`), `Check/Language` — the rules' languages: `LanguagePack` (one language's words, marks
-and patterns from `config/lesson/lang/<code>.php`; a key it lacks is a check skipped, `PackSkips`, never a finding).
+checks in observe/drop/gate), `SkeletonCheck` + `DialogueCheck` (наряд GEN-4: the day's two stages, a named rule a class — `Check/Skeleton/Rule`,
+`Check/Dialogue/Rule` —, its code the finding's name in a repair, fatal or a warning by the rule; `LessonCodes` — every code;
+`StageText`, `TermForms`, `LearnerLine` — how they read text), `Check/Language` — the rules' languages: `LanguagePack` (one
+language's words, marks and patterns from `config/lesson/lang/<code>.php`; a rule that needs a key it lacks does not run).
 Since наряд LANG-1 (DECISIONS п. 430) there are TEN packs — en, ru, uk, be, pl, ro, es, it, de, fr — and each writes every
 key the code reads for its side (targets en pl ro es it de fr, natives ru uk be pl ro es it de fr), a rule that is not
-the language's written as a no-op, never null (null is `lang.pack_missing`); the key spec is
+the language's written as a no-op, never null (null would switch the rule off); the key spec is
 `docs/research/lang-1/pack-keys.md`. A pack's words are asked and kept FOLDED (`LanguagePack::normal()`: ß → ss, œ → oe,
 the Romanian cedilla letters with the comma below), and `speech()` hands its lists down in the text's canonical form, so a
 pack is written in the language's own spelling. `LanguagePacks` hands every pack its NEIGHBOURS — each other pack's
 `script_letters` and `common_words` (`asNeighbour()`) — for the translation guard (`ReplyNative`); `talkTitleTemplate()`
 holds a pack's `talk_title_template` to its shape (it throws on a missing field; the pack tests call it — the title itself
 is `NativeStrings::talkTitle`, which reads the key and falls back to English on a broken one);
-`LanguageWords` (the same questions of any language, answered off its pack), `LessonGate` (the twelve fatal codes of `LessonGate::FATAL`, the
-card order a repair takes — a word last —, at most two cards, the `fatal: …` reason), `Words` / `FrameText` / `FrameParts` (the text
-rules the validator and the assembly share — and, since SESSION-1a, the frame without its window: its words, where
+`LanguageWords` (the same questions of any language, answered off its pack), `Words` / `FrameText` / `FrameParts` (the text
+rules the checks and the assembly share — and, since SESSION-1a, the frame without its window: its words, where
 the slot stands), `DayMetricsCalculator`, `NativeStrings` (the server's own strings in the learner's language — ru, uk
 and en; every other native reads them in English, L10N is not LANG-1's — but the talk's title, which for a native with no
 declension here is its pack's `talk_title_template`: «Rozmowa: recepcjonistka i lekarz», «Gespräch: Rezeptionistin und
@@ -166,15 +173,18 @@ TARGET's — the pack's `rescue`, six lines translated into the learner's langua
 `Port/RescueAudioStore` → `Infrastructure/Adapter/DiskRescueAudioStore`, `plan-audio/rescue/` — one file for every plan of
 that target and gender; served by `GET /plans/rescue-audio/{key}`).
 `WordUsage` (the line of the day a word is said in — by the lesson's `used_in` — and its place in it, sheet 23-0e).
-Application: `LessonBuildService` (the lesson call, one retry only for an answer off the schema, the validator's
-findings counted by code, the checks the packs could not run counted as `lang.pack_missing`, the seam judge once after
-the gate; a lesson that failed the gate is asked for anew ONCE in the same build — наряд LANG-1b §1, `lesson.auto_rebuild`), `LessonContexts` (a lesson's validation context — the pair of languages as their packs, by code),
-`LessonGateKeeper` (a fatal finding holds the lesson: P2R for its card, at most two cards, the repaired answer stored
-or the lesson failed with its codes; warnings pass), `LessonSeamJudge` (every native sentence of the day in one call,
-a «no» is `filler.native_seam`) and `LessonCardRepairer` + `ReviseLesson` (P2R: one card repaired by the model for what
-the validator finds at it, shown only the part of the lesson it needs — asked by the gate before a lesson is stored, or
-by the command for a stored lesson, written only on `--apply` and before the day is dealt, the judged seams of frames
-it did not rewrite kept).
+Application: `LessonBuildService` (наряд GEN-4 — the conveyor: skeleton → `SkeletonCheck` → seam judge → the skeleton's
+repairs → dialogue → `DialogueCheck` → shuffle → the dialogue's repairs → `LessonAssembler`; a stage asked once more for a
+fatal finding or an answer off the schema, a second fails the day `fatal: <codes>`; warnings send their card to a repair, two
+a stage, kept only when it brings nothing fatal; every finding counted under its stage's prompt version), `LessonRequests`
+(the day's inputs — the survival set, the learner's words beside the brief, the gender as the profile says it now, the
+roles, `EARLIER_DAYS`), `LessonContexts` (what each stage's check reads: the set, VOCABULARY_COUNT, the pair's packs, the
+learner's gender, the earlier days; the skeleton for the dialogue), `LessonSeamJudge` (the skeleton's native frames with
+their fillers in one call, before the dialogue; a «no» is `filler.native_seam`), `LessonCardRepairer` (one card by the
+model, `lesson_card_repair.v1.5`), `LessonBuildLog` / `LessonBill` (what the build did and what it cost — the calls, the
+attempts, the judgements, the repairs and whether each helped). The plan: `PlanBuildService` (the plan call, its checks,
+one retry for `gate`; then `PlanLineRepairer` — a screen line over its limit shortened by `plan_line_repair.v1`, a call of
+its own, taken only within the limit).
 Application, the day itself (наряд SESSION-1a): `DayDealer` (what a day is dealt from — the scene's served lesson
 and terms, the packs, the scenes the returned units belong to, the Beginner catalogue top-up; the one place that
 decides which scenes a review or a rehearsal covers), `CardViews` (what a card gets when it is READ, not when it is
@@ -214,7 +224,7 @@ reads plan tables.
 
 | Module | How | Why |
 |---|---|---|
-| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout — 180 s for the plan, the lesson, P2R and the seam judge since GEN-3, the vendor's `VendorCall` connects in 10 s, retries only an ANSWERED 408/409/429/5xx and journals every call in `model_calls` before it is made — and, since SESSION-1a, its own retry count: the slot judge asks for exactly ONE attempt, every other caller keeps the default); `ImageSearchPort`; `SpeechSynthesizerPort` | the plan's model calls — the plan, the lesson, the P2R repair, the seam judge, the slot judge — the photos (`searchMany`), the day's voice (`speakLines`, `balance`) |
+| `Generation` | `ContentModelCatalog` → `ContentModelPort` (purpose `plan`, own timeout — 180 s for the plan, the skeleton, the dialogue, a card repair and the seam judge since GEN-3 (30 s for a plan line repair), the model and reasoning effort by purpose since GEN-4, the vendor's `VendorCall` connects in 10 s, retries only an ANSWERED 408/409/429/5xx and journals every call in `model_calls` before it is made — and, since SESSION-1a, its own retry count: the slot judge asks for exactly ONE attempt, every other caller keeps the default); `ImageSearchPort`; `SpeechSynthesizerPort` | the plan's model calls — the plan and its line repairs, the day's two stages, a card repair, the seam judge, the slot judge, the talk — the photos (`searchMany`), the day's voice (`speakLines`, `balance`) |
 | `Identity` | `UserReader`; `GetPushTokens` + `RemovePushToken`; `GetUsualVisitTime` | the learner's timezone, native language and gender (the lesson's LEARNER_GENDER); the device addresses a letter goes to (and forgetting a dead one); when the daily reminder is due |
 | `Vocabulary` | `ImportTerm`; `NativeDistractorReader` | a closed day's words and phrases become terms (dedup, provenance); catalogue translations as wrong options for a thin Beginner choice |
 | `Collections` | `CreateGeneratedCollection` (origin `plan`), `AddTermToCollection`; `DeleteCollection` | the plan's collection; its tombstone when the plan is dropped by the GEN-2a purge migration |
@@ -224,7 +234,7 @@ reads plan tables.
 
 | Port | Implementations |
 |---|---|
-| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas; the plan, the lesson, the P2R card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v3.4` since ACC-1 §6, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; the role is told its scene only, its targets by the talk's short ids `T1…T7`, the learner's earlier lines as facts (`EARLIER`) and — on a scene's goodbye — `SCENE_END`; it answers its line, `understood`, `off_topic`, `opens` and `end` — which constructions were said and when a scene is over are not its to say; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn, and every refused attempt is journaled in `conversation_rejections` with its `model_calls` id) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
+| `PlanModelPort` | `ContentModelPlanBuilder` (over the catalogue, prompt files + strict schemas, a model and a reasoning effort per purpose — `plan.model.purposes`, journal purpose the same; the plan, a plan line repair, the skeleton, the dialogue, a card repair, the seam judge, — CONV-1 — `conversationTurn` (`conversation_agent.v3.4` since ACC-1 §6, `plan.conversation.model`, ONE attempt, its own 20 s, journal purpose `conversation`; the role is told its scene only, its targets by the talk's short ids `T1…T7`, the learner's earlier lines as facts (`EARLIER`) and — on a scene's goodbye — `SCENE_END`; it answers its line, `understood`, `off_topic`, `opens` and `end` — which constructions were said and when a scene is over are not its to say; a move a guard refused is asked once more with `REDO` — the second call is billed to the same turn, and every refused attempt is journaled in `conversation_rejections` with its `model_calls` id) and — SESSION-1a — `judgeSlot`: the judge model, `plan.slot_judge.timeout`, ONE attempt through `ContentModelCatalog::get(retries: 1)`, the `plan.slot_judge` log line with its version, tokens, price and latency), `FakePlanModel` (tests / `PLAN_MODEL_DRIVER=fake`; its slot judge accepts by default and its closure may throw, to play the model's silence) |
 | `PlanDispatcher` | `QueuedPlanDispatcher` (`BuildPlanJob`, `BuildLessonJob`, `AttachPlanImagesJob` — the route's photos, `IllustrateSceneJob` — a day's photos after its lesson, `VoiceSceneJob` — a scene's voice: waits out the concurrency limit, fails with the vendor's code on a refusal of the account, stops at the fuse) |
 | `LearnerCalendar` | `IdentityLearnerCalendar` |
 | `NextDayAccess` | `EveryNextDayAllowed` — may the learner have the next day; asked by `CloseDayHandler` before the next day's lesson is queued (GEN-3 §11). Always yes until PAY-1 — the lesson built on payment is its body; the days' paywall itself came with ACC-1 (`LearnerAccess` below) |
@@ -255,38 +265,32 @@ reads plan tables.
 ## Notes
 
 - The prompts live in `Infrastructure/Prompt/current/` and only there (наряд PROMPTS-1): one file per prompt, named as the
-  prompt and its version — `plan-builder-v2`, `lesson_day.v4.10`, `lesson_card_repair.v1.4`, `lesson_seam_judge.v1.1`,
-  `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES` is the one map from a prompt to its file;
-  `docs/prompts/REGISTRY.md` holds each one's name, version, path and sha256, and `PromptRegistryTest` holds the directory
-  and the registry to each other. The files are FROZEN; the version is the file name. A new version replaces the old file in
-  the same commit — no rollback file lies beside the current one; the history is `git log --follow` on the path, and what
-  each version changed is in DECISIONS and the reports of the наряды. The
-  loader cuts the lesson's `TEST INPUT` section and sends the real inputs as the user message — the prompt is the system
-  message, byte for byte the same on every call, so the vendor's cache holds it (GEN-3); the inputs are built by one
-  `LessonRequests` (roles, `EARLIER_DAYS`) for the build and for a repair alike; the repair wrapper
-  quotes the lesson prompt's own sections for the card's kind (a heading the lesson prompt lacks is a broken pair and fails
-  the call), is shown only the part of the lesson the card needs, an exchange's `NEIGHBOURS`, and the earlier days' frames and
-  words, and is told every finding at its card but, for a frame, that its native pattern is another frame's
-  (`LessonCard::cites` — P2R v1.3: a native frame is a translation); its schema
-  is one per kind, with no address in it; the slot judge's user message is one line per INPUT of its prompt, values as they are — `HEARD` is not
-  collapsed, because the recognition noise the prompt forgives can only be forgiven if it is seen.
-- The lesson is stored as the model wrote it (`plan_scenes.lesson_json`), re-parsed on read and served assembled.
-- Every plan check ships in `observe`; modes are flipped in `config/plan.php`, never in code. The lesson validator
-  has no modes: it counts (`checks_json` of the scene, `plan_check_counters` by code, `lang.pack_missing` for a check
-  its languages' packs cannot run); twelve codes are fatal by the architect's decisions after GEN-2a, in GEN-2b, GEN-3,
-  BACK-TAILS-1, FIX-3 and LANG-1b (an option of a check copied out of the partner's line is a WARNING since наряд LANG-1b §1,
-  `options.partner_fragment`; a word defined in another language than the target is FATAL since its §10.2,
-  `vocab.definition_language`)
-  (`LessonGate`; an abbreviation as a word of the day is a warning — whether the learner's language has an everyday word for
-  it is the model's to judge) — a lesson with them is never stored before P2R repairs their card (at most two a day; a
-  word a repair REPLACED is checked again by the server and refused when it is still a known word, a second id of a word or not
-  where `used_in` says; a word the repair kept, its definition written anew, is the validator's alone); a lesson still held is asked for anew ONCE in the same build (наряд LANG-1b §1), and only then it
-  fails `fatal: <codes>`. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
+  prompt and its version — `plan-builder-v2.1`, `plan_line_repair.v1`, `lesson_skeleton.v1`, `lesson_dialogue.v1`,
+  `lesson_card_repair.v1.5`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES`
+  is the one map from a prompt to its file; `docs/prompts/REGISTRY.md` holds each one's name, version, path and sha256, and
+  `PromptRegistryTest` holds the directory and the registry to each other. The files are FROZEN; the version is the file
+  name. A new version replaces the old file in the same commit — no rollback file lies beside the current one; the history
+  is `git log --follow` on the path, and what each version changed is in DECISIONS and the reports of the наряды. The
+  loader cuts a prompt's `TEST INPUT` section and sends the real inputs as the user message, in the form of that section
+  (the skeleton's byte for byte — `LessonRequestPromptTest`) — the prompt is the system message, byte for byte the same on
+  every call, so the vendor's cache holds it (GEN-3); the repair wrapper quotes the sections of its card's stage
+  (`PlanPromptFiles::REPAIR_SECTIONS`; a heading the stage's prompt lacks is a broken pair and fails the call) and is shown
+  the card, the skeleton, the dialogue for a card of the dialogue, an exchange's `NEIGHBOURS`, the earlier days' frames and
+  words; its schema is one per kind, with no address in it; the slot judge's user message is one line per INPUT of its
+  prompt, values as they are — `HEARD` is not collapsed, because the recognition noise the prompt forgives can only be
+  forgiven if it is seen.
+- The day's lesson is stored as the two stages assembled it (`plan_scenes.lesson_json`), the skeleton beside it
+  (`skeleton_json`), re-parsed on read and served assembled; a lesson written before GEN-4 is the one call's answer as it was.
+- Every plan check ships in `observe` but the shape of the survival set (`survival_set`, `gate`); modes are flipped in
+  `config/plan.php`, never in code. The day's checks have no modes: a rule is fatal or a warning by itself
+  (`plan-v2.md` §4); they count (`checks_json` of the scene, `plan_check_counters` by code under the stage's prompt version).
+  A fatal finding asks its stage once more, and a second fails the day `fatal: <codes>`; a warning sends its card to a
+  repair (two a stage), kept only when it brings nothing fatal; no fatal finding is ever stored. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
   extension rebuilds it. Every answer of the plan's model is read without the characters that print nothing
   (`Domain/Service/ModelText`, at `ContentModelPlanBuilder`; `plan:clean-text` for what was stored before, наряд LANG-1b §6 —
   and, since its last step, the readings stored in `plan_terms` and the dealt cards, by the parser's own rule,
-  `Domain/Service/ReadingLetters`). A lesson that passed is read once by the seam judge (`Application/Service/LessonSeamJudge`,
-  `filler.native_seam`, a warning; `judge.unavailable` when it does not answer). The SLOT judge counts in the same
+  `Domain/Service/ReadingLetters`). The skeleton is read by the seam judge before the dialogue (`Application/Service/LessonSeamJudge`,
+  `filler.native_seam`, a warning; `judge.unavailable` when it does not answer), and the frames a repair changed once more. The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
   conversation's guards count there too, under `conversation_agent.v3.4` (`conversation.learner_line`, `…_cut`, `…_kept`,
@@ -300,8 +304,7 @@ reads plan tables.
 - The day's build log (BACK-TAILS-2 §1, port `DayBuildLog`, adapter `LogDayBuildLog`): a scene day whose «Фразы» the
   ladder could not fit under their ceiling writes `plan.phrases_over_ceiling` (warning) with the rungs and the frames —
   the stop signal, not a failure; the day is dealt anyway.
-- QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN), `plan:repair-card`
-  (P2R by hand — Presentation/Console).
+- QA: `plan:shift-day` (the simulator's calendar), `plan:seed-load` (a load for EXPLAIN).
 - Ops: `plan:reconcile-talks {--dry}` (CONV-2) — writes the sixth-stage passage of every day whose talk ended of its own
   before `plan_stage_passages` existed (the first such talk of the day); idempotent, prints «было / стало». Backup first.
 - Ops: `plan:reconcile-scenes {--apply}` (BACK-TAILS-2 §6) — renames the scenes of the «Вспомнить» sheets dealt before the
