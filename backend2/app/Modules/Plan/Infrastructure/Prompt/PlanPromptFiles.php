@@ -49,8 +49,8 @@ final class PlanPromptFiles
     public const FILES = [
         'plan' => 'plan-builder-v2.1.md',
         'plan_line_repair' => 'plan_line_repair.v1.md',
-        'skeleton' => 'lesson_skeleton.v1.md',
-        'dialogue' => 'lesson_dialogue.v1.md',
+        'skeleton' => 'lesson_skeleton.v1.1.md',
+        'dialogue' => 'lesson_dialogue.v1.1.md',
         'repair' => 'lesson_card_repair.v1.5.md',
         'seam_judge' => 'lesson_seam_judge.v1.1.md',
         'slot_judge' => 'slot_judge.v3.md',

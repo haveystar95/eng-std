@@ -38,14 +38,14 @@ use Throwable;
  *   skeleton → SkeletonCheck → seam judge → repair of the skeleton → dialogue → DialogueCheck → shuffle of the options →
  *   repair of the dialogue → the lesson assembled.
  *
- *  - THE SKELETON (`lesson_skeleton.v1`) turns the scene's survival set into frames, partner lines and words. {@see SkeletonCheck}
+ *  - THE SKELETON (`lesson_skeleton.v1.1`) turns the scene's survival set into frames, partner lines and words. {@see SkeletonCheck}
  *    reads it; a FATAL finding asks the skeleton once more with the findings quoted (`PREVIOUS_ATTEMPT_REJECTED_FOR`), an
  *    answer off the schema the same — one repeat a stage, no more; still fatal, the day fails with its codes.
  *  - THE SEAM JUDGE reads the skeleton's native frames said with their fillers, before the dialogue exists.
  *  - THE SKELETON'S REPAIRS: the cards its warnings — and the seam judge's «does not read» — stand at, at most
  *    {@see REPAIR_CARDS}, frames first ({@see LessonCard::SKELETON_KINDS}); each repair is checked again and kept only if it
  *    brings no fatal finding. The frames a repair changed are read by the seam judge once more.
- *  - THE DIALOGUE (`lesson_dialogue.v1`) puts the repaired skeleton into DIALOGUE_COUNT exchanges; {@see DialogueCheck}, one
+ *  - THE DIALOGUE (`lesson_dialogue.v1.1`) puts the repaired skeleton into DIALOGUE_COUNT exchanges; {@see DialogueCheck}, one
  *    repeat for a fatal finding, as the skeleton.
  *  - THE SHUFFLE: the server puts the right option of every check and every listening question where the scene's seed says
  *    ({@see OptionShuffle}) — the model's index says only which option is right.
@@ -119,7 +119,7 @@ final readonly class LessonBuildService
             $bill->stage($reply);
             $log->call('skeleton', $attempt, $reply);
             try {
-                $skeleton = $this->parser->skeleton($reply->payload);
+                $skeleton = $this->parser->forNative($request->nativeLangCode)->skeleton($reply->payload);
             } catch (ModelAnswerOffSchema $e) {
                 $log->attempt('skeleton', $attempt, [], [], $e->getMessage());
                 [$violations, $found, $failed] = [[$e->getMessage()], [], $e->getMessage()];
@@ -132,7 +132,7 @@ final readonly class LessonBuildService
                 return [$skeleton, $found, null];
             }
         }
-        $this->counters->recordCodes($this->model->skeletonPromptVersion(), self::codes(LessonCodes::fatalOf($found)), CheckAction::Failed);
+        $this->counters->recordCodes($this->model->skeletonPromptVersion(), self::codes(self::fatalOf($found)), CheckAction::Failed);
 
         return [null, $found, $failed];
     }
@@ -152,7 +152,7 @@ final readonly class LessonBuildService
             $bill->stage($reply);
             $log->call('dialogue', $attempt, $reply);
             try {
-                $dialogue = $this->parser->dialogue($reply->payload);
+                $dialogue = $this->parser->forNative($request->lesson->nativeLangCode)->dialogue($reply->payload);
             } catch (ModelAnswerOffSchema $e) {
                 $log->attempt('dialogue', $attempt, [], [], $e->getMessage());
                 [$violations, $found, $failed] = [[$e->getMessage()], [], $e->getMessage()];
@@ -165,7 +165,7 @@ final readonly class LessonBuildService
                 return [$dialogue, $found, null];
             }
         }
-        $this->counters->recordCodes($this->model->dialoguePromptVersion(), self::codes(LessonCodes::fatalOf($found)), CheckAction::Failed);
+        $this->counters->recordCodes($this->model->dialoguePromptVersion(), self::codes(self::fatalOf($found)), CheckAction::Failed);
 
         return [null, $found, $failed];
     }
@@ -180,7 +180,7 @@ final readonly class LessonBuildService
     private function counted(string $version, array $found, string $stage, int $attempt, LessonBuildLog $log): array
     {
         $this->counters->recordCodes($version, self::codes($found));
-        $fatal = LessonCodes::fatalOf($found);
+        $fatal = self::fatalOf($found);
         $log->attempt($stage, $attempt, $found, $fatal);
         if ($fatal === []) {
             return [[], null];
@@ -270,7 +270,7 @@ final readonly class LessonBuildService
 
             return false;
         }
-        $broke = self::codes(LessonCodes::fatalOf($after));
+        $broke = self::codes(self::fatalOf($after));
         if ($broke !== []) {
             $log->repair($stage, $card->address, $card->kind, $sentFor, $outcome->status, false, $broke, $sentFor, false, 'the repair brings a fatal finding');
 
@@ -327,8 +327,21 @@ final readonly class LessonBuildService
     }
 
     /**
-     * The cards the non-fatal findings stand at, each once, in the order of their stage's kinds, then by address; at most
-     * {@see REPAIR_CARDS}. A finding about a stage as a whole stands at no card.
+     * The findings that ask a stage once more: the fatal ones, and those of a budgeted code the stage's repairs cannot take
+     * ({@see LessonCodes::overBudget()}).
+     *
+     * @param  list<LessonViolation>  $found
+     * @return list<LessonViolation>
+     */
+    private static function fatalOf(array $found): array
+    {
+        return [...LessonCodes::fatalOf($found), ...LessonCodes::overBudget($found, self::REPAIR_CARDS)];
+    }
+
+    /**
+     * The cards the non-fatal findings stand at, each once: first the cards of a budgeted code ({@see LessonCodes::BUDGETED}),
+     * then in the order of their stage's kinds, then by address; at most {@see REPAIR_CARDS}. A finding about a stage as a
+     * whole stands at no card.
      *
      * @param  list<LessonViolation>  $findings
      * @param  list<string>  $kinds
@@ -337,14 +350,18 @@ final readonly class LessonBuildService
     private static function cards(array $findings, array $kinds): array
     {
         $cards = [];
+        $first = [];
         foreach ($findings as $finding) {
             $card = LessonCodes::isFatal($finding->code) ? null : LessonCard::at($finding->address);
             if ($card !== null && in_array($card->kind, $kinds, true)) {
                 $cards[$card->address] = $card;
+                $first[$card->address] = ($first[$card->address] ?? false) || in_array($finding->code, LessonCodes::BUDGETED, true);
             }
         }
         $cards = array_values($cards);
-        usort($cards, static fn (LessonCard $a, LessonCard $b): int => array_search($a->kind, $kinds, true) <=> array_search($b->kind, $kinds, true) ?: strnatcmp($a->address, $b->address));
+        usort($cards, static fn (LessonCard $a, LessonCard $b): int => $first[$b->address] <=> $first[$a->address]
+            ?: array_search($a->kind, $kinds, true) <=> array_search($b->kind, $kinds, true)
+            ?: strnatcmp($a->address, $b->address));
 
         return array_slice($cards, 0, self::REPAIR_CARDS);
     }

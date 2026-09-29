@@ -15,10 +15,13 @@ namespace App\Modules\Plan\Domain\Service;
  *   with its acute becomes the Cyrillic vowel with the combining acute U+0301 ({@see self::CYRILLIC_STRESSED}): «до лекáжа» →
  *   «до лека́жа», «___ ми пасуe» → «___ ми пасуе», «нюмэро дё телефoн» → «нюмэро дё телефон» (наряд LANG-1);
  * - a letter of ANOTHER Cyrillic alphabet becomes the letter of the readings it stands for ({@see self::CYRILLIC_ALIENS},
- *   наряд LANG-1b §10.3): «а аҗута́» → «а ажута́» — the owner's ru→ro day read «a ajuta» with the Tatar «җ» three times.
+ *   наряд LANG-1b §10.3): «а аҗута́» → «а ажута́» — the owner's ru→ro day read «a ajuta» with the Tatar «җ» three times;
+ * - with the learner's language named (the parser, наряд GEN-4b §3), a Latin «ú» / «í» becomes that alphabet's stressed /i/ —
+ *   «и́» in Russian, «і́» in Ukrainian and Belarusian ({@see self::CYRILLIC_STRESSED_I}): «а сэ нумú» → «а сэ нуми́».
+ *   `plan:clean-text`, which reads stored rows without their plan, mends only what every Cyrillic reading shares.
  *
- * Why a machine mends them rather than a repair: `pronunciation.foreign_script` is FATAL (наряд BACK-TAILS-1 §3.2), and these
- * are not letters of another writing — they are the same letter from the other table, or a letter of a sister alphabet drawn
+ * Why a machine mends them rather than a repair: a repair is a paid call, two a stage, and `pronunciation.foreign_script` sends
+ * its cards there first (a warning since GEN-4b §3; fatal beyond the stage's repairs) — and these are not letters of another writing — they are the same letter from the other table, or a letter of a sister alphabet drawn
  * almost as the learner reads it; only the code point is wrong. The twins were every one of the seven `foreign_script`
  * findings of the LANG-1 scouting days and four of the eleven of the ru→en days replayed (`docs/research/lang-1/baseline.md`);
  * the Tatar «җ» is Cyrillic, so `foreign_script` let it through and only the warning `pronunciation.script` counted it.
@@ -62,14 +65,31 @@ final class ReadingLetters
         'Á' => "А\u{0301}", 'É' => "Е\u{0301}", 'Ó' => "О\u{0301}", 'Ý' => "У\u{0301}",
     ];
 
-    /** The reading with its Cyrillic words in the letters of the readings; nothing else of it changes. */
-    public static function mended(string $reading): string
+    /**
+     * THE STRESSED «I» OF THE LEARNER'S OWN ALPHABET (наряд GEN-4b §3): a Latin «ú» or «í» with its acute inside a Cyrillic
+     * reading stands for the vowel that reading writes as /i/ — «и́» for a Russian learner, «і́» for a Ukrainian or a
+     * Belarusian one (Belarusian has no «и»). Which one depends on the learner's language, so it is read only when the
+     * caller names it: the e2e day of GEN-4 failed on «а сэ нумú» (Romanian «a se numi», read «а сэ нуми́»). Letters of other
+     * writings — Hebrew, Arabic, Devanagari — are no twins and stay findings for the repair.
+     */
+    private const CYRILLIC_STRESSED_I = [
+        'ru' => ['ú' => "и\u{0301}", 'í' => "и\u{0301}", 'Ú' => "И\u{0301}", 'Í' => "И\u{0301}"],
+        'uk' => ['ú' => "і\u{0301}", 'í' => "і\u{0301}", 'Ú' => "І\u{0301}", 'Í' => "І\u{0301}"],
+        'be' => ['ú' => "і\u{0301}", 'í' => "і\u{0301}", 'Ú' => "І\u{0301}", 'Í' => "І\u{0301}"],
+    ];
+
+    /**
+     * The reading with its Cyrillic words in the letters of the readings; nothing else of it changes. `$native` — the
+     * learner's language code, when known: its own twins are read too ({@see self::CYRILLIC_STRESSED_I}); without it only
+     * the twins every Cyrillic reading shares.
+     */
+    public static function mended(string $reading, ?string $native = null): string
     {
+        $table = (self::CYRILLIC_STRESSED_I[$native ?? ''] ?? []) + self::CYRILLIC_STRESSED + self::CYRILLIC_TWINS + self::CYRILLIC_ALIENS;
+
         return preg_replace_callback(
             '/[\p{L}\p{M}]+/u',
-            static fn (array $run): string => preg_match('/\p{Cyrillic}/u', $run[0]) === 1
-                ? strtr($run[0], self::CYRILLIC_STRESSED + self::CYRILLIC_TWINS + self::CYRILLIC_ALIENS)
-                : $run[0],
+            static fn (array $run): string => preg_match('/\p{Cyrillic}/u', $run[0]) === 1 ? strtr($run[0], $table) : $run[0],
             $reading,
         ) ?? $reading;
     }

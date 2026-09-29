@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * ONE FRAME OF THE SKELETON (`lesson_skeleton.v1`, FRAMES; наряд GEN-4): the frame the lesson knows ({@see Phrase} — its
+ * ONE FRAME OF THE SKELETON (`lesson_skeleton.v1.1`, FRAMES; наряд GEN-4): the frame the lesson knows ({@see Phrase} — its
  * pattern in both languages, its reading, its slot with 2–3 fillers) and the `must_say` numbers of the survival set it
  * serves — normally one, two when two items came out as one pattern. The numbers are the skeleton's own: the lesson the
  * learner gets carries the frame without them.

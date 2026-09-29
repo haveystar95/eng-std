@@ -26,10 +26,10 @@ interface PlanModelPort
     /** ONE screen line of the plan, shortened under its limit (`plan_line_repair.v1`, наряд GEN-4): `{line}`. */
     public function repairPlanLine(PlanLineRepairRequest $request): ModelReply;
 
-    /** The day's first stage (`lesson_skeleton.v1`): frames, partner lines and vocabulary from the scene's survival set. */
+    /** The day's first stage (`lesson_skeleton.v1.1`): frames, partner lines and vocabulary from the scene's survival set. */
     public function buildSkeleton(LessonRequest $request): ModelReply;
 
-    /** The day's second stage (`lesson_dialogue.v1`): the skeleton's frames and lines put into DIALOGUE_COUNT exchanges. */
+    /** The day's second stage (`lesson_dialogue.v1.1`): the skeleton's frames and lines put into DIALOGUE_COUNT exchanges. */
     public function buildDialogue(DialogueRequest $request): ModelReply;
 
     /**
@@ -66,7 +66,7 @@ interface PlanModelPort
 
     public function dialoguePromptVersion(): string;
 
-    /** The version a day's lesson is stamped with: its two stages', «lesson_skeleton.v1+lesson_dialogue.v1». */
+    /** The version a day's lesson is stamped with: its two stages', «lesson_skeleton.v1.1+lesson_dialogue.v1.1». */
     public function lessonPromptVersion(): string;
 
     public function repairPromptVersion(): string;

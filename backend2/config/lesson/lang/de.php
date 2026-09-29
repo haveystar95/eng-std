@@ -251,6 +251,13 @@ return [
         'lassen' => ['lässt', 'ließ'], 'fallen' => ['fällt', 'fiel'], 'rufen' => ['rief', 'gerufen'], 'schliessen' => ['schloss', 'geschlossen'],
         'waschen' => ['wäscht', 'wusch'], 'steigen' => ['stieg', 'gestiegen'], 'umsteigen' => ['stieg', 'umgestiegen'],
         'aussteigen' => ['stieg', 'ausgestiegen'], 'einsteigen' => ['stieg', 'eingestiegen'],
+        // GEN-4b: what the gate run found said and not read — «gelten» as «gilt», «anmelden» as «angemeldet» — and the
+        // participles of the separable verbs of a visit, the «ge» inside them («ausgefüllt» for «ausfüllen»).
+        'gelten' => ['gilt', 'galt', 'gegolten'], 'anmelden' => ['angemeldet', 'melde', 'meldet'], 'abmelden' => ['abgemeldet'],
+        'ausfüllen' => ['ausgefüllt'], 'abholen' => ['abgeholt'], 'vorstellen' => ['vorgestellt'], 'einkaufen' => ['eingekauft'],
+        'aufstehen' => ['stand', 'aufgestanden'], 'ausziehen' => ['zog', 'ausgezogen'], 'abgeben' => ['gibt', 'gab', 'abgegeben'],
+        'mitnehmen' => ['nimmt', 'nahm', 'mitgenommen'], 'zurückrufen' => ['rufe', 'ruft', 'rief', 'zurückgerufen'],
+        'teilnehmen' => ['nimmt', 'nahm', 'teilgenommen'], 'stattfinden' => ['findet', 'fand', 'stattgefunden'],
     ],
 
     // A number, one word (folded: «dreißig» is `dreissig` here): a digit anywhere («0176», «14a»), a cardinal made of the

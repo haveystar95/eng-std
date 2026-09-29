@@ -624,7 +624,7 @@ function planWriteLessons(App\Modules\Plan\Domain\Entity\Plan $plan): void
             $lesson,
             $skeleton,
             lessonPacks()->for('en'),
-            new App\Modules\Plan\Domain\ValueObject\ModelCall('lesson_skeleton.v1+lesson_dialogue.v1', 'test', 'fake', '0.000000', 1, 2),
+            new App\Modules\Plan\Domain\ValueObject\ModelCall('lesson_skeleton.v1.1+lesson_dialogue.v1.1', 'test', 'fake', '0.000000', 1, 2),
             [],
             new DateTimeImmutable('2026-09-10T09:00:00Z'),
         );
@@ -797,7 +797,7 @@ function planCleanLesson(App\Modules\Plan\Application\Dto\LessonRequest $request
 }
 
 /**
- * THE CANON DAY OF THE STAGES' CHECKS (наряд GEN-4) — the day of the architect's own TEST INPUT (`lesson_dialogue.v1`: ru→ro,
+ * THE CANON DAY OF THE STAGES' CHECKS (наряд GEN-4) — the day of the architect's own TEST INPUT (`lesson_dialogue.v1.1`: ru→ro,
  * the candidate's work experience, a male learner): its survival set, its skeleton, and a dialogue written to it that breaks
  * no rule, in `tests/Fixtures/plan-day/`. Every rule of `SkeletonCheck` and `DialogueCheck` is tested on it with one defect.
  *

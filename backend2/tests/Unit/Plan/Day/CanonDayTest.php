@@ -22,7 +22,7 @@ it('counts the canon dialogue as the architect did: seven partner lines, no unpa
     expect(dayCanonSkeleton()->dialogueCount())->toBe(8);
 });
 
-// The example of `lesson_dialogue.v1` as written, byte for byte from the file: one warning — «post» (v2) names a6 in its
+// The example of `lesson_dialogue.v1.1` as written, byte for byte from the file: one warning — «post» (v2) names a6 in its
 // `used_in`, and a6 does not say it — and nothing fatal. Catches a rule that reads the architect's own example otherwise.
 it('finds in the dialogue prompt\'s own example skeleton the one warning the canon takes out', function () {
     $raw = (string) file_get_contents(PlanPromptFiles::path('dialogue'));

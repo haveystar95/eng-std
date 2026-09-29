@@ -11,8 +11,8 @@ use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * JSON → the day's values: the model's SKELETON ({@see skeleton()}, `lesson_skeleton.v1`) and DIALOGUE ({@see dialogue()},
- * `lesson_dialogue.v1`), one repaired card of either ({@see card()}, `lesson_card_repair.v1.5`), and a stored {@see Lesson}
+ * JSON → the day's values: the model's SKELETON ({@see skeleton()}, `lesson_skeleton.v1.1`) and DIALOGUE ({@see dialogue()},
+ * `lesson_dialogue.v1.1`), one repaired card of either ({@see card()}, `lesson_card_repair.v1.5`), and a stored {@see Lesson}
  * ({@see parse()} — the lesson assembled from the two, in the shape every day of the plan has been stored in).
  * Strict about SHAPE only: a missing key, a wrong type, an unknown kind or speaker, an empty required
  * string is a reply that is not the requested schema, and that is the model's refusal, not a finding
@@ -29,10 +29,21 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
  * whole lesson and in a repaired card alike — has the Latin letters drawn inside a Cyrillic word put back into
  * Cyrillic, a Latin acute vowel («á») as the Cyrillic vowel with the combining stress mark (наряд LANG-1), and a letter of
  * another Cyrillic alphabet as the letter it stands for («аҗута́» → «ажута́», наряд LANG-1b §10) — the one rule of
- * {@see ReadingLetters}, which `plan:clean-text` reads the readings already stored with.
+ * {@see ReadingLetters}, which `plan:clean-text` reads the readings already stored with. A parser that knows the learner's
+ * language ({@see forNative()}, the day's build) reads that language's own twins too: a Latin «ú» / «í» as «и́» for a Russian
+ * learner, «і́» for a Ukrainian or a Belarusian one (наряд GEN-4b §3).
  */
 final class LessonParser
 {
+    /** @param  string|null  $native  the learner's language code, when the caller knows it — the day's build does */
+    public function __construct(private readonly ?string $native = null) {}
+
+    /** The same parser reading the readings of a learner of `$native` ({@see ReadingLetters::mended()}). */
+    public function forNative(?string $native): self
+    {
+        return new self($native);
+    }
+
     /** @param array<string, mixed> $payload */
     public function parse(array $payload): Lesson
     {
@@ -77,7 +88,7 @@ final class LessonParser
     }
 
     /**
-     * THE SKELETON of a day (`lesson_skeleton.v1`, OUTPUT SCHEMA): topic, learner role, the partner's gender, the frames with
+     * THE SKELETON of a day (`lesson_skeleton.v1.1`, OUTPUT SCHEMA): topic, learner role, the partner's gender, the frames with
      * the `must_say` numbers they serve, the partner lines, the vocabulary.
      *
      * @param  array<string, mixed>  $payload
@@ -115,7 +126,7 @@ final class LessonParser
     }
 
     /**
-     * THE DIALOGUE of a day (`lesson_dialogue.v1`, OUTPUT SCHEMA): the exchanges — each with the partner line it carries and
+     * THE DIALOGUE of a day (`lesson_dialogue.v1.1`, OUTPUT SCHEMA): the exchanges — each with the partner line it carries and
      * the item that line delivers — and the listening questions.
      *
      * @param  array<string, mixed>  $payload
@@ -201,7 +212,7 @@ final class LessonParser
             id: $this->string($row, 'id', $path),
             termTarget: $this->string($row, 'term_target', $path),
             translationNative: $this->string($row, 'translation_native', $path),
-            pronunciationNative: self::reading($this->stringOrEmpty($row, 'pronunciation_native')),
+            pronunciationNative: $this->reading($this->stringOrEmpty($row, 'pronunciation_native')),
             definitionTarget: $this->stringOrEmpty($row, 'definition_target'),
             kind: $kind,
             imagePrompt: $this->nullableString($row, 'image_prompt'),
@@ -270,7 +281,7 @@ final class LessonParser
             roleNative: $this->stringOrEmpty($row, 'role_native'),
             textTarget: $text,
             textNative: $native,
-            pronunciationNative: self::reading($this->nullableString($row, 'pronunciation_native')),
+            pronunciationNative: $this->reading($this->nullableString($row, 'pronunciation_native')),
             speakingKey: $this->nullableString($row, 'speaking_key'),
             simplifiedVariants: $this->stringList($row, 'simplified_variants'),
             phraseId: $this->nullableString($row, 'phrase_id'),
@@ -299,7 +310,7 @@ final class LessonParser
                 $fillers[] = new Filler(
                     target: $this->string($f, 'target', "{$path}.slot.fillers[{$index}]"),
                     native: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->stringOrEmpty($f, 'native'))),
-                    pronunciationNative: self::reading($this->stringOrEmpty($f, 'pronunciation_native')),
+                    pronunciationNative: $this->reading($this->stringOrEmpty($f, 'pronunciation_native')),
                     inDialogue: $inDialogue,
                 );
             }
@@ -311,7 +322,7 @@ final class LessonParser
             kind: $kind,
             frameTarget: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->string($row, 'frame_target', $path))),
             frameNative: FrameText::withoutDoubledStop(FrameText::withEndMarkClosed($this->stringOrEmpty($row, 'frame_native'))),
-            pronunciationNative: self::reading($this->stringOrEmpty($row, 'pronunciation_native')),
+            pronunciationNative: $this->reading($this->stringOrEmpty($row, 'pronunciation_native')),
             slot: $slot,
         );
     }
@@ -334,9 +345,9 @@ final class LessonParser
      *
      * @return ($reading is null ? null : string)
      */
-    private static function reading(?string $reading): ?string
+    private function reading(?string $reading): ?string
     {
-        return $reading === null ? null : ReadingLetters::mended($reading);
+        return $reading === null ? null : ReadingLetters::mended($reading, $this->native);
     }
 
     /** @param array<string, mixed> $row */

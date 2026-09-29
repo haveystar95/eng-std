@@ -82,7 +82,7 @@ final class PlanSchemas
     }
 
     /**
-     * THE SKELETON (`lesson_skeleton.v1`, OUTPUT SCHEMA), keys in its order. No list has a length (п. 202: a forced length
+     * THE SKELETON (`lesson_skeleton.v1.1`, OUTPUT SCHEMA), keys in its order. No list has a length (п. 202: a forced length
      * is padded with invented items) — the counts are {@see \App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck}'s.
      *
      * @return array<string, mixed>
@@ -100,7 +100,7 @@ final class PlanSchemas
     }
 
     /**
-     * THE DIALOGUE (`lesson_dialogue.v1`, OUTPUT SCHEMA), keys in its order: every exchange with the item and the partner line
+     * THE DIALOGUE (`lesson_dialogue.v1.1`, OUTPUT SCHEMA), keys in its order: every exchange with the item and the partner line
      * it carries (nullable), a learner message's frame and filler (nullable), a check; the listening. No length —
      * DIALOGUE_COUNT is {@see \App\Modules\Plan\Domain\Check\Dialogue\DialogueCheck}'s.
      *

@@ -82,7 +82,7 @@ final readonly class LessonCardRepairer
                 throw ModelAnswerOffSchema::at('card', 'missing object');
             }
             /** @var array<string, mixed> $raw */
-            $repaired = self::shuffled($this->parser->card($card->kind, $raw), $card, $request->sceneId);
+            $repaired = self::shuffled($this->parser->forNative($request->nativeLangCode)->card($card->kind, $raw), $card, $request->sceneId);
             self::assertFits($repaired, $card, $skeleton, $dialogue);
         } catch (ModelAnswerOffSchema $e) {
             return self::outcome(LessonCardRepairOutcome::OFF_SCHEMA, $card, $before, $raw, $findings, null, null, $reply, $e->getMessage());

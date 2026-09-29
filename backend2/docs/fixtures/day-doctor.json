@@ -79,7 +79,7 @@
         "day_number": 1,
         "cost_usd": "0.000000",
         "latency_ms": 11,
-        "prompt_version": "lesson_skeleton.v1+lesson_dialogue.v1"
+        "prompt_version": "lesson_skeleton.v1.1+lesson_dialogue.v1.1"
     },
     "stages": [
         {

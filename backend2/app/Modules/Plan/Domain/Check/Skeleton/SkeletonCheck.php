@@ -18,6 +18,7 @@ use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerItemMissing;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerItemUnknown;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerNamesFiller;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerPairsMany;
+use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerPairsNone;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerTooLong;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PronunciationEqualsNative;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PronunciationForeignScript;
@@ -36,7 +37,9 @@ use App\Modules\Plan\Domain\Lesson\Skeleton;
  * it was ordered with ({@see SkeletonContext}). A FATAL finding asks the skeleton once more; a warning sends its card — a frame,
  * a partner line, a word — to a repair. The rules, fatal first, in the order of the order; four beside it — the shape guards
  * `skeleton.ids` and `partner.pairs_many` (the gate run's: a line paired with two frames leaves the dialogue no exchange for
- * one of them), and `vocab.reading`, `vocab.definition_language`, the codes the repair prompt names for a word it keeps.
+ * one of them), and `vocab.reading`, `vocab.definition_language`, the codes the repair prompt names for a word it keeps. Since
+ * GEN-4b: `partner.pairs_none` (fatal — a line paired with nothing while a frame has no line), and
+ * `pronunciation.foreign_script` a warning the repairs take first, fatal only beyond them ({@see \App\Modules\Plan\Domain\Check\LessonCodes::BUDGETED}).
  */
 final readonly class SkeletonCheck
 {
@@ -60,10 +63,11 @@ final readonly class SkeletonCheck
             new PartnerItemUnknown,
             new VocabNotFound,
             new VocabCount,
-            new PronunciationForeignScript,
             new PronunciationEqualsNative,
             new SkeletonIds,
             new PartnerPairsMany,
+            new PartnerPairsNone,
+            new PronunciationForeignScript,
             new PronunciationNearNative,
             new FrameNativeTwin,
             new FillerCommonPrefix,

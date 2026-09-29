@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * ONE LINE OF THE PARTNER, AS THE SKELETON WRITES IT (`lesson_skeleton.v1`, PARTNER LINES; наряд GEN-4): what A says for one
+ * ONE LINE OF THE PARTNER, AS THE SKELETON WRITES IT (`lesson_skeleton.v1.1`, PARTNER LINES; наряд GEN-4): what A says for one
  * item of the survival set's `must_understand` — the item's number, a question or a statement, the `must_say` numbers of the
  * frames it goes with, and its text in both languages. The dialogue puts it into an exchange character for character; the
  * lesson the learner gets carries only its text, as A's message of that exchange.

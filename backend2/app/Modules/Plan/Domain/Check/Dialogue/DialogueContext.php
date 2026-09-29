@@ -10,7 +10,7 @@ use App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext;
 use App\Modules\Plan\Domain\Lesson\Skeleton;
 
 /**
- * What the dialogue was ORDERED with (`lesson_dialogue.v1`, INPUTS): the skeleton it was written from — every frame and every
+ * What the dialogue was ORDERED with (`lesson_dialogue.v1.1`, INPUTS): the skeleton it was written from — every frame and every
  * partner line it may say, and no other — DIALOGUE_COUNT as the server counted it off that skeleton, and the pair of
  * languages as their packs.
  */

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * ONE EXCHANGE AS THE DIALOGUE WRITES IT (`lesson_dialogue.v1`, EXCHANGES; наряд GEN-4): the lesson's exchange ({@see Exchange}
+ * ONE EXCHANGE AS THE DIALOGUE WRITES IT (`lesson_dialogue.v1.1`, EXCHANGES; наряд GEN-4): the lesson's exchange ({@see Exchange}
  * — step, kind, who opens it, two messages, the check) and which partner line of the skeleton A says in it — its id
  * (`partner_line`, `a3`) and the `must_understand` item it delivers; both null for a rescue and for an A line the dialogue
  * wrote itself (the one A line of a frame no partner line pairs with). The lesson the learner gets carries the exchange

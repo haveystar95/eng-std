@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Domain\Lesson;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE SKELETON OF A DAY (`lesson_skeleton.v1`, наряд GEN-4) — the first of the day's two stages: the frames the learner
+ * THE SKELETON OF A DAY (`lesson_skeleton.v1.1`, наряд GEN-4) — the first of the day's two stages: the frames the learner
  * practises (one per item of the scene's `must_say`), the lines the partner says (one per item of `must_understand`), the
  * vocabulary of both, the day's title and description, the learner's role and the partner's gender. No dialogue: the second
  * stage ({@see Dialogue}) puts these frames and lines into a conversation and may add nothing of its own.

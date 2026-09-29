@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Check\Skeleton\Rule;
 
+use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonViolation;
 use App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext;
 use App\Modules\Plan\Domain\Check\Skeleton\SkeletonRule;
@@ -12,8 +13,11 @@ use App\Modules\Plan\Domain\Lesson\Skeleton;
 use App\Modules\Plan\Domain\Service\ReadingLetters;
 
 /**
- * `pronunciation.foreign_script` — FATAL (the guard of LANG-1b, наряд GEN-4). The learner reads the skeleton's native fields
- * and readings in the letters of their own alphabet:
+ * `pronunciation.foreign_script` — a WARNING whose cards the stage's repairs take first, FATAL only beyond them (наряд GEN-4b
+ * §3, {@see LessonCodes::BUDGETED}: more cards than a stage has repairs, or a finding at the title, the description or the
+ * role, which no card holds). The guard of LANG-1b; fatal from GEN-4 until the gate run showed both models writing a letter of
+ * another writing into a third of their first skeletons, each a one-card repair. The learner reads the skeleton's native
+ * fields and readings in the letters of their own alphabet:
  *
  *  - a READING (of a frame, a filler, a word) has no letter outside the native pack's alphabet (`script_letters`) — a Latin
  *    letter in a Cyrillic reading, an Armenian «ֆ» — after the parser has put back what it can ({@see ReadingLetters});
@@ -32,7 +36,7 @@ final class PronunciationForeignScript implements SkeletonRule
 
     public function fatal(): bool
     {
-        return true;
+        return false;
     }
 
     public function findings(Skeleton $skeleton, SkeletonContext $context): array

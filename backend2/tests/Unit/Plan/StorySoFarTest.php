@@ -62,7 +62,7 @@ function ssWrite(PlanScene $scene, int $story, VoiceGender $gender = VoiceGender
     $earlier = new EarlierDays(array_fill(0, $story - 1, planEarlierDay()));
     $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('x', $earlier));
     $payload['role_gender'] = $gender->value;
-    $scene->acceptLesson((new LessonParser)->parse($payload), planSkeletonOf($payload), lessonPacks()->for('en'), new ModelCall('lesson_skeleton.v1+lesson_dialogue.v1', 'test', 'fake', '0.000000', 1, 2), [], new DateTimeImmutable('2026-09-17T10:00:00Z'));
+    $scene->acceptLesson((new LessonParser)->parse($payload), planSkeletonOf($payload), lessonPacks()->for('en'), new ModelCall('lesson_skeleton.v1.1+lesson_dialogue.v1.1', 'test', 'fake', '0.000000', 1, 2), [], new DateTimeImmutable('2026-09-17T10:00:00Z'));
 }
 
 // Наряд GEN-3, §2: «EARLIER_DAYS — все содержательные дни этого плана с готовым уроком, раньше текущего, по порядку; на первый

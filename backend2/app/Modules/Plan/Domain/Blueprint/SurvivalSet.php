@@ -8,7 +8,7 @@ namespace App\Modules\Plan\Domain\Blueprint;
  * THE SURVIVAL SET OF A SCENE (`plan-builder-v2.1`, STEP 4; наряд GEN-4): what the learner must SAY — 6 to 8 intentions in
  * the order they come up, each with the one part of its sentence that varies — and what they must UNDERSTAND — 4 to 5
  * things the partner says or asks. The day is built from it: every `must_say` item becomes one frame of the skeleton, every
- * `must_understand` item one partner line (`lesson_skeleton.v1`).
+ * `must_understand` item one partner line (`lesson_skeleton.v1.1`).
  *
  * The model writes an item of `must_say` as one string, «say where you worked before — slot: the workplace»; the set keeps it
  * as its intention and its slot, the slot null for «— slot: none». A scene written before the set existed has an empty one.

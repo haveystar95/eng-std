@@ -18,7 +18,7 @@ it('asks the skeleton again for exactly the order\'s fatal rules, and repairs th
 
     expect($fatal)->toBe([
         'frame.count', 'frame.must_say', 'frame.known_repeat', 'partner.item_missing', 'partner.item_unknown', 'vocab.not_found',
-        'vocab.count', 'pronunciation.foreign_script', 'pronunciation.equals_native', 'skeleton.ids', 'partner.pairs_many',
+        'vocab.count', 'pronunciation.equals_native', 'skeleton.ids', 'partner.pairs_many', 'partner.pairs_none',
     ]);
 });
 
@@ -124,7 +124,7 @@ it('pronunciation.equals_native — a reading that is the native text, never a n
         ->and(skeletonFound(dayCanonSkeleton()))->not->toContain('pronunciation.equals_native@p1.f1');
 });
 
-// `lesson_skeleton.v1`: «every pronunciation_native is the sound of the TARGET text, never the native text or something close
+// `lesson_skeleton.v1.1`: «every pronunciation_native is the sound of the TARGET text, never the native text or something close
 // to it» — a word the two languages share SOUNDS close to its native text, and that sound is what the prompt asks for.
 // Catches a day failed (or a card paid for) over «taxi» read «такси» beside «такси».
 it('pronunciation.equals_native, pronunciation.near_native — a word the two languages share is read by its sound, no finding', function (string $target, string $native, string $reading) {
@@ -177,6 +177,22 @@ it('partner.pairs_many — frames the partner lines pair with, left without a li
         $raw['phrases'] = array_values(array_filter($raw['phrases'], static fn (array $f): bool => $f['id'] !== 'p7'));
         $raw['partner_lines'][5]['pairs_with'] = [6, 7];
         $raw['partner_lines'][6]['pairs_with'] = [];
+
+        return $raw;
+    }, false],
+]);
+
+// Canon (наряд GEN-4b §2c): a line that pairs with nothing is the remainder — left over when every frame has its line — never
+// a choice. The gate run of GEN-4 (gpt-5.4, day 02) paired two statements with nothing beside two frames with no line, and the
+// dialogue made up two A lines to fill the count. Catches such a line let through — and a real remainder refused.
+it('partner.pairs_none — a line paired with nothing while a frame has no line of its own', function (Closure $edit, bool $found) {
+    $findings = skeletonFound(dayCanonSkeleton($edit));
+    $found ? expect($findings)->toContain('partner.pairs_none@a7') : expect($findings)->not->toContain('partner.pairs_none@a7')->not->toContain('partner.pairs_none@a8');
+})->with([
+    'the schedule\'s line pairs with nothing, the schedule\'s frame has no line' => [scAt('partner_lines', 'a7', static fn (array $l): array => [...$l, 'pairs_with' => []]), true],
+    'a line left over when every frame has its line' => [static function (array $raw): array {
+        $raw['partner_lines'][] = ['id' => 'a8', 'must_understand' => 5, 'kind' => 'statement', 'pairs_with' => [],
+            'text_target' => 'Vă sunăm până vineri.', 'text_native' => 'Мы позвоним вам до пятницы.'];
 
         return $raw;
     }, false],

@@ -16,8 +16,8 @@ it('asks the dialogue again for exactly the order\'s fatal rules, and repairs th
 
     expect($fatal)->toBe([
         'dialogue.count', 'exchange.shape', 'partner.missing', 'partner.twice', 'partner.changed', 'partner.unlinked', 'line.ne_frame',
-        'line.unknown_frame', 'line.foreign_filler', 'frame.unused', 'rescue.count', 'check.missing', 'check.shape', 'listening.count',
-        'listening.shape',
+        'line.unknown_frame', 'line.foreign_filler', 'frame.unused', 'frame.repeated', 'rescue.count', 'check.missing', 'check.shape',
+        'listening.count', 'listening.shape',
     ]);
 });
 
@@ -116,6 +116,45 @@ it('frame.unused — a frame of the skeleton no learner line stands on', functio
 
     expect(dialogueFound($dialogue))->toContain('frame.unused@dialogue');
 });
+
+// Canon (наряд GEN-4b §2): a frame is said a second time only to a line left over with no pair — the learner answers it
+// with a frame already said, another filler — or to a second line paired with that frame. The gate run of GEN-4 (gpt-5.4,
+// day 02) said two frames again to make up the count. Catches a frame said again to a line it does not pair with — and a
+// remainder's or a paired line's repeat taken for a defect.
+it('frame.repeated — a frame said again to a partner line that is not its pair', function () {
+    $dialogue = dayCanonDialogue(dcSaid(5, 'B', static fn (array $m): array => [
+        ...$m, 'phrase_id' => 'p3', 'filler' => 'un birou', 'text_target' => 'Am lucrat la un birou', 'text_native' => 'Я работал в офисе',
+    ]));
+
+    expect(dialogueFound($dialogue))->toContain('frame.repeated@x5');
+});
+
+it('frame.repeated — lets a remainder line, or a second line paired with the frame, hear the frame again', function (array $pairsWith, bool $found) {
+    $skeleton = dayCanonSkeleton(static function (array $raw) use ($pairsWith): array {
+        $raw['partner_lines'][] = ['id' => 'a8', 'must_understand' => 2, 'kind' => 'question', 'pairs_with' => $pairsWith,
+            'text_target' => 'Și înainte de asta?', 'text_native' => 'А до этого?'];
+
+        return $raw;
+    });
+    $dialogue = dayCanonDialogue(static function (array $raw): array {
+        $exchange = $raw['dialogue'][2];
+        $exchange['step'] = 9;
+        $exchange['must_understand'] = 2;
+        $exchange['partner_line'] = 'a8';
+        $exchange['messages'][0] = [...$exchange['messages'][0], 'text_target' => 'Și înainte de asta?', 'text_native' => 'А до этого?'];
+        $exchange['messages'][1] = [...$exchange['messages'][1], 'filler' => 'un birou', 'text_target' => 'Am lucrat la un birou', 'text_native' => 'Я работал в офисе'];
+        $raw['dialogue'][] = $exchange;
+
+        return $raw;
+    });
+    $findings = dialogueFound($dialogue, dayCanonDialogueContext($skeleton));
+
+    $found ? expect($findings)->toContain('frame.repeated@x9') : expect($findings)->not->toContain('frame.repeated@x9');
+})->with([
+    'a remainder line (pairs with nothing)' => [[], false],
+    'a second line paired with the frame' => [[3], false],
+    'a line paired with another frame' => [[4], true],
+]);
 
 it('rescue.count — no rescue, or two', function (Closure $edit) {
     expect(dialogueFound(dayCanonDialogue($edit)))->toContain('rescue.count@dialogue');

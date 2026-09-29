@@ -1,4 +1,4 @@
-LESSON SKELETON — v1
+LESSON SKELETON — v1.1
 
 You write the SKELETON of one day of a situational language lesson: the sentence frames the learner will practise, the lines the conversation partner will say, and the vocabulary. You do not write the dialogue — a later step puts your frames and lines into a conversation and cannot add anything you did not write. There is no story here: the only facts in the skeleton are the ones the input gives.
 
@@ -14,7 +14,7 @@ TOPIC_DESCRIPTION: three labelled lines — "Situation" (where, with whom, what 
 
 SURVIVAL_SET: two numbered lists written by the plan.
 must_say — 6 to 8 intentions in the order they come up in the interaction: "what the learner says — slot: what varies". Each becomes exactly ONE frame.
-must_understand — 4 to 5 things the partner says or asks here, from the partner's side. Each becomes ONE partner line — two lines when the item holds two questions.
+must_understand — 4 to 5 things the partner says or asks here, from the partner's side. Each becomes ONE partner line — two lines when the item holds two questions or covers two frames.
 
 TARGET_LANGUAGE, NATIVE_LANGUAGE, LEVEL (Beginner or Intermediate).
 
@@ -76,15 +76,15 @@ Every frame with a slot has 2 or 3 fillers:
 
 PARTNER LINES
 
-One line per must_understand item, in the order of the list — two lines when the item holds two questions, because A asks one thing per line; both carry the item's number.
+One line per must_understand item, in the order of the list — two lines when the item holds two questions or covers two frames ("asks your name and which position you want": one line for the name, one for the position), because A asks one thing per line and every line goes with one frame; both carry the item's number.
 
 - id "a1", "a2", …; must_understand — the item's number.
 - kind: "question" when A asks (the learner will answer it with a frame); "statement" when A states a fact, gives an instruction, makes an offer or answers the learner.
-- pairs_with: the must_say numbers this line goes with — for a question, the frame that answers it; for a statement, the "ask" frame it replies to; empty when nothing in the set pairs with it.
+- pairs_with: exactly ONE must_say number — of the one frame this line goes with. A question pairs with the frame that answers it; a statement with the frame it follows in the conversation (the learner says the frame, A replies with this line), among the frames that have no line of their own yet. Never one line for two frames ("Cum vă numiți și pentru ce post candidați?" with "pairs_with": [1, 2] ✗ — that is two lines). pairs_with is empty only for a line left over when every frame already has its line — a remainder, never a choice.
 - text_target: one sentence, or two when necessary, at most 18 words, in TARGET_LANGUAGE; A addresses the learner formally (vous / Sie / usted / dumneavoastră) unless the scene is clearly casual. text_native: its natural rendering; the same formality («вы», never «ты» in Russian); A's grammar follows role_gender.
 - A question asks ONE thing. A statement carries ONE concrete fact the learner can be tested on: a time, a condition, an amount, a list of two or three things. General does not mean vague: "a trial month", "training in the first week", "a team of five", "shifts of morning and evening" are facts; "practical tasks every day", "various duties" are not. The examples here are examples — choose the fact that fits this scene, do not copy them.
 - The fact is about the matter of the scene — the job on offer, the diagnosis, the flat, the appointment — and it is general: true for this kind of situation, not built on any filler of the frames. A never names the learner's placeholder values (the shop, the goods, the shelves, the illness you chose for a slot).
-- A statement that replies to an "ask" frame has TWO parts: the answer ("Da." / "Nu.") and ONE concrete fact about the matter of the scene that does not depend on what was asked — so it fits every filler of that frame alike and names NONE of them (not the one used in the dialogue, not the others, not all of them in a list). For "Postul include ___?" the reply is "Da." or "Nu." followed by one fact about this job that holds whatever was asked — choose the fact for this scene yourself. Never a filler repeated back ("Da, include lucrul cu marfa." ✗), never the fillers listed ("Da, include instruire, documente și lucru cu publicul." ✗), never the answer alone ("Da, postul include această sarcină." ✗ — nothing to test).
+- A statement that replies to an "ask" frame carries ONE concrete fact about the matter of the scene that does not depend on what was asked — so it fits every filler of that frame alike and names NONE of them (not the one used in the dialogue, not the others, not all of them in a list). To a yes-or-no question it has TWO parts, the answer ("Da." / "Nu.") and the fact: for "Postul include ___?" the reply is "Da." or "Nu." followed by one fact about this job that holds whatever was asked — choose the fact for this scene yourself. To a question of which, what, how many or when it is the fact itself, with no "Da." / "Nu." ("Da. Programul este de luni până vineri." as the reply to "Care este programul de lucru?" ✗). Never a filler repeated back ("Da, include lucrul cu marfa." ✗), never the fillers listed ("Da, include instruire, documente și lucru cu publicul." ✗), never the answer alone ("Da, postul include această sarcină." ✗ — nothing to test).
 - Never empty lines ("Great!", "Anything else?"); never two questions in one line; no two partner lines carry the same fact.
 
 ---
@@ -115,7 +115,7 @@ Every frame and every partner line, in both languages, reads like a person talki
 
 WHEN THE SET IS NOT PERFECT
 
-The set is written by another model. Repair it silently, keeping every intention you can: an item that is an action ("show your passport") → the words said while doing it ("Here is my ___"); a bare yes-or-no item → the frame carries the thing confirmed ("I can start ___"); an item whose natural frame is already a Frame of EARLIER_DAYS → no frame for it (the only reason to drop an item); an item that cannot be said in ten words at LEVEL → say less; an item no person in LEARNER_ROLE would say to PARTNER_ROLE here → the closest thing they would say, never an unrelated intention; a must_understand question with no answer in must_say → still a partner line, pairs_with empty.
+The set is written by another model. Repair it silently, keeping every intention you can: an item that is an action ("show your passport") → the words said while doing it ("Here is my ___"); a bare yes-or-no item → the frame carries the thing confirmed ("I can start ___"); an item whose natural frame is already a Frame of EARLIER_DAYS → no frame for it (the only reason to drop an item); an item that cannot be said in ten words at LEVEL → say less; an item no person in LEARNER_ROLE would say to PARTNER_ROLE here → the closest thing they would say, never an unrelated intention; a must_understand question with no answer in must_say → still a partner line, paired with a frame that has no line of its own yet; pairs_with empty only when every frame has its line.
 
 ---
 
@@ -186,7 +186,7 @@ Return ONLY a JSON object matching this exact schema. Keys in exactly this order
 ]
 }
 
-Field rules: phrase — id, kind ("answer" | "ask"), must_say (array of item numbers, normally one), frame_target, frame_native, pronunciation_native, slot (object or null); filler — target, native, pronunciation_native, in_dialogue; partner line — id, must_understand (item number), kind ("question" | "statement"), pairs_with (array of must_say numbers, may be empty), text_target, text_native; vocabulary — id, term_target, translation_native, pronunciation_native, definition_target, kind ("word" | "chunk"), image_prompt, used_in. role_gender: "female" or "male". Roles exactly as given.
+Field rules: phrase — id, kind ("answer" | "ask"), must_say (array of item numbers, normally one), frame_target, frame_native, pronunciation_native, slot (object or null); filler — target, native, pronunciation_native, in_dialogue; partner line — id, must_understand (item number), kind ("question" | "statement"), pairs_with (array of exactly one must_say number; empty only for a line left over when every frame has its line), text_target, text_native; vocabulary — id, term_target, translation_native, pronunciation_native, definition_target, kind ("word" | "chunk"), image_prompt, used_in. role_gender: "female" or "male". Roles exactly as given.
 
 ---
 
@@ -196,7 +196,7 @@ Silently check before returning; do not expose this check.
 
 - One frame per must_say item, each with its number, none outside the set; an item dropped only because it is already learned; "slot: none" → slot null; kind ask/answer by the item's verb; frame part ≤ 7 words; no pattern shared with EARLIER_DAYS or with another frame, in either language.
 - Fillers: 2–3 per slotted frame, values of 1–3 words, exactly one in_dialogue; the learner's own details in_dialogue where they fit; placeholders across frames do not form one job or story; no word repeated across the seam; native fillers in the required form; every assembled pair grammatical in both languages.
-- Partner lines: one per must_understand item (two when it holds two questions), each with its number and pairs_with; one question or one fact per line; ≤ 18 words; nothing built on a filler, no placeholder value named; a reply to an "ask" frame fits every filler of that frame and names none of them.
+- Partner lines: one per must_understand item (two when it holds two questions or covers two frames), each with its number and pairs_with — exactly one frame per line, never a line paired with nothing while a frame has no line; one question or one fact per line; a reply to a which / what / how many / when question is the fact, never "Da." first; ≤ 18 words; nothing built on a filler, no placeholder value named; a reply to an "ask" frame fits every filler of that frame and names none of them.
 - Readings: every pronunciation_native is the sound of the TARGET text, never the native text or something close to it; no two frames share frame_native.
 - Vocabulary: within VOCABULARY_COUNT; every item found in a frame, a partner line or a learner-detail filler, used_in accurate; ≥ half in frames; no placeholder word, no international word, no number, no everyday word, no Word of EARLIER_DAYS; lemma form; no item inside another.
 - Text: speech in both languages; formal address; the learner's frame_native and native fillers follow LEARNER_GENDER (a male learner never says «я работала»), A's text_native follows role_gender; pronunciation in NATIVE_LANGUAGE's letters only, on frames, fillers and vocabulary.

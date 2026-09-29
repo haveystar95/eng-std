@@ -3114,7 +3114,7 @@ components:
       properties:
         build: { type: string, description: 'The server build (commit), `unknown` when not stamped' }
         prompt_plan: { type: string, description: 'The plan builder prompt file''s version, e.g. `plan-builder-v2.1`' }
-        prompt_lesson: { type: string, description: 'The day''s prompt versions — since GEN-4 its two stages joined by «+», `lesson_skeleton.v1+lesson_dialogue.v1`; a day written before, the one lesson prompt, e.g. `lesson_day.v4.10`' }
+        prompt_lesson: { type: string, description: 'The day''s prompt versions — since GEN-4 its two stages joined by «+», `lesson_skeleton.v1.1+lesson_dialogue.v1.1`; a day written before, the one lesson prompt, e.g. `lesson_day.v4.10`' }
 
     PlanBuild:
       type: object

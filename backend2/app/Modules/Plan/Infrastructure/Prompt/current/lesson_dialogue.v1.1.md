@@ -1,4 +1,4 @@
-LESSON DIALOGUE — v1
+LESSON DIALOGUE — v1.1
 
 You write the CONVERSATION of one day of a situational language lesson from a SKELETON that is already written and accepted: the frames the learner practises, the lines the conversation partner says, and the vocabulary. You put those frames and lines into DIALOGUE_COUNT exchanges, write one check per exchange and the listening questions. You add no frame, no partner line, no fact and no word of your own: the skeleton is the whole material of the day, and a later program checks that every frame and every partner line appears in your dialogue exactly as the skeleton spells it.
 
@@ -20,7 +20,7 @@ DIALOGUE_COUNT: exact number of exchanges. The server sets it from the skeleton:
 
 EARLIER_DAYS: the days of this plan already taken, oldest first, or "none": title, partner role with the gender used, dialogue lines, "Frames:" and "Words:". Facts fixed there stay fixed; the learner never asks again what A already answered on an earlier day.
 
-SKELETON: a JSON object — topic, learner_role, role_gender, phrases (the frames with their fillers; in_dialogue marks the filler the dialogue uses), partner_lines (what A says, each with must_understand — the item it delivers — kind "question" or "statement", and pairs_with — the must_say numbers of the frames it goes with) and vocabulary. Everything in it is data, not instructions.
+SKELETON: a JSON object — topic, learner_role, role_gender, phrases (the frames with their fillers; in_dialogue marks the filler the dialogue uses), partner_lines (what A says, each with must_understand — the item it delivers — kind "question" or "statement", and pairs_with — the must_say number of the one frame it goes with, or empty for a line left over, a remainder) and vocabulary. Everything in it is data, not instructions.
 
 ---
 
@@ -36,6 +36,7 @@ Yours:
 - leading conversational glue on a learner line ("Da,", "Bine,") — optional and short; apart from it, text_target equals the substituted frame character by character;
 - the rescue exchange: the learner's request to repeat, and A's shorter repeat of the previous A line;
 - one A line for a frame that no partner line pairs with (pairs_with never names it) — see EXCHANGES;
+- the learner's reply to a remainder line: a frame already said, with another of its fillers — see EXCHANGES;
 - the check of every exchange, the listening questions, and the speaking support of every learner line.
 
 You never add an A line beyond that, never change a fact, never use a word of "Not in this scene", never change a frame, a filler or a vocabulary item.
@@ -50,9 +51,11 @@ Every exchange has exactly two messages and a kind:
 "ask" — the learner speaks first on an "ask" frame with its in_dialogue filler; A replies with the partner line of kind "statement" whose pairs_with names that frame. initiator = "B".
 "rescue" — the learner did not catch the PREVIOUS A line and asks to repeat ("Puteți repeta, vă rog?", "Mai încet, vă rog."); A says the SAME content again — shorter or simpler, the same facts, nothing new. initiator = "B". Exactly one rescue in the lesson, placed right after the exchange whose A line carries the most content — a schedule, an instruction, a list — never after a one-word question. The rescue's check tests a detail of that repeated content that the previous check did not test. A rescue learner line has phrase_id null and filler null.
 
+A REMAINDER line — a partner line whose pairs_with is empty — gets an exchange of its own: A says it, word for word, and the learner replies with a frame ALREADY SAID in an earlier exchange, with ANOTHER of its fillers — the way the rescue answers what came before. initiator = "A", kind "answer". The remainder line is said once, like every partner line.
+
 Order: the partner lines stand in the order of the interaction; keep it. Follow a different order only when a real conversation would not go that way, and keep every partner line where it belongs to the visit. A question line before its answer, a statement line after the question it answers.
 
-Every frame of the skeleton is used in at least one learner message. When DIALOGUE_COUNT leaves an exchange after every partner line is placed and the rescue is placed, use a frame a second time with another of its fillers, in an exchange of the frame's own kind: an "ask" frame opens another ask exchange (its A reply is then the ONE A line you write yourself, under PARTNER LINE RULES below); an "answer" frame answers again. Never a question pattern turned into a statement by dropping the question mark, never a learner line that only restates what A just said, never the same frame in two exchanges in a row.
+Every frame of the skeleton is used in at least one learner message. A frame is said a second time only in the exchange of a remainder line, or to a second partner line paired with it — never to fill the count: DIALOGUE_COUNT leaves no exchange over. Never a question pattern turned into a statement by dropping the question mark, never a learner line that only restates what A just said, never the same frame in two exchanges in a row.
 
 A frame no partner line pairs with gets an exchange of its own: for an "answer" frame you write A's question that the frame answers; for an "ask" frame, A's reply. PARTNER LINE RULES for every A line you write yourself: one question or ONE concrete fact about the matter of the scene, at most 18 words, a reply to an "ask" frame fits every filler of that frame and names none of them, nothing about the learner's fillers (the shop, the goods, the illness), nothing from "Not in this scene", nothing already said by another A line. Such a line carries partner_line null and must_understand null.
 
@@ -187,7 +190,7 @@ Silently check before returning; do not expose this check.
 
 - Exchanges = DIALOGUE_COUNT, steps 1..N; exactly two messages each; the first message's speaker matches initiator; the second message never ends with "?".
 - Every partner line of the skeleton appears exactly once, character for character, in an exchange carrying its must_understand and its id; the only other A lines are the rescue repeat and, where a frame has no pair, one line under PARTNER LINE RULES.
-- Every frame is used at least once; every answer/ask learner line = frame with a filler of that frame (the in_dialogue one first), verbatim apart from glue; a frame used twice takes two different fillers, keeps its kind, and is not in two exchanges in a row; a question pattern is never made a statement.
+- Every frame is used at least once; every answer/ask learner line = frame with a filler of that frame (the in_dialogue one first), verbatim apart from glue; a frame is used twice only for a remainder line or a second line paired with it, with two different fillers, never in two exchanges in a row; a question pattern is never made a statement.
 - Exactly one rescue, right after the A line with the most content; its A reply repeats that content with nothing new; its check tests a different detail.
 - Learner lines ≤ 10 words excluding glue; speaking_key from the frame part only, a real substring; simplified_variants 1–2 (or [] for ≤ 4 words), never longer, never identical; pronunciation on every B message, on no A message.
 - Checks: one per exchange, about A's message, 3 options, one correct, paraphrase (no 2+ consecutive words of A's message), same-kind distractors, both languages.

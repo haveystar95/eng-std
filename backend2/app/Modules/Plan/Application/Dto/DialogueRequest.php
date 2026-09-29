@@ -7,7 +7,7 @@ namespace App\Modules\Plan\Application\Dto;
 use App\Modules\Plan\Domain\Lesson\Skeleton;
 
 /**
- * THE INPUTS OF THE DIALOGUE (`lesson_dialogue.v1`, INPUTS; наряд GEN-4, 3.5): the day's inputs, the skeleton as it came out of
+ * THE INPUTS OF THE DIALOGUE (`lesson_dialogue.v1.1`, INPUTS; наряд GEN-4, 3.5): the day's inputs, the skeleton as it came out of
  * its check and its repairs, and DIALOGUE_COUNT — counted off that skeleton ({@see Skeleton::dialogueCount()}).
  * `previousViolations` — what the dialogue's previous answer was refused for, quoted as data on its one repeat.
  */

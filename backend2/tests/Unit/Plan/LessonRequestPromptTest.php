@@ -26,7 +26,7 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * WHAT THE DAY'S STAGES AND THE REPAIR OF A CARD SEND (`lesson_skeleton.v1`, `lesson_dialogue.v1`,
+ * WHAT THE DAY'S STAGES AND THE REPAIR OF A CARD SEND (`lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`,
  * `lesson_card_repair.v1.5`; наряд GEN-4): each stage's input in the form of its prompt's own TEST INPUT, byte for byte; a
  * stage asked again with what failed it; a repair's card with the skeleton, the dialogue and the neighbours it may read,
  * and the short story; a request built for the vendor's prompt cache — the rules and the schema first and the same between
@@ -196,7 +196,7 @@ it('sends two days the same rules and the same schema of each stage, and every i
         ->and(json_encode($two['schema']))->toBe(json_encode($one['schema']))
         ->and($four['prompt']->text)->toBe($three['prompt']->text)
         ->and(json_encode($four['schema']))->toBe(json_encode($three['schema']))
-        ->and([$one['prompt']->version, $three['prompt']->version])->toBe(['lesson_skeleton.v1', 'lesson_dialogue.v1'])
+        ->and([$one['prompt']->version, $three['prompt']->version])->toBe(['lesson_skeleton.v1.1', 'lesson_dialogue.v1.1'])
         ->and($one['prompt']->text)->not->toContain('TEST INPUT')
         ->and($three['prompt']->text)->not->toContain('TEST INPUT')
         ->and($one['prompt']->text)->not->toContain('Опыт работы')
@@ -278,7 +278,7 @@ it('quotes to a repair the sections of the stage its card is of, word for word',
             ->and($system)->not->toContain(lrpPrompts()->section($other, PlanPromptFiles::REPAIR_SECTIONS[$other][0]));
     }
     expect([lrpPrompts()->planVersion(), lrpPrompts()->skeletonVersion(), lrpPrompts()->dialogueVersion(), lrpPrompts()->repairVersion(), lrpPrompts()->planLineVersion()])
-        ->toBe(['plan-builder-v2.1', 'lesson_skeleton.v1', 'lesson_dialogue.v1', 'lesson_card_repair.v1.5', 'plan_line_repair.v1']);
+        ->toBe(['plan-builder-v2.1', 'lesson_skeleton.v1.1', 'lesson_dialogue.v1.1', 'lesson_card_repair.v1.5', 'plan_line_repair.v1']);
 });
 
 // Наряд GEN-4, §4: «модель и reasoning_effort per purpose: plan, plan_line_repair, skeleton, dialogue, repair, seam_judge,

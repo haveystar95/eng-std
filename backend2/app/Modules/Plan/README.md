@@ -265,7 +265,7 @@ reads plan tables.
 ## Notes
 
 - The prompts live in `Infrastructure/Prompt/current/` and only there (наряд PROMPTS-1): one file per prompt, named as the
-  prompt and its version — `plan-builder-v2.1`, `plan_line_repair.v1`, `lesson_skeleton.v1`, `lesson_dialogue.v1`,
+  prompt and its version — `plan-builder-v2.1`, `plan_line_repair.v1`, `lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`,
   `lesson_card_repair.v1.5`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES`
   is the one map from a prompt to its file; `docs/prompts/REGISTRY.md` holds each one's name, version, path and sha256, and
   `PromptRegistryTest` holds the directory and the registry to each other. The files are FROZEN; the version is the file
@@ -280,12 +280,15 @@ reads plan tables.
   prompt, values as they are — `HEARD` is not collapsed, because the recognition noise the prompt forgives can only be
   forgiven if it is seen.
 - The day's lesson is stored as the two stages assembled it (`plan_scenes.lesson_json`), the skeleton beside it
-  (`skeleton_json`), re-parsed on read and served assembled; a lesson written before GEN-4 is the one call's answer as it was.
+  (`skeleton_json`), re-parsed on read and served assembled; a lesson written before GEN-4 is the one call's answer, its
+  options shuffled once by the migration of GEN-4 as its reading used to shuffle them.
 - Every plan check ships in `observe` but the shape of the survival set (`survival_set`, `gate`); modes are flipped in
   `config/plan.php`, never in code. The day's checks have no modes: a rule is fatal or a warning by itself
   (`plan-v2.md` §4); they count (`checks_json` of the scene, `plan_check_counters` by code under the stage's prompt version).
   A fatal finding asks its stage once more, and a second fails the day `fatal: <codes>`; a warning sends its card to a
-  repair (two a stage), kept only when it brings nothing fatal; no fatal finding is ever stored. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
+  repair (two a stage), kept only when it brings nothing fatal; no fatal finding is ever stored. A letter of another writing
+  in a reading (`pronunciation.foreign_script`) is a warning whose cards the repairs take first — fatal only beyond them
+  (`LessonCodes::BUDGETED`, наряд GEN-4b). The stages run on `gpt-5.4`, the repairs on `gpt-5.6-luna`. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
   extension rebuilds it. Every answer of the plan's model is read without the characters that print nothing
   (`Domain/Service/ModelText`, at `ContentModelPlanBuilder`; `plan:clean-text` for what was stored before, наряд LANG-1b §6 —
   and, since its last step, the readings stored in `plan_terms` and the dealt cards, by the parser's own rule,

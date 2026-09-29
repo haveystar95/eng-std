@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 use App\Modules\Plan\Domain\Check\Dialogue\DialogueCheck;
+use App\Modules\Plan\Domain\Check\Skeleton\Rule\PronunciationForeignScript;
 use App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck;
+use App\Modules\Plan\Domain\Lesson\LessonCard;
 
 /**
  * EVERY CODE A DAY'S BUILD COUNTS (наряд GEN-4): the codes of the two stages' rules — {@see SkeletonCheck}, {@see DialogueCheck},
@@ -25,6 +27,14 @@ final class LessonCodes
 
     /** The codes a model finds, not the code: the native seams, read by the seam judge. */
     public const JUDGED = [self::FILLER_NATIVE_SEAM];
+
+    /**
+     * THE CODES THE REPAIRS TAKE FIRST, FATAL ONLY BEYOND THEM (наряд GEN-4b §3): a warning whose cards go to the stage's repairs
+     * ahead of every other card — a letter of another writing in a reading is the frame's, the line's or the word's to rewrite —
+     * and a finding the stage cannot keep when its cards are more than a stage's repairs, or one of them stands at no card a
+     * repair takes (the title, the description, the role).
+     */
+    public const BUDGETED = [PronunciationForeignScript::CODE];
 
     /** @return list<string> every code of a finding, in the order the report lists them: the skeleton's, the dialogue's, the judge's */
     public static function all(): array
@@ -61,6 +71,28 @@ final class LessonCodes
         $fatal = self::fatal();
 
         return array_values(array_filter($findings, static fn (LessonViolation $v): bool => in_array($v->code, $fatal, true)));
+    }
+
+    /**
+     * The findings of a budgeted code a stage cannot repair ({@see BUDGETED}): every one of them when their cards are more than
+     * `$repairs`, or when one of them stands at no card; none when the repairs can take them all.
+     *
+     * @param  list<LessonViolation>  $findings
+     * @return list<LessonViolation>
+     */
+    public static function overBudget(array $findings, int $repairs): array
+    {
+        $budgeted = array_values(array_filter($findings, static fn (LessonViolation $v): bool => in_array($v->code, self::BUDGETED, true)));
+        $cards = [];
+        foreach ($budgeted as $finding) {
+            $card = LessonCard::at($finding->address);
+            if ($card === null) {
+                return $budgeted;
+            }
+            $cards[$card->address] = true;
+        }
+
+        return count($cards) > $repairs ? $budgeted : [];
     }
 
     /**

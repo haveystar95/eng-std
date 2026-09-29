@@ -9,7 +9,7 @@ use App\Modules\Plan\Domain\Lesson\Phrase;
 use App\Modules\Plan\Domain\Service\FrameText;
 
 /**
- * A LEARNER LINE IS ITS FRAME WITH ITS FILLER (`lesson_dialogue.v1`, WHAT IS FIXED: «the frame with its in_dialogue filler
+ * A LEARNER LINE IS ITS FRAME WITH ITS FILLER (`lesson_dialogue.v1.1`, WHAT IS FIXED: «the frame with its in_dialogue filler
  * substituted for ___, in TARGET_LANGUAGE and in NATIVE_LANGUAGE»; наряд GEN-4: «допускается только префикс-связка до
  * запятой»). What the comparison forgives, and nothing else: a short glue before the frame that ends in a comma («Da, »,
  * «Bine, », at most three words), the case of the frame's first letter after it, and the mark the sentence ends with — the

@@ -23,15 +23,17 @@ return [
          *
          *  - `plan` — the plan is written once and read for its whole life: the strong model (bakeoff-v11-ab, К2);
          *  - `plan_line_repair` — ONE screen line of the plan over its limit of characters, shortened;
-         *  - `skeleton`, `dialogue` — the day's two stages; `repair` — one card of either;
+         *  - `skeleton`, `dialogue` — the day's two stages, on the strong model (наряд GEN-4b: gpt-5.4 built 13 days of 16, the
+         *    dialogue first time right in 13 of 14, against 8 and 7 of 11 on Luna; `docs/research/gen-4b/`); `repair` — one card
+         *    of either, cheap;
          *  - `seam_judge` — one yes or no per native sentence of the day's frames, one call a day;
          *  - `slot_judge` — the learner's spoken slot, synchronously inside their request (its timeout: `slot_judge`).
          */
         'purposes' => [
             'plan' => ['model' => env('PLAN_BUILDER_MODEL', 'gpt-5.4'), 'reasoning_effort' => env('PLAN_BUILDER_REASONING')],
             'plan_line_repair' => ['model' => env('PLAN_LINE_REPAIR_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_LINE_REPAIR_REASONING')],
-            'skeleton' => ['model' => env('PLAN_SKELETON_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_SKELETON_REASONING')],
-            'dialogue' => ['model' => env('PLAN_DIALOGUE_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_DIALOGUE_REASONING')],
+            'skeleton' => ['model' => env('PLAN_SKELETON_MODEL', 'gpt-5.4'), 'reasoning_effort' => env('PLAN_SKELETON_REASONING')],
+            'dialogue' => ['model' => env('PLAN_DIALOGUE_MODEL', 'gpt-5.4'), 'reasoning_effort' => env('PLAN_DIALOGUE_REASONING')],
             'repair' => ['model' => env('PLAN_REPAIR_MODEL', 'gpt-5.6-luna'), 'reasoning_effort' => env('PLAN_REPAIR_REASONING')],
             'seam_judge' => ['model' => env('PLAN_SEAM_JUDGE_MODEL', 'gpt-5.4-mini'), 'reasoning_effort' => env('PLAN_SEAM_JUDGE_REASONING')],
             'slot_judge' => ['model' => env('PLAN_SLOT_JUDGE_MODEL', 'gpt-5.4-mini'), 'reasoning_effort' => env('PLAN_SLOT_JUDGE_REASONING')],

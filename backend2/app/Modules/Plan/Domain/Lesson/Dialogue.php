@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * THE DIALOGUE OF A DAY (`lesson_dialogue.v1`, наряд GEN-4) — the second of the day's two stages: the skeleton's frames and
+ * THE DIALOGUE OF A DAY (`lesson_dialogue.v1.1`, наряд GEN-4) — the second of the day's two stages: the skeleton's frames and
  * partner lines put into DIALOGUE_COUNT exchanges, a check in every exchange, and the listening questions of the whole
  * visit. It adds no frame, no partner line, no fact and no word: what it may write itself is the glue of a learner line, the
  * rescue, the one A line of a frame no partner line pairs with, the checks, the listening and the speaking support.

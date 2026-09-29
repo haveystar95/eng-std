@@ -8,7 +8,7 @@ use App\Modules\Plan\Domain\Check\StageText;
 use Normalizer;
 
 /**
- * A READING THAT IS THE TARGET'S OWN SOUND (наряд GEN-4; `lesson_skeleton.v1`: «every pronunciation_native is the sound of the
+ * A READING THAT IS THE TARGET'S OWN SOUND (наряд GEN-4; `lesson_skeleton.v1.1`: «every pronunciation_native is the sound of the
  * TARGET text, never the native text or something close to it»). A word the two languages share — «operator» / «оператор»,
  * «taxi» / «такси», «hotel» / «hotel» — is read close to its native text because it SOUNDS so: that is the sound the prompt
  * asks for, not a translation copied. So a reading is set beside the target's own spelling in the reading's letters — a

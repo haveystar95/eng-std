@@ -11,7 +11,7 @@ use App\Modules\Plan\Domain\Lesson\EarlierDays;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * What the skeleton was ORDERED with (`lesson_skeleton.v1`, INPUTS): the scene's survival set, VOCABULARY_COUNT, the pair of
+ * What the skeleton was ORDERED with (`lesson_skeleton.v1.1`, INPUTS): the scene's survival set, VOCABULARY_COUNT, the pair of
  * languages as their packs, the learner's gender (null — unknown) and the days of the plan already written (EARLIER_DAYS).
  */
 final readonly class SkeletonContext

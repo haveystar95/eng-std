@@ -13,8 +13,8 @@
 
 - **Один день знакомства = одна сцена = две ступени модели** (наряд GEN-4, §4): план даёт сцене **набор выживания** —
   `must_say` (6–8 намерений ученика с окном) и `must_understand` (4–5 реплик собеседника), — и день строится из него
-  скелетом (`lesson_skeleton.v1`: каркасы по пунктам, реплики собеседника по пунктам, словарь из их слов) и диалогом
-  (`lesson_dialogue.v1`: расставляет готовые каркасы и реплики, не добавляя ни факта, ни слова; код сверяет байт в байт).
+  скелетом (`lesson_skeleton.v1.1`: каркасы по пунктам, реплики собеседника по пунктам, словарь из их слов) и диалогом
+  (`lesson_dialogue.v1.1`: расставляет готовые каркасы и реплики, не добавляя ни факта, ни слова; код сверяет байт в байт).
   Сцена — одно реальное взаимодействие с одним собеседником; день N — следующий день одной истории: ступени знают материал
   и реплики прошлых дней плана (`EARLIER_DAYS`, §2) и говорят в ролях плана.
 - **День = ШЕСТЬ этапов** в фиксированном порядке: слова → фразы → диалог → слушаю и отвечаю →
@@ -22,7 +22,7 @@
   отдаваемые клиенту при открытии; шестой — живой разговор с агентом, у которого карточек нет вовсе:
   его журнал — он сам. «День пройден» = шесть этапов насквозь.
 - **Вызовы модели.** На план — строитель плана (`plan-builder-v2.1`) и починка одной строки плана сверх лимита знаков
-  (`plan_line_repair.v1`, §2). На день — скелет и диалог (`lesson_skeleton.v1`, `lesson_dialogue.v1`), починка ОДНОЙ
+  (`plan_line_repair.v1`, §2). На день — скелет и диалог (`lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`), починка ОДНОЙ
   карточки (`lesson_card_repair.v1.5`) — сборка зовёт её сама для карточек с предупреждениями, не больше двух на ступень
   (§4), — и судья швов (`lesson_seam_judge.v1.1`): один вызов на день читает родные каркасы скелета с наполнениями. Модель и
   reasoning effort — свои у каждого назначения (§9). Всё остальное — детерминированный код: календарь, проверки ступеней,
@@ -54,7 +54,7 @@
 | `conversations` | разговор с агентом (наряд CONV-1, §11) | план, день, `type` day·rehearsal·review, `state` agent_turn·your_turn·ended, `scene_ids` (чекпойнты по порядку) и `checkpoints_done`, `turn_limit`, `hints_enabled`, `cost_usd` (модель + озвучка, то, о чём спрашивают кап), `ended_reason` natural·limit·declined·replayed, `started_at`/`ended_at`. **Одна открытая на день** — частичный уникальный индекс `conversations_day_open_uidx (day_id) WHERE state <> 'ended'`; «Ещё раз» закрывает прежнюю как `replayed` |
 | `conversation_turns` | реплики разговора, **append-only** | `(conversation_id, turn_index)` уникально; `kind` agent·said·rescue·skip и `speaker` partner·learner; тексты обеих сторон; звук хода (`audio_path`, длительность, голос и счёт: символы · кредиты · $ · `request_id`); суждения роли (`understood`, `off_topic`) и сцена, закрытая на реплике (`checkpoint_done` — с FIX-4 ставит сервер на прощании сцены); **цели, которые засчитал СЕРВЕР** (`phrases_used` хода ученика — судья каркасов `FrameJudge`, наряд FIX-4 §2) и сказанные «почти» (`phrases_almost`); сцена реплики (`scene_id`) и приветствие/прощание сцены (`scene_event` start·end, наряд FIX-4 §4); подсказка, предложенная на следующий ход (`hint_native` — целая фраза, FIX-4 §5), и дверь, которую открыла реплика роли (`opens_target`, наряд FIX-3 §7; с FIX-4 — только принятая сервером); цена и время хода (модель, версия промпта, токены, `model_cost_usd` + `speech_cost_usd` = `cost_usd`, `model_latency_ms`/`speech_latency_ms`/`latency_ms`). Ни одного UPDATE: строка пишется целиком, когда роль ответила |
 | `conversation_rejections` | журнал отбраковок разговора, **append-only** (наряд FIX-4 §6, решение владельца 24.09) | что сервер отверг у роли: `kind` `rejected_answer` (ответ модели не озвучен и перезапрошен: `reason` learner_line · learner_echo · same_words · own_line · early_end; `detail.outcome` — cut · neutral · kept, когда и второй ответ отбракован; `detail.second: unavailable` — второй не пришёл) или `dropped_opening` (открытие не принято: foreign_scene · already_said · unknown_id; `detail.opens` — как назвала роль, `detail.target` — что это за цель); `turn_index` — реплика роли, о которой речь, `attempt` — попытка модели (1, 2), `model_call_id` — строка `model_calls` вызова. Токены обеих попыток — в цене хода `conversation_turns` (честная цена); `model_calls` остаётся общей таблицей Observability, подробности разговора в неё не тянутся. Индекс `(conversation_id, turn_index)` |
-| `plan_check_counters` | счётчики проверок | `(prompt_version, check_name, action)` → `hits`; у дня `check_name` — код правила ступени под версией её промпта (`lesson_skeleton.v1`, `lesson_dialogue.v1`, §4), `action`: `counted` — каждая находка ответа модели, `gated` — фатальная, спросившая ступень ещё раз, `failed` — фатальная второго ответа, уронившая день; не находка: `judge.unavailable` — судья швов не ответил (под версией скелета). У плана — проверки плана и `line_repair` (строка сверх лимита, §4). Строки прежних версий (`lesson_day.*`: коды валидатора, `lang.pack_missing`, `lesson.auto_rebuild`) остаются как были. У судьи окна `prompt_version` — `slot_judge.v3`, и код у него один: `judge.unavailable` (§4). У агента разговора `prompt_version` — `conversation_agent.v3.4` (ACC-1; прежние строки — под своими версиями), коды страховок роли (наряды CONV-2, BACK-TAILS-2 §9, FIX-3 §7, FIX-4c §6): `conversation.learner_line`, `…_cut`, `…_kept`, `conversation.rescue_same_words`, `…_kept`, `conversation.learner_echo`, `…_cut`, `…_neutral`, `…_kept`, `conversation.own_line`, `…_kept`, `conversation.early_end`, `…_kept`, `conversation.native_missing`, `…_blanked` (§11) |
+| `plan_check_counters` | счётчики проверок | `(prompt_version, check_name, action)` → `hits`; у дня `check_name` — код правила ступени под версией её промпта (`lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`, §4), `action`: `counted` — каждая находка ответа модели, `gated` — фатальная, спросившая ступень ещё раз, `failed` — фатальная второго ответа, уронившая день; не находка: `judge.unavailable` — судья швов не ответил (под версией скелета). У плана — проверки плана и `line_repair` (строка сверх лимита, §4). Строки прежних версий (`lesson_day.*`: коды валидатора, `lang.pack_missing`, `lesson.auto_rebuild`) остаются как были. У судьи окна `prompt_version` — `slot_judge.v3`, и код у него один: `judge.unavailable` (§4). У агента разговора `prompt_version` — `conversation_agent.v3.4` (ACC-1; прежние строки — под своими версиями), коды страховок роли (наряды CONV-2, BACK-TAILS-2 §9, FIX-3 §7, FIX-4c §6): `conversation.learner_line`, `…_cut`, `…_kept`, `conversation.rescue_same_words`, `…_kept`, `conversation.learner_echo`, `…_cut`, `…_neutral`, `…_kept`, `conversation.own_line`, `…_kept`, `conversation.early_end`, `…_kept`, `conversation.native_missing`, `…_blanked` (§11) |
 
 Слова и фразы дня после закрытия дня уходят в коллекцию плана (`plans.collection_id`,
 `collections.origin = 'plan'`, скрыта из «Мои коллекции») через `ImportTerm` + `AddTermToCollection`.
@@ -72,8 +72,8 @@
 |---|---|---|---|---|
 | план (`plan-builder-v2.1`, версия 8 GEN-4a) | `GOAL`, `TARGET_LANGUAGE`, `NATIVE_LANGUAGE`, `LEVEL`, `SCENES_COUNT` (считает сервер по §5), `EXISTING_SCENES` (только при расширении: каждая сцена — строкой `- заголовок`, под ней её пункты `must_say` строками `  - …`, наряд GEN-4) | `PlanSchemas::plan()`, strict; у сцены сразу после `priority` — `must_say` и `must_understand` (списки строк; пункт `must_say` — «намерение — slot: окно», сервер делит его на `{text, slot}`, `SurvivalSet`) | 180 с ответа, 10 с соединения (`PLAN_BUILDER_TIMEOUT`, `VendorCall`) | ≈ $0.02–0.04 на `gpt-5.4` (прогоны GEN-4a) |
 | **починка строки плана** (`plan_line_repair.v1`, наряд GEN-4) | одна строка экрана длиннее лимита (`CharLimitsCheck::over`: название сцены ≤ 18 / на цели ≤ 24, строка под ним ≤ 34, цель ≤ 30, название плана ≤ 24): `FIELD`, `LANGUAGE`, `LIMIT`, `LINE`; «сократи, сохранив смысл и грамматику»; не больше 12 строк на план (`PlanLineRepairer`) | `PlanSchemas::planLine()`: `{line}` | 30 с | ≈ $0.0003 на `gpt-5.6-luna` |
-| **скелет** (`lesson_skeleton.v1`) | собирает один `LessonRequests` — вход в форме TEST INPUT промта, байт в байт (тест держит): `TOPIC` = `title_native` сцены; `TOPIC_DESCRIPTION` = три строки брифа сцены + строка `About the learner, in their own words: <цель плана>`; `SURVIVAL_SET:` — `must_say:` нумерованным списком «N. намерение — slot: окно», `must_understand:` — «N. текст»; `TARGET_LANGUAGE`, `NATIVE_LANGUAGE`, `LEVEL`; `LEARNER_GENDER` — `profiles.gender` на момент сборки дня, пусто → `unknown`; `LEARNER_ROLE` = «цель / родной» **плана**, `PARTNER_ROLE` — **сцены**; `VOCABULARY_COUNT` — диапазон «8–12» (`config/plan.php`, по уровню); `EARLIER_DAYS` (ниже); на повторе — `PREVIOUS_ATTEMPT_REJECTED_FOR:` после входа | `PlanSchemas::skeleton()`, strict, ключи в порядке промпта; id — enum всех id, какие бывают у дня (`p1…p8`, `a1…a10`, `v1…v12`), своих id дня в схеме нет — кэш; длин списков нет (п. 202) | 180 с (`PLAN_LESSON_TIMEOUT`) | прогон ворот — `docs/research/gen-4b/` |
-| **диалог** (`lesson_dialogue.v1`) | `TOPIC_DESCRIPTION`, языки, `LEVEL`, `LEARNER_GENDER`, роли, **`DIALOGUE_COUNT`** = реплики скелета + непарные каркасы + 1, `EARLIER_DAYS`, `SKELETON:` — скелет после починок, JSON; на повторе — `PREVIOUS_ATTEMPT_REJECTED_FOR:` | `PlanSchemas::dialogue()`, strict: обмен с `must_understand` и `partner_line` (enum `a1…a10`∪null), сообщения A/B через `anyOf`, у строки ученика `phrase_id` (enum `p1…p8`∪null) и `filler` (строка∪null) | 180 с | там же |
+| **скелет** (`lesson_skeleton.v1.1`) | собирает один `LessonRequests` — вход в форме TEST INPUT промта, байт в байт (тест держит): `TOPIC` = `title_native` сцены; `TOPIC_DESCRIPTION` = три строки брифа сцены + строка `About the learner, in their own words: <цель плана>`; `SURVIVAL_SET:` — `must_say:` нумерованным списком «N. намерение — slot: окно», `must_understand:` — «N. текст»; `TARGET_LANGUAGE`, `NATIVE_LANGUAGE`, `LEVEL`; `LEARNER_GENDER` — `profiles.gender` на момент сборки дня, пусто → `unknown`; `LEARNER_ROLE` = «цель / родной» **плана**, `PARTNER_ROLE` — **сцены**; `VOCABULARY_COUNT` — диапазон «8–12» (`config/plan.php`, по уровню); `EARLIER_DAYS` (ниже); на повторе — `PREVIOUS_ATTEMPT_REJECTED_FOR:` после входа | `PlanSchemas::skeleton()`, strict, ключи в порядке промпта; id — enum всех id, какие бывают у дня (`p1…p8`, `a1…a10`, `v1…v12`), своих id дня в схеме нет — кэш; длин списков нет (п. 202) | 180 с (`PLAN_LESSON_TIMEOUT`) | прогон ворот — `docs/research/gen-4b/` |
+| **диалог** (`lesson_dialogue.v1.1`) | `TOPIC_DESCRIPTION`, языки, `LEVEL`, `LEARNER_GENDER`, роли, **`DIALOGUE_COUNT`** = реплики скелета + непарные каркасы + 1, `EARLIER_DAYS`, `SKELETON:` — скелет после починок, JSON; на повторе — `PREVIOUS_ATTEMPT_REJECTED_FOR:` | `PlanSchemas::dialogue()`, strict: обмен с `must_understand` и `partner_line` (enum `a1…a10`∪null), сообщения A/B через `anyOf`, у строки ученика `phrase_id` (enum `p1…p8`∪null) и `filler` (строка∪null) | 180 с | там же |
 | починка карточки (`lesson_card_repair.v1.5`) | `ADDRESS`, `CARD KIND`, `FINDINGS` (код · причина), `CARD` как его держит ступень, `SKELETON` целиком, у карточки диалога — `DIALOGUE` целиком, у обмена — `NEIGHBOURS` (обмен до и после или `none`), всем — `EARLIER_DAYS` в короткой форме (`Day {n}`, `Frames:`, `Words:`), языки, `LEVEL`, `LEARNER_GENDER`; правила — цитата разделов промпта своей ступени по виду карточки (§4), обёртка их не пересказывает | `PlanSchemas::lessonCard(вид)`: `{card}` в форме этой карточки у её ступени — одна схема на вид, без адреса и id дня; что держит сервер — §4 | 180 с | — |
 | судья швов (`lesson_seam_judge.v1.1`) | `NATIVE_LANGUAGE` (имя) и предложения на родном, собранные из РОДНЫХ КАРКАСОВ СКЕЛЕТА: `frame_native` каждого каркаса с окном с каждым `native` его наполнений (`NativeSeams`), по адресу наполнения `p3.f2` — с шаблоном и значением; до диалога, и ещё раз — каркасы, изменённые починкой. Судит только форму на стыке шаблона и значения (падеж, род, число, артикль, предлог, удвоение/пропуск слова); стиль, содержание и знак в конце — не судит; сомнение → `true` | `PlanSchemas::seamJudge(id)`: `{verdicts: [{id ∈ отправленных, reads: boolean}]}` | 180 с | ≈ $0.0016–0.0024 на `gpt-5.4-mini` |
 | **судья окна** (`slot_judge.v3`, наряд SESSION-1a; v2 — BACK-TAILS-1 §1.1, пересказ снят вместе с карточкой, входа `TASK` больше нет; v3 — CONV-2, пп. 7–8: вход `MODE`, ответ своими словами судится по смыслу, своё значение — по роду) | одним сообщением, по строке на вход, значения как есть: `MODE` (`answer` у `speak_answer`, `own_value` у круга «со своим словом»), `TARGET_LANGUAGE`, `NATIVE_LANGUAGE` (имена языков), `LEVEL` (значение уровня плана — `beginner`/`intermediate`, не промт-метка), `PARTNER_LINE` и `PARTNER_LINE_NATIVE` (реплика собеседника обмена карточки у `speak_answer`; пусты у `ask`-обмена — FIX-2 п. 3 — и в режиме `own_value` — CONV-2 п. 8), `PATTERN` = `frame_target`, `PATTERN_NATIVE` = `frame_native`, `SLOT_HINT` = `slot.hint_native`, `EXAMPLE_VALUES` = target наполнений через «; », `HEARD` — распознанное **как пришло** (не схлопывается: шум распознавания промпт велит прощать, а простить можно только то, что видно) | `PlanSchemas::slotJudge()`, strict: `{accepted: boolean, slot_value: string\|null, reason_native: string\|null}`, все ключи обязательны, `additionalProperties: false` | 8 с (`PLAN_SLOT_JUDGE_TIMEOUT`), **ровно одна HTTP-попытка, без ретрая** (`ContentModelCatalog::get(… retries: 1)` — у адаптера по умолчанию их четыре, и таймаут ретраится: ученик ждал бы 8 с четырежды; у остальных вызывающих поведение прежнее). Синхронно внутри `POST …/cards/{card}/judge` и **вне транзакции** — на восьми секундах не держится ни одна блокировка. Модель молчит, отвечает не по форме или суточный кап исчерпан → вердикт пишет код (`accepted`, §6) и `+1 judge.unavailable` в `plan_check_counters` по версии `slot_judge.v3` | ≈ **$0.0005 за вызов** на `gpt-5.4-mini` по `ModelCost`; живьём на смоуке наряда (`docs/research/session-1a/judge-smoke.jsonl`, 7 вызовов модели) — $0.000516–0.000610, вход 548–586 токенов, выход 22–43, задержка модели 1.0–3.6 с. Кап 60 вызовов на ученика в сутки = ≤ ≈ $0.033 в день на ученика. Цена, токены и задержка — в лог исходящих (`purpose = plan`) и в `response.judge` карточки; на сцену и план они не пишутся |
@@ -107,11 +107,12 @@
   план и повтор × 180 + 12 строк × 30 + минута (**780 с**); `retry_after` очереди Redis (**1 920 с**) и
   `build_stale_seconds` (**1 920**) — выше, так что живой job не отдаётся второму воркеру и повтор ученика не гонится с
   ним; job, вышедший за таймаут, падает и не повторяется.
-- **Модель — на каждое назначение** (наряд GEN-4, `config/plan.php` → `model.purposes`): `plan` — `gpt-5.4`
-  (`PLAN_BUILDER_MODEL`), `plan_line_repair`, `skeleton`, `dialogue`, `repair` — `gpt-5.6-luna` (`PLAN_LINE_REPAIR_MODEL`,
-  `PLAN_SKELETON_MODEL`, `PLAN_DIALOGUE_MODEL`, `PLAN_REPAIR_MODEL`), `seam_judge` и `slot_judge` — `gpt-5.4-mini`
-  (`PLAN_SEAM_JUDGE_MODEL`, `PLAN_SLOT_JUDGE_MODEL`); у каждого — `reasoning_effort` (`PLAN_*_REASONING`; пусто — не
-  шлётся, модель берёт свой). Провайдер — `PLAN_MODEL_PROVIDER`; агент разговора — `PLAN_CONVERSATION_MODEL` (§11).
+- **Модель — на каждое назначение** (наряд GEN-4, `config/plan.php` → `model.purposes`; модели ступеней — GEN-4b):
+  `plan`, `skeleton`, `dialogue` — `gpt-5.4` (`PLAN_BUILDER_MODEL`, `PLAN_SKELETON_MODEL`, `PLAN_DIALOGUE_MODEL`; прогон ворот:
+  на gpt-5.4 день собирался в 13 случаях из 16, на Luna — в 8), `plan_line_repair`, `repair` — `gpt-5.6-luna`
+  (`PLAN_LINE_REPAIR_MODEL`, `PLAN_REPAIR_MODEL`), `seam_judge` и `slot_judge` — `gpt-5.4-mini` (`PLAN_SEAM_JUDGE_MODEL`,
+  `PLAN_SLOT_JUDGE_MODEL`); `reasoning_effort` — необязательный (`PLAN_*_REASONING`; пусто — не шлётся, модель берёт свой),
+  нигде не включён: Luna с effort high отвергнута (DECISIONS п. 453: 143 с на скелет, 2 таймаута из 10, $0.088 скелет). Провайдер — `PLAN_MODEL_PROVIDER`; агент разговора — `PLAN_CONVERSATION_MODEL` (§11).
   Тариф `gpt-5.6-luna` в `ModelCost` — $1 / $6 за 1M входа / выхода, кэш — $0.10. Прежние `PLAN_LESSON_MODEL` и
   `PLAN_JUDGE_MODEL` не читаются. `PLAN_MODEL_DRIVER=fake` — детерминированный `FakePlanModel` (тесты, офлайн: скелет и
   диалог — из одного урока-фикстуры, диалог говорит скелет, который ему дали).
@@ -246,14 +247,18 @@ JSON / не по схеме = отказ модели → один ретрай,
 конца у каркасов и наполнений («I work ___ .» читается «I work ___.») и чинит буквы чтений (`ReadingLetters`: латинские
 двойники и буквы других кириллиц внутри кириллического слова).
 
-- **Скелет** (`lesson_skeleton.v1`) — каркасы по пунктам `must_say` (каркас называет пункты, которым служит, `must_say`; два
+- **Скелет** (`lesson_skeleton.v1.1`) — каркасы по пунктам `must_say` (каркас называет пункты, которым служит, `must_say`; два
   пункта одного образца — один каркас), реплики собеседника по пунктам `must_understand` (`partner_lines`: `id` `a1…`,
-  пункт, вид question·statement, `pairs_with` — пункты `must_say`, на которые реплика отвечает или которые открывает) и
+  пункт, вид question·statement, `pairs_with` — **ровно один** пункт `must_say`: каркас, который отвечает на вопрос, или
+  каркас, за которым сообщение следует в разговоре; пусто — только у **реплики-остатка**, когда у каждого каркаса уже есть
+  реплика; v1.1, наряд GEN-4b) и
   словарь из слов каркасов и реплик (`used_in` — `p3`/`a4`). Хранится рядом с уроком, после починок
   (`plan_scenes.skeleton_json`).
-- **Диалог** (`lesson_dialogue.v1`) расставляет готовые каркасы и реплики: DIALOGUE_COUNT обменов; у обмена `partner_line`
+- **Диалог** (`lesson_dialogue.v1.1`) расставляет готовые каркасы и реплики: DIALOGUE_COUNT обменов; у обмена `partner_line`
   (какую реплику скелета говорит A; `null` у rescue и у каркаса без пары) и `must_understand`, у строки ученика `phrase_id`
-  и `filler`; проверка каждого обмена и listening. Ни факта, ни слова сверх скелета — код сверяет байт в байт.
+  и `filler`; проверка каждого обмена и listening. Ни факта, ни слова сверх скелета — код сверяет байт в байт. Реплику-остаток
+  A говорит в своём обмене, ученик отвечает **уже сказанным каркасом с другим наполнением**; каркас звучит второй раз только
+  там или во второй реплике, спаренной с ним (`frame.repeated`), — не для счёта.
   **DIALOGUE_COUNT = реплики собеседника + каркасы, которых не называет ни один `pairs_with`, + 1 (rescue)**
   (`Skeleton::dialogueCount`).
 - **Повтор ступени — только по фатальной находке** (или ответу не по схеме), **не больше одного на ступень**: ступень
@@ -264,7 +269,9 @@ JSON / не по схеме = отказ модели → один ретрай,
 - **Предупреждения** шлют свою карточку в починку (`lesson_card_repair.v1.5`): скелета — каркас `p3` (и его наполнения
   `p3.f2`), реплику собеседника `a4`, слово `v4`; диалога — обмен `x3` (и его сообщения `A3`/`B3`), проверку `x3.check`,
   вопрос listening `L2`. **Не больше двух карточек на ступень**, по порядку «каркас → реплика → слово» и «обмен → проверка →
-  listening», внутри вида — по адресу. Починённая ступень проверяется заново, и починка **остаётся, только если не
+  listening», внутри вида — по адресу; **первыми** — карточки кода с бюджетом (`LessonCodes::BUDGETED`,
+  `pronunciation.foreign_script`, GEN-4b): он фатален, только если его карточек больше двух или находка стоит не на карточке
+  (заголовок, описание, роль). Починённая ступень проверяется заново, и починка **остаётся, только если не
   принесла фатальной находки** — иначе карточка остаётся, какой её написала ступень, со своим предупреждением. Сервер
   держит то, что починка менять не может: у каркаса — id, вид и `must_say`; у реплики — id, пункт, вид и `pairs_with`; у
   слова — id; у обмена — шаг, вид, открывающего, `partner_line` и пункт (`LessonCard::replace`). Починённый каркас
@@ -288,19 +295,20 @@ JSON / не по схеме = отказ модели → один ретрай,
   который её говорит (`A5`); реплика, которую не говорит ни один обмен, выпадает. Каркасам и строкам (обе стороны,
   упрощённые варианты) без знака конца код дописывает «.»; вопросы — с «?»; чтения, наполнения, проверки и listening — как
   написаны. `must_say`, `must_understand`, `partner_line`, `pairs_with` в урок не попадают. Роли — из плана (`Lesson::withRoles`).
-- **Счётчики** (`plan_check_counters`): каждая находка — `counted` под версией промпта своей ступени (`lesson_skeleton.v1`,
-  `lesson_dialogue.v1`; судья швов — под версией скелета), фатальная — ещё `gated`, фатальная второго ответа — `failed`.
+- **Счётчики** (`plan_check_counters`): каждая находка — `counted` под версией промпта своей ступени (`lesson_skeleton.v1.1`,
+  `lesson_dialogue.v1.1`; судья швов — под версией скелета), фатальная — ещё `gated`, фатальная второго ответа — `failed`.
   Предупреждения, оставшиеся после починок, — в `checks_json` сцены; фатальной находки в сохранённом уроке не бывает. Цена
   и время дня — оба вызова, повторы, судья и починки (`cost_usd_lesson`, `latency_ms_lesson`); версия дня —
-  `lesson_skeleton.v1+lesson_dialogue.v1`; разбивка по вызовам — журнал `model_calls` (§2).
+  `lesson_skeleton.v1.1+lesson_dialogue.v1.1`; разбивка по вызовам — журнал `model_calls` (§2).
 
 Проверки — только код, без семантики: каждое правило — класс (`Domain/Check/Skeleton/Rule`, `Domain/Check/Dialogue/Rule`),
 код правила = имя находки в починке; тест каждого правила — канон с одним дефектом (`tests/Unit/Plan/Day`). Канон — скелет
-из TEST INPUT `lesson_dialogue.v1` (румынское собеседование) без единственного предупреждения этого примера (`post`, `v2`,
+из TEST INPUT `lesson_dialogue.v1.1` (румынское собеседование) без единственного предупреждения этого примера (`post`, `v2`,
 называет в `used_in` реплику `a6`, где слова нет) и диалог к нему. ✦ — страж формы или код, который называет промт
 починки, сверх списка наряда.
 
-**SkeletonCheck** — 11 фатальных, 13 предупреждений:
+**SkeletonCheck** — 11 фатальных, 14 предупреждений (GEN-4b: `partner.pairs_none` — фатально, `pronunciation.foreign_script` —
+предупреждение с бюджетом):
 
 | код | что | |
 |---|---|---|
@@ -311,10 +319,11 @@ JSON / не по схеме = отказ модели → один ретрай,
 | `partner.item_unknown` | реплика с пунктом вне списка | фатально |
 | `vocab.not_found` | слова нет ни в каркасе (с каждым наполнением), ни в реплике — по форме (`TermForms`: словарная форма против спрягаемой, у связки — её знаменательные слова, у слова из одних служебных — все его слова; неправильные формы — из `lemma_forms` пакета цели: «vouloir» — «veux», «a putea» — «pot»; слово текста читается и целиком, и по частям при апострофе и дефисе: «l’ambiance» говорит «ambiance») | фатально |
 | `vocab.count` | слов вне VOCABULARY_COUNT | фатально |
-| `pronunciation.foreign_script` | в чтении каркаса, наполнения, слова — буква чужой письменности (`script_letters`); в родном поле — слово из двух письменностей или буква другой кириллицы (укр. «і» в русском слове) | фатально |
 | `pronunciation.equals_native` | чтение равно родному тексту (у каркаса — всегда; наполнение и слово с заглавной на обоих языках — имя, читается как пишется) | фатально |
 | ✦ `skeleton.ids` | два каркаса, две реплики или два слова под одним id | фатально |
 | ✦ `partner.pairs_many` | каркасу, с которым спарена реплика собеседника (`pairs_with`), не остаётся своей реплики: реплика звучит один раз, в одном обмене, с одним каркасом, и каркасы разводятся по репликам по одному (паросочетание) — «Für Sie passt das Basiskonto. Es kostet vier Euro» на два каркаса-вопроса без второй реплики оставляет каркас без обмена, и день падал на `frame.unused` / `partner.unlinked` после двух оплаченных диалогов (прогон ворот: планы 04, 08, 09). Реплика на два каркаса, когда второй берёт другая реплика, и два пункта ОДНОГО каркаса — не находка | фатально |
+| ✦ `partner.pairs_none` | реплика с пустым `pairs_with`, когда у какого-то каркаса нет своей реплики: пустой `pairs_with` — только остаток (GEN-4b; прогон ворот, gpt-5.4, день 02 — два сообщения без пары рядом с двумя каркасами без реплики, диалог выдумал две реплики A для счёта) | фатально |
+| `pronunciation.foreign_script` | в чтении каркаса, наполнения, слова — буква чужой письменности (`script_letters`); в родном поле — слово из двух письменностей или буква другой кириллицы (укр. «і» в русском слове). Латинская ударная «ú» / «í» в кириллическом чтении — двойник родного языка, её чинит парсер (`ReadingLetters`: «и́» для ru, «і́» для uk/be) | карточка первой; фатально сверх двух карточек или вне карточки (GEN-4b) |
 | `pronunciation.near_native` | чтение каркаса или наполнения близко к родному (сходство ≥ 0.75, `StageText::similarity`), но не равно | карточка |
 | `frame.native_twin` | одинаковый `frame_native` у двух каркасов | карточка |
 | `filler.common_prefix` | все наполнения окна начинаются одним знаменательным словом (любой язык; общий артикль или предлог — не находка) | карточка |
@@ -329,7 +338,7 @@ JSON / не по схеме = отказ модели → один ретрай,
 | `partner.too_long` | реплика > 18 слов | карточка |
 | `frame.missing_item` | пункт `must_say` без каркаса — не фатально: пункт мог быть уже выучен | скелет целиком |
 
-**DialogueCheck** — 15 фатальных, 7 предупреждений:
+**DialogueCheck** — 16 фатальных, 7 предупреждений:
 
 | код | что | |
 |---|---|---|
@@ -343,6 +352,7 @@ JSON / не по схеме = отказ модели → один ретрай,
 | `line.unknown_frame` | `phrase_id` — не каркас скелета | фатально |
 | `line.foreign_filler` | `filler` не из этого каркаса; наполнение у каркаса без окна | фатально |
 | `frame.unused` | на каркасе не стоит ни одна строка ученика | фатально |
+| ✦ `frame.repeated` | каркас сказан второй раз в обмене, который не обмен реплики-остатка и чья реплика A не спарена с этим каркасом (GEN-4b: повтор — только остатку или второй реплике того же каркаса, не для счёта) | фатально |
 | `rescue.count` | обменов rescue ≠ 1 | фатально |
 | `check.missing` | у обмена нет проверки | фатально |
 | ✦ `check.shape` | у проверки не три варианта на обоих языках или верный — мимо | фатально |

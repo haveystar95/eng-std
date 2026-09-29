@@ -178,6 +178,8 @@ return [
         'spendere' => ['speso'],
         'decidere' => ['deciso'],
         'succedere' => ['successo'],
+        // GEN-4b: the impersonal «bisogna», beside «falloir» — «faut» of the French day the gate run failed on.
+        'bisognare' => ['bisogna', 'bisognava', 'bisognerà', 'bisognerebbe'],
     ],
 
     // A number: a digit anywhere in the word; a numeral made of the parts of Italian numerals («ventitré», «ventun»,

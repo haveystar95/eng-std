@@ -47,7 +47,7 @@ it('reports every code with its findings, fatal ones, days, failed days, share, 
     ]);
     // The counters of every attempt, two prompt versions — the report adds them up.
     DB::table('plan_check_counters')->where('check_name', 'line.ne_frame')->delete();
-    foreach ([['lesson_day.v4.10', 'counted', 2], ['lesson_dialogue.v1', 'counted', 3], ['lesson_dialogue.v1', 'gated', 5], ['lesson_dialogue.v1', 'failed', 2]] as [$version, $action, $hits]) {
+    foreach ([['lesson_day.v4.10', 'counted', 2], ['lesson_dialogue.v1.1', 'counted', 3], ['lesson_dialogue.v1.1', 'gated', 5], ['lesson_dialogue.v1.1', 'failed', 2]] as [$version, $action, $hits]) {
         DB::table('plan_check_counters')->insert(['id' => (string) Str::ulid(), 'prompt_version' => $version, 'check_name' => 'line.ne_frame', 'action' => $action, 'hits' => $hits, 'updated_at' => now()]);
     }
     $days = DB::table('plan_scenes')->whereIn('lesson_status', ['ready', 'failed'])->whereRaw('coalesce(generated_at, build_started_at, updated_at) >= ?', [$since])->count();

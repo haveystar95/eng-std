@@ -45,9 +45,9 @@ final class FakePlanModel implements PlanModelPort
     /** The version of every prompt, as the files in `current/` name them. */
     public const PLAN_VERSION = 'plan-builder-v2.1';
 
-    public const SKELETON_VERSION = 'lesson_skeleton.v1';
+    public const SKELETON_VERSION = 'lesson_skeleton.v1.1';
 
-    public const DIALOGUE_VERSION = 'lesson_dialogue.v1';
+    public const DIALOGUE_VERSION = 'lesson_dialogue.v1.1';
 
     public const REPAIR_VERSION = 'lesson_card_repair.v1.5';
 

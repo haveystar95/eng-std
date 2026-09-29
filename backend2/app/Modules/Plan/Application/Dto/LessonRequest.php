@@ -11,8 +11,8 @@ use App\Modules\Plan\Domain\ValueObject\PlanLevel;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
- * THE INPUTS OF A DAY (наряд GEN-4) — what the skeleton (`lesson_skeleton.v1`, INPUTS) and the dialogue
- * (`lesson_dialogue.v1`, INPUTS) are written from, exactly as their prompts name them — plus the two language CODES beside the
+ * THE INPUTS OF A DAY (наряд GEN-4) — what the skeleton (`lesson_skeleton.v1.1`, INPUTS) and the dialogue
+ * (`lesson_dialogue.v1.1`, INPUTS) are written from, exactly as their prompts name them — plus the two language CODES beside the
  * names (the prompts read «Russian», the checks read «ru») and the scene's id, which seeds the shuffle of the options.
  *
  * `topicDescription` is the scene's three-line brief with the learner's own words after it; `survival` is the scene's

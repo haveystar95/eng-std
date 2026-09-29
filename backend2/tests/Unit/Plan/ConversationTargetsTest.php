@@ -260,7 +260,7 @@ function ctMaterialTitle(string $native, LanguagePacks $packs): array
     $plan->acceptBlueprint((new BlueprintParser)->parse(FakePlanModel::planPayload($request)), new ModelCall('plan-builder-v2.1', 'test', 'fake', '0.000000', 1, 1), [], static fn (): PlanSceneId => PlanSceneId::generate());
     $scene = $plan->sceneOf($plan->day(1)) ?? throw new RuntimeException('day 1 holds no scene');
     $payload = FakePlanModel::lessonPayload(FakePlanModel::lessonRequest('x'));
-    $scene->acceptLesson((new LessonParser)->parse($payload), planSkeletonOf($payload), lessonPacks()->for('en'), new ModelCall('lesson_skeleton.v1+lesson_dialogue.v1', 'test', 'fake', '0.000000', 1, 2), [], $now);
+    $scene->acceptLesson((new LessonParser)->parse($payload), planSkeletonOf($payload), lessonPacks()->for('en'), new ModelCall('lesson_skeleton.v1.1+lesson_dialogue.v1.1', 'test', 'fake', '0.000000', 1, 2), [], $now);
     $scene->finishIllustration($now);
 
     // The talk's title needs no term: a repository that holds none, and fails loudly if asked to write.

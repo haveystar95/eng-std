@@ -64,6 +64,25 @@ it('puts the letters of other Cyrillic alphabets back into the letters of the re
     'with a Latin twin in the same word' => ["Ам аҗутa\u{0301}т ___ .", "Ам ажута\u{0301}т ___ ."],
 ]);
 
+// Наряд GEN-4b §3: «латинские ударные гласные внутри кириллического чтения — двойники по родному языку (ú/í → и́ для ru, і́
+// для uk/be); тест на канон: e2e-случай «а сэ нумú» → «а сэ нуми́»». The e2e day of GEN-4 failed on it twice. CATCHES the
+// twin left in a reading, the letter of one language given to another (a Belarusian has no «и»), a capital missed, and a
+// parser that knows no learner mending by a guess.
+it('puts a Latin stressed «ú» / «í» back as the stressed /i/ of the learner\'s own alphabet', function (?string $native, string $model, string $read) {
+    $p = lpPayload();
+    $p['phrases'][0]['pronunciation_native'] = $model;
+
+    expect((new LessonParser)->forNative($native)->parse($p)->phrases[0]->pronunciationNative)->toBe($read);
+})->with([
+    'the e2e day, ru' => ['ru', 'а сэ нумú', "а сэ нуми\u{0301}"],
+    'an í, ru' => ['ru', 'саркíнэ', "сарки\u{0301}нэ"],
+    'the gate run\'s be day' => ['be', 'сíльны', "сі\u{0301}льны"],
+    'uk' => ['uk', 'кнúга', "кні\u{0301}га"],
+    'capitals, ru' => ['ru', 'ÚМ Íва', "И\u{0301}М И\u{0301}ва"],
+    'no learner named: left for the check' => [null, 'а сэ нумú', 'а сэ нумú'],
+    'a learner reading Latin letters' => ['pl', 'numú', 'numú'],
+]);
+
 // Canon of the fix: «латиница рядом с кириллицей остаётся латиницей; другие письменности не чинятся». CATCHES a Latin word
 // next to Cyrillic ones turned into Cyrillic («SMS-ку»), the Latin reading of a learner who reads Latin letters touched,
 // a letter with no Cyrillic twin forced into one, a Cyrillic word already right changed (ё, й and a stress kept), a
