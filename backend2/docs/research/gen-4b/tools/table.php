@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 use App\Modules\Plan\Domain\Check\LessonCodes;
 
-const TABLE_OUT = OUT.'/summary.md';
+define('TABLE_OUT', OUT.'/'.(getenv('TABLE_FILE') ?: 'summary.md'));
 
 /** @return array<string, array<string, mixed>> the runs of a kind, by plan id */
 function runFiles(string $dir): array
@@ -123,13 +123,13 @@ function measured(array $days, string $stage, bool $firstOnly): array
 }
 
 $plans = runFiles('plans');
-$recheck = (readJson(RUNS.'/recheck.json') ?? [])['runs'] ?? [];
+$recheck = (readJson(RECHECK_FILE) ?? [])['runs'] ?? [];
 $diverged = [];
 // One measure or none: a run recorded after the last recheck would be counted by the run's reading alone.
 foreach ([...array_map(static fn (string $r): string => "days/{$r}", array_keys(DAY_RUNS)), ...array_map(static fn (string $r): string => "skeletons/{$r}", array_keys(SKELETON_RUNS))] as $dir) {
     $missing = array_diff(array_keys(runFiles($dir)), array_keys($recheck[$dir] ?? []));
     if ($missing !== []) {
-        fwrite(STDERR, "Refused: runs/recheck.json has no {$dir} ".implode(', ', $missing)." — run gate.php recheck first.\n");
+        fwrite(STDERR, 'Refused: '.RECHECK_FILE." has no {$dir} ".implode(', ', $missing)." — run gate.php recheck first.\n");
         exit(1);
     }
 }
@@ -208,16 +208,16 @@ foreach (array_keys(DAY_RUNS) as $run) {
 
 $lines[] = '## Итог';
 $lines[] = '';
-$lines[] = '_Доли — первый ответ ступени каждого дня, одной меркой (финальный код проверок, `recheck.json`); «в прогоне» — как прочёл его код прогона, где отличается. Починки, повторы, цена, время — как прошёл прогон._';
+$lines[] = '_Доли — первый ответ ступени каждого дня, одной меркой (финальный код проверок, `'.basename(RECHECK_FILE).'`); «в прогоне» — как прочёл его код прогона, где отличается. Починки, повторы, цена, время — как прошёл прогон._';
 $lines[] = '';
-$lines[] = '| модель ступеней | дней собрано | чистых скелетов | скелетов без фатальных | чистых диалогов | диалогов без фатальных | починок на день (отпр.) | оставлено / помогло | повторов скелета / диалога | средняя цена дня | среднее время дня, с |';
+$lines[] = '| прогон · модель ступеней | дней собрано | чистых скелетов | скелетов без фатальных | чистых диалогов | диалогов без фатальных | починок на день (отпр.) | оставлено / помогло | повторов скелета / диалога | средняя цена дня | среднее время дня, с |';
 $lines[] = '|---|---|---|---|---|---|---|---|---|---|---|';
 foreach ($summary as $run => $s) {
     $sk = measured($recheck["days/{$run}"] ?? [], 'skeleton', true);
     $dl = measured($recheck["days/{$run}"] ?? [], 'dialogue', true);
     $lines[] = sprintf(
-        '| `%s` | %s | %s | %s | %s | %s | %.2f | %d / %d | %d / %d | %s | %.0f |',
-        DAY_RUNS[$run]['model'], share($s['built'], $s['days']),
+        '| `%s` · `%s` | %s | %s | %s | %s | %s | %.2f | %d / %d | %d / %d | %s | %.0f |',
+        $run, DAY_RUNS[$run]['model'], share($s['built'], $s['days']),
         both($sk['clean'], $s['clean_skeleton'], $s['days']), both($sk['fatal_free'], $s['fatal_free_skeleton'], $s['days']),
         both($dl['clean'], $s['clean_dialogue'], $s['dialogues']), both($dl['fatal_free'], $s['fatal_free_dialogue'], $s['dialogues']),
         $s['days'] === 0 ? 0 : $s['repairs'] / $s['days'], $s['kept'], $s['helped'], $s['skeleton_repeats'], $s['dialogue_repeats'],

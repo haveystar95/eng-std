@@ -1,0 +1,17 @@
+[
+    {
+        "code": "check.answer_is_filler",
+        "detail": "the right option «Lucru cu clienții» / «Работа с клиентами» is the learner's filler «lucrul cu clienții»",
+        "address": "x6.check"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Lucru cu clienții» repeats «lucru cu» of A's «Postul include lucru cu clienții și pregătirea documentelor.»",
+        "address": "x6.check"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Pregătirea documentelor» repeats «pregătirea documentelor» of A's «Include și pregătirea documentelor.»",
+        "address": "x7.check"
+    }
+]

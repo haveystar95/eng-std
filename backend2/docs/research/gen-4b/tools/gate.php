@@ -83,16 +83,24 @@ const OUT = 'docs/research/gen-4b';
 const RUNS = OUT.'/runs';
 const SPEND_FILE = OUT.'/spend.json';
 
-/** The order's cap on OpenAI ($5): the e2e of §6 is in `spend.json` too (unit `e2e`, its calls read off the e2e journal). */
-const CAP_USD = 5.00;
+/** Where `recheck` writes and `table` reads the one measure — `RECHECK_FILE` names another (GEN-4b: `recheck-b.json`). */
+define('RECHECK_FILE', RUNS.'/'.(getenv('RECHECK_FILE') ?: 'recheck.json'));
+
+/**
+ * The caps on OpenAI, one `spend.json` for both: GEN-4's $5 (spent $4.9341, the e2e of §6 in it — unit `e2e`, its calls read
+ * off the e2e journal) and GEN-4b's $1 on top — the three failed days again and its e2e (unit `e2e-b`).
+ */
+const CAP_USD = 5.9341;
 
 /** The dearest one unit of each kind may cost, seen or feared: a plan, a day of either model, a skeleton thought hard about. */
-const WORST_USD = ['plan' => 0.08, 'luna' => 0.25, 'gpt54' => 0.30, 'luna-high' => 0.10];
+const WORST_USD = ['plan' => 0.08, 'luna' => 0.25, 'gpt54' => 0.30, 'gpt54-b' => 0.30, 'luna-high' => 0.10];
 
 /** The runs: which model writes the two stages, and with what effort. The repairs and the judge are the config's. */
 const DAY_RUNS = [
     'luna' => ['model' => 'gpt-5.6-luna', 'effort' => null],
     'gpt54' => ['model' => 'gpt-5.4', 'effort' => null],
+    // GEN-4b: the three days gpt-5.4 failed (02, 05, 14) again, on the prompts v1.1 and the checks of GEN-4b.
+    'gpt54-b' => ['model' => 'gpt-5.4', 'effort' => null],
 ];
 const SKELETON_RUNS = [
     'luna-high' => ['model' => 'gpt-5.6-luna', 'effort' => 'high'],
@@ -765,8 +773,8 @@ switch ($command) {
                 $out['runs'][$dir][$id] = $answers;
             }
         }
-        write(RUNS.'/recheck.json', $out);
-        fwrite(STDERR, 'written '.RUNS."/recheck.json\n");
+        write(RECHECK_FILE, $out);
+        fwrite(STDERR, 'written '.RECHECK_FILE."\n");
         break;
 
     case 'table':

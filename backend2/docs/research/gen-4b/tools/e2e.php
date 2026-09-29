@@ -38,7 +38,7 @@ require __DIR__.'/../../../../vendor/autoload.php';
 $app = require __DIR__.'/../../../../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
-const E2E_OUT = 'docs/research/gen-4b/e2e';
+define('E2E_OUT', 'docs/research/gen-4b/'.(getenv('E2E_OUT') ?: 'e2e'));
 const GOAL = 'Собеседование в пятницу, боюсь вопросов про опыт';
 const LEARNER = 'qa-gen4-ru-ro-0929@wt.test';
 

@@ -1,0 +1,122 @@
+{
+    "calls": [
+        {
+            "id": "01M3PH2778RRNM2H01RJCQ6TQJ",
+            "status": "completed",
+            "model": "gpt-5.4",
+            "answered_model": "gpt-5.4-2026-03-05",
+            "purpose": "plan",
+            "tokens_in": 4851,
+            "cached_tokens": 3840,
+            "tokens_out": 847,
+            "cost_usd": "0.016193",
+            "latency_ms": 14527,
+            "started_at": "2026-09-29 12:08:36+00"
+        },
+        {
+            "id": "01M3PH2RMGF8K8HV9C88ANENA1",
+            "status": "completed",
+            "model": "gpt-5.4",
+            "answered_model": "gpt-5.4-2026-03-05",
+            "purpose": "skeleton",
+            "tokens_in": 5244,
+            "cached_tokens": 2816,
+            "tokens_out": 1888,
+            "cost_usd": "0.035094",
+            "latency_ms": 26423,
+            "started_at": "2026-09-29 12:08:54+00"
+        },
+        {
+            "id": "01M3PH3JFG4AQZP5DMCN9H1H39",
+            "status": "completed",
+            "model": "gpt-5.4-mini",
+            "answered_model": "gpt-5.4-mini-2026-03-17",
+            "purpose": "seam_judge",
+            "tokens_in": 1230,
+            "cached_tokens": 0,
+            "tokens_out": 211,
+            "cost_usd": "0.001872",
+            "latency_ms": 1615,
+            "started_at": "2026-09-29 12:09:21+00"
+        },
+        {
+            "id": "01M3PH3M2EMY50KX5NR82260GN",
+            "status": "completed",
+            "model": "gpt-5.6-luna",
+            "answered_model": "gpt-5.6-luna",
+            "purpose": "repair",
+            "tokens_in": 6177,
+            "cached_tokens": 3963,
+            "tokens_out": 357,
+            "cost_usd": "0.004752",
+            "latency_ms": 4427,
+            "started_at": "2026-09-29 12:09:22+00"
+        },
+        {
+            "id": "01M3PH3RD823PX5V2YFD6QB0J5",
+            "status": "completed",
+            "model": "gpt-5.6-luna",
+            "answered_model": "gpt-5.6-luna",
+            "purpose": "repair",
+            "tokens_in": 6066,
+            "cached_tokens": 0,
+            "tokens_out": 141,
+            "cost_usd": "0.006912",
+            "latency_ms": 2584,
+            "started_at": "2026-09-29 12:09:27+00"
+        },
+        {
+            "id": "01M3PH3TYKH9AZ17YDTV7ZNCQA",
+            "status": "completed",
+            "model": "gpt-5.4-mini",
+            "answered_model": "gpt-5.4-mini-2026-03-17",
+            "purpose": "seam_judge",
+            "tokens_in": 652,
+            "cached_tokens": 0,
+            "tokens_out": 46,
+            "cost_usd": "0.000696",
+            "latency_ms": 801,
+            "started_at": "2026-09-29 12:09:29+00"
+        },
+        {
+            "id": "01M3PH3VQYNC6B4AQSKQ1SGWDD",
+            "status": "completed",
+            "model": "gpt-5.4",
+            "answered_model": "gpt-5.4-2026-03-05",
+            "purpose": "dialogue",
+            "tokens_in": 6960,
+            "cached_tokens": 2816,
+            "tokens_out": 2541,
+            "cost_usd": "0.049179",
+            "latency_ms": 35067,
+            "started_at": "2026-09-29 12:09:30+00"
+        },
+        {
+            "id": "01M3PH4Y0MHW2W2H76YQC5ZV27",
+            "status": "completed",
+            "model": "gpt-5.6-luna",
+            "answered_model": "gpt-5.6-luna",
+            "purpose": "repair",
+            "tokens_in": 8099,
+            "cached_tokens": 3391,
+            "tokens_out": 290,
+            "cost_usd": "0.006787",
+            "latency_ms": 4526,
+            "started_at": "2026-09-29 12:10:05+00"
+        },
+        {
+            "id": "01M3PH52ECRBJ3RC20FFAMXC55",
+            "status": "completed",
+            "model": "gpt-5.6-luna",
+            "answered_model": "gpt-5.6-luna",
+            "purpose": "repair",
+            "tokens_in": 8081,
+            "cached_tokens": 3391,
+            "tokens_out": 293,
+            "cost_usd": "0.006787",
+            "latency_ms": 4428,
+            "started_at": "2026-09-29 12:10:10+00"
+        }
+    ],
+    "cost_usd": 0.128272
+}

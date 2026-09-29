@@ -1,0 +1,184 @@
+{
+    "plan": {
+        "id": "01M3PH274ZB7RYCQMJ0AB13PA1",
+        "status": "ready",
+        "goal": "Собеседование в пятницу, боюсь вопросов про опыт",
+        "title_native": "Собеседование",
+        "title_target": "Interviu de angajare",
+        "overdue_native": "Собеседование было вчера",
+        "prompt_version_plan": "plan-builder-v2.1",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.016193",
+        "attempts_plan": 1,
+        "findings": [
+            {
+                "mode": "observe",
+                "check": "survival_slot_none",
+                "action": "counted",
+                "detail": "scene 2: 4 must_say items end with «— slot: none» (at most 2)"
+            },
+            {
+                "mode": "observe",
+                "check": "survival_slot_answer",
+                "action": "counted",
+                "detail": "scene 2: must_say 3 «ask when the work starts» — slot «the time expression» is what the answer names (time)"
+            },
+            {
+                "mode": "observe",
+                "check": "survival_slot_answer",
+                "action": "counted",
+                "detail": "scene 2: must_say 5 «ask when you will get an answer» — slot «the time expression» is what the answer names (time)"
+            }
+        ]
+    },
+    "days": [
+        {
+            "number": 1,
+            "type": "scene",
+            "scene_id": "01M3PH2NE00VKYS85E9T8BC6GB",
+            "status": "locked"
+        },
+        {
+            "number": 2,
+            "type": "scene",
+            "scene_id": "01M3PH2NE1H1J307SC7NSYWJQV",
+            "status": "locked"
+        }
+    ],
+    "scenes": [
+        {
+            "id": "01M3PH2NE00VKYS85E9T8BC6GB",
+            "order": 1,
+            "priority": 2,
+            "title_native": "Опыт работы",
+            "title_target": "Experiență",
+            "teaches_native": "рассказать про опыт и график",
+            "goals_native": [
+                "сказать, на какую вакансию",
+                "сказать, где работали",
+                "сказать, что делали",
+                "спросить про график"
+            ],
+            "topic_description": "Situation: You are in the main part of a job interview with the interviewer. This is the moment that matters most because you are worried about questions about your past experience. The employer needs to understand your background and whether your previous work matches the position.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: greeting and small talk, salary, next steps after the interview.",
+            "must_say": [
+                {
+                    "slot": "the name",
+                    "text": "give your name"
+                },
+                {
+                    "slot": "the position",
+                    "text": "say which position you are applying for"
+                },
+                {
+                    "slot": "the workplace",
+                    "text": "say where you worked before"
+                },
+                {
+                    "slot": "the length of time",
+                    "text": "say how long you worked there"
+                },
+                {
+                    "slot": "the duty",
+                    "text": "say what your main duties were"
+                },
+                {
+                    "slot": "the duty",
+                    "text": "ask what this position includes"
+                },
+                {
+                    "slot": null,
+                    "text": "ask about the work schedule"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks your name and which position you want"
+                },
+                {
+                    "text": "asks where you worked before and for how long"
+                },
+                {
+                    "text": "asks what your main duties were"
+                },
+                {
+                    "text": "says the role includes specific tasks"
+                },
+                {
+                    "text": "explains the work schedule"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.112079",
+            "latency_ms_lesson": 79910,
+            "attempts_lesson": 2
+        },
+        {
+            "id": "01M3PH2NE1H1J307SC7NSYWJQV",
+            "order": 2,
+            "priority": 1,
+            "title_native": "Условия работы",
+            "title_target": "Condiții de muncă",
+            "teaches_native": "спросить оплату и сроки",
+            "goals_native": [
+                "спросить про зарплату",
+                "спросить про занятость",
+                "спросить, когда ответ",
+                "подтвердить интерес"
+            ],
+            "topic_description": "Situation: Near the end of the interview, you need practical details before leaving. This interaction decides whether the offer suits you and what happens next. After discussing your background, you now ask about pay, hours, start date and when to expect a decision.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introducing yourself, describing past workplaces, explaining duties and experience.",
+            "must_say": [
+                {
+                    "slot": null,
+                    "text": "ask about the salary"
+                },
+                {
+                    "slot": null,
+                    "text": "ask whether the job is full-time or part-time"
+                },
+                {
+                    "slot": "the time expression",
+                    "text": "ask when the work starts"
+                },
+                {
+                    "slot": null,
+                    "text": "ask whether training is provided"
+                },
+                {
+                    "slot": "the time expression",
+                    "text": "ask when you will get an answer"
+                },
+                {
+                    "slot": null,
+                    "text": "confirm you are interested in the job"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "says the salary or salary range"
+                },
+                {
+                    "text": "explains whether the job is full-time or part-time"
+                },
+                {
+                    "text": "says when the job starts"
+                },
+                {
+                    "text": "says whether training is provided"
+                },
+                {
+                    "text": "tells you when they will contact you"
+                }
+            ],
+            "lesson_status": "pending",
+            "fail_reason": null,
+            "prompt_version_lesson": null,
+            "model_lesson": null,
+            "cost_usd_lesson": null,
+            "latency_ms_lesson": null,
+            "attempts_lesson": null
+        }
+    ]
+}
