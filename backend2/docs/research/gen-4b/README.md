@@ -412,3 +412,20 @@ invariant-reviewer — CLEAN.
  - Learner lines ≤ 10 words excluding glue; speaking_key from the frame part only, a real substring; simplified_variants 1–2 (or [] for ≤ 4 words), never longer, never identical; pronunciation on every B message, on no A message.
  - Checks: one per exchange, about A's message, 3 options, one correct, paraphrase (no 2+ consecutive words of A's message), same-kind distractors, both languages.
 ```
+
+## 11. Выкат — 29.09.2026, 19:37–19:42 UTC (команда Дена «вливай»)
+
+Стек боя (`wt_app`, `wt_horizon`, `wt_scheduler`, `wt_web`, `wt_ngrok`, `wt_redis`, `wt_db`, `wt_admin`) Ден остановил сам в
+15:14 UTC; поднять разрешил («можешь стартовать»). Порядок наряда (horizon стоит → ff → migrate → horizon) выполнен при
+остановленном стеке:
+
+1. `docker compose start db`; страховочные бэкапы: `wordtrainer-20260929-223819.sql.gz` (16 МБ),
+   `wordtrainer_e2e_test-20260929-223830.sql.gz` (4.1 МБ) — `scripts/db-backup.sh --safety`.
+2. Снимок «до»: код main (`ff6854f7`) отдаёт 6 уроков боя (`tools/served-options.php`, только чтение).
+3. `git merge --ff-only gen-4` — main `ff6854f7` → `e50a2e4e` (PROMPTS-1 и GEN-4 + GEN-4b, 10 коммитов); чужие правки
+   рабочего дерева main (`config/playground.php`, удаления `mobile/assets/intro/*.png`) не тронуты.
+4. `migrate --pretend`, затем `migrate --force` на бою — четыре миграции GEN-4 (24 + 3 + 57 + 64 мс); e2e — четвёртая
+   (563 мс); `wordtrainer_test` — все четыре.
+5. Снимок «после»: код ветки отдаёт те же 6 уроков боя, **вариант в вариант** (72 вопроса).
+6. `scripts/stamp-build.sh` (`e50a2e4e`), `docker compose start` — все сервисы; `wt_app` на старте: «Nothing to migrate»;
+   `horizon:status` — running; `/api/v1/health` локально и через ngrok — `commit: e50a2e4e`; ошибок в логах нет.

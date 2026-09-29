@@ -7,9 +7,9 @@
 > Канон плана: **`docs/plan-v2.md`**; контракт: **`docs/plan-api.md`** + `openapi/openapi.yaml`
 > (теги `Plans`, `Devices`); модуль: `app/Modules/Plan/README.md`.
 
-Branch: **`gen-4`** (worktree `../gen-4`, от `prompts-1` `5cae49f0`, который тоже НЕ влит; main = бой `ff6854f7`).
-Last updated: 2026-09-29. Наряды **GEN-4 и GEN-4b — сделаны, ждут влития по команде Дена** (влитие = выкат, вместе с
-`prompts-1`). Отчёт — `docs/research/gen-4b/README.md` (GEN-4b — §10); решения — DECISIONS пп. **452, 453**. Стенд `wt_gen4`
+Branch: **`main`** = бой, **`e50a2e4e`** + документы выката (PROMPTS-1, GEN-4 и GEN-4b влиты fast-forward 29.09).
+Last updated: 2026-09-29. Наряды **GEN-4 и GEN-4b — сделаны и ВЫКАЧЕНЫ 29.09, 19:37–19:42 UTC** (команда Дена «вливай»;
+вместе с `prompts-1`). Отчёт — `docs/research/gen-4b/README.md` (GEN-4b — §10); решения — DECISIONS пп. **452, 453**. Стенд `wt_gen4`
 и его базы снесены.
 
 ## 1. Что сделано
@@ -28,13 +28,14 @@ GEN-4b, на `97c6e21b`: OpenAPI ok ×2, deptrac **0** (8 276), PHPStan **0**, *
 `migrate:fresh` ок, invariant-reviewer — **CLEAN**. Mobile не трогался. Деньги: GEN-4 — OpenAI **$4.9341 из $5**
 (ElevenLabs 182 кредита · 916 символов · $0.0364); GEN-4b — OpenAI **$0.4701 из $1**, ElevenLabs — 0.
 
-## 3. Выкат — НЕ выполнен (стоп перед влитием: main = бой)
+## 3. Выкат — ВЫПОЛНЕН 29.09, 19:37–19:42 UTC
 
-Порядок, когда Ден скажет: (1) остановить horizon; (2) ff `main` → `gen-4` (с ним `prompts-1`); (3) `migrate` — четыре
-миграции GEN-4 (набор выживания, `skeleton_json`, `prompt_version` 16 → 64, перемешивание уроков одним вызовом — на копии
-e2e 0.4 с на 225 уроков); (4) поднять horizon — новые промты и назначения. `.env` боя `PLAN_*` не задаёт — берутся значения
-наряда (plan, skeleton, dialogue — `gpt-5.4`; repair, plan_line_repair — `gpt-5.6-luna`; судьи — `gpt-5.4-mini`). На e2e
-миграции 1–3 применены кодом ветки, 4-я — при влитии.
+Стек боя Ден остановил сам в 15:14 UTC и разрешил поднять. Бэкапы `wordtrainer-20260929-223819.sql.gz`,
+`wordtrainer_e2e_test-20260929-223830.sql.gz` → снимок «до» (6 уроков боя) → ff `main` `ff6854f7` → `e50a2e4e` → `migrate`
+боя (четыре миграции GEN-4), e2e (четвёртая), `wordtrainer_test` → снимок «после»: 6 из 6 уроков вариант в вариант →
+`stamp-build.sh` → `docker compose start` (все сервисы; `wt_app_e2e` не поднимался) → `/health` локально и через ngrok —
+`e50a2e4e`, horizon running. `.env` боя `PLAN_*` не задаёт — значения наряда (plan, skeleton, dialogue — `gpt-5.4`; repair,
+plan_line_repair — `gpt-5.6-luna`; судьи — `gpt-5.4-mini`). Отчёт — README §11.
 
 ## 4. Проверено живьём / только кодом
 
@@ -59,7 +60,6 @@ e2e 0.4 с на 225 уроков); (4) поднять horizon — новые п�
 
 ## 6. Что дальше
 
-- **Ден**: команда на влитие (порядок — §3).
 - **Хвосты в ROADMAP (раздел GEN-4)**: слово из наполнения-заглушки в словаре (e2e-b «depozit») — нет проверки; ответ на
   да/нет без «Da./Nu.»; `partner.pairs_none` — следить по счётчикам после выката; мёртвые ключи пакетов — отдельный наряд.
 
@@ -70,7 +70,7 @@ e2e 0.4 с на 225 уроков); (4) поднять horizon — новые п�
 
 ## 8. Стенд
 
-Снесён: контейнер `wt_gen4`, базы `wordtrainer_gen4*`. Всё, что они держали, — в `docs/research/gen-4b/` (каждый вызов с
+Снесены: контейнер `wt_gen4`, базы `wordtrainer_gen4*`, worktree `../gen-4` и ветка `gen-4` (влита). Всё, что они держали, — в `docs/research/gen-4b/` (каждый вызов с
 сырым ответом, `spend.json`). e2e: QA `qa-gen4-ru-ro-0929@wt.test` (GEN-4, план `01M3PC4TA6Z3T4SWJNHKCHR78R`, озвучен) и
 `qa-gen4b-ru-ro-0929@wt.test` (GEN-4b, план `01M3PH274ZB7RYCQMJ0AB13PA1`, без голоса). Харнесс — `docs/research/gen-4b/tools/`
 (`gate.php plans|days|skeletons|recheck|table`, `e2e.php build|retry|dump`, `e2e-api.py`, `served-options.php`).
