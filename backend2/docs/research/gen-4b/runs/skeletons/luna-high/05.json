@@ -1,0 +1,475 @@
+{
+    "plan": "05",
+    "run": "luna-high",
+    "model": {
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Control migratorio",
+        "title_target": "Passport control",
+        "teaches_native": "responder al control de pasaporte",
+        "goals_native": [
+            "decir adónde va",
+            "decir por qué viaja",
+            "decir cuánto tiempo estará",
+            "decir dónde se aloja"
+        ],
+        "learner_role": [
+            "Traveller",
+            "Viajero"
+        ],
+        "partner_role": [
+            "Border officer",
+            "Agente de fronteras"
+        ],
+        "topic_description": "Situation: At passport control, the learner speaks to a border officer before entering or leaving through the border point. It is the learner's first time flying to London, and this is the interaction they are most worried about because they must answer clearly and stay calm.\nLearner: Traveller. Partner: Border officer.\nNot in this scene: check-in, baggage questions, security screening, finding the gate, transport in the city.",
+        "must_say": [
+            "give your passport — slot: the document",
+            "answer where you are going — slot: the destination",
+            "answer why you are travelling — slot: the reason",
+            "answer how long you will stay — slot: the length of stay",
+            "answer where you will stay — slot: the place",
+            "ask whether everything is okay — slot: none",
+            "confirm you understand where to go next — slot: the place"
+        ],
+        "must_understand": [
+            "asks where you are travelling to",
+            "asks the purpose of your trip",
+            "asks how long you will stay and where you will stay",
+            "says you can go through or tells you where to go next"
+        ]
+    },
+    "error": null,
+    "findings": [],
+    "cost_usd": 0.083837,
+    "wall_ms": 138584,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T10:59:08Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 4987,
+            "cached_tokens_in": 4642,
+            "tokens_out": 13838,
+            "reasoning_tokens": 12088,
+            "cost_usd": "0.083837",
+            "latency_ms": 138568,
+            "wall_ms": 138572,
+            "call_id": "01M3PD3105776QX5H51Q71CA7P",
+            "user": "TOPIC: Control migratorio\n\nTOPIC_DESCRIPTION: Situation: At passport control, the learner speaks to a border officer before entering or leaving through the border point. It is the learner's first time flying to London, and this is the interaction they are most worried about because they must answer clearly and stay calm.\nLearner: Traveller. Partner: Border officer.\nNot in this scene: check-in, baggage questions, security screening, finding the gate, transport in the city.\n\nAbout the learner, in their own words: vuelo a Londres, primera vez, miedo al control de pasaportes\n\nSURVIVAL_SET:\nmust_say:\n1. give your passport — slot: the document\n2. answer where you are going — slot: the destination\n3. answer why you are travelling — slot: the reason\n4. answer how long you will stay — slot: the length of stay\n5. answer where you will stay — slot: the place\n6. ask whether everything is okay — slot: none\n7. confirm you understand where to go next — slot: the place\nmust_understand:\n1. asks where you are travelling to\n2. asks the purpose of your trip\n3. asks how long you will stay and where you will stay\n4. says you can go through or tells you where to go next\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Spanish\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Traveller / Viajero\n\nPARTNER_ROLE: Border officer / Agente de fronteras\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Passport Control",
+                    "title_native": "Control migratorio",
+                    "description_target": "You can hand over your passport, answer basic travel questions, ask if everything is okay, and confirm where to go next.",
+                    "description_native": "Podrá entregar su pasaporte, responder preguntas básicas sobre el viaje, preguntar si todo está bien y confirmar adónde ir después."
+                },
+                "learner_role": {
+                    "role_target": "Traveller",
+                    "role_native": "Viajero"
+                },
+                "role_gender": "male",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "I can show my ___",
+                        "frame_native": "Puedo enseñar ___",
+                        "pronunciation_native": "ai can shou mai ___",
+                        "slot": {
+                            "hint_native": "el documento",
+                            "fillers": [
+                                {
+                                    "target": "passport",
+                                    "native": "mi pasaporte",
+                                    "pronunciation_native": "pásport",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "identity card",
+                                    "native": "mi documento de identidad",
+                                    "pronunciation_native": "aidéntiti card",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "I'm flying to ___",
+                        "frame_native": "Vuelo a ___",
+                        "pronunciation_native": "aim fláiin tu ___",
+                        "slot": {
+                            "hint_native": "el destino",
+                            "fillers": [
+                                {
+                                    "target": "London",
+                                    "native": "Londres",
+                                    "pronunciation_native": "lándon",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "Dublin",
+                                    "native": "Dublín",
+                                    "pronunciation_native": "dáblin",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the coast",
+                                    "native": "la costa",
+                                    "pronunciation_native": "de koust",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "I'm travelling for ___",
+                        "frame_native": "Viajo por ___",
+                        "pronunciation_native": "aim trávolin for ___",
+                        "slot": {
+                            "hint_native": "el motivo del viaje",
+                            "fillers": [
+                                {
+                                    "target": "tourism",
+                                    "native": "turismo",
+                                    "pronunciation_native": "túrism",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "work",
+                                    "native": "trabajo",
+                                    "pronunciation_native": "uérk",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "a family visit",
+                                    "native": "una visita familiar",
+                                    "pronunciation_native": "a fámili vísit",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Just ___",
+                        "frame_native": "Solo ___",
+                        "pronunciation_native": "yast ___",
+                        "slot": {
+                            "hint_native": "la duración de la estancia",
+                            "fillers": [
+                                {
+                                    "target": "ten days",
+                                    "native": "diez días",
+                                    "pronunciation_native": "ten deis",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "two weeks",
+                                    "native": "dos semanas",
+                                    "pronunciation_native": "tu uiks",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "one month",
+                                    "native": "un mes",
+                                    "pronunciation_native": "uan manz",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "I'm staying at ___",
+                        "frame_native": "Me alojaré en ___",
+                        "pronunciation_native": "aim stéiin at ___",
+                        "slot": {
+                            "hint_native": "el lugar donde se alojará",
+                            "fillers": [
+                                {
+                                    "target": "a hostel",
+                                    "native": "un hostal",
+                                    "pronunciation_native": "a jóustel",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a rented room",
+                                    "native": "una habitación alquilada",
+                                    "pronunciation_native": "a réntid rum",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "a campsite",
+                                    "native": "un camping",
+                                    "pronunciation_native": "a kámp sait",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Is everything okay?",
+                        "frame_native": "¿Está todo bien?",
+                        "pronunciation_native": "is évri-zing oukéi",
+                        "slot": null
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "answer",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "My next stop is ___, right?",
+                        "frame_native": "Mi siguiente parada es ___, ¿verdad?",
+                        "pronunciation_native": "mai nekst stap is ___ rait",
+                        "slot": {
+                            "hint_native": "el lugar al que irá después",
+                            "fillers": [
+                                {
+                                    "target": "the arrivals hall",
+                                    "native": "la sala de llegadas",
+                                    "pronunciation_native": "di arraivals jol",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the information desk",
+                                    "native": "el mostrador de información",
+                                    "pronunciation_native": "di informéishon désk",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the red door",
+                                    "native": "la puerta roja",
+                                    "pronunciation_native": "de red dor",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "Where are you travelling to?",
+                        "text_native": "¿Adónde viaja?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "What is the purpose of your trip?",
+                        "text_native": "¿Cuál es el motivo de su viaje?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "How long will you stay?",
+                        "text_native": "¿Cuánto tiempo se quedará?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "Where will you stay?",
+                        "text_native": "¿Dónde se alojará?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            6
+                        ],
+                        "text_target": "Yes. You can go through now.",
+                        "text_native": "Sí. Puede pasar ahora."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "show",
+                        "translation_native": "mostrar",
+                        "pronunciation_native": "shou",
+                        "definition_target": "let someone see something",
+                        "kind": "word",
+                        "image_prompt": "A traveller showing a passport to a border officer at a passport desk",
+                        "used_in": [
+                            "p1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "fly",
+                        "translation_native": "volar",
+                        "pronunciation_native": "flai",
+                        "definition_target": "travel by airplane",
+                        "kind": "word",
+                        "image_prompt": "A passenger airplane flying above white clouds",
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "travel",
+                        "translation_native": "viajar",
+                        "pronunciation_native": "trável",
+                        "definition_target": "go from one place to another",
+                        "kind": "word",
+                        "image_prompt": "A traveller with a small suitcase in an airport",
+                        "used_in": [
+                            "p3",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "purpose",
+                        "translation_native": "motivo",
+                        "pronunciation_native": "pérpes",
+                        "definition_target": "the reason for doing something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "trip",
+                        "translation_native": "viaje",
+                        "pronunciation_native": "tríp",
+                        "definition_target": "a journey to another place",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "stay",
+                        "translation_native": "quedarse",
+                        "pronunciation_native": "stei",
+                        "definition_target": "remain in a place for some time",
+                        "kind": "word",
+                        "image_prompt": "A guest inside a simple hostel room",
+                        "used_in": [
+                            "p5",
+                            "a3",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "go through",
+                        "translation_native": "pasar por",
+                        "pronunciation_native": "gou zrú",
+                        "definition_target": "pass beyond a checkpoint",
+                        "kind": "chunk",
+                        "image_prompt": "A traveller walking through an open passport-control gate",
+                        "used_in": [
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "next",
+                        "translation_native": "siguiente",
+                        "pronunciation_native": "nekst",
+                        "definition_target": "following in order or place",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Passport Control\",\"title_native\":\"Control migratorio\",\"description_target\":\"You can hand over your passport, answer basic travel questions, ask if everything is okay, and confirm where to go next.\",\"description_native\":\"Podrá entregar su pasaporte, responder preguntas básicas sobre el viaje, preguntar si todo está bien y confirmar adónde ir después.\"},\"learner_role\":{\"role_target\":\"Traveller\",\"role_native\":\"Viajero\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"I can show my ___\",\"frame_native\":\"Puedo enseñar ___\",\"pronunciation_native\":\"ai can shou mai ___\",\"slot\":{\"hint_native\":\"el documento\",\"fillers\":[{\"target\":\"passport\",\"native\":\"mi pasaporte\",\"pronunciation_native\":\"pásport\",\"in_dialogue\":true},{\"target\":\"identity card\",\"native\":\"mi documento de identidad\",\"pronunciation_native\":\"aidéntiti card\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"I'm flying to ___\",\"frame_native\":\"Vuelo a ___\",\"pronunciation_native\":\"aim fláiin tu ___\",\"slot\":{\"hint_native\":\"el destino\",\"fillers\":[{\"target\":\"London\",\"native\":\"Londres\",\"pronunciation_native\":\"lándon\",\"in_dialogue\":true},{\"target\":\"Dublin\",\"native\":\"Dublín\",\"pronunciation_native\":\"dáblin\",\"in_dialogue\":false},{\"target\":\"the coast\",\"native\":\"la costa\",\"pronunciation_native\":\"de koust\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"I'm travelling for ___\",\"frame_native\":\"Viajo por ___\",\"pronunciation_native\":\"aim trávolin for ___\",\"slot\":{\"hint_native\":\"el motivo del viaje\",\"fillers\":[{\"target\":\"tourism\",\"native\":\"turismo\",\"pronunciation_native\":\"túrism\",\"in_dialogue\":true},{\"target\":\"work\",\"native\":\"trabajo\",\"pronunciation_native\":\"uérk\",\"in_dialogue\":false},{\"target\":\"a family visit\",\"native\":\"una visita familiar\",\"pronunciation_native\":\"a fámili vísit\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"Just ___\",\"frame_native\":\"Solo ___\",\"pronunciation_native\":\"yast ___\",\"slot\":{\"hint_native\":\"la duración de la estancia\",\"fillers\":[{\"target\":\"ten days\",\"native\":\"diez días\",\"pronunciation_native\":\"ten deis\",\"in_dialogue\":true},{\"target\":\"two weeks\",\"native\":\"dos semanas\",\"pronunciation_native\":\"tu uiks\",\"in_dialogue\":false},{\"target\":\"one month\",\"native\":\"un mes\",\"pronunciation_native\":\"uan manz\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm staying at ___\",\"frame_native\":\"Me alojaré en ___\",\"pronunciation_native\":\"aim stéiin at ___\",\"slot\":{\"hint_native\":\"el lugar donde se alojará\",\"fillers\":[{\"target\":\"a hostel\",\"native\":\"un hostal\",\"pronunciation_native\":\"a jóustel\",\"in_dialogue\":true},{\"target\":\"a rented room\",\"native\":\"una habitación alquilada\",\"pronunciation_native\":\"a réntid rum\",\"in_dialogue\":false},{\"target\":\"a campsite\",\"native\":\"un camping\",\"pronunciation_native\":\"a kámp sait\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is everything okay?\",\"frame_native\":\"¿Está todo bien?\",\"pronunciation_native\":\"is évri-zing oukéi\",\"slot\":null},{\"id\":\"p7\",\"kind\":\"answer\",\"must_say\":[7],\"frame_target\":\"My next stop is ___, right?\",\"frame_native\":\"Mi siguiente parada es ___, ¿verdad?\",\"pronunciation_native\":\"mai nekst stap is ___ rait\",\"slot\":{\"hint_native\":\"el lugar al que irá después\",\"fillers\":[{\"target\":\"the arrivals hall\",\"native\":\"la sala de llegadas\",\"pronunciation_native\":\"di arraivals jol\",\"in_dialogue\":true},{\"target\":\"the information desk\",\"native\":\"el mostrador de información\",\"pronunciation_native\":\"di informéishon désk\",\"in_dialogue\":false},{\"target\":\"the red door\",\"native\":\"la puerta roja\",\"pronunciation_native\":\"de red dor\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Where are you travelling to?\",\"text_native\":\"¿Adónde viaja?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"What is the purpose of your trip?\",\"text_native\":\"¿Cuál es el motivo de su viaje?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"How long will you stay?\",\"text_native\":\"¿Cuánto tiempo se quedará?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"Where will you stay?\",\"text_native\":\"¿Dónde se alojará?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Yes. You can go through now.\",\"text_native\":\"Sí. Puede pasar ahora.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"show\",\"translation_native\":\"mostrar\",\"pronunciation_native\":\"shou\",\"definition_target\":\"let someone see something\",\"kind\":\"word\",\"image_prompt\":\"A traveller showing a passport to a border officer at a passport desk\",\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"fly\",\"translation_native\":\"volar\",\"pronunciation_native\":\"flai\",\"definition_target\":\"travel by airplane\",\"kind\":\"word\",\"image_prompt\":\"A passenger airplane flying above white clouds\",\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"travel\",\"translation_native\":\"viajar\",\"pronunciation_native\":\"trável\",\"definition_target\":\"go from one place to another\",\"kind\":\"word\",\"image_prompt\":\"A traveller with a small suitcase in an airport\",\"used_in\":[\"p3\",\"a1\"]},{\"id\":\"v4\",\"term_target\":\"purpose\",\"translation_native\":\"motivo\",\"pronunciation_native\":\"pérpes\",\"definition_target\":\"the reason for doing something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a2\"]},{\"id\":\"v5\",\"term_target\":\"trip\",\"translation_native\":\"viaje\",\"pronunciation_native\":\"tríp\",\"definition_target\":\"a journey to another place\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a2\"]},{\"id\":\"v6\",\"term_target\":\"stay\",\"translation_native\":\"quedarse\",\"pronunciation_native\":\"stei\",\"definition_target\":\"remain in a place for some time\",\"kind\":\"word\",\"image_prompt\":\"A guest inside a simple hostel room\",\"used_in\":[\"p5\",\"a3\",\"a4\"]},{\"id\":\"v7\",\"term_target\":\"go through\",\"translation_native\":\"pasar por\",\"pronunciation_native\":\"gou zrú\",\"definition_target\":\"pass beyond a checkpoint\",\"kind\":\"chunk\",\"image_prompt\":\"A traveller walking through an open passport-control gate\",\"used_in\":[\"a5\"]},{\"id\":\"v8\",\"term_target\":\"next\",\"translation_native\":\"siguiente\",\"pronunciation_native\":\"nekst\",\"definition_target\":\"following in order or place\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETPq941hjxEDjmsIhaSJd7isZsZJt",
+                "object": "chat.completion",
+                "created": 1790679549,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Passport Control\",\"title_native\":\"Control migratorio\",\"description_target\":\"You can hand over your passport, answer basic travel questions, ask if everything is okay, and confirm where to go next.\",\"description_native\":\"Podrá entregar su pasaporte, responder preguntas básicas sobre el viaje, preguntar si todo está bien y confirmar adónde ir después.\"},\"learner_role\":{\"role_target\":\"Traveller\",\"role_native\":\"Viajero\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"I can show my ___\",\"frame_native\":\"Puedo enseñar ___\",\"pronunciation_native\":\"ai can shou mai ___\",\"slot\":{\"hint_native\":\"el documento\",\"fillers\":[{\"target\":\"passport\",\"native\":\"mi pasaporte\",\"pronunciation_native\":\"pásport\",\"in_dialogue\":true},{\"target\":\"identity card\",\"native\":\"mi documento de identidad\",\"pronunciation_native\":\"aidéntiti card\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"I'm flying to ___\",\"frame_native\":\"Vuelo a ___\",\"pronunciation_native\":\"aim fláiin tu ___\",\"slot\":{\"hint_native\":\"el destino\",\"fillers\":[{\"target\":\"London\",\"native\":\"Londres\",\"pronunciation_native\":\"lándon\",\"in_dialogue\":true},{\"target\":\"Dublin\",\"native\":\"Dublín\",\"pronunciation_native\":\"dáblin\",\"in_dialogue\":false},{\"target\":\"the coast\",\"native\":\"la costa\",\"pronunciation_native\":\"de koust\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"I'm travelling for ___\",\"frame_native\":\"Viajo por ___\",\"pronunciation_native\":\"aim trávolin for ___\",\"slot\":{\"hint_native\":\"el motivo del viaje\",\"fillers\":[{\"target\":\"tourism\",\"native\":\"turismo\",\"pronunciation_native\":\"túrism\",\"in_dialogue\":true},{\"target\":\"work\",\"native\":\"trabajo\",\"pronunciation_native\":\"uérk\",\"in_dialogue\":false},{\"target\":\"a family visit\",\"native\":\"una visita familiar\",\"pronunciation_native\":\"a fámili vísit\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"Just ___\",\"frame_native\":\"Solo ___\",\"pronunciation_native\":\"yast ___\",\"slot\":{\"hint_native\":\"la duración de la estancia\",\"fillers\":[{\"target\":\"ten days\",\"native\":\"diez días\",\"pronunciation_native\":\"ten deis\",\"in_dialogue\":true},{\"target\":\"two weeks\",\"native\":\"dos semanas\",\"pronunciation_native\":\"tu uiks\",\"in_dialogue\":false},{\"target\":\"one month\",\"native\":\"un mes\",\"pronunciation_native\":\"uan manz\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm staying at ___\",\"frame_native\":\"Me alojaré en ___\",\"pronunciation_native\":\"aim stéiin at ___\",\"slot\":{\"hint_native\":\"el lugar donde se alojará\",\"fillers\":[{\"target\":\"a hostel\",\"native\":\"un hostal\",\"pronunciation_native\":\"a jóustel\",\"in_dialogue\":true},{\"target\":\"a rented room\",\"native\":\"una habitación alquilada\",\"pronunciation_native\":\"a réntid rum\",\"in_dialogue\":false},{\"target\":\"a campsite\",\"native\":\"un camping\",\"pronunciation_native\":\"a kámp sait\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is everything okay?\",\"frame_native\":\"¿Está todo bien?\",\"pronunciation_native\":\"is évri-zing oukéi\",\"slot\":null},{\"id\":\"p7\",\"kind\":\"answer\",\"must_say\":[7],\"frame_target\":\"My next stop is ___, right?\",\"frame_native\":\"Mi siguiente parada es ___, ¿verdad?\",\"pronunciation_native\":\"mai nekst stap is ___ rait\",\"slot\":{\"hint_native\":\"el lugar al que irá después\",\"fillers\":[{\"target\":\"the arrivals hall\",\"native\":\"la sala de llegadas\",\"pronunciation_native\":\"di arraivals jol\",\"in_dialogue\":true},{\"target\":\"the information desk\",\"native\":\"el mostrador de información\",\"pronunciation_native\":\"di informéishon désk\",\"in_dialogue\":false},{\"target\":\"the red door\",\"native\":\"la puerta roja\",\"pronunciation_native\":\"de red dor\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Where are you travelling to?\",\"text_native\":\"¿Adónde viaja?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"What is the purpose of your trip?\",\"text_native\":\"¿Cuál es el motivo de su viaje?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"How long will you stay?\",\"text_native\":\"¿Cuánto tiempo se quedará?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"Where will you stay?\",\"text_native\":\"¿Dónde se alojará?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Yes. You can go through now.\",\"text_native\":\"Sí. Puede pasar ahora.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"show\",\"translation_native\":\"mostrar\",\"pronunciation_native\":\"shou\",\"definition_target\":\"let someone see something\",\"kind\":\"word\",\"image_prompt\":\"A traveller showing a passport to a border officer at a passport desk\",\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"fly\",\"translation_native\":\"volar\",\"pronunciation_native\":\"flai\",\"definition_target\":\"travel by airplane\",\"kind\":\"word\",\"image_prompt\":\"A passenger airplane flying above white clouds\",\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"travel\",\"translation_native\":\"viajar\",\"pronunciation_native\":\"trável\",\"definition_target\":\"go from one place to another\",\"kind\":\"word\",\"image_prompt\":\"A traveller with a small suitcase in an airport\",\"used_in\":[\"p3\",\"a1\"]},{\"id\":\"v4\",\"term_target\":\"purpose\",\"translation_native\":\"motivo\",\"pronunciation_native\":\"pérpes\",\"definition_target\":\"the reason for doing something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a2\"]},{\"id\":\"v5\",\"term_target\":\"trip\",\"translation_native\":\"viaje\",\"pronunciation_native\":\"tríp\",\"definition_target\":\"a journey to another place\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a2\"]},{\"id\":\"v6\",\"term_target\":\"stay\",\"translation_native\":\"quedarse\",\"pronunciation_native\":\"stei\",\"definition_target\":\"remain in a place for some time\",\"kind\":\"word\",\"image_prompt\":\"A guest inside a simple hostel room\",\"used_in\":[\"p5\",\"a3\",\"a4\"]},{\"id\":\"v7\",\"term_target\":\"go through\",\"translation_native\":\"pasar por\",\"pronunciation_native\":\"gou zrú\",\"definition_target\":\"pass beyond a checkpoint\",\"kind\":\"chunk\",\"image_prompt\":\"A traveller walking through an open passport-control gate\",\"used_in\":[\"a5\"]},{\"id\":\"v8\",\"term_target\":\"next\",\"translation_native\":\"siguiente\",\"pronunciation_native\":\"nekst\",\"definition_target\":\"following in order or place\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 4987,
+                    "completion_tokens": 13838,
+                    "total_tokens": 18825,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 342,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 12088,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

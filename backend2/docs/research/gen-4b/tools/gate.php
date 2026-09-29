@@ -83,8 +83,8 @@ const OUT = 'docs/research/gen-4b';
 const RUNS = OUT.'/runs';
 const SPEND_FILE = OUT.'/spend.json';
 
-/** The order's cap on OpenAI ($5) less what the e2e of §6 needs — a plan of two scenes, their days, a repair or two. */
-const CAP_USD = 4.70;
+/** The order's cap on OpenAI ($5): the e2e of §6 is in `spend.json` too (unit `e2e`, its calls read off the e2e journal). */
+const CAP_USD = 5.00;
 
 /** The dearest one unit of each kind may cost, seen or feared: a plan, a day of either model, a skeleton thought hard about. */
 const WORST_USD = ['plan' => 0.08, 'luna' => 0.25, 'gpt54' => 0.30, 'luna-high' => 0.10];

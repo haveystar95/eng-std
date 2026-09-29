@@ -1,0 +1,27 @@
+[
+    {
+        "code": "vocab.used_in_wrong",
+        "detail": "«program de lucru» is not in a6",
+        "address": "v6"
+    },
+    {
+        "code": "vocab.definition_language",
+        "detail": "the definition «to have a job or do work» of «a lucra» reads as en, not ro (have)",
+        "address": "v3"
+    },
+    {
+        "code": "vocab.definition_language",
+        "detail": "the definition «a duty or task at work» of «sarcină» reads as en, not ro (at)",
+        "address": "v4"
+    },
+    {
+        "code": "vocab.definition_language",
+        "detail": "the definition «the hours when someone works» of «program de lucru» reads as en, not ro (the, when)",
+        "address": "v6"
+    },
+    {
+        "code": "vocab.definition_language",
+        "detail": "the definition «to examine something to check it» of «a verifica» reads as en, not ro (it)",
+        "address": "v7"
+    }
+]

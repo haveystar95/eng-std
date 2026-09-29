@@ -1,0 +1,612 @@
+{
+    "plan": "08",
+    "run": "luna-high",
+    "model": {
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+    },
+    "scene": {
+        "order": 1,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Приём у врача",
+        "title_target": "Doctor's appointment",
+        "teaches_native": "описать боль, понять лечение",
+        "goals_native": [
+            "сказать, где болит",
+            "сказать, когда началось",
+            "спросить про анализ",
+            "понять назначение"
+        ],
+        "learner_role": [
+            "Patient",
+            "Пациент"
+        ],
+        "partner_role": [
+            "Doctor",
+            "Врач"
+        ],
+        "topic_description": "Situation: The learner is at a medical consultation with a doctor in a clinic. This is the main interaction where the health problem is described, the doctor asks basic questions, and the learner needs to understand the likely problem and the treatment plan.\nLearner: Patient. Partner: Doctor.\nNot in this scene: booking the appointment, reception questions, payment, buying medicine at a pharmacy.",
+        "must_say": [
+            "say where it hurts — slot: the part of the body",
+            "say when it started — slot: the time expression",
+            "say how strong it is — slot: the number or word",
+            "answer whether you have a symptom — slot: the symptom",
+            "ask what the problem is — slot: none",
+            "ask whether you need a test — slot: the test",
+            "ask how often to take something — slot: the medicine",
+            "confirm you understand the instruction — slot: none"
+        ],
+        "must_understand": [
+            "asks where it hurts, since when, and how bad it is",
+            "asks whether you have other symptoms",
+            "says what the problem is or what they think it is",
+            "explains whether you need a test or medicine",
+            "gives instructions for treatment and when to come back"
+        ]
+    },
+    "error": null,
+    "findings": [
+        {
+            "code": "partner.names_filler",
+            "address": "a3",
+            "detail": "the line names «сильная», a filler of p3",
+            "fatal": false
+        },
+        {
+            "code": "vocab.stop_word",
+            "address": "v4",
+            "detail": "«need» is a word of the stop list («need»)",
+            "fatal": false
+        },
+        {
+            "code": "vocab.stop_word",
+            "address": "v6",
+            "detail": "«take» is a word of the stop list («take»)",
+            "fatal": false
+        },
+        {
+            "code": "filler.repeats_frame",
+            "address": "p1.f1",
+            "detail": "«my head» repeats «my», the frame's word at the slot of «My ___ hurts.»",
+            "fatal": false
+        },
+        {
+            "code": "filler.repeats_frame",
+            "address": "p1.f2",
+            "detail": "«my stomach» repeats «my», the frame's word at the slot of «My ___ hurts.»",
+            "fatal": false
+        },
+        {
+            "code": "filler.repeats_frame",
+            "address": "p1.f3",
+            "detail": "«my throat» repeats «my», the frame's word at the slot of «My ___ hurts.»",
+            "fatal": false
+        }
+    ],
+    "cost_usd": 0.083988,
+    "wall_ms": 145302,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T11:06:19Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 4994,
+            "cached_tokens_in": 4642,
+            "tokens_out": 13862,
+            "reasoning_tokens": 11684,
+            "cost_usd": "0.083988",
+            "latency_ms": 145279,
+            "wall_ms": 145281,
+            "call_id": "01M3PDG5TQC13CRPY3KJHGKX3V",
+            "user": "TOPIC: Приём у врача\n\nTOPIC_DESCRIPTION: Situation: The learner is at a medical consultation with a doctor in a clinic. This is the main interaction where the health problem is described, the doctor asks basic questions, and the learner needs to understand the likely problem and the treatment plan.\nLearner: Patient. Partner: Doctor.\nNot in this scene: booking the appointment, reception questions, payment, buying medicine at a pharmacy.\n\nAbout the learner, in their own words: врач\n\nSURVIVAL_SET:\nmust_say:\n1. say where it hurts — slot: the part of the body\n2. say when it started — slot: the time expression\n3. say how strong it is — slot: the number or word\n4. answer whether you have a symptom — slot: the symptom\n5. ask what the problem is — slot: none\n6. ask whether you need a test — slot: the test\n7. ask how often to take something — slot: the medicine\n8. confirm you understand the instruction — slot: none\nmust_understand:\n1. asks where it hurts, since when, and how bad it is\n2. asks whether you have other symptoms\n3. says what the problem is or what they think it is\n4. explains whether you need a test or medicine\n5. gives instructions for treatment and when to come back\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Russian\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Patient / Пациент\n\nPARTNER_ROLE: Doctor / Врач\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "At the Doctor's",
+                    "title_native": "Приём у врача",
+                    "description_target": "Describe pain and symptoms, ask about tests and treatment, and understand the doctor's instructions.",
+                    "description_native": "Описать боль и симптомы, спросить об обследовании и лечении и понять инструкции врача."
+                },
+                "learner_role": {
+                    "role_target": "Patient",
+                    "role_native": "Пациент"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "My ___ hurts.",
+                        "frame_native": "У меня болит ___.",
+                        "pronunciation_native": "май ___ хёртс",
+                        "slot": {
+                            "hint_native": "часть тела",
+                            "fillers": [
+                                {
+                                    "target": "my head",
+                                    "native": "голова",
+                                    "pronunciation_native": "май хэд",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "my stomach",
+                                    "native": "живот",
+                                    "pronunciation_native": "май стамэк",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "my throat",
+                                    "native": "горло",
+                                    "pronunciation_native": "май сроут",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "It started ___.",
+                        "frame_native": "Это началось ___.",
+                        "pronunciation_native": "ит стартед ___",
+                        "slot": {
+                            "hint_native": "время начала",
+                            "fillers": [
+                                {
+                                    "target": "yesterday",
+                                    "native": "вчера",
+                                    "pronunciation_native": "йестэрдэй",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "this morning",
+                                    "native": "сегодня утром",
+                                    "pronunciation_native": "зис морнинг",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "two days ago",
+                                    "native": "два дня назад",
+                                    "pronunciation_native": "ту дэйз эгоу",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "The pain is ___.",
+                        "frame_native": "Боль ___.",
+                        "pronunciation_native": "зэ пэйн из ___",
+                        "slot": {
+                            "hint_native": "сила боли",
+                            "fillers": [
+                                {
+                                    "target": "moderate",
+                                    "native": "умеренная",
+                                    "pronunciation_native": "модэрэт",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "mild",
+                                    "native": "слабая",
+                                    "pronunciation_native": "майлд",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "strong",
+                                    "native": "сильная",
+                                    "pronunciation_native": "стронг",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "I have ___.",
+                        "frame_native": "У меня ___.",
+                        "pronunciation_native": "ай хэв ___",
+                        "slot": {
+                            "hint_native": "симптом",
+                            "fillers": [
+                                {
+                                    "target": "a cough",
+                                    "native": "кашель",
+                                    "pronunciation_native": "э коф",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a fever",
+                                    "native": "температура",
+                                    "pronunciation_native": "э фивэр",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "nausea",
+                                    "native": "тошнота",
+                                    "pronunciation_native": "нозиэ",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "What is the problem?",
+                        "frame_native": "В чём проблема?",
+                        "pronunciation_native": "уот из зэ проблэм",
+                        "slot": null
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Do I need ___?",
+                        "frame_native": "Мне нужно ___?",
+                        "pronunciation_native": "ду ай нид ___",
+                        "slot": {
+                            "hint_native": "обследование или анализ",
+                            "fillers": [
+                                {
+                                    "target": "a blood test",
+                                    "native": "сдать анализ крови",
+                                    "pronunciation_native": "э блад тэст",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "an X-ray",
+                                    "native": "сделать рентген",
+                                    "pronunciation_native": "эн экс-рэй",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "an ultrasound",
+                                    "native": "сделать УЗИ",
+                                    "pronunciation_native": "эн алтрасaунд",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "How often should I take ___?",
+                        "frame_native": "Как часто мне принимать ___?",
+                        "pronunciation_native": "хау офэн шуд ай тэйк ___",
+                        "slot": {
+                            "hint_native": "лекарство",
+                            "fillers": [
+                                {
+                                    "target": "this medicine",
+                                    "native": "это лекарство",
+                                    "pronunciation_native": "зис мэдисин",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "these tablets",
+                                    "native": "эти таблетки",
+                                    "pronunciation_native": "зиз тэйблетс",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "this syrup",
+                                    "native": "этот сироп",
+                                    "pronunciation_native": "зис сирэп",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "answer",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "I understand.",
+                        "frame_native": "Понятно.",
+                        "pronunciation_native": "ай андэрстэнд",
+                        "slot": null
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Where does it hurt?",
+                        "text_native": "Где у вас болит?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "When did it start?",
+                        "text_native": "Когда это началось?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "How bad is the pain?",
+                        "text_native": "Насколько сильная боль?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Do you have any other symptoms?",
+                        "text_native": "У вас есть другие симптомы?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "It looks like inflammation. Please rest today.",
+                        "text_native": "Похоже на воспаление. Сегодня вам нужно отдыхать."
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            6
+                        ],
+                        "text_target": "Yes. The examination can be done here today.",
+                        "text_native": "Да. Обследование можно пройти здесь сегодня."
+                    },
+                    {
+                        "id": "a7",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [],
+                        "text_target": "Yes. The treatment will last three days.",
+                        "text_native": "Да. Лечение продлится три дня."
+                    },
+                    {
+                        "id": "a8",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            7
+                        ],
+                        "text_target": "Take it twice a day.",
+                        "text_native": "Принимайте его два раза в день."
+                    },
+                    {
+                        "id": "a9",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [],
+                        "text_target": "Come back in three days.",
+                        "text_native": "Приходите снова через три дня."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "hurt",
+                        "translation_native": "болеть",
+                        "pronunciation_native": "хёрт",
+                        "definition_target": "feel pain in a body part",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "start",
+                        "translation_native": "начинаться",
+                        "pronunciation_native": "старт",
+                        "definition_target": "begin",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "pain",
+                        "translation_native": "боль",
+                        "pronunciation_native": "пэйн",
+                        "definition_target": "an unpleasant feeling in the body",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "need",
+                        "translation_native": "нуждаться",
+                        "pronunciation_native": "нид",
+                        "definition_target": "require something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "often",
+                        "translation_native": "часто",
+                        "pronunciation_native": "офэн",
+                        "definition_target": "many times",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "take",
+                        "translation_native": "принимать",
+                        "pronunciation_native": "тэйк",
+                        "definition_target": "use or swallow medicine",
+                        "kind": "word",
+                        "image_prompt": "A patient taking a tablet with water at home",
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "understand",
+                        "translation_native": "понимать",
+                        "pronunciation_native": "андэрстэнд",
+                        "definition_target": "know what something means",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "inflammation",
+                        "translation_native": "воспаление",
+                        "pronunciation_native": "инфлэмэйшн",
+                        "definition_target": "a painful swollen condition in the body",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "treatment",
+                        "translation_native": "лечение",
+                        "pronunciation_native": "тритмэнт",
+                        "definition_target": "medical care for a health problem",
+                        "kind": "word",
+                        "image_prompt": "A doctor giving a patient a treatment plan in a clinic",
+                        "used_in": [
+                            "a7"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "rest",
+                        "translation_native": "отдыхать",
+                        "pronunciation_native": "рэст",
+                        "definition_target": "stop activity to recover",
+                        "kind": "word",
+                        "image_prompt": "A patient resting in bed at home",
+                        "used_in": [
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v11",
+                        "term_target": "examination",
+                        "translation_native": "обследование",
+                        "pronunciation_native": "игзэминэйшн",
+                        "definition_target": "a medical check by a doctor",
+                        "kind": "word",
+                        "image_prompt": "A doctor examining a patient in a clinic",
+                        "used_in": [
+                            "a6"
+                        ]
+                    },
+                    {
+                        "id": "v12",
+                        "term_target": "last",
+                        "translation_native": "длиться",
+                        "pronunciation_native": "ласт",
+                        "definition_target": "continue for a period of time",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a7"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"At the Doctor's\",\"title_native\":\"Приём у врача\",\"description_target\":\"Describe pain and symptoms, ask about tests and treatment, and understand the doctor's instructions.\",\"description_native\":\"Описать боль и симптомы, спросить об обследовании и лечении и понять инструкции врача.\"},\"learner_role\":{\"role_target\":\"Patient\",\"role_native\":\"Пациент\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"My ___ hurts.\",\"frame_native\":\"У меня болит ___.\",\"pronunciation_native\":\"май ___ хёртс\",\"slot\":{\"hint_native\":\"часть тела\",\"fillers\":[{\"target\":\"my head\",\"native\":\"голова\",\"pronunciation_native\":\"май хэд\",\"in_dialogue\":true},{\"target\":\"my stomach\",\"native\":\"живот\",\"pronunciation_native\":\"май стамэк\",\"in_dialogue\":false},{\"target\":\"my throat\",\"native\":\"горло\",\"pronunciation_native\":\"май сроут\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"It started ___.\",\"frame_native\":\"Это началось ___.\",\"pronunciation_native\":\"ит стартед ___\",\"slot\":{\"hint_native\":\"время начала\",\"fillers\":[{\"target\":\"yesterday\",\"native\":\"вчера\",\"pronunciation_native\":\"йестэрдэй\",\"in_dialogue\":true},{\"target\":\"this morning\",\"native\":\"сегодня утром\",\"pronunciation_native\":\"зис морнинг\",\"in_dialogue\":false},{\"target\":\"two days ago\",\"native\":\"два дня назад\",\"pronunciation_native\":\"ту дэйз эгоу\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"The pain is ___.\",\"frame_native\":\"Боль ___.\",\"pronunciation_native\":\"зэ пэйн из ___\",\"slot\":{\"hint_native\":\"сила боли\",\"fillers\":[{\"target\":\"moderate\",\"native\":\"умеренная\",\"pronunciation_native\":\"модэрэт\",\"in_dialogue\":true},{\"target\":\"mild\",\"native\":\"слабая\",\"pronunciation_native\":\"майлд\",\"in_dialogue\":false},{\"target\":\"strong\",\"native\":\"сильная\",\"pronunciation_native\":\"стронг\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"I have ___.\",\"frame_native\":\"У меня ___.\",\"pronunciation_native\":\"ай хэв ___\",\"slot\":{\"hint_native\":\"симптом\",\"fillers\":[{\"target\":\"a cough\",\"native\":\"кашель\",\"pronunciation_native\":\"э коф\",\"in_dialogue\":true},{\"target\":\"a fever\",\"native\":\"температура\",\"pronunciation_native\":\"э фивэр\",\"in_dialogue\":false},{\"target\":\"nausea\",\"native\":\"тошнота\",\"pronunciation_native\":\"нозиэ\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"What is the problem?\",\"frame_native\":\"В чём проблема?\",\"pronunciation_native\":\"уот из зэ проблэм\",\"slot\":null},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Do I need ___?\",\"frame_native\":\"Мне нужно ___?\",\"pronunciation_native\":\"ду ай нид ___\",\"slot\":{\"hint_native\":\"обследование или анализ\",\"fillers\":[{\"target\":\"a blood test\",\"native\":\"сдать анализ крови\",\"pronunciation_native\":\"э блад тэст\",\"in_dialogue\":true},{\"target\":\"an X-ray\",\"native\":\"сделать рентген\",\"pronunciation_native\":\"эн экс-рэй\",\"in_dialogue\":false},{\"target\":\"an ultrasound\",\"native\":\"сделать УЗИ\",\"pronunciation_native\":\"эн алтрасaунд\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"How often should I take ___?\",\"frame_native\":\"Как часто мне принимать ___?\",\"pronunciation_native\":\"хау офэн шуд ай тэйк ___\",\"slot\":{\"hint_native\":\"лекарство\",\"fillers\":[{\"target\":\"this medicine\",\"native\":\"это лекарство\",\"pronunciation_native\":\"зис мэдисин\",\"in_dialogue\":true},{\"target\":\"these tablets\",\"native\":\"эти таблетки\",\"pronunciation_native\":\"зиз тэйблетс\",\"in_dialogue\":false},{\"target\":\"this syrup\",\"native\":\"этот сироп\",\"pronunciation_native\":\"зис сирэп\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"I understand.\",\"frame_native\":\"Понятно.\",\"pronunciation_native\":\"ай андэрстэнд\",\"slot\":null}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Where does it hurt?\",\"text_native\":\"Где у вас болит?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"When did it start?\",\"text_native\":\"Когда это началось?\"},{\"id\":\"a3\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"How bad is the pain?\",\"text_native\":\"Насколько сильная боль?\"},{\"id\":\"a4\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Do you have any other symptoms?\",\"text_native\":\"У вас есть другие симптомы?\"},{\"id\":\"a5\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"It looks like inflammation. Please rest today.\",\"text_native\":\"Похоже на воспаление. Сегодня вам нужно отдыхать.\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Yes. The examination can be done here today.\",\"text_native\":\"Да. Обследование можно пройти здесь сегодня.\"},{\"id\":\"a7\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[],\"text_target\":\"Yes. The treatment will last three days.\",\"text_native\":\"Да. Лечение продлится три дня.\"},{\"id\":\"a8\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Take it twice a day.\",\"text_native\":\"Принимайте его два раза в день.\"},{\"id\":\"a9\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[],\"text_target\":\"Come back in three days.\",\"text_native\":\"Приходите снова через три дня.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"hurt\",\"translation_native\":\"болеть\",\"pronunciation_native\":\"хёрт\",\"definition_target\":\"feel pain in a body part\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"start\",\"translation_native\":\"начинаться\",\"pronunciation_native\":\"старт\",\"definition_target\":\"begin\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"pain\",\"translation_native\":\"боль\",\"pronunciation_native\":\"пэйн\",\"definition_target\":\"an unpleasant feeling in the body\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"need\",\"translation_native\":\"нуждаться\",\"pronunciation_native\":\"нид\",\"definition_target\":\"require something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v5\",\"term_target\":\"often\",\"translation_native\":\"часто\",\"pronunciation_native\":\"офэн\",\"definition_target\":\"many times\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v6\",\"term_target\":\"take\",\"translation_native\":\"принимать\",\"pronunciation_native\":\"тэйк\",\"definition_target\":\"use or swallow medicine\",\"kind\":\"word\",\"image_prompt\":\"A patient taking a tablet with water at home\",\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"understand\",\"translation_native\":\"понимать\",\"pronunciation_native\":\"андэрстэнд\",\"definition_target\":\"know what something means\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"inflammation\",\"translation_native\":\"воспаление\",\"pronunciation_native\":\"инфлэмэйшн\",\"definition_target\":\"a painful swollen condition in the body\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a5\"]},{\"id\":\"v9\",\"term_target\":\"treatment\",\"translation_native\":\"лечение\",\"pronunciation_native\":\"тритмэнт\",\"definition_target\":\"medical care for a health problem\",\"kind\":\"word\",\"image_prompt\":\"A doctor giving a patient a treatment plan in a clinic\",\"used_in\":[\"a7\"]},{\"id\":\"v10\",\"term_target\":\"rest\",\"translation_native\":\"отдыхать\",\"pronunciation_native\":\"рэст\",\"definition_target\":\"stop activity to recover\",\"kind\":\"word\",\"image_prompt\":\"A patient resting in bed at home\",\"used_in\":[\"a5\"]},{\"id\":\"v11\",\"term_target\":\"examination\",\"translation_native\":\"обследование\",\"pronunciation_native\":\"игзэминэйшн\",\"definition_target\":\"a medical check by a doctor\",\"kind\":\"word\",\"image_prompt\":\"A doctor examining a patient in a clinic\",\"used_in\":[\"a6\"]},{\"id\":\"v12\",\"term_target\":\"last\",\"translation_native\":\"длиться\",\"pronunciation_native\":\"ласт\",\"definition_target\":\"continue for a period of time\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a7\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETPx6l61UqVpBTPVoKS6cqTc3ItdE",
+                "object": "chat.completion",
+                "created": 1790679980,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"At the Doctor's\",\"title_native\":\"Приём у врача\",\"description_target\":\"Describe pain and symptoms, ask about tests and treatment, and understand the doctor's instructions.\",\"description_native\":\"Описать боль и симптомы, спросить об обследовании и лечении и понять инструкции врача.\"},\"learner_role\":{\"role_target\":\"Patient\",\"role_native\":\"Пациент\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"My ___ hurts.\",\"frame_native\":\"У меня болит ___.\",\"pronunciation_native\":\"май ___ хёртс\",\"slot\":{\"hint_native\":\"часть тела\",\"fillers\":[{\"target\":\"my head\",\"native\":\"голова\",\"pronunciation_native\":\"май хэд\",\"in_dialogue\":true},{\"target\":\"my stomach\",\"native\":\"живот\",\"pronunciation_native\":\"май стамэк\",\"in_dialogue\":false},{\"target\":\"my throat\",\"native\":\"горло\",\"pronunciation_native\":\"май сроут\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"It started ___.\",\"frame_native\":\"Это началось ___.\",\"pronunciation_native\":\"ит стартед ___\",\"slot\":{\"hint_native\":\"время начала\",\"fillers\":[{\"target\":\"yesterday\",\"native\":\"вчера\",\"pronunciation_native\":\"йестэрдэй\",\"in_dialogue\":true},{\"target\":\"this morning\",\"native\":\"сегодня утром\",\"pronunciation_native\":\"зис морнинг\",\"in_dialogue\":false},{\"target\":\"two days ago\",\"native\":\"два дня назад\",\"pronunciation_native\":\"ту дэйз эгоу\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"The pain is ___.\",\"frame_native\":\"Боль ___.\",\"pronunciation_native\":\"зэ пэйн из ___\",\"slot\":{\"hint_native\":\"сила боли\",\"fillers\":[{\"target\":\"moderate\",\"native\":\"умеренная\",\"pronunciation_native\":\"модэрэт\",\"in_dialogue\":true},{\"target\":\"mild\",\"native\":\"слабая\",\"pronunciation_native\":\"майлд\",\"in_dialogue\":false},{\"target\":\"strong\",\"native\":\"сильная\",\"pronunciation_native\":\"стронг\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"I have ___.\",\"frame_native\":\"У меня ___.\",\"pronunciation_native\":\"ай хэв ___\",\"slot\":{\"hint_native\":\"симптом\",\"fillers\":[{\"target\":\"a cough\",\"native\":\"кашель\",\"pronunciation_native\":\"э коф\",\"in_dialogue\":true},{\"target\":\"a fever\",\"native\":\"температура\",\"pronunciation_native\":\"э фивэр\",\"in_dialogue\":false},{\"target\":\"nausea\",\"native\":\"тошнота\",\"pronunciation_native\":\"нозиэ\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"What is the problem?\",\"frame_native\":\"В чём проблема?\",\"pronunciation_native\":\"уот из зэ проблэм\",\"slot\":null},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Do I need ___?\",\"frame_native\":\"Мне нужно ___?\",\"pronunciation_native\":\"ду ай нид ___\",\"slot\":{\"hint_native\":\"обследование или анализ\",\"fillers\":[{\"target\":\"a blood test\",\"native\":\"сдать анализ крови\",\"pronunciation_native\":\"э блад тэст\",\"in_dialogue\":true},{\"target\":\"an X-ray\",\"native\":\"сделать рентген\",\"pronunciation_native\":\"эн экс-рэй\",\"in_dialogue\":false},{\"target\":\"an ultrasound\",\"native\":\"сделать УЗИ\",\"pronunciation_native\":\"эн алтрасaунд\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"How often should I take ___?\",\"frame_native\":\"Как часто мне принимать ___?\",\"pronunciation_native\":\"хау офэн шуд ай тэйк ___\",\"slot\":{\"hint_native\":\"лекарство\",\"fillers\":[{\"target\":\"this medicine\",\"native\":\"это лекарство\",\"pronunciation_native\":\"зис мэдисин\",\"in_dialogue\":true},{\"target\":\"these tablets\",\"native\":\"эти таблетки\",\"pronunciation_native\":\"зиз тэйблетс\",\"in_dialogue\":false},{\"target\":\"this syrup\",\"native\":\"этот сироп\",\"pronunciation_native\":\"зис сирэп\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"I understand.\",\"frame_native\":\"Понятно.\",\"pronunciation_native\":\"ай андэрстэнд\",\"slot\":null}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Where does it hurt?\",\"text_native\":\"Где у вас болит?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"When did it start?\",\"text_native\":\"Когда это началось?\"},{\"id\":\"a3\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"How bad is the pain?\",\"text_native\":\"Насколько сильная боль?\"},{\"id\":\"a4\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Do you have any other symptoms?\",\"text_native\":\"У вас есть другие симптомы?\"},{\"id\":\"a5\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"It looks like inflammation. Please rest today.\",\"text_native\":\"Похоже на воспаление. Сегодня вам нужно отдыхать.\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Yes. The examination can be done here today.\",\"text_native\":\"Да. Обследование можно пройти здесь сегодня.\"},{\"id\":\"a7\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[],\"text_target\":\"Yes. The treatment will last three days.\",\"text_native\":\"Да. Лечение продлится три дня.\"},{\"id\":\"a8\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Take it twice a day.\",\"text_native\":\"Принимайте его два раза в день.\"},{\"id\":\"a9\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[],\"text_target\":\"Come back in three days.\",\"text_native\":\"Приходите снова через три дня.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"hurt\",\"translation_native\":\"болеть\",\"pronunciation_native\":\"хёрт\",\"definition_target\":\"feel pain in a body part\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"start\",\"translation_native\":\"начинаться\",\"pronunciation_native\":\"старт\",\"definition_target\":\"begin\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"pain\",\"translation_native\":\"боль\",\"pronunciation_native\":\"пэйн\",\"definition_target\":\"an unpleasant feeling in the body\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"need\",\"translation_native\":\"нуждаться\",\"pronunciation_native\":\"нид\",\"definition_target\":\"require something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v5\",\"term_target\":\"often\",\"translation_native\":\"часто\",\"pronunciation_native\":\"офэн\",\"definition_target\":\"many times\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v6\",\"term_target\":\"take\",\"translation_native\":\"принимать\",\"pronunciation_native\":\"тэйк\",\"definition_target\":\"use or swallow medicine\",\"kind\":\"word\",\"image_prompt\":\"A patient taking a tablet with water at home\",\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"understand\",\"translation_native\":\"понимать\",\"pronunciation_native\":\"андэрстэнд\",\"definition_target\":\"know what something means\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"inflammation\",\"translation_native\":\"воспаление\",\"pronunciation_native\":\"инфлэмэйшн\",\"definition_target\":\"a painful swollen condition in the body\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a5\"]},{\"id\":\"v9\",\"term_target\":\"treatment\",\"translation_native\":\"лечение\",\"pronunciation_native\":\"тритмэнт\",\"definition_target\":\"medical care for a health problem\",\"kind\":\"word\",\"image_prompt\":\"A doctor giving a patient a treatment plan in a clinic\",\"used_in\":[\"a7\"]},{\"id\":\"v10\",\"term_target\":\"rest\",\"translation_native\":\"отдыхать\",\"pronunciation_native\":\"рэст\",\"definition_target\":\"stop activity to recover\",\"kind\":\"word\",\"image_prompt\":\"A patient resting in bed at home\",\"used_in\":[\"a5\"]},{\"id\":\"v11\",\"term_target\":\"examination\",\"translation_native\":\"обследование\",\"pronunciation_native\":\"игзэминэйшн\",\"definition_target\":\"a medical check by a doctor\",\"kind\":\"word\",\"image_prompt\":\"A doctor examining a patient in a clinic\",\"used_in\":[\"a6\"]},{\"id\":\"v12\",\"term_target\":\"last\",\"translation_native\":\"длиться\",\"pronunciation_native\":\"ласт\",\"definition_target\":\"continue for a period of time\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a7\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 4994,
+                    "completion_tokens": 13862,
+                    "total_tokens": 18856,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 349,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 11684,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

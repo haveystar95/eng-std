@@ -1,0 +1,560 @@
+{
+    "plan": "03",
+    "run": "luna-high",
+    "model": {
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Oglądanie lokalu",
+        "title_target": "Viewing the apartment",
+        "teaches_native": "pytać o warunki i zasady",
+        "goals_native": [
+            "zapytać, co jest w cenie",
+            "zapytać, czy pies może wejść",
+            "zapytać o dodatkowe opłaty",
+            "zgłosić swoją wątpliwość"
+        ],
+        "learner_role": [
+            "Tenant",
+            "Najemca"
+        ],
+        "partner_role": [
+            "Agent",
+            "Agent"
+        ],
+        "topic_description": "Situation: You are walking through the apartment with the agent and need to decide whether the place could work for you. You have a small dog, so the pet rule is especially important, along with costs, condition, and practical details.\nLearner: Tenant. Partner: Agent.\nNot in this scene: introductions and viewing plan, application steps, required documents, negotiating the contract, arranging the next contact.",
+        "must_say": [
+            "ask what is included in the rent — slot: the thing included",
+            "ask whether a pet is allowed — slot: the pet",
+            "ask whether there are extra monthly costs — slot: the cost",
+            "ask how old something in the flat is — slot: the thing",
+            "explain a concern about the apartment — slot: the concern",
+            "ask whether something can be changed — slot: the change",
+            "ask about the neighbourhood — slot: the place nearby",
+            "confirm what matters most to you — slot: the priority"
+        ],
+        "must_understand": [
+            "says what is included in the rent and what is not",
+            "explains the building or flat rules about pets",
+            "says what extra monthly costs there are",
+            "explains whether changes are possible and under what conditions",
+            "tells you about the area or nearby services"
+        ]
+    },
+    "error": null,
+    "findings": [],
+    "cost_usd": 0.082319,
+    "wall_ms": 126578,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T10:54:02Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5017,
+            "cached_tokens_in": 4642,
+            "tokens_out": 13580,
+            "reasoning_tokens": 11257,
+            "cost_usd": "0.082319",
+            "latency_ms": 126552,
+            "wall_ms": 126553,
+            "call_id": "01M3PCSNGRBYZGSSHZM6TWV12M",
+            "user": "TOPIC: Oglądanie lokalu\n\nTOPIC_DESCRIPTION: Situation: You are walking through the apartment with the agent and need to decide whether the place could work for you. You have a small dog, so the pet rule is especially important, along with costs, condition, and practical details.\nLearner: Tenant. Partner: Agent.\nNot in this scene: introductions and viewing plan, application steps, required documents, negotiating the contract, arranging the next contact.\n\nAbout the learner, in their own words: wynajem mieszkania, oglądanie z agentem, mam małego psa\n\nSURVIVAL_SET:\nmust_say:\n1. ask what is included in the rent — slot: the thing included\n2. ask whether a pet is allowed — slot: the pet\n3. ask whether there are extra monthly costs — slot: the cost\n4. ask how old something in the flat is — slot: the thing\n5. explain a concern about the apartment — slot: the concern\n6. ask whether something can be changed — slot: the change\n7. ask about the neighbourhood — slot: the place nearby\n8. confirm what matters most to you — slot: the priority\nmust_understand:\n1. says what is included in the rent and what is not\n2. explains the building or flat rules about pets\n3. says what extra monthly costs there are\n4. explains whether changes are possible and under what conditions\n5. tells you about the area or nearby services\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Polish\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Tenant / Najemca\n\nPARTNER_ROLE: Agent / Agent\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Viewing the Apartment",
+                    "title_native": "Oglądanie lokalu",
+                    "description_target": "Ask about costs, rules, condition, changes, and nearby services while viewing a rental.",
+                    "description_native": "Podczas oglądania wynajmowanego mieszkania zapytaj o koszty, zasady, stan, zmiany i usługi w okolicy."
+                },
+                "learner_role": {
+                    "role_target": "Tenant",
+                    "role_native": "Najemca"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Does the monthly payment include ___?",
+                        "frame_native": "Czy miesięczna opłata obejmuje ___?",
+                        "pronunciation_native": "daz de manthli pejment inklud ___",
+                        "slot": {
+                            "hint_native": "rzecz wliczona w opłatę",
+                            "fillers": [
+                                {
+                                    "target": "building maintenance",
+                                    "native": "utrzymanie budynku",
+                                    "pronunciation_native": "bilding mejntenens",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "shared-area cleaning",
+                                    "native": "sprzątanie części wspólnych",
+                                    "pronunciation_native": "szerd eria klining",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "lift use",
+                                    "native": "korzystanie z windy",
+                                    "pronunciation_native": "lift juz",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Can I keep ___ here?",
+                        "frame_native": "Czy można tu trzymać ___?",
+                        "pronunciation_native": "ken aj kip ___ hir",
+                        "slot": {
+                            "hint_native": "zwierzę",
+                            "fillers": [
+                                {
+                                    "target": "a small dog",
+                                    "native": "małego psa",
+                                    "pronunciation_native": "e smol dog",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a cat",
+                                    "native": "kota",
+                                    "pronunciation_native": "e ket",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "two rabbits",
+                                    "native": "dwa króliki",
+                                    "pronunciation_native": "tu rebits",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Is there an extra cost for ___?",
+                        "frame_native": "Czy za ___ jest dodatkowa opłata?",
+                        "pronunciation_native": "iz der en ekstra kost for ___",
+                        "slot": {
+                            "hint_native": "rzecz, za którą może być dodatkowa opłata",
+                            "fillers": [
+                                {
+                                    "target": "gas",
+                                    "native": "gaz",
+                                    "pronunciation_native": "ges",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "electricity",
+                                    "native": "prąd",
+                                    "pronunciation_native": "ilektrisiti",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "water",
+                                    "native": "wodę",
+                                    "pronunciation_native": "łoter",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "How old is ___?",
+                        "frame_native": "Ile lat ma ___?",
+                        "pronunciation_native": "hał ołld iz ___",
+                        "slot": {
+                            "hint_native": "rzecz lub część lokalu",
+                            "fillers": [
+                                {
+                                    "target": "the boiler",
+                                    "native": "bojler",
+                                    "pronunciation_native": "de bojler",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the building",
+                                    "native": "budynek",
+                                    "pronunciation_native": "de bilding",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the windows",
+                                    "native": "okna",
+                                    "pronunciation_native": "de łindołz",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "I'm concerned about ___.",
+                        "frame_native": "Martwi mnie ___.",
+                        "pronunciation_native": "ajm konsyrnd ebałt ___",
+                        "slot": {
+                            "hint_native": "problem lub obawa",
+                            "fillers": [
+                                {
+                                    "target": "the noise",
+                                    "native": "hałas",
+                                    "pronunciation_native": "de nojz",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "damp",
+                                    "native": "wilgoć",
+                                    "pronunciation_native": "demp",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "limited storage",
+                                    "native": "mało miejsca",
+                                    "pronunciation_native": "limitid storidż",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Can ___ be changed?",
+                        "frame_native": "Czy można zmienić ___?",
+                        "pronunciation_native": "ken ___ bi czejndżd",
+                        "slot": {
+                            "hint_native": "rzecz, którą można zmienić",
+                            "fillers": [
+                                {
+                                    "target": "the flooring",
+                                    "native": "podłogę",
+                                    "pronunciation_native": "de floring",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the light fixtures",
+                                    "native": "oprawy oświetleniowe",
+                                    "pronunciation_native": "de lajt fiksczers",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the bathroom door",
+                                    "native": "drzwi do łazienki",
+                                    "pronunciation_native": "de bafrum dor",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Is there ___ nearby?",
+                        "frame_native": "Czy w pobliżu jest ___?",
+                        "pronunciation_native": "iz der ___ nirbaj",
+                        "slot": {
+                            "hint_native": "miejsce lub usługa w pobliżu",
+                            "fillers": [
+                                {
+                                    "target": "a library",
+                                    "native": "biblioteka",
+                                    "pronunciation_native": "e lajbreri",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a school",
+                                    "native": "szkoła",
+                                    "pronunciation_native": "e skul",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "a sports centre",
+                                    "native": "centrum sportowe",
+                                    "pronunciation_native": "e sports senter",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "answer",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "What matters most to me is ___.",
+                        "frame_native": "Najważniejsze jest dla mnie ___.",
+                        "pronunciation_native": "łot maters most tu mi iz ___",
+                        "slot": {
+                            "hint_native": "najważniejsza cecha lokalu",
+                            "fillers": [
+                                {
+                                    "target": "a quiet place",
+                                    "native": "spokojne miejsce",
+                                    "pronunciation_native": "e kłajet plejs",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a short commute",
+                                    "native": "krótki dojazd",
+                                    "pronunciation_native": "e szort komjut",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "privacy",
+                                    "native": "prywatność",
+                                    "pronunciation_native": "prajwesi",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Yes. Basic building services are included; internet is separate.",
+                        "text_native": "Tak. Podstawowe usługi związane z budynkiem są wliczone, a internet jest dodatkowo płatny."
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "statement",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "Yes. Pets are allowed with the owner's written approval; dogs must be on a lead in shared areas.",
+                        "text_native": "Tak. Zwierzęta są dozwolone za pisemną zgodą właściciela; psy muszą być na smyczy w częściach wspólnych."
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Yes. Utility charges are billed separately, and waste collection is a fixed monthly fee.",
+                        "text_native": "Tak. Opłaty za media są rozliczane osobno, a wywóz śmieci to stała miesięczna opłata."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            6
+                        ],
+                        "text_target": "Yes. Changes need the owner's written approval and must be paid for by the tenant.",
+                        "text_native": "Tak. Zmiany wymagają pisemnej zgody właściciela i opłaca je najemca."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            7
+                        ],
+                        "text_target": "Yes. Several everyday services are within a five-minute walk.",
+                        "text_native": "Tak. Kilka podstawowych usług jest w odległości pięciu minut pieszo stąd."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "include",
+                        "translation_native": "obejmować",
+                        "pronunciation_native": "inklude",
+                        "definition_target": "to have something as part of a price",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "keep",
+                        "translation_native": "trzymać",
+                        "pronunciation_native": "kip",
+                        "definition_target": "to have or look after something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "extra cost",
+                        "translation_native": "dodatkowa opłata",
+                        "pronunciation_native": "ekstra kost",
+                        "definition_target": "an additional payment",
+                        "kind": "chunk",
+                        "image_prompt": "A rental bill showing an additional charge beside the main payment.",
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "concern",
+                        "translation_native": "obawa",
+                        "pronunciation_native": "konsyrn",
+                        "definition_target": "a worry about a possible problem",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "change",
+                        "translation_native": "zmiana",
+                        "pronunciation_native": "czejndż",
+                        "definition_target": "to make something different",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "nearby",
+                        "translation_native": "w pobliżu",
+                        "pronunciation_native": "nirbaj",
+                        "definition_target": "close to a place",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "matter",
+                        "translation_native": "mieć znaczenie",
+                        "pronunciation_native": "mater",
+                        "definition_target": "to be important",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "approval",
+                        "translation_native": "zgoda",
+                        "pronunciation_native": "eprułal",
+                        "definition_target": "official permission",
+                        "kind": "word",
+                        "image_prompt": "A property owner signing a written permission form.",
+                        "used_in": [
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "separate",
+                        "translation_native": "osobny",
+                        "pronunciation_native": "seperet",
+                        "definition_target": "not included with something else",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a1",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "fixed",
+                        "translation_native": "stały",
+                        "pronunciation_native": "fikst",
+                        "definition_target": "the same amount each time",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a3"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Viewing the Apartment\",\"title_native\":\"Oglądanie lokalu\",\"description_target\":\"Ask about costs, rules, condition, changes, and nearby services while viewing a rental.\",\"description_native\":\"Podczas oglądania wynajmowanego mieszkania zapytaj o koszty, zasady, stan, zmiany i usługi w okolicy.\"},\"learner_role\":{\"role_target\":\"Tenant\",\"role_native\":\"Najemca\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"Does the monthly payment include ___?\",\"frame_native\":\"Czy miesięczna opłata obejmuje ___?\",\"pronunciation_native\":\"daz de manthli pejment inklud ___\",\"slot\":{\"hint_native\":\"rzecz wliczona w opłatę\",\"fillers\":[{\"target\":\"building maintenance\",\"native\":\"utrzymanie budynku\",\"pronunciation_native\":\"bilding mejntenens\",\"in_dialogue\":true},{\"target\":\"shared-area cleaning\",\"native\":\"sprzątanie części wspólnych\",\"pronunciation_native\":\"szerd eria klining\",\"in_dialogue\":false},{\"target\":\"lift use\",\"native\":\"korzystanie z windy\",\"pronunciation_native\":\"lift juz\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Can I keep ___ here?\",\"frame_native\":\"Czy można tu trzymać ___?\",\"pronunciation_native\":\"ken aj kip ___ hir\",\"slot\":{\"hint_native\":\"zwierzę\",\"fillers\":[{\"target\":\"a small dog\",\"native\":\"małego psa\",\"pronunciation_native\":\"e smol dog\",\"in_dialogue\":true},{\"target\":\"a cat\",\"native\":\"kota\",\"pronunciation_native\":\"e ket\",\"in_dialogue\":false},{\"target\":\"two rabbits\",\"native\":\"dwa króliki\",\"pronunciation_native\":\"tu rebits\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is there an extra cost for ___?\",\"frame_native\":\"Czy za ___ jest dodatkowa opłata?\",\"pronunciation_native\":\"iz der en ekstra kost for ___\",\"slot\":{\"hint_native\":\"rzecz, za którą może być dodatkowa opłata\",\"fillers\":[{\"target\":\"gas\",\"native\":\"gaz\",\"pronunciation_native\":\"ges\",\"in_dialogue\":true},{\"target\":\"electricity\",\"native\":\"prąd\",\"pronunciation_native\":\"ilektrisiti\",\"in_dialogue\":false},{\"target\":\"water\",\"native\":\"wodę\",\"pronunciation_native\":\"łoter\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"How old is ___?\",\"frame_native\":\"Ile lat ma ___?\",\"pronunciation_native\":\"hał ołld iz ___\",\"slot\":{\"hint_native\":\"rzecz lub część lokalu\",\"fillers\":[{\"target\":\"the boiler\",\"native\":\"bojler\",\"pronunciation_native\":\"de bojler\",\"in_dialogue\":true},{\"target\":\"the building\",\"native\":\"budynek\",\"pronunciation_native\":\"de bilding\",\"in_dialogue\":false},{\"target\":\"the windows\",\"native\":\"okna\",\"pronunciation_native\":\"de łindołz\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm concerned about ___.\",\"frame_native\":\"Martwi mnie ___.\",\"pronunciation_native\":\"ajm konsyrnd ebałt ___\",\"slot\":{\"hint_native\":\"problem lub obawa\",\"fillers\":[{\"target\":\"the noise\",\"native\":\"hałas\",\"pronunciation_native\":\"de nojz\",\"in_dialogue\":true},{\"target\":\"damp\",\"native\":\"wilgoć\",\"pronunciation_native\":\"demp\",\"in_dialogue\":false},{\"target\":\"limited storage\",\"native\":\"mało miejsca\",\"pronunciation_native\":\"limitid storidż\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Can ___ be changed?\",\"frame_native\":\"Czy można zmienić ___?\",\"pronunciation_native\":\"ken ___ bi czejndżd\",\"slot\":{\"hint_native\":\"rzecz, którą można zmienić\",\"fillers\":[{\"target\":\"the flooring\",\"native\":\"podłogę\",\"pronunciation_native\":\"de floring\",\"in_dialogue\":true},{\"target\":\"the light fixtures\",\"native\":\"oprawy oświetleniowe\",\"pronunciation_native\":\"de lajt fiksczers\",\"in_dialogue\":false},{\"target\":\"the bathroom door\",\"native\":\"drzwi do łazienki\",\"pronunciation_native\":\"de bafrum dor\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Is there ___ nearby?\",\"frame_native\":\"Czy w pobliżu jest ___?\",\"pronunciation_native\":\"iz der ___ nirbaj\",\"slot\":{\"hint_native\":\"miejsce lub usługa w pobliżu\",\"fillers\":[{\"target\":\"a library\",\"native\":\"biblioteka\",\"pronunciation_native\":\"e lajbreri\",\"in_dialogue\":true},{\"target\":\"a school\",\"native\":\"szkoła\",\"pronunciation_native\":\"e skul\",\"in_dialogue\":false},{\"target\":\"a sports centre\",\"native\":\"centrum sportowe\",\"pronunciation_native\":\"e sports senter\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"What matters most to me is ___.\",\"frame_native\":\"Najważniejsze jest dla mnie ___.\",\"pronunciation_native\":\"łot maters most tu mi iz ___\",\"slot\":{\"hint_native\":\"najważniejsza cecha lokalu\",\"fillers\":[{\"target\":\"a quiet place\",\"native\":\"spokojne miejsce\",\"pronunciation_native\":\"e kłajet plejs\",\"in_dialogue\":true},{\"target\":\"a short commute\",\"native\":\"krótki dojazd\",\"pronunciation_native\":\"e szort komjut\",\"in_dialogue\":false},{\"target\":\"privacy\",\"native\":\"prywatność\",\"pronunciation_native\":\"prajwesi\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"Yes. Basic building services are included; internet is separate.\",\"text_native\":\"Tak. Podstawowe usługi związane z budynkiem są wliczone, a internet jest dodatkowo płatny.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"Yes. Pets are allowed with the owner's written approval; dogs must be on a lead in shared areas.\",\"text_native\":\"Tak. Zwierzęta są dozwolone za pisemną zgodą właściciela; psy muszą być na smyczy w częściach wspólnych.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Yes. Utility charges are billed separately, and waste collection is a fixed monthly fee.\",\"text_native\":\"Tak. Opłaty za media są rozliczane osobno, a wywóz śmieci to stała miesięczna opłata.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Yes. Changes need the owner's written approval and must be paid for by the tenant.\",\"text_native\":\"Tak. Zmiany wymagają pisemnej zgody właściciela i opłaca je najemca.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Yes. Several everyday services are within a five-minute walk.\",\"text_native\":\"Tak. Kilka podstawowych usług jest w odległości pięciu minut pieszo stąd.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"include\",\"translation_native\":\"obejmować\",\"pronunciation_native\":\"inklude\",\"definition_target\":\"to have something as part of a price\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"keep\",\"translation_native\":\"trzymać\",\"pronunciation_native\":\"kip\",\"definition_target\":\"to have or look after something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"extra cost\",\"translation_native\":\"dodatkowa opłata\",\"pronunciation_native\":\"ekstra kost\",\"definition_target\":\"an additional payment\",\"kind\":\"chunk\",\"image_prompt\":\"A rental bill showing an additional charge beside the main payment.\",\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"concern\",\"translation_native\":\"obawa\",\"pronunciation_native\":\"konsyrn\",\"definition_target\":\"a worry about a possible problem\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v5\",\"term_target\":\"change\",\"translation_native\":\"zmiana\",\"pronunciation_native\":\"czejndż\",\"definition_target\":\"to make something different\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v6\",\"term_target\":\"nearby\",\"translation_native\":\"w pobliżu\",\"pronunciation_native\":\"nirbaj\",\"definition_target\":\"close to a place\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"matter\",\"translation_native\":\"mieć znaczenie\",\"pronunciation_native\":\"mater\",\"definition_target\":\"to be important\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"approval\",\"translation_native\":\"zgoda\",\"pronunciation_native\":\"eprułal\",\"definition_target\":\"official permission\",\"kind\":\"word\",\"image_prompt\":\"A property owner signing a written permission form.\",\"used_in\":[\"a2\"]},{\"id\":\"v9\",\"term_target\":\"separate\",\"translation_native\":\"osobny\",\"pronunciation_native\":\"seperet\",\"definition_target\":\"not included with something else\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a1\",\"a3\"]},{\"id\":\"v10\",\"term_target\":\"fixed\",\"translation_native\":\"stały\",\"pronunciation_native\":\"fikst\",\"definition_target\":\"the same amount each time\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a3\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETPlCxgnIyLVfvIxxIRmIRKwQxfQk",
+                "object": "chat.completion",
+                "created": 1790679242,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Viewing the Apartment\",\"title_native\":\"Oglądanie lokalu\",\"description_target\":\"Ask about costs, rules, condition, changes, and nearby services while viewing a rental.\",\"description_native\":\"Podczas oglądania wynajmowanego mieszkania zapytaj o koszty, zasady, stan, zmiany i usługi w okolicy.\"},\"learner_role\":{\"role_target\":\"Tenant\",\"role_native\":\"Najemca\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"Does the monthly payment include ___?\",\"frame_native\":\"Czy miesięczna opłata obejmuje ___?\",\"pronunciation_native\":\"daz de manthli pejment inklud ___\",\"slot\":{\"hint_native\":\"rzecz wliczona w opłatę\",\"fillers\":[{\"target\":\"building maintenance\",\"native\":\"utrzymanie budynku\",\"pronunciation_native\":\"bilding mejntenens\",\"in_dialogue\":true},{\"target\":\"shared-area cleaning\",\"native\":\"sprzątanie części wspólnych\",\"pronunciation_native\":\"szerd eria klining\",\"in_dialogue\":false},{\"target\":\"lift use\",\"native\":\"korzystanie z windy\",\"pronunciation_native\":\"lift juz\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Can I keep ___ here?\",\"frame_native\":\"Czy można tu trzymać ___?\",\"pronunciation_native\":\"ken aj kip ___ hir\",\"slot\":{\"hint_native\":\"zwierzę\",\"fillers\":[{\"target\":\"a small dog\",\"native\":\"małego psa\",\"pronunciation_native\":\"e smol dog\",\"in_dialogue\":true},{\"target\":\"a cat\",\"native\":\"kota\",\"pronunciation_native\":\"e ket\",\"in_dialogue\":false},{\"target\":\"two rabbits\",\"native\":\"dwa króliki\",\"pronunciation_native\":\"tu rebits\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is there an extra cost for ___?\",\"frame_native\":\"Czy za ___ jest dodatkowa opłata?\",\"pronunciation_native\":\"iz der en ekstra kost for ___\",\"slot\":{\"hint_native\":\"rzecz, za którą może być dodatkowa opłata\",\"fillers\":[{\"target\":\"gas\",\"native\":\"gaz\",\"pronunciation_native\":\"ges\",\"in_dialogue\":true},{\"target\":\"electricity\",\"native\":\"prąd\",\"pronunciation_native\":\"ilektrisiti\",\"in_dialogue\":false},{\"target\":\"water\",\"native\":\"wodę\",\"pronunciation_native\":\"łoter\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"How old is ___?\",\"frame_native\":\"Ile lat ma ___?\",\"pronunciation_native\":\"hał ołld iz ___\",\"slot\":{\"hint_native\":\"rzecz lub część lokalu\",\"fillers\":[{\"target\":\"the boiler\",\"native\":\"bojler\",\"pronunciation_native\":\"de bojler\",\"in_dialogue\":true},{\"target\":\"the building\",\"native\":\"budynek\",\"pronunciation_native\":\"de bilding\",\"in_dialogue\":false},{\"target\":\"the windows\",\"native\":\"okna\",\"pronunciation_native\":\"de łindołz\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm concerned about ___.\",\"frame_native\":\"Martwi mnie ___.\",\"pronunciation_native\":\"ajm konsyrnd ebałt ___\",\"slot\":{\"hint_native\":\"problem lub obawa\",\"fillers\":[{\"target\":\"the noise\",\"native\":\"hałas\",\"pronunciation_native\":\"de nojz\",\"in_dialogue\":true},{\"target\":\"damp\",\"native\":\"wilgoć\",\"pronunciation_native\":\"demp\",\"in_dialogue\":false},{\"target\":\"limited storage\",\"native\":\"mało miejsca\",\"pronunciation_native\":\"limitid storidż\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Can ___ be changed?\",\"frame_native\":\"Czy można zmienić ___?\",\"pronunciation_native\":\"ken ___ bi czejndżd\",\"slot\":{\"hint_native\":\"rzecz, którą można zmienić\",\"fillers\":[{\"target\":\"the flooring\",\"native\":\"podłogę\",\"pronunciation_native\":\"de floring\",\"in_dialogue\":true},{\"target\":\"the light fixtures\",\"native\":\"oprawy oświetleniowe\",\"pronunciation_native\":\"de lajt fiksczers\",\"in_dialogue\":false},{\"target\":\"the bathroom door\",\"native\":\"drzwi do łazienki\",\"pronunciation_native\":\"de bafrum dor\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Is there ___ nearby?\",\"frame_native\":\"Czy w pobliżu jest ___?\",\"pronunciation_native\":\"iz der ___ nirbaj\",\"slot\":{\"hint_native\":\"miejsce lub usługa w pobliżu\",\"fillers\":[{\"target\":\"a library\",\"native\":\"biblioteka\",\"pronunciation_native\":\"e lajbreri\",\"in_dialogue\":true},{\"target\":\"a school\",\"native\":\"szkoła\",\"pronunciation_native\":\"e skul\",\"in_dialogue\":false},{\"target\":\"a sports centre\",\"native\":\"centrum sportowe\",\"pronunciation_native\":\"e sports senter\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"What matters most to me is ___.\",\"frame_native\":\"Najważniejsze jest dla mnie ___.\",\"pronunciation_native\":\"łot maters most tu mi iz ___\",\"slot\":{\"hint_native\":\"najważniejsza cecha lokalu\",\"fillers\":[{\"target\":\"a quiet place\",\"native\":\"spokojne miejsce\",\"pronunciation_native\":\"e kłajet plejs\",\"in_dialogue\":true},{\"target\":\"a short commute\",\"native\":\"krótki dojazd\",\"pronunciation_native\":\"e szort komjut\",\"in_dialogue\":false},{\"target\":\"privacy\",\"native\":\"prywatność\",\"pronunciation_native\":\"prajwesi\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"Yes. Basic building services are included; internet is separate.\",\"text_native\":\"Tak. Podstawowe usługi związane z budynkiem są wliczone, a internet jest dodatkowo płatny.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"Yes. Pets are allowed with the owner's written approval; dogs must be on a lead in shared areas.\",\"text_native\":\"Tak. Zwierzęta są dozwolone za pisemną zgodą właściciela; psy muszą być na smyczy w częściach wspólnych.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Yes. Utility charges are billed separately, and waste collection is a fixed monthly fee.\",\"text_native\":\"Tak. Opłaty za media są rozliczane osobno, a wywóz śmieci to stała miesięczna opłata.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Yes. Changes need the owner's written approval and must be paid for by the tenant.\",\"text_native\":\"Tak. Zmiany wymagają pisemnej zgody właściciela i opłaca je najemca.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Yes. Several everyday services are within a five-minute walk.\",\"text_native\":\"Tak. Kilka podstawowych usług jest w odległości pięciu minut pieszo stąd.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"include\",\"translation_native\":\"obejmować\",\"pronunciation_native\":\"inklude\",\"definition_target\":\"to have something as part of a price\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"keep\",\"translation_native\":\"trzymać\",\"pronunciation_native\":\"kip\",\"definition_target\":\"to have or look after something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"extra cost\",\"translation_native\":\"dodatkowa opłata\",\"pronunciation_native\":\"ekstra kost\",\"definition_target\":\"an additional payment\",\"kind\":\"chunk\",\"image_prompt\":\"A rental bill showing an additional charge beside the main payment.\",\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"concern\",\"translation_native\":\"obawa\",\"pronunciation_native\":\"konsyrn\",\"definition_target\":\"a worry about a possible problem\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v5\",\"term_target\":\"change\",\"translation_native\":\"zmiana\",\"pronunciation_native\":\"czejndż\",\"definition_target\":\"to make something different\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v6\",\"term_target\":\"nearby\",\"translation_native\":\"w pobliżu\",\"pronunciation_native\":\"nirbaj\",\"definition_target\":\"close to a place\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"matter\",\"translation_native\":\"mieć znaczenie\",\"pronunciation_native\":\"mater\",\"definition_target\":\"to be important\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"approval\",\"translation_native\":\"zgoda\",\"pronunciation_native\":\"eprułal\",\"definition_target\":\"official permission\",\"kind\":\"word\",\"image_prompt\":\"A property owner signing a written permission form.\",\"used_in\":[\"a2\"]},{\"id\":\"v9\",\"term_target\":\"separate\",\"translation_native\":\"osobny\",\"pronunciation_native\":\"seperet\",\"definition_target\":\"not included with something else\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a1\",\"a3\"]},{\"id\":\"v10\",\"term_target\":\"fixed\",\"translation_native\":\"stały\",\"pronunciation_native\":\"fikst\",\"definition_target\":\"the same amount each time\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a3\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5017,
+                    "completion_tokens": 13580,
+                    "total_tokens": 18597,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 372,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 11257,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

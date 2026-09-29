@@ -1,0 +1,502 @@
+{
+    "plan": "01",
+    "run": "luna-high",
+    "model": {
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Основные вопросы",
+        "title_target": "Întrebări importante",
+        "teaches_native": "ответить на главные вопросы",
+        "goals_native": [
+            "сказать, почему хотите",
+            "сказать, что умеете",
+            "спросить про обучение",
+            "спросить, что дальше"
+        ],
+        "learner_role": [
+            "Candidat",
+            "Кандидат"
+        ],
+        "partner_role": [
+            "Intervievator",
+            "Интервьюер"
+        ],
+        "topic_description": "Situation: After discussing your background, the interviewer moves to the key decision points of the interview. This is where they judge your fit for the role, your practical ability, and your availability, and where you need to understand what happens after the meeting.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: giving your name, naming the position, describing previous workplaces and duties, discussing salary.",
+        "must_say": [
+            "say why you want this job — slot: the reason",
+            "say what you do well at work — slot: the skill",
+            "answer whether you can do a task — slot: the task",
+            "answer whether you can start on a date — slot: the date",
+            "ask whether training is provided — slot: none",
+            "ask what the next step is — slot: none",
+            "confirm you are interested in the job — slot: the position"
+        ],
+        "must_understand": [
+            "asks why you want this job",
+            "asks what you are good at and whether you can do a task",
+            "asks when you can start",
+            "explains whether training is provided",
+            "tells you the next step after the interview"
+        ]
+    },
+    "error": null,
+    "findings": [
+        {
+            "code": "vocab.stop_word",
+            "address": "v8",
+            "detail": "«la serviciu» is a word of the stop list («serviciu»)",
+            "fatal": false
+        },
+        {
+            "code": "vocab.definition_language",
+            "address": "v2",
+            "detail": "the definition «to be good at something» of «a se pricepe» reads as en, not ro (at)",
+            "fatal": false
+        },
+        {
+            "code": "vocab.definition_language",
+            "address": "v5",
+            "detail": "the definition «training for a job» of «instruire» reads as en, not ro (for)",
+            "fatal": false
+        },
+        {
+            "code": "vocab.definition_language",
+            "address": "v6",
+            "detail": "the definition «the next action in a process» of «următorul pas» reads as en, not ro (the)",
+            "fatal": false
+        },
+        {
+            "code": "vocab.definition_language",
+            "address": "v8",
+            "detail": "the definition «at work» of «la serviciu» reads as en, not ro (at)",
+            "fatal": false
+        }
+    ],
+    "cost_usd": 0.077668,
+    "wall_ms": 111126,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T10:49:21Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 4996,
+            "cached_tokens_in": 0,
+            "tokens_out": 12112,
+            "reasoning_tokens": 10238,
+            "cost_usd": "0.077668",
+            "latency_ms": 111047,
+            "wall_ms": 111057,
+            "call_id": "01M3PCH3R2KAEGFD6V6XRV998Q",
+            "user": "TOPIC: Основные вопросы\n\nTOPIC_DESCRIPTION: Situation: After discussing your background, the interviewer moves to the key decision points of the interview. This is where they judge your fit for the role, your practical ability, and your availability, and where you need to understand what happens after the meeting.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: giving your name, naming the position, describing previous workplaces and duties, discussing salary.\n\nAbout the learner, in their own words: Собеседование в пятницу, боюсь вопросов про опыт\n\nSURVIVAL_SET:\nmust_say:\n1. say why you want this job — slot: the reason\n2. say what you do well at work — slot: the skill\n3. answer whether you can do a task — slot: the task\n4. answer whether you can start on a date — slot: the date\n5. ask whether training is provided — slot: none\n6. ask what the next step is — slot: none\n7. confirm you are interested in the job — slot: the position\nmust_understand:\n1. asks why you want this job\n2. asks what you are good at and whether you can do a task\n3. asks when you can start\n4. explains whether training is provided\n5. tells you the next step after the interview\n\nTARGET_LANGUAGE: Romanian\n\nNATIVE_LANGUAGE: Russian\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidat / Кандидат\n\nPARTNER_ROLE: Intervievator / Интервьюер\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Întrebări-cheie",
+                    "title_native": "Основные вопросы",
+                    "description_target": "Veți exersa cum să explicați motivația și abilitățile, să răspundeți despre sarcini și disponibilitate și să întrebați despre instruire și pașii următori.",
+                    "description_native": "Вы потренируетесь объяснять мотивацию и навыки, отвечать о задачах и доступности, а также спрашивать об обучении и следующих шагах."
+                },
+                "learner_role": {
+                    "role_target": "Candidat",
+                    "role_native": "Кандидат"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Vreau să lucrez aici pentru ___",
+                        "frame_native": "Я хочу работать здесь ради ___",
+                        "pronunciation_native": "вреау сэ лукрэс аичь пентру ___",
+                        "slot": {
+                            "hint_native": "причина",
+                            "fillers": [
+                                {
+                                    "target": "experiență",
+                                    "native": "опыта",
+                                    "pronunciation_native": "экспериенцэ",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "stabilitate",
+                                    "native": "стабильности",
+                                    "pronunciation_native": "стабилитате",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "echipă",
+                                    "native": "команды",
+                                    "pronunciation_native": "экипэ",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Mă pricep să ___",
+                        "frame_native": "Я умею ___",
+                        "pronunciation_native": "мэ причеп сэ ___",
+                        "slot": {
+                            "hint_native": "навык или умение",
+                            "fillers": [
+                                {
+                                    "target": "lucrez în echipă",
+                                    "native": "работать в команде",
+                                    "pronunciation_native": "лукрэс ын экипэ",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "vorbesc cu clienții",
+                                    "native": "разговаривать с клиентами",
+                                    "pronunciation_native": "ворбеск ку клиенць",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "organizez munca",
+                                    "native": "организовывать работу",
+                                    "pronunciation_native": "организэс мунка",
+                                    "in_dialogue": true
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Pot să ___",
+                        "frame_native": "Я могу ___",
+                        "pronunciation_native": "пот сэ ___",
+                        "slot": {
+                            "hint_native": "задача или действие",
+                            "fillers": [
+                                {
+                                    "target": "verific documente",
+                                    "native": "проверять документы",
+                                    "pronunciation_native": "верифик докумэнте",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "pregătesc comenzi",
+                                    "native": "готовить заказы",
+                                    "pronunciation_native": "прэгэтеск комэнзь",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "folosesc un program",
+                                    "native": "пользоваться программой",
+                                    "pronunciation_native": "фолосеск ун програм",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Pot începe ___",
+                        "frame_native": "Я могу начать ___",
+                        "pronunciation_native": "пот ынчепе ___",
+                        "slot": {
+                            "hint_native": "дата начала",
+                            "fillers": [
+                                {
+                                    "target": "luni",
+                                    "native": "в понедельник",
+                                    "pronunciation_native": "лунь",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "pe întâi iunie",
+                                    "native": "с первого июня",
+                                    "pronunciation_native": "пе ынтый юние",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "săptămâna viitoare",
+                                    "native": "на следующей неделе",
+                                    "pronunciation_native": "сэптэмына виитоаре",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "Oferiți instruire?",
+                        "frame_native": "Вы проводите обучение?",
+                        "pronunciation_native": "офериц ынструире",
+                        "slot": null
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Care este următorul pas?",
+                        "frame_native": "Какой следующий шаг?",
+                        "pronunciation_native": "каре есте урмэторул пас",
+                        "slot": null
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "answer",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Mă interesează postul de ___",
+                        "frame_native": "Мне интересна должность ___",
+                        "pronunciation_native": "мэ интересеазэ постул де ___",
+                        "slot": {
+                            "hint_native": "название должности",
+                            "fillers": [
+                                {
+                                    "target": "operator",
+                                    "native": "оператора",
+                                    "pronunciation_native": "оператор",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "coordonator",
+                                    "native": "координатора",
+                                    "pronunciation_native": "координатор",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "receptioner",
+                                    "native": "администратора",
+                                    "pronunciation_native": "ресепцьонер",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "De ce doriți acest loc de muncă?",
+                        "text_native": "Почему вы хотите эту работу?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "Ce faceți bine la serviciu?",
+                        "text_native": "Что вы хорошо умеете делать на работе?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Puteți face această sarcină?",
+                        "text_native": "Вы можете выполнить эту задачу?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Când puteți începe?",
+                        "text_native": "Когда вы можете начать?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "Da, oferim instruire în prima săptămână.",
+                        "text_native": "Да, мы проводим обучение в первую неделю."
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            6
+                        ],
+                        "text_target": "Următorul pas este un test scurt online.",
+                        "text_native": "Следующий шаг — короткий онлайн-тест."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "loc de muncă",
+                        "translation_native": "работа",
+                        "pronunciation_native": "лок де мунке",
+                        "definition_target": "a job or position",
+                        "kind": "chunk",
+                        "image_prompt": "A person speaking with an interviewer in a modern office",
+                        "used_in": [
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "a se pricepe",
+                        "translation_native": "уметь",
+                        "pronunciation_native": "а се причепе",
+                        "definition_target": "to be good at something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "a începe",
+                        "translation_native": "начать",
+                        "pronunciation_native": "а ынчепе",
+                        "definition_target": "to begin something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p4",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "a oferi",
+                        "translation_native": "предоставлять",
+                        "pronunciation_native": "а офери",
+                        "definition_target": "to provide something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5",
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "instruire",
+                        "translation_native": "обучение",
+                        "pronunciation_native": "ынструире",
+                        "definition_target": "training for a job",
+                        "kind": "word",
+                        "image_prompt": "A trainer showing a new employee how to use office equipment",
+                        "used_in": [
+                            "p5",
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "următorul pas",
+                        "translation_native": "следующий шаг",
+                        "pronunciation_native": "урмэторул пас",
+                        "definition_target": "the next action in a process",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6",
+                            "a6"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "a dori",
+                        "translation_native": "хотеть",
+                        "pronunciation_native": "а дори",
+                        "definition_target": "to want something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "la serviciu",
+                        "translation_native": "на работе",
+                        "pronunciation_native": "ла сервичьу",
+                        "definition_target": "at work",
+                        "kind": "chunk",
+                        "image_prompt": "An employee working at a desk in an office",
+                        "used_in": [
+                            "a2"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Întrebări-cheie\",\"title_native\":\"Основные вопросы\",\"description_target\":\"Veți exersa cum să explicați motivația și abilitățile, să răspundeți despre sarcini și disponibilitate și să întrebați despre instruire și pașii următori.\",\"description_native\":\"Вы потренируетесь объяснять мотивацию и навыки, отвечать о задачах и доступности, а также спрашивать об обучении и следующих шагах.\"},\"learner_role\":{\"role_target\":\"Candidat\",\"role_native\":\"Кандидат\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Vreau să lucrez aici pentru ___\",\"frame_native\":\"Я хочу работать здесь ради ___\",\"pronunciation_native\":\"вреау сэ лукрэс аичь пентру ___\",\"slot\":{\"hint_native\":\"причина\",\"fillers\":[{\"target\":\"experiență\",\"native\":\"опыта\",\"pronunciation_native\":\"экспериенцэ\",\"in_dialogue\":false},{\"target\":\"stabilitate\",\"native\":\"стабильности\",\"pronunciation_native\":\"стабилитате\",\"in_dialogue\":true},{\"target\":\"echipă\",\"native\":\"команды\",\"pronunciation_native\":\"экипэ\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mă pricep să ___\",\"frame_native\":\"Я умею ___\",\"pronunciation_native\":\"мэ причеп сэ ___\",\"slot\":{\"hint_native\":\"навык или умение\",\"fillers\":[{\"target\":\"lucrez în echipă\",\"native\":\"работать в команде\",\"pronunciation_native\":\"лукрэс ын экипэ\",\"in_dialogue\":false},{\"target\":\"vorbesc cu clienții\",\"native\":\"разговаривать с клиентами\",\"pronunciation_native\":\"ворбеск ку клиенць\",\"in_dialogue\":false},{\"target\":\"organizez munca\",\"native\":\"организовывать работу\",\"pronunciation_native\":\"организэс мунка\",\"in_dialogue\":true}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"Pot să ___\",\"frame_native\":\"Я могу ___\",\"pronunciation_native\":\"пот сэ ___\",\"slot\":{\"hint_native\":\"задача или действие\",\"fillers\":[{\"target\":\"verific documente\",\"native\":\"проверять документы\",\"pronunciation_native\":\"верифик докумэнте\",\"in_dialogue\":true},{\"target\":\"pregătesc comenzi\",\"native\":\"готовить заказы\",\"pronunciation_native\":\"прэгэтеск комэнзь\",\"in_dialogue\":false},{\"target\":\"folosesc un program\",\"native\":\"пользоваться программой\",\"pronunciation_native\":\"фолосеск ун програм\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"Pot începe ___\",\"frame_native\":\"Я могу начать ___\",\"pronunciation_native\":\"пот ынчепе ___\",\"slot\":{\"hint_native\":\"дата начала\",\"fillers\":[{\"target\":\"luni\",\"native\":\"в понедельник\",\"pronunciation_native\":\"лунь\",\"in_dialogue\":true},{\"target\":\"pe întâi iunie\",\"native\":\"с первого июня\",\"pronunciation_native\":\"пе ынтый юние\",\"in_dialogue\":false},{\"target\":\"săptămâna viitoare\",\"native\":\"на следующей неделе\",\"pronunciation_native\":\"сэптэмына виитоаре\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Oferiți instruire?\",\"frame_native\":\"Вы проводите обучение?\",\"pronunciation_native\":\"офериц ынструире\",\"slot\":null},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Care este următorul pas?\",\"frame_native\":\"Какой следующий шаг?\",\"pronunciation_native\":\"каре есте урмэторул пас\",\"slot\":null},{\"id\":\"p7\",\"kind\":\"answer\",\"must_say\":[7],\"frame_target\":\"Mă interesează postul de ___\",\"frame_native\":\"Мне интересна должность ___\",\"pronunciation_native\":\"мэ интересеазэ постул де ___\",\"slot\":{\"hint_native\":\"название должности\",\"fillers\":[{\"target\":\"operator\",\"native\":\"оператора\",\"pronunciation_native\":\"оператор\",\"in_dialogue\":true},{\"target\":\"coordonator\",\"native\":\"координатора\",\"pronunciation_native\":\"координатор\",\"in_dialogue\":false},{\"target\":\"receptioner\",\"native\":\"администратора\",\"pronunciation_native\":\"ресепцьонер\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"De ce doriți acest loc de muncă?\",\"text_native\":\"Почему вы хотите эту работу?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Ce faceți bine la serviciu?\",\"text_native\":\"Что вы хорошо умеете делать на работе?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"Puteți face această sarcină?\",\"text_native\":\"Вы можете выполнить эту задачу?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Când puteți începe?\",\"text_native\":\"Когда вы можете начать?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"Da, oferim instruire în prima săptămână.\",\"text_native\":\"Да, мы проводим обучение в первую неделю.\"},{\"id\":\"a6\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Următorul pas este un test scurt online.\",\"text_native\":\"Следующий шаг — короткий онлайн-тест.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"loc de muncă\",\"translation_native\":\"работа\",\"pronunciation_native\":\"лок де мунке\",\"definition_target\":\"a job or position\",\"kind\":\"chunk\",\"image_prompt\":\"A person speaking with an interviewer in a modern office\",\"used_in\":[\"a1\"]},{\"id\":\"v2\",\"term_target\":\"a se pricepe\",\"translation_native\":\"уметь\",\"pronunciation_native\":\"а се причепе\",\"definition_target\":\"to be good at something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"a începe\",\"translation_native\":\"начать\",\"pronunciation_native\":\"а ынчепе\",\"definition_target\":\"to begin something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v4\",\"term_target\":\"a oferi\",\"translation_native\":\"предоставлять\",\"pronunciation_native\":\"а офери\",\"definition_target\":\"to provide something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v5\",\"term_target\":\"instruire\",\"translation_native\":\"обучение\",\"pronunciation_native\":\"ынструире\",\"definition_target\":\"training for a job\",\"kind\":\"word\",\"image_prompt\":\"A trainer showing a new employee how to use office equipment\",\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v6\",\"term_target\":\"următorul pas\",\"translation_native\":\"следующий шаг\",\"pronunciation_native\":\"урмэторул пас\",\"definition_target\":\"the next action in a process\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p6\",\"a6\"]},{\"id\":\"v7\",\"term_target\":\"a dori\",\"translation_native\":\"хотеть\",\"pronunciation_native\":\"а дори\",\"definition_target\":\"to want something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a1\"]},{\"id\":\"v8\",\"term_target\":\"la serviciu\",\"translation_native\":\"на работе\",\"pronunciation_native\":\"ла сервичьу\",\"definition_target\":\"at work\",\"kind\":\"chunk\",\"image_prompt\":\"An employee working at a desk in an office\",\"used_in\":[\"a2\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETPgg5wNAirnnFb8OBcGlnrPSOBGu",
+                "object": "chat.completion",
+                "created": 1790678962,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Întrebări-cheie\",\"title_native\":\"Основные вопросы\",\"description_target\":\"Veți exersa cum să explicați motivația și abilitățile, să răspundeți despre sarcini și disponibilitate și să întrebați despre instruire și pașii următori.\",\"description_native\":\"Вы потренируетесь объяснять мотивацию и навыки, отвечать о задачах и доступности, а также спрашивать об обучении и следующих шагах.\"},\"learner_role\":{\"role_target\":\"Candidat\",\"role_native\":\"Кандидат\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Vreau să lucrez aici pentru ___\",\"frame_native\":\"Я хочу работать здесь ради ___\",\"pronunciation_native\":\"вреау сэ лукрэс аичь пентру ___\",\"slot\":{\"hint_native\":\"причина\",\"fillers\":[{\"target\":\"experiență\",\"native\":\"опыта\",\"pronunciation_native\":\"экспериенцэ\",\"in_dialogue\":false},{\"target\":\"stabilitate\",\"native\":\"стабильности\",\"pronunciation_native\":\"стабилитате\",\"in_dialogue\":true},{\"target\":\"echipă\",\"native\":\"команды\",\"pronunciation_native\":\"экипэ\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mă pricep să ___\",\"frame_native\":\"Я умею ___\",\"pronunciation_native\":\"мэ причеп сэ ___\",\"slot\":{\"hint_native\":\"навык или умение\",\"fillers\":[{\"target\":\"lucrez în echipă\",\"native\":\"работать в команде\",\"pronunciation_native\":\"лукрэс ын экипэ\",\"in_dialogue\":false},{\"target\":\"vorbesc cu clienții\",\"native\":\"разговаривать с клиентами\",\"pronunciation_native\":\"ворбеск ку клиенць\",\"in_dialogue\":false},{\"target\":\"organizez munca\",\"native\":\"организовывать работу\",\"pronunciation_native\":\"организэс мунка\",\"in_dialogue\":true}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"Pot să ___\",\"frame_native\":\"Я могу ___\",\"pronunciation_native\":\"пот сэ ___\",\"slot\":{\"hint_native\":\"задача или действие\",\"fillers\":[{\"target\":\"verific documente\",\"native\":\"проверять документы\",\"pronunciation_native\":\"верифик докумэнте\",\"in_dialogue\":true},{\"target\":\"pregătesc comenzi\",\"native\":\"готовить заказы\",\"pronunciation_native\":\"прэгэтеск комэнзь\",\"in_dialogue\":false},{\"target\":\"folosesc un program\",\"native\":\"пользоваться программой\",\"pronunciation_native\":\"фолосеск ун програм\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"Pot începe ___\",\"frame_native\":\"Я могу начать ___\",\"pronunciation_native\":\"пот ынчепе ___\",\"slot\":{\"hint_native\":\"дата начала\",\"fillers\":[{\"target\":\"luni\",\"native\":\"в понедельник\",\"pronunciation_native\":\"лунь\",\"in_dialogue\":true},{\"target\":\"pe întâi iunie\",\"native\":\"с первого июня\",\"pronunciation_native\":\"пе ынтый юние\",\"in_dialogue\":false},{\"target\":\"săptămâna viitoare\",\"native\":\"на следующей неделе\",\"pronunciation_native\":\"сэптэмына виитоаре\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Oferiți instruire?\",\"frame_native\":\"Вы проводите обучение?\",\"pronunciation_native\":\"офериц ынструире\",\"slot\":null},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Care este următorul pas?\",\"frame_native\":\"Какой следующий шаг?\",\"pronunciation_native\":\"каре есте урмэторул пас\",\"slot\":null},{\"id\":\"p7\",\"kind\":\"answer\",\"must_say\":[7],\"frame_target\":\"Mă interesează postul de ___\",\"frame_native\":\"Мне интересна должность ___\",\"pronunciation_native\":\"мэ интересеазэ постул де ___\",\"slot\":{\"hint_native\":\"название должности\",\"fillers\":[{\"target\":\"operator\",\"native\":\"оператора\",\"pronunciation_native\":\"оператор\",\"in_dialogue\":true},{\"target\":\"coordonator\",\"native\":\"координатора\",\"pronunciation_native\":\"координатор\",\"in_dialogue\":false},{\"target\":\"receptioner\",\"native\":\"администратора\",\"pronunciation_native\":\"ресепцьонер\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"De ce doriți acest loc de muncă?\",\"text_native\":\"Почему вы хотите эту работу?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Ce faceți bine la serviciu?\",\"text_native\":\"Что вы хорошо умеете делать на работе?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"Puteți face această sarcină?\",\"text_native\":\"Вы можете выполнить эту задачу?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Când puteți începe?\",\"text_native\":\"Когда вы можете начать?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"Da, oferim instruire în prima săptămână.\",\"text_native\":\"Да, мы проводим обучение в первую неделю.\"},{\"id\":\"a6\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"Următorul pas este un test scurt online.\",\"text_native\":\"Следующий шаг — короткий онлайн-тест.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"loc de muncă\",\"translation_native\":\"работа\",\"pronunciation_native\":\"лок де мунке\",\"definition_target\":\"a job or position\",\"kind\":\"chunk\",\"image_prompt\":\"A person speaking with an interviewer in a modern office\",\"used_in\":[\"a1\"]},{\"id\":\"v2\",\"term_target\":\"a se pricepe\",\"translation_native\":\"уметь\",\"pronunciation_native\":\"а се причепе\",\"definition_target\":\"to be good at something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"a începe\",\"translation_native\":\"начать\",\"pronunciation_native\":\"а ынчепе\",\"definition_target\":\"to begin something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v4\",\"term_target\":\"a oferi\",\"translation_native\":\"предоставлять\",\"pronunciation_native\":\"а офери\",\"definition_target\":\"to provide something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v5\",\"term_target\":\"instruire\",\"translation_native\":\"обучение\",\"pronunciation_native\":\"ынструире\",\"definition_target\":\"training for a job\",\"kind\":\"word\",\"image_prompt\":\"A trainer showing a new employee how to use office equipment\",\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v6\",\"term_target\":\"următorul pas\",\"translation_native\":\"следующий шаг\",\"pronunciation_native\":\"урмэторул пас\",\"definition_target\":\"the next action in a process\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p6\",\"a6\"]},{\"id\":\"v7\",\"term_target\":\"a dori\",\"translation_native\":\"хотеть\",\"pronunciation_native\":\"а дори\",\"definition_target\":\"to want something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a1\"]},{\"id\":\"v8\",\"term_target\":\"la serviciu\",\"translation_native\":\"на работе\",\"pronunciation_native\":\"ла сервичьу\",\"definition_target\":\"at work\",\"kind\":\"chunk\",\"image_prompt\":\"An employee working at a desk in an office\",\"used_in\":[\"a2\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 4996,
+                    "completion_tokens": 12112,
+                    "total_tokens": 17108,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 4993,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 10238,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

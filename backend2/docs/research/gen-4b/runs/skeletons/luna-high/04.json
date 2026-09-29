@@ -1,0 +1,62 @@
+{
+    "plan": "04",
+    "run": "luna-high",
+    "model": {
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Открытие счёта",
+        "title_target": "Kontoeröffnung",
+        "teaches_native": "назвать адрес, узнать условия",
+        "goals_native": [
+            "сказать, зачем нужен счёт",
+            "ответить про адрес и статус",
+            "спросить, примут ли адрес",
+            "спросить про карту и плату"
+        ],
+        "learner_role": [
+            "Kunde",
+            "Клиент"
+        ],
+        "partner_role": [
+            "Berater",
+            "Консультант"
+        ],
+        "topic_description": "Situation: The learner is now speaking with the bank adviser who handles account opening. This is the key interaction because the question of registration or temporary address is decided here, along with whether the bank can accept the application and which basic account conditions apply.\nLearner: Customer. Partner: Bank adviser.\nNot in this scene: greeting at the front desk, asking where to wait, basic document check before the appointment.",
+        "must_say": [
+            "say why you need the account — slot: the purpose",
+            "answer what your address situation is — slot: the address status",
+            "answer whether you work or study — slot: the status",
+            "ask whether a temporary address is acceptable — slot: the address type",
+            "ask which account is best for you — slot: the need",
+            "ask about the monthly fee — slot: the account",
+            "ask when the card will arrive — slot: the thing (the card, the PIN)",
+            "confirm you understand the next step — slot: the next step"
+        ],
+        "must_understand": [
+            "asks why you want to open the account",
+            "asks about your address and work or study status",
+            "explains whether a temporary address is accepted",
+            "offers one or two account options with a fee",
+            "tells you what happens next with the card or confirmation"
+        ]
+    },
+    "error": "cURL error 28: Operation timed out after 180001 milliseconds with 0 bytes received (see https://curl.se/libcurl/c/libcurl-errors.html) for https://api.openai.com/v1/chat/completions",
+    "findings": null,
+    "cost_usd": 0.0,
+    "wall_ms": 180072,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T10:56:08Z",
+            "user": "TOPIC: Открытие счёта\n\nTOPIC_DESCRIPTION: Situation: The learner is now speaking with the bank adviser who handles account opening. This is the key interaction because the question of registration or temporary address is decided here, along with whether the bank can accept the application and which basic account conditions apply.\nLearner: Customer. Partner: Bank adviser.\nNot in this scene: greeting at the front desk, asking where to wait, basic document check before the appointment.\n\nAbout the learner, in their own words: открыть счёт в банке, первый раз, нет постоянной регистрации\n\nSURVIVAL_SET:\nmust_say:\n1. say why you need the account — slot: the purpose\n2. answer what your address situation is — slot: the address status\n3. answer whether you work or study — slot: the status\n4. ask whether a temporary address is acceptable — slot: the address type\n5. ask which account is best for you — slot: the need\n6. ask about the monthly fee — slot: the account\n7. ask when the card will arrive — slot: the thing (the card, the PIN)\n8. confirm you understand the next step — slot: the next step\nmust_understand:\n1. asks why you want to open the account\n2. asks about your address and work or study status\n3. explains whether a temporary address is accepted\n4. offers one or two account options with a fee\n5. tells you what happens next with the card or confirmation\n\nTARGET_LANGUAGE: German\n\nNATIVE_LANGUAGE: Russian\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Kunde / Клиент\n\nPARTNER_ROLE: Berater / Консультант\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "error": "cURL error 28: Operation timed out after 180001 milliseconds with 0 bytes received (see https://curl.se/libcurl/c/libcurl-errors.html) for https://api.openai.com/v1/chat/completions",
+            "wire": null,
+            "wall_ms": 180067
+        }
+    ]
+}

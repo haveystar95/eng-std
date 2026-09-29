@@ -1,0 +1,569 @@
+{
+    "plan": "06",
+    "run": "luna-high",
+    "model": {
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Основні питання",
+        "title_target": "Main Interview",
+        "teaches_native": "описати досвід, спитати про оплату",
+        "goals_native": [
+            "описати обов'язки",
+            "сказати про результати",
+            "спитати про успіх у ролі",
+            "спитати про зарплату"
+        ],
+        "learner_role": [
+            "Candidate",
+            "Кандидат"
+        ],
+        "partner_role": [
+            "Hiring Manager",
+            "Менеджер з найму"
+        ],
+        "topic_description": "Situation: This is the main part of the interview with the hiring manager. Your fit for the manager role is being assessed through your experience, results, and leadership style. Your concern about salary belongs here because this is where expectations, evaluation, and compensation are usually discussed and understood.\nLearner: Candidate. Partner: Hiring Manager.\nNot in this scene: self-introduction, interview format, scheduling later rounds, accepting an offer, onboarding details.",
+        "must_say": [
+            "explain your current responsibilities — slot: the responsibilities",
+            "say what results you achieved — slot: the result",
+            "explain how you manage people or projects — slot: the method",
+            "answer whether you have experience with something — slot: the area of experience",
+            "ask what success in this role looks like — slot: the time period",
+            "ask how performance is evaluated — slot: the area",
+            "ask what salary range is planned — slot: the role",
+            "ask whether the package includes a benefit — slot: the benefit"
+        ],
+        "must_understand": [
+            "asks about your current responsibilities and achievements",
+            "asks how you manage a team, projects, or priorities",
+            "asks whether you have experience in a specific area",
+            "says what results the company expects in the role",
+            "explains the salary range or what the package includes"
+        ]
+    },
+    "error": null,
+    "findings": [
+        {
+            "code": "partner.pairs_many",
+            "address": "skeleton",
+            "detail": "no partner line of its own is left for p8 (a6 pairs with p7 and p8): a line is said once, in one exchange, with one frame",
+            "fatal": true
+        }
+    ],
+    "cost_usd": 0.088042,
+    "wall_ms": 142626,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T11:01:27Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5028,
+            "cached_tokens_in": 4642,
+            "tokens_out": 14532,
+            "reasoning_tokens": 11998,
+            "cost_usd": "0.088042",
+            "latency_ms": 142597,
+            "wall_ms": 142599,
+            "call_id": "01M3PD78B6XVV21AF0KT713X8E",
+            "user": "TOPIC: Основні питання\n\nTOPIC_DESCRIPTION: Situation: This is the main part of the interview with the hiring manager. Your fit for the manager role is being assessed through your experience, results, and leadership style. Your concern about salary belongs here because this is where expectations, evaluation, and compensation are usually discussed and understood.\nLearner: Candidate. Partner: Hiring Manager.\nNot in this scene: self-introduction, interview format, scheduling later rounds, accepting an offer, onboarding details.\n\nAbout the learner, in their own words: співбесіда на позицію менеджера, питання про зарплату\n\nSURVIVAL_SET:\nmust_say:\n1. explain your current responsibilities — slot: the responsibilities\n2. say what results you achieved — slot: the result\n3. explain how you manage people or projects — slot: the method\n4. answer whether you have experience with something — slot: the area of experience\n5. ask what success in this role looks like — slot: the time period\n6. ask how performance is evaluated — slot: the area\n7. ask what salary range is planned — slot: the role\n8. ask whether the package includes a benefit — slot: the benefit\nmust_understand:\n1. asks about your current responsibilities and achievements\n2. asks how you manage a team, projects, or priorities\n3. asks whether you have experience in a specific area\n4. says what results the company expects in the role\n5. explains the salary range or what the package includes\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Ukrainian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidate / Кандидат\n\nPARTNER_ROLE: Hiring Manager / Менеджер з найму\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Key Interview Questions",
+                    "title_native": "Основні питання",
+                    "description_target": "Handle core interview questions about responsibilities, results, management, and experience, then ask about success, evaluation, salary, and benefits.",
+                    "description_native": "Відповідати на ключові питання про обов’язки, результати, управління та досвід, а також запитувати про успіх, оцінювання, зарплату й пільги."
+                },
+                "learner_role": {
+                    "role_target": "Candidate",
+                    "role_native": "Кандидат"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "I currently handle ___.",
+                        "frame_native": "Зараз я відповідаю ___.",
+                        "pronunciation_native": "ай керентлі хендл ___",
+                        "slot": {
+                            "hint_native": "Що саме ви зараз ведете або за що відповідаєте",
+                            "fillers": [
+                                {
+                                    "target": "library records",
+                                    "native": "за бібліотечні записи",
+                                    "pronunciation_native": "лайбрері рекордс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "hotel bookings",
+                                    "native": "за бронювання готелю",
+                                    "pronunciation_native": "хоутел букінґз",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "school timetables",
+                                    "native": "за шкільні розклади",
+                                    "pronunciation_native": "скул таймтейблз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "I achieved ___.",
+                        "frame_native": "Мені вдалося досягти ___.",
+                        "pronunciation_native": "ай ечівд ___",
+                        "slot": {
+                            "hint_native": "Якого результату вам вдалося досягти",
+                            "fillers": [
+                                {
+                                    "target": "lower costs",
+                                    "native": "нижчих витрат",
+                                    "pronunciation_native": "лоуер костс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a sales increase",
+                                    "native": "зростання продажів",
+                                    "pronunciation_native": "е сейлз інкріс",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "faster delivery",
+                                    "native": "швидшої доставки",
+                                    "pronunciation_native": "фастер ділівері",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "I manage teams through ___.",
+                        "frame_native": "Я керую командами ___.",
+                        "pronunciation_native": "ай менедж тімз сру ___",
+                        "slot": {
+                            "hint_native": "За допомогою якого підходу ви керуєте командами",
+                            "fillers": [
+                                {
+                                    "target": "clear goals",
+                                    "native": "завдяки чітким цілям",
+                                    "pronunciation_native": "клір гоулз",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "regular check-ins",
+                                    "native": "через регулярні зустрічі",
+                                    "pronunciation_native": "рег'юлер чек-інз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "open feedback",
+                                    "native": "завдяки щирим відгукам",
+                                    "pronunciation_native": "оупен фідбек",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "I have experience in ___.",
+                        "frame_native": "У мене є досвід ___.",
+                        "pronunciation_native": "ай хэв експіріенс ін ___",
+                        "slot": {
+                            "hint_native": "У якій сфері ви маєте досвід",
+                            "fillers": [
+                                {
+                                    "target": "conflict resolution",
+                                    "native": "у вирішенні конфліктів",
+                                    "pronunciation_native": "конфлікт резолюшн",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "budget planning",
+                                    "native": "у плануванні бюджету",
+                                    "pronunciation_native": "баджит пленінг",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "product launches",
+                                    "native": "у запуску продуктів",
+                                    "pronunciation_native": "продакт лончиз",
+                                    "in_dialogue": true
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "What does success look like after ___?",
+                        "frame_native": "Як виглядає успіх ___?",
+                        "pronunciation_native": "уот даз саксэс лук лайк афтер ___",
+                        "slot": {
+                            "hint_native": "Через який період ви хочете оцінити успіх",
+                            "fillers": [
+                                {
+                                    "target": "three months",
+                                    "native": "через три місяці",
+                                    "pronunciation_native": "срі манс",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the first quarter",
+                                    "native": "після першого кварталу",
+                                    "pronunciation_native": "зе ферст квортер",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "one year",
+                                    "native": "через один рік",
+                                    "pronunciation_native": "уан йір",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "How is performance evaluated in ___?",
+                        "frame_native": "Як оцінюють результати ___?",
+                        "pronunciation_native": "хау із перформенс івел'юейтед ін ___",
+                        "slot": {
+                            "hint_native": "У якій сфері або частині роботи оцінюють результати",
+                            "fillers": [
+                                {
+                                    "target": "this role",
+                                    "native": "у цій ролі",
+                                    "pronunciation_native": "зис роул",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the team",
+                                    "native": "у команді",
+                                    "pronunciation_native": "зе тім",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "projects",
+                                    "native": "у проєктах",
+                                    "pronunciation_native": "проджектс",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "What salary range is planned for ___?",
+                        "frame_native": "Який діапазон зарплати передбачений ___?",
+                        "pronunciation_native": "уот селар рейндж із пленд фор ___",
+                        "slot": {
+                            "hint_native": "Для якої посади ви запитуєте про діапазон зарплати",
+                            "fillers": [
+                                {
+                                    "target": "the manager role",
+                                    "native": "для ролі менеджера",
+                                    "pronunciation_native": "зе меніджер роул",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a leadership position",
+                                    "native": "для керівної посади",
+                                    "pronunciation_native": "е лідерщип позішн",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the operations role",
+                                    "native": "для операційної ролі",
+                                    "pronunciation_native": "зе оперейшнз роул",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "ask",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "Does the package include ___?",
+                        "frame_native": "Чи пакет включає ___?",
+                        "pronunciation_native": "даз зе пекідж інклуд ___",
+                        "slot": {
+                            "hint_native": "Яку додаткову перевагу ви хочете перевірити",
+                            "fillers": [
+                                {
+                                    "target": "health insurance",
+                                    "native": "медичне страхування",
+                                    "pronunciation_native": "хелс іншуренс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "paid leave",
+                                    "native": "оплачувану відпустку",
+                                    "pronunciation_native": "пейд лів",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "travel support",
+                                    "native": "компенсацію проїзду",
+                                    "pronunciation_native": "тревел сапорт",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "What are your current responsibilities?",
+                        "text_native": "Які у вас поточні обов’язки?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "What results have you achieved?",
+                        "text_native": "Яких результатів ви досягли?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "How do you manage teams, projects, or priorities?",
+                        "text_native": "Як ви керуєте командами, проєктами чи пріоритетами?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Do you have experience in an area relevant to this role?",
+                        "text_native": "Чи маєте ви досвід у сфері, важливій для цієї ролі?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "In this role, the company expects clear goals, steady progress, and reliable delivery.",
+                        "text_native": "У цій ролі компанія очікує чітких цілей, стабільного прогресу та надійного виконання."
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            7,
+                            8
+                        ],
+                        "text_target": "The planned salary range is thirty to forty thousand hryvnias per month. No, the package includes professional-development support.",
+                        "text_native": "Запланований діапазон зарплати — від тридцяти до сорока тисяч гривень на місяць. Ні, пакет включає підтримку професійного розвитку."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "handle",
+                        "translation_native": "відповідати за",
+                        "pronunciation_native": "хендл",
+                        "definition_target": "to be responsible for a task",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "achieve",
+                        "translation_native": "досягати",
+                        "pronunciation_native": "ечів",
+                        "definition_target": "to successfully reach a result",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "manage",
+                        "translation_native": "керувати",
+                        "pronunciation_native": "менедж",
+                        "definition_target": "to organize and lead work",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "experience",
+                        "translation_native": "досвід",
+                        "pronunciation_native": "експіріенс",
+                        "definition_target": "knowledge gained from doing something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p4",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "success",
+                        "translation_native": "успіх",
+                        "pronunciation_native": "саксес",
+                        "definition_target": "a good result in a role",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "evaluate",
+                        "translation_native": "оцінювати",
+                        "pronunciation_native": "івел'юейт",
+                        "definition_target": "to judge performance or results",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "salary range",
+                        "translation_native": "діапазон зарплати",
+                        "pronunciation_native": "селар рейндж",
+                        "definition_target": "the lowest and highest pay offered",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7",
+                            "a6"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "responsibility",
+                        "translation_native": "обов’язок",
+                        "pronunciation_native": "ріспонсебіліті",
+                        "definition_target": "a duty you must take care of",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "support",
+                        "translation_native": "підтримка",
+                        "pronunciation_native": "сапорт",
+                        "definition_target": "help provided to someone or something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "a6"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Key Interview Questions\",\"title_native\":\"Основні питання\",\"description_target\":\"Handle core interview questions about responsibilities, results, management, and experience, then ask about success, evaluation, salary, and benefits.\",\"description_native\":\"Відповідати на ключові питання про обов’язки, результати, управління та досвід, а також запитувати про успіх, оцінювання, зарплату й пільги.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Кандидат\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"I currently handle ___.\",\"frame_native\":\"Зараз я відповідаю ___.\",\"pronunciation_native\":\"ай керентлі хендл ___\",\"slot\":{\"hint_native\":\"Що саме ви зараз ведете або за що відповідаєте\",\"fillers\":[{\"target\":\"library records\",\"native\":\"за бібліотечні записи\",\"pronunciation_native\":\"лайбрері рекордс\",\"in_dialogue\":true},{\"target\":\"hotel bookings\",\"native\":\"за бронювання готелю\",\"pronunciation_native\":\"хоутел букінґз\",\"in_dialogue\":false},{\"target\":\"school timetables\",\"native\":\"за шкільні розклади\",\"pronunciation_native\":\"скул таймтейблз\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"I achieved ___.\",\"frame_native\":\"Мені вдалося досягти ___.\",\"pronunciation_native\":\"ай ечівд ___\",\"slot\":{\"hint_native\":\"Якого результату вам вдалося досягти\",\"fillers\":[{\"target\":\"lower costs\",\"native\":\"нижчих витрат\",\"pronunciation_native\":\"лоуер костс\",\"in_dialogue\":true},{\"target\":\"a sales increase\",\"native\":\"зростання продажів\",\"pronunciation_native\":\"е сейлз інкріс\",\"in_dialogue\":false},{\"target\":\"faster delivery\",\"native\":\"швидшої доставки\",\"pronunciation_native\":\"фастер ділівері\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"I manage teams through ___.\",\"frame_native\":\"Я керую командами ___.\",\"pronunciation_native\":\"ай менедж тімз сру ___\",\"slot\":{\"hint_native\":\"За допомогою якого підходу ви керуєте командами\",\"fillers\":[{\"target\":\"clear goals\",\"native\":\"завдяки чітким цілям\",\"pronunciation_native\":\"клір гоулз\",\"in_dialogue\":false},{\"target\":\"regular check-ins\",\"native\":\"через регулярні зустрічі\",\"pronunciation_native\":\"рег'юлер чек-інз\",\"in_dialogue\":true},{\"target\":\"open feedback\",\"native\":\"завдяки щирим відгукам\",\"pronunciation_native\":\"оупен фідбек\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"I have experience in ___.\",\"frame_native\":\"У мене є досвід ___.\",\"pronunciation_native\":\"ай хэв експіріенс ін ___\",\"slot\":{\"hint_native\":\"У якій сфері ви маєте досвід\",\"fillers\":[{\"target\":\"conflict resolution\",\"native\":\"у вирішенні конфліктів\",\"pronunciation_native\":\"конфлікт резолюшн\",\"in_dialogue\":false},{\"target\":\"budget planning\",\"native\":\"у плануванні бюджету\",\"pronunciation_native\":\"баджит пленінг\",\"in_dialogue\":false},{\"target\":\"product launches\",\"native\":\"у запуску продуктів\",\"pronunciation_native\":\"продакт лончиз\",\"in_dialogue\":true}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"What does success look like after ___?\",\"frame_native\":\"Як виглядає успіх ___?\",\"pronunciation_native\":\"уот даз саксэс лук лайк афтер ___\",\"slot\":{\"hint_native\":\"Через який період ви хочете оцінити успіх\",\"fillers\":[{\"target\":\"three months\",\"native\":\"через три місяці\",\"pronunciation_native\":\"срі манс\",\"in_dialogue\":false},{\"target\":\"the first quarter\",\"native\":\"після першого кварталу\",\"pronunciation_native\":\"зе ферст квортер\",\"in_dialogue\":true},{\"target\":\"one year\",\"native\":\"через один рік\",\"pronunciation_native\":\"уан йір\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"How is performance evaluated in ___?\",\"frame_native\":\"Як оцінюють результати ___?\",\"pronunciation_native\":\"хау із перформенс івел'юейтед ін ___\",\"slot\":{\"hint_native\":\"У якій сфері або частині роботи оцінюють результати\",\"fillers\":[{\"target\":\"this role\",\"native\":\"у цій ролі\",\"pronunciation_native\":\"зис роул\",\"in_dialogue\":true},{\"target\":\"the team\",\"native\":\"у команді\",\"pronunciation_native\":\"зе тім\",\"in_dialogue\":false},{\"target\":\"projects\",\"native\":\"у проєктах\",\"pronunciation_native\":\"проджектс\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"What salary range is planned for ___?\",\"frame_native\":\"Який діапазон зарплати передбачений ___?\",\"pronunciation_native\":\"уот селар рейндж із пленд фор ___\",\"slot\":{\"hint_native\":\"Для якої посади ви запитуєте про діапазон зарплати\",\"fillers\":[{\"target\":\"the manager role\",\"native\":\"для ролі менеджера\",\"pronunciation_native\":\"зе меніджер роул\",\"in_dialogue\":true},{\"target\":\"a leadership position\",\"native\":\"для керівної посади\",\"pronunciation_native\":\"е лідерщип позішн\",\"in_dialogue\":false},{\"target\":\"the operations role\",\"native\":\"для операційної ролі\",\"pronunciation_native\":\"зе оперейшнз роул\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"ask\",\"must_say\":[8],\"frame_target\":\"Does the package include ___?\",\"frame_native\":\"Чи пакет включає ___?\",\"pronunciation_native\":\"даз зе пекідж інклуд ___\",\"slot\":{\"hint_native\":\"Яку додаткову перевагу ви хочете перевірити\",\"fillers\":[{\"target\":\"health insurance\",\"native\":\"медичне страхування\",\"pronunciation_native\":\"хелс іншуренс\",\"in_dialogue\":true},{\"target\":\"paid leave\",\"native\":\"оплачувану відпустку\",\"pronunciation_native\":\"пейд лів\",\"in_dialogue\":false},{\"target\":\"travel support\",\"native\":\"компенсацію проїзду\",\"pronunciation_native\":\"тревел сапорт\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"What are your current responsibilities?\",\"text_native\":\"Які у вас поточні обов’язки?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"What results have you achieved?\",\"text_native\":\"Яких результатів ви досягли?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"How do you manage teams, projects, or priorities?\",\"text_native\":\"Як ви керуєте командами, проєктами чи пріоритетами?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Do you have experience in an area relevant to this role?\",\"text_native\":\"Чи маєте ви досвід у сфері, важливій для цієї ролі?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"In this role, the company expects clear goals, steady progress, and reliable delivery.\",\"text_native\":\"У цій ролі компанія очікує чітких цілей, стабільного прогресу та надійного виконання.\"},{\"id\":\"a6\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7,8],\"text_target\":\"The planned salary range is thirty to forty thousand hryvnias per month. No, the package includes professional-development support.\",\"text_native\":\"Запланований діапазон зарплати — від тридцяти до сорока тисяч гривень на місяць. Ні, пакет включає підтримку професійного розвитку.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"handle\",\"translation_native\":\"відповідати за\",\"pronunciation_native\":\"хендл\",\"definition_target\":\"to be responsible for a task\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"achieve\",\"translation_native\":\"досягати\",\"pronunciation_native\":\"ечів\",\"definition_target\":\"to successfully reach a result\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"manage\",\"translation_native\":\"керувати\",\"pronunciation_native\":\"менедж\",\"definition_target\":\"to organize and lead work\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v4\",\"term_target\":\"experience\",\"translation_native\":\"досвід\",\"pronunciation_native\":\"експіріенс\",\"definition_target\":\"knowledge gained from doing something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v5\",\"term_target\":\"success\",\"translation_native\":\"успіх\",\"pronunciation_native\":\"саксес\",\"definition_target\":\"a good result in a role\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v6\",\"term_target\":\"evaluate\",\"translation_native\":\"оцінювати\",\"pronunciation_native\":\"івел'юейт\",\"definition_target\":\"to judge performance or results\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v7\",\"term_target\":\"salary range\",\"translation_native\":\"діапазон зарплати\",\"pronunciation_native\":\"селар рейндж\",\"definition_target\":\"the lowest and highest pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p7\",\"a6\"]},{\"id\":\"v8\",\"term_target\":\"responsibility\",\"translation_native\":\"обов’язок\",\"pronunciation_native\":\"ріспонсебіліті\",\"definition_target\":\"a duty you must take care of\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a1\"]},{\"id\":\"v9\",\"term_target\":\"support\",\"translation_native\":\"підтримка\",\"pronunciation_native\":\"сапорт\",\"definition_target\":\"help provided to someone or something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a6\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETPsOrmxgM3Jv4aQwQ4iXlju9fS3W",
+                "object": "chat.completion",
+                "created": 1790679688,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Key Interview Questions\",\"title_native\":\"Основні питання\",\"description_target\":\"Handle core interview questions about responsibilities, results, management, and experience, then ask about success, evaluation, salary, and benefits.\",\"description_native\":\"Відповідати на ключові питання про обов’язки, результати, управління та досвід, а також запитувати про успіх, оцінювання, зарплату й пільги.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Кандидат\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"I currently handle ___.\",\"frame_native\":\"Зараз я відповідаю ___.\",\"pronunciation_native\":\"ай керентлі хендл ___\",\"slot\":{\"hint_native\":\"Що саме ви зараз ведете або за що відповідаєте\",\"fillers\":[{\"target\":\"library records\",\"native\":\"за бібліотечні записи\",\"pronunciation_native\":\"лайбрері рекордс\",\"in_dialogue\":true},{\"target\":\"hotel bookings\",\"native\":\"за бронювання готелю\",\"pronunciation_native\":\"хоутел букінґз\",\"in_dialogue\":false},{\"target\":\"school timetables\",\"native\":\"за шкільні розклади\",\"pronunciation_native\":\"скул таймтейблз\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"I achieved ___.\",\"frame_native\":\"Мені вдалося досягти ___.\",\"pronunciation_native\":\"ай ечівд ___\",\"slot\":{\"hint_native\":\"Якого результату вам вдалося досягти\",\"fillers\":[{\"target\":\"lower costs\",\"native\":\"нижчих витрат\",\"pronunciation_native\":\"лоуер костс\",\"in_dialogue\":true},{\"target\":\"a sales increase\",\"native\":\"зростання продажів\",\"pronunciation_native\":\"е сейлз інкріс\",\"in_dialogue\":false},{\"target\":\"faster delivery\",\"native\":\"швидшої доставки\",\"pronunciation_native\":\"фастер ділівері\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"I manage teams through ___.\",\"frame_native\":\"Я керую командами ___.\",\"pronunciation_native\":\"ай менедж тімз сру ___\",\"slot\":{\"hint_native\":\"За допомогою якого підходу ви керуєте командами\",\"fillers\":[{\"target\":\"clear goals\",\"native\":\"завдяки чітким цілям\",\"pronunciation_native\":\"клір гоулз\",\"in_dialogue\":false},{\"target\":\"regular check-ins\",\"native\":\"через регулярні зустрічі\",\"pronunciation_native\":\"рег'юлер чек-інз\",\"in_dialogue\":true},{\"target\":\"open feedback\",\"native\":\"завдяки щирим відгукам\",\"pronunciation_native\":\"оупен фідбек\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"I have experience in ___.\",\"frame_native\":\"У мене є досвід ___.\",\"pronunciation_native\":\"ай хэв експіріенс ін ___\",\"slot\":{\"hint_native\":\"У якій сфері ви маєте досвід\",\"fillers\":[{\"target\":\"conflict resolution\",\"native\":\"у вирішенні конфліктів\",\"pronunciation_native\":\"конфлікт резолюшн\",\"in_dialogue\":false},{\"target\":\"budget planning\",\"native\":\"у плануванні бюджету\",\"pronunciation_native\":\"баджит пленінг\",\"in_dialogue\":false},{\"target\":\"product launches\",\"native\":\"у запуску продуктів\",\"pronunciation_native\":\"продакт лончиз\",\"in_dialogue\":true}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"What does success look like after ___?\",\"frame_native\":\"Як виглядає успіх ___?\",\"pronunciation_native\":\"уот даз саксэс лук лайк афтер ___\",\"slot\":{\"hint_native\":\"Через який період ви хочете оцінити успіх\",\"fillers\":[{\"target\":\"three months\",\"native\":\"через три місяці\",\"pronunciation_native\":\"срі манс\",\"in_dialogue\":false},{\"target\":\"the first quarter\",\"native\":\"після першого кварталу\",\"pronunciation_native\":\"зе ферст квортер\",\"in_dialogue\":true},{\"target\":\"one year\",\"native\":\"через один рік\",\"pronunciation_native\":\"уан йір\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"How is performance evaluated in ___?\",\"frame_native\":\"Як оцінюють результати ___?\",\"pronunciation_native\":\"хау із перформенс івел'юейтед ін ___\",\"slot\":{\"hint_native\":\"У якій сфері або частині роботи оцінюють результати\",\"fillers\":[{\"target\":\"this role\",\"native\":\"у цій ролі\",\"pronunciation_native\":\"зис роул\",\"in_dialogue\":true},{\"target\":\"the team\",\"native\":\"у команді\",\"pronunciation_native\":\"зе тім\",\"in_dialogue\":false},{\"target\":\"projects\",\"native\":\"у проєктах\",\"pronunciation_native\":\"проджектс\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"What salary range is planned for ___?\",\"frame_native\":\"Який діапазон зарплати передбачений ___?\",\"pronunciation_native\":\"уот селар рейндж із пленд фор ___\",\"slot\":{\"hint_native\":\"Для якої посади ви запитуєте про діапазон зарплати\",\"fillers\":[{\"target\":\"the manager role\",\"native\":\"для ролі менеджера\",\"pronunciation_native\":\"зе меніджер роул\",\"in_dialogue\":true},{\"target\":\"a leadership position\",\"native\":\"для керівної посади\",\"pronunciation_native\":\"е лідерщип позішн\",\"in_dialogue\":false},{\"target\":\"the operations role\",\"native\":\"для операційної ролі\",\"pronunciation_native\":\"зе оперейшнз роул\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"ask\",\"must_say\":[8],\"frame_target\":\"Does the package include ___?\",\"frame_native\":\"Чи пакет включає ___?\",\"pronunciation_native\":\"даз зе пекідж інклуд ___\",\"slot\":{\"hint_native\":\"Яку додаткову перевагу ви хочете перевірити\",\"fillers\":[{\"target\":\"health insurance\",\"native\":\"медичне страхування\",\"pronunciation_native\":\"хелс іншуренс\",\"in_dialogue\":true},{\"target\":\"paid leave\",\"native\":\"оплачувану відпустку\",\"pronunciation_native\":\"пейд лів\",\"in_dialogue\":false},{\"target\":\"travel support\",\"native\":\"компенсацію проїзду\",\"pronunciation_native\":\"тревел сапорт\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"What are your current responsibilities?\",\"text_native\":\"Які у вас поточні обов’язки?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"What results have you achieved?\",\"text_native\":\"Яких результатів ви досягли?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"How do you manage teams, projects, or priorities?\",\"text_native\":\"Як ви керуєте командами, проєктами чи пріоритетами?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Do you have experience in an area relevant to this role?\",\"text_native\":\"Чи маєте ви досвід у сфері, важливій для цієї ролі?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"In this role, the company expects clear goals, steady progress, and reliable delivery.\",\"text_native\":\"У цій ролі компанія очікує чітких цілей, стабільного прогресу та надійного виконання.\"},{\"id\":\"a6\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7,8],\"text_target\":\"The planned salary range is thirty to forty thousand hryvnias per month. No, the package includes professional-development support.\",\"text_native\":\"Запланований діапазон зарплати — від тридцяти до сорока тисяч гривень на місяць. Ні, пакет включає підтримку професійного розвитку.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"handle\",\"translation_native\":\"відповідати за\",\"pronunciation_native\":\"хендл\",\"definition_target\":\"to be responsible for a task\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"achieve\",\"translation_native\":\"досягати\",\"pronunciation_native\":\"ечів\",\"definition_target\":\"to successfully reach a result\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"manage\",\"translation_native\":\"керувати\",\"pronunciation_native\":\"менедж\",\"definition_target\":\"to organize and lead work\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v4\",\"term_target\":\"experience\",\"translation_native\":\"досвід\",\"pronunciation_native\":\"експіріенс\",\"definition_target\":\"knowledge gained from doing something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v5\",\"term_target\":\"success\",\"translation_native\":\"успіх\",\"pronunciation_native\":\"саксес\",\"definition_target\":\"a good result in a role\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v6\",\"term_target\":\"evaluate\",\"translation_native\":\"оцінювати\",\"pronunciation_native\":\"івел'юейт\",\"definition_target\":\"to judge performance or results\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v7\",\"term_target\":\"salary range\",\"translation_native\":\"діапазон зарплати\",\"pronunciation_native\":\"селар рейндж\",\"definition_target\":\"the lowest and highest pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p7\",\"a6\"]},{\"id\":\"v8\",\"term_target\":\"responsibility\",\"translation_native\":\"обов’язок\",\"pronunciation_native\":\"ріспонсебіліті\",\"definition_target\":\"a duty you must take care of\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a1\"]},{\"id\":\"v9\",\"term_target\":\"support\",\"translation_native\":\"підтримка\",\"pronunciation_native\":\"сапорт\",\"definition_target\":\"help provided to someone or something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"a6\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5028,
+                    "completion_tokens": 14532,
+                    "total_tokens": 19560,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 383,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 11998,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

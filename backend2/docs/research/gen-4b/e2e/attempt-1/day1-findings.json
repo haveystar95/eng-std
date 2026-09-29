@@ -1,0 +1,47 @@
+[
+    {
+        "code": "pronunciation.foreign_script",
+        "detail": "the reading «а сэ нумú» has letters of another alphabet: ú",
+        "address": "v1"
+    },
+    {
+        "code": "pronunciation.foreign_script",
+        "detail": "the reading «саркúнэ» has letters of another alphabet: ú",
+        "address": "v6"
+    },
+    {
+        "code": "pronunciation.near_native",
+        "detail": "the reading «должност продавца» is close to the native text «должность продавца» (0.94)",
+        "address": "p2.f1"
+    },
+    {
+        "code": "pronunciation.near_native",
+        "detail": "the reading «должност медсэстры» is close to the native text «должность медсестры» (0.89)",
+        "address": "p2.f2"
+    },
+    {
+        "code": "pronunciation.near_native",
+        "detail": "the reading «должност апэратора» is close to the native text «должность оператора» (0.84)",
+        "address": "p2.f3"
+    },
+    {
+        "code": "filler.common_prefix",
+        "detail": "every native filler starts with «должность» — the word is the frame's",
+        "address": "p2"
+    },
+    {
+        "code": "vocab.definition_language",
+        "detail": "the definition «to have a particular name» of «a se numi» reads as en, not ro (have)",
+        "address": "v1"
+    },
+    {
+        "code": "vocab.definition_language",
+        "detail": "the definition «to apply for a position» of «a candida» reads as en, not ro (for)",
+        "address": "v2"
+    },
+    {
+        "code": "vocab.definition_language",
+        "detail": "the definition «a schedule of working hours» of «orar» reads as en, not ro (of)",
+        "address": "v7"
+    }
+]

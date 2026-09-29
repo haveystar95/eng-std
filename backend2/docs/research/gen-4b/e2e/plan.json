@@ -1,0 +1,165 @@
+{
+    "plan": {
+        "id": "01M3PC4TA6Z3T4SWJNHKCHR78R",
+        "status": "ready",
+        "goal": "Собеседование в пятницу, боюсь вопросов про опыт",
+        "title_native": "Собеседование",
+        "title_target": "Interviu de angajare",
+        "overdue_native": "Собеседование было вчера",
+        "prompt_version_plan": "plan-builder-v2.1",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.016583",
+        "attempts_plan": 1,
+        "findings": [
+            {
+                "mode": "observe",
+                "check": "survival_verbs",
+                "action": "counted",
+                "detail": "scene 2: must_say 1 «describe what you did in your previous job» starts with no verb of the list"
+            }
+        ]
+    },
+    "days": [
+        {
+            "number": 1,
+            "type": "scene",
+            "scene_id": "01M3PC58QP9JVMWKKJK8X323QC",
+            "status": "locked"
+        },
+        {
+            "number": 2,
+            "type": "scene",
+            "scene_id": "01M3PC58QQ7TA4A0CBX7ZC004F",
+            "status": "locked"
+        }
+    ],
+    "scenes": [
+        {
+            "id": "01M3PC58QP9JVMWKKJK8X323QC",
+            "order": 1,
+            "priority": 2,
+            "title_native": "Начало встречи",
+            "title_target": "Începutul interviului",
+            "teaches_native": "представиться, спросить про работу",
+            "goals_native": [
+                "назвать своё имя",
+                "сказать, на какую вакансию",
+                "сказать, где работали",
+                "спросить про график"
+            ],
+            "topic_description": "Situation: The interview has just started in an office or meeting room. The learner is meeting the interviewer for a job interview on Friday and needs to handle the opening calmly before deeper questions begin. This scene covers the basic start and the first simple exchange about the role.\nLearner: Job candidate. Partner: Interviewer.\nNot in this scene: describing responsibilities in past jobs in detail, talking about skills and strengths, discussing salary or next steps.",
+            "must_say": [
+                {
+                    "slot": "the name",
+                    "text": "give your name"
+                },
+                {
+                    "slot": "the position",
+                    "text": "say which position you are applying for"
+                },
+                {
+                    "slot": "the workplace",
+                    "text": "say where you worked before"
+                },
+                {
+                    "slot": "the length of time",
+                    "text": "say how long you worked there"
+                },
+                {
+                    "slot": null,
+                    "text": "ask what the main duties are"
+                },
+                {
+                    "slot": null,
+                    "text": "ask what the work schedule is"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks your name and which position you want"
+                },
+                {
+                    "text": "asks where you worked before and for how long"
+                },
+                {
+                    "text": "says the main duties of the job"
+                },
+                {
+                    "text": "says the work schedule"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1+lesson_dialogue.v1",
+            "model_lesson": "gpt-5.6-luna",
+            "cost_usd_lesson": "0.068064",
+            "latency_ms_lesson": 65770,
+            "attempts_lesson": 2
+        },
+        {
+            "id": "01M3PC58QQ7TA4A0CBX7ZC004F",
+            "order": 2,
+            "priority": 1,
+            "title_native": "Опыт и навыки",
+            "title_target": "Experiență și abilități",
+            "teaches_native": "описать опыт, спросить про этапы",
+            "goals_native": [
+                "описать прошлые обязанности",
+                "сказать, что умеете",
+                "сказать, с чем работали",
+                "спросить про следующие этапы"
+            ],
+            "topic_description": "Situation: The interviewer moves to the main part of the conversation and asks about the learner's background. The learner's main worry is questions about experience, so this is the core scene where misunderstanding matters most. It focuses on simple, concrete ways to talk about past work and understand what experience the employer needs.\nLearner: Job candidate. Partner: Interviewer.\nNot in this scene: introductions, stating your name, asking about the schedule, salary negotiation or signing documents.",
+            "must_say": [
+                {
+                    "slot": "the duty",
+                    "text": "describe what you did in your previous job"
+                },
+                {
+                    "slot": "the tool or program",
+                    "text": "say what tools or programs you used"
+                },
+                {
+                    "slot": "the skill",
+                    "text": "say what you can do well"
+                },
+                {
+                    "slot": "the task",
+                    "text": "answer whether you have done a task before"
+                },
+                {
+                    "slot": "the field",
+                    "text": "ask whether experience in a field is required"
+                },
+                {
+                    "slot": null,
+                    "text": "ask what happens next in the hiring process"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks what your previous duties were"
+                },
+                {
+                    "text": "asks which tools or programs you used"
+                },
+                {
+                    "text": "asks whether you have done a similar task before"
+                },
+                {
+                    "text": "says which experience or skills matter most"
+                },
+                {
+                    "text": "explains the next step after the interview"
+                }
+            ],
+            "lesson_status": "pending",
+            "fail_reason": null,
+            "prompt_version_lesson": null,
+            "model_lesson": null,
+            "cost_usd_lesson": null,
+            "latency_ms_lesson": null,
+            "attempts_lesson": null
+        }
+    ]
+}

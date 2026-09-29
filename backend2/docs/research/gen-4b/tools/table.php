@@ -258,7 +258,7 @@ foreach (array_keys(SKELETON_RUNS) as $run) {
     $lines[] = '';
     $lines[] = '| план | сцена | `'.$run.'`: находки | токены рассуждения | цена | `luna` (без effort): находки 1-го скелета | токены рассуждения |';
     $lines[] = '|---|---|---|---|---|---|---|';
-    $clean = ['high' => 0, 'luna' => 0, 'n' => 0, 'high_fatal_free' => 0, 'luna_fatal_free' => 0, 'cost' => 0.0];
+    $clean = ['high' => 0, 'luna' => 0, 'n' => 0, 'answered' => 0, 'high_fatal_free' => 0, 'luna_fatal_free' => 0, 'cost' => 0.0, 'seconds' => 0.0];
     foreach ($skeletons as $id => $row) {
         $found = $row['findings'];
         $reasoning = $row['calls'][0]['reasoning_tokens'] ?? null;
@@ -267,10 +267,15 @@ foreach (array_keys(SKELETON_RUNS) as $run) {
         $found = $recheck["skeletons/{$run}"][$id]['skeleton'][0]['findings'] ?? $found;
         $lunaCall = $day === null ? null : ($day['calls'][0] ?? null);
         $lines[] = sprintf('| %s | %s | %s | %s | %s | %s | %s |', $id, $row['scene']['title_native'] ?? '?',
-            $row['error'] !== null ? $row['error'] : codeList($found ?? []), $reasoning ?? '—', money((float) $row['cost_usd']),
+            $row['error'] !== null ? (str_contains($row['error'], 'timed out') ? 'нет ответа за 180 с (таймаут сборки)' : $row['error']) : codeList($found ?? []),
+            $reasoning ?? '—', $row['error'] !== null ? '? (не записана)' : money((float) $row['cost_usd']),
             $first === null ? '—' : ($first['off_schema'] !== null ? 'не по схеме' : codeList($first['findings'])), $lunaCall['reasoning_tokens'] ?? '—');
         $clean['n']++;
-        $clean['cost'] += (float) $row['cost_usd'];
+        if ($row['error'] === null) {
+            $clean['answered']++;
+            $clean['cost'] += (float) $row['cost_usd'];
+            $clean['seconds'] += ((int) ($row['calls'][0]['latency_ms'] ?? 0)) / 1000;
+        }
         $clean['high'] += $row['error'] === null && $found === [] ? 1 : 0;
         $clean['high_fatal_free'] += $row['error'] === null && array_filter($found ?? [], static fn (array $f): bool => $f['fatal']) === [] ? 1 : 0;
         if ($first !== null && $first['off_schema'] === null) {
@@ -279,9 +284,10 @@ foreach (array_keys(SKELETON_RUNS) as $run) {
         }
     }
     $lines[] = '';
-    $lines[] = sprintf('Чистых скелетов: `%s` — %s, `luna` — %s; без фатальных: %s против %s; средняя цена скелета `%s` — %s.',
+    $lines[] = sprintf('На %d сценах: ответили %d, без ответа за 180 с — %d. Чистых скелетов: `%s` — %s, `luna` — %s; без фатальных: %s против %s (сцена без ответа — не «без фатальных»); средняя цена ответившего скелета `%s` — %s, время — %.0f с.',
+        $clean['n'], $clean['answered'], $clean['n'] - $clean['answered'],
         $run, share($clean['high'], $clean['n']), share($clean['luna'], $clean['n']), share($clean['high_fatal_free'], $clean['n']), share($clean['luna_fatal_free'], $clean['n']),
-        $run, money($clean['n'] === 0 ? 0 : $clean['cost'] / $clean['n']));
+        $run, money($clean['answered'] === 0 ? 0 : $clean['cost'] / $clean['answered']), $clean['answered'] === 0 ? 0 : $clean['seconds'] / $clean['answered']);
     $lines[] = '';
 }
 

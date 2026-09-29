@@ -1,5 +1,5 @@
 {
-    "checked_at": "2026-09-29T10:21:40Z",
+    "checked_at": "2026-09-29T11:14:58Z",
     "runs": {
         "days/luna": {
             "01": {
@@ -3631,6 +3631,1067 @@
                         ]
                     }
                 ]
+            },
+            "13": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1",
+                                "detail": "the reading «уотс зэ сэлэри рэйндж фор ___» has letters of another alphabet: у о т с з э л р и й н д ж ф",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1.f1",
+                                "detail": "the reading «дис роул» has letters of another alphabet: д и с р о у л",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1.f2",
+                                "detail": "the reading «зэ позишн» has letters of another alphabet: з э п о и ш н",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1.f3",
+                                "detail": "the reading «зэ джоб» has letters of another alphabet: з э д ж о б",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2",
+                                "detail": "the reading «из ___ гроус ор нэт» has letters of another alphabet: и з г р о у с н э т",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2.f1",
+                                "detail": "the reading «зэт эмаунт» has letters of another alphabet: з э т м а у н",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2.f2",
+                                "detail": "the reading «зэ сэлэри» has letters of another alphabet: з э с л р и",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2.f3",
+                                "detail": "the reading «дис фигер» has letters of another alphabet: д и с ф г е р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3",
+                                "detail": "the reading «из сэлэри пэйд ___» has letters of another alphabet: и з с э л р п й д",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3.f1",
+                                "detail": "the reading «мансли» has letters of another alphabet: м а н с л и",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3.f2",
+                                "detail": "the reading «эври ту уикс» has letters of another alphabet: э в р и т у к с",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3.f3",
+                                "detail": "the reading «уикли» has letters of another alphabet: у и к л",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4",
+                                "detail": "the reading «ар зэр ___» has letters of another alphabet: а р з э",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4.f1",
+                                "detail": "the reading «боунэсиз» has letters of another alphabet: б о у н э с и з",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4.f2",
+                                "detail": "the reading «мил ваучерз» has letters of another alphabet: м и л в а у ч е р з",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4.f3",
+                                "detail": "the reading «хэлс иншурэнс» has letters of another alphabet: х э л с и н ш у р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5",
+                                "detail": "the reading «айм лукин фор ___» has letters of another alphabet: а й м л у к и н ф о р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5.f1",
+                                "detail": "the reading «сёрти-файв ту форти тауzэнд» has letters of another alphabet: с ё р т и ф а й в у о э н д",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5.f2",
+                                "detail": "the reading «эраунд сёрти тауzэнд» has letters of another alphabet: э р а у н д с ё т и",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5.f3",
+                                "detail": "the reading «форти тауzэнд гроус» has letters of another alphabet: ф о р т и а у э н д г с",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6",
+                                "detail": "the reading «из ___ нигоушиэбл» has letters of another alphabet: и з н г о у ш э б л",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6.f1",
+                                "detail": "the reading «зэт эмаунт» has letters of another alphabet: з э т м а у н",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6.f2",
+                                "detail": "the reading «зи офер» has letters of another alphabet: з и о ф е р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6.f3",
+                                "detail": "the reading «зэ бэйс сэлэри» has letters of another alphabet: з э б й с л р и",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7",
+                                "detail": "the reading «даз зи офер инклуд ___» has letters of another alphabet: д а з и о ф е р н к л у",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7.f1",
+                                "detail": "the reading «пэйд холидэйз» has letters of another alphabet: п э й д х о л и з",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7.f2",
+                                "detail": "the reading «трейнинг» has letters of another alphabet: т р е й н и г",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7.f3",
+                                "detail": "the reading «пэншн контрибьюшнз» has letters of another alphabet: п э н ш к о т р и б ь ю з",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v1",
+                                "detail": "the reading «сэлэри рэйндж» has letters of another alphabet: с э л р и й н д ж",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v2",
+                                "detail": "the reading «гроус» has letters of another alphabet: г р о у с",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v3",
+                                "detail": "the reading «нэт» has letters of another alphabet: н э т",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v4",
+                                "detail": "the reading «мансли» has letters of another alphabet: м а н с л и",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v5",
+                                "detail": "the reading «боунэс» has letters of another alphabet: б о у н э с",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v6",
+                                "detail": "the reading «хэлс иншурэнс» has letters of another alphabet: х э л с и н ш у р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v7",
+                                "detail": "the reading «нигоушиэбл» has letters of another alphabet: н и г о у ш э б л",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v8",
+                                "detail": "the reading «офер» has letters of another alphabet: о ф е р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v9",
+                                "detail": "the reading «пэйд холидэйз» has letters of another alphabet: п э й д х о л и з",
+                                "fatal": true
+                            },
+                            {
+                                "code": "partner.pairs_many",
+                                "address": "skeleton",
+                                "detail": "no partner line of its own is left for p7 (a4 pairs with p4 and p7): a line is said once, in one exchange, with one frame",
+                                "fatal": true
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a1",
+                                "detail": "the line names «this role», a filler of p1",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a2",
+                                "detail": "the line names «that amount», a filler of p2",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a3",
+                                "detail": "the line names «monthly», a filler of p3",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a4",
+                                "detail": "the line names «bonus», a filler of p4",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.used_in_wrong",
+                                "address": "v1",
+                                "detail": "«salary range» is not in a1",
+                                "fatal": false
+                            }
+                        ]
+                    },
+                    {
+                        "attempt": 2,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a1",
+                                "detail": "the line names «this role», a filler of p1",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a2",
+                                "detail": "the line names «quella cifra», a filler of p2",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a3",
+                                "detail": "the line names «monthly», a filler of p3",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a4",
+                                "detail": "the line names «bonus», a filler of p4",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.used_in_wrong",
+                                "address": "v1",
+                                "detail": "«salary range» is not in a1",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "check.answer_is_filler",
+                                "address": "x8.check",
+                                "detail": "the right option «Paid leave» / «Ferie retribuite» is the learner's filler «paid holidays»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x1.check",
+                                "detail": "the right option «Between thirty-two and thirty-six thousand per year» repeats «between thirty-two» of A's «For this role, the range is between thirty-two and thirty-six thousand a year.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x2.check",
+                                "detail": "the right option «Come lordo prima delle trattenute» repeats «prima delle» of A's «Quella cifra è lorda, prima delle tasse e dei contributi sociali.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x3.check",
+                                "detail": "the right option «At the end of each month» repeats «at the» of A's «Employees are paid monthly, at the end of each month.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x5.check",
+                                "detail": "the right option «Private health coverage» repeats «private health» of A's «There is an annual bonus and private health insurance.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x8.check",
+                                "detail": "the right option «Ferie retribuite» repeats «ferie retribuite» of A's «Le ferie retribuite sono incluse.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "speaking_key.wrong",
+                                "address": "B7",
+                                "detail": "the key «Is negotiable» is not in «Is that amount negotiable?»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "variant.longer",
+                                "address": "B5",
+                                "detail": "the variant «Are bonuses included in the offer?» has 6 words, the line 5",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            "14": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1",
+                                "detail": "the reading «ум лу-крат ла ___» has letters of another alphabet: у м л к р а т",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1.f1",
+                                "detail": "the reading «ун ма-га-зин» has letters of another alphabet: у н м а г з и",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1.f2",
+                                "detail": "the reading «ун би-роу» has letters of another alphabet: у н б и р о",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p1.f3",
+                                "detail": "the reading «о шкоа-лэ» has letters of another alphabet: о ш к а л э",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2",
+                                "detail": "the reading «ам фост ___» has letters of another alphabet: а м ф о с т",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2.f1",
+                                "detail": "the reading «ка-сиер» has letters of another alphabet: к а с и е р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2.f2",
+                                "detail": "the reading «ре-чеп-ци-о-нер» has letters of another alphabet: р е ч п ц и о н",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p2.f3",
+                                "detail": "the reading «вын-зэ-тор» has letters of another alphabet: в ы н з э т о р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3",
+                                "detail": "the reading «ум лу-крат а-ко-ло ___» has letters of another alphabet: у м л к р а т о",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3.f1",
+                                "detail": "the reading «дой ань» has letters of another alphabet: д о й а н ь",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3.f2",
+                                "detail": "the reading «ша-се лунь» has letters of another alphabet: ш а с е л у н ь",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p3.f3",
+                                "detail": "the reading «ун ан» has letters of another alphabet: у н а",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4",
+                                "detail": "the reading «мэ о-ку-пам де ___» has letters of another alphabet: м э о к у п а д е",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4.f1",
+                                "detail": "the reading «кли-еньц» has letters of another alphabet: к л и е н ь ц",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4.f2",
+                                "detail": "the reading «сто-курь» has letters of another alphabet: с т о к у р ь",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p4.f3",
+                                "detail": "the reading «про-гра-мэрь» has letters of another alphabet: п р о г а м э ь",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5",
+                                "detail": "the reading «да, ам фо-ло-сит ___» has letters of another alphabet: д а м ф о л с и т",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5.f1",
+                                "detail": "the reading «ка-са де мар-кат» has letters of another alphabet: к а с д е м р т",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5.f2",
+                                "detail": "the reading «ек-сел» has letters of another alphabet: е к с л",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p5.f3",
+                                "detail": "the reading «ин-вен-та-рул» has letters of another alphabet: и н в е т а р у л",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6",
+                                "detail": "the reading «че фа-че ___» has letters of another alphabet: ч е ф а",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6.f1",
+                                "detail": "the reading «ун ка-сиер» has letters of another alphabet: у н к а с и е р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6.f2",
+                                "detail": "the reading «ун ре-чеп-ци-о-нер» has letters of another alphabet: у н р е ч п ц и о",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p6.f3",
+                                "detail": "the reading «ун а-сис-тент» has letters of another alphabet: у н а с и т е",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7",
+                                "detail": "the reading «о-фе-риць ин-стру-и-ре пен-тру ___» has letters of another alphabet: о ф е р и ц ь н с т у п",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7.f1",
+                                "detail": "the reading «про-гра-мул ноу» has letters of another alphabet: п р о г а м у л н",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7.f2",
+                                "detail": "the reading «лук-рул ку кли-ень-ций» has letters of another alphabet: л у к р и е н ь ц й",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p7.f3",
+                                "detail": "the reading «ин-вен-тар» has letters of another alphabet: и н в е т а р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "p8",
+                                "detail": "the reading «ка-ре е-сте па-сул ур-мэ-тор» has letters of another alphabet: к а р е с т п у л м э о",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v1",
+                                "detail": "the reading «а лу-кра» has letters of another alphabet: а л у к р",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v2",
+                                "detail": "the reading «а се о-ку-па де» has letters of another alphabet: а с е о к у п д",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v3",
+                                "detail": "the reading «а фо-ло-си» has letters of another alphabet: а ф о л с и",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v4",
+                                "detail": "the reading «ин-стру-и-ре» has letters of another alphabet: и н с т р у е",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v5",
+                                "detail": "the reading «па-сул ур-мэ-тор» has letters of another alphabet: п а с у л р м э т о",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v6",
+                                "detail": "the reading «рес-пон-са-би-ли-та-те» has letters of another alphabet: р е с п о н а б и л т",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v7",
+                                "detail": "the reading «а ин-клу-де» has letters of another alphabet: а и н к л у д е",
+                                "fatal": true
+                            },
+                            {
+                                "code": "pronunciation.foreign_script",
+                                "address": "v8",
+                                "detail": "the reading «мар-фэ» has letters of another alphabet: м а р ф э",
+                                "fatal": true
+                            }
+                        ]
+                    },
+                    {
+                        "attempt": 2,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.pairs_many",
+                                "address": "skeleton",
+                                "detail": "no partner line of its own is left for p7 (a5 pairs with p6 and p7): a line is said once, in one exchange, with one frame",
+                                "fatal": true
+                            },
+                            {
+                                "code": "vocab.reading",
+                                "address": "v8",
+                                "detail": "the reading «stok» of «stoc» is close to its translation «stock» (0.80)",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": []
+            },
+            "15": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.pairs_many",
+                                "address": "skeleton",
+                                "detail": "no partner line of its own is left for p8 (a1 pairs with p1 and p2; a3 pairs with p6 and p7; a5 pairs with p1 and p8): a line is said once, in one exchange, with one frame",
+                                "fatal": true
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a3",
+                                "detail": "the line names «ruhig», a filler of p6",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a8",
+                                "detail": "the line names «einen Hund», a filler of p4",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.stop_word",
+                                "address": "v5",
+                                "detail": "«der Hund» is a word of the stop list («hund»)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.used_in_wrong",
+                                "address": "v3",
+                                "detail": "«die Regel» is not in a7",
+                                "fatal": false
+                            }
+                        ]
+                    },
+                    {
+                        "attempt": 2,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a3",
+                                "detail": "the line names «ruhig», a filler of p6",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a6",
+                                "detail": "the line names «the dog», a filler of p5",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a7",
+                                "detail": "the line names «Haustieren», a filler of p3",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a8",
+                                "detail": "the line names «einen Hund», a filler of p4",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.used_in_wrong",
+                                "address": "v3",
+                                "detail": "«Regel» is not in a7",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.used_in_wrong",
+                                "address": "v8",
+                                "detail": "«zustimmen» is not in p8",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "check.verbatim",
+                                "address": "x1.check",
+                                "detail": "the right option «Which type of pet you have» repeats «of pet» of A's «What kind of pet do you have?»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x6.check",
+                                "detail": "the right option «Die des Vermieters» repeats «des vermieters» of A's «Ja, nur mit Zustimmung des Vermieters.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x7.check",
+                                "detail": "the right option «In the stair area» repeats «in the» of A's «There are building rules about pets in the stairwell.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x8.check",
+                                "detail": "the right option «Eine zusätzliche Gebühr» repeats «eine zusätzliche» of A's «Für einen Hund kann eine zusätzliche Gebühr anfallen.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x9.check",
+                                "detail": "the right option «Eine Bestätigung» repeats «eine bestätigung» of A's «Der Vermieter möchte kurze Infos zum Hund und manchmal eine Bestätigung.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x10.check",
+                                "detail": "the right option «Wenn der Vermieter einverstanden ist» repeats «wenn der» of A's «Wenn der Vermieter zustimmt, dürfen Sie den Hund halten.»",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            "16": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.pairs_many",
+                                "address": "skeleton",
+                                "detail": "no partner line of its own is left for p6 (a4 pairs with p5 and p6): a line is said once, in one exchange, with one frame",
+                                "fatal": true
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a2",
+                                "detail": "the line names «the same», a filler of p3",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a5",
+                                "detail": "the line names «in one week», a filler of p7",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.stop_word",
+                                "address": "v2",
+                                "detail": "«to help» is a word of the stop list («help»)",
+                                "fatal": false
+                            }
+                        ]
+                    },
+                    {
+                        "attempt": 2,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a1",
+                                "detail": "the line names «the medicine», a filler of p1",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a2",
+                                "detail": "the line names «the same», a filler of p3",
+                                "fatal": false
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a6",
+                                "detail": "the line names «in one week», a filler of p7",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "check.answer_is_filler",
+                                "address": "x8.check",
+                                "detail": "the right option «After seven days» / «Через неделю» is the learner's filler «in one week»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x3.check",
+                                "detail": "the right option «What still causes pain» repeats «what still» of A's «What still hurts?»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x5.check",
+                                "detail": "the right option «Two times a day» repeats «a day» of A's «Use heat twice a day. Stop this treatment.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x6.check",
+                                "detail": "the right option «To check the pain again» repeats «to check» of A's «Yes, you need another visit. I want to check the pain again.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x7.check",
+                                "detail": "the right option «Понаблюдать несколько дней» repeats «несколько дней» of A's «Сейчас обследование не нужно. Мы понаблюдаем несколько дней.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "check.verbatim",
+                                "address": "x8.check",
+                                "detail": "the right option «Через неделю» repeats «через неделю» of A's «Если боль не пройдёт, приходите через неделю.»",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "skeletons/luna-high": {
+            "01": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "vocab.stop_word",
+                                "address": "v8",
+                                "detail": "«la serviciu» is a word of the stop list («serviciu»)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.definition_language",
+                                "address": "v2",
+                                "detail": "the definition «to be good at something» of «a se pricepe» reads as en, not ro (at)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.definition_language",
+                                "address": "v5",
+                                "detail": "the definition «training for a job» of «instruire» reads as en, not ro (for)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.definition_language",
+                                "address": "v6",
+                                "detail": "the definition «the next action in a process» of «următorul pas» reads as en, not ro (the)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.definition_language",
+                                "address": "v8",
+                                "detail": "the definition «at work» of «la serviciu» reads as en, not ro (at)",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": []
+            },
+            "02": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "vocab.used_in_wrong",
+                                "address": "v2",
+                                "detail": "«get worse» is not in a3",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.used_in_wrong",
+                                "address": "v5",
+                                "detail": "«medicine» is not in p7",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": []
+            },
+            "03": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": []
+                    }
+                ],
+                "dialogue": []
+            },
+            "04": {
+                "skeleton": [],
+                "dialogue": []
+            },
+            "05": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": []
+                    }
+                ],
+                "dialogue": []
+            },
+            "06": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.pairs_many",
+                                "address": "skeleton",
+                                "detail": "no partner line of its own is left for p8 (a6 pairs with p7 and p8): a line is said once, in one exchange, with one frame",
+                                "fatal": true
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": []
+            },
+            "07": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.pairs_many",
+                                "address": "skeleton",
+                                "detail": "no partner line of its own is left for p7 (a7 pairs with p6 and p7): a line is said once, in one exchange, with one frame",
+                                "fatal": true
+                            },
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a5",
+                                "detail": "the line names «раньше», a filler of p5",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.stop_word",
+                                "address": "v1",
+                                "detail": "«genitore» is a word of the stop list («genitore»)",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": []
+            },
+            "08": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "partner.names_filler",
+                                "address": "a3",
+                                "detail": "the line names «сильная», a filler of p3",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.stop_word",
+                                "address": "v4",
+                                "detail": "«need» is a word of the stop list («need»)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.stop_word",
+                                "address": "v6",
+                                "detail": "«take» is a word of the stop list («take»)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "filler.repeats_frame",
+                                "address": "p1.f1",
+                                "detail": "«my head» repeats «my», the frame's word at the slot of «My ___ hurts.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "filler.repeats_frame",
+                                "address": "p1.f2",
+                                "detail": "«my stomach» repeats «my», the frame's word at the slot of «My ___ hurts.»",
+                                "fatal": false
+                            },
+                            {
+                                "code": "filler.repeats_frame",
+                                "address": "p1.f3",
+                                "detail": "«my throat» repeats «my», the frame's word at the slot of «My ___ hurts.»",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": []
+            },
+            "09": {
+                "skeleton": [],
+                "dialogue": []
+            },
+            "10": {
+                "skeleton": [
+                    {
+                        "attempt": 1,
+                        "off_schema": null,
+                        "findings": [
+                            {
+                                "code": "vocab.stop_word",
+                                "address": "v7",
+                                "detail": "«nouvelle» is a word of the stop list («nouvelle»)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.definition_language",
+                                "address": "v5",
+                                "detail": "the definition «to have a role or effect» of «jouer» reads as en, not fr (have)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.definition_language",
+                                "address": "v6",
+                                "detail": "the definition «to tell about an event» of «raconter» reads as en, not fr (about)",
+                                "fatal": false
+                            },
+                            {
+                                "code": "vocab.definition_language",
+                                "address": "v7",
+                                "detail": "the definition «information received from someone» of «nouvelle» reads as en, not fr (from)",
+                                "fatal": false
+                            }
+                        ]
+                    }
+                ],
+                "dialogue": []
             }
         }
     }

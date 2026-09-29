@@ -2544,5 +2544,519 @@
         "model": null,
         "cost_usd": "0.000000",
         "error": "OpenAI API error: 429 {\n    \"error\": {\n        \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"credit_balance_exhausted\"\n    }\n}\n"
+    },
+    {
+        "at": "2026-09-29T10:42:13Z",
+        "unit": "day-gpt54-13",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 4983,
+        "cached_tokens_in": 0,
+        "tokens_out": 1992,
+        "cost_usd": "0.042338"
+    },
+    {
+        "at": "2026-09-29T10:42:43Z",
+        "unit": "day-gpt54-13",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 6343,
+        "cached_tokens_in": 4864,
+        "tokens_out": 1960,
+        "cost_usd": "0.034314"
+    },
+    {
+        "at": "2026-09-29T10:43:10Z",
+        "unit": "day-gpt54-13",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1396,
+        "cached_tokens_in": 0,
+        "tokens_out": 244,
+        "cost_usd": "0.002145"
+    },
+    {
+        "at": "2026-09-29T10:43:12Z",
+        "unit": "day-gpt54-13",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 6124,
+        "cached_tokens_in": 3785,
+        "tokens_out": 671,
+        "cost_usd": "0.006743"
+    },
+    {
+        "at": "2026-09-29T10:43:20Z",
+        "unit": "day-gpt54-13",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 6071,
+        "cached_tokens_in": 3785,
+        "tokens_out": 1643,
+        "cost_usd": "0.012523"
+    },
+    {
+        "at": "2026-09-29T10:43:37Z",
+        "unit": "day-gpt54-13",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 807,
+        "cached_tokens_in": 0,
+        "tokens_out": 79,
+        "cost_usd": "0.000961"
+    },
+    {
+        "at": "2026-09-29T10:43:39Z",
+        "unit": "day-gpt54-13",
+        "purpose": "dialogue",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 6977,
+        "cached_tokens_in": 0,
+        "tokens_out": 2641,
+        "cost_usd": "0.057058"
+    },
+    {
+        "at": "2026-09-29T10:44:11Z",
+        "unit": "day-gpt54-13",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 9351,
+        "cached_tokens_in": 3645,
+        "tokens_out": 356,
+        "cost_usd": "0.008207"
+    },
+    {
+        "at": "2026-09-29T10:44:14Z",
+        "unit": "day-gpt54-13",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 9354,
+        "cached_tokens_in": 3645,
+        "tokens_out": 391,
+        "cost_usd": "0.008420"
+    },
+    {
+        "at": "2026-09-29T10:44:17Z",
+        "unit": "day-gpt54-14",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 5004,
+        "cached_tokens_in": 2816,
+        "tokens_out": 1954,
+        "cost_usd": "0.035484"
+    },
+    {
+        "at": "2026-09-29T10:44:47Z",
+        "unit": "day-gpt54-14",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 6332,
+        "cached_tokens_in": 4864,
+        "tokens_out": 2026,
+        "cost_usd": "0.035276"
+    },
+    {
+        "at": "2026-09-29T10:45:18Z",
+        "unit": "day-gpt54-15",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 5050,
+        "cached_tokens_in": 2816,
+        "tokens_out": 2078,
+        "cost_usd": "0.037459"
+    },
+    {
+        "at": "2026-09-29T10:45:52Z",
+        "unit": "day-gpt54-15",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 5124,
+        "cached_tokens_in": 0,
+        "tokens_out": 2145,
+        "cost_usd": "0.044985"
+    },
+    {
+        "at": "2026-09-29T10:46:26Z",
+        "unit": "day-gpt54-15",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1189,
+        "cached_tokens_in": 0,
+        "tokens_out": 200,
+        "cost_usd": "0.001792"
+    },
+    {
+        "at": "2026-09-29T10:46:27Z",
+        "unit": "day-gpt54-15",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 6230,
+        "cached_tokens_in": 3785,
+        "tokens_out": 811,
+        "cost_usd": "0.007690"
+    },
+    {
+        "at": "2026-09-29T10:46:36Z",
+        "unit": "day-gpt54-15",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 6026,
+        "cached_tokens_in": 0,
+        "tokens_out": 180,
+        "cost_usd": "0.007106"
+    },
+    {
+        "at": "2026-09-29T10:46:39Z",
+        "unit": "day-gpt54-15",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 622,
+        "cached_tokens_in": 0,
+        "tokens_out": 35,
+        "cost_usd": "0.000624"
+    },
+    {
+        "at": "2026-09-29T10:46:40Z",
+        "unit": "day-gpt54-15",
+        "purpose": "dialogue",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 7263,
+        "cached_tokens_in": 2816,
+        "tokens_out": 2907,
+        "cost_usd": "0.055427"
+    },
+    {
+        "at": "2026-09-29T10:47:15Z",
+        "unit": "day-gpt54-15",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 8672,
+        "cached_tokens_in": 3347,
+        "tokens_out": 406,
+        "cost_usd": "0.008096"
+    },
+    {
+        "at": "2026-09-29T10:47:19Z",
+        "unit": "day-gpt54-15",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 8660,
+        "cached_tokens_in": 3347,
+        "tokens_out": 529,
+        "cost_usd": "0.008822"
+    },
+    {
+        "at": "2026-09-29T10:47:24Z",
+        "unit": "day-gpt54-16",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 5017,
+        "cached_tokens_in": 2816,
+        "tokens_out": 1859,
+        "cost_usd": "0.034092"
+    },
+    {
+        "at": "2026-09-29T10:47:49Z",
+        "unit": "day-gpt54-16",
+        "purpose": "skeleton",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 5071,
+        "cached_tokens_in": 2816,
+        "tokens_out": 1919,
+        "cost_usd": "0.035127"
+    },
+    {
+        "at": "2026-09-29T10:48:15Z",
+        "unit": "day-gpt54-16",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1218,
+        "cached_tokens_in": 0,
+        "tokens_out": 211,
+        "cost_usd": "0.001863"
+    },
+    {
+        "at": "2026-09-29T10:48:17Z",
+        "unit": "day-gpt54-16",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 6031,
+        "cached_tokens_in": 3785,
+        "tokens_out": 368,
+        "cost_usd": "0.004833"
+    },
+    {
+        "at": "2026-09-29T10:48:22Z",
+        "unit": "day-gpt54-16",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 6039,
+        "cached_tokens_in": 3785,
+        "tokens_out": 360,
+        "cost_usd": "0.004793"
+    },
+    {
+        "at": "2026-09-29T10:48:26Z",
+        "unit": "day-gpt54-16",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 768,
+        "cached_tokens_in": 0,
+        "tokens_out": 79,
+        "cost_usd": "0.000932"
+    },
+    {
+        "at": "2026-09-29T10:48:27Z",
+        "unit": "day-gpt54-16",
+        "purpose": "dialogue",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 6960,
+        "cached_tokens_in": 2816,
+        "tokens_out": 2368,
+        "cost_usd": "0.046584"
+    },
+    {
+        "at": "2026-09-29T10:48:56Z",
+        "unit": "day-gpt54-16",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 7899,
+        "cached_tokens_in": 3347,
+        "tokens_out": 216,
+        "cost_usd": "0.006183"
+    },
+    {
+        "at": "2026-09-29T10:48:59Z",
+        "unit": "day-gpt54-16",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 7913,
+        "cached_tokens_in": 3347,
+        "tokens_out": 270,
+        "cost_usd": "0.006521"
+    },
+    {
+        "at": "2026-09-29T10:42:39Z",
+        "unit": "e2e",
+        "purpose": "plan",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 4851,
+        "cached_tokens_in": 3840,
+        "tokens_out": 873,
+        "cost_usd": "0.016583",
+        "source": "wordtrainer_e2e_test model_calls 01M3PC4TE7T6642EJSJAJY61YB"
+    },
+    {
+        "at": "2026-09-29T10:42:56Z",
+        "unit": "e2e",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 4972,
+        "cached_tokens_in": 0,
+        "tokens_out": 3782,
+        "cost_usd": "0.027664",
+        "source": "wordtrainer_e2e_test model_calls 01M3PC5BRD9BM65WAFMYC1TJ3S"
+    },
+    {
+        "at": "2026-09-29T10:43:27Z",
+        "unit": "e2e",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5024,
+        "cached_tokens_in": 4642,
+        "tokens_out": 3471,
+        "cost_usd": "0.021672",
+        "source": "wordtrainer_e2e_test model_calls 01M3PC699T45S93JRQAKZ8H6Y5"
+    },
+    {
+        "at": "2026-09-29T10:45:11Z",
+        "unit": "e2e",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 4972,
+        "cached_tokens_in": 4969,
+        "tokens_out": 3809,
+        "cost_usd": "0.023354",
+        "source": "wordtrainer_e2e_test model_calls 01M3PC9F440AQB2VAWWWTVVBJ2"
+    },
+    {
+        "at": "2026-09-29T10:45:42Z",
+        "unit": "e2e",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 986,
+        "cached_tokens_in": 0,
+        "tokens_out": 145,
+        "cost_usd": "0.001392",
+        "source": "wordtrainer_e2e_test model_calls 01M3PCAD0MH8DXMWXTSB6CKC5Q"
+    },
+    {
+        "at": "2026-09-29T10:45:43Z",
+        "unit": "e2e",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5567,
+        "cached_tokens_in": 3803,
+        "tokens_out": 467,
+        "cost_usd": "0.004946",
+        "source": "wordtrainer_e2e_test model_calls 01M3PCAEAF2RXA81GNNW640VB6"
+    },
+    {
+        "at": "2026-09-29T10:45:47Z",
+        "unit": "e2e",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5544,
+        "cached_tokens_in": 3803,
+        "tokens_out": 147,
+        "cost_usd": "0.003003",
+        "source": "wordtrainer_e2e_test model_calls 01M3PCAJSJAZH8ZJ1TT0NQ0F4H"
+    },
+    {
+        "at": "2026-09-29T10:45:49Z",
+        "unit": "e2e",
+        "purpose": "dialogue",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 6385,
+        "cached_tokens_in": 0,
+        "tokens_out": 2714,
+        "cost_usd": "0.022669",
+        "source": "wordtrainer_e2e_test model_calls 01M3PCAMHHYKAYD6ZT9QDVNFYF"
+    },
+    {
+        "at": "2026-09-29T10:46:10Z",
+        "unit": "e2e",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 7414,
+        "cached_tokens_in": 3347,
+        "tokens_out": 265,
+        "cost_usd": "0.005992",
+        "source": "wordtrainer_e2e_test model_calls 01M3PCB8WCK30VXRMAGP3A6Y1Z"
+    },
+    {
+        "at": "2026-09-29T10:46:13Z",
+        "unit": "e2e",
+        "purpose": "repair",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 7416,
+        "cached_tokens_in": 3347,
+        "tokens_out": 384,
+        "cost_usd": "0.006708",
+        "source": "wordtrainer_e2e_test model_calls 01M3PCBBKX8PKKDF7H3GBXQ7VE"
+    },
+    {
+        "at": "2026-09-29T10:49:21Z",
+        "unit": "skeleton-luna-high-01",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 4996,
+        "cached_tokens_in": 0,
+        "tokens_out": 12112,
+        "cost_usd": "0.077668"
+    },
+    {
+        "at": "2026-09-29T10:51:28Z",
+        "unit": "skeleton-luna-high-02",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5017,
+        "cached_tokens_in": 4642,
+        "tokens_out": 16389,
+        "cost_usd": "0.099173"
+    },
+    {
+        "at": "2026-09-29T10:54:02Z",
+        "unit": "skeleton-luna-high-03",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5017,
+        "cached_tokens_in": 4642,
+        "tokens_out": 13580,
+        "cost_usd": "0.082319"
+    },
+    {
+        "at": "2026-09-29T10:56:08Z",
+        "unit": "skeleton-luna-high-04",
+        "purpose": "skeleton",
+        "model": null,
+        "cost_usd": "0.000000",
+        "error": "cURL error 28: Operation timed out after 180001 milliseconds with 0 bytes received (see https://curl.se/libcurl/c/libcurl-errors.html) for https://api.openai.com/v1/chat/completions"
+    },
+    {
+        "at": "2026-09-29T10:59:08Z",
+        "unit": "skeleton-luna-high-05",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 4987,
+        "cached_tokens_in": 4642,
+        "tokens_out": 13838,
+        "cost_usd": "0.083837"
+    },
+    {
+        "at": "2026-09-29T10:56:08Z",
+        "unit": "skeleton-luna-high-04",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "cost_usd": "0.090000",
+        "estimated": true,
+        "note": "timed out at 180 s with no answer; the vendor bills a non-streamed call it completes — priced as the mean of the luna-high skeletons answered (01–03, 05: $0.078–0.099)"
+    },
+    {
+        "at": "2026-09-29T11:01:27Z",
+        "unit": "skeleton-luna-high-06",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5028,
+        "cached_tokens_in": 4642,
+        "tokens_out": 14532,
+        "cost_usd": "0.088042"
+    },
+    {
+        "at": "2026-09-29T11:03:50Z",
+        "unit": "skeleton-luna-high-07",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5039,
+        "cached_tokens_in": 4642,
+        "tokens_out": 15293,
+        "cost_usd": "0.092619"
+    },
+    {
+        "at": "2026-09-29T11:06:19Z",
+        "unit": "skeleton-luna-high-08",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 4994,
+        "cached_tokens_in": 4642,
+        "tokens_out": 13862,
+        "cost_usd": "0.083988"
+    },
+    {
+        "at": "2026-09-29T11:08:45Z",
+        "unit": "skeleton-luna-high-09",
+        "purpose": "skeleton",
+        "model": null,
+        "cost_usd": "0.000000",
+        "error": "cURL error 28: Operation timed out after 180003 milliseconds with 0 bytes received (see https://curl.se/libcurl/c/libcurl-errors.html) for https://api.openai.com/v1/chat/completions"
+    },
+    {
+        "at": "2026-09-29T11:08:45Z",
+        "unit": "skeleton-luna-high-09",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "cost_usd": "0.090000",
+        "estimated": true,
+        "note": "timed out at 180 s with no answer; the vendor bills a non-streamed call it completes — priced as the mean of the luna-high skeletons answered"
+    },
+    {
+        "at": "2026-09-29T11:11:45Z",
+        "unit": "skeleton-luna-high-10",
+        "purpose": "skeleton",
+        "model": "gpt-5.6-luna",
+        "tokens_in": 5022,
+        "cached_tokens_in": 4642,
+        "tokens_out": 16415,
+        "cost_usd": "0.099334"
     }
 ]

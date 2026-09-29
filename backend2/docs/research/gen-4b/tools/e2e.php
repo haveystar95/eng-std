@@ -12,6 +12,8 @@ declare(strict_types=1);
  *
  *   docker exec -e DB_DATABASE=wordtrainer_e2e_test -e PLAN_MODEL_DRIVER=openai -e QUEUE_CONNECTION=sync wt_gen4 \
  *       php docs/research/gen-4b/tools/e2e.php build
+ *   docker exec -e DB_DATABASE=wordtrainer_e2e_test -e PLAN_MODEL_DRIVER=openai -e QUEUE_CONNECTION=sync -e SPEECH_ENABLED=false \
+ *       wt_gen4 php docs/research/gen-4b/tools/e2e.php retry <plan-id>     (the learner's «ещё раз» of a failed day 1)
  *   docker exec -e DB_DATABASE=wordtrainer_e2e_test wt_gen4 php docs/research/gen-4b/tools/e2e.php dump <plan-id>
  *
  * `dump` writes docs/research/gen-4b/e2e/: plan.json (the plan, its scenes with their survival sets, its findings),
@@ -22,7 +24,11 @@ declare(strict_types=1);
 use App\Modules\Identity\Application\Port\DevSignIn;
 use App\Modules\Plan\Application\Command\CreatePlan;
 use App\Modules\Plan\Application\Command\CreatePlanHandler;
+use App\Modules\Plan\Application\Command\RetryLesson;
+use App\Modules\Plan\Application\Command\RetryLessonHandler;
+use App\Modules\Plan\Domain\ValueObject\PlanId;
 use App\Modules\Plan\Domain\ValueObject\PlanLevel;
+use App\Modules\Plan\Domain\ValueObject\PlanSceneId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Contracts\Console\Kernel;
@@ -72,6 +78,25 @@ switch ($argv[1] ?? '') {
         $id = app(CreatePlanHandler::class)(new CreatePlan(UserId::fromString($auth->user->id), GOAL, new LanguageCode('ro'), PlanLevel::Beginner, 2, null));
         fwrite(STDERR, sprintf("plan %s for %s built in %.0f s\n", $id->value, LEARNER, microtime(true) - $started));
         echo $id->value, "\n";
+        break;
+
+    case 'retry':
+        // «Урок не собрался — ещё раз»: the learner's own retry of a failed day 1, as the phone asks it (`RetryLesson`).
+        if (config('queue.default') !== 'sync' || config('plan.model.driver') === 'fake' || (bool) config('generation.speech.enabled')) {
+            fwrite(STDERR, "Refused: run with -e QUEUE_CONNECTION=sync -e PLAN_MODEL_DRIVER=openai -e SPEECH_ENABLED=false.\n");
+            exit(1);
+        }
+        $id = (string) ($argv[2] ?? '');
+        $plan = DB::table('plans')->where('id', $id)->first();
+        $day1 = DB::table('plan_days')->where('plan_id', $id)->where('number', 1)->first();
+        if ($plan === null || $day1 === null) {
+            fwrite(STDERR, "No plan {$id} or its day 1\n");
+            exit(1);
+        }
+        $started = microtime(true);
+        app(RetryLessonHandler::class)(new RetryLesson(PlanId::fromString($id), PlanSceneId::fromString((string) $day1->scene_id), UserId::fromString((string) $plan->user_id)));
+        $scene = DB::table('plan_scenes')->where('id', $day1->scene_id)->first();
+        fwrite(STDERR, sprintf("day 1 of %s retried in %.0f s: %s %s\n", $id, microtime(true) - $started, $scene->lesson_status ?? '?', $scene->fail_reason ?? ''));
         break;
 
     case 'dump':

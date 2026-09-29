@@ -1,0 +1,62 @@
+{
+    "plan": "09",
+    "run": "luna-high",
+    "model": {
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Прыём у лекара",
+        "title_target": "Wizyta u dentysty",
+        "teaches_native": "апісаць боль, зразумець лячэнне",
+        "goals_native": [
+            "сказаць, дзе баліць",
+            "сказаць, калі пачалося",
+            "спытаць, што гэта",
+            "спытаць пра лячэнне"
+        ],
+        "learner_role": [
+            "Pacjent",
+            "Пацыент"
+        ],
+        "partner_role": [
+            "Dentysta",
+            "Стаматолаг"
+        ],
+        "topic_description": "Situation: You are now in the dentist's room for the main consultation. The dentist needs a simple description of the tooth problem and then decides what treatment to do. Because this is your first time in Poland, clear understanding of the diagnosis and basic aftercare matters most.\nLearner: Patient. Partner: Dentist.\nNot in this scene: check-in details, insurance, documents, waiting time, payment at reception.",
+        "must_say": [
+            "say where it hurts — slot: the tooth or side",
+            "say when it started — slot: the time expression",
+            "answer whether the pain is strong — slot: the pain level",
+            "answer whether hot or cold makes it worse — slot: the trigger",
+            "ask what the problem is — slot: none",
+            "ask whether you need treatment today — slot: the treatment",
+            "ask whether you can eat after the treatment — slot: the food or drink",
+            "confirm you understand the instruction — slot: the instruction"
+        ],
+        "must_understand": [
+            "asks which tooth hurts and since when",
+            "asks whether the pain is strong and what makes it worse",
+            "says what the problem is",
+            "explains what treatment is needed today",
+            "tells you what to do after the treatment"
+        ]
+    },
+    "error": "cURL error 28: Operation timed out after 180003 milliseconds with 0 bytes received (see https://curl.se/libcurl/c/libcurl-errors.html) for https://api.openai.com/v1/chat/completions",
+    "findings": null,
+    "cost_usd": 0.0,
+    "wall_ms": 180061,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T11:08:45Z",
+            "user": "TOPIC: Прыём у лекара\n\nTOPIC_DESCRIPTION: Situation: You are now in the dentist's room for the main consultation. The dentist needs a simple description of the tooth problem and then decides what treatment to do. Because this is your first time in Poland, clear understanding of the diagnosis and basic aftercare matters most.\nLearner: Patient. Partner: Dentist.\nNot in this scene: check-in details, insurance, documents, waiting time, payment at reception.\n\nAbout the learner, in their own words: візіт да стаматолага, баліць зуб, першы раз у Польшчы\n\nSURVIVAL_SET:\nmust_say:\n1. say where it hurts — slot: the tooth or side\n2. say when it started — slot: the time expression\n3. answer whether the pain is strong — slot: the pain level\n4. answer whether hot or cold makes it worse — slot: the trigger\n5. ask what the problem is — slot: none\n6. ask whether you need treatment today — slot: the treatment\n7. ask whether you can eat after the treatment — slot: the food or drink\n8. confirm you understand the instruction — slot: the instruction\nmust_understand:\n1. asks which tooth hurts and since when\n2. asks whether the pain is strong and what makes it worse\n3. says what the problem is\n4. explains what treatment is needed today\n5. tells you what to do after the treatment\n\nTARGET_LANGUAGE: Polish\n\nNATIVE_LANGUAGE: Belarusian\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Pacjent / Пацыент\n\nPARTNER_ROLE: Dentysta / Стаматолаг\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "error": "cURL error 28: Operation timed out after 180003 milliseconds with 0 bytes received (see https://curl.se/libcurl/c/libcurl-errors.html) for https://api.openai.com/v1/chat/completions",
+            "wire": null,
+            "wall_ms": 180050
+        }
+    ]
+}
