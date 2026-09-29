@@ -1,0 +1,1301 @@
+{
+    "plan": "15",
+    "run": "luna",
+    "models": {
+        "stages": {
+            "model": "gpt-5.6-luna",
+            "effort": null
+        },
+        "repair": "gpt-5.6-luna",
+        "seam_judge": "gpt-5.4-mini"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Pet rules",
+        "title_target": "Haustierregeln",
+        "teaches_native": "ask if a dog is allowed",
+        "goals_native": [
+            "ask if pets are allowed",
+            "describe who will live there",
+            "ask about pet rules",
+            "understand the condition"
+        ],
+        "learner_role": [
+            "Mieter",
+            "Tenant"
+        ],
+        "partner_role": [
+            "Makler",
+            "Agent"
+        ],
+        "topic_description": "Situation: During the viewing, the decision may depend on whether the landlord accepts pets. You have a small dog, so this is the key moment to raise it clearly, understand the rules, and learn what information the agent needs.\nLearner: Tenant. Partner: Agent.\nNot in this scene: basic viewing logistics, general rent details, submitting the full application or arranging contract signing.",
+        "must_say": [
+            "ask whether something is allowed — slot: the thing (a dog, a cat)",
+            "explain who will live in the flat — slot: the person or pet",
+            "ask whether there are rules about something — slot: the thing (pets, noise)",
+            "ask whether there is an extra cost for something — slot: the thing (a dog, pet permission)",
+            "ask whether the landlord needs more information about something — slot: the thing (the dog, pet references)",
+            "answer whether something is calm or trained — slot: the quality",
+            "explain how often something would be there alone — slot: the length of time",
+            "confirm you understand the condition — slot: the condition"
+        ],
+        "must_understand": [
+            "asks what kind of pet you have and how big it is",
+            "asks whether the pet is quiet, trained or left alone often",
+            "says whether pets are allowed and under what conditions",
+            "explains whether the landlord needs extra information or approval",
+            "tells you about any extra rules or costs related to pets"
+        ]
+    },
+    "request": {
+        "topic": "Pet rules",
+        "vocabulary": [
+            8,
+            12
+        ],
+        "scene_id": "gen4b-15"
+    },
+    "outcome": {
+        "status": "failed",
+        "error": null,
+        "fail_reason": "fatal: vocab.not_found",
+        "findings": [
+            {
+                "code": "vocab.not_found",
+                "address": "v5",
+                "detail": "«erziehen» occurs in no frame and no partner line"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p7.f2",
+                "detail": "the reading «dahs teer» is close to the native text «das Tier» (0.78)"
+            },
+            {
+                "code": "filler.common_prefix",
+                "address": "p1",
+                "detail": "every target filler starts with «a» — the word is the frame's"
+            },
+            {
+                "code": "filler.common_prefix",
+                "address": "p2",
+                "detail": "every target filler starts with «my» — the word is the frame's"
+            },
+            {
+                "code": "filler.common_prefix",
+                "address": "p8",
+                "detail": "every target filler starts with «the» — the word is the frame's"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v4",
+                "detail": "«ruhig» is not in p6"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v5",
+                "detail": "«erziehen» is not in p6"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v5",
+                "detail": "«erziehen» is not in a3"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v7",
+                "detail": "«gelten» is not in p8"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v8",
+                "detail": "«anmelden» is not in a5"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v1",
+                "detail": "the definition «to say that something is permitted» of «erlauben» reads as en, not de (that, is)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v2",
+                "detail": "the definition «an instruction that must be followed» of «Regel» reads as en, not de (that)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v3",
+                "detail": "the definition «the person who rents out a property» of «Vermieter» reads as en, not de (the)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v7",
+                "detail": "the definition «to be valid for a person or situation» of «gelten» reads as en, not de (for)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v8",
+                "detail": "the definition «to officially record something with the responsible person» of «anmelden» reads as en, not de (with, the)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v9",
+                "detail": "the definition «costs added to the usual payment» of «Zusatzkosten» reads as en, not de (the)"
+            }
+        ],
+        "attempts": [
+            {
+                "stage": "skeleton",
+                "attempt": 1,
+                "findings": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f3",
+                        "detail": "the reading «koor-tseh tsайт» has letters of another alphabet: а й т"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a3",
+                        "detail": "the line names «ruhig», a filler of p6"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a5",
+                        "detail": "the line names «Haustiere», a filler of p3"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v1",
+                        "detail": "the definition «permitted by the rules» of «erlaubt» reads as en, not de (the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v3",
+                        "detail": "the definition «an instruction about what is permitted» of «die Regel» reads as en, not de (about, what, is)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v5",
+                        "detail": "the definition «the person who rents out a property» of «der Vermieter» reads as en, not de (the)"
+                    }
+                ],
+                "fatal": [
+                    "pronunciation.foreign_script"
+                ],
+                "off_schema": null
+            },
+            {
+                "stage": "skeleton",
+                "attempt": 2,
+                "findings": [
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v5",
+                        "detail": "«erziehen» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p7.f2",
+                        "detail": "the reading «dahs teer» is close to the native text «das Tier» (0.78)"
+                    },
+                    {
+                        "code": "filler.common_prefix",
+                        "address": "p1",
+                        "detail": "every target filler starts with «a» — the word is the frame's"
+                    },
+                    {
+                        "code": "filler.common_prefix",
+                        "address": "p2",
+                        "detail": "every target filler starts with «my» — the word is the frame's"
+                    },
+                    {
+                        "code": "filler.common_prefix",
+                        "address": "p8",
+                        "detail": "every target filler starts with «the» — the word is the frame's"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v4",
+                        "detail": "«ruhig» is not in p6"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v5",
+                        "detail": "«erziehen» is not in p6"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v5",
+                        "detail": "«erziehen» is not in a3"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v7",
+                        "detail": "«gelten» is not in p8"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v8",
+                        "detail": "«anmelden» is not in a5"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v1",
+                        "detail": "the definition «to say that something is permitted» of «erlauben» reads as en, not de (that, is)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v2",
+                        "detail": "the definition «an instruction that must be followed» of «Regel» reads as en, not de (that)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v3",
+                        "detail": "the definition «the person who rents out a property» of «Vermieter» reads as en, not de (the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v7",
+                        "detail": "the definition «to be valid for a person or situation» of «gelten» reads as en, not de (for)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v8",
+                        "detail": "the definition «to officially record something with the responsible person» of «anmelden» reads as en, not de (with, the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v9",
+                        "detail": "the definition «costs added to the usual payment» of «Zusatzkosten» reads as en, not de (the)"
+                    }
+                ],
+                "fatal": [
+                    "vocab.not_found"
+                ],
+                "off_schema": null
+            }
+        ],
+        "repairs": [],
+        "judgements": [],
+        "skeleton": null,
+        "lesson": null
+    },
+    "cost_usd": 0.055167,
+    "latency_ms": 69848,
+    "wall_ms": 69895,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:51:41Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5050,
+            "cached_tokens_in": 4642,
+            "tokens_out": 4721,
+            "reasoning_tokens": 2490,
+            "cost_usd": "0.029198",
+            "latency_ms": 37266,
+            "wall_ms": 37267,
+            "call_id": "01M3P97G0H041231KPAYGV3BQF",
+            "user": "TOPIC: Pet rules\n\nTOPIC_DESCRIPTION: Situation: During the viewing, the decision may depend on whether the landlord accepts pets. You have a small dog, so this is the key moment to raise it clearly, understand the rules, and learn what information the agent needs.\nLearner: Tenant. Partner: Agent.\nNot in this scene: basic viewing logistics, general rent details, submitting the full application or arranging contract signing.\n\nAbout the learner, in their own words: Renting a flat in Berlin, viewing with the agent, I have a small dog\n\nSURVIVAL_SET:\nmust_say:\n1. ask whether something is allowed — slot: the thing (a dog, a cat)\n2. explain who will live in the flat — slot: the person or pet\n3. ask whether there are rules about something — slot: the thing (pets, noise)\n4. ask whether there is an extra cost for something — slot: the thing (a dog, pet permission)\n5. ask whether the landlord needs more information about something — slot: the thing (the dog, pet references)\n6. answer whether something is calm or trained — slot: the quality\n7. explain how often something would be there alone — slot: the length of time\n8. confirm you understand the condition — slot: the condition\nmust_understand:\n1. asks what kind of pet you have and how big it is\n2. asks whether the pet is quiet, trained or left alone often\n3. says whether pets are allowed and under what conditions\n4. explains whether the landlord needs extra information or approval\n5. tells you about any extra rules or costs related to pets\n\nTARGET_LANGUAGE: German\n\nNATIVE_LANGUAGE: English\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Mieter / Tenant\n\nPARTNER_ROLE: Makler / Agent\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Regeln für Haustiere",
+                    "title_native": "Pet rules",
+                    "description_target": "Sie fragen nach Haustierregeln, Kosten und Genehmigungen und erklären die Situation Ihres Hundes.",
+                    "description_native": "You ask about pet rules, costs, and approvals and explain your dog's situation."
+                },
+                "learner_role": {
+                    "role_target": "Mieter",
+                    "role_native": "Tenant"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Ist ___ erlaubt?",
+                        "frame_native": "Is ___ allowed?",
+                        "pronunciation_native": "ist ___ erlowpt?",
+                        "slot": {
+                            "hint_native": "type of pet",
+                            "fillers": [
+                                {
+                                    "target": "ein kleiner Hund",
+                                    "native": "a small dog",
+                                    "pronunciation_native": "ayn klayner hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "eine Katze",
+                                    "native": "a cat",
+                                    "pronunciation_native": "ayne kat-seh",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "ein Kaninchen",
+                                    "native": "a rabbit",
+                                    "pronunciation_native": "ayn kah-neen-khen",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "___ lebt in der Wohnung.",
+                        "frame_native": "___ lives in the flat.",
+                        "pronunciation_native": "___ laypt in dare voh-noong.",
+                        "slot": {
+                            "hint_native": "person or pet",
+                            "fillers": [
+                                {
+                                    "target": "mein kleiner Hund",
+                                    "native": "my small dog",
+                                    "pronunciation_native": "mine klayner hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "meine Tochter",
+                                    "native": "my daughter",
+                                    "pronunciation_native": "myne tokh-ter",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "ein Mitbewohner",
+                                    "native": "a flatmate",
+                                    "pronunciation_native": "ayn mit-bay-voh-ner",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Gibt es Regeln für ___?",
+                        "frame_native": "Are there rules for ___?",
+                        "pronunciation_native": "gipt es ray-geln fyr ___?",
+                        "slot": {
+                            "hint_native": "thing covered by rules",
+                            "fillers": [
+                                {
+                                    "target": "Haustiere",
+                                    "native": "pets",
+                                    "pronunciation_native": "howss-tee-reh",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "laute Musik",
+                                    "native": "loud music",
+                                    "pronunciation_native": "low-teh moo-zeek",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "Besucher",
+                                    "native": "visitors",
+                                    "pronunciation_native": "beh-zoo-kher",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Kostet ___ extra?",
+                        "frame_native": "Does ___ cost extra?",
+                        "pronunciation_native": "koh-stet ___ ex-trah?",
+                        "slot": {
+                            "hint_native": "thing with an extra cost",
+                            "fillers": [
+                                {
+                                    "target": "mein Hund",
+                                    "native": "my dog",
+                                    "pronunciation_native": "mine hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "ein Parkplatz",
+                                    "native": "a parking space",
+                                    "pronunciation_native": "ayn park-plats",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "die Endreinigung",
+                                    "native": "the final cleaning",
+                                    "pronunciation_native": "dee ent-roy-nee-goong",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "Braucht der Vermieter noch ___?",
+                        "frame_native": "Does the landlord need ___?",
+                        "pronunciation_native": "browkht dare fer-mee-ter nokh ___?",
+                        "slot": {
+                            "hint_native": "information or approval",
+                            "fillers": [
+                                {
+                                    "target": "Infos zum Hund",
+                                    "native": "dog details",
+                                    "pronunciation_native": "in-fohs tsoom hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "eine Referenz",
+                                    "native": "a reference",
+                                    "pronunciation_native": "ayne ray-feh-rents",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "eine Bescheinigung",
+                                    "native": "a certificate",
+                                    "pronunciation_native": "ayne beh-shy-nee-goong",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "answer",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Er ist ___.",
+                        "frame_native": "He is ___.",
+                        "pronunciation_native": "air ist ___.",
+                        "slot": {
+                            "hint_native": "quality of the pet",
+                            "fillers": [
+                                {
+                                    "target": "ruhig",
+                                    "native": "calm",
+                                    "pronunciation_native": "roo-ikh",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "gut erzogen",
+                                    "native": "well trained",
+                                    "pronunciation_native": "goot air-tsoh-gen",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "sehr freundlich",
+                                    "native": "very friendly",
+                                    "pronunciation_native": "zair froynt-likh",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "answer",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Er bleibt ___ allein.",
+                        "frame_native": "He stays alone for ___.",
+                        "pronunciation_native": "air blypt ___ a-layne.",
+                        "slot": {
+                            "hint_native": "length of time alone",
+                            "fillers": [
+                                {
+                                    "target": "zwei Stunden",
+                                    "native": "two hours",
+                                    "pronunciation_native": "tsvay shtoon-den",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "den ganzen Vormittag",
+                                    "native": "the whole morning",
+                                    "pronunciation_native": "dayn gants-en for-mit-tahk",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "kurze Zeit",
+                                    "native": "a short time",
+                                    "pronunciation_native": "koor-tseh tsайт",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "answer",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "Ich akzeptiere ___.",
+                        "frame_native": "I accept ___.",
+                        "pronunciation_native": "ikh ak-tsep-tee-reh ___.",
+                        "slot": {
+                            "hint_native": "condition",
+                            "fillers": [
+                                {
+                                    "target": "diese Regel",
+                                    "native": "this rule",
+                                    "pronunciation_native": "dee-zeh ray-gel",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "die Hausordnung",
+                                    "native": "the house rules",
+                                    "pronunciation_native": "dee howss-ord-noong",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "die schriftliche Zustimmung",
+                                    "native": "the written approval",
+                                    "pronunciation_native": "dee shrift-likh-eh tsoo-shtim-moong",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Welche Art von Haustier haben Sie?",
+                        "text_native": "What kind of pet do you have? "
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Wie groß ist es?",
+                        "text_native": "How big is it?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            6
+                        ],
+                        "text_target": "Ist Ihr Haustier ruhig und gut erzogen?",
+                        "text_native": "Is your pet calm and well trained?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            7
+                        ],
+                        "text_target": "Bleibt es oft allein?",
+                        "text_native": "Is it often left alone?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1,
+                            3
+                        ],
+                        "text_target": "Ja, Haustiere sind erlaubt, wenn sie die Nachbarn nicht stören.",
+                        "text_native": "Yes, pets are allowed if they do not disturb the neighbours."
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "Der Vermieter braucht eine kurze Beschreibung und eine Genehmigung.",
+                        "text_native": "The landlord needs a short description and an approval."
+                    },
+                    {
+                        "id": "a7",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Für Haustiere fällt keine zusätzliche Gebühr an.",
+                        "text_native": "There is no additional fee for pets."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "erlaubt",
+                        "translation_native": "allowed",
+                        "pronunciation_native": "er-lowpt",
+                        "definition_target": "permitted by the rules",
+                        "kind": "word",
+                        "image_prompt": "A small dog sitting calmly inside an apartment",
+                        "used_in": [
+                            "p1",
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "die Wohnung",
+                        "translation_native": "flat",
+                        "pronunciation_native": "dee voh-noong",
+                        "definition_target": "a home in a building",
+                        "kind": "word",
+                        "image_prompt": "A bright apartment living room",
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "die Regel",
+                        "translation_native": "rule",
+                        "pronunciation_native": "dee ray-gel",
+                        "definition_target": "an instruction about what is permitted",
+                        "kind": "word",
+                        "image_prompt": "A printed house rule notice on a wall",
+                        "used_in": [
+                            "p3",
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "kosten",
+                        "translation_native": "to cost",
+                        "pronunciation_native": "koh-sten",
+                        "definition_target": "to require payment",
+                        "kind": "word",
+                        "image_prompt": "A person looking at a fee on a rental document",
+                        "used_in": [
+                            "p4"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "der Vermieter",
+                        "translation_native": "landlord",
+                        "pronunciation_native": "dare fer-mee-ter",
+                        "definition_target": "the person who rents out a property",
+                        "kind": "word",
+                        "image_prompt": "A landlord discussing an apartment with a tenant",
+                        "used_in": [
+                            "p5",
+                            "a6"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "ruhig",
+                        "translation_native": "calm",
+                        "pronunciation_native": "roo-ikh",
+                        "definition_target": "making little or no noise",
+                        "kind": "word",
+                        "image_prompt": "A calm dog lying quietly on a rug",
+                        "used_in": [
+                            "p6",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "akzeptieren",
+                        "translation_native": "to accept",
+                        "pronunciation_native": "ak-tsep-tee-ren",
+                        "definition_target": "to agree to a condition",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "stören",
+                        "translation_native": "to disturb",
+                        "pronunciation_native": "shtur-en",
+                        "definition_target": "to bother other people",
+                        "kind": "word",
+                        "image_prompt": "A neighbour covering their ears because of noise",
+                        "used_in": [
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "die Genehmigung",
+                        "translation_native": "approval",
+                        "pronunciation_native": "dee gay-nay-mee-goong",
+                        "definition_target": "official permission",
+                        "kind": "word",
+                        "image_prompt": "A signed approval document on a desk",
+                        "used_in": [
+                            "a6"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "die Gebühr",
+                        "translation_native": "fee",
+                        "pronunciation_native": "dee geh-byoor",
+                        "definition_target": "an additional payment",
+                        "kind": "word",
+                        "image_prompt": "A rental document showing an additional fee",
+                        "used_in": [
+                            "a7"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Regeln für Haustiere\",\"title_native\":\"Pet rules\",\"description_target\":\"Sie fragen nach Haustierregeln, Kosten und Genehmigungen und erklären die Situation Ihres Hundes.\",\"description_native\":\"You ask about pet rules, costs, and approvals and explain your dog's situation.\"},\"learner_role\":{\"role_target\":\"Mieter\",\"role_native\":\"Tenant\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"Ist ___ erlaubt?\",\"frame_native\":\"Is ___ allowed?\",\"pronunciation_native\":\"ist ___ erlowpt?\",\"slot\":{\"hint_native\":\"type of pet\",\"fillers\":[{\"target\":\"ein kleiner Hund\",\"native\":\"a small dog\",\"pronunciation_native\":\"ayn klayner hoont\",\"in_dialogue\":true},{\"target\":\"eine Katze\",\"native\":\"a cat\",\"pronunciation_native\":\"ayne kat-seh\",\"in_dialogue\":false},{\"target\":\"ein Kaninchen\",\"native\":\"a rabbit\",\"pronunciation_native\":\"ayn kah-neen-khen\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"___ lebt in der Wohnung.\",\"frame_native\":\"___ lives in the flat.\",\"pronunciation_native\":\"___ laypt in dare voh-noong.\",\"slot\":{\"hint_native\":\"person or pet\",\"fillers\":[{\"target\":\"mein kleiner Hund\",\"native\":\"my small dog\",\"pronunciation_native\":\"mine klayner hoont\",\"in_dialogue\":true},{\"target\":\"meine Tochter\",\"native\":\"my daughter\",\"pronunciation_native\":\"myne tokh-ter\",\"in_dialogue\":false},{\"target\":\"ein Mitbewohner\",\"native\":\"a flatmate\",\"pronunciation_native\":\"ayn mit-bay-voh-ner\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Gibt es Regeln für ___?\",\"frame_native\":\"Are there rules for ___?\",\"pronunciation_native\":\"gipt es ray-geln fyr ___?\",\"slot\":{\"hint_native\":\"thing covered by rules\",\"fillers\":[{\"target\":\"Haustiere\",\"native\":\"pets\",\"pronunciation_native\":\"howss-tee-reh\",\"in_dialogue\":true},{\"target\":\"laute Musik\",\"native\":\"loud music\",\"pronunciation_native\":\"low-teh moo-zeek\",\"in_dialogue\":false},{\"target\":\"Besucher\",\"native\":\"visitors\",\"pronunciation_native\":\"beh-zoo-kher\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Kostet ___ extra?\",\"frame_native\":\"Does ___ cost extra?\",\"pronunciation_native\":\"koh-stet ___ ex-trah?\",\"slot\":{\"hint_native\":\"thing with an extra cost\",\"fillers\":[{\"target\":\"mein Hund\",\"native\":\"my dog\",\"pronunciation_native\":\"mine hoont\",\"in_dialogue\":true},{\"target\":\"ein Parkplatz\",\"native\":\"a parking space\",\"pronunciation_native\":\"ayn park-plats\",\"in_dialogue\":false},{\"target\":\"die Endreinigung\",\"native\":\"the final cleaning\",\"pronunciation_native\":\"dee ent-roy-nee-goong\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Braucht der Vermieter noch ___?\",\"frame_native\":\"Does the landlord need ___?\",\"pronunciation_native\":\"browkht dare fer-mee-ter nokh ___?\",\"slot\":{\"hint_native\":\"information or approval\",\"fillers\":[{\"target\":\"Infos zum Hund\",\"native\":\"dog details\",\"pronunciation_native\":\"in-fohs tsoom hoont\",\"in_dialogue\":true},{\"target\":\"eine Referenz\",\"native\":\"a reference\",\"pronunciation_native\":\"ayne ray-feh-rents\",\"in_dialogue\":false},{\"target\":\"eine Bescheinigung\",\"native\":\"a certificate\",\"pronunciation_native\":\"ayne beh-shy-nee-goong\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"answer\",\"must_say\":[6],\"frame_target\":\"Er ist ___.\",\"frame_native\":\"He is ___.\",\"pronunciation_native\":\"air ist ___.\",\"slot\":{\"hint_native\":\"quality of the pet\",\"fillers\":[{\"target\":\"ruhig\",\"native\":\"calm\",\"pronunciation_native\":\"roo-ikh\",\"in_dialogue\":true},{\"target\":\"gut erzogen\",\"native\":\"well trained\",\"pronunciation_native\":\"goot air-tsoh-gen\",\"in_dialogue\":false},{\"target\":\"sehr freundlich\",\"native\":\"very friendly\",\"pronunciation_native\":\"zair froynt-likh\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"answer\",\"must_say\":[7],\"frame_target\":\"Er bleibt ___ allein.\",\"frame_native\":\"He stays alone for ___.\",\"pronunciation_native\":\"air blypt ___ a-layne.\",\"slot\":{\"hint_native\":\"length of time alone\",\"fillers\":[{\"target\":\"zwei Stunden\",\"native\":\"two hours\",\"pronunciation_native\":\"tsvay shtoon-den\",\"in_dialogue\":true},{\"target\":\"den ganzen Vormittag\",\"native\":\"the whole morning\",\"pronunciation_native\":\"dayn gants-en for-mit-tahk\",\"in_dialogue\":false},{\"target\":\"kurze Zeit\",\"native\":\"a short time\",\"pronunciation_native\":\"koor-tseh tsайт\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Ich akzeptiere ___.\",\"frame_native\":\"I accept ___.\",\"pronunciation_native\":\"ikh ak-tsep-tee-reh ___.\",\"slot\":{\"hint_native\":\"condition\",\"fillers\":[{\"target\":\"diese Regel\",\"native\":\"this rule\",\"pronunciation_native\":\"dee-zeh ray-gel\",\"in_dialogue\":true},{\"target\":\"die Hausordnung\",\"native\":\"the house rules\",\"pronunciation_native\":\"dee howss-ord-noong\",\"in_dialogue\":false},{\"target\":\"die schriftliche Zustimmung\",\"native\":\"the written approval\",\"pronunciation_native\":\"dee shrift-likh-eh tsoo-shtim-moong\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Welche Art von Haustier haben Sie?\",\"text_native\":\"What kind of pet do you have? \"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Wie groß ist es?\",\"text_native\":\"How big is it?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[6],\"text_target\":\"Ist Ihr Haustier ruhig und gut erzogen?\",\"text_native\":\"Is your pet calm and well trained?\"},{\"id\":\"a4\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[7],\"text_target\":\"Bleibt es oft allein?\",\"text_native\":\"Is it often left alone?\"},{\"id\":\"a5\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[1,3],\"text_target\":\"Ja, Haustiere sind erlaubt, wenn sie die Nachbarn nicht stören.\",\"text_native\":\"Yes, pets are allowed if they do not disturb the neighbours.\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"Der Vermieter braucht eine kurze Beschreibung und eine Genehmigung.\",\"text_native\":\"The landlord needs a short description and an approval.\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Für Haustiere fällt keine zusätzliche Gebühr an.\",\"text_native\":\"There is no additional fee for pets.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"erlaubt\",\"translation_native\":\"allowed\",\"pronunciation_native\":\"er-lowpt\",\"definition_target\":\"permitted by the rules\",\"kind\":\"word\",\"image_prompt\":\"A small dog sitting calmly inside an apartment\",\"used_in\":[\"p1\",\"a5\"]},{\"id\":\"v2\",\"term_target\":\"die Wohnung\",\"translation_native\":\"flat\",\"pronunciation_native\":\"dee voh-noong\",\"definition_target\":\"a home in a building\",\"kind\":\"word\",\"image_prompt\":\"A bright apartment living room\",\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"die Regel\",\"translation_native\":\"rule\",\"pronunciation_native\":\"dee ray-gel\",\"definition_target\":\"an instruction about what is permitted\",\"kind\":\"word\",\"image_prompt\":\"A printed house rule notice on a wall\",\"used_in\":[\"p3\",\"p8\"]},{\"id\":\"v4\",\"term_target\":\"kosten\",\"translation_native\":\"to cost\",\"pronunciation_native\":\"koh-sten\",\"definition_target\":\"to require payment\",\"kind\":\"word\",\"image_prompt\":\"A person looking at a fee on a rental document\",\"used_in\":[\"p4\"]},{\"id\":\"v5\",\"term_target\":\"der Vermieter\",\"translation_native\":\"landlord\",\"pronunciation_native\":\"dare fer-mee-ter\",\"definition_target\":\"the person who rents out a property\",\"kind\":\"word\",\"image_prompt\":\"A landlord discussing an apartment with a tenant\",\"used_in\":[\"p5\",\"a6\"]},{\"id\":\"v6\",\"term_target\":\"ruhig\",\"translation_native\":\"calm\",\"pronunciation_native\":\"roo-ikh\",\"definition_target\":\"making little or no noise\",\"kind\":\"word\",\"image_prompt\":\"A calm dog lying quietly on a rug\",\"used_in\":[\"p6\",\"a3\"]},{\"id\":\"v7\",\"term_target\":\"akzeptieren\",\"translation_native\":\"to accept\",\"pronunciation_native\":\"ak-tsep-tee-ren\",\"definition_target\":\"to agree to a condition\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"stören\",\"translation_native\":\"to disturb\",\"pronunciation_native\":\"shtur-en\",\"definition_target\":\"to bother other people\",\"kind\":\"word\",\"image_prompt\":\"A neighbour covering their ears because of noise\",\"used_in\":[\"a5\"]},{\"id\":\"v9\",\"term_target\":\"die Genehmigung\",\"translation_native\":\"approval\",\"pronunciation_native\":\"dee gay-nay-mee-goong\",\"definition_target\":\"official permission\",\"kind\":\"word\",\"image_prompt\":\"A signed approval document on a desk\",\"used_in\":[\"a6\"]},{\"id\":\"v10\",\"term_target\":\"die Gebühr\",\"translation_native\":\"fee\",\"pronunciation_native\":\"dee geh-byoor\",\"definition_target\":\"an additional payment\",\"kind\":\"word\",\"image_prompt\":\"A rental document showing an additional fee\",\"used_in\":[\"a7\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOmrj98unAA62sLUSiTF4Fau5eAK",
+                "object": "chat.completion",
+                "created": 1790675501,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Regeln für Haustiere\",\"title_native\":\"Pet rules\",\"description_target\":\"Sie fragen nach Haustierregeln, Kosten und Genehmigungen und erklären die Situation Ihres Hundes.\",\"description_native\":\"You ask about pet rules, costs, and approvals and explain your dog's situation.\"},\"learner_role\":{\"role_target\":\"Mieter\",\"role_native\":\"Tenant\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"Ist ___ erlaubt?\",\"frame_native\":\"Is ___ allowed?\",\"pronunciation_native\":\"ist ___ erlowpt?\",\"slot\":{\"hint_native\":\"type of pet\",\"fillers\":[{\"target\":\"ein kleiner Hund\",\"native\":\"a small dog\",\"pronunciation_native\":\"ayn klayner hoont\",\"in_dialogue\":true},{\"target\":\"eine Katze\",\"native\":\"a cat\",\"pronunciation_native\":\"ayne kat-seh\",\"in_dialogue\":false},{\"target\":\"ein Kaninchen\",\"native\":\"a rabbit\",\"pronunciation_native\":\"ayn kah-neen-khen\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"___ lebt in der Wohnung.\",\"frame_native\":\"___ lives in the flat.\",\"pronunciation_native\":\"___ laypt in dare voh-noong.\",\"slot\":{\"hint_native\":\"person or pet\",\"fillers\":[{\"target\":\"mein kleiner Hund\",\"native\":\"my small dog\",\"pronunciation_native\":\"mine klayner hoont\",\"in_dialogue\":true},{\"target\":\"meine Tochter\",\"native\":\"my daughter\",\"pronunciation_native\":\"myne tokh-ter\",\"in_dialogue\":false},{\"target\":\"ein Mitbewohner\",\"native\":\"a flatmate\",\"pronunciation_native\":\"ayn mit-bay-voh-ner\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Gibt es Regeln für ___?\",\"frame_native\":\"Are there rules for ___?\",\"pronunciation_native\":\"gipt es ray-geln fyr ___?\",\"slot\":{\"hint_native\":\"thing covered by rules\",\"fillers\":[{\"target\":\"Haustiere\",\"native\":\"pets\",\"pronunciation_native\":\"howss-tee-reh\",\"in_dialogue\":true},{\"target\":\"laute Musik\",\"native\":\"loud music\",\"pronunciation_native\":\"low-teh moo-zeek\",\"in_dialogue\":false},{\"target\":\"Besucher\",\"native\":\"visitors\",\"pronunciation_native\":\"beh-zoo-kher\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Kostet ___ extra?\",\"frame_native\":\"Does ___ cost extra?\",\"pronunciation_native\":\"koh-stet ___ ex-trah?\",\"slot\":{\"hint_native\":\"thing with an extra cost\",\"fillers\":[{\"target\":\"mein Hund\",\"native\":\"my dog\",\"pronunciation_native\":\"mine hoont\",\"in_dialogue\":true},{\"target\":\"ein Parkplatz\",\"native\":\"a parking space\",\"pronunciation_native\":\"ayn park-plats\",\"in_dialogue\":false},{\"target\":\"die Endreinigung\",\"native\":\"the final cleaning\",\"pronunciation_native\":\"dee ent-roy-nee-goong\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Braucht der Vermieter noch ___?\",\"frame_native\":\"Does the landlord need ___?\",\"pronunciation_native\":\"browkht dare fer-mee-ter nokh ___?\",\"slot\":{\"hint_native\":\"information or approval\",\"fillers\":[{\"target\":\"Infos zum Hund\",\"native\":\"dog details\",\"pronunciation_native\":\"in-fohs tsoom hoont\",\"in_dialogue\":true},{\"target\":\"eine Referenz\",\"native\":\"a reference\",\"pronunciation_native\":\"ayne ray-feh-rents\",\"in_dialogue\":false},{\"target\":\"eine Bescheinigung\",\"native\":\"a certificate\",\"pronunciation_native\":\"ayne beh-shy-nee-goong\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"answer\",\"must_say\":[6],\"frame_target\":\"Er ist ___.\",\"frame_native\":\"He is ___.\",\"pronunciation_native\":\"air ist ___.\",\"slot\":{\"hint_native\":\"quality of the pet\",\"fillers\":[{\"target\":\"ruhig\",\"native\":\"calm\",\"pronunciation_native\":\"roo-ikh\",\"in_dialogue\":true},{\"target\":\"gut erzogen\",\"native\":\"well trained\",\"pronunciation_native\":\"goot air-tsoh-gen\",\"in_dialogue\":false},{\"target\":\"sehr freundlich\",\"native\":\"very friendly\",\"pronunciation_native\":\"zair froynt-likh\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"answer\",\"must_say\":[7],\"frame_target\":\"Er bleibt ___ allein.\",\"frame_native\":\"He stays alone for ___.\",\"pronunciation_native\":\"air blypt ___ a-layne.\",\"slot\":{\"hint_native\":\"length of time alone\",\"fillers\":[{\"target\":\"zwei Stunden\",\"native\":\"two hours\",\"pronunciation_native\":\"tsvay shtoon-den\",\"in_dialogue\":true},{\"target\":\"den ganzen Vormittag\",\"native\":\"the whole morning\",\"pronunciation_native\":\"dayn gants-en for-mit-tahk\",\"in_dialogue\":false},{\"target\":\"kurze Zeit\",\"native\":\"a short time\",\"pronunciation_native\":\"koor-tseh tsайт\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Ich akzeptiere ___.\",\"frame_native\":\"I accept ___.\",\"pronunciation_native\":\"ikh ak-tsep-tee-reh ___.\",\"slot\":{\"hint_native\":\"condition\",\"fillers\":[{\"target\":\"diese Regel\",\"native\":\"this rule\",\"pronunciation_native\":\"dee-zeh ray-gel\",\"in_dialogue\":true},{\"target\":\"die Hausordnung\",\"native\":\"the house rules\",\"pronunciation_native\":\"dee howss-ord-noong\",\"in_dialogue\":false},{\"target\":\"die schriftliche Zustimmung\",\"native\":\"the written approval\",\"pronunciation_native\":\"dee shrift-likh-eh tsoo-shtim-moong\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Welche Art von Haustier haben Sie?\",\"text_native\":\"What kind of pet do you have? \"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Wie groß ist es?\",\"text_native\":\"How big is it?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[6],\"text_target\":\"Ist Ihr Haustier ruhig und gut erzogen?\",\"text_native\":\"Is your pet calm and well trained?\"},{\"id\":\"a4\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[7],\"text_target\":\"Bleibt es oft allein?\",\"text_native\":\"Is it often left alone?\"},{\"id\":\"a5\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[1,3],\"text_target\":\"Ja, Haustiere sind erlaubt, wenn sie die Nachbarn nicht stören.\",\"text_native\":\"Yes, pets are allowed if they do not disturb the neighbours.\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"Der Vermieter braucht eine kurze Beschreibung und eine Genehmigung.\",\"text_native\":\"The landlord needs a short description and an approval.\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Für Haustiere fällt keine zusätzliche Gebühr an.\",\"text_native\":\"There is no additional fee for pets.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"erlaubt\",\"translation_native\":\"allowed\",\"pronunciation_native\":\"er-lowpt\",\"definition_target\":\"permitted by the rules\",\"kind\":\"word\",\"image_prompt\":\"A small dog sitting calmly inside an apartment\",\"used_in\":[\"p1\",\"a5\"]},{\"id\":\"v2\",\"term_target\":\"die Wohnung\",\"translation_native\":\"flat\",\"pronunciation_native\":\"dee voh-noong\",\"definition_target\":\"a home in a building\",\"kind\":\"word\",\"image_prompt\":\"A bright apartment living room\",\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"die Regel\",\"translation_native\":\"rule\",\"pronunciation_native\":\"dee ray-gel\",\"definition_target\":\"an instruction about what is permitted\",\"kind\":\"word\",\"image_prompt\":\"A printed house rule notice on a wall\",\"used_in\":[\"p3\",\"p8\"]},{\"id\":\"v4\",\"term_target\":\"kosten\",\"translation_native\":\"to cost\",\"pronunciation_native\":\"koh-sten\",\"definition_target\":\"to require payment\",\"kind\":\"word\",\"image_prompt\":\"A person looking at a fee on a rental document\",\"used_in\":[\"p4\"]},{\"id\":\"v5\",\"term_target\":\"der Vermieter\",\"translation_native\":\"landlord\",\"pronunciation_native\":\"dare fer-mee-ter\",\"definition_target\":\"the person who rents out a property\",\"kind\":\"word\",\"image_prompt\":\"A landlord discussing an apartment with a tenant\",\"used_in\":[\"p5\",\"a6\"]},{\"id\":\"v6\",\"term_target\":\"ruhig\",\"translation_native\":\"calm\",\"pronunciation_native\":\"roo-ikh\",\"definition_target\":\"making little or no noise\",\"kind\":\"word\",\"image_prompt\":\"A calm dog lying quietly on a rug\",\"used_in\":[\"p6\",\"a3\"]},{\"id\":\"v7\",\"term_target\":\"akzeptieren\",\"translation_native\":\"to accept\",\"pronunciation_native\":\"ak-tsep-tee-ren\",\"definition_target\":\"to agree to a condition\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"stören\",\"translation_native\":\"to disturb\",\"pronunciation_native\":\"shtur-en\",\"definition_target\":\"to bother other people\",\"kind\":\"word\",\"image_prompt\":\"A neighbour covering their ears because of noise\",\"used_in\":[\"a5\"]},{\"id\":\"v9\",\"term_target\":\"die Genehmigung\",\"translation_native\":\"approval\",\"pronunciation_native\":\"dee gay-nay-mee-goong\",\"definition_target\":\"official permission\",\"kind\":\"word\",\"image_prompt\":\"A signed approval document on a desk\",\"used_in\":[\"a6\"]},{\"id\":\"v10\",\"term_target\":\"die Gebühr\",\"translation_native\":\"fee\",\"pronunciation_native\":\"dee geh-byoor\",\"definition_target\":\"an additional payment\",\"kind\":\"word\",\"image_prompt\":\"A rental document showing an additional fee\",\"used_in\":[\"a7\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5050,
+                    "completion_tokens": 4721,
+                    "total_tokens": 9771,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 405,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2490,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:52:18Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5091,
+            "cached_tokens_in": 4642,
+            "tokens_out": 4176,
+            "reasoning_tokens": 2071,
+            "cost_usd": "0.025969",
+            "latency_ms": 32582,
+            "wall_ms": 32582,
+            "call_id": "01M3P98MDMMHP94GF0YBSHT99Z",
+            "user": "TOPIC: Pet rules\n\nTOPIC_DESCRIPTION: Situation: During the viewing, the decision may depend on whether the landlord accepts pets. You have a small dog, so this is the key moment to raise it clearly, understand the rules, and learn what information the agent needs.\nLearner: Tenant. Partner: Agent.\nNot in this scene: basic viewing logistics, general rent details, submitting the full application or arranging contract signing.\n\nAbout the learner, in their own words: Renting a flat in Berlin, viewing with the agent, I have a small dog\n\nSURVIVAL_SET:\nmust_say:\n1. ask whether something is allowed — slot: the thing (a dog, a cat)\n2. explain who will live in the flat — slot: the person or pet\n3. ask whether there are rules about something — slot: the thing (pets, noise)\n4. ask whether there is an extra cost for something — slot: the thing (a dog, pet permission)\n5. ask whether the landlord needs more information about something — slot: the thing (the dog, pet references)\n6. answer whether something is calm or trained — slot: the quality\n7. explain how often something would be there alone — slot: the length of time\n8. confirm you understand the condition — slot: the condition\nmust_understand:\n1. asks what kind of pet you have and how big it is\n2. asks whether the pet is quiet, trained or left alone often\n3. says whether pets are allowed and under what conditions\n4. explains whether the landlord needs extra information or approval\n5. tells you about any extra rules or costs related to pets\n\nTARGET_LANGUAGE: German\n\nNATIVE_LANGUAGE: English\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Mieter / Tenant\n\nPARTNER_ROLE: Makler / Agent\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone\n\nPREVIOUS_ATTEMPT_REJECTED_FOR:\n- pronunciation.foreign_script · p7.f3: the reading «koor-tseh tsайт» has letters of another alphabet: а й т",
+            "payload": {
+                "topic": {
+                    "title_target": "Regeln für Haustiere",
+                    "title_native": "Pet rules",
+                    "description_target": "Nach diesem Tag können Sie nach Haustieren fragen, Ihren Hund erklären und Regeln, Kosten sowie benötigte Informationen verstehen.",
+                    "description_native": "After this day, you can ask about pets, explain your dog, and understand rules, costs, and required information."
+                },
+                "learner_role": {
+                    "role_target": "Mieter",
+                    "role_native": "Tenant"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Darf ich ___ haben?",
+                        "frame_native": "May I have ___?",
+                        "pronunciation_native": "darf ikh ___ hah-ben?",
+                        "slot": {
+                            "hint_native": "the pet you want to keep",
+                            "fillers": [
+                                {
+                                    "target": "a small dog",
+                                    "native": "einen kleinen Hund",
+                                    "pronunciation_native": "eye-nen kly-nen hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a cat",
+                                    "native": "eine Katze",
+                                    "pronunciation_native": "eye-neh kaht-seh",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Bei mir lebt ___.",
+                        "frame_native": "___ lives with me.",
+                        "pronunciation_native": "bye meer laypt ___",
+                        "slot": {
+                            "hint_native": "the person or pet living with you",
+                            "fillers": [
+                                {
+                                    "target": "my small dog",
+                                    "native": "mein kleiner Hund",
+                                    "pronunciation_native": "mine kly-ner hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "my sister",
+                                    "native": "meine Schwester",
+                                    "pronunciation_native": "my-neh shves-ter",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Gibt es Regeln für ___?",
+                        "frame_native": "Are there rules for ___?",
+                        "pronunciation_native": "gibt es ray-geln fyoor ___?",
+                        "slot": {
+                            "hint_native": "the thing covered by the rules",
+                            "fillers": [
+                                {
+                                    "target": "pets",
+                                    "native": "Haustiere",
+                                    "pronunciation_native": "howss-teer-eh",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "noise",
+                                    "native": "Lärm",
+                                    "pronunciation_native": "lairm",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Kostet ___ extra?",
+                        "frame_native": "Does ___ cost extra?",
+                        "pronunciation_native": "koss-tet ___ ex-trah?",
+                        "slot": {
+                            "hint_native": "the thing that might cost extra",
+                            "fillers": [
+                                {
+                                    "target": "pet keeping",
+                                    "native": "die Tierhaltung",
+                                    "pronunciation_native": "dee teer-hahl-toong",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a parking space",
+                                    "native": "ein Stellplatz",
+                                    "pronunciation_native": "ine shtell-plahts",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "Braucht der Vermieter noch Informationen über ___?",
+                        "frame_native": "Does the landlord need more information about ___?",
+                        "pronunciation_native": "browkht dair fair-mee-ter nokh in-for-maht-see-oh-nen oo-ber ___?",
+                        "slot": {
+                            "hint_native": "the subject of the extra information",
+                            "fillers": [
+                                {
+                                    "target": "my dog",
+                                    "native": "meinen Hund",
+                                    "pronunciation_native": "my-nen hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "past pets",
+                                    "native": "frühere Haustiere",
+                                    "pronunciation_native": "froo-eh-reh howss-teer-eh",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "answer",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Das Tier ist ___.",
+                        "frame_native": "The animal is ___.",
+                        "pronunciation_native": "dahs teer ist ___",
+                        "slot": {
+                            "hint_native": "a quality such as calm or trained",
+                            "fillers": [
+                                {
+                                    "target": "calm",
+                                    "native": "ruhig",
+                                    "pronunciation_native": "roo-ikh",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "well trained",
+                                    "native": "gut erzogen",
+                                    "pronunciation_native": "goot air-tsoh-gen",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Wie lange ist ___ allein?",
+                        "frame_native": "How long is ___ alone?",
+                        "pronunciation_native": "vee lahng-eh ist ___ ah-line?",
+                        "slot": {
+                            "hint_native": "the person or pet that is alone",
+                            "fillers": [
+                                {
+                                    "target": "my dog",
+                                    "native": "mein Hund",
+                                    "pronunciation_native": "mine hoont",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the animal",
+                                    "native": "das Tier",
+                                    "pronunciation_native": "dahs teer",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "answer",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "Ich verstehe, dass ___ gilt.",
+                        "frame_native": "I understand that ___ applies.",
+                        "pronunciation_native": "ikh fair-shtay-eh dahss ___ gilt",
+                        "slot": {
+                            "hint_native": "the condition you accept",
+                            "fillers": [
+                                {
+                                    "target": "the house rules",
+                                    "native": "die Hausordnung",
+                                    "pronunciation_native": "dee howss-ord-noong",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the registration requirement",
+                                    "native": "die Anmeldepflicht",
+                                    "pronunciation_native": "dee an-mel-deh-flikht",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "Welche Art von Haustier haben Sie?",
+                        "text_native": "What kind of pet do you have?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "Wie groß ist es?",
+                        "text_native": "How big is it?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            6
+                        ],
+                        "text_target": "Ist Ihr Haustier ruhig und gut erzogen?",
+                        "text_native": "Is your pet calm and well trained?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            7
+                        ],
+                        "text_target": "Bleibt es oft allein?",
+                        "text_native": "Is it often left alone?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Ja. Haustiere sind erlaubt, wenn sie angemeldet sind.",
+                        "text_native": "Yes. Pets are allowed if they are registered."
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "Der Vermieter braucht eine kurze Beschreibung und eine Bestätigung der Haftpflichtversicherung.",
+                        "text_native": "The landlord needs a short description and proof of liability insurance."
+                    },
+                    {
+                        "id": "a7",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3,
+                            4
+                        ],
+                        "text_target": "Für Haustiere gelten Anmeldepflicht und keine monatlichen Zusatzkosten.",
+                        "text_native": "Pets require registration, but there are no monthly extra costs."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "erlauben",
+                        "translation_native": "to allow",
+                        "pronunciation_native": "air-low-ben",
+                        "definition_target": "to say that something is permitted",
+                        "kind": "word",
+                        "image_prompt": "A landlord showing a tenant a house rule sign marked as permitted",
+                        "used_in": [
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "Regel",
+                        "translation_native": "rule",
+                        "pronunciation_native": "ray-gel",
+                        "definition_target": "an instruction that must be followed",
+                        "kind": "word",
+                        "image_prompt": "A printed apartment rule sheet on a table",
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "Vermieter",
+                        "translation_native": "landlord",
+                        "pronunciation_native": "fair-mee-ter",
+                        "definition_target": "the person who rents out a property",
+                        "kind": "word",
+                        "image_prompt": "A landlord holding apartment keys during a viewing",
+                        "used_in": [
+                            "p5",
+                            "a6"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "ruhig",
+                        "translation_native": "calm",
+                        "pronunciation_native": "roo-ikh",
+                        "definition_target": "not making much noise or movement",
+                        "kind": "word",
+                        "image_prompt": "A calm small dog sitting quietly in a flat",
+                        "used_in": [
+                            "p6",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "erziehen",
+                        "translation_native": "to train",
+                        "pronunciation_native": "air-tsee-en",
+                        "definition_target": "to teach an animal good behaviour",
+                        "kind": "word",
+                        "image_prompt": "A person training a dog to sit indoors",
+                        "used_in": [
+                            "p6",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "allein",
+                        "translation_native": "alone",
+                        "pronunciation_native": "ah-line",
+                        "definition_target": "without another person or animal present",
+                        "kind": "word",
+                        "image_prompt": "A dog resting alone in an apartment room",
+                        "used_in": [
+                            "p7",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "gelten",
+                        "translation_native": "to apply",
+                        "pronunciation_native": "gel-ten",
+                        "definition_target": "to be valid for a person or situation",
+                        "kind": "word",
+                        "image_prompt": "A tenant reading a notice about apartment conditions",
+                        "used_in": [
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "anmelden",
+                        "translation_native": "to register",
+                        "pronunciation_native": "an-mel-den",
+                        "definition_target": "to officially record something with the responsible person",
+                        "kind": "word",
+                        "image_prompt": "A tenant filling out a pet registration form",
+                        "used_in": [
+                            "a5",
+                            "a7"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "Zusatzkosten",
+                        "translation_native": "extra costs",
+                        "pronunciation_native": "tsoo-sahts-koss-ten",
+                        "definition_target": "costs added to the usual payment",
+                        "kind": "word",
+                        "image_prompt": "An apartment cost sheet showing an additional charge line",
+                        "used_in": [
+                            "a7"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "Haftpflichtversicherung",
+                        "translation_native": "liability insurance",
+                        "pronunciation_native": "haft-pflikht-fair-shikh-er-oong",
+                        "definition_target": "insurance covering damage caused to other people or property",
+                        "kind": "word",
+                        "image_prompt": "An insurance document beside apartment keys",
+                        "used_in": [
+                            "a6"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Regeln für Haustiere\",\"title_native\":\"Pet rules\",\"description_target\":\"Nach diesem Tag können Sie nach Haustieren fragen, Ihren Hund erklären und Regeln, Kosten sowie benötigte Informationen verstehen.\",\"description_native\":\"After this day, you can ask about pets, explain your dog, and understand rules, costs, and required information.\"},\"learner_role\":{\"role_target\":\"Mieter\",\"role_native\":\"Tenant\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"Darf ich ___ haben?\",\"frame_native\":\"May I have ___?\",\"pronunciation_native\":\"darf ikh ___ hah-ben?\",\"slot\":{\"hint_native\":\"the pet you want to keep\",\"fillers\":[{\"target\":\"a small dog\",\"native\":\"einen kleinen Hund\",\"pronunciation_native\":\"eye-nen kly-nen hoont\",\"in_dialogue\":true},{\"target\":\"a cat\",\"native\":\"eine Katze\",\"pronunciation_native\":\"eye-neh kaht-seh\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Bei mir lebt ___.\",\"frame_native\":\"___ lives with me.\",\"pronunciation_native\":\"bye meer laypt ___\",\"slot\":{\"hint_native\":\"the person or pet living with you\",\"fillers\":[{\"target\":\"my small dog\",\"native\":\"mein kleiner Hund\",\"pronunciation_native\":\"mine kly-ner hoont\",\"in_dialogue\":true},{\"target\":\"my sister\",\"native\":\"meine Schwester\",\"pronunciation_native\":\"my-neh shves-ter\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Gibt es Regeln für ___?\",\"frame_native\":\"Are there rules for ___?\",\"pronunciation_native\":\"gibt es ray-geln fyoor ___?\",\"slot\":{\"hint_native\":\"the thing covered by the rules\",\"fillers\":[{\"target\":\"pets\",\"native\":\"Haustiere\",\"pronunciation_native\":\"howss-teer-eh\",\"in_dialogue\":true},{\"target\":\"noise\",\"native\":\"Lärm\",\"pronunciation_native\":\"lairm\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Kostet ___ extra?\",\"frame_native\":\"Does ___ cost extra?\",\"pronunciation_native\":\"koss-tet ___ ex-trah?\",\"slot\":{\"hint_native\":\"the thing that might cost extra\",\"fillers\":[{\"target\":\"pet keeping\",\"native\":\"die Tierhaltung\",\"pronunciation_native\":\"dee teer-hahl-toong\",\"in_dialogue\":true},{\"target\":\"a parking space\",\"native\":\"ein Stellplatz\",\"pronunciation_native\":\"ine shtell-plahts\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Braucht der Vermieter noch Informationen über ___?\",\"frame_native\":\"Does the landlord need more information about ___?\",\"pronunciation_native\":\"browkht dair fair-mee-ter nokh in-for-maht-see-oh-nen oo-ber ___?\",\"slot\":{\"hint_native\":\"the subject of the extra information\",\"fillers\":[{\"target\":\"my dog\",\"native\":\"meinen Hund\",\"pronunciation_native\":\"my-nen hoont\",\"in_dialogue\":true},{\"target\":\"past pets\",\"native\":\"frühere Haustiere\",\"pronunciation_native\":\"froo-eh-reh howss-teer-eh\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"answer\",\"must_say\":[6],\"frame_target\":\"Das Tier ist ___.\",\"frame_native\":\"The animal is ___.\",\"pronunciation_native\":\"dahs teer ist ___\",\"slot\":{\"hint_native\":\"a quality such as calm or trained\",\"fillers\":[{\"target\":\"calm\",\"native\":\"ruhig\",\"pronunciation_native\":\"roo-ikh\",\"in_dialogue\":true},{\"target\":\"well trained\",\"native\":\"gut erzogen\",\"pronunciation_native\":\"goot air-tsoh-gen\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Wie lange ist ___ allein?\",\"frame_native\":\"How long is ___ alone?\",\"pronunciation_native\":\"vee lahng-eh ist ___ ah-line?\",\"slot\":{\"hint_native\":\"the person or pet that is alone\",\"fillers\":[{\"target\":\"my dog\",\"native\":\"mein Hund\",\"pronunciation_native\":\"mine hoont\",\"in_dialogue\":true},{\"target\":\"the animal\",\"native\":\"das Tier\",\"pronunciation_native\":\"dahs teer\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Ich verstehe, dass ___ gilt.\",\"frame_native\":\"I understand that ___ applies.\",\"pronunciation_native\":\"ikh fair-shtay-eh dahss ___ gilt\",\"slot\":{\"hint_native\":\"the condition you accept\",\"fillers\":[{\"target\":\"the house rules\",\"native\":\"die Hausordnung\",\"pronunciation_native\":\"dee howss-ord-noong\",\"in_dialogue\":true},{\"target\":\"the registration requirement\",\"native\":\"die Anmeldepflicht\",\"pronunciation_native\":\"dee an-mel-deh-flikht\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Welche Art von Haustier haben Sie?\",\"text_native\":\"What kind of pet do you have?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Wie groß ist es?\",\"text_native\":\"How big is it?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[6],\"text_target\":\"Ist Ihr Haustier ruhig und gut erzogen?\",\"text_native\":\"Is your pet calm and well trained?\"},{\"id\":\"a4\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[7],\"text_target\":\"Bleibt es oft allein?\",\"text_native\":\"Is it often left alone?\"},{\"id\":\"a5\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"Ja. Haustiere sind erlaubt, wenn sie angemeldet sind.\",\"text_native\":\"Yes. Pets are allowed if they are registered.\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"Der Vermieter braucht eine kurze Beschreibung und eine Bestätigung der Haftpflichtversicherung.\",\"text_native\":\"The landlord needs a short description and proof of liability insurance.\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[3,4],\"text_target\":\"Für Haustiere gelten Anmeldepflicht und keine monatlichen Zusatzkosten.\",\"text_native\":\"Pets require registration, but there are no monthly extra costs.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"erlauben\",\"translation_native\":\"to allow\",\"pronunciation_native\":\"air-low-ben\",\"definition_target\":\"to say that something is permitted\",\"kind\":\"word\",\"image_prompt\":\"A landlord showing a tenant a house rule sign marked as permitted\",\"used_in\":[\"a5\"]},{\"id\":\"v2\",\"term_target\":\"Regel\",\"translation_native\":\"rule\",\"pronunciation_native\":\"ray-gel\",\"definition_target\":\"an instruction that must be followed\",\"kind\":\"word\",\"image_prompt\":\"A printed apartment rule sheet on a table\",\"used_in\":[\"p3\"]},{\"id\":\"v3\",\"term_target\":\"Vermieter\",\"translation_native\":\"landlord\",\"pronunciation_native\":\"fair-mee-ter\",\"definition_target\":\"the person who rents out a property\",\"kind\":\"word\",\"image_prompt\":\"A landlord holding apartment keys during a viewing\",\"used_in\":[\"p5\",\"a6\"]},{\"id\":\"v4\",\"term_target\":\"ruhig\",\"translation_native\":\"calm\",\"pronunciation_native\":\"roo-ikh\",\"definition_target\":\"not making much noise or movement\",\"kind\":\"word\",\"image_prompt\":\"A calm small dog sitting quietly in a flat\",\"used_in\":[\"p6\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"erziehen\",\"translation_native\":\"to train\",\"pronunciation_native\":\"air-tsee-en\",\"definition_target\":\"to teach an animal good behaviour\",\"kind\":\"word\",\"image_prompt\":\"A person training a dog to sit indoors\",\"used_in\":[\"p6\",\"a3\"]},{\"id\":\"v6\",\"term_target\":\"allein\",\"translation_native\":\"alone\",\"pronunciation_native\":\"ah-line\",\"definition_target\":\"without another person or animal present\",\"kind\":\"word\",\"image_prompt\":\"A dog resting alone in an apartment room\",\"used_in\":[\"p7\",\"a4\"]},{\"id\":\"v7\",\"term_target\":\"gelten\",\"translation_native\":\"to apply\",\"pronunciation_native\":\"gel-ten\",\"definition_target\":\"to be valid for a person or situation\",\"kind\":\"word\",\"image_prompt\":\"A tenant reading a notice about apartment conditions\",\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"anmelden\",\"translation_native\":\"to register\",\"pronunciation_native\":\"an-mel-den\",\"definition_target\":\"to officially record something with the responsible person\",\"kind\":\"word\",\"image_prompt\":\"A tenant filling out a pet registration form\",\"used_in\":[\"a5\",\"a7\"]},{\"id\":\"v9\",\"term_target\":\"Zusatzkosten\",\"translation_native\":\"extra costs\",\"pronunciation_native\":\"tsoo-sahts-koss-ten\",\"definition_target\":\"costs added to the usual payment\",\"kind\":\"word\",\"image_prompt\":\"An apartment cost sheet showing an additional charge line\",\"used_in\":[\"a7\"]},{\"id\":\"v10\",\"term_target\":\"Haftpflichtversicherung\",\"translation_native\":\"liability insurance\",\"pronunciation_native\":\"haft-pflikht-fair-shikh-er-oong\",\"definition_target\":\"insurance covering damage caused to other people or property\",\"kind\":\"word\",\"image_prompt\":\"An insurance document beside apartment keys\",\"used_in\":[\"a6\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOnScyZJawtucMz1Jls6kHXisG5T",
+                "object": "chat.completion",
+                "created": 1790675538,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Regeln für Haustiere\",\"title_native\":\"Pet rules\",\"description_target\":\"Nach diesem Tag können Sie nach Haustieren fragen, Ihren Hund erklären und Regeln, Kosten sowie benötigte Informationen verstehen.\",\"description_native\":\"After this day, you can ask about pets, explain your dog, and understand rules, costs, and required information.\"},\"learner_role\":{\"role_target\":\"Mieter\",\"role_native\":\"Tenant\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"Darf ich ___ haben?\",\"frame_native\":\"May I have ___?\",\"pronunciation_native\":\"darf ikh ___ hah-ben?\",\"slot\":{\"hint_native\":\"the pet you want to keep\",\"fillers\":[{\"target\":\"a small dog\",\"native\":\"einen kleinen Hund\",\"pronunciation_native\":\"eye-nen kly-nen hoont\",\"in_dialogue\":true},{\"target\":\"a cat\",\"native\":\"eine Katze\",\"pronunciation_native\":\"eye-neh kaht-seh\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Bei mir lebt ___.\",\"frame_native\":\"___ lives with me.\",\"pronunciation_native\":\"bye meer laypt ___\",\"slot\":{\"hint_native\":\"the person or pet living with you\",\"fillers\":[{\"target\":\"my small dog\",\"native\":\"mein kleiner Hund\",\"pronunciation_native\":\"mine kly-ner hoont\",\"in_dialogue\":true},{\"target\":\"my sister\",\"native\":\"meine Schwester\",\"pronunciation_native\":\"my-neh shves-ter\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Gibt es Regeln für ___?\",\"frame_native\":\"Are there rules for ___?\",\"pronunciation_native\":\"gibt es ray-geln fyoor ___?\",\"slot\":{\"hint_native\":\"the thing covered by the rules\",\"fillers\":[{\"target\":\"pets\",\"native\":\"Haustiere\",\"pronunciation_native\":\"howss-teer-eh\",\"in_dialogue\":true},{\"target\":\"noise\",\"native\":\"Lärm\",\"pronunciation_native\":\"lairm\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Kostet ___ extra?\",\"frame_native\":\"Does ___ cost extra?\",\"pronunciation_native\":\"koss-tet ___ ex-trah?\",\"slot\":{\"hint_native\":\"the thing that might cost extra\",\"fillers\":[{\"target\":\"pet keeping\",\"native\":\"die Tierhaltung\",\"pronunciation_native\":\"dee teer-hahl-toong\",\"in_dialogue\":true},{\"target\":\"a parking space\",\"native\":\"ein Stellplatz\",\"pronunciation_native\":\"ine shtell-plahts\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Braucht der Vermieter noch Informationen über ___?\",\"frame_native\":\"Does the landlord need more information about ___?\",\"pronunciation_native\":\"browkht dair fair-mee-ter nokh in-for-maht-see-oh-nen oo-ber ___?\",\"slot\":{\"hint_native\":\"the subject of the extra information\",\"fillers\":[{\"target\":\"my dog\",\"native\":\"meinen Hund\",\"pronunciation_native\":\"my-nen hoont\",\"in_dialogue\":true},{\"target\":\"past pets\",\"native\":\"frühere Haustiere\",\"pronunciation_native\":\"froo-eh-reh howss-teer-eh\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"answer\",\"must_say\":[6],\"frame_target\":\"Das Tier ist ___.\",\"frame_native\":\"The animal is ___.\",\"pronunciation_native\":\"dahs teer ist ___\",\"slot\":{\"hint_native\":\"a quality such as calm or trained\",\"fillers\":[{\"target\":\"calm\",\"native\":\"ruhig\",\"pronunciation_native\":\"roo-ikh\",\"in_dialogue\":true},{\"target\":\"well trained\",\"native\":\"gut erzogen\",\"pronunciation_native\":\"goot air-tsoh-gen\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Wie lange ist ___ allein?\",\"frame_native\":\"How long is ___ alone?\",\"pronunciation_native\":\"vee lahng-eh ist ___ ah-line?\",\"slot\":{\"hint_native\":\"the person or pet that is alone\",\"fillers\":[{\"target\":\"my dog\",\"native\":\"mein Hund\",\"pronunciation_native\":\"mine hoont\",\"in_dialogue\":true},{\"target\":\"the animal\",\"native\":\"das Tier\",\"pronunciation_native\":\"dahs teer\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Ich verstehe, dass ___ gilt.\",\"frame_native\":\"I understand that ___ applies.\",\"pronunciation_native\":\"ikh fair-shtay-eh dahss ___ gilt\",\"slot\":{\"hint_native\":\"the condition you accept\",\"fillers\":[{\"target\":\"the house rules\",\"native\":\"die Hausordnung\",\"pronunciation_native\":\"dee howss-ord-noong\",\"in_dialogue\":true},{\"target\":\"the registration requirement\",\"native\":\"die Anmeldepflicht\",\"pronunciation_native\":\"dee an-mel-deh-flikht\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Welche Art von Haustier haben Sie?\",\"text_native\":\"What kind of pet do you have?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Wie groß ist es?\",\"text_native\":\"How big is it?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[6],\"text_target\":\"Ist Ihr Haustier ruhig und gut erzogen?\",\"text_native\":\"Is your pet calm and well trained?\"},{\"id\":\"a4\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[7],\"text_target\":\"Bleibt es oft allein?\",\"text_native\":\"Is it often left alone?\"},{\"id\":\"a5\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"Ja. Haustiere sind erlaubt, wenn sie angemeldet sind.\",\"text_native\":\"Yes. Pets are allowed if they are registered.\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[5],\"text_target\":\"Der Vermieter braucht eine kurze Beschreibung und eine Bestätigung der Haftpflichtversicherung.\",\"text_native\":\"The landlord needs a short description and proof of liability insurance.\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[3,4],\"text_target\":\"Für Haustiere gelten Anmeldepflicht und keine monatlichen Zusatzkosten.\",\"text_native\":\"Pets require registration, but there are no monthly extra costs.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"erlauben\",\"translation_native\":\"to allow\",\"pronunciation_native\":\"air-low-ben\",\"definition_target\":\"to say that something is permitted\",\"kind\":\"word\",\"image_prompt\":\"A landlord showing a tenant a house rule sign marked as permitted\",\"used_in\":[\"a5\"]},{\"id\":\"v2\",\"term_target\":\"Regel\",\"translation_native\":\"rule\",\"pronunciation_native\":\"ray-gel\",\"definition_target\":\"an instruction that must be followed\",\"kind\":\"word\",\"image_prompt\":\"A printed apartment rule sheet on a table\",\"used_in\":[\"p3\"]},{\"id\":\"v3\",\"term_target\":\"Vermieter\",\"translation_native\":\"landlord\",\"pronunciation_native\":\"fair-mee-ter\",\"definition_target\":\"the person who rents out a property\",\"kind\":\"word\",\"image_prompt\":\"A landlord holding apartment keys during a viewing\",\"used_in\":[\"p5\",\"a6\"]},{\"id\":\"v4\",\"term_target\":\"ruhig\",\"translation_native\":\"calm\",\"pronunciation_native\":\"roo-ikh\",\"definition_target\":\"not making much noise or movement\",\"kind\":\"word\",\"image_prompt\":\"A calm small dog sitting quietly in a flat\",\"used_in\":[\"p6\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"erziehen\",\"translation_native\":\"to train\",\"pronunciation_native\":\"air-tsee-en\",\"definition_target\":\"to teach an animal good behaviour\",\"kind\":\"word\",\"image_prompt\":\"A person training a dog to sit indoors\",\"used_in\":[\"p6\",\"a3\"]},{\"id\":\"v6\",\"term_target\":\"allein\",\"translation_native\":\"alone\",\"pronunciation_native\":\"ah-line\",\"definition_target\":\"without another person or animal present\",\"kind\":\"word\",\"image_prompt\":\"A dog resting alone in an apartment room\",\"used_in\":[\"p7\",\"a4\"]},{\"id\":\"v7\",\"term_target\":\"gelten\",\"translation_native\":\"to apply\",\"pronunciation_native\":\"gel-ten\",\"definition_target\":\"to be valid for a person or situation\",\"kind\":\"word\",\"image_prompt\":\"A tenant reading a notice about apartment conditions\",\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"anmelden\",\"translation_native\":\"to register\",\"pronunciation_native\":\"an-mel-den\",\"definition_target\":\"to officially record something with the responsible person\",\"kind\":\"word\",\"image_prompt\":\"A tenant filling out a pet registration form\",\"used_in\":[\"a5\",\"a7\"]},{\"id\":\"v9\",\"term_target\":\"Zusatzkosten\",\"translation_native\":\"extra costs\",\"pronunciation_native\":\"tsoo-sahts-koss-ten\",\"definition_target\":\"costs added to the usual payment\",\"kind\":\"word\",\"image_prompt\":\"An apartment cost sheet showing an additional charge line\",\"used_in\":[\"a7\"]},{\"id\":\"v10\",\"term_target\":\"Haftpflichtversicherung\",\"translation_native\":\"liability insurance\",\"pronunciation_native\":\"haft-pflikht-fair-shikh-er-oong\",\"definition_target\":\"insurance covering damage caused to other people or property\",\"kind\":\"word\",\"image_prompt\":\"An insurance document beside apartment keys\",\"used_in\":[\"a6\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5091,
+                    "completion_tokens": 4176,
+                    "total_tokens": 9267,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 446,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2071,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

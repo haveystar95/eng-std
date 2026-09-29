@@ -1,0 +1,1142 @@
+{
+    "plan": "10",
+    "run": "luna",
+    "models": {
+        "stages": {
+            "model": "gpt-5.6-luna",
+            "effort": null
+        },
+        "repair": "gpt-5.6-luna",
+        "seam_judge": "gpt-5.4-mini"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Întrebări-cheie",
+        "title_target": "Questions clés",
+        "teaches_native": "să răspunzi despre experiență",
+        "goals_native": [
+            "să explici de ce vrei postul",
+            "să legi experiența de rol",
+            "să dai un exemplu concret",
+            "să întrebi când decid"
+        ],
+        "learner_role": [
+            "Candidat",
+            "Candidat"
+        ],
+        "partner_role": [
+            "Recruteur",
+            "Recrutor"
+        ],
+        "topic_description": "Situation: The interview moves to the decisive part, where the recruiter tests motivation and past experience. This is the core interaction because the learner's main worry is handling questions about experience well enough to show fit for the role and leave a strong impression.\nLearner: Candidate. Partner: Recruiter.\nNot in this scene: introductions, stating your name, saying which job you applied for, basic work history, salary negotiation, signing documents.",
+        "must_say": [
+            "answer why you want this job — slot: the reason",
+            "explain which experience fits the role — slot: the relevant experience",
+            "give a concrete example of a success — slot: the achievement",
+            "answer how you handled a problem at work — slot: the problem",
+            "ask whether a skill is important for the role — slot: the skill",
+            "ask what the team is like — slot: the aspect of the team",
+            "ask when they will make a decision — slot: none"
+        ],
+        "must_understand": [
+            "asks why you want this job",
+            "asks which past experience is most relevant",
+            "asks for an example of a success or a difficult situation",
+            "asks how you work with others or under pressure",
+            "says when they will contact candidates"
+        ]
+    },
+    "request": {
+        "topic": "Întrebări-cheie",
+        "vocabulary": [
+            8,
+            12
+        ],
+        "scene_id": "gen4b-10"
+    },
+    "outcome": {
+        "status": "failed",
+        "error": null,
+        "fail_reason": "fatal: vocab.not_found",
+        "findings": [
+            {
+                "code": "vocab.not_found",
+                "address": "v1",
+                "detail": "«vouloir» occurs in no frame and no partner line"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p1.f1",
+                "detail": "the reading «evolue profesional» is close to the native text «să evoluez profesional» (0.82)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p3.f2",
+                "detail": "the reading «organize lechip» is close to the native text «organizez echipa» (0.81)"
+            },
+            {
+                "code": "vocab.stop_word",
+                "address": "v1",
+                "detail": "«vouloir» is a word of the stop list («vouloir»)"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v1",
+                "detail": "«vouloir» is not in p1"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v7",
+                "detail": "the definition «to talk about something» of «parler» reads as en, not fr (about)"
+            }
+        ],
+        "attempts": [
+            {
+                "stage": "skeleton",
+                "attempt": 1,
+                "findings": [
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v1",
+                        "detail": "«vouloir» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v6",
+                        "detail": "«falloir» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v8",
+                        "detail": "«ambiance» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "v9",
+                        "detail": "the reading «koleگ» has letters of another alphabet: گ"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p1.f1",
+                        "detail": "the reading «să lukrez an Frans» is close to the native text «să lucrez în Franța» (0.79)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p1.f2",
+                        "detail": "the reading «să anvăț mai mult» is close to the native text «să învăț mai mult» (0.94)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p1.f3",
+                        "detail": "the reading «să mă alătur unei ekip» is close to the native text «să mă alătur unei echipe» (0.88)"
+                    },
+                    {
+                        "code": "vocab.stop_word",
+                        "address": "v1",
+                        "detail": "«vouloir» is a word of the stop list («vouloir»)"
+                    },
+                    {
+                        "code": "vocab.stop_word",
+                        "address": "v10",
+                        "detail": "«semaine» is a word of the stop list («semaine»)"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v1",
+                        "detail": "«vouloir» is not in p1"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v6",
+                        "detail": "«falloir» is not in p5"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v8",
+                        "detail": "«ambiance» is not in p6"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v5",
+                        "detail": "the definition «the amount of money something requires» of «coût» reads as en, not fr (the, of)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v8",
+                        "detail": "the definition «the general feeling in a place» of «ambiance» reads as en, not fr (the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v9",
+                        "detail": "the definition «a person who works with you» of «collègue» reads as en, not fr (with, you)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v10",
+                        "detail": "the definition «a period of seven days» of «semaine» reads as en, not fr (of)"
+                    }
+                ],
+                "fatal": [
+                    "vocab.not_found",
+                    "pronunciation.foreign_script"
+                ],
+                "off_schema": null
+            },
+            {
+                "stage": "skeleton",
+                "attempt": 2,
+                "findings": [
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v1",
+                        "detail": "«vouloir» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p1.f1",
+                        "detail": "the reading «evolue profesional» is close to the native text «să evoluez profesional» (0.82)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p3.f2",
+                        "detail": "the reading «organize lechip» is close to the native text «organizez echipa» (0.81)"
+                    },
+                    {
+                        "code": "vocab.stop_word",
+                        "address": "v1",
+                        "detail": "«vouloir» is a word of the stop list («vouloir»)"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v1",
+                        "detail": "«vouloir» is not in p1"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v7",
+                        "detail": "the definition «to talk about something» of «parler» reads as en, not fr (about)"
+                    }
+                ],
+                "fatal": [
+                    "vocab.not_found"
+                ],
+                "off_schema": null
+            }
+        ],
+        "repairs": [],
+        "judgements": [],
+        "skeleton": null,
+        "lesson": null
+    },
+    "cost_usd": 0.056816,
+    "latency_ms": 77347,
+    "wall_ms": 77397,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:45:31Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5022,
+            "cached_tokens_in": 4642,
+            "tokens_out": 4934,
+            "reasoning_tokens": 2797,
+            "cost_usd": "0.030448",
+            "latency_ms": 42540,
+            "wall_ms": 42541,
+            "call_id": "01M3P8W6PQ4N42ZBFFHC1J65B9",
+            "user": "TOPIC: Întrebări-cheie\n\nTOPIC_DESCRIPTION: Situation: The interview moves to the decisive part, where the recruiter tests motivation and past experience. This is the core interaction because the learner's main worry is handling questions about experience well enough to show fit for the role and leave a strong impression.\nLearner: Candidate. Partner: Recruiter.\nNot in this scene: introductions, stating your name, saying which job you applied for, basic work history, salary negotiation, signing documents.\n\nAbout the learner, in their own words: interviu pentru un job în Franța, prima dată, emoții la întrebări despre experiență\n\nSURVIVAL_SET:\nmust_say:\n1. answer why you want this job — slot: the reason\n2. explain which experience fits the role — slot: the relevant experience\n3. give a concrete example of a success — slot: the achievement\n4. answer how you handled a problem at work — slot: the problem\n5. ask whether a skill is important for the role — slot: the skill\n6. ask what the team is like — slot: the aspect of the team\n7. ask when they will make a decision — slot: none\nmust_understand:\n1. asks why you want this job\n2. asks which past experience is most relevant\n3. asks for an example of a success or a difficult situation\n4. asks how you work with others or under pressure\n5. says when they will contact candidates\n\nTARGET_LANGUAGE: French\n\nNATIVE_LANGUAGE: Romanian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidat / Candidat\n\nPARTNER_ROLE: Recruteur / Recrutor\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Questions clés",
+                    "title_native": "Întrebări-cheie",
+                    "description_target": "Répondre aux questions décisives sur votre motivation et votre expérience, puis poser des questions sur l’équipe et la décision.",
+                    "description_native": "Să răspundeți la întrebările decisive despre motivație și experiență, apoi să puneți întrebări despre echipă și decizie."
+                },
+                "learner_role": {
+                    "role_target": "Candidat",
+                    "role_native": "Candidat"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Je veux ce poste parce que ___",
+                        "frame_native": "Vreau acest post pentru că ___",
+                        "pronunciation_native": "Jă vö sə post pars kă ___",
+                        "slot": {
+                            "hint_native": "motivul pentru care doriți postul",
+                            "fillers": [
+                                {
+                                    "target": "travailler en France",
+                                    "native": "să lucrez în Franța",
+                                    "pronunciation_native": "să lukrez an Frans",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "apprendre davantage",
+                                    "native": "să învăț mai mult",
+                                    "pronunciation_native": "să anvăț mai mult",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "rejoindre une équipe",
+                                    "native": "să mă alătur unei echipe",
+                                    "pronunciation_native": "să mă alătur unei ekip",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Mon expérience en ___ correspond au poste",
+                        "frame_native": "Experiența mea în ___ se potrivește cu postul",
+                        "pronunciation_native": "Mon eksperians an ___ korespond o post",
+                        "slot": {
+                            "hint_native": "experiența relevantă pentru post",
+                            "fillers": [
+                                {
+                                    "target": "relation client",
+                                    "native": "relația cu clienții",
+                                    "pronunciation_native": "rălasion kli-an",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "gestion de projets",
+                                    "native": "gestionarea proiectelor",
+                                    "pronunciation_native": "jestion də projee",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "organisation d’événements",
+                                    "native": "organizarea evenimentelor",
+                                    "pronunciation_native": "organizas-ión devən-moan",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "J’ai réussi à ___",
+                        "frame_native": "Am reușit să ___",
+                        "pronunciation_native": "Je răusi a ___",
+                        "slot": {
+                            "hint_native": "o realizare concretă",
+                            "fillers": [
+                                {
+                                    "target": "améliorer les ventes",
+                                    "native": "îmbunătățesc vânzările",
+                                    "pronunciation_native": "amelioré le vant",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "réduire les coûts",
+                                    "native": "reduc costurile",
+                                    "pronunciation_native": "rădüir le ku",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "former une équipe",
+                                    "native": "formez o echipă",
+                                    "pronunciation_native": "formé ün ekip",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Face à ___, j’ai trouvé une solution",
+                        "frame_native": "În fața ___, am găsit o soluție",
+                        "pronunciation_native": "Fas a ___, je truve ün solüsion",
+                        "slot": {
+                            "hint_native": "problema cu care v-ați confruntat",
+                            "fillers": [
+                                {
+                                    "target": "un retard important",
+                                    "native": "unei întârzieri mari",
+                                    "pronunciation_native": "ăn rătar importan",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "un client mécontent",
+                                    "native": "unui client nemulțumit",
+                                    "pronunciation_native": "ăn kli-an mekontan",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "un délai court",
+                                    "native": "unui termen scurt",
+                                    "pronunciation_native": "ăn dele kur",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "Est-ce qu’il faut ___ pour ce poste ?",
+                        "frame_native": "Este nevoie de ___ pentru acest post?",
+                        "pronunciation_native": "Es k-il fo ___ pur sə post",
+                        "slot": {
+                            "hint_native": "abilitatea despre care întrebați",
+                            "fillers": [
+                                {
+                                    "target": "parler anglais",
+                                    "native": "să vorbesc engleză",
+                                    "pronunciation_native": "parlé angle",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "gérer les priorités",
+                                    "native": "să gestionez prioritățile",
+                                    "pronunciation_native": "jeré le priorite",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "la maîtrise d’Excel",
+                                    "native": "stăpânirea Excelului",
+                                    "pronunciation_native": "la mătriz deksel",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Comment est ___ dans votre équipe ?",
+                        "frame_native": "Cum este ___ în echipa dumneavoastră?",
+                        "pronunciation_native": "Koman e ___ dan votr ekip",
+                        "slot": {
+                            "hint_native": "aspectul echipei despre care întrebați",
+                            "fillers": [
+                                {
+                                    "target": "l’ambiance",
+                                    "native": "atmosfera",
+                                    "pronunciation_native": "lambians",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la communication",
+                                    "native": "comunicarea",
+                                    "pronunciation_native": "la komünikasión",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "le soutien mutuel",
+                                    "native": "sprijinul reciproc",
+                                    "pronunciation_native": "lə sutian mütüel",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Quand prendrez-vous votre décision ?",
+                        "frame_native": "Când veți lua decizia?",
+                        "pronunciation_native": "Kan prandrè vu votr desizión",
+                        "slot": null
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Pourquoi souhaitez-vous ce poste ?",
+                        "text_native": "De ce vă doriți acest post?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "Quelle expérience passée correspond le mieux à ce poste ?",
+                        "text_native": "Ce experiență anterioară se potrivește cel mai bine acestui post?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Pouvez-vous donner un exemple de réussite ?",
+                        "text_native": "Puteți da un exemplu de reușită?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Pouvez-vous décrire une situation difficile ?",
+                        "text_native": "Puteți descrie o situație dificilă?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 4,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Comment collaborez-vous avec vos collègues ?",
+                        "text_native": "Cum colaborați cu colegii dumneavoastră?"
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 4,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Comment réagissez-vous sous pression ?",
+                        "text_native": "Cum reacționați sub presiune?"
+                    },
+                    {
+                        "id": "a7",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [],
+                        "text_target": "Nous vous contacterons la semaine prochaine.",
+                        "text_native": "Vă vom contacta săptămâna viitoare."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "vouloir",
+                        "translation_native": "a vrea",
+                        "pronunciation_native": "vuluăr",
+                        "definition_target": "to want something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "travailler",
+                        "translation_native": "a lucra",
+                        "pronunciation_native": "travaie",
+                        "definition_target": "to do a job or activity",
+                        "kind": "word",
+                        "image_prompt": "A person working at a desk in a French office",
+                        "used_in": [
+                            "p1"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "correspondre",
+                        "translation_native": "a se potrivi",
+                        "pronunciation_native": "korespondăr",
+                        "definition_target": "to match or fit a role",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "réduire",
+                        "translation_native": "a reduce",
+                        "pronunciation_native": "rădüir",
+                        "definition_target": "to make something smaller",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "coût",
+                        "translation_native": "cost",
+                        "pronunciation_native": "ku",
+                        "definition_target": "the amount of money something requires",
+                        "kind": "word",
+                        "image_prompt": "A business cost chart on a desk",
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "falloir",
+                        "translation_native": "a fi necesar",
+                        "pronunciation_native": "faluar",
+                        "definition_target": "to be necessary",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "équipe",
+                        "translation_native": "echipă",
+                        "pronunciation_native": "ekip",
+                        "definition_target": "a group working together",
+                        "kind": "word",
+                        "image_prompt": "A small team meeting in an office",
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "ambiance",
+                        "translation_native": "atmosferă",
+                        "pronunciation_native": "ambians",
+                        "definition_target": "the general feeling in a place",
+                        "kind": "word",
+                        "image_prompt": "Colleagues having a friendly meeting in an office",
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "collègue",
+                        "translation_native": "coleg",
+                        "pronunciation_native": "koleگ",
+                        "definition_target": "a person who works with you",
+                        "kind": "word",
+                        "image_prompt": "Two colleagues discussing work in an office",
+                        "used_in": [
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "semaine",
+                        "translation_native": "săptămână",
+                        "pronunciation_native": "səmen",
+                        "definition_target": "a period of seven days",
+                        "kind": "word",
+                        "image_prompt": "A weekly calendar on a desk",
+                        "used_in": [
+                            "a7"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Questions clés\",\"title_native\":\"Întrebări-cheie\",\"description_target\":\"Répondre aux questions décisives sur votre motivation et votre expérience, puis poser des questions sur l’équipe et la décision.\",\"description_native\":\"Să răspundeți la întrebările decisive despre motivație și experiență, apoi să puneți întrebări despre echipă și decizie.\"},\"learner_role\":{\"role_target\":\"Candidat\",\"role_native\":\"Candidat\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Je veux ce poste parce que ___\",\"frame_native\":\"Vreau acest post pentru că ___\",\"pronunciation_native\":\"Jă vö sə post pars kă ___\",\"slot\":{\"hint_native\":\"motivul pentru care doriți postul\",\"fillers\":[{\"target\":\"travailler en France\",\"native\":\"să lucrez în Franța\",\"pronunciation_native\":\"să lukrez an Frans\",\"in_dialogue\":true},{\"target\":\"apprendre davantage\",\"native\":\"să învăț mai mult\",\"pronunciation_native\":\"să anvăț mai mult\",\"in_dialogue\":false},{\"target\":\"rejoindre une équipe\",\"native\":\"să mă alătur unei echipe\",\"pronunciation_native\":\"să mă alătur unei ekip\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mon expérience en ___ correspond au poste\",\"frame_native\":\"Experiența mea în ___ se potrivește cu postul\",\"pronunciation_native\":\"Mon eksperians an ___ korespond o post\",\"slot\":{\"hint_native\":\"experiența relevantă pentru post\",\"fillers\":[{\"target\":\"relation client\",\"native\":\"relația cu clienții\",\"pronunciation_native\":\"rălasion kli-an\",\"in_dialogue\":true},{\"target\":\"gestion de projets\",\"native\":\"gestionarea proiectelor\",\"pronunciation_native\":\"jestion də projee\",\"in_dialogue\":false},{\"target\":\"organisation d’événements\",\"native\":\"organizarea evenimentelor\",\"pronunciation_native\":\"organizas-ión devən-moan\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"J’ai réussi à ___\",\"frame_native\":\"Am reușit să ___\",\"pronunciation_native\":\"Je răusi a ___\",\"slot\":{\"hint_native\":\"o realizare concretă\",\"fillers\":[{\"target\":\"améliorer les ventes\",\"native\":\"îmbunătățesc vânzările\",\"pronunciation_native\":\"amelioré le vant\",\"in_dialogue\":true},{\"target\":\"réduire les coûts\",\"native\":\"reduc costurile\",\"pronunciation_native\":\"rădüir le ku\",\"in_dialogue\":false},{\"target\":\"former une équipe\",\"native\":\"formez o echipă\",\"pronunciation_native\":\"formé ün ekip\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"Face à ___, j’ai trouvé une solution\",\"frame_native\":\"În fața ___, am găsit o soluție\",\"pronunciation_native\":\"Fas a ___, je truve ün solüsion\",\"slot\":{\"hint_native\":\"problema cu care v-ați confruntat\",\"fillers\":[{\"target\":\"un retard important\",\"native\":\"unei întârzieri mari\",\"pronunciation_native\":\"ăn rătar importan\",\"in_dialogue\":true},{\"target\":\"un client mécontent\",\"native\":\"unui client nemulțumit\",\"pronunciation_native\":\"ăn kli-an mekontan\",\"in_dialogue\":false},{\"target\":\"un délai court\",\"native\":\"unui termen scurt\",\"pronunciation_native\":\"ăn dele kur\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Est-ce qu’il faut ___ pour ce poste ?\",\"frame_native\":\"Este nevoie de ___ pentru acest post?\",\"pronunciation_native\":\"Es k-il fo ___ pur sə post\",\"slot\":{\"hint_native\":\"abilitatea despre care întrebați\",\"fillers\":[{\"target\":\"parler anglais\",\"native\":\"să vorbesc engleză\",\"pronunciation_native\":\"parlé angle\",\"in_dialogue\":true},{\"target\":\"gérer les priorités\",\"native\":\"să gestionez prioritățile\",\"pronunciation_native\":\"jeré le priorite\",\"in_dialogue\":false},{\"target\":\"la maîtrise d’Excel\",\"native\":\"stăpânirea Excelului\",\"pronunciation_native\":\"la mătriz deksel\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Comment est ___ dans votre équipe ?\",\"frame_native\":\"Cum este ___ în echipa dumneavoastră?\",\"pronunciation_native\":\"Koman e ___ dan votr ekip\",\"slot\":{\"hint_native\":\"aspectul echipei despre care întrebați\",\"fillers\":[{\"target\":\"l’ambiance\",\"native\":\"atmosfera\",\"pronunciation_native\":\"lambians\",\"in_dialogue\":true},{\"target\":\"la communication\",\"native\":\"comunicarea\",\"pronunciation_native\":\"la komünikasión\",\"in_dialogue\":false},{\"target\":\"le soutien mutuel\",\"native\":\"sprijinul reciproc\",\"pronunciation_native\":\"lə sutian mütüel\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Quand prendrez-vous votre décision ?\",\"frame_native\":\"Când veți lua decizia?\",\"pronunciation_native\":\"Kan prandrè vu votr desizión\",\"slot\":null}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Pourquoi souhaitez-vous ce poste ?\",\"text_native\":\"De ce vă doriți acest post?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Quelle expérience passée correspond le mieux à ce poste ?\",\"text_native\":\"Ce experiență anterioară se potrivește cel mai bine acestui post?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"Pouvez-vous donner un exemple de réussite ?\",\"text_native\":\"Puteți da un exemplu de reușită?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Pouvez-vous décrire une situation difficile ?\",\"text_native\":\"Puteți descrie o situație dificilă?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Comment collaborez-vous avec vos collègues ?\",\"text_native\":\"Cum colaborați cu colegii dumneavoastră?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Comment réagissez-vous sous pression ?\",\"text_native\":\"Cum reacționați sub presiune?\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[],\"text_target\":\"Nous vous contacterons la semaine prochaine.\",\"text_native\":\"Vă vom contacta săptămâna viitoare.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"vouloir\",\"translation_native\":\"a vrea\",\"pronunciation_native\":\"vuluăr\",\"definition_target\":\"to want something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"travailler\",\"translation_native\":\"a lucra\",\"pronunciation_native\":\"travaie\",\"definition_target\":\"to do a job or activity\",\"kind\":\"word\",\"image_prompt\":\"A person working at a desk in a French office\",\"used_in\":[\"p1\"]},{\"id\":\"v3\",\"term_target\":\"correspondre\",\"translation_native\":\"a se potrivi\",\"pronunciation_native\":\"korespondăr\",\"definition_target\":\"to match or fit a role\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"réduire\",\"translation_native\":\"a reduce\",\"pronunciation_native\":\"rădüir\",\"definition_target\":\"to make something smaller\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v5\",\"term_target\":\"coût\",\"translation_native\":\"cost\",\"pronunciation_native\":\"ku\",\"definition_target\":\"the amount of money something requires\",\"kind\":\"word\",\"image_prompt\":\"A business cost chart on a desk\",\"used_in\":[\"p3\"]},{\"id\":\"v6\",\"term_target\":\"falloir\",\"translation_native\":\"a fi necesar\",\"pronunciation_native\":\"faluar\",\"definition_target\":\"to be necessary\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"équipe\",\"translation_native\":\"echipă\",\"pronunciation_native\":\"ekip\",\"definition_target\":\"a group working together\",\"kind\":\"word\",\"image_prompt\":\"A small team meeting in an office\",\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"ambiance\",\"translation_native\":\"atmosferă\",\"pronunciation_native\":\"ambians\",\"definition_target\":\"the general feeling in a place\",\"kind\":\"word\",\"image_prompt\":\"Colleagues having a friendly meeting in an office\",\"used_in\":[\"p6\"]},{\"id\":\"v9\",\"term_target\":\"collègue\",\"translation_native\":\"coleg\",\"pronunciation_native\":\"koleگ\",\"definition_target\":\"a person who works with you\",\"kind\":\"word\",\"image_prompt\":\"Two colleagues discussing work in an office\",\"used_in\":[\"a5\"]},{\"id\":\"v10\",\"term_target\":\"semaine\",\"translation_native\":\"săptămână\",\"pronunciation_native\":\"səmen\",\"definition_target\":\"a period of seven days\",\"kind\":\"word\",\"image_prompt\":\"A weekly calendar on a desk\",\"used_in\":[\"a7\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOgt6N7s93RpYpGyclh5uOdG4SIA",
+                "object": "chat.completion",
+                "created": 1790675131,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Questions clés\",\"title_native\":\"Întrebări-cheie\",\"description_target\":\"Répondre aux questions décisives sur votre motivation et votre expérience, puis poser des questions sur l’équipe et la décision.\",\"description_native\":\"Să răspundeți la întrebările decisive despre motivație și experiență, apoi să puneți întrebări despre echipă și decizie.\"},\"learner_role\":{\"role_target\":\"Candidat\",\"role_native\":\"Candidat\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Je veux ce poste parce que ___\",\"frame_native\":\"Vreau acest post pentru că ___\",\"pronunciation_native\":\"Jă vö sə post pars kă ___\",\"slot\":{\"hint_native\":\"motivul pentru care doriți postul\",\"fillers\":[{\"target\":\"travailler en France\",\"native\":\"să lucrez în Franța\",\"pronunciation_native\":\"să lukrez an Frans\",\"in_dialogue\":true},{\"target\":\"apprendre davantage\",\"native\":\"să învăț mai mult\",\"pronunciation_native\":\"să anvăț mai mult\",\"in_dialogue\":false},{\"target\":\"rejoindre une équipe\",\"native\":\"să mă alătur unei echipe\",\"pronunciation_native\":\"să mă alătur unei ekip\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mon expérience en ___ correspond au poste\",\"frame_native\":\"Experiența mea în ___ se potrivește cu postul\",\"pronunciation_native\":\"Mon eksperians an ___ korespond o post\",\"slot\":{\"hint_native\":\"experiența relevantă pentru post\",\"fillers\":[{\"target\":\"relation client\",\"native\":\"relația cu clienții\",\"pronunciation_native\":\"rălasion kli-an\",\"in_dialogue\":true},{\"target\":\"gestion de projets\",\"native\":\"gestionarea proiectelor\",\"pronunciation_native\":\"jestion də projee\",\"in_dialogue\":false},{\"target\":\"organisation d’événements\",\"native\":\"organizarea evenimentelor\",\"pronunciation_native\":\"organizas-ión devən-moan\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"J’ai réussi à ___\",\"frame_native\":\"Am reușit să ___\",\"pronunciation_native\":\"Je răusi a ___\",\"slot\":{\"hint_native\":\"o realizare concretă\",\"fillers\":[{\"target\":\"améliorer les ventes\",\"native\":\"îmbunătățesc vânzările\",\"pronunciation_native\":\"amelioré le vant\",\"in_dialogue\":true},{\"target\":\"réduire les coûts\",\"native\":\"reduc costurile\",\"pronunciation_native\":\"rădüir le ku\",\"in_dialogue\":false},{\"target\":\"former une équipe\",\"native\":\"formez o echipă\",\"pronunciation_native\":\"formé ün ekip\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"Face à ___, j’ai trouvé une solution\",\"frame_native\":\"În fața ___, am găsit o soluție\",\"pronunciation_native\":\"Fas a ___, je truve ün solüsion\",\"slot\":{\"hint_native\":\"problema cu care v-ați confruntat\",\"fillers\":[{\"target\":\"un retard important\",\"native\":\"unei întârzieri mari\",\"pronunciation_native\":\"ăn rătar importan\",\"in_dialogue\":true},{\"target\":\"un client mécontent\",\"native\":\"unui client nemulțumit\",\"pronunciation_native\":\"ăn kli-an mekontan\",\"in_dialogue\":false},{\"target\":\"un délai court\",\"native\":\"unui termen scurt\",\"pronunciation_native\":\"ăn dele kur\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Est-ce qu’il faut ___ pour ce poste ?\",\"frame_native\":\"Este nevoie de ___ pentru acest post?\",\"pronunciation_native\":\"Es k-il fo ___ pur sə post\",\"slot\":{\"hint_native\":\"abilitatea despre care întrebați\",\"fillers\":[{\"target\":\"parler anglais\",\"native\":\"să vorbesc engleză\",\"pronunciation_native\":\"parlé angle\",\"in_dialogue\":true},{\"target\":\"gérer les priorités\",\"native\":\"să gestionez prioritățile\",\"pronunciation_native\":\"jeré le priorite\",\"in_dialogue\":false},{\"target\":\"la maîtrise d’Excel\",\"native\":\"stăpânirea Excelului\",\"pronunciation_native\":\"la mătriz deksel\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Comment est ___ dans votre équipe ?\",\"frame_native\":\"Cum este ___ în echipa dumneavoastră?\",\"pronunciation_native\":\"Koman e ___ dan votr ekip\",\"slot\":{\"hint_native\":\"aspectul echipei despre care întrebați\",\"fillers\":[{\"target\":\"l’ambiance\",\"native\":\"atmosfera\",\"pronunciation_native\":\"lambians\",\"in_dialogue\":true},{\"target\":\"la communication\",\"native\":\"comunicarea\",\"pronunciation_native\":\"la komünikasión\",\"in_dialogue\":false},{\"target\":\"le soutien mutuel\",\"native\":\"sprijinul reciproc\",\"pronunciation_native\":\"lə sutian mütüel\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Quand prendrez-vous votre décision ?\",\"frame_native\":\"Când veți lua decizia?\",\"pronunciation_native\":\"Kan prandrè vu votr desizión\",\"slot\":null}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Pourquoi souhaitez-vous ce poste ?\",\"text_native\":\"De ce vă doriți acest post?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Quelle expérience passée correspond le mieux à ce poste ?\",\"text_native\":\"Ce experiență anterioară se potrivește cel mai bine acestui post?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"Pouvez-vous donner un exemple de réussite ?\",\"text_native\":\"Puteți da un exemplu de reușită?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Pouvez-vous décrire une situation difficile ?\",\"text_native\":\"Puteți descrie o situație dificilă?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Comment collaborez-vous avec vos collègues ?\",\"text_native\":\"Cum colaborați cu colegii dumneavoastră?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Comment réagissez-vous sous pression ?\",\"text_native\":\"Cum reacționați sub presiune?\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[],\"text_target\":\"Nous vous contacterons la semaine prochaine.\",\"text_native\":\"Vă vom contacta săptămâna viitoare.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"vouloir\",\"translation_native\":\"a vrea\",\"pronunciation_native\":\"vuluăr\",\"definition_target\":\"to want something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"travailler\",\"translation_native\":\"a lucra\",\"pronunciation_native\":\"travaie\",\"definition_target\":\"to do a job or activity\",\"kind\":\"word\",\"image_prompt\":\"A person working at a desk in a French office\",\"used_in\":[\"p1\"]},{\"id\":\"v3\",\"term_target\":\"correspondre\",\"translation_native\":\"a se potrivi\",\"pronunciation_native\":\"korespondăr\",\"definition_target\":\"to match or fit a role\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"réduire\",\"translation_native\":\"a reduce\",\"pronunciation_native\":\"rădüir\",\"definition_target\":\"to make something smaller\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v5\",\"term_target\":\"coût\",\"translation_native\":\"cost\",\"pronunciation_native\":\"ku\",\"definition_target\":\"the amount of money something requires\",\"kind\":\"word\",\"image_prompt\":\"A business cost chart on a desk\",\"used_in\":[\"p3\"]},{\"id\":\"v6\",\"term_target\":\"falloir\",\"translation_native\":\"a fi necesar\",\"pronunciation_native\":\"faluar\",\"definition_target\":\"to be necessary\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"équipe\",\"translation_native\":\"echipă\",\"pronunciation_native\":\"ekip\",\"definition_target\":\"a group working together\",\"kind\":\"word\",\"image_prompt\":\"A small team meeting in an office\",\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"ambiance\",\"translation_native\":\"atmosferă\",\"pronunciation_native\":\"ambians\",\"definition_target\":\"the general feeling in a place\",\"kind\":\"word\",\"image_prompt\":\"Colleagues having a friendly meeting in an office\",\"used_in\":[\"p6\"]},{\"id\":\"v9\",\"term_target\":\"collègue\",\"translation_native\":\"coleg\",\"pronunciation_native\":\"koleگ\",\"definition_target\":\"a person who works with you\",\"kind\":\"word\",\"image_prompt\":\"Two colleagues discussing work in an office\",\"used_in\":[\"a5\"]},{\"id\":\"v10\",\"term_target\":\"semaine\",\"translation_native\":\"săptămână\",\"pronunciation_native\":\"səmen\",\"definition_target\":\"a period of seven days\",\"kind\":\"word\",\"image_prompt\":\"A weekly calendar on a desk\",\"used_in\":[\"a7\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5022,
+                    "completion_tokens": 4934,
+                    "total_tokens": 9956,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 377,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2797,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:46:13Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5118,
+            "cached_tokens_in": 4642,
+            "tokens_out": 4238,
+            "reasoning_tokens": 2336,
+            "cost_usd": "0.026368",
+            "latency_ms": 34807,
+            "wall_ms": 34808,
+            "call_id": "01M3P8XG8YCEGGMQ9SDAYGDC4A",
+            "user": "TOPIC: Întrebări-cheie\n\nTOPIC_DESCRIPTION: Situation: The interview moves to the decisive part, where the recruiter tests motivation and past experience. This is the core interaction because the learner's main worry is handling questions about experience well enough to show fit for the role and leave a strong impression.\nLearner: Candidate. Partner: Recruiter.\nNot in this scene: introductions, stating your name, saying which job you applied for, basic work history, salary negotiation, signing documents.\n\nAbout the learner, in their own words: interviu pentru un job în Franța, prima dată, emoții la întrebări despre experiență\n\nSURVIVAL_SET:\nmust_say:\n1. answer why you want this job — slot: the reason\n2. explain which experience fits the role — slot: the relevant experience\n3. give a concrete example of a success — slot: the achievement\n4. answer how you handled a problem at work — slot: the problem\n5. ask whether a skill is important for the role — slot: the skill\n6. ask what the team is like — slot: the aspect of the team\n7. ask when they will make a decision — slot: none\nmust_understand:\n1. asks why you want this job\n2. asks which past experience is most relevant\n3. asks for an example of a success or a difficult situation\n4. asks how you work with others or under pressure\n5. says when they will contact candidates\n\nTARGET_LANGUAGE: French\n\nNATIVE_LANGUAGE: Romanian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidat / Candidat\n\nPARTNER_ROLE: Recruteur / Recrutor\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone\n\nPREVIOUS_ATTEMPT_REJECTED_FOR:\n- vocab.not_found · v1: «vouloir» occurs in no frame and no partner line\n- vocab.not_found · v6: «falloir» occurs in no frame and no partner line\n- vocab.not_found · v8: «ambiance» occurs in no frame and no partner line\n- pronunciation.foreign_script · v9: the reading «koleگ» has letters of another alphabet: گ",
+            "payload": {
+                "topic": {
+                    "title_target": "Key questions",
+                    "title_native": "Întrebări-cheie",
+                    "description_target": "Handle questions about motivation and experience, give concrete examples, and ask about the team and the decision timeline.",
+                    "description_native": "Răspundeți la întrebări despre motivație și experiență, dați exemple concrete și întrebați despre echipă și termenul deciziei."
+                },
+                "learner_role": {
+                    "role_target": "Candidat",
+                    "role_native": "Candidat"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Je veux ce poste pour ___",
+                        "frame_native": "Vreau acest post pentru ___",
+                        "pronunciation_native": "jă vă cə post pur ___",
+                        "slot": {
+                            "hint_native": "motivul",
+                            "fillers": [
+                                {
+                                    "target": "évoluer professionnellement",
+                                    "native": "să evoluez profesional",
+                                    "pronunciation_native": "evolue profesional",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "aider les clients",
+                                    "native": "să ajut clienții",
+                                    "pronunciation_native": "ede le client",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "développer mes compétences",
+                                    "native": "să-mi dezvolt competențele",
+                                    "pronunciation_native": "dezvelope me competans",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Mon expérience ___ correspond à ce poste",
+                        "frame_native": "Experiența mea ___ se potrivește acestui rol",
+                        "pronunciation_native": "mon experians ___ corespon a cə post",
+                        "slot": {
+                            "hint_native": "experiența relevantă, cu prepoziția necesară",
+                            "fillers": [
+                                {
+                                    "target": "dans le service client",
+                                    "native": "în serviciul clienților",
+                                    "pronunciation_native": "dan lă servis client",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "en gestion de projets",
+                                    "native": "în gestionarea proiectelor",
+                                    "pronunciation_native": "an jestion də projee",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "dans la formation",
+                                    "native": "în domeniul formării",
+                                    "pronunciation_native": "dan la formasion",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "answer",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "J’ai réussi à ___",
+                        "frame_native": "Am reușit să ___",
+                        "pronunciation_native": "je reusi a ___",
+                        "slot": {
+                            "hint_native": "realizarea concretă",
+                            "fillers": [
+                                {
+                                    "target": "réduire les délais",
+                                    "native": "reduc termenele",
+                                    "pronunciation_native": "redüir le dele",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "organiser l’équipe",
+                                    "native": "organizez echipa",
+                                    "pronunciation_native": "organize lechip",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "améliorer le service",
+                                    "native": "îmbunătățesc serviciul",
+                                    "pronunciation_native": "amelior le servis",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "answer",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "J’ai résolu ___ avec l’équipe",
+                        "frame_native": "Am rezolvat ___ împreună cu echipa",
+                        "pronunciation_native": "je rezolu ___ avek lechip",
+                        "slot": {
+                            "hint_native": "problema, în forma potrivită",
+                            "fillers": [
+                                {
+                                    "target": "un retard important",
+                                    "native": "o întârziere importantă",
+                                    "pronunciation_native": "ăn rătar importan",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "une erreur de commande",
+                                    "native": "o eroare de comandă",
+                                    "pronunciation_native": "ün erăr də comand",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "un conflit interne",
+                                    "native": "un conflict intern",
+                                    "pronunciation_native": "ăn conflit antern",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "ask",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "Est-ce que ___ compte pour ce poste ?",
+                        "frame_native": "Contează ___ pentru acest rol?",
+                        "pronunciation_native": "es cə ___ cont pur cə post",
+                        "slot": {
+                            "hint_native": "abilitatea despre care întrebați",
+                            "fillers": [
+                                {
+                                    "target": "la communication claire",
+                                    "native": "comunicarea clară",
+                                    "pronunciation_native": "la comunicasion cler",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "l’adaptation rapide",
+                                    "native": "adaptarea rapidă",
+                                    "pronunciation_native": "ladaptasion rapid",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "le travail en équipe",
+                                    "native": "lucrul în echipă",
+                                    "pronunciation_native": "lə travai an ekip",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Pouvez-vous me parler de ___ dans l’équipe ?",
+                        "frame_native": "Îmi puteți vorbi despre ___ în echipă?",
+                        "pronunciation_native": "puve vu mə parle də ___ dan lechip",
+                        "slot": {
+                            "hint_native": "aspectul echipei",
+                            "fillers": [
+                                {
+                                    "target": "la collaboration",
+                                    "native": "colaborare",
+                                    "pronunciation_native": "la colaborasion",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "l’organisation",
+                                    "native": "organizare",
+                                    "pronunciation_native": "lorganizacion",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "la communication interne",
+                                    "native": "comunicare internă",
+                                    "pronunciation_native": "la comunicasion antern",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Quand prendrez-vous votre décision ?",
+                        "frame_native": "Când veți lua decizia?",
+                        "pronunciation_native": "can prăndră vu votr dezizion",
+                        "slot": null
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Qu’est-ce qui vous attire dans ce poste ?",
+                        "text_native": "Ce vă atrage la acest post?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "Quelle expérience passée correspond le mieux à ce poste ?",
+                        "text_native": "Ce experiență anterioară se potrivește cel mai bine acestui post?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Pouvez-vous me donner un exemple de réussite ?",
+                        "text_native": "Îmi puteți da un exemplu de reușită?"
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 3,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Pouvez-vous décrire une situation difficile ?",
+                        "text_native": "Puteți descrie o situație dificilă?"
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 4,
+                        "kind": "question",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Comment travaillez-vous avec les autres sous pression ?",
+                        "text_native": "Cum lucrați cu ceilalți atunci când sunteți sub presiune?"
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            7
+                        ],
+                        "text_target": "Nous contacterons les candidats la semaine prochaine.",
+                        "text_native": "Vom contacta candidații săptămâna viitoare."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "vouloir",
+                        "translation_native": "a vrea",
+                        "pronunciation_native": "vulwar",
+                        "definition_target": "to want something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "correspondre",
+                        "translation_native": "a se potrivi",
+                        "pronunciation_native": "corespondr",
+                        "definition_target": "to match or fit",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "réussir",
+                        "translation_native": "a reuși",
+                        "pronunciation_native": "reusir",
+                        "definition_target": "to succeed in doing something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "réduire",
+                        "translation_native": "a reduce",
+                        "pronunciation_native": "redüir",
+                        "definition_target": "to make something smaller or shorter",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "résoudre",
+                        "translation_native": "a rezolva",
+                        "pronunciation_native": "rezudr",
+                        "definition_target": "to solve a problem",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p4"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "compter",
+                        "translation_native": "a conta",
+                        "pronunciation_native": "conte",
+                        "definition_target": "to matter or be important",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "parler",
+                        "translation_native": "a vorbi",
+                        "pronunciation_native": "parle",
+                        "definition_target": "to talk about something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "décision",
+                        "translation_native": "decizie",
+                        "pronunciation_native": "dezizion",
+                        "definition_target": "a choice made after consideration",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Key questions\",\"title_native\":\"Întrebări-cheie\",\"description_target\":\"Handle questions about motivation and experience, give concrete examples, and ask about the team and the decision timeline.\",\"description_native\":\"Răspundeți la întrebări despre motivație și experiență, dați exemple concrete și întrebați despre echipă și termenul deciziei.\"},\"learner_role\":{\"role_target\":\"Candidat\",\"role_native\":\"Candidat\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Je veux ce poste pour ___\",\"frame_native\":\"Vreau acest post pentru ___\",\"pronunciation_native\":\"jă vă cə post pur ___\",\"slot\":{\"hint_native\":\"motivul\",\"fillers\":[{\"target\":\"évoluer professionnellement\",\"native\":\"să evoluez profesional\",\"pronunciation_native\":\"evolue profesional\",\"in_dialogue\":true},{\"target\":\"aider les clients\",\"native\":\"să ajut clienții\",\"pronunciation_native\":\"ede le client\",\"in_dialogue\":false},{\"target\":\"développer mes compétences\",\"native\":\"să-mi dezvolt competențele\",\"pronunciation_native\":\"dezvelope me competans\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mon expérience ___ correspond à ce poste\",\"frame_native\":\"Experiența mea ___ se potrivește acestui rol\",\"pronunciation_native\":\"mon experians ___ corespon a cə post\",\"slot\":{\"hint_native\":\"experiența relevantă, cu prepoziția necesară\",\"fillers\":[{\"target\":\"dans le service client\",\"native\":\"în serviciul clienților\",\"pronunciation_native\":\"dan lă servis client\",\"in_dialogue\":true},{\"target\":\"en gestion de projets\",\"native\":\"în gestionarea proiectelor\",\"pronunciation_native\":\"an jestion də projee\",\"in_dialogue\":false},{\"target\":\"dans la formation\",\"native\":\"în domeniul formării\",\"pronunciation_native\":\"dan la formasion\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"J’ai réussi à ___\",\"frame_native\":\"Am reușit să ___\",\"pronunciation_native\":\"je reusi a ___\",\"slot\":{\"hint_native\":\"realizarea concretă\",\"fillers\":[{\"target\":\"réduire les délais\",\"native\":\"reduc termenele\",\"pronunciation_native\":\"redüir le dele\",\"in_dialogue\":true},{\"target\":\"organiser l’équipe\",\"native\":\"organizez echipa\",\"pronunciation_native\":\"organize lechip\",\"in_dialogue\":false},{\"target\":\"améliorer le service\",\"native\":\"îmbunătățesc serviciul\",\"pronunciation_native\":\"amelior le servis\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"J’ai résolu ___ avec l’équipe\",\"frame_native\":\"Am rezolvat ___ împreună cu echipa\",\"pronunciation_native\":\"je rezolu ___ avek lechip\",\"slot\":{\"hint_native\":\"problema, în forma potrivită\",\"fillers\":[{\"target\":\"un retard important\",\"native\":\"o întârziere importantă\",\"pronunciation_native\":\"ăn rătar importan\",\"in_dialogue\":true},{\"target\":\"une erreur de commande\",\"native\":\"o eroare de comandă\",\"pronunciation_native\":\"ün erăr də comand\",\"in_dialogue\":false},{\"target\":\"un conflit interne\",\"native\":\"un conflict intern\",\"pronunciation_native\":\"ăn conflit antern\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Est-ce que ___ compte pour ce poste ?\",\"frame_native\":\"Contează ___ pentru acest rol?\",\"pronunciation_native\":\"es cə ___ cont pur cə post\",\"slot\":{\"hint_native\":\"abilitatea despre care întrebați\",\"fillers\":[{\"target\":\"la communication claire\",\"native\":\"comunicarea clară\",\"pronunciation_native\":\"la comunicasion cler\",\"in_dialogue\":true},{\"target\":\"l’adaptation rapide\",\"native\":\"adaptarea rapidă\",\"pronunciation_native\":\"ladaptasion rapid\",\"in_dialogue\":false},{\"target\":\"le travail en équipe\",\"native\":\"lucrul în echipă\",\"pronunciation_native\":\"lə travai an ekip\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Pouvez-vous me parler de ___ dans l’équipe ?\",\"frame_native\":\"Îmi puteți vorbi despre ___ în echipă?\",\"pronunciation_native\":\"puve vu mə parle də ___ dan lechip\",\"slot\":{\"hint_native\":\"aspectul echipei\",\"fillers\":[{\"target\":\"la collaboration\",\"native\":\"colaborare\",\"pronunciation_native\":\"la colaborasion\",\"in_dialogue\":true},{\"target\":\"l’organisation\",\"native\":\"organizare\",\"pronunciation_native\":\"lorganizacion\",\"in_dialogue\":false},{\"target\":\"la communication interne\",\"native\":\"comunicare internă\",\"pronunciation_native\":\"la comunicasion antern\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Quand prendrez-vous votre décision ?\",\"frame_native\":\"Când veți lua decizia?\",\"pronunciation_native\":\"can prăndră vu votr dezizion\",\"slot\":null}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Qu’est-ce qui vous attire dans ce poste ?\",\"text_native\":\"Ce vă atrage la acest post?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Quelle expérience passée correspond le mieux à ce poste ?\",\"text_native\":\"Ce experiență anterioară se potrivește cel mai bine acestui post?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"Pouvez-vous me donner un exemple de réussite ?\",\"text_native\":\"Îmi puteți da un exemplu de reușită?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Pouvez-vous décrire une situation difficile ?\",\"text_native\":\"Puteți descrie o situație dificilă?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Comment travaillez-vous avec les autres sous pression ?\",\"text_native\":\"Cum lucrați cu ceilalți atunci când sunteți sub presiune?\"},{\"id\":\"a6\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Nous contacterons les candidats la semaine prochaine.\",\"text_native\":\"Vom contacta candidații săptămâna viitoare.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"vouloir\",\"translation_native\":\"a vrea\",\"pronunciation_native\":\"vulwar\",\"definition_target\":\"to want something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"correspondre\",\"translation_native\":\"a se potrivi\",\"pronunciation_native\":\"corespondr\",\"definition_target\":\"to match or fit\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"réussir\",\"translation_native\":\"a reuși\",\"pronunciation_native\":\"reusir\",\"definition_target\":\"to succeed in doing something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"réduire\",\"translation_native\":\"a reduce\",\"pronunciation_native\":\"redüir\",\"definition_target\":\"to make something smaller or shorter\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v5\",\"term_target\":\"résoudre\",\"translation_native\":\"a rezolva\",\"pronunciation_native\":\"rezudr\",\"definition_target\":\"to solve a problem\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\"]},{\"id\":\"v6\",\"term_target\":\"compter\",\"translation_native\":\"a conta\",\"pronunciation_native\":\"conte\",\"definition_target\":\"to matter or be important\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"parler\",\"translation_native\":\"a vorbi\",\"pronunciation_native\":\"parle\",\"definition_target\":\"to talk about something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"décision\",\"translation_native\":\"decizie\",\"pronunciation_native\":\"dezizion\",\"definition_target\":\"a choice made after consideration\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOhaAUHqLt7omhjoQG67ORJHujvW",
+                "object": "chat.completion",
+                "created": 1790675174,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Key questions\",\"title_native\":\"Întrebări-cheie\",\"description_target\":\"Handle questions about motivation and experience, give concrete examples, and ask about the team and the decision timeline.\",\"description_native\":\"Răspundeți la întrebări despre motivație și experiență, dați exemple concrete și întrebați despre echipă și termenul deciziei.\"},\"learner_role\":{\"role_target\":\"Candidat\",\"role_native\":\"Candidat\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Je veux ce poste pour ___\",\"frame_native\":\"Vreau acest post pentru ___\",\"pronunciation_native\":\"jă vă cə post pur ___\",\"slot\":{\"hint_native\":\"motivul\",\"fillers\":[{\"target\":\"évoluer professionnellement\",\"native\":\"să evoluez profesional\",\"pronunciation_native\":\"evolue profesional\",\"in_dialogue\":true},{\"target\":\"aider les clients\",\"native\":\"să ajut clienții\",\"pronunciation_native\":\"ede le client\",\"in_dialogue\":false},{\"target\":\"développer mes compétences\",\"native\":\"să-mi dezvolt competențele\",\"pronunciation_native\":\"dezvelope me competans\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mon expérience ___ correspond à ce poste\",\"frame_native\":\"Experiența mea ___ se potrivește acestui rol\",\"pronunciation_native\":\"mon experians ___ corespon a cə post\",\"slot\":{\"hint_native\":\"experiența relevantă, cu prepoziția necesară\",\"fillers\":[{\"target\":\"dans le service client\",\"native\":\"în serviciul clienților\",\"pronunciation_native\":\"dan lă servis client\",\"in_dialogue\":true},{\"target\":\"en gestion de projets\",\"native\":\"în gestionarea proiectelor\",\"pronunciation_native\":\"an jestion də projee\",\"in_dialogue\":false},{\"target\":\"dans la formation\",\"native\":\"în domeniul formării\",\"pronunciation_native\":\"dan la formasion\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"answer\",\"must_say\":[3],\"frame_target\":\"J’ai réussi à ___\",\"frame_native\":\"Am reușit să ___\",\"pronunciation_native\":\"je reusi a ___\",\"slot\":{\"hint_native\":\"realizarea concretă\",\"fillers\":[{\"target\":\"réduire les délais\",\"native\":\"reduc termenele\",\"pronunciation_native\":\"redüir le dele\",\"in_dialogue\":true},{\"target\":\"organiser l’équipe\",\"native\":\"organizez echipa\",\"pronunciation_native\":\"organize lechip\",\"in_dialogue\":false},{\"target\":\"améliorer le service\",\"native\":\"îmbunătățesc serviciul\",\"pronunciation_native\":\"amelior le servis\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"answer\",\"must_say\":[4],\"frame_target\":\"J’ai résolu ___ avec l’équipe\",\"frame_native\":\"Am rezolvat ___ împreună cu echipa\",\"pronunciation_native\":\"je rezolu ___ avek lechip\",\"slot\":{\"hint_native\":\"problema, în forma potrivită\",\"fillers\":[{\"target\":\"un retard important\",\"native\":\"o întârziere importantă\",\"pronunciation_native\":\"ăn rătar importan\",\"in_dialogue\":true},{\"target\":\"une erreur de commande\",\"native\":\"o eroare de comandă\",\"pronunciation_native\":\"ün erăr də comand\",\"in_dialogue\":false},{\"target\":\"un conflit interne\",\"native\":\"un conflict intern\",\"pronunciation_native\":\"ăn conflit antern\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"ask\",\"must_say\":[5],\"frame_target\":\"Est-ce que ___ compte pour ce poste ?\",\"frame_native\":\"Contează ___ pentru acest rol?\",\"pronunciation_native\":\"es cə ___ cont pur cə post\",\"slot\":{\"hint_native\":\"abilitatea despre care întrebați\",\"fillers\":[{\"target\":\"la communication claire\",\"native\":\"comunicarea clară\",\"pronunciation_native\":\"la comunicasion cler\",\"in_dialogue\":true},{\"target\":\"l’adaptation rapide\",\"native\":\"adaptarea rapidă\",\"pronunciation_native\":\"ladaptasion rapid\",\"in_dialogue\":false},{\"target\":\"le travail en équipe\",\"native\":\"lucrul în echipă\",\"pronunciation_native\":\"lə travai an ekip\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Pouvez-vous me parler de ___ dans l’équipe ?\",\"frame_native\":\"Îmi puteți vorbi despre ___ în echipă?\",\"pronunciation_native\":\"puve vu mə parle də ___ dan lechip\",\"slot\":{\"hint_native\":\"aspectul echipei\",\"fillers\":[{\"target\":\"la collaboration\",\"native\":\"colaborare\",\"pronunciation_native\":\"la colaborasion\",\"in_dialogue\":true},{\"target\":\"l’organisation\",\"native\":\"organizare\",\"pronunciation_native\":\"lorganizacion\",\"in_dialogue\":false},{\"target\":\"la communication interne\",\"native\":\"comunicare internă\",\"pronunciation_native\":\"la comunicasion antern\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Quand prendrez-vous votre décision ?\",\"frame_native\":\"Când veți lua decizia?\",\"pronunciation_native\":\"can prăndră vu votr dezizion\",\"slot\":null}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Qu’est-ce qui vous attire dans ce poste ?\",\"text_native\":\"Ce vă atrage la acest post?\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[2],\"text_target\":\"Quelle expérience passée correspond le mieux à ce poste ?\",\"text_native\":\"Ce experiență anterioară se potrivește cel mai bine acestui post?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[3],\"text_target\":\"Pouvez-vous me donner un exemple de réussite ?\",\"text_native\":\"Îmi puteți da un exemplu de reușită?\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Pouvez-vous décrire une situation difficile ?\",\"text_native\":\"Puteți descrie o situație dificilă?\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[4],\"text_target\":\"Comment travaillez-vous avec les autres sous pression ?\",\"text_native\":\"Cum lucrați cu ceilalți atunci când sunteți sub presiune?\"},{\"id\":\"a6\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Nous contacterons les candidats la semaine prochaine.\",\"text_native\":\"Vom contacta candidații săptămâna viitoare.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"vouloir\",\"translation_native\":\"a vrea\",\"pronunciation_native\":\"vulwar\",\"definition_target\":\"to want something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\"]},{\"id\":\"v2\",\"term_target\":\"correspondre\",\"translation_native\":\"a se potrivi\",\"pronunciation_native\":\"corespondr\",\"definition_target\":\"to match or fit\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v3\",\"term_target\":\"réussir\",\"translation_native\":\"a reuși\",\"pronunciation_native\":\"reusir\",\"definition_target\":\"to succeed in doing something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"réduire\",\"translation_native\":\"a reduce\",\"pronunciation_native\":\"redüir\",\"definition_target\":\"to make something smaller or shorter\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\"]},{\"id\":\"v5\",\"term_target\":\"résoudre\",\"translation_native\":\"a rezolva\",\"pronunciation_native\":\"rezudr\",\"definition_target\":\"to solve a problem\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\"]},{\"id\":\"v6\",\"term_target\":\"compter\",\"translation_native\":\"a conta\",\"pronunciation_native\":\"conte\",\"definition_target\":\"to matter or be important\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"parler\",\"translation_native\":\"a vorbi\",\"pronunciation_native\":\"parle\",\"definition_target\":\"to talk about something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"décision\",\"translation_native\":\"decizie\",\"pronunciation_native\":\"dezizion\",\"definition_target\":\"a choice made after consideration\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5118,
+                    "completion_tokens": 4238,
+                    "total_tokens": 9356,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 473,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2336,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

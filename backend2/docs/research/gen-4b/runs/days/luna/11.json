@@ -1,0 +1,1314 @@
+{
+    "plan": "11",
+    "run": "luna",
+    "models": {
+        "stages": {
+            "model": "gpt-5.6-luna",
+            "effort": null
+        },
+        "repair": "gpt-5.6-luna",
+        "seam_judge": "gpt-5.4-mini"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Besichtigung",
+        "title_target": "Visita al piso",
+        "teaches_native": "Miete und Wohnung erfragen",
+        "goals_native": [
+            "nach der Miete fragen",
+            "fragen, was drin ist",
+            "sagen, wer einzieht",
+            "den nächsten Schritt erfragen"
+        ],
+        "learner_role": [
+            "Inquilino",
+            "Mieter"
+        ],
+        "partner_role": [
+            "Agente inmobiliario",
+            "Makler"
+        ],
+        "topic_description": "Situation: You are viewing the apartment with the agent in Madrid. This is the key interaction because you must decide whether the flat works for your situation and whether your small child can live there comfortably. What you understand here affects whether you continue with the application.\nLearner: Tenant. Partner: Real estate agent.\nNot in this scene: checking in at the office, handing over documents, filling forms, signing a contract, paying money.",
+        "must_say": [
+            "ask about the rent — slot: the flat",
+            "ask what is included in the rent — slot: the cost",
+            "ask how many rooms there are — slot: the room type",
+            "ask whether something is allowed — slot: the thing (a child, a pet)",
+            "say who will live in the flat — slot: the person or pet",
+            "ask whether there is a problem with something — slot: the thing (noise, light, heating)",
+            "ask how far something is — slot: the place (school, metro)",
+            "ask whether the flat can be reserved — slot: the flat"
+        ],
+        "must_understand": [
+            "says the rent, the deposit and what is included",
+            "asks who will live in the flat",
+            "says the number of rooms and basic features",
+            "explains a condition or limitation of the flat",
+            "tells you the next step if you want the flat"
+        ]
+    },
+    "request": {
+        "topic": "Besichtigung",
+        "vocabulary": [
+            8,
+            12
+        ],
+        "scene_id": "gen4b-11"
+    },
+    "outcome": {
+        "status": "failed",
+        "error": null,
+        "fail_reason": "fatal: pronunciation.equals_native",
+        "findings": [
+            {
+                "code": "pronunciation.equals_native",
+                "address": "p1.f2",
+                "detail": "the reading «das Apartment» is the native text «das Apartment»"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p1.f1",
+                "detail": "the reading «díese Wohnung» is close to the native text «diese Wohnung» (0.92)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p2.f1",
+                "detail": "the reading «der Mietpraís» is close to the native text «der Mietpreis» (0.85)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p2.f2",
+                "detail": "the reading «di Monatskosten» is close to the native text «die Monatskosten» (0.94)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p3.f1",
+                "detail": "the reading «zímmer» is close to the native text «Zimmer» (0.83)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p3.f2",
+                "detail": "the reading «schláfzimmer» is close to the native text «Schlafzimmer» (0.92)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p4.f1",
+                "detail": "the reading «ain klaînes kint» is close to the native text «ein kleines Kind» (0.75)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p4.f2",
+                "detail": "the reading «ain Haustír» is close to the native text «ein Haustier» (0.75)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p5.f1",
+                "detail": "the reading «ain klaînes kint» is close to the native text «ein kleines Kind» (0.75)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p5.f2",
+                "detail": "the reading «ain hunt» is close to the native text «ein Hund» (0.75)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p6.f1",
+                "detail": "the reading «deem lerm» is close to the native text «dem Lärm» (0.78)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p6.f2",
+                "detail": "the reading «der háizung» is close to the native text «der Heizung» (0.91)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p8.f1",
+                "detail": "the reading «díese Wohnung» is close to the native text «diese Wohnung» (0.92)"
+            },
+            {
+                "code": "pronunciation.near_native",
+                "address": "p8.f2",
+                "detail": "the reading «das Vóonobjekt» is close to the native text «das Wohnobjekt» (0.79)"
+            },
+            {
+                "code": "partner.names_filler",
+                "address": "a1",
+                "detail": "the line names «el alquiler», a filler of p2"
+            },
+            {
+                "code": "partner.names_filler",
+                "address": "a3",
+                "detail": "the line names «habitaciones», a filler of p3"
+            },
+            {
+                "code": "vocab.stop_word",
+                "address": "v3",
+                "detail": "«habitación» is a word of the stop list («habitación»)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v1",
+                "detail": "the definition «money paid regularly for a home» of «alquiler» reads as en, not es (for)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v2",
+                "detail": "the definition «to have something as part of a price» of «incluir» reads as en, not es (have, of)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v7",
+                "detail": "the definition «a system that heats a home» of «calefacción» reads as en, not es (that)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v8",
+                "detail": "the definition «how far one place is from another» of «distancia» reads as en, not es (how, is, from)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v9",
+                "detail": "the definition «money held as security for a rental» of «fianza» reads as en, not es (for)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v10",
+                "detail": "the definition «available for use or reservation» of «disponible» reads as en, not es (for)"
+            }
+        ],
+        "attempts": [
+            {
+                "stage": "skeleton",
+                "attempt": 1,
+                "findings": [
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v9",
+                        "detail": "«ascensor» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a1",
+                        "detail": "the line names «el alquiler», a filler of p2"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a3",
+                        "detail": "the line names «habitaciones», a filler of p3"
+                    },
+                    {
+                        "code": "vocab.stop_word",
+                        "address": "v3",
+                        "detail": "«habitación» is a word of the stop list («habitación»)"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v9",
+                        "detail": "«ascensor» is not in a3"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v1",
+                        "detail": "the definition «The regular payment for living in a flat.» of «alquiler» reads as en, not es (the, for)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v2",
+                        "detail": "the definition «To contain something as part of the price or service.» of «incluir» reads as en, not es (of, the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v6",
+                        "detail": "the definition «The space between two places.» of «distancia» reads as en, not es (the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v7",
+                        "detail": "the definition «To hold a flat for someone before the final agreement.» of «reservar» reads as en, not es (for, before, the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v8",
+                        "detail": "the definition «Money paid as security for a rental.» of «fianza» reads as en, not es (for)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v9",
+                        "detail": "the definition «A lift that carries people between floors.» of «ascensor» reads as en, not es (that)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v10",
+                        "detail": "the definition «A formal request to rent the flat.» of «solicitud» reads as en, not es (the)"
+                    }
+                ],
+                "fatal": [
+                    "vocab.not_found"
+                ],
+                "off_schema": null
+            },
+            {
+                "stage": "skeleton",
+                "attempt": 2,
+                "findings": [
+                    {
+                        "code": "pronunciation.equals_native",
+                        "address": "p1.f2",
+                        "detail": "the reading «das Apartment» is the native text «das Apartment»"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p1.f1",
+                        "detail": "the reading «díese Wohnung» is close to the native text «diese Wohnung» (0.92)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p2.f1",
+                        "detail": "the reading «der Mietpraís» is close to the native text «der Mietpreis» (0.85)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p2.f2",
+                        "detail": "the reading «di Monatskosten» is close to the native text «die Monatskosten» (0.94)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p3.f1",
+                        "detail": "the reading «zímmer» is close to the native text «Zimmer» (0.83)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p3.f2",
+                        "detail": "the reading «schláfzimmer» is close to the native text «Schlafzimmer» (0.92)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p4.f1",
+                        "detail": "the reading «ain klaînes kint» is close to the native text «ein kleines Kind» (0.75)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p4.f2",
+                        "detail": "the reading «ain Haustír» is close to the native text «ein Haustier» (0.75)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p5.f1",
+                        "detail": "the reading «ain klaînes kint» is close to the native text «ein kleines Kind» (0.75)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p5.f2",
+                        "detail": "the reading «ain hunt» is close to the native text «ein Hund» (0.75)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p6.f1",
+                        "detail": "the reading «deem lerm» is close to the native text «dem Lärm» (0.78)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p6.f2",
+                        "detail": "the reading «der háizung» is close to the native text «der Heizung» (0.91)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p8.f1",
+                        "detail": "the reading «díese Wohnung» is close to the native text «diese Wohnung» (0.92)"
+                    },
+                    {
+                        "code": "pronunciation.near_native",
+                        "address": "p8.f2",
+                        "detail": "the reading «das Vóonobjekt» is close to the native text «das Wohnobjekt» (0.79)"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a1",
+                        "detail": "the line names «el alquiler», a filler of p2"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a3",
+                        "detail": "the line names «habitaciones», a filler of p3"
+                    },
+                    {
+                        "code": "vocab.stop_word",
+                        "address": "v3",
+                        "detail": "«habitación» is a word of the stop list («habitación»)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v1",
+                        "detail": "the definition «money paid regularly for a home» of «alquiler» reads as en, not es (for)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v2",
+                        "detail": "the definition «to have something as part of a price» of «incluir» reads as en, not es (have, of)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v7",
+                        "detail": "the definition «a system that heats a home» of «calefacción» reads as en, not es (that)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v8",
+                        "detail": "the definition «how far one place is from another» of «distancia» reads as en, not es (how, is, from)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v9",
+                        "detail": "the definition «money held as security for a rental» of «fianza» reads as en, not es (for)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v10",
+                        "detail": "the definition «available for use or reservation» of «disponible» reads as en, not es (for)"
+                    }
+                ],
+                "fatal": [
+                    "pronunciation.equals_native"
+                ],
+                "off_schema": null
+            }
+        ],
+        "repairs": [],
+        "judgements": [],
+        "skeleton": null,
+        "lesson": null
+    },
+    "cost_usd": 0.050323,
+    "latency_ms": 67339,
+    "wall_ms": 67388,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:46:48Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5039,
+            "cached_tokens_in": 4642,
+            "tokens_out": 4151,
+            "reasoning_tokens": 2234,
+            "cost_usd": "0.025767",
+            "latency_ms": 35158,
+            "wall_ms": 35159,
+            "call_id": "01M3P8YJ9HKHHKQJA9WTXBRAJK",
+            "user": "TOPIC: Besichtigung\n\nTOPIC_DESCRIPTION: Situation: You are viewing the apartment with the agent in Madrid. This is the key interaction because you must decide whether the flat works for your situation and whether your small child can live there comfortably. What you understand here affects whether you continue with the application.\nLearner: Tenant. Partner: Real estate agent.\nNot in this scene: checking in at the office, handing over documents, filling forms, signing a contract, paying money.\n\nAbout the learner, in their own words: Wohnung mieten in Madrid, Besichtigung mit dem Makler, kleines Kind\n\nSURVIVAL_SET:\nmust_say:\n1. ask about the rent — slot: the flat\n2. ask what is included in the rent — slot: the cost\n3. ask how many rooms there are — slot: the room type\n4. ask whether something is allowed — slot: the thing (a child, a pet)\n5. say who will live in the flat — slot: the person or pet\n6. ask whether there is a problem with something — slot: the thing (noise, light, heating)\n7. ask how far something is — slot: the place (school, metro)\n8. ask whether the flat can be reserved — slot: the flat\nmust_understand:\n1. says the rent, the deposit and what is included\n2. asks who will live in the flat\n3. says the number of rooms and basic features\n4. explains a condition or limitation of the flat\n5. tells you the next step if you want the flat\n\nTARGET_LANGUAGE: Spanish\n\nNATIVE_LANGUAGE: German\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Inquilino / Mieter\n\nPARTNER_ROLE: Agente inmobiliario / Makler\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Visita del piso",
+                    "title_native": "Besichtigung",
+                    "description_target": "Después de este día, podrá preguntar por el alquiler, las condiciones y las características del piso.",
+                    "description_native": "Nach diesem Tag können Sie nach der Miete, den Bedingungen und den Eigenschaften der Wohnung fragen."
+                },
+                "learner_role": {
+                    "role_target": "Inquilino",
+                    "role_native": "Mieter"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "¿Cuál es el alquiler de ___?",
+                        "frame_native": "Wie hoch ist die Miete für ___?",
+                        "pronunciation_native": "kuál es el alkilér de ___",
+                        "slot": {
+                            "hint_native": "Wohnung",
+                            "fillers": [
+                                {
+                                    "target": "este piso",
+                                    "native": "diese Wohnung",
+                                    "pronunciation_native": "éste písu",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "el apartamento",
+                                    "native": "das Apartment",
+                                    "pronunciation_native": "el apartaménto",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "¿Qué incluye ___?",
+                        "frame_native": "Was ist in ___ enthalten?",
+                        "pronunciation_native": "ke inklúje ___",
+                        "slot": {
+                            "hint_native": "Kosten",
+                            "fillers": [
+                                {
+                                    "target": "el alquiler",
+                                    "native": "der Mietpreis",
+                                    "pronunciation_native": "el alkilér",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la cuota mensual",
+                                    "native": "die Monatsgebühr",
+                                    "pronunciation_native": "la kuóta mensuál",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "¿Cuántas ___ hay?",
+                        "frame_native": "Wie viele ___ gibt es?",
+                        "pronunciation_native": "kuántas ___ ai",
+                        "slot": {
+                            "hint_native": "Zimmertyp",
+                            "fillers": [
+                                {
+                                    "target": "habitaciones",
+                                    "native": "Zimmer",
+                                    "pronunciation_native": "abitasjónes",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "dormitorios",
+                                    "native": "Schlafzimmer",
+                                    "pronunciation_native": "dormitórios",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "¿Se permite ___?",
+                        "frame_native": "Ist ___ erlaubt?",
+                        "pronunciation_native": "se permíte ___",
+                        "slot": {
+                            "hint_native": "Person oder Tier",
+                            "fillers": [
+                                {
+                                    "target": "un niño pequeño",
+                                    "native": "ein kleines Kind",
+                                    "pronunciation_native": "un nínjo pekénjo",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "una mascota",
+                                    "native": "ein Haustier",
+                                    "pronunciation_native": "úna maskóta",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "Vivirá ___ aquí.",
+                        "frame_native": "___ wird hier wohnen.",
+                        "pronunciation_native": "bibirá ___ akí",
+                        "slot": {
+                            "hint_native": "Person oder Tier",
+                            "fillers": [
+                                {
+                                    "target": "un niño pequeño",
+                                    "native": "ein kleines Kind",
+                                    "pronunciation_native": "un nínjo pekénjo",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "una pareja",
+                                    "native": "ein Paar",
+                                    "pronunciation_native": "úna parécha",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "¿Hay algún problema con ___?",
+                        "frame_native": "Gibt es ein Problem mit ___?",
+                        "pronunciation_native": "ai algún probléma kon ___",
+                        "slot": {
+                            "hint_native": "Sache, nach der Sie fragen",
+                            "fillers": [
+                                {
+                                    "target": "el ruido",
+                                    "native": "der Lärm",
+                                    "pronunciation_native": "el rruído",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la calefacción",
+                                    "native": "die Heizung",
+                                    "pronunciation_native": "la kalefaksjón",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "¿A qué distancia está ___?",
+                        "frame_native": "Wie weit ist ___ entfernt?",
+                        "pronunciation_native": "a ke distánßja está ___",
+                        "slot": {
+                            "hint_native": "Ort",
+                            "fillers": [
+                                {
+                                    "target": "el metro",
+                                    "native": "die U-Bahn",
+                                    "pronunciation_native": "el métro",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la escuela",
+                                    "native": "die Schule",
+                                    "pronunciation_native": "la eskúela",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "ask",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "¿Se puede reservar ___?",
+                        "frame_native": "Kann man ___ reservieren?",
+                        "pronunciation_native": "se puéde reserbár ___",
+                        "slot": {
+                            "hint_native": "Wohnung",
+                            "fillers": [
+                                {
+                                    "target": "este piso",
+                                    "native": "diese Wohnung",
+                                    "pronunciation_native": "éste písu",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la vivienda",
+                                    "native": "die Wohnimmobilie",
+                                    "pronunciation_native": "la bibjénda",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1,
+                            2
+                        ],
+                        "text_target": "El alquiler son 1.200 euros; la fianza es de dos meses e incluye el agua.",
+                        "text_native": "Die Miete beträgt 1.200 Euro; die Kaution beträgt zwei Monatsmieten, und Wasser ist enthalten."
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "¿Quién vivirá en el piso?",
+                        "text_native": "Wer wird in der Wohnung wohnen?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Tiene dos habitaciones, un balcón y mucha luz.",
+                        "text_native": "Sie hat zwei Zimmer, einen Balkon und viel Licht."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Sí. Se exige autorización para ciertos casos.",
+                        "text_native": "Ja. Für bestimmte Fälle ist eine Genehmigung erforderlich."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            8
+                        ],
+                        "text_target": "Si le interesa, puede presentar la solicitud esta semana.",
+                        "text_native": "Wenn Sie interessiert sind, können Sie diese Woche den Antrag einreichen."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "alquiler",
+                        "translation_native": "Miete",
+                        "pronunciation_native": "alkilér",
+                        "definition_target": "The regular payment for living in a flat.",
+                        "kind": "word",
+                        "image_prompt": "A rental apartment advertisement showing a monthly price",
+                        "used_in": [
+                            "p1",
+                            "p2",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "incluir",
+                        "translation_native": "enthalten",
+                        "pronunciation_native": "inklúir",
+                        "definition_target": "To contain something as part of the price or service.",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "habitación",
+                        "translation_native": "Zimmer",
+                        "pronunciation_native": "abitasjón",
+                        "definition_target": "A room in a home.",
+                        "kind": "word",
+                        "image_prompt": "A bright room inside an apartment",
+                        "used_in": [
+                            "p3",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "permitir",
+                        "translation_native": "erlauben",
+                        "pronunciation_native": "permitír",
+                        "definition_target": "To allow something.",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p4"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "vivir",
+                        "translation_native": "wohnen",
+                        "pronunciation_native": "bibír",
+                        "definition_target": "To live in a place.",
+                        "kind": "word",
+                        "image_prompt": "A family living together in an apartment",
+                        "used_in": [
+                            "p5",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "distancia",
+                        "translation_native": "Entfernung",
+                        "pronunciation_native": "distánßja",
+                        "definition_target": "The space between two places.",
+                        "kind": "word",
+                        "image_prompt": "A map showing the distance between an apartment and a metro station",
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "reservar",
+                        "translation_native": "reservieren",
+                        "pronunciation_native": "reserbár",
+                        "definition_target": "To hold a flat for someone before the final agreement.",
+                        "kind": "word",
+                        "image_prompt": "A real estate agent marking an apartment as reserved",
+                        "used_in": [
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "fianza",
+                        "translation_native": "Kaution",
+                        "pronunciation_native": "fjánza",
+                        "definition_target": "Money paid as security for a rental.",
+                        "kind": "word",
+                        "image_prompt": "A rental agreement with a security deposit amount",
+                        "used_in": [
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "ascensor",
+                        "translation_native": "Aufzug",
+                        "pronunciation_native": "aßensór",
+                        "definition_target": "A lift that carries people between floors.",
+                        "kind": "word",
+                        "image_prompt": "An elevator in an apartment building lobby",
+                        "used_in": [
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "solicitud",
+                        "translation_native": "Antrag",
+                        "pronunciation_native": "ßolizitúd",
+                        "definition_target": "A formal request to rent the flat.",
+                        "kind": "word",
+                        "image_prompt": "A person completing a rental application at a desk",
+                        "used_in": [
+                            "a5"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Visita del piso\",\"title_native\":\"Besichtigung\",\"description_target\":\"Después de este día, podrá preguntar por el alquiler, las condiciones y las características del piso.\",\"description_native\":\"Nach diesem Tag können Sie nach der Miete, den Bedingungen und den Eigenschaften der Wohnung fragen.\"},\"learner_role\":{\"role_target\":\"Inquilino\",\"role_native\":\"Mieter\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"¿Cuál es el alquiler de ___?\",\"frame_native\":\"Wie hoch ist die Miete für ___?\",\"pronunciation_native\":\"kuál es el alkilér de ___\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"éste písu\",\"in_dialogue\":true},{\"target\":\"el apartamento\",\"native\":\"das Apartment\",\"pronunciation_native\":\"el apartaménto\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"¿Qué incluye ___?\",\"frame_native\":\"Was ist in ___ enthalten?\",\"pronunciation_native\":\"ke inklúje ___\",\"slot\":{\"hint_native\":\"Kosten\",\"fillers\":[{\"target\":\"el alquiler\",\"native\":\"der Mietpreis\",\"pronunciation_native\":\"el alkilér\",\"in_dialogue\":true},{\"target\":\"la cuota mensual\",\"native\":\"die Monatsgebühr\",\"pronunciation_native\":\"la kuóta mensuál\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"¿Cuántas ___ hay?\",\"frame_native\":\"Wie viele ___ gibt es?\",\"pronunciation_native\":\"kuántas ___ ai\",\"slot\":{\"hint_native\":\"Zimmertyp\",\"fillers\":[{\"target\":\"habitaciones\",\"native\":\"Zimmer\",\"pronunciation_native\":\"abitasjónes\",\"in_dialogue\":true},{\"target\":\"dormitorios\",\"native\":\"Schlafzimmer\",\"pronunciation_native\":\"dormitórios\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"¿Se permite ___?\",\"frame_native\":\"Ist ___ erlaubt?\",\"pronunciation_native\":\"se permíte ___\",\"slot\":{\"hint_native\":\"Person oder Tier\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"un nínjo pekénjo\",\"in_dialogue\":true},{\"target\":\"una mascota\",\"native\":\"ein Haustier\",\"pronunciation_native\":\"úna maskóta\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"Vivirá ___ aquí.\",\"frame_native\":\"___ wird hier wohnen.\",\"pronunciation_native\":\"bibirá ___ akí\",\"slot\":{\"hint_native\":\"Person oder Tier\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"un nínjo pekénjo\",\"in_dialogue\":true},{\"target\":\"una pareja\",\"native\":\"ein Paar\",\"pronunciation_native\":\"úna parécha\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"¿Hay algún problema con ___?\",\"frame_native\":\"Gibt es ein Problem mit ___?\",\"pronunciation_native\":\"ai algún probléma kon ___\",\"slot\":{\"hint_native\":\"Sache, nach der Sie fragen\",\"fillers\":[{\"target\":\"el ruido\",\"native\":\"der Lärm\",\"pronunciation_native\":\"el rruído\",\"in_dialogue\":true},{\"target\":\"la calefacción\",\"native\":\"die Heizung\",\"pronunciation_native\":\"la kalefaksjón\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"¿A qué distancia está ___?\",\"frame_native\":\"Wie weit ist ___ entfernt?\",\"pronunciation_native\":\"a ke distánßja está ___\",\"slot\":{\"hint_native\":\"Ort\",\"fillers\":[{\"target\":\"el metro\",\"native\":\"die U-Bahn\",\"pronunciation_native\":\"el métro\",\"in_dialogue\":true},{\"target\":\"la escuela\",\"native\":\"die Schule\",\"pronunciation_native\":\"la eskúela\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"ask\",\"must_say\":[8],\"frame_target\":\"¿Se puede reservar ___?\",\"frame_native\":\"Kann man ___ reservieren?\",\"pronunciation_native\":\"se puéde reserbár ___\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"éste písu\",\"in_dialogue\":true},{\"target\":\"la vivienda\",\"native\":\"die Wohnimmobilie\",\"pronunciation_native\":\"la bibjénda\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1,2],\"text_target\":\"El alquiler son 1.200 euros; la fianza es de dos meses e incluye el agua.\",\"text_native\":\"Die Miete beträgt 1.200 Euro; die Kaution beträgt zwei Monatsmieten, und Wasser ist enthalten.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"¿Quién vivirá en el piso?\",\"text_native\":\"Wer wird in der Wohnung wohnen?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Tiene dos habitaciones, un balcón y mucha luz.\",\"text_native\":\"Sie hat zwei Zimmer, einen Balkon und viel Licht.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Sí. Se exige autorización para ciertos casos.\",\"text_native\":\"Ja. Für bestimmte Fälle ist eine Genehmigung erforderlich.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[8],\"text_target\":\"Si le interesa, puede presentar la solicitud esta semana.\",\"text_native\":\"Wenn Sie interessiert sind, können Sie diese Woche den Antrag einreichen.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"alquiler\",\"translation_native\":\"Miete\",\"pronunciation_native\":\"alkilér\",\"definition_target\":\"The regular payment for living in a flat.\",\"kind\":\"word\",\"image_prompt\":\"A rental apartment advertisement showing a monthly price\",\"used_in\":[\"p1\",\"p2\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"incluir\",\"translation_native\":\"enthalten\",\"pronunciation_native\":\"inklúir\",\"definition_target\":\"To contain something as part of the price or service.\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a1\"]},{\"id\":\"v3\",\"term_target\":\"habitación\",\"translation_native\":\"Zimmer\",\"pronunciation_native\":\"abitasjón\",\"definition_target\":\"A room in a home.\",\"kind\":\"word\",\"image_prompt\":\"A bright room inside an apartment\",\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v4\",\"term_target\":\"permitir\",\"translation_native\":\"erlauben\",\"pronunciation_native\":\"permitír\",\"definition_target\":\"To allow something.\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\"]},{\"id\":\"v5\",\"term_target\":\"vivir\",\"translation_native\":\"wohnen\",\"pronunciation_native\":\"bibír\",\"definition_target\":\"To live in a place.\",\"kind\":\"word\",\"image_prompt\":\"A family living together in an apartment\",\"used_in\":[\"p5\",\"a2\"]},{\"id\":\"v6\",\"term_target\":\"distancia\",\"translation_native\":\"Entfernung\",\"pronunciation_native\":\"distánßja\",\"definition_target\":\"The space between two places.\",\"kind\":\"word\",\"image_prompt\":\"A map showing the distance between an apartment and a metro station\",\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"reservar\",\"translation_native\":\"reservieren\",\"pronunciation_native\":\"reserbár\",\"definition_target\":\"To hold a flat for someone before the final agreement.\",\"kind\":\"word\",\"image_prompt\":\"A real estate agent marking an apartment as reserved\",\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"fianza\",\"translation_native\":\"Kaution\",\"pronunciation_native\":\"fjánza\",\"definition_target\":\"Money paid as security for a rental.\",\"kind\":\"word\",\"image_prompt\":\"A rental agreement with a security deposit amount\",\"used_in\":[\"a1\"]},{\"id\":\"v9\",\"term_target\":\"ascensor\",\"translation_native\":\"Aufzug\",\"pronunciation_native\":\"aßensór\",\"definition_target\":\"A lift that carries people between floors.\",\"kind\":\"word\",\"image_prompt\":\"An elevator in an apartment building lobby\",\"used_in\":[\"a3\"]},{\"id\":\"v10\",\"term_target\":\"solicitud\",\"translation_native\":\"Antrag\",\"pronunciation_native\":\"ßolizitúd\",\"definition_target\":\"A formal request to rent the flat.\",\"kind\":\"word\",\"image_prompt\":\"A person completing a rental application at a desk\",\"used_in\":[\"a5\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOi8sq0wUw5FTgGtAKBGZUDFOlOv",
+                "object": "chat.completion",
+                "created": 1790675208,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Visita del piso\",\"title_native\":\"Besichtigung\",\"description_target\":\"Después de este día, podrá preguntar por el alquiler, las condiciones y las características del piso.\",\"description_native\":\"Nach diesem Tag können Sie nach der Miete, den Bedingungen und den Eigenschaften der Wohnung fragen.\"},\"learner_role\":{\"role_target\":\"Inquilino\",\"role_native\":\"Mieter\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"¿Cuál es el alquiler de ___?\",\"frame_native\":\"Wie hoch ist die Miete für ___?\",\"pronunciation_native\":\"kuál es el alkilér de ___\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"éste písu\",\"in_dialogue\":true},{\"target\":\"el apartamento\",\"native\":\"das Apartment\",\"pronunciation_native\":\"el apartaménto\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"¿Qué incluye ___?\",\"frame_native\":\"Was ist in ___ enthalten?\",\"pronunciation_native\":\"ke inklúje ___\",\"slot\":{\"hint_native\":\"Kosten\",\"fillers\":[{\"target\":\"el alquiler\",\"native\":\"der Mietpreis\",\"pronunciation_native\":\"el alkilér\",\"in_dialogue\":true},{\"target\":\"la cuota mensual\",\"native\":\"die Monatsgebühr\",\"pronunciation_native\":\"la kuóta mensuál\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"¿Cuántas ___ hay?\",\"frame_native\":\"Wie viele ___ gibt es?\",\"pronunciation_native\":\"kuántas ___ ai\",\"slot\":{\"hint_native\":\"Zimmertyp\",\"fillers\":[{\"target\":\"habitaciones\",\"native\":\"Zimmer\",\"pronunciation_native\":\"abitasjónes\",\"in_dialogue\":true},{\"target\":\"dormitorios\",\"native\":\"Schlafzimmer\",\"pronunciation_native\":\"dormitórios\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"¿Se permite ___?\",\"frame_native\":\"Ist ___ erlaubt?\",\"pronunciation_native\":\"se permíte ___\",\"slot\":{\"hint_native\":\"Person oder Tier\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"un nínjo pekénjo\",\"in_dialogue\":true},{\"target\":\"una mascota\",\"native\":\"ein Haustier\",\"pronunciation_native\":\"úna maskóta\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"Vivirá ___ aquí.\",\"frame_native\":\"___ wird hier wohnen.\",\"pronunciation_native\":\"bibirá ___ akí\",\"slot\":{\"hint_native\":\"Person oder Tier\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"un nínjo pekénjo\",\"in_dialogue\":true},{\"target\":\"una pareja\",\"native\":\"ein Paar\",\"pronunciation_native\":\"úna parécha\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"¿Hay algún problema con ___?\",\"frame_native\":\"Gibt es ein Problem mit ___?\",\"pronunciation_native\":\"ai algún probléma kon ___\",\"slot\":{\"hint_native\":\"Sache, nach der Sie fragen\",\"fillers\":[{\"target\":\"el ruido\",\"native\":\"der Lärm\",\"pronunciation_native\":\"el rruído\",\"in_dialogue\":true},{\"target\":\"la calefacción\",\"native\":\"die Heizung\",\"pronunciation_native\":\"la kalefaksjón\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"¿A qué distancia está ___?\",\"frame_native\":\"Wie weit ist ___ entfernt?\",\"pronunciation_native\":\"a ke distánßja está ___\",\"slot\":{\"hint_native\":\"Ort\",\"fillers\":[{\"target\":\"el metro\",\"native\":\"die U-Bahn\",\"pronunciation_native\":\"el métro\",\"in_dialogue\":true},{\"target\":\"la escuela\",\"native\":\"die Schule\",\"pronunciation_native\":\"la eskúela\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"ask\",\"must_say\":[8],\"frame_target\":\"¿Se puede reservar ___?\",\"frame_native\":\"Kann man ___ reservieren?\",\"pronunciation_native\":\"se puéde reserbár ___\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"éste písu\",\"in_dialogue\":true},{\"target\":\"la vivienda\",\"native\":\"die Wohnimmobilie\",\"pronunciation_native\":\"la bibjénda\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1,2],\"text_target\":\"El alquiler son 1.200 euros; la fianza es de dos meses e incluye el agua.\",\"text_native\":\"Die Miete beträgt 1.200 Euro; die Kaution beträgt zwei Monatsmieten, und Wasser ist enthalten.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"¿Quién vivirá en el piso?\",\"text_native\":\"Wer wird in der Wohnung wohnen?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Tiene dos habitaciones, un balcón y mucha luz.\",\"text_native\":\"Sie hat zwei Zimmer, einen Balkon und viel Licht.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Sí. Se exige autorización para ciertos casos.\",\"text_native\":\"Ja. Für bestimmte Fälle ist eine Genehmigung erforderlich.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[8],\"text_target\":\"Si le interesa, puede presentar la solicitud esta semana.\",\"text_native\":\"Wenn Sie interessiert sind, können Sie diese Woche den Antrag einreichen.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"alquiler\",\"translation_native\":\"Miete\",\"pronunciation_native\":\"alkilér\",\"definition_target\":\"The regular payment for living in a flat.\",\"kind\":\"word\",\"image_prompt\":\"A rental apartment advertisement showing a monthly price\",\"used_in\":[\"p1\",\"p2\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"incluir\",\"translation_native\":\"enthalten\",\"pronunciation_native\":\"inklúir\",\"definition_target\":\"To contain something as part of the price or service.\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a1\"]},{\"id\":\"v3\",\"term_target\":\"habitación\",\"translation_native\":\"Zimmer\",\"pronunciation_native\":\"abitasjón\",\"definition_target\":\"A room in a home.\",\"kind\":\"word\",\"image_prompt\":\"A bright room inside an apartment\",\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v4\",\"term_target\":\"permitir\",\"translation_native\":\"erlauben\",\"pronunciation_native\":\"permitír\",\"definition_target\":\"To allow something.\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\"]},{\"id\":\"v5\",\"term_target\":\"vivir\",\"translation_native\":\"wohnen\",\"pronunciation_native\":\"bibír\",\"definition_target\":\"To live in a place.\",\"kind\":\"word\",\"image_prompt\":\"A family living together in an apartment\",\"used_in\":[\"p5\",\"a2\"]},{\"id\":\"v6\",\"term_target\":\"distancia\",\"translation_native\":\"Entfernung\",\"pronunciation_native\":\"distánßja\",\"definition_target\":\"The space between two places.\",\"kind\":\"word\",\"image_prompt\":\"A map showing the distance between an apartment and a metro station\",\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"reservar\",\"translation_native\":\"reservieren\",\"pronunciation_native\":\"reserbár\",\"definition_target\":\"To hold a flat for someone before the final agreement.\",\"kind\":\"word\",\"image_prompt\":\"A real estate agent marking an apartment as reserved\",\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"fianza\",\"translation_native\":\"Kaution\",\"pronunciation_native\":\"fjánza\",\"definition_target\":\"Money paid as security for a rental.\",\"kind\":\"word\",\"image_prompt\":\"A rental agreement with a security deposit amount\",\"used_in\":[\"a1\"]},{\"id\":\"v9\",\"term_target\":\"ascensor\",\"translation_native\":\"Aufzug\",\"pronunciation_native\":\"aßensór\",\"definition_target\":\"A lift that carries people between floors.\",\"kind\":\"word\",\"image_prompt\":\"An elevator in an apartment building lobby\",\"used_in\":[\"a3\"]},{\"id\":\"v10\",\"term_target\":\"solicitud\",\"translation_native\":\"Antrag\",\"pronunciation_native\":\"ßolizitúd\",\"definition_target\":\"A formal request to rent the flat.\",\"kind\":\"word\",\"image_prompt\":\"A person completing a rental application at a desk\",\"used_in\":[\"a5\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5039,
+                    "completion_tokens": 4151,
+                    "total_tokens": 9190,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 394,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2234,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:47:23Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5070,
+            "cached_tokens_in": 4642,
+            "tokens_out": 3944,
+            "reasoning_tokens": 2024,
+            "cost_usd": "0.024556",
+            "latency_ms": 32181,
+            "wall_ms": 32181,
+            "call_id": "01M3P8ZMMTH0TH8J0GQ2V4QZBE",
+            "user": "TOPIC: Besichtigung\n\nTOPIC_DESCRIPTION: Situation: You are viewing the apartment with the agent in Madrid. This is the key interaction because you must decide whether the flat works for your situation and whether your small child can live there comfortably. What you understand here affects whether you continue with the application.\nLearner: Tenant. Partner: Real estate agent.\nNot in this scene: checking in at the office, handing over documents, filling forms, signing a contract, paying money.\n\nAbout the learner, in their own words: Wohnung mieten in Madrid, Besichtigung mit dem Makler, kleines Kind\n\nSURVIVAL_SET:\nmust_say:\n1. ask about the rent — slot: the flat\n2. ask what is included in the rent — slot: the cost\n3. ask how many rooms there are — slot: the room type\n4. ask whether something is allowed — slot: the thing (a child, a pet)\n5. say who will live in the flat — slot: the person or pet\n6. ask whether there is a problem with something — slot: the thing (noise, light, heating)\n7. ask how far something is — slot: the place (school, metro)\n8. ask whether the flat can be reserved — slot: the flat\nmust_understand:\n1. says the rent, the deposit and what is included\n2. asks who will live in the flat\n3. says the number of rooms and basic features\n4. explains a condition or limitation of the flat\n5. tells you the next step if you want the flat\n\nTARGET_LANGUAGE: Spanish\n\nNATIVE_LANGUAGE: German\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Inquilino / Mieter\n\nPARTNER_ROLE: Agente inmobiliario / Makler\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone\n\nPREVIOUS_ATTEMPT_REJECTED_FOR:\n- vocab.not_found · v9: «ascensor» occurs in no frame and no partner line",
+            "payload": {
+                "topic": {
+                    "title_target": "Visita del piso",
+                    "title_native": "Wohnungsbesichtigung",
+                    "description_target": "Podrás preguntar por el alquiler, las habitaciones, las condiciones y la distancia, y decidir si el piso sirve para ti y tu hijo pequeño.",
+                    "description_native": "Du kannst nach Miete, Zimmern, Bedingungen und Entfernungen fragen und entscheiden, ob die Wohnung für dich und dein kleines Kind passt."
+                },
+                "learner_role": {
+                    "role_target": "Inquilino",
+                    "role_native": "Mieter"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "¿Cuál es el alquiler de ___?",
+                        "frame_native": "Wie hoch ist die Miete für ___?",
+                        "pronunciation_native": "kuál es el alkilér de ___?",
+                        "slot": {
+                            "hint_native": "Wohnung",
+                            "fillers": [
+                                {
+                                    "target": "este piso",
+                                    "native": "diese Wohnung",
+                                    "pronunciation_native": "díese Wohnung",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "el apartamento",
+                                    "native": "das Apartment",
+                                    "pronunciation_native": "das Apartment",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "¿Qué incluye ___?",
+                        "frame_native": "Was ist in ___ enthalten?",
+                        "pronunciation_native": "ké inklúje ___?",
+                        "slot": {
+                            "hint_native": "Kosten oder Zahlung",
+                            "fillers": [
+                                {
+                                    "target": "el alquiler",
+                                    "native": "der Mietpreis",
+                                    "pronunciation_native": "der Mietpraís",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "el precio mensual",
+                                    "native": "die Monatskosten",
+                                    "pronunciation_native": "di Monatskosten",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "¿Cuántas ___ hay?",
+                        "frame_native": "Wie viele ___ gibt es?",
+                        "pronunciation_native": "kuántas ___ aj?",
+                        "slot": {
+                            "hint_native": "Zimmerart",
+                            "fillers": [
+                                {
+                                    "target": "habitaciones",
+                                    "native": "Zimmer",
+                                    "pronunciation_native": "zímmer",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "dormitorios",
+                                    "native": "Schlafzimmer",
+                                    "pronunciation_native": "schláfzimmer",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "¿Se permite ___?",
+                        "frame_native": "Ist ___ erlaubt?",
+                        "pronunciation_native": "se permíte ___?",
+                        "slot": {
+                            "hint_native": "Kind oder Haustier",
+                            "fillers": [
+                                {
+                                    "target": "un niño pequeño",
+                                    "native": "ein kleines Kind",
+                                    "pronunciation_native": "ain klaînes kint",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "una mascota",
+                                    "native": "ein Haustier",
+                                    "pronunciation_native": "ain Haustír",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "Va a vivir ___ conmigo.",
+                        "frame_native": "___ wohnt mit mir.",
+                        "pronunciation_native": "ba a bibír ___ konmígo",
+                        "slot": {
+                            "hint_native": "Person oder Tier im Haushalt",
+                            "fillers": [
+                                {
+                                    "target": "un niño pequeño",
+                                    "native": "ein kleines Kind",
+                                    "pronunciation_native": "ain klaînes kint",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "un perro",
+                                    "native": "ein Hund",
+                                    "pronunciation_native": "ain hunt",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "¿Hay algún problema con ___?",
+                        "frame_native": "Gibt es ein Problem mit ___?",
+                        "pronunciation_native": "aj algún probléma kon ___?",
+                        "slot": {
+                            "hint_native": "Lärm oder Heizung",
+                            "fillers": [
+                                {
+                                    "target": "el ruido",
+                                    "native": "dem Lärm",
+                                    "pronunciation_native": "deem lerm",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la calefacción",
+                                    "native": "der Heizung",
+                                    "pronunciation_native": "der háizung",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "¿Qué distancia hay hasta ___?",
+                        "frame_native": "Wie weit ist es bis ___?",
+                        "pronunciation_native": "ké distánzia aj ásta ___?",
+                        "slot": {
+                            "hint_native": "Ort in der Nähe",
+                            "fillers": [
+                                {
+                                    "target": "la escuela",
+                                    "native": "zur Schule",
+                                    "pronunciation_native": "tsur schúle",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "el metro",
+                                    "native": "zur U-Bahn",
+                                    "pronunciation_native": "tsur ú-baan",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "ask",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "¿Se puede reservar ___?",
+                        "frame_native": "Kann man ___ reservieren?",
+                        "pronunciation_native": "se puéde reserbár ___?",
+                        "slot": {
+                            "hint_native": "Wohnung",
+                            "fillers": [
+                                {
+                                    "target": "este piso",
+                                    "native": "diese Wohnung",
+                                    "pronunciation_native": "díese Wohnung",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la vivienda",
+                                    "native": "das Wohnobjekt",
+                                    "pronunciation_native": "das Vóonobjekt",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1,
+                            2
+                        ],
+                        "text_target": "El alquiler es de 1.200 euros; la fianza son dos meses e incluye el agua.",
+                        "text_native": "Die Miete beträgt 1.200 Euro; die Kaution beträgt zwei Monatsmieten und Wasser ist inklusive."
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "¿Quién va a vivir en el piso?",
+                        "text_native": "Wer wird in der Wohnung wohnen?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "El piso tiene tres habitaciones, un balcón y mucha luz.",
+                        "text_native": "Die Wohnung hat drei Zimmer, einen Balkon und viel Licht."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "No se permiten mascotas.",
+                        "text_native": "Haustiere sind nicht erlaubt."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            8
+                        ],
+                        "text_target": "Sí. La reserva mantiene el piso disponible durante tres días.",
+                        "text_native": "Ja. Die Reservierung hält die Wohnung drei Tage für Sie frei."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "alquiler",
+                        "translation_native": "Miete",
+                        "pronunciation_native": "alkilér",
+                        "definition_target": "money paid regularly for a home",
+                        "kind": "word",
+                        "image_prompt": "A rental apartment with a monthly rent notice on a table",
+                        "used_in": [
+                            "p1",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "incluir",
+                        "translation_native": "enthalten",
+                        "pronunciation_native": "inkluír",
+                        "definition_target": "to have something as part of a price",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "habitación",
+                        "translation_native": "Zimmer",
+                        "pronunciation_native": "abitazjón",
+                        "definition_target": "a room in a home",
+                        "kind": "word",
+                        "image_prompt": "A bright apartment room with a bed and a window",
+                        "used_in": [
+                            "p3",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "permitir",
+                        "translation_native": "erlauben",
+                        "pronunciation_native": "permitír",
+                        "definition_target": "to allow something",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p4",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "vivir",
+                        "translation_native": "wohnen",
+                        "pronunciation_native": "bibír",
+                        "definition_target": "to live in a place",
+                        "kind": "word",
+                        "image_prompt": "A family living together in an apartment",
+                        "used_in": [
+                            "p5",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "ruido",
+                        "translation_native": "Lärm",
+                        "pronunciation_native": "ruído",
+                        "definition_target": "unwanted or loud sound",
+                        "kind": "word",
+                        "image_prompt": "A person covering their ears beside a noisy street",
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "calefacción",
+                        "translation_native": "Heizung",
+                        "pronunciation_native": "kale-faksjón",
+                        "definition_target": "a system that heats a home",
+                        "kind": "word",
+                        "image_prompt": "A radiator heating a room",
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "distancia",
+                        "translation_native": "Entfernung",
+                        "pronunciation_native": "distánzia",
+                        "definition_target": "how far one place is from another",
+                        "kind": "word",
+                        "image_prompt": "A map showing distance between an apartment and a school",
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "fianza",
+                        "translation_native": "Kaution",
+                        "pronunciation_native": "fjánza",
+                        "definition_target": "money held as security for a rental",
+                        "kind": "word",
+                        "image_prompt": "A rental agreement beside coins and an apartment key",
+                        "used_in": [
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "disponible",
+                        "translation_native": "frei",
+                        "pronunciation_native": "disponíble",
+                        "definition_target": "available for use or reservation",
+                        "kind": "word",
+                        "image_prompt": "An apartment key with an available sign",
+                        "used_in": [
+                            "a5"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Visita del piso\",\"title_native\":\"Wohnungsbesichtigung\",\"description_target\":\"Podrás preguntar por el alquiler, las habitaciones, las condiciones y la distancia, y decidir si el piso sirve para ti y tu hijo pequeño.\",\"description_native\":\"Du kannst nach Miete, Zimmern, Bedingungen und Entfernungen fragen und entscheiden, ob die Wohnung für dich und dein kleines Kind passt.\"},\"learner_role\":{\"role_target\":\"Inquilino\",\"role_native\":\"Mieter\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"¿Cuál es el alquiler de ___?\",\"frame_native\":\"Wie hoch ist die Miete für ___?\",\"pronunciation_native\":\"kuál es el alkilér de ___?\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"díese Wohnung\",\"in_dialogue\":true},{\"target\":\"el apartamento\",\"native\":\"das Apartment\",\"pronunciation_native\":\"das Apartment\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"¿Qué incluye ___?\",\"frame_native\":\"Was ist in ___ enthalten?\",\"pronunciation_native\":\"ké inklúje ___?\",\"slot\":{\"hint_native\":\"Kosten oder Zahlung\",\"fillers\":[{\"target\":\"el alquiler\",\"native\":\"der Mietpreis\",\"pronunciation_native\":\"der Mietpraís\",\"in_dialogue\":true},{\"target\":\"el precio mensual\",\"native\":\"die Monatskosten\",\"pronunciation_native\":\"di Monatskosten\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"¿Cuántas ___ hay?\",\"frame_native\":\"Wie viele ___ gibt es?\",\"pronunciation_native\":\"kuántas ___ aj?\",\"slot\":{\"hint_native\":\"Zimmerart\",\"fillers\":[{\"target\":\"habitaciones\",\"native\":\"Zimmer\",\"pronunciation_native\":\"zímmer\",\"in_dialogue\":true},{\"target\":\"dormitorios\",\"native\":\"Schlafzimmer\",\"pronunciation_native\":\"schláfzimmer\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"¿Se permite ___?\",\"frame_native\":\"Ist ___ erlaubt?\",\"pronunciation_native\":\"se permíte ___?\",\"slot\":{\"hint_native\":\"Kind oder Haustier\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"ain klaînes kint\",\"in_dialogue\":true},{\"target\":\"una mascota\",\"native\":\"ein Haustier\",\"pronunciation_native\":\"ain Haustír\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"Va a vivir ___ conmigo.\",\"frame_native\":\"___ wohnt mit mir.\",\"pronunciation_native\":\"ba a bibír ___ konmígo\",\"slot\":{\"hint_native\":\"Person oder Tier im Haushalt\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"ain klaînes kint\",\"in_dialogue\":true},{\"target\":\"un perro\",\"native\":\"ein Hund\",\"pronunciation_native\":\"ain hunt\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"¿Hay algún problema con ___?\",\"frame_native\":\"Gibt es ein Problem mit ___?\",\"pronunciation_native\":\"aj algún probléma kon ___?\",\"slot\":{\"hint_native\":\"Lärm oder Heizung\",\"fillers\":[{\"target\":\"el ruido\",\"native\":\"dem Lärm\",\"pronunciation_native\":\"deem lerm\",\"in_dialogue\":true},{\"target\":\"la calefacción\",\"native\":\"der Heizung\",\"pronunciation_native\":\"der háizung\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"¿Qué distancia hay hasta ___?\",\"frame_native\":\"Wie weit ist es bis ___?\",\"pronunciation_native\":\"ké distánzia aj ásta ___?\",\"slot\":{\"hint_native\":\"Ort in der Nähe\",\"fillers\":[{\"target\":\"la escuela\",\"native\":\"zur Schule\",\"pronunciation_native\":\"tsur schúle\",\"in_dialogue\":true},{\"target\":\"el metro\",\"native\":\"zur U-Bahn\",\"pronunciation_native\":\"tsur ú-baan\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"ask\",\"must_say\":[8],\"frame_target\":\"¿Se puede reservar ___?\",\"frame_native\":\"Kann man ___ reservieren?\",\"pronunciation_native\":\"se puéde reserbár ___?\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"díese Wohnung\",\"in_dialogue\":true},{\"target\":\"la vivienda\",\"native\":\"das Wohnobjekt\",\"pronunciation_native\":\"das Vóonobjekt\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1,2],\"text_target\":\"El alquiler es de 1.200 euros; la fianza son dos meses e incluye el agua.\",\"text_native\":\"Die Miete beträgt 1.200 Euro; die Kaution beträgt zwei Monatsmieten und Wasser ist inklusive.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"¿Quién va a vivir en el piso?\",\"text_native\":\"Wer wird in der Wohnung wohnen?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"El piso tiene tres habitaciones, un balcón y mucha luz.\",\"text_native\":\"Die Wohnung hat drei Zimmer, einen Balkon und viel Licht.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"No se permiten mascotas.\",\"text_native\":\"Haustiere sind nicht erlaubt.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[8],\"text_target\":\"Sí. La reserva mantiene el piso disponible durante tres días.\",\"text_native\":\"Ja. Die Reservierung hält die Wohnung drei Tage für Sie frei.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"alquiler\",\"translation_native\":\"Miete\",\"pronunciation_native\":\"alkilér\",\"definition_target\":\"money paid regularly for a home\",\"kind\":\"word\",\"image_prompt\":\"A rental apartment with a monthly rent notice on a table\",\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"incluir\",\"translation_native\":\"enthalten\",\"pronunciation_native\":\"inkluír\",\"definition_target\":\"to have something as part of a price\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a1\"]},{\"id\":\"v3\",\"term_target\":\"habitación\",\"translation_native\":\"Zimmer\",\"pronunciation_native\":\"abitazjón\",\"definition_target\":\"a room in a home\",\"kind\":\"word\",\"image_prompt\":\"A bright apartment room with a bed and a window\",\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v4\",\"term_target\":\"permitir\",\"translation_native\":\"erlauben\",\"pronunciation_native\":\"permitír\",\"definition_target\":\"to allow something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v5\",\"term_target\":\"vivir\",\"translation_native\":\"wohnen\",\"pronunciation_native\":\"bibír\",\"definition_target\":\"to live in a place\",\"kind\":\"word\",\"image_prompt\":\"A family living together in an apartment\",\"used_in\":[\"p5\",\"a2\"]},{\"id\":\"v6\",\"term_target\":\"ruido\",\"translation_native\":\"Lärm\",\"pronunciation_native\":\"ruído\",\"definition_target\":\"unwanted or loud sound\",\"kind\":\"word\",\"image_prompt\":\"A person covering their ears beside a noisy street\",\"used_in\":[\"p6\"]},{\"id\":\"v7\",\"term_target\":\"calefacción\",\"translation_native\":\"Heizung\",\"pronunciation_native\":\"kale-faksjón\",\"definition_target\":\"a system that heats a home\",\"kind\":\"word\",\"image_prompt\":\"A radiator heating a room\",\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"distancia\",\"translation_native\":\"Entfernung\",\"pronunciation_native\":\"distánzia\",\"definition_target\":\"how far one place is from another\",\"kind\":\"word\",\"image_prompt\":\"A map showing distance between an apartment and a school\",\"used_in\":[\"p7\"]},{\"id\":\"v9\",\"term_target\":\"fianza\",\"translation_native\":\"Kaution\",\"pronunciation_native\":\"fjánza\",\"definition_target\":\"money held as security for a rental\",\"kind\":\"word\",\"image_prompt\":\"A rental agreement beside coins and an apartment key\",\"used_in\":[\"a1\"]},{\"id\":\"v10\",\"term_target\":\"disponible\",\"translation_native\":\"frei\",\"pronunciation_native\":\"disponíble\",\"definition_target\":\"available for use or reservation\",\"kind\":\"word\",\"image_prompt\":\"An apartment key with an available sign\",\"used_in\":[\"a5\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOiiWXrDTtsrw4vBJdFpIjbgRfD3",
+                "object": "chat.completion",
+                "created": 1790675244,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Visita del piso\",\"title_native\":\"Wohnungsbesichtigung\",\"description_target\":\"Podrás preguntar por el alquiler, las habitaciones, las condiciones y la distancia, y decidir si el piso sirve para ti y tu hijo pequeño.\",\"description_native\":\"Du kannst nach Miete, Zimmern, Bedingungen und Entfernungen fragen und entscheiden, ob die Wohnung für dich und dein kleines Kind passt.\"},\"learner_role\":{\"role_target\":\"Inquilino\",\"role_native\":\"Mieter\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"¿Cuál es el alquiler de ___?\",\"frame_native\":\"Wie hoch ist die Miete für ___?\",\"pronunciation_native\":\"kuál es el alkilér de ___?\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"díese Wohnung\",\"in_dialogue\":true},{\"target\":\"el apartamento\",\"native\":\"das Apartment\",\"pronunciation_native\":\"das Apartment\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"¿Qué incluye ___?\",\"frame_native\":\"Was ist in ___ enthalten?\",\"pronunciation_native\":\"ké inklúje ___?\",\"slot\":{\"hint_native\":\"Kosten oder Zahlung\",\"fillers\":[{\"target\":\"el alquiler\",\"native\":\"der Mietpreis\",\"pronunciation_native\":\"der Mietpraís\",\"in_dialogue\":true},{\"target\":\"el precio mensual\",\"native\":\"die Monatskosten\",\"pronunciation_native\":\"di Monatskosten\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"¿Cuántas ___ hay?\",\"frame_native\":\"Wie viele ___ gibt es?\",\"pronunciation_native\":\"kuántas ___ aj?\",\"slot\":{\"hint_native\":\"Zimmerart\",\"fillers\":[{\"target\":\"habitaciones\",\"native\":\"Zimmer\",\"pronunciation_native\":\"zímmer\",\"in_dialogue\":true},{\"target\":\"dormitorios\",\"native\":\"Schlafzimmer\",\"pronunciation_native\":\"schláfzimmer\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"¿Se permite ___?\",\"frame_native\":\"Ist ___ erlaubt?\",\"pronunciation_native\":\"se permíte ___?\",\"slot\":{\"hint_native\":\"Kind oder Haustier\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"ain klaînes kint\",\"in_dialogue\":true},{\"target\":\"una mascota\",\"native\":\"ein Haustier\",\"pronunciation_native\":\"ain Haustír\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"Va a vivir ___ conmigo.\",\"frame_native\":\"___ wohnt mit mir.\",\"pronunciation_native\":\"ba a bibír ___ konmígo\",\"slot\":{\"hint_native\":\"Person oder Tier im Haushalt\",\"fillers\":[{\"target\":\"un niño pequeño\",\"native\":\"ein kleines Kind\",\"pronunciation_native\":\"ain klaînes kint\",\"in_dialogue\":true},{\"target\":\"un perro\",\"native\":\"ein Hund\",\"pronunciation_native\":\"ain hunt\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"¿Hay algún problema con ___?\",\"frame_native\":\"Gibt es ein Problem mit ___?\",\"pronunciation_native\":\"aj algún probléma kon ___?\",\"slot\":{\"hint_native\":\"Lärm oder Heizung\",\"fillers\":[{\"target\":\"el ruido\",\"native\":\"dem Lärm\",\"pronunciation_native\":\"deem lerm\",\"in_dialogue\":true},{\"target\":\"la calefacción\",\"native\":\"der Heizung\",\"pronunciation_native\":\"der háizung\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"¿Qué distancia hay hasta ___?\",\"frame_native\":\"Wie weit ist es bis ___?\",\"pronunciation_native\":\"ké distánzia aj ásta ___?\",\"slot\":{\"hint_native\":\"Ort in der Nähe\",\"fillers\":[{\"target\":\"la escuela\",\"native\":\"zur Schule\",\"pronunciation_native\":\"tsur schúle\",\"in_dialogue\":true},{\"target\":\"el metro\",\"native\":\"zur U-Bahn\",\"pronunciation_native\":\"tsur ú-baan\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"ask\",\"must_say\":[8],\"frame_target\":\"¿Se puede reservar ___?\",\"frame_native\":\"Kann man ___ reservieren?\",\"pronunciation_native\":\"se puéde reserbár ___?\",\"slot\":{\"hint_native\":\"Wohnung\",\"fillers\":[{\"target\":\"este piso\",\"native\":\"diese Wohnung\",\"pronunciation_native\":\"díese Wohnung\",\"in_dialogue\":true},{\"target\":\"la vivienda\",\"native\":\"das Wohnobjekt\",\"pronunciation_native\":\"das Vóonobjekt\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1,2],\"text_target\":\"El alquiler es de 1.200 euros; la fianza son dos meses e incluye el agua.\",\"text_native\":\"Die Miete beträgt 1.200 Euro; die Kaution beträgt zwei Monatsmieten und Wasser ist inklusive.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"¿Quién va a vivir en el piso?\",\"text_native\":\"Wer wird in der Wohnung wohnen?\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"El piso tiene tres habitaciones, un balcón y mucha luz.\",\"text_native\":\"Die Wohnung hat drei Zimmer, einen Balkon und viel Licht.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"No se permiten mascotas.\",\"text_native\":\"Haustiere sind nicht erlaubt.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[8],\"text_target\":\"Sí. La reserva mantiene el piso disponible durante tres días.\",\"text_native\":\"Ja. Die Reservierung hält die Wohnung drei Tage für Sie frei.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"alquiler\",\"translation_native\":\"Miete\",\"pronunciation_native\":\"alkilér\",\"definition_target\":\"money paid regularly for a home\",\"kind\":\"word\",\"image_prompt\":\"A rental apartment with a monthly rent notice on a table\",\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"incluir\",\"translation_native\":\"enthalten\",\"pronunciation_native\":\"inkluír\",\"definition_target\":\"to have something as part of a price\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a1\"]},{\"id\":\"v3\",\"term_target\":\"habitación\",\"translation_native\":\"Zimmer\",\"pronunciation_native\":\"abitazjón\",\"definition_target\":\"a room in a home\",\"kind\":\"word\",\"image_prompt\":\"A bright apartment room with a bed and a window\",\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v4\",\"term_target\":\"permitir\",\"translation_native\":\"erlauben\",\"pronunciation_native\":\"permitír\",\"definition_target\":\"to allow something\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v5\",\"term_target\":\"vivir\",\"translation_native\":\"wohnen\",\"pronunciation_native\":\"bibír\",\"definition_target\":\"to live in a place\",\"kind\":\"word\",\"image_prompt\":\"A family living together in an apartment\",\"used_in\":[\"p5\",\"a2\"]},{\"id\":\"v6\",\"term_target\":\"ruido\",\"translation_native\":\"Lärm\",\"pronunciation_native\":\"ruído\",\"definition_target\":\"unwanted or loud sound\",\"kind\":\"word\",\"image_prompt\":\"A person covering their ears beside a noisy street\",\"used_in\":[\"p6\"]},{\"id\":\"v7\",\"term_target\":\"calefacción\",\"translation_native\":\"Heizung\",\"pronunciation_native\":\"kale-faksjón\",\"definition_target\":\"a system that heats a home\",\"kind\":\"word\",\"image_prompt\":\"A radiator heating a room\",\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"distancia\",\"translation_native\":\"Entfernung\",\"pronunciation_native\":\"distánzia\",\"definition_target\":\"how far one place is from another\",\"kind\":\"word\",\"image_prompt\":\"A map showing distance between an apartment and a school\",\"used_in\":[\"p7\"]},{\"id\":\"v9\",\"term_target\":\"fianza\",\"translation_native\":\"Kaution\",\"pronunciation_native\":\"fjánza\",\"definition_target\":\"money held as security for a rental\",\"kind\":\"word\",\"image_prompt\":\"A rental agreement beside coins and an apartment key\",\"used_in\":[\"a1\"]},{\"id\":\"v10\",\"term_target\":\"disponible\",\"translation_native\":\"frei\",\"pronunciation_native\":\"disponíble\",\"definition_target\":\"available for use or reservation\",\"kind\":\"word\",\"image_prompt\":\"An apartment key with an available sign\",\"used_in\":[\"a5\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5070,
+                    "completion_tokens": 3944,
+                    "total_tokens": 9014,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 425,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2024,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

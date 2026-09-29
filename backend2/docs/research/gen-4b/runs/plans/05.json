@@ -1,0 +1,504 @@
+{
+    "plan": "05",
+    "inputs": {
+        "native": "es",
+        "target": "en",
+        "level": "beginner",
+        "scenes": 3,
+        "goal": "vuelo a Londres, primera vez, miedo al control de pasaportes",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/05-es-en.json (GEN-4a paid $0.020502)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: title_native over 18 («Control de pasaporte», 20)"
+            },
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 3: title_native over 18 («Llegada a la ciudad», 19)"
+            },
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 3: goals_native 2 over 30 («preguntar dónde comprar billete», 31)"
+            },
+            {
+                "check": "survival_asks",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: 1 must_say items start with ask (at least 2)"
+            },
+            {
+                "check": "survival_unanswered",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: must_understand 2 «asks the purpose of your trip» has no answer in must_say"
+            },
+            {
+                "check": "survival_unanswered",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 3: must_understand 1 «asks where you want to go» has no answer in must_say"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: title_native «Control de pasaporte» (20) → «Control migratorio» (18)"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 3: title_native «Llegada a la ciudad» (19) → «Arribo a la ciudad» (18)"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 3: goals_native 2 «preguntar dónde comprar billete» (31) still over 30: «preguntar dónde comprar billete» (31)"
+            }
+        ],
+        "plan": {
+            "title_native": "Viaje a Londres",
+            "title_target": "Trip to London",
+            "overdue_native": "El vuelo fue ayer",
+            "learner_role": [
+                "Traveller",
+                "Viajero"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 3,
+                "title_native": "Facturación",
+                "title_target": "Check-in",
+                "teaches_native": "facturar y entender la puerta",
+                "goals_native": [
+                    "decir el destino",
+                    "decir si lleva equipaje",
+                    "preguntar por la puerta",
+                    "preguntar la hora de embarque"
+                ],
+                "learner_role": [
+                    "Traveller",
+                    "Viajero"
+                ],
+                "partner_role": [
+                    "Airline agent",
+                    "Agente de facturación"
+                ],
+                "topic_description": "Situation: At the airport check-in desk, the learner is taking a first flight to London and needs the boarding pass and basic flight information before going to security and passport control. This is an early airport interaction where missing key details could cause confusion later.\nLearner: Traveller. Partner: Airline agent.\nNot in this scene: security instructions, passport questions, border entry purpose, transport after arrival.",
+                "must_say": [
+                    "say you are checking in for a flight — slot: the destination",
+                    "give your passport — slot: the document",
+                    "answer whether you have luggage — slot: the luggage type",
+                    "answer whether you packed your bags yourself — slot: the bags",
+                    "ask where the gate is — slot: none",
+                    "ask when boarding starts — slot: none"
+                ],
+                "must_understand": [
+                    "asks for your passport and booking",
+                    "asks whether you have checked baggage",
+                    "asks whether you packed your bags yourself",
+                    "says which gate to go to and when boarding starts"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Control migratorio",
+                "title_target": "Passport control",
+                "teaches_native": "responder al control de pasaporte",
+                "goals_native": [
+                    "decir adónde va",
+                    "decir por qué viaja",
+                    "decir cuánto tiempo estará",
+                    "decir dónde se aloja"
+                ],
+                "learner_role": [
+                    "Traveller",
+                    "Viajero"
+                ],
+                "partner_role": [
+                    "Border officer",
+                    "Agente de fronteras"
+                ],
+                "topic_description": "Situation: At passport control, the learner speaks to a border officer before entering or leaving through the border point. It is the learner's first time flying to London, and this is the interaction they are most worried about because they must answer clearly and stay calm.\nLearner: Traveller. Partner: Border officer.\nNot in this scene: check-in, baggage questions, security screening, finding the gate, transport in the city.",
+                "must_say": [
+                    "give your passport — slot: the document",
+                    "answer where you are going — slot: the destination",
+                    "answer why you are travelling — slot: the reason",
+                    "answer how long you will stay — slot: the length of stay",
+                    "answer where you will stay — slot: the place",
+                    "ask whether everything is okay — slot: none",
+                    "confirm you understand where to go next — slot: the place"
+                ],
+                "must_understand": [
+                    "asks where you are travelling to",
+                    "asks the purpose of your trip",
+                    "asks how long you will stay and where you will stay",
+                    "says you can go through or tells you where to go next"
+                ]
+            },
+            {
+                "order": 3,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Arribo a la ciudad",
+                "title_target": "Into the city",
+                "teaches_native": "pedir transporte al centro",
+                "goals_native": [
+                    "decir adónde va",
+                    "preguntar qué transporte tomar",
+                    "preguntar dónde comprar billete",
+                    "confirmar la parada o andén"
+                ],
+                "learner_role": [
+                    "Traveller",
+                    "Viajero"
+                ],
+                "partner_role": [
+                    "Station staff",
+                    "Empleado de estación"
+                ],
+                "topic_description": "Situation: After arrival, the learner needs to leave the airport and reach London using public transport. This interaction matters because the learner must choose the right route, buy the correct ticket, and find the correct platform or stop in an unfamiliar place.\nLearner: Traveller. Partner: Station staff.\nNot in this scene: check-in, passport questions, hotel check-in, asking for tourist information.",
+                "must_say": [
+                    "say you are going to central London — slot: the area",
+                    "ask which train or bus to take — slot: the destination",
+                    "ask where to buy a ticket — slot: the ticket",
+                    "ask how much it costs — slot: the ticket",
+                    "ask how long it takes — slot: the route",
+                    "confirm the platform or stop — slot: the place"
+                ],
+                "must_understand": [
+                    "asks where you want to go",
+                    "says which train, bus, or line to take",
+                    "tells you where to buy the ticket",
+                    "says the price and travel time",
+                    "gives the platform number or bus stop"
+                ]
+            }
+        ],
+        "cost_usd": "0.007106"
+    },
+    "wall_ms": 9954,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:25:49Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4853,
+            "cached_tokens_in": 3840,
+            "tokens_out": 1134,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 18719,
+            "wall_ms": 1,
+            "call_id": null,
+            "user": "GOAL: vuelo a Londres, primera vez, miedo al control de pasaportes\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Spanish\nLEVEL: Beginner\nSCENES_COUNT: 3\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Viaje a Londres",
+                    "title_target": "Trip to London",
+                    "event_native": "Vuelo",
+                    "until_phrase_native": "Hasta el vuelo",
+                    "overdue_native": "El vuelo fue ayer.",
+                    "cover_image_prompt": "passport control area at an international airport, queue lanes, bright terminal light, realistic photo, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Traveller",
+                    "learner_role_native": "Viajero"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 3,
+                        "must_say": [
+                            "say you are checking in for a flight — slot: the destination",
+                            "give your passport — slot: the document",
+                            "answer whether you have luggage — slot: the luggage type",
+                            "answer whether you packed your bags yourself — slot: the bags",
+                            "ask where the gate is — slot: none",
+                            "ask when boarding starts — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks for your passport and booking",
+                            "asks whether you have checked baggage",
+                            "asks whether you packed your bags yourself",
+                            "says which gate to go to and when boarding starts"
+                        ],
+                        "title_native": "Facturación",
+                        "title_target": "Check-in",
+                        "teaches_native": "facturar y entender la puerta",
+                        "goals_native": [
+                            "decir el destino",
+                            "decir si lleva equipaje",
+                            "preguntar por la puerta",
+                            "preguntar la hora de embarque"
+                        ],
+                        "learner_role_target": "Traveller",
+                        "learner_role_native": "Viajero",
+                        "partner_role_target": "Airline agent",
+                        "partner_role_native": "Agente de facturación",
+                        "topic_description": "Situation: At the airport check-in desk, the learner is taking a first flight to London and needs the boarding pass and basic flight information before going to security and passport control. This is an early airport interaction where missing key details could cause confusion later.\nLearner: Traveller. Partner: Airline agent.\nNot in this scene: security instructions, passport questions, border entry purpose, transport after arrival.",
+                        "image_prompt": "airport check-in counter with suitcase scale and boarding pass printer, realistic photo, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "give your passport — slot: the document",
+                            "answer where you are going — slot: the destination",
+                            "answer why you are travelling — slot: the reason",
+                            "answer how long you will stay — slot: the length of stay",
+                            "answer where you will stay — slot: the place",
+                            "ask whether everything is okay — slot: none",
+                            "confirm you understand where to go next — slot: the place"
+                        ],
+                        "must_understand": [
+                            "asks where you are travelling to",
+                            "asks the purpose of your trip",
+                            "asks how long you will stay and where you will stay",
+                            "says you can go through or tells you where to go next"
+                        ],
+                        "title_native": "Control de pasaporte",
+                        "title_target": "Passport control",
+                        "teaches_native": "responder al control de pasaporte",
+                        "goals_native": [
+                            "decir adónde va",
+                            "decir por qué viaja",
+                            "decir cuánto tiempo estará",
+                            "decir dónde se aloja"
+                        ],
+                        "learner_role_target": "Traveller",
+                        "learner_role_native": "Viajero",
+                        "partner_role_target": "Border officer",
+                        "partner_role_native": "Agente de fronteras",
+                        "topic_description": "Situation: At passport control, the learner speaks to a border officer before entering or leaving through the border point. It is the learner's first time flying to London, and this is the interaction they are most worried about because they must answer clearly and stay calm.\nLearner: Traveller. Partner: Border officer.\nNot in this scene: check-in, baggage questions, security screening, finding the gate, transport in the city.",
+                        "image_prompt": "airport passport control booths with queue barriers and officer desks, realistic photo, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 3,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "say you are going to central London — slot: the area",
+                            "ask which train or bus to take — slot: the destination",
+                            "ask where to buy a ticket — slot: the ticket",
+                            "ask how much it costs — slot: the ticket",
+                            "ask how long it takes — slot: the route",
+                            "confirm the platform or stop — slot: the place"
+                        ],
+                        "must_understand": [
+                            "asks where you want to go",
+                            "says which train, bus, or line to take",
+                            "tells you where to buy the ticket",
+                            "says the price and travel time",
+                            "gives the platform number or bus stop"
+                        ],
+                        "title_native": "Llegada a la ciudad",
+                        "title_target": "Into the city",
+                        "teaches_native": "pedir transporte al centro",
+                        "goals_native": [
+                            "decir adónde va",
+                            "preguntar qué transporte tomar",
+                            "preguntar dónde comprar billete",
+                            "confirmar la parada o andén"
+                        ],
+                        "learner_role_target": "Traveller",
+                        "learner_role_native": "Viajero",
+                        "partner_role_target": "Station staff",
+                        "partner_role_native": "Empleado de estación",
+                        "topic_description": "Situation: After arrival, the learner needs to leave the airport and reach London using public transport. This interaction matters because the learner must choose the right route, buy the correct ticket, and find the correct platform or stop in an unfamiliar place.\nLearner: Traveller. Partner: Station staff.\nNot in this scene: check-in, passport questions, hotel check-in, asking for tourist information.",
+                        "image_prompt": "airport train station information point with ticket machines and platform signs in the distance, realistic photo, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Viaje a Londres\",\"title_target\":\"Trip to London\",\"event_native\":\"Vuelo\",\"until_phrase_native\":\"Hasta el vuelo\",\"overdue_native\":\"El vuelo fue ayer.\",\"cover_image_prompt\":\"passport control area at an international airport, queue lanes, bright terminal light, realistic photo, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Traveller\",\"learner_role_native\":\"Viajero\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":3,\"must_say\":[\"say you are checking in for a flight — slot: the destination\",\"give your passport — slot: the document\",\"answer whether you have luggage — slot: the luggage type\",\"answer whether you packed your bags yourself — slot: the bags\",\"ask where the gate is — slot: none\",\"ask when boarding starts — slot: none\"],\"must_understand\":[\"asks for your passport and booking\",\"asks whether you have checked baggage\",\"asks whether you packed your bags yourself\",\"says which gate to go to and when boarding starts\"],\"title_native\":\"Facturación\",\"title_target\":\"Check-in\",\"teaches_native\":\"facturar y entender la puerta\",\"goals_native\":[\"decir el destino\",\"decir si lleva equipaje\",\"preguntar por la puerta\",\"preguntar la hora de embarque\"],\"learner_role_target\":\"Traveller\",\"learner_role_native\":\"Viajero\",\"partner_role_target\":\"Airline agent\",\"partner_role_native\":\"Agente de facturación\",\"topic_description\":\"Situation: At the airport check-in desk, the learner is taking a first flight to London and needs the boarding pass and basic flight information before going to security and passport control. This is an early airport interaction where missing key details could cause confusion later.\\nLearner: Traveller. Partner: Airline agent.\\nNot in this scene: security instructions, passport questions, border entry purpose, transport after arrival.\",\"image_prompt\":\"airport check-in counter with suitcase scale and boarding pass printer, realistic photo, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"give your passport — slot: the document\",\"answer where you are going — slot: the destination\",\"answer why you are travelling — slot: the reason\",\"answer how long you will stay — slot: the length of stay\",\"answer where you will stay — slot: the place\",\"ask whether everything is okay — slot: none\",\"confirm you understand where to go next — slot: the place\"],\"must_understand\":[\"asks where you are travelling to\",\"asks the purpose of your trip\",\"asks how long you will stay and where you will stay\",\"says you can go through or tells you where to go next\"],\"title_native\":\"Control de pasaporte\",\"title_target\":\"Passport control\",\"teaches_native\":\"responder al control de pasaporte\",\"goals_native\":[\"decir adónde va\",\"decir por qué viaja\",\"decir cuánto tiempo estará\",\"decir dónde se aloja\"],\"learner_role_target\":\"Traveller\",\"learner_role_native\":\"Viajero\",\"partner_role_target\":\"Border officer\",\"partner_role_native\":\"Agente de fronteras\",\"topic_description\":\"Situation: At passport control, the learner speaks to a border officer before entering or leaving through the border point. It is the learner's first time flying to London, and this is the interaction they are most worried about because they must answer clearly and stay calm.\\nLearner: Traveller. Partner: Border officer.\\nNot in this scene: check-in, baggage questions, security screening, finding the gate, transport in the city.\",\"image_prompt\":\"airport passport control booths with queue barriers and officer desks, realistic photo, no text, no logos, no faces in close-up\"},{\"order\":3,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"say you are going to central London — slot: the area\",\"ask which train or bus to take — slot: the destination\",\"ask where to buy a ticket — slot: the ticket\",\"ask how much it costs — slot: the ticket\",\"ask how long it takes — slot: the route\",\"confirm the platform or stop — slot: the place\"],\"must_understand\":[\"asks where you want to go\",\"says which train, bus, or line to take\",\"tells you where to buy the ticket\",\"says the price and travel time\",\"gives the platform number or bus stop\"],\"title_native\":\"Llegada a la ciudad\",\"title_target\":\"Into the city\",\"teaches_native\":\"pedir transporte al centro\",\"goals_native\":[\"decir adónde va\",\"preguntar qué transporte tomar\",\"preguntar dónde comprar billete\",\"confirmar la parada o andén\"],\"learner_role_target\":\"Traveller\",\"learner_role_native\":\"Viajero\",\"partner_role_target\":\"Station staff\",\"partner_role_native\":\"Empleado de estación\",\"topic_description\":\"Situation: After arrival, the learner needs to leave the airport and reach London using public transport. This interaction matters because the learner must choose the right route, buy the correct ticket, and find the correct platform or stop in an unfamiliar place.\\nLearner: Traveller. Partner: Station staff.\\nNot in this scene: check-in, passport questions, hotel check-in, asking for tourist information.\",\"image_prompt\":\"airport train station information point with ticket machines and platform signs in the distance, realistic photo, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:49Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 478,
+            "cached_tokens_in": 0,
+            "tokens_out": 114,
+            "reasoning_tokens": 95,
+            "cost_usd": "0.001162",
+            "latency_ms": 1874,
+            "wall_ms": 1875,
+            "call_id": "01M3P7R4QTZBN6367ZY89X1AVN",
+            "user": "FIELD: title_native\nLANGUAGE: Spanish\nLIMIT: 18\nLINE: Control de pasaporte",
+            "payload": {
+                "line": "Control migratorio"
+            },
+            "raw": "{\"line\":\"Control migratorio\"}",
+            "wire": {
+                "id": "chatcmpl-ETONpCkOtpGX7kJ3eUE0dtxJE4SIt",
+                "object": "chat.completion",
+                "created": 1790673949,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"Control migratorio\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 478,
+                    "completion_tokens": 114,
+                    "total_tokens": 592,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 95,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:51Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 479,
+            "cached_tokens_in": 0,
+            "tokens_out": 297,
+            "reasoning_tokens": 276,
+            "cost_usd": "0.002261",
+            "latency_ms": 3156,
+            "wall_ms": 3156,
+            "call_id": "01M3P7R6JEJB6HZ81ZWTXD6KMQ",
+            "user": "FIELD: title_native\nLANGUAGE: Spanish\nLIMIT: 18\nLINE: Llegada a la ciudad",
+            "payload": {
+                "line": "Arribo a la ciudad"
+            },
+            "raw": "{\"line\":\"Arribo a la ciudad\"}",
+            "wire": {
+                "id": "chatcmpl-ETONrK2t2xEQ7yVnhCUAqyyjvy6J8",
+                "object": "chat.completion",
+                "created": 1790673951,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"Arribo a la ciudad\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 479,
+                    "completion_tokens": 297,
+                    "total_tokens": 776,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 276,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:54Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 479,
+            "cached_tokens_in": 0,
+            "tokens_out": 534,
+            "reasoning_tokens": 512,
+            "cost_usd": "0.003683",
+            "latency_ms": 4909,
+            "wall_ms": 4908,
+            "call_id": "01M3P7R9N4REA4NFHG71ZFR5DG",
+            "user": "FIELD: goals_native\nLANGUAGE: Spanish\nLIMIT: 30\nLINE: preguntar dónde comprar billete",
+            "payload": {
+                "line": "preguntar dónde comprar billete"
+            },
+            "raw": "{\"line\":\"preguntar dónde comprar billete\"}",
+            "wire": {
+                "id": "chatcmpl-ETONum2q8r0XUknjyUPBkUc5hDuHa",
+                "object": "chat.completion",
+                "created": 1790673954,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"preguntar dónde comprar billete\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 479,
+                    "completion_tokens": 534,
+                    "total_tokens": 1013,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 512,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

@@ -1,0 +1,50 @@
+{
+    "plan": "13",
+    "at": "2026-09-28T14:45:47Z",
+    "inputs": {
+        "goal": "colloquio di lavoro, domande sullo stipendio",
+        "target": "en",
+        "native": "it",
+        "target_language": "English",
+        "native_language": "Italian",
+        "level": "Intermediate",
+        "scenes_count": 2,
+        "existing_scenes": []
+    },
+    "rules": "v8",
+    "user": "GOAL: colloquio di lavoro, domande sullo stipendio\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Italian\nLEVEL: Intermediate\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+    "prompt": {
+        "file": "docs/research/gen-4/plan-builder-v2.1.md",
+        "version": "plan-builder-v2.1",
+        "system_chars": 19135,
+        "system_bytes": 19999,
+        "system_sha256": "c629b22af9d11762384efd037c78cc5adb91ff200d3f8ac8e50c5cc4188462d0"
+    },
+    "schema": "v2.1",
+    "asked_model": "gpt-5.4",
+    "answered_model": "gpt-5.4-2026-03-05",
+    "response_id": "chatcmpl-ET6twlxEvKNjeEmKRKE6IByJHHGoE",
+    "finish_reason": "stop",
+    "usage": {
+        "prompt_tokens": 4851,
+        "completion_tokens": 805,
+        "total_tokens": 5656,
+        "prompt_tokens_details": {
+            "cached_tokens": 3840,
+            "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+        }
+    },
+    "tokens_in": 4851,
+    "cached_tokens_in": 3840,
+    "tokens_out": 805,
+    "cost_usd": "0.015563",
+    "latency_ms": 14267,
+    "journal_call_id": "01M3M7NA8412CZT8QJGZZZM8N4",
+    "error": null
+}

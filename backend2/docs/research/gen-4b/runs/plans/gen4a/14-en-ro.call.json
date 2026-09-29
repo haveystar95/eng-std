@@ -1,0 +1,50 @@
+{
+    "plan": "14",
+    "at": "2026-09-28T14:46:02Z",
+    "inputs": {
+        "goal": "Job interview on Friday, worried about questions on my experience",
+        "target": "ro",
+        "native": "en",
+        "target_language": "Romanian",
+        "native_language": "English",
+        "level": "Beginner",
+        "scenes_count": 2,
+        "existing_scenes": []
+    },
+    "rules": "v8",
+    "user": "GOAL: Job interview on Friday, worried about questions on my experience\nTARGET_LANGUAGE: Romanian\nNATIVE_LANGUAGE: English\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+    "prompt": {
+        "file": "docs/research/gen-4/plan-builder-v2.1.md",
+        "version": "plan-builder-v2.1",
+        "system_chars": 19135,
+        "system_bytes": 19999,
+        "system_sha256": "c629b22af9d11762384efd037c78cc5adb91ff200d3f8ac8e50c5cc4188462d0"
+    },
+    "schema": "v2.1",
+    "asked_model": "gpt-5.4",
+    "answered_model": "gpt-5.4-2026-03-05",
+    "response_id": "chatcmpl-ET6uAupmDtZWSQ8LEdwGds1PCKanM",
+    "finish_reason": "stop",
+    "usage": {
+        "prompt_tokens": 4850,
+        "completion_tokens": 823,
+        "total_tokens": 5673,
+        "prompt_tokens_details": {
+            "cached_tokens": 3840,
+            "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+        }
+    },
+    "tokens_in": 4850,
+    "cached_tokens_in": 3840,
+    "tokens_out": 823,
+    "cost_usd": "0.015830",
+    "latency_ms": 12642,
+    "journal_call_id": "01M3M7NR68YE8QSMJNQRJFAHSM",
+    "error": null
+}

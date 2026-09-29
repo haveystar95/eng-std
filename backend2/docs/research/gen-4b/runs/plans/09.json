@@ -1,0 +1,287 @@
+{
+    "plan": "09",
+    "inputs": {
+        "native": "be",
+        "target": "pl",
+        "level": "beginner",
+        "scenes": 2,
+        "goal": "візіт да стаматолага, баліць зуб, першы раз у Польшчы",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/09-be-pl.json (GEN-4a paid $0.017145)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: teaches_native over 34 («сказаць прычыну і спытаць пра прыём», 35)"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: teaches_native «сказаць прычыну і спытаць пра прыём» (35) still over 34: «назваць прычыну і спытаць пра прыём» (35)"
+            }
+        ],
+        "plan": {
+            "title_native": "Візіт да стаматолага",
+            "title_target": "Wizyta u dentysty",
+            "overdue_native": "Прыём быў учора",
+            "learner_role": [
+                "Pacjent",
+                "Пацыент"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Рэгістратура",
+                "title_target": "Recepcja",
+                "teaches_native": "сказаць прычыну і спытаць пра прыём",
+                "goals_native": [
+                    "сказаць, хто вы",
+                    "сказаць, што здарылася",
+                    "спытаць пра чаканне",
+                    "спытаць пра дакумент"
+                ],
+                "learner_role": [
+                    "Pacjent",
+                    "Пацыент"
+                ],
+                "partner_role": [
+                    "Recepcjonista",
+                    "Рэгістратар"
+                ],
+                "topic_description": "Situation: You arrive at a dental clinic in Poland with tooth pain and need to check in before seeing anyone. It is your first time in this country and likely your first visit to this clinic, so the front desk decides whether you can be seen today and what paperwork is needed.\nLearner: Patient. Partner: Receptionist.\nNot in this scene: describing the pain in detail, the examination, treatment options, medicine, aftercare.",
+                "must_say": [
+                    "give your name — slot: the name",
+                    "say why you are here — slot: the problem",
+                    "answer whether you have been here before — slot: the last visit (never, once)",
+                    "ask whether the dentist can see you today — slot: none",
+                    "ask how long the wait is — slot: none",
+                    "answer whether you have insurance — slot: the type of insurance",
+                    "ask what document they need — slot: the document type"
+                ],
+                "must_understand": [
+                    "asks for your name and why you are here",
+                    "asks whether this is your first visit",
+                    "offers a time today or says you need to wait",
+                    "asks whether you have insurance",
+                    "tells you what document to show and where to wait"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Прыём у лекара",
+                "title_target": "Wizyta u dentysty",
+                "teaches_native": "апісаць боль, зразумець лячэнне",
+                "goals_native": [
+                    "сказаць, дзе баліць",
+                    "сказаць, калі пачалося",
+                    "спытаць, што гэта",
+                    "спытаць пра лячэнне"
+                ],
+                "learner_role": [
+                    "Pacjent",
+                    "Пацыент"
+                ],
+                "partner_role": [
+                    "Dentysta",
+                    "Стаматолаг"
+                ],
+                "topic_description": "Situation: You are now in the dentist's room for the main consultation. The dentist needs a simple description of the tooth problem and then decides what treatment to do. Because this is your first time in Poland, clear understanding of the diagnosis and basic aftercare matters most.\nLearner: Patient. Partner: Dentist.\nNot in this scene: check-in details, insurance, documents, waiting time, payment at reception.",
+                "must_say": [
+                    "say where it hurts — slot: the tooth or side",
+                    "say when it started — slot: the time expression",
+                    "answer whether the pain is strong — slot: the pain level",
+                    "answer whether hot or cold makes it worse — slot: the trigger",
+                    "ask what the problem is — slot: none",
+                    "ask whether you need treatment today — slot: the treatment",
+                    "ask whether you can eat after the treatment — slot: the food or drink",
+                    "confirm you understand the instruction — slot: the instruction"
+                ],
+                "must_understand": [
+                    "asks which tooth hurts and since when",
+                    "asks whether the pain is strong and what makes it worse",
+                    "says what the problem is",
+                    "explains what treatment is needed today",
+                    "tells you what to do after the treatment"
+                ]
+            }
+        ],
+        "cost_usd": "0.002612"
+    },
+    "wall_ms": 3514,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:26:01Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4860,
+            "cached_tokens_in": 3840,
+            "tokens_out": 909,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 15812,
+            "wall_ms": 0,
+            "call_id": null,
+            "user": "GOAL: візіт да стаматолага, баліць зуб, першы раз у Польшчы\nTARGET_LANGUAGE: Polish\nNATIVE_LANGUAGE: Belarusian\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Візіт да стаматолага",
+                    "title_target": "Wizyta u dentysty",
+                    "event_native": "Прыём",
+                    "until_phrase_native": "Да прыёму",
+                    "overdue_native": "Прыём быў учора",
+                    "cover_image_prompt": "dental treatment room in a modern clinic, dentist chair and instruments, bright clean light, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Pacjent",
+                    "learner_role_native": "Пацыент"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "give your name — slot: the name",
+                            "say why you are here — slot: the problem",
+                            "answer whether you have been here before — slot: the last visit (never, once)",
+                            "ask whether the dentist can see you today — slot: none",
+                            "ask how long the wait is — slot: none",
+                            "answer whether you have insurance — slot: the type of insurance",
+                            "ask what document they need — slot: the document type"
+                        ],
+                        "must_understand": [
+                            "asks for your name and why you are here",
+                            "asks whether this is your first visit",
+                            "offers a time today or says you need to wait",
+                            "asks whether you have insurance",
+                            "tells you what document to show and where to wait"
+                        ],
+                        "title_native": "Рэгістратура",
+                        "title_target": "Recepcja",
+                        "teaches_native": "сказаць прычыну і спытаць пра прыём",
+                        "goals_native": [
+                            "сказаць, хто вы",
+                            "сказаць, што здарылася",
+                            "спытаць пра чаканне",
+                            "спытаць пра дакумент"
+                        ],
+                        "learner_role_target": "Pacjent",
+                        "learner_role_native": "Пацыент",
+                        "partner_role_target": "Recepcjonista",
+                        "partner_role_native": "Рэгістратар",
+                        "topic_description": "Situation: You arrive at a dental clinic in Poland with tooth pain and need to check in before seeing anyone. It is your first time in this country and likely your first visit to this clinic, so the front desk decides whether you can be seen today and what paperwork is needed.\nLearner: Patient. Partner: Receptionist.\nNot in this scene: describing the pain in detail, the examination, treatment options, medicine, aftercare.",
+                        "image_prompt": "reception desk of a dental clinic, computer, appointment area, bright clean interior, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "say where it hurts — slot: the tooth or side",
+                            "say when it started — slot: the time expression",
+                            "answer whether the pain is strong — slot: the pain level",
+                            "answer whether hot or cold makes it worse — slot: the trigger",
+                            "ask what the problem is — slot: none",
+                            "ask whether you need treatment today — slot: the treatment",
+                            "ask whether you can eat after the treatment — slot: the food or drink",
+                            "confirm you understand the instruction — slot: the instruction"
+                        ],
+                        "must_understand": [
+                            "asks which tooth hurts and since when",
+                            "asks whether the pain is strong and what makes it worse",
+                            "says what the problem is",
+                            "explains what treatment is needed today",
+                            "tells you what to do after the treatment"
+                        ],
+                        "title_native": "Прыём у лекара",
+                        "title_target": "Wizyta u dentysty",
+                        "teaches_native": "апісаць боль, зразумець лячэнне",
+                        "goals_native": [
+                            "сказаць, дзе баліць",
+                            "сказаць, калі пачалося",
+                            "спытаць, што гэта",
+                            "спытаць пра лячэнне"
+                        ],
+                        "learner_role_target": "Pacjent",
+                        "learner_role_native": "Пацыент",
+                        "partner_role_target": "Dentysta",
+                        "partner_role_native": "Стаматолаг",
+                        "topic_description": "Situation: You are now in the dentist's room for the main consultation. The dentist needs a simple description of the tooth problem and then decides what treatment to do. Because this is your first time in Poland, clear understanding of the diagnosis and basic aftercare matters most.\nLearner: Patient. Partner: Dentist.\nNot in this scene: check-in details, insurance, documents, waiting time, payment at reception.",
+                        "image_prompt": "dental chair and dentist equipment in a treatment room, patient perspective, bright clinical light, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Візіт да стаматолага\",\"title_target\":\"Wizyta u dentysty\",\"event_native\":\"Прыём\",\"until_phrase_native\":\"Да прыёму\",\"overdue_native\":\"Прыём быў учора\",\"cover_image_prompt\":\"dental treatment room in a modern clinic, dentist chair and instruments, bright clean light, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Pacjent\",\"learner_role_native\":\"Пацыент\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"give your name — slot: the name\",\"say why you are here — slot: the problem\",\"answer whether you have been here before — slot: the last visit (never, once)\",\"ask whether the dentist can see you today — slot: none\",\"ask how long the wait is — slot: none\",\"answer whether you have insurance — slot: the type of insurance\",\"ask what document they need — slot: the document type\"],\"must_understand\":[\"asks for your name and why you are here\",\"asks whether this is your first visit\",\"offers a time today or says you need to wait\",\"asks whether you have insurance\",\"tells you what document to show and where to wait\"],\"title_native\":\"Рэгістратура\",\"title_target\":\"Recepcja\",\"teaches_native\":\"сказаць прычыну і спытаць пра прыём\",\"goals_native\":[\"сказаць, хто вы\",\"сказаць, што здарылася\",\"спытаць пра чаканне\",\"спытаць пра дакумент\"],\"learner_role_target\":\"Pacjent\",\"learner_role_native\":\"Пацыент\",\"partner_role_target\":\"Recepcjonista\",\"partner_role_native\":\"Рэгістратар\",\"topic_description\":\"Situation: You arrive at a dental clinic in Poland with tooth pain and need to check in before seeing anyone. It is your first time in this country and likely your first visit to this clinic, so the front desk decides whether you can be seen today and what paperwork is needed.\\nLearner: Patient. Partner: Receptionist.\\nNot in this scene: describing the pain in detail, the examination, treatment options, medicine, aftercare.\",\"image_prompt\":\"reception desk of a dental clinic, computer, appointment area, bright clean interior, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"say where it hurts — slot: the tooth or side\",\"say when it started — slot: the time expression\",\"answer whether the pain is strong — slot: the pain level\",\"answer whether hot or cold makes it worse — slot: the trigger\",\"ask what the problem is — slot: none\",\"ask whether you need treatment today — slot: the treatment\",\"ask whether you can eat after the treatment — slot: the food or drink\",\"confirm you understand the instruction — slot: the instruction\"],\"must_understand\":[\"asks which tooth hurts and since when\",\"asks whether the pain is strong and what makes it worse\",\"says what the problem is\",\"explains what treatment is needed today\",\"tells you what to do after the treatment\"],\"title_native\":\"Прыём у лекара\",\"title_target\":\"Wizyta u dentysty\",\"teaches_native\":\"апісаць боль, зразумець лячэнне\",\"goals_native\":[\"сказаць, дзе баліць\",\"сказаць, калі пачалося\",\"спытаць, што гэта\",\"спытаць пра лячэнне\"],\"learner_role_target\":\"Pacjent\",\"learner_role_native\":\"Пацыент\",\"partner_role_target\":\"Dentysta\",\"partner_role_native\":\"Стаматолаг\",\"topic_description\":\"Situation: You are now in the dentist's room for the main consultation. The dentist needs a simple description of the tooth problem and then decides what treatment to do. Because this is your first time in Poland, clear understanding of the diagnosis and basic aftercare matters most.\\nLearner: Patient. Partner: Dentist.\\nNot in this scene: check-in details, insurance, documents, waiting time, payment at reception.\",\"image_prompt\":\"dental chair and dentist equipment in a treatment room, patient perspective, bright clinical light, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:26:01Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 488,
+            "cached_tokens_in": 0,
+            "tokens_out": 354,
+            "reasoning_tokens": 325,
+            "cost_usd": "0.002612",
+            "latency_ms": 3506,
+            "wall_ms": 3506,
+            "call_id": "01M3P7RGR0G27QR1T414Y7AHVP",
+            "user": "FIELD: teaches_native\nLANGUAGE: Belarusian\nLIMIT: 34\nLINE: сказаць прычыну і спытаць пра прыём",
+            "payload": {
+                "line": "назваць прычыну і спытаць пра прыём"
+            },
+            "raw": "{\"line\":\"назваць прычыну і спытаць пра прыём\"}",
+            "wire": {
+                "id": "chatcmpl-ETOO23iaG2t8eWf02ezmInsBY5AqR",
+                "object": "chat.completion",
+                "created": 1790673962,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"назваць прычыну і спытаць пра прыём\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 488,
+                    "completion_tokens": 354,
+                    "total_tokens": 842,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 325,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

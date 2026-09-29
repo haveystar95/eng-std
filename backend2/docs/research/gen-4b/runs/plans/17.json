@@ -1,0 +1,48 @@
+{
+    "plan": "17",
+    "inputs": {
+        "native": "ru",
+        "target": "en",
+        "level": "beginner",
+        "scenes": 3,
+        "goal": "хочу подтянуть английский",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/17-ru-en.json (GEN-4a paid $0.006419)",
+    "outcome": {
+        "status": "unclear",
+        "error": null,
+        "unclear_reason": "The goal is not a concrete real-life situation with a specific conversation partner.",
+        "fail_reason": null,
+        "findings": [],
+        "plan": null,
+        "scenes": [],
+        "cost_usd": "0.000000"
+    },
+    "wall_ms": 2,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:26:12Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4844,
+            "cached_tokens_in": 2816,
+            "tokens_out": 43,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 1721,
+            "wall_ms": 0,
+            "call_id": null,
+            "user": "GOAL: хочу подтянуть английский\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: Beginner\nSCENES_COUNT: 3\nEXISTING_SCENES:",
+            "payload": {
+                "status": "unclear",
+                "unclear_reason": "The goal is not a concrete real-life situation with a specific conversation partner.",
+                "plan": null,
+                "scenes": []
+            },
+            "raw": "{\"status\":\"unclear\",\"unclear_reason\":\"The goal is not a concrete real-life situation with a specific conversation partner.\" \n  ,\"plan\":null,\"scenes\":[]}",
+            "wire": null
+        }
+    ]
+}

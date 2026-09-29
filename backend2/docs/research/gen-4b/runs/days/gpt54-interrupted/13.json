@@ -1,0 +1,1433 @@
+{
+    "plan": "13",
+    "run": "gpt54",
+    "models": {
+        "stages": {
+            "model": "gpt-5.4",
+            "effort": null
+        },
+        "repair": "gpt-5.6-luna",
+        "seam_judge": "gpt-5.4-mini"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Stipendio",
+        "title_target": "Salary",
+        "teaches_native": "chiedere di stipendio e benefit",
+        "goals_native": [
+            "chiedere la fascia salariale",
+            "chiedere lordo o netto",
+            "dire la tua richiesta",
+            "chiedere se è trattabile"
+        ],
+        "learner_role": [
+            "Candidate",
+            "Candidato"
+        ],
+        "partner_role": [
+            "Interviewer",
+            "Selezionatore"
+        ],
+        "topic_description": "Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.",
+        "must_say": [
+            "ask what salary range is offered — slot: the position",
+            "ask whether the salary is gross or net — slot: the salary figure",
+            "ask how often salary is paid — slot: the pay period",
+            "ask whether there are bonuses or benefits — slot: the benefit",
+            "explain your salary expectation — slot: the amount or range",
+            "ask whether the amount is negotiable — slot: the amount",
+            "confirm what is included in the offer — slot: the item included"
+        ],
+        "must_understand": [
+            "says the salary range for the role",
+            "explains whether the amount is gross or net",
+            "tells how often employees are paid",
+            "offers information about bonuses or benefits",
+            "asks what salary you are expecting"
+        ]
+    },
+    "request": {
+        "topic": "Stipendio",
+        "vocabulary": [
+            8,
+            12
+        ],
+        "scene_id": "gen4b-13"
+    },
+    "outcome": {
+        "status": "error",
+        "error": "Модель не ответила: OpenAI API error: 429 {\n    \"error\": {\n        \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"credit_balance_exhausted\"\n    }\n}\n",
+        "fail_reason": null,
+        "findings": [],
+        "attempts": [],
+        "repairs": [],
+        "judgements": [],
+        "skeleton": null,
+        "lesson": null
+    },
+    "cost_usd": 0.08773,
+    "latency_ms": 82443,
+    "wall_ms": 108003,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T10:16:50Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4983,
+            "cached_tokens_in": 2816,
+            "tokens_out": 2031,
+            "reasoning_tokens": 0,
+            "cost_usd": "0.036587",
+            "latency_ms": 27385,
+            "wall_ms": 27387,
+            "call_id": "01M3PANHNG961RJSD8H9MG32R1",
+            "user": "TOPIC: Stipendio\n\nTOPIC_DESCRIPTION: Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.\n\nAbout the learner, in their own words: colloquio di lavoro, domande sullo stipendio\n\nSURVIVAL_SET:\nmust_say:\n1. ask what salary range is offered — slot: the position\n2. ask whether the salary is gross or net — slot: the salary figure\n3. ask how often salary is paid — slot: the pay period\n4. ask whether there are bonuses or benefits — slot: the benefit\n5. explain your salary expectation — slot: the amount or range\n6. ask whether the amount is negotiable — slot: the amount\n7. confirm what is included in the offer — slot: the item included\nmust_understand:\n1. says the salary range for the role\n2. explains whether the amount is gross or net\n3. tells how often employees are paid\n4. offers information about bonuses or benefits\n5. asks what salary you are expecting\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Italian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidate / Candidato\n\nPARTNER_ROLE: Interviewer / Selezionatore\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Salary and conditions",
+                    "title_native": "Stipendio",
+                    "description_target": "Ask about salary, pay schedule, benefits, and negotiate compensation in a job interview.",
+                    "description_native": "Chiedere di stipendio, pagamenti, benefit e negoziare il compenso durante un colloquio di lavoro."
+                },
+                "learner_role": {
+                    "role_target": "Candidate",
+                    "role_native": "Candidato"
+                },
+                "role_gender": "male",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "What salary range is offered for ___?",
+                        "frame_native": "Qual è la fascia salariale per ___?",
+                        "pronunciation_native": "уот сэлэри рэйндж из оферд фор ___",
+                        "slot": {
+                            "hint_native": "la posizione",
+                            "fillers": [
+                                {
+                                    "target": "this role",
+                                    "native": "questo ruolo",
+                                    "pronunciation_native": "дис роул",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the position",
+                                    "native": "la posizione",
+                                    "pronunciation_native": "зэ позишн",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the job",
+                                    "native": "il lavoro",
+                                    "pronunciation_native": "зэ джоб",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Is ___ gross or net?",
+                        "frame_native": "___ è lordo o netto?",
+                        "pronunciation_native": "из ___ гроус ор нет",
+                        "slot": {
+                            "hint_native": "la cifra dello stipendio",
+                            "fillers": [
+                                {
+                                    "target": "thirty thousand",
+                                    "native": "trentamila",
+                                    "pronunciation_native": "тёрти таузэнд",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "this amount",
+                                    "native": "questa cifra",
+                                    "pronunciation_native": "дис эмаунт",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the figure",
+                                    "native": "la cifra",
+                                    "pronunciation_native": "зэ фигер",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Is salary paid ___?",
+                        "frame_native": "Lo stipendio viene pagato ___?",
+                        "pronunciation_native": "из сэлэри пэйд ___",
+                        "slot": {
+                            "hint_native": "la frequenza di pagamento",
+                            "fillers": [
+                                {
+                                    "target": "monthly",
+                                    "native": "mensilmente",
+                                    "pronunciation_native": "мантли",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "every two weeks",
+                                    "native": "ogni due settimane",
+                                    "pronunciation_native": "эври ту уикс",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "weekly",
+                                    "native": "settimanalmente",
+                                    "pronunciation_native": "уикли",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Are there ___?",
+                        "frame_native": "Ci sono ___?",
+                        "pronunciation_native": "ар зэр ___",
+                        "slot": {
+                            "hint_native": "il benefit",
+                            "fillers": [
+                                {
+                                    "target": "health insurance",
+                                    "native": "un'assicurazione sanitaria",
+                                    "pronunciation_native": "хэлс иншурэнс",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "bonuses",
+                                    "native": "dei bonus",
+                                    "pronunciation_native": "боунэсиз",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "meal vouchers",
+                                    "native": "dei buoni pasto",
+                                    "pronunciation_native": "мил ваучерз",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "I’m looking for ___",
+                        "frame_native": "Cerco ___",
+                        "pronunciation_native": "айм лукин фор ___",
+                        "slot": {
+                            "hint_native": "la cifra o fascia",
+                            "fillers": [
+                                {
+                                    "target": "thirty to thirty-five thousand",
+                                    "native": "tra trentamila e trentacinquemila",
+                                    "pronunciation_native": "тёрти ту тёрти-файв таузэнд",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "around thirty thousand",
+                                    "native": "circa trentamila",
+                                    "pronunciation_native": "эраунд тёрти таузэнд",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "something competitive",
+                                    "native": "qualcosa di competitivo",
+                                    "pronunciation_native": "самсинг компетитив",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Is ___ negotiable?",
+                        "frame_native": "___ è negoziabile?",
+                        "pronunciation_native": "из ___ нигоушэбл",
+                        "slot": {
+                            "hint_native": "la cifra",
+                            "fillers": [
+                                {
+                                    "target": "that amount",
+                                    "native": "quella cifra",
+                                    "pronunciation_native": "зэт эмаунт",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the offer",
+                                    "native": "l'offerta",
+                                    "pronunciation_native": "зи офер",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the starting salary",
+                                    "native": "lo stipendio iniziale",
+                                    "pronunciation_native": "зэ стартин сэлэри",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Does the offer include ___?",
+                        "frame_native": "L'offerta include ___?",
+                        "pronunciation_native": "даз зи офер инклуд ___",
+                        "slot": {
+                            "hint_native": "l'elemento incluso",
+                            "fillers": [
+                                {
+                                    "target": "paid holidays",
+                                    "native": "le ferie retribuite",
+                                    "pronunciation_native": "пэйд холидэйз",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "training",
+                                    "native": "la formazione",
+                                    "pronunciation_native": "трейнинг",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "transport allowance",
+                                    "native": "un'indennità di trasporto",
+                                    "pronunciation_native": "транспорт элауэнс",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "For this role, the range is between thirty and thirty-five thousand a year.",
+                        "text_native": "Per questo ruolo, la fascia è tra trentamila e trentacinquemila all'anno."
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "statement",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "That figure is gross, before taxes and social contributions.",
+                        "text_native": "Quella cifra è lorda, prima delle tasse e dei contributi sociali."
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Employees are paid once a month, at the end of the month.",
+                        "text_native": "I dipendenti vengono pagati una volta al mese, alla fine del mese."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4,
+                            7
+                        ],
+                        "text_target": "We also offer annual bonuses, meal vouchers, and private health insurance.",
+                        "text_native": "Offriamo anche bonus annuali, buoni pasto e assicurazione sanitaria privata."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 5,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "What salary are you expecting?",
+                        "text_native": "Che stipendio si aspetta?"
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "salary range",
+                        "translation_native": "fascia salariale",
+                        "pronunciation_native": "сэлэри рэйндж",
+                        "definition_target": "the minimum and maximum pay offered",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "gross",
+                        "translation_native": "lordo",
+                        "pronunciation_native": "гроус",
+                        "definition_target": "before taxes are taken away",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "net",
+                        "translation_native": "netto",
+                        "pronunciation_native": "нет",
+                        "definition_target": "after taxes are taken away",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "paid",
+                        "translation_native": "pagato",
+                        "pronunciation_native": "пэйд",
+                        "definition_target": "given as money by an employer",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "bonus",
+                        "translation_native": "bonus",
+                        "pronunciation_native": "боунэс",
+                        "definition_target": "extra money in addition to salary",
+                        "kind": "word",
+                        "image_prompt": "A manager handing a printed performance bonus letter to an employee in an office.",
+                        "used_in": [
+                            "p4",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "health insurance",
+                        "translation_native": "assicurazione sanitaria",
+                        "pronunciation_native": "хэлс иншурэнс",
+                        "definition_target": "medical coverage paid fully or partly by the employer",
+                        "kind": "chunk",
+                        "image_prompt": "A health insurance card and medical forms on an office desk.",
+                        "used_in": [
+                            "p4",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "competitive",
+                        "translation_native": "competitivo",
+                        "pronunciation_native": "компетитив",
+                        "definition_target": "as good as similar offers on the market",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "negotiable",
+                        "translation_native": "negoziabile",
+                        "pronunciation_native": "нигоушэбл",
+                        "definition_target": "able to be discussed and changed",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "offer",
+                        "translation_native": "offerta",
+                        "pronunciation_native": "офер",
+                        "definition_target": "the proposed job conditions from the employer",
+                        "kind": "word",
+                        "image_prompt": "A printed job offer letter on a desk beside a pen.",
+                        "used_in": [
+                            "p6",
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "paid holiday",
+                        "translation_native": "ferie retribuite",
+                        "pronunciation_native": "пэйд холидэй",
+                        "definition_target": "time off from work with salary",
+                        "kind": "chunk",
+                        "image_prompt": "A calendar marked with vacation days next to a laptop and office badge.",
+                        "used_in": [
+                            "p7"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Salary and conditions\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about salary, pay schedule, benefits, and negotiate compensation in a job interview.\",\"description_native\":\"Chiedere di stipendio, pagamenti, benefit e negoziare il compenso durante un colloquio di lavoro.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Qual è la fascia salariale per ___?\",\"pronunciation_native\":\"уот сэлэри рэйндж из оферд фор ___\",\"slot\":{\"hint_native\":\"la posizione\",\"fillers\":[{\"target\":\"this role\",\"native\":\"questo ruolo\",\"pronunciation_native\":\"дис роул\",\"in_dialogue\":true},{\"target\":\"the position\",\"native\":\"la posizione\",\"pronunciation_native\":\"зэ позишн\",\"in_dialogue\":false},{\"target\":\"the job\",\"native\":\"il lavoro\",\"pronunciation_native\":\"зэ джоб\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"из ___ гроус ор нет\",\"slot\":{\"hint_native\":\"la cifra dello stipendio\",\"fillers\":[{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"тёрти таузэнд\",\"in_dialogue\":true},{\"target\":\"this amount\",\"native\":\"questa cifra\",\"pronunciation_native\":\"дис эмаунт\",\"in_dialogue\":false},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"зэ фигер\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is salary paid ___?\",\"frame_native\":\"Lo stipendio viene pagato ___?\",\"pronunciation_native\":\"из сэлэри пэйд ___\",\"slot\":{\"hint_native\":\"la frequenza di pagamento\",\"fillers\":[{\"target\":\"monthly\",\"native\":\"mensilmente\",\"pronunciation_native\":\"мантли\",\"in_dialogue\":true},{\"target\":\"every two weeks\",\"native\":\"ogni due settimane\",\"pronunciation_native\":\"эври ту уикс\",\"in_dialogue\":false},{\"target\":\"weekly\",\"native\":\"settimanalmente\",\"pronunciation_native\":\"уикли\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ар зэр ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"health insurance\",\"native\":\"un'assicurazione sanitaria\",\"pronunciation_native\":\"хэлс иншурэнс\",\"in_dialogue\":true},{\"target\":\"bonuses\",\"native\":\"dei bonus\",\"pronunciation_native\":\"боунэсиз\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"dei buoni pasto\",\"pronunciation_native\":\"мил ваучерз\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I’m looking for ___\",\"frame_native\":\"Cerco ___\",\"pronunciation_native\":\"айм лукин фор ___\",\"slot\":{\"hint_native\":\"la cifra o fascia\",\"fillers\":[{\"target\":\"thirty to thirty-five thousand\",\"native\":\"tra trentamila e trentacinquemila\",\"pronunciation_native\":\"тёрти ту тёрти-файв таузэнд\",\"in_dialogue\":true},{\"target\":\"around thirty thousand\",\"native\":\"circa trentamila\",\"pronunciation_native\":\"эраунд тёрти таузэнд\",\"in_dialogue\":false},{\"target\":\"something competitive\",\"native\":\"qualcosa di competitivo\",\"pronunciation_native\":\"самсинг компетитив\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è negoziabile?\",\"pronunciation_native\":\"из ___ нигоушэбл\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"that amount\",\"native\":\"quella cifra\",\"pronunciation_native\":\"зэт эмаунт\",\"in_dialogue\":true},{\"target\":\"the offer\",\"native\":\"l'offerta\",\"pronunciation_native\":\"зи офер\",\"in_dialogue\":false},{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"зэ стартин сэлэри\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta include ___?\",\"pronunciation_native\":\"даз зи офер инклуд ___\",\"slot\":{\"hint_native\":\"l'elemento incluso\",\"fillers\":[{\"target\":\"paid holidays\",\"native\":\"le ferie retribuite\",\"pronunciation_native\":\"пэйд холидэйз\",\"in_dialogue\":true},{\"target\":\"training\",\"native\":\"la formazione\",\"pronunciation_native\":\"трейнинг\",\"in_dialogue\":false},{\"target\":\"transport allowance\",\"native\":\"un'indennità di trasporto\",\"pronunciation_native\":\"транспорт элауэнс\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"For this role, the range is between thirty and thirty-five thousand a year.\",\"text_native\":\"Per questo ruolo, la fascia è tra trentamila e trentacinquemila all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"That figure is gross, before taxes and social contributions.\",\"text_native\":\"Quella cifra è lorda, prima delle tasse e dei contributi sociali.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid once a month, at the end of the month.\",\"text_native\":\"I dipendenti vengono pagati una volta al mese, alla fine del mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4,7],\"text_target\":\"We also offer annual bonuses, meal vouchers, and private health insurance.\",\"text_native\":\"Offriamo anche bonus annuali, buoni pasto e assicurazione sanitaria privata.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Che stipendio si aspetta?\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia salariale\",\"pronunciation_native\":\"сэлэри рэйндж\",\"definition_target\":\"the minimum and maximum pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"гроус\",\"definition_target\":\"before taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"нет\",\"definition_target\":\"after taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"paid\",\"translation_native\":\"pagato\",\"pronunciation_native\":\"пэйд\",\"definition_target\":\"given as money by an employer\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"bonus\",\"translation_native\":\"bonus\",\"pronunciation_native\":\"боунэс\",\"definition_target\":\"extra money in addition to salary\",\"kind\":\"word\",\"image_prompt\":\"A manager handing a printed performance bonus letter to an employee in an office.\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v6\",\"term_target\":\"health insurance\",\"translation_native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"хэлс иншурэнс\",\"definition_target\":\"medical coverage paid fully or partly by the employer\",\"kind\":\"chunk\",\"image_prompt\":\"A health insurance card and medical forms on an office desk.\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v7\",\"term_target\":\"competitive\",\"translation_native\":\"competitivo\",\"pronunciation_native\":\"компетитив\",\"definition_target\":\"as good as similar offers on the market\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v8\",\"term_target\":\"negotiable\",\"translation_native\":\"negoziabile\",\"pronunciation_native\":\"нигоушэбл\",\"definition_target\":\"able to be discussed and changed\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v9\",\"term_target\":\"offer\",\"translation_native\":\"offerta\",\"pronunciation_native\":\"офер\",\"definition_target\":\"the proposed job conditions from the employer\",\"kind\":\"word\",\"image_prompt\":\"A printed job offer letter on a desk beside a pen.\",\"used_in\":[\"p6\",\"p7\"]},{\"id\":\"v10\",\"term_target\":\"paid holiday\",\"translation_native\":\"ferie retribuite\",\"pronunciation_native\":\"пэйд холидэй\",\"definition_target\":\"time off from work with salary\",\"kind\":\"chunk\",\"image_prompt\":\"A calendar marked with vacation days next to a laptop and office badge.\",\"used_in\":[\"p7\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETPBC20vmUjmU5W4sVyXqZFz1HIoc",
+                "object": "chat.completion",
+                "created": 1790677010,
+                "model": "gpt-5.4-2026-03-05",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Salary and conditions\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about salary, pay schedule, benefits, and negotiate compensation in a job interview.\",\"description_native\":\"Chiedere di stipendio, pagamenti, benefit e negoziare il compenso durante un colloquio di lavoro.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Qual è la fascia salariale per ___?\",\"pronunciation_native\":\"уот сэлэри рэйндж из оферд фор ___\",\"slot\":{\"hint_native\":\"la posizione\",\"fillers\":[{\"target\":\"this role\",\"native\":\"questo ruolo\",\"pronunciation_native\":\"дис роул\",\"in_dialogue\":true},{\"target\":\"the position\",\"native\":\"la posizione\",\"pronunciation_native\":\"зэ позишн\",\"in_dialogue\":false},{\"target\":\"the job\",\"native\":\"il lavoro\",\"pronunciation_native\":\"зэ джоб\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"из ___ гроус ор нет\",\"slot\":{\"hint_native\":\"la cifra dello stipendio\",\"fillers\":[{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"тёрти таузэнд\",\"in_dialogue\":true},{\"target\":\"this amount\",\"native\":\"questa cifra\",\"pronunciation_native\":\"дис эмаунт\",\"in_dialogue\":false},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"зэ фигер\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is salary paid ___?\",\"frame_native\":\"Lo stipendio viene pagato ___?\",\"pronunciation_native\":\"из сэлэри пэйд ___\",\"slot\":{\"hint_native\":\"la frequenza di pagamento\",\"fillers\":[{\"target\":\"monthly\",\"native\":\"mensilmente\",\"pronunciation_native\":\"мантли\",\"in_dialogue\":true},{\"target\":\"every two weeks\",\"native\":\"ogni due settimane\",\"pronunciation_native\":\"эври ту уикс\",\"in_dialogue\":false},{\"target\":\"weekly\",\"native\":\"settimanalmente\",\"pronunciation_native\":\"уикли\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ар зэр ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"health insurance\",\"native\":\"un'assicurazione sanitaria\",\"pronunciation_native\":\"хэлс иншурэнс\",\"in_dialogue\":true},{\"target\":\"bonuses\",\"native\":\"dei bonus\",\"pronunciation_native\":\"боунэсиз\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"dei buoni pasto\",\"pronunciation_native\":\"мил ваучерз\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I’m looking for ___\",\"frame_native\":\"Cerco ___\",\"pronunciation_native\":\"айм лукин фор ___\",\"slot\":{\"hint_native\":\"la cifra o fascia\",\"fillers\":[{\"target\":\"thirty to thirty-five thousand\",\"native\":\"tra trentamila e trentacinquemila\",\"pronunciation_native\":\"тёрти ту тёрти-файв таузэнд\",\"in_dialogue\":true},{\"target\":\"around thirty thousand\",\"native\":\"circa trentamila\",\"pronunciation_native\":\"эраунд тёрти таузэнд\",\"in_dialogue\":false},{\"target\":\"something competitive\",\"native\":\"qualcosa di competitivo\",\"pronunciation_native\":\"самсинг компетитив\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è negoziabile?\",\"pronunciation_native\":\"из ___ нигоушэбл\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"that amount\",\"native\":\"quella cifra\",\"pronunciation_native\":\"зэт эмаунт\",\"in_dialogue\":true},{\"target\":\"the offer\",\"native\":\"l'offerta\",\"pronunciation_native\":\"зи офер\",\"in_dialogue\":false},{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"зэ стартин сэлэри\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta include ___?\",\"pronunciation_native\":\"даз зи офер инклуд ___\",\"slot\":{\"hint_native\":\"l'elemento incluso\",\"fillers\":[{\"target\":\"paid holidays\",\"native\":\"le ferie retribuite\",\"pronunciation_native\":\"пэйд холидэйз\",\"in_dialogue\":true},{\"target\":\"training\",\"native\":\"la formazione\",\"pronunciation_native\":\"трейнинг\",\"in_dialogue\":false},{\"target\":\"transport allowance\",\"native\":\"un'indennità di trasporto\",\"pronunciation_native\":\"транспорт элауэнс\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"For this role, the range is between thirty and thirty-five thousand a year.\",\"text_native\":\"Per questo ruolo, la fascia è tra trentamila e trentacinquemila all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"That figure is gross, before taxes and social contributions.\",\"text_native\":\"Quella cifra è lorda, prima delle tasse e dei contributi sociali.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid once a month, at the end of the month.\",\"text_native\":\"I dipendenti vengono pagati una volta al mese, alla fine del mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4,7],\"text_target\":\"We also offer annual bonuses, meal vouchers, and private health insurance.\",\"text_native\":\"Offriamo anche bonus annuali, buoni pasto e assicurazione sanitaria privata.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Che stipendio si aspetta?\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia salariale\",\"pronunciation_native\":\"сэлэри рэйндж\",\"definition_target\":\"the minimum and maximum pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"гроус\",\"definition_target\":\"before taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"нет\",\"definition_target\":\"after taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"paid\",\"translation_native\":\"pagato\",\"pronunciation_native\":\"пэйд\",\"definition_target\":\"given as money by an employer\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"bonus\",\"translation_native\":\"bonus\",\"pronunciation_native\":\"боунэс\",\"definition_target\":\"extra money in addition to salary\",\"kind\":\"word\",\"image_prompt\":\"A manager handing a printed performance bonus letter to an employee in an office.\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v6\",\"term_target\":\"health insurance\",\"translation_native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"хэлс иншурэнс\",\"definition_target\":\"medical coverage paid fully or partly by the employer\",\"kind\":\"chunk\",\"image_prompt\":\"A health insurance card and medical forms on an office desk.\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v7\",\"term_target\":\"competitive\",\"translation_native\":\"competitivo\",\"pronunciation_native\":\"компетитив\",\"definition_target\":\"as good as similar offers on the market\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v8\",\"term_target\":\"negotiable\",\"translation_native\":\"negoziabile\",\"pronunciation_native\":\"нигоушэбл\",\"definition_target\":\"able to be discussed and changed\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v9\",\"term_target\":\"offer\",\"translation_native\":\"offerta\",\"pronunciation_native\":\"офер\",\"definition_target\":\"the proposed job conditions from the employer\",\"kind\":\"word\",\"image_prompt\":\"A printed job offer letter on a desk beside a pen.\",\"used_in\":[\"p6\",\"p7\"]},{\"id\":\"v10\",\"term_target\":\"paid holiday\",\"translation_native\":\"ferie retribuite\",\"pronunciation_native\":\"пэйд холидэй\",\"definition_target\":\"time off from work with salary\",\"kind\":\"chunk\",\"image_prompt\":\"A calendar marked with vacation days next to a laptop and office badge.\",\"used_in\":[\"p7\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 4983,
+                    "completion_tokens": 2031,
+                    "total_tokens": 7014,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 2816,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 0,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T10:17:17Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 6367,
+            "cached_tokens_in": 4864,
+            "tokens_out": 1995,
+            "reasoning_tokens": 0,
+            "cost_usd": "0.034899",
+            "latency_ms": 25606,
+            "wall_ms": 25606,
+            "call_id": "01M3PAPCE80QND7BD20AG7KWGF",
+            "user": "TOPIC: Stipendio\n\nTOPIC_DESCRIPTION: Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.\n\nAbout the learner, in their own words: colloquio di lavoro, domande sullo stipendio\n\nSURVIVAL_SET:\nmust_say:\n1. ask what salary range is offered — slot: the position\n2. ask whether the salary is gross or net — slot: the salary figure\n3. ask how often salary is paid — slot: the pay period\n4. ask whether there are bonuses or benefits — slot: the benefit\n5. explain your salary expectation — slot: the amount or range\n6. ask whether the amount is negotiable — slot: the amount\n7. confirm what is included in the offer — slot: the item included\nmust_understand:\n1. says the salary range for the role\n2. explains whether the amount is gross or net\n3. tells how often employees are paid\n4. offers information about bonuses or benefits\n5. asks what salary you are expecting\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Italian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidate / Candidato\n\nPARTNER_ROLE: Interviewer / Selezionatore\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone\n\nPREVIOUS_ATTEMPT_REJECTED_FOR:\n- pronunciation.foreign_script · p1: the reading «уот сэлэри рэйндж из оферд фор ___» has letters of another alphabet: у о т с э л р и й н д ж з ф е\n- pronunciation.foreign_script · p1.f1: the reading «дис роул» has letters of another alphabet: д и с р о у л\n- pronunciation.foreign_script · p1.f2: the reading «зэ позишн» has letters of another alphabet: з э п о и ш н\n- pronunciation.foreign_script · p1.f3: the reading «зэ джоб» has letters of another alphabet: з э д ж о б\n- pronunciation.foreign_script · p2: the reading «из ___ гроус ор нет» has letters of another alphabet: и з г р о у с н е т\n- pronunciation.foreign_script · p2.f1: the reading «тёрти таузэнд» has letters of another alphabet: т ё р и а у з э н д\n- pronunciation.foreign_script · p2.f2: the reading «дис эмаунт» has letters of another alphabet: д и с э м а у н т\n- pronunciation.foreign_script · p2.f3: the reading «зэ фигер» has letters of another alphabet: з э ф и г е р\n- pronunciation.foreign_script · p3: the reading «из сэлэри пэйд ___» has letters of another alphabet: и з с э л р п й д\n- pronunciation.foreign_script · p3.f1: the reading «мантли» has letters of another alphabet: м а н т л и\n- pronunciation.foreign_script · p3.f2: the reading «эври ту уикс» has letters of another alphabet: э в р и т у к с\n- pronunciation.foreign_script · p3.f3: the reading «уикли» has letters of another alphabet: у и к л\n- pronunciation.foreign_script · p4: the reading «ар зэр ___» has letters of another alphabet: а р з э\n- pronunciation.foreign_script · p4.f1: the reading «хэлс иншурэнс» has letters of another alphabet: х э л с и н ш у р\n- pronunciation.foreign_script · p4.f2: the reading «боунэсиз» has letters of another alphabet: б о у н э с и з\n- pronunciation.foreign_script · p4.f3: the reading «мил ваучерз» has letters of another alphabet: м и л в а у ч е р з\n- pronunciation.foreign_script · p5: the reading «айм лукин фор ___» has letters of another alphabet: а й м л у к и н ф о р\n- pronunciation.foreign_script · p5.f1: the reading «тёрти ту тёрти-файв таузэнд» has letters of another alphabet: т ё р и у ф а й в з э н д\n- pronunciation.foreign_script · p5.f2: the reading «эраунд тёрти таузэнд» has letters of another alphabet: э р а у н д т ё и з\n- pronunciation.foreign_script · p5.f3: the reading «самсинг компетитив» has letters of another alphabet: с а м и н г к о п е т в\n- pronunciation.foreign_script · p6: the reading «из ___ нигоушэбл» has letters of another alphabet: и з н г о у ш э б л\n- pronunciation.foreign_script · p6.f1: the reading «зэт эмаунт» has letters of another alphabet: з э т м а у н\n- pronunciation.foreign_script · p6.f2: the reading «зи офер» has letters of another alphabet: з и о ф е р\n- pronunciation.foreign_script · p6.f3: the reading «зэ стартин сэлэри» has letters of another alphabet: з э с т а р и н л\n- pronunciation.foreign_script · p7: the reading «даз зи офер инклуд ___» has letters of another alphabet: д а з и о ф е р н к л у\n- pronunciation.foreign_script · p7.f1: the reading «пэйд холидэйз» has letters of another alphabet: п э й д х о л и з\n- pronunciation.foreign_script · p7.f2: the reading «трейнинг» has letters of another alphabet: т р е й н и г\n- pronunciation.foreign_script · p7.f3: the reading «транспорт элауэнс» has letters of another alphabet: т р а н с п о э л у\n- pronunciation.foreign_script · v1: the reading «сэлэри рэйндж» has letters of another alphabet: с э л р и й н д ж\n- pronunciation.foreign_script · v2: the reading «гроус» has letters of another alphabet: г р о у с\n- pronunciation.foreign_script · v3: the reading «нет» has letters of another alphabet: н е т\n- pronunciation.foreign_script · v4: the reading «пэйд» has letters of another alphabet: п э й д\n- pronunciation.foreign_script · v5: the reading «боунэс» has letters of another alphabet: б о у н э с\n- pronunciation.foreign_script · v6: the reading «хэлс иншурэнс» has letters of another alphabet: х э л с и н ш у р\n- pronunciation.foreign_script · v7: the reading «компетитив» has letters of another alphabet: к о м п е т и в\n- pronunciation.foreign_script · v8: the reading «нигоушэбл» has letters of another alphabet: н и г о у ш э б л\n- pronunciation.foreign_script · v9: the reading «офер» has letters of another alphabet: о ф е р\n- pronunciation.foreign_script · v10: the reading «пэйд холидэй» has letters of another alphabet: п э й д х о л и\n- partner.pairs_many · skeleton: no partner line of its own is left for p7 (a4 pairs with p4 and p7): a line is said once, in one exchange, with one frame",
+            "payload": {
+                "topic": {
+                    "title_target": "Salary",
+                    "title_native": "Stipendio",
+                    "description_target": "Ask about salary, payment schedule, benefits, and negotiation in a job interview.",
+                    "description_native": "Chiedere dello stipendio, della frequenza di pagamento, dei benefit e della trattativa in un colloquio."
+                },
+                "learner_role": {
+                    "role_target": "Candidate",
+                    "role_native": "Candidato"
+                },
+                "role_gender": "male",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "What salary range is offered for ___?",
+                        "frame_native": "Che fascia di stipendio è prevista per ___?",
+                        "pronunciation_native": "uòt sèlari rèindg is òferd for ___",
+                        "slot": {
+                            "hint_native": "la posizione",
+                            "fillers": [
+                                {
+                                    "target": "this role",
+                                    "native": "questo ruolo",
+                                    "pronunciation_native": "dhis ròl",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the position",
+                                    "native": "la posizione",
+                                    "pronunciation_native": "dhə pozìscion",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the job",
+                                    "native": "il lavoro",
+                                    "pronunciation_native": "dhə giob",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Is ___ gross or net?",
+                        "frame_native": "___ è lordo o netto?",
+                        "pronunciation_native": "is ___ gròus or nèt",
+                        "slot": {
+                            "hint_native": "la cifra",
+                            "fillers": [
+                                {
+                                    "target": "this amount",
+                                    "native": "questo importo",
+                                    "pronunciation_native": "dhis amàunt",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the figure",
+                                    "native": "la cifra",
+                                    "pronunciation_native": "dhə figher",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "thirty thousand",
+                                    "native": "trentamila",
+                                    "pronunciation_native": "thèrti thàuzand",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Is salary paid ___?",
+                        "frame_native": "Lo stipendio viene pagato ___?",
+                        "pronunciation_native": "is sèlari pèid ___",
+                        "slot": {
+                            "hint_native": "la frequenza",
+                            "fillers": [
+                                {
+                                    "target": "monthly",
+                                    "native": "mensilmente",
+                                    "pronunciation_native": "mànthli",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "weekly",
+                                    "native": "settimanalmente",
+                                    "pronunciation_native": "uìikli",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "every two weeks",
+                                    "native": "ogni due settimane",
+                                    "pronunciation_native": "èvri tù uìiks",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Are there ___?",
+                        "frame_native": "Ci sono ___?",
+                        "pronunciation_native": "ar dher ___",
+                        "slot": {
+                            "hint_native": "il benefit",
+                            "fillers": [
+                                {
+                                    "target": "bonuses",
+                                    "native": "bonus",
+                                    "pronunciation_native": "bòunesiz",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "health insurance",
+                                    "native": "assicurazione sanitaria",
+                                    "pronunciation_native": "helth insciurans",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "meal vouchers",
+                                    "native": "buoni pasto",
+                                    "pronunciation_native": "mìil vàucers",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "I'm looking for ___",
+                        "frame_native": "Cerco ___",
+                        "pronunciation_native": "aim lùchin for ___",
+                        "slot": {
+                            "hint_native": "l'importo o la fascia",
+                            "fillers": [
+                                {
+                                    "target": "something competitive",
+                                    "native": "qualcosa di competitivo",
+                                    "pronunciation_native": "sàmthing compètitiv",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "around thirty thousand",
+                                    "native": "circa trentamila",
+                                    "pronunciation_native": "aràund thèrti thàuzand",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "thirty to thirty-five thousand",
+                                    "native": "tra trentamila e trentacinquemila",
+                                    "pronunciation_native": "thèrti tu thèrti-faiv thàuzand",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Is ___ negotiable?",
+                        "frame_native": "___ è negoziabile?",
+                        "pronunciation_native": "is ___ nigòusciabl",
+                        "slot": {
+                            "hint_native": "l'importo",
+                            "fillers": [
+                                {
+                                    "target": "the offer",
+                                    "native": "l'offerta",
+                                    "pronunciation_native": "dhə òfer",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "that amount",
+                                    "native": "quell'importo",
+                                    "pronunciation_native": "dhat amàunt",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the starting salary",
+                                    "native": "lo stipendio iniziale",
+                                    "pronunciation_native": "dhə stàrting sèlari",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Does the offer include ___?",
+                        "frame_native": "L'offerta include ___?",
+                        "pronunciation_native": "daz dhi òfer inclùud ___",
+                        "slot": {
+                            "hint_native": "l'elemento incluso",
+                            "fillers": [
+                                {
+                                    "target": "paid holidays",
+                                    "native": "ferie retribuite",
+                                    "pronunciation_native": "pèid hòlideiz",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "training",
+                                    "native": "formazione",
+                                    "pronunciation_native": "trèining",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "transport allowance",
+                                    "native": "indennità di trasporto",
+                                    "pronunciation_native": "trànsport alàuans",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "For this role, the range is between twenty-eight and thirty-two thousand a year.",
+                        "text_native": "Per questo ruolo, la fascia è tra ventottomila e trentaduemila all'anno."
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "statement",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "That amount is gross, before taxes and contributions.",
+                        "text_native": "Quell'importo è lordo, prima delle tasse e dei contributi."
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Employees are paid monthly, at the end of each month.",
+                        "text_native": "I dipendenti vengono pagati ogni mese, alla fine del mese."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "There is a yearly bonus and private health insurance.",
+                        "text_native": "Ci sono un bonus annuale e un'assicurazione sanitaria privata."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 5,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "What salary are you expecting?",
+                        "text_native": "Che stipendio si aspetta?"
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            7
+                        ],
+                        "text_target": "Yes, the offer also includes paid holidays from the first year.",
+                        "text_native": "Sì, l'offerta include anche ferie retribuite dal primo anno."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "salary range",
+                        "translation_native": "fascia di stipendio",
+                        "pronunciation_native": "sèlari rèindg",
+                        "definition_target": "the minimum and maximum pay offered",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "gross",
+                        "translation_native": "lordo",
+                        "pronunciation_native": "gròus",
+                        "definition_target": "before taxes are taken away",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "net",
+                        "translation_native": "netto",
+                        "pronunciation_native": "nèt",
+                        "definition_target": "after taxes are taken away",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "monthly",
+                        "translation_native": "mensilmente",
+                        "pronunciation_native": "mànthli",
+                        "definition_target": "happening once every month",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "bonus",
+                        "translation_native": "bonus",
+                        "pronunciation_native": "bòunus",
+                        "definition_target": "extra money in addition to salary",
+                        "kind": "word",
+                        "image_prompt": "A manager handing an employee a document about extra yearly pay in an office",
+                        "used_in": [
+                            "p4",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "competitive",
+                        "translation_native": "competitivo",
+                        "pronunciation_native": "compètitiv",
+                        "definition_target": "good compared with similar jobs",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "negotiable",
+                        "translation_native": "negoziabile",
+                        "pronunciation_native": "nigòusciabl",
+                        "definition_target": "able to be discussed and changed",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "offer",
+                        "translation_native": "offerta",
+                        "pronunciation_native": "òfer",
+                        "definition_target": "the job conditions proposed by the company",
+                        "kind": "word",
+                        "image_prompt": "A printed job offer letter on a desk in an office",
+                        "used_in": [
+                            "p6",
+                            "p7",
+                            "a6"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "paid holidays",
+                        "translation_native": "ferie retribuite",
+                        "pronunciation_native": "pèid hòlideiz",
+                        "definition_target": "days off from work that are still paid",
+                        "kind": "chunk",
+                        "image_prompt": "A vacation calendar and approved leave form on an office desk",
+                        "used_in": [
+                            "p7",
+                            "a6"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Salary\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about salary, payment schedule, benefits, and negotiation in a job interview.\",\"description_native\":\"Chiedere dello stipendio, della frequenza di pagamento, dei benefit e della trattativa in un colloquio.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Che fascia di stipendio è prevista per ___?\",\"pronunciation_native\":\"uòt sèlari rèindg is òferd for ___\",\"slot\":{\"hint_native\":\"la posizione\",\"fillers\":[{\"target\":\"this role\",\"native\":\"questo ruolo\",\"pronunciation_native\":\"dhis ròl\",\"in_dialogue\":true},{\"target\":\"the position\",\"native\":\"la posizione\",\"pronunciation_native\":\"dhə pozìscion\",\"in_dialogue\":false},{\"target\":\"the job\",\"native\":\"il lavoro\",\"pronunciation_native\":\"dhə giob\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"is ___ gròus or nèt\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"this amount\",\"native\":\"questo importo\",\"pronunciation_native\":\"dhis amàunt\",\"in_dialogue\":true},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"dhə figher\",\"in_dialogue\":false},{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"thèrti thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is salary paid ___?\",\"frame_native\":\"Lo stipendio viene pagato ___?\",\"pronunciation_native\":\"is sèlari pèid ___\",\"slot\":{\"hint_native\":\"la frequenza\",\"fillers\":[{\"target\":\"monthly\",\"native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"in_dialogue\":true},{\"target\":\"weekly\",\"native\":\"settimanalmente\",\"pronunciation_native\":\"uìikli\",\"in_dialogue\":false},{\"target\":\"every two weeks\",\"native\":\"ogni due settimane\",\"pronunciation_native\":\"èvri tù uìiks\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar dher ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"bonuses\",\"native\":\"bonus\",\"pronunciation_native\":\"bòunesiz\",\"in_dialogue\":true},{\"target\":\"health insurance\",\"native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"helth insciurans\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vàucers\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm looking for ___\",\"frame_native\":\"Cerco ___\",\"pronunciation_native\":\"aim lùchin for ___\",\"slot\":{\"hint_native\":\"l'importo o la fascia\",\"fillers\":[{\"target\":\"something competitive\",\"native\":\"qualcosa di competitivo\",\"pronunciation_native\":\"sàmthing compètitiv\",\"in_dialogue\":true},{\"target\":\"around thirty thousand\",\"native\":\"circa trentamila\",\"pronunciation_native\":\"aràund thèrti thàuzand\",\"in_dialogue\":false},{\"target\":\"thirty to thirty-five thousand\",\"native\":\"tra trentamila e trentacinquemila\",\"pronunciation_native\":\"thèrti tu thèrti-faiv thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è negoziabile?\",\"pronunciation_native\":\"is ___ nigòusciabl\",\"slot\":{\"hint_native\":\"l'importo\",\"fillers\":[{\"target\":\"the offer\",\"native\":\"l'offerta\",\"pronunciation_native\":\"dhə òfer\",\"in_dialogue\":true},{\"target\":\"that amount\",\"native\":\"quell'importo\",\"pronunciation_native\":\"dhat amàunt\",\"in_dialogue\":false},{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"dhə stàrting sèlari\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta include ___?\",\"pronunciation_native\":\"daz dhi òfer inclùud ___\",\"slot\":{\"hint_native\":\"l'elemento incluso\",\"fillers\":[{\"target\":\"paid holidays\",\"native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"in_dialogue\":true},{\"target\":\"training\",\"native\":\"formazione\",\"pronunciation_native\":\"trèining\",\"in_dialogue\":false},{\"target\":\"transport allowance\",\"native\":\"indennità di trasporto\",\"pronunciation_native\":\"trànsport alàuans\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"For this role, the range is between twenty-eight and thirty-two thousand a year.\",\"text_native\":\"Per questo ruolo, la fascia è tra ventottomila e trentaduemila all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"That amount is gross, before taxes and contributions.\",\"text_native\":\"Quell'importo è lordo, prima delle tasse e dei contributi.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid monthly, at the end of each month.\",\"text_native\":\"I dipendenti vengono pagati ogni mese, alla fine del mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"There is a yearly bonus and private health insurance.\",\"text_native\":\"Ci sono un bonus annuale e un'assicurazione sanitaria privata.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Che stipendio si aspetta?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Yes, the offer also includes paid holidays from the first year.\",\"text_native\":\"Sì, l'offerta include anche ferie retribuite dal primo anno.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia di stipendio\",\"pronunciation_native\":\"sèlari rèindg\",\"definition_target\":\"the minimum and maximum pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"gròus\",\"definition_target\":\"before taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"nèt\",\"definition_target\":\"after taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"monthly\",\"translation_native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"definition_target\":\"happening once every month\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"bonus\",\"translation_native\":\"bonus\",\"pronunciation_native\":\"bòunus\",\"definition_target\":\"extra money in addition to salary\",\"kind\":\"word\",\"image_prompt\":\"A manager handing an employee a document about extra yearly pay in an office\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v6\",\"term_target\":\"competitive\",\"translation_native\":\"competitivo\",\"pronunciation_native\":\"compètitiv\",\"definition_target\":\"good compared with similar jobs\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"negotiable\",\"translation_native\":\"negoziabile\",\"pronunciation_native\":\"nigòusciabl\",\"definition_target\":\"able to be discussed and changed\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"offer\",\"translation_native\":\"offerta\",\"pronunciation_native\":\"òfer\",\"definition_target\":\"the job conditions proposed by the company\",\"kind\":\"word\",\"image_prompt\":\"A printed job offer letter on a desk in an office\",\"used_in\":[\"p6\",\"p7\",\"a6\"]},{\"id\":\"v9\",\"term_target\":\"paid holidays\",\"translation_native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"definition_target\":\"days off from work that are still paid\",\"kind\":\"chunk\",\"image_prompt\":\"A vacation calendar and approved leave form on an office desk\",\"used_in\":[\"p7\",\"a6\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETPBdzn302jUd9x9rrCbKZ9SS8z4A",
+                "object": "chat.completion",
+                "created": 1790677037,
+                "model": "gpt-5.4-2026-03-05",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Salary\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about salary, payment schedule, benefits, and negotiation in a job interview.\",\"description_native\":\"Chiedere dello stipendio, della frequenza di pagamento, dei benefit e della trattativa in un colloquio.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Che fascia di stipendio è prevista per ___?\",\"pronunciation_native\":\"uòt sèlari rèindg is òferd for ___\",\"slot\":{\"hint_native\":\"la posizione\",\"fillers\":[{\"target\":\"this role\",\"native\":\"questo ruolo\",\"pronunciation_native\":\"dhis ròl\",\"in_dialogue\":true},{\"target\":\"the position\",\"native\":\"la posizione\",\"pronunciation_native\":\"dhə pozìscion\",\"in_dialogue\":false},{\"target\":\"the job\",\"native\":\"il lavoro\",\"pronunciation_native\":\"dhə giob\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"is ___ gròus or nèt\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"this amount\",\"native\":\"questo importo\",\"pronunciation_native\":\"dhis amàunt\",\"in_dialogue\":true},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"dhə figher\",\"in_dialogue\":false},{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"thèrti thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is salary paid ___?\",\"frame_native\":\"Lo stipendio viene pagato ___?\",\"pronunciation_native\":\"is sèlari pèid ___\",\"slot\":{\"hint_native\":\"la frequenza\",\"fillers\":[{\"target\":\"monthly\",\"native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"in_dialogue\":true},{\"target\":\"weekly\",\"native\":\"settimanalmente\",\"pronunciation_native\":\"uìikli\",\"in_dialogue\":false},{\"target\":\"every two weeks\",\"native\":\"ogni due settimane\",\"pronunciation_native\":\"èvri tù uìiks\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar dher ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"bonuses\",\"native\":\"bonus\",\"pronunciation_native\":\"bòunesiz\",\"in_dialogue\":true},{\"target\":\"health insurance\",\"native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"helth insciurans\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vàucers\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm looking for ___\",\"frame_native\":\"Cerco ___\",\"pronunciation_native\":\"aim lùchin for ___\",\"slot\":{\"hint_native\":\"l'importo o la fascia\",\"fillers\":[{\"target\":\"something competitive\",\"native\":\"qualcosa di competitivo\",\"pronunciation_native\":\"sàmthing compètitiv\",\"in_dialogue\":true},{\"target\":\"around thirty thousand\",\"native\":\"circa trentamila\",\"pronunciation_native\":\"aràund thèrti thàuzand\",\"in_dialogue\":false},{\"target\":\"thirty to thirty-five thousand\",\"native\":\"tra trentamila e trentacinquemila\",\"pronunciation_native\":\"thèrti tu thèrti-faiv thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è negoziabile?\",\"pronunciation_native\":\"is ___ nigòusciabl\",\"slot\":{\"hint_native\":\"l'importo\",\"fillers\":[{\"target\":\"the offer\",\"native\":\"l'offerta\",\"pronunciation_native\":\"dhə òfer\",\"in_dialogue\":true},{\"target\":\"that amount\",\"native\":\"quell'importo\",\"pronunciation_native\":\"dhat amàunt\",\"in_dialogue\":false},{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"dhə stàrting sèlari\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta include ___?\",\"pronunciation_native\":\"daz dhi òfer inclùud ___\",\"slot\":{\"hint_native\":\"l'elemento incluso\",\"fillers\":[{\"target\":\"paid holidays\",\"native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"in_dialogue\":true},{\"target\":\"training\",\"native\":\"formazione\",\"pronunciation_native\":\"trèining\",\"in_dialogue\":false},{\"target\":\"transport allowance\",\"native\":\"indennità di trasporto\",\"pronunciation_native\":\"trànsport alàuans\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"For this role, the range is between twenty-eight and thirty-two thousand a year.\",\"text_native\":\"Per questo ruolo, la fascia è tra ventottomila e trentaduemila all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"That amount is gross, before taxes and contributions.\",\"text_native\":\"Quell'importo è lordo, prima delle tasse e dei contributi.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid monthly, at the end of each month.\",\"text_native\":\"I dipendenti vengono pagati ogni mese, alla fine del mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"There is a yearly bonus and private health insurance.\",\"text_native\":\"Ci sono un bonus annuale e un'assicurazione sanitaria privata.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Che stipendio si aspetta?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Yes, the offer also includes paid holidays from the first year.\",\"text_native\":\"Sì, l'offerta include anche ferie retribuite dal primo anno.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia di stipendio\",\"pronunciation_native\":\"sèlari rèindg\",\"definition_target\":\"the minimum and maximum pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"gròus\",\"definition_target\":\"before taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"nèt\",\"definition_target\":\"after taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"monthly\",\"translation_native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"definition_target\":\"happening once every month\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"bonus\",\"translation_native\":\"bonus\",\"pronunciation_native\":\"bòunus\",\"definition_target\":\"extra money in addition to salary\",\"kind\":\"word\",\"image_prompt\":\"A manager handing an employee a document about extra yearly pay in an office\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v6\",\"term_target\":\"competitive\",\"translation_native\":\"competitivo\",\"pronunciation_native\":\"compètitiv\",\"definition_target\":\"good compared with similar jobs\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"negotiable\",\"translation_native\":\"negoziabile\",\"pronunciation_native\":\"nigòusciabl\",\"definition_target\":\"able to be discussed and changed\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"offer\",\"translation_native\":\"offerta\",\"pronunciation_native\":\"òfer\",\"definition_target\":\"the job conditions proposed by the company\",\"kind\":\"word\",\"image_prompt\":\"A printed job offer letter on a desk in an office\",\"used_in\":[\"p6\",\"p7\",\"a6\"]},{\"id\":\"v9\",\"term_target\":\"paid holidays\",\"translation_native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"definition_target\":\"days off from work that are still paid\",\"kind\":\"chunk\",\"image_prompt\":\"A vacation calendar and approved leave form on an office desk\",\"used_in\":[\"p7\",\"a6\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 6367,
+                    "completion_tokens": 1995,
+                    "total_tokens": 8362,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4864,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 0,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "seam_judge",
+            "at": "2026-09-29T10:17:43Z",
+            "prompt_version": "lesson_seam_judge.v1.1",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "tokens_in": 1408,
+            "cached_tokens_in": 0,
+            "tokens_out": 244,
+            "reasoning_tokens": 0,
+            "cost_usd": "0.002154",
+            "latency_ms": 1879,
+            "wall_ms": 1879,
+            "call_id": "01M3PAQ5F0RWTE2EK6HT1E73QV",
+            "user": "NATIVE_LANGUAGE: Italian\n\nITEMS (id · the pattern with its slot · the value put into the slot · the sentence they make):\n[\n{\"id\":\"p1.f1\",\"pattern\":\"Che fascia di stipendio è prevista per ___?\",\"value\":\"questo ruolo\",\"sentence\":\"Che fascia di stipendio è prevista per questo ruolo?\"},\n{\"id\":\"p1.f2\",\"pattern\":\"Che fascia di stipendio è prevista per ___?\",\"value\":\"la posizione\",\"sentence\":\"Che fascia di stipendio è prevista per la posizione?\"},\n{\"id\":\"p1.f3\",\"pattern\":\"Che fascia di stipendio è prevista per ___?\",\"value\":\"il lavoro\",\"sentence\":\"Che fascia di stipendio è prevista per il lavoro?\"},\n{\"id\":\"p2.f1\",\"pattern\":\"___ è lordo o netto?\",\"value\":\"questo importo\",\"sentence\":\"questo importo è lordo o netto?\"},\n{\"id\":\"p2.f2\",\"pattern\":\"___ è lordo o netto?\",\"value\":\"la cifra\",\"sentence\":\"la cifra è lordo o netto?\"},\n{\"id\":\"p2.f3\",\"pattern\":\"___ è lordo o netto?\",\"value\":\"trentamila\",\"sentence\":\"trentamila è lordo o netto?\"},\n{\"id\":\"p3.f1\",\"pattern\":\"Lo stipendio viene pagato ___?\",\"value\":\"mensilmente\",\"sentence\":\"Lo stipendio viene pagato mensilmente?\"},\n{\"id\":\"p3.f2\",\"pattern\":\"Lo stipendio viene pagato ___?\",\"value\":\"settimanalmente\",\"sentence\":\"Lo stipendio viene pagato settimanalmente?\"},\n{\"id\":\"p3.f3\",\"pattern\":\"Lo stipendio viene pagato ___?\",\"value\":\"ogni due settimane\",\"sentence\":\"Lo stipendio viene pagato ogni due settimane?\"},\n{\"id\":\"p4.f1\",\"pattern\":\"Ci sono ___?\",\"value\":\"bonus\",\"sentence\":\"Ci sono bonus?\"},\n{\"id\":\"p4.f2\",\"pattern\":\"Ci sono ___?\",\"value\":\"assicurazione sanitaria\",\"sentence\":\"Ci sono assicurazione sanitaria?\"},\n{\"id\":\"p4.f3\",\"pattern\":\"Ci sono ___?\",\"value\":\"buoni pasto\",\"sentence\":\"Ci sono buoni pasto?\"},\n{\"id\":\"p5.f1\",\"pattern\":\"Cerco ___\",\"value\":\"qualcosa di competitivo\",\"sentence\":\"Cerco qualcosa di competitivo\"},\n{\"id\":\"p5.f2\",\"pattern\":\"Cerco ___\",\"value\":\"circa trentamila\",\"sentence\":\"Cerco circa trentamila\"},\n{\"id\":\"p5.f3\",\"pattern\":\"Cerco ___\",\"value\":\"tra trentamila e trentacinquemila\",\"sentence\":\"Cerco tra trentamila e trentacinquemila\"},\n{\"id\":\"p6.f1\",\"pattern\":\"___ è negoziabile?\",\"value\":\"l'offerta\",\"sentence\":\"l'offerta è negoziabile?\"},\n{\"id\":\"p6.f2\",\"pattern\":\"___ è negoziabile?\",\"value\":\"quell'importo\",\"sentence\":\"quell'importo è negoziabile?\"},\n{\"id\":\"p6.f3\",\"pattern\":\"___ è negoziabile?\",\"value\":\"lo stipendio iniziale\",\"sentence\":\"lo stipendio iniziale è negoziabile?\"},\n{\"id\":\"p7.f1\",\"pattern\":\"L'offerta include ___?\",\"value\":\"ferie retribuite\",\"sentence\":\"L'offerta include ferie retribuite?\"},\n{\"id\":\"p7.f2\",\"pattern\":\"L'offerta include ___?\",\"value\":\"formazione\",\"sentence\":\"L'offerta include formazione?\"},\n{\"id\":\"p7.f3\",\"pattern\":\"L'offerta include ___?\",\"value\":\"indennità di trasporto\",\"sentence\":\"L'offerta include indennità di trasporto?\"}\n]",
+            "payload": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": false
+                    },
+                    {
+                        "id": "p2.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": false
+                    },
+                    {
+                        "id": "p4.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f3",
+                        "reads": true
+                    }
+                ]
+            },
+            "raw": "{\"verdicts\":[{\"id\":\"p1.f1\",\"reads\":true},{\"id\":\"p1.f2\",\"reads\":true},{\"id\":\"p1.f3\",\"reads\":true},{\"id\":\"p2.f1\",\"reads\":true},{\"id\":\"p2.f2\",\"reads\":false},{\"id\":\"p2.f3\",\"reads\":true},{\"id\":\"p3.f1\",\"reads\":true},{\"id\":\"p3.f2\",\"reads\":true},{\"id\":\"p3.f3\",\"reads\":true},{\"id\":\"p4.f1\",\"reads\":true},{\"id\":\"p4.f2\",\"reads\":false},{\"id\":\"p4.f3\",\"reads\":true},{\"id\":\"p5.f1\",\"reads\":true},{\"id\":\"p5.f2\",\"reads\":true},{\"id\":\"p5.f3\",\"reads\":true},{\"id\":\"p6.f1\",\"reads\":true},{\"id\":\"p6.f2\",\"reads\":true},{\"id\":\"p6.f3\",\"reads\":true},{\"id\":\"p7.f1\",\"reads\":true},{\"id\":\"p7.f2\",\"reads\":true},{\"id\":\"p7.f3\",\"reads\":true}]}",
+            "wire": {
+                "id": "chatcmpl-ETPC3OZkiASZ52kQtL8tQ1oHX8fqt",
+                "object": "chat.completion",
+                "created": 1790677063,
+                "model": "gpt-5.4-mini-2026-03-17",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"verdicts\":[{\"id\":\"p1.f1\",\"reads\":true},{\"id\":\"p1.f2\",\"reads\":true},{\"id\":\"p1.f3\",\"reads\":true},{\"id\":\"p2.f1\",\"reads\":true},{\"id\":\"p2.f2\",\"reads\":false},{\"id\":\"p2.f3\",\"reads\":true},{\"id\":\"p3.f1\",\"reads\":true},{\"id\":\"p3.f2\",\"reads\":true},{\"id\":\"p3.f3\",\"reads\":true},{\"id\":\"p4.f1\",\"reads\":true},{\"id\":\"p4.f2\",\"reads\":false},{\"id\":\"p4.f3\",\"reads\":true},{\"id\":\"p5.f1\",\"reads\":true},{\"id\":\"p5.f2\",\"reads\":true},{\"id\":\"p5.f3\",\"reads\":true},{\"id\":\"p6.f1\",\"reads\":true},{\"id\":\"p6.f2\",\"reads\":true},{\"id\":\"p6.f3\",\"reads\":true},{\"id\":\"p7.f1\",\"reads\":true},{\"id\":\"p7.f2\",\"reads\":true},{\"id\":\"p7.f3\",\"reads\":true}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 1408,
+                    "completion_tokens": 244,
+                    "total_tokens": 1652,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 0,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "repair",
+            "at": "2026-09-29T10:17:45Z",
+            "prompt_version": "lesson_card_repair.v1.5",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 6119,
+            "cached_tokens_in": 3785,
+            "tokens_out": 675,
+            "reasoning_tokens": 512,
+            "cost_usd": "0.006763",
+            "latency_ms": 7547,
+            "wall_ms": 7548,
+            "call_id": "01M3PAQ79VN25C12E7DZVRDNSA",
+            "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Italian\nLEVEL: Intermediate\nLEARNER_GENDER: unknown\n\nADDRESS: p2\nCARD KIND: frame\n\nFINDINGS (code · what is broken):\n- filler.native_seam · p2.f2: «la cifra è lordo o netto?» («___ è lordo o netto?» with «la cifra») does not read as Italian, the seam judge says\n\nCARD (as written):\n{\n    \"id\": \"p2\",\n    \"kind\": \"ask\",\n    \"must_say\": [\n        2\n    ],\n    \"frame_target\": \"Is ___ gross or net?\",\n    \"frame_native\": \"___ è lordo o netto?\",\n    \"pronunciation_native\": \"is ___ gròus or nèt\",\n    \"slot\": {\n        \"hint_native\": \"la cifra\",\n        \"fillers\": [\n            {\n                \"target\": \"this amount\",\n                \"native\": \"questo importo\",\n                \"pronunciation_native\": \"dhis amàunt\",\n                \"in_dialogue\": true\n            },\n            {\n                \"target\": \"the figure\",\n                \"native\": \"la cifra\",\n                \"pronunciation_native\": \"dhə figher\",\n                \"in_dialogue\": false\n            },\n            {\n                \"target\": \"thirty thousand\",\n                \"native\": \"trentamila\",\n                \"pronunciation_native\": \"thèrti thàuzand\",\n                \"in_dialogue\": false\n            }\n        ]\n    }\n}\n\nSKELETON (accepted; for context, do not return it):\n{\"topic\":{\"title_target\":\"Salary\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about salary, payment schedule, benefits, and negotiation in a job interview.\",\"description_native\":\"Chiedere dello stipendio, della frequenza di pagamento, dei benefit e della trattativa in un colloquio.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Che fascia di stipendio è prevista per ___?\",\"pronunciation_native\":\"uòt sèlari rèindg is òferd for ___\",\"slot\":{\"hint_native\":\"la posizione\",\"fillers\":[{\"target\":\"this role\",\"native\":\"questo ruolo\",\"pronunciation_native\":\"dhis ròl\",\"in_dialogue\":true},{\"target\":\"the position\",\"native\":\"la posizione\",\"pronunciation_native\":\"dhə pozìscion\",\"in_dialogue\":false},{\"target\":\"the job\",\"native\":\"il lavoro\",\"pronunciation_native\":\"dhə giob\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"is ___ gròus or nèt\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"this amount\",\"native\":\"questo importo\",\"pronunciation_native\":\"dhis amàunt\",\"in_dialogue\":true},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"dhə figher\",\"in_dialogue\":false},{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"thèrti thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is salary paid ___?\",\"frame_native\":\"Lo stipendio viene pagato ___?\",\"pronunciation_native\":\"is sèlari pèid ___\",\"slot\":{\"hint_native\":\"la frequenza\",\"fillers\":[{\"target\":\"monthly\",\"native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"in_dialogue\":true},{\"target\":\"weekly\",\"native\":\"settimanalmente\",\"pronunciation_native\":\"uìikli\",\"in_dialogue\":false},{\"target\":\"every two weeks\",\"native\":\"ogni due settimane\",\"pronunciation_native\":\"èvri tù uìiks\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar dher ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"bonuses\",\"native\":\"bonus\",\"pronunciation_native\":\"bòunesiz\",\"in_dialogue\":true},{\"target\":\"health insurance\",\"native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"helth insciurans\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vàucers\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm looking for ___\",\"frame_native\":\"Cerco ___\",\"pronunciation_native\":\"aim lùchin for ___\",\"slot\":{\"hint_native\":\"l'importo o la fascia\",\"fillers\":[{\"target\":\"something competitive\",\"native\":\"qualcosa di competitivo\",\"pronunciation_native\":\"sàmthing compètitiv\",\"in_dialogue\":true},{\"target\":\"around thirty thousand\",\"native\":\"circa trentamila\",\"pronunciation_native\":\"aràund thèrti thàuzand\",\"in_dialogue\":false},{\"target\":\"thirty to thirty-five thousand\",\"native\":\"tra trentamila e trentacinquemila\",\"pronunciation_native\":\"thèrti tu thèrti-faiv thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è negoziabile?\",\"pronunciation_native\":\"is ___ nigòusciabl\",\"slot\":{\"hint_native\":\"l'importo\",\"fillers\":[{\"target\":\"the offer\",\"native\":\"l'offerta\",\"pronunciation_native\":\"dhə òfer\",\"in_dialogue\":true},{\"target\":\"that amount\",\"native\":\"quell'importo\",\"pronunciation_native\":\"dhat amàunt\",\"in_dialogue\":false},{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"dhə stàrting sèlari\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta include ___?\",\"pronunciation_native\":\"daz dhi òfer inclùud ___\",\"slot\":{\"hint_native\":\"l'elemento incluso\",\"fillers\":[{\"target\":\"paid holidays\",\"native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"in_dialogue\":true},{\"target\":\"training\",\"native\":\"formazione\",\"pronunciation_native\":\"trèining\",\"in_dialogue\":false},{\"target\":\"transport allowance\",\"native\":\"indennità di trasporto\",\"pronunciation_native\":\"trànsport alàuans\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"For this role, the range is between twenty-eight and thirty-two thousand a year.\",\"text_native\":\"Per questo ruolo, la fascia è tra ventottomila e trentaduemila all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"That amount is gross, before taxes and contributions.\",\"text_native\":\"Quell'importo è lordo, prima delle tasse e dei contributi.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid monthly, at the end of each month.\",\"text_native\":\"I dipendenti vengono pagati ogni mese, alla fine del mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"There is a yearly bonus and private health insurance.\",\"text_native\":\"Ci sono un bonus annuale e un'assicurazione sanitaria privata.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Che stipendio si aspetta?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Yes, the offer also includes paid holidays from the first year.\",\"text_native\":\"Sì, l'offerta include anche ferie retribuite dal primo anno.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia di stipendio\",\"pronunciation_native\":\"sèlari rèindg\",\"definition_target\":\"the minimum and maximum pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"gròus\",\"definition_target\":\"before taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"nèt\",\"definition_target\":\"after taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"monthly\",\"translation_native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"definition_target\":\"happening once every month\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"bonus\",\"translation_native\":\"bonus\",\"pronunciation_native\":\"bòunus\",\"definition_target\":\"extra money in addition to salary\",\"kind\":\"word\",\"image_prompt\":\"A manager handing an employee a document about extra yearly pay in an office\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v6\",\"term_target\":\"competitive\",\"translation_native\":\"competitivo\",\"pronunciation_native\":\"compètitiv\",\"definition_target\":\"good compared with similar jobs\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"negotiable\",\"translation_native\":\"negoziabile\",\"pronunciation_native\":\"nigòusciabl\",\"definition_target\":\"able to be discussed and changed\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"offer\",\"translation_native\":\"offerta\",\"pronunciation_native\":\"òfer\",\"definition_target\":\"the job conditions proposed by the company\",\"kind\":\"word\",\"image_prompt\":\"A printed job offer letter on a desk in an office\",\"used_in\":[\"p6\",\"p7\",\"a6\"]},{\"id\":\"v9\",\"term_target\":\"paid holidays\",\"translation_native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"definition_target\":\"days off from work that are still paid\",\"kind\":\"chunk\",\"image_prompt\":\"A vacation calendar and approved leave form on an office desk\",\"used_in\":[\"p7\",\"a6\"]}]}\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "card": {
+                    "id": "p2",
+                    "kind": "ask",
+                    "must_say": [
+                        2
+                    ],
+                    "frame_target": "Is ___ gross or net?",
+                    "frame_native": "___ è al lordo o al netto?",
+                    "pronunciation_native": "iz ___ gròus or nèt",
+                    "slot": {
+                        "hint_native": "la cifra",
+                        "fillers": [
+                            {
+                                "target": "this amount",
+                                "native": "questo importo",
+                                "pronunciation_native": "dhis amàunt",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "the figure",
+                                "native": "la cifra",
+                                "pronunciation_native": "dhə figher",
+                                "in_dialogue": false
+                            },
+                            {
+                                "target": "thirty thousand",
+                                "native": "trentamila",
+                                "pronunciation_native": "thèrti thàuzand",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                }
+            },
+            "raw": "{\"card\":{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è al lordo o al netto?\",\"pronunciation_native\":\"iz ___ gròus or nèt\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"this amount\",\"native\":\"questo importo\",\"pronunciation_native\":\"dhis amàunt\",\"in_dialogue\":true},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"dhə figher\",\"in_dialogue\":false},{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"thèrti thàuzand\",\"in_dialogue\":false}]}}}",
+            "wire": {
+                "id": "chatcmpl-ETPC55VE70hFfLGKcRpZtQcsz7kSR",
+                "object": "chat.completion",
+                "created": 1790677065,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"card\":{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è al lordo o al netto?\",\"pronunciation_native\":\"iz ___ gròus or nèt\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"this amount\",\"native\":\"questo importo\",\"pronunciation_native\":\"dhis amàunt\",\"in_dialogue\":true},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"dhə figher\",\"in_dialogue\":false},{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"thèrti thàuzand\",\"in_dialogue\":false}]}}}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 6119,
+                    "completion_tokens": 675,
+                    "total_tokens": 6794,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 3785,
+                        "cache_write_tokens": 2331,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 512,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            },
+            "address": "p2",
+            "kind": "frame"
+        },
+        {
+            "purpose": "repair",
+            "at": "2026-09-29T10:17:52Z",
+            "prompt_version": "lesson_card_repair.v1.5",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 6108,
+            "cached_tokens_in": 3785,
+            "tokens_out": 613,
+            "reasoning_tokens": 460,
+            "cost_usd": "0.006380",
+            "latency_ms": 19072,
+            "wall_ms": 19073,
+            "call_id": "01M3PAQEPFXECGTVD2QVEVGDMQ",
+            "user": "TARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Italian\nLEVEL: Intermediate\nLEARNER_GENDER: unknown\n\nADDRESS: p4\nCARD KIND: frame\n\nFINDINGS (code · what is broken):\n- filler.native_seam · p4.f2: «Ci sono assicurazione sanitaria?» («Ci sono ___?» with «assicurazione sanitaria») does not read as Italian, the seam judge says\n\nCARD (as written):\n{\n    \"id\": \"p4\",\n    \"kind\": \"ask\",\n    \"must_say\": [\n        4\n    ],\n    \"frame_target\": \"Are there ___?\",\n    \"frame_native\": \"Ci sono ___?\",\n    \"pronunciation_native\": \"ar dher ___\",\n    \"slot\": {\n        \"hint_native\": \"il benefit\",\n        \"fillers\": [\n            {\n                \"target\": \"bonuses\",\n                \"native\": \"bonus\",\n                \"pronunciation_native\": \"bòunesiz\",\n                \"in_dialogue\": true\n            },\n            {\n                \"target\": \"health insurance\",\n                \"native\": \"assicurazione sanitaria\",\n                \"pronunciation_native\": \"helth insciurans\",\n                \"in_dialogue\": false\n            },\n            {\n                \"target\": \"meal vouchers\",\n                \"native\": \"buoni pasto\",\n                \"pronunciation_native\": \"mìil vàucers\",\n                \"in_dialogue\": false\n            }\n        ]\n    }\n}\n\nSKELETON (accepted; for context, do not return it):\n{\"topic\":{\"title_target\":\"Salary\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about salary, payment schedule, benefits, and negotiation in a job interview.\",\"description_native\":\"Chiedere dello stipendio, della frequenza di pagamento, dei benefit e della trattativa in un colloquio.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Che fascia di stipendio è prevista per ___?\",\"pronunciation_native\":\"uòt sèlari rèindg is òferd for ___\",\"slot\":{\"hint_native\":\"la posizione\",\"fillers\":[{\"target\":\"this role\",\"native\":\"questo ruolo\",\"pronunciation_native\":\"dhis ròl\",\"in_dialogue\":true},{\"target\":\"the position\",\"native\":\"la posizione\",\"pronunciation_native\":\"dhə pozìscion\",\"in_dialogue\":false},{\"target\":\"the job\",\"native\":\"il lavoro\",\"pronunciation_native\":\"dhə giob\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è al lordo o al netto?\",\"pronunciation_native\":\"iz ___ gròus or nèt\",\"slot\":{\"hint_native\":\"la cifra\",\"fillers\":[{\"target\":\"this amount\",\"native\":\"questo importo\",\"pronunciation_native\":\"dhis amàunt\",\"in_dialogue\":true},{\"target\":\"the figure\",\"native\":\"la cifra\",\"pronunciation_native\":\"dhə figher\",\"in_dialogue\":false},{\"target\":\"thirty thousand\",\"native\":\"trentamila\",\"pronunciation_native\":\"thèrti thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Is salary paid ___?\",\"frame_native\":\"Lo stipendio viene pagato ___?\",\"pronunciation_native\":\"is sèlari pèid ___\",\"slot\":{\"hint_native\":\"la frequenza\",\"fillers\":[{\"target\":\"monthly\",\"native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"in_dialogue\":true},{\"target\":\"weekly\",\"native\":\"settimanalmente\",\"pronunciation_native\":\"uìikli\",\"in_dialogue\":false},{\"target\":\"every two weeks\",\"native\":\"ogni due settimane\",\"pronunciation_native\":\"èvri tù uìiks\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar dher ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"bonuses\",\"native\":\"bonus\",\"pronunciation_native\":\"bòunesiz\",\"in_dialogue\":true},{\"target\":\"health insurance\",\"native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"helth insciurans\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vàucers\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I'm looking for ___\",\"frame_native\":\"Cerco ___\",\"pronunciation_native\":\"aim lùchin for ___\",\"slot\":{\"hint_native\":\"l'importo o la fascia\",\"fillers\":[{\"target\":\"something competitive\",\"native\":\"qualcosa di competitivo\",\"pronunciation_native\":\"sàmthing compètitiv\",\"in_dialogue\":true},{\"target\":\"around thirty thousand\",\"native\":\"circa trentamila\",\"pronunciation_native\":\"aràund thèrti thàuzand\",\"in_dialogue\":false},{\"target\":\"thirty to thirty-five thousand\",\"native\":\"tra trentamila e trentacinquemila\",\"pronunciation_native\":\"thèrti tu thèrti-faiv thàuzand\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è negoziabile?\",\"pronunciation_native\":\"is ___ nigòusciabl\",\"slot\":{\"hint_native\":\"l'importo\",\"fillers\":[{\"target\":\"the offer\",\"native\":\"l'offerta\",\"pronunciation_native\":\"dhə òfer\",\"in_dialogue\":true},{\"target\":\"that amount\",\"native\":\"quell'importo\",\"pronunciation_native\":\"dhat amàunt\",\"in_dialogue\":false},{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"dhə stàrting sèlari\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta include ___?\",\"pronunciation_native\":\"daz dhi òfer inclùud ___\",\"slot\":{\"hint_native\":\"l'elemento incluso\",\"fillers\":[{\"target\":\"paid holidays\",\"native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"in_dialogue\":true},{\"target\":\"training\",\"native\":\"formazione\",\"pronunciation_native\":\"trèining\",\"in_dialogue\":false},{\"target\":\"transport allowance\",\"native\":\"indennità di trasporto\",\"pronunciation_native\":\"trànsport alàuans\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"For this role, the range is between twenty-eight and thirty-two thousand a year.\",\"text_native\":\"Per questo ruolo, la fascia è tra ventottomila e trentaduemila all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"That amount is gross, before taxes and contributions.\",\"text_native\":\"Quell'importo è lordo, prima delle tasse e dei contributi.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid monthly, at the end of each month.\",\"text_native\":\"I dipendenti vengono pagati ogni mese, alla fine del mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"There is a yearly bonus and private health insurance.\",\"text_native\":\"Ci sono un bonus annuale e un'assicurazione sanitaria privata.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Che stipendio si aspetta?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Yes, the offer also includes paid holidays from the first year.\",\"text_native\":\"Sì, l'offerta include anche ferie retribuite dal primo anno.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia di stipendio\",\"pronunciation_native\":\"sèlari rèindg\",\"definition_target\":\"the minimum and maximum pay offered\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"gròus\",\"definition_target\":\"before taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"nèt\",\"definition_target\":\"after taxes are taken away\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"monthly\",\"translation_native\":\"mensilmente\",\"pronunciation_native\":\"mànthli\",\"definition_target\":\"happening once every month\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"bonus\",\"translation_native\":\"bonus\",\"pronunciation_native\":\"bòunus\",\"definition_target\":\"extra money in addition to salary\",\"kind\":\"word\",\"image_prompt\":\"A manager handing an employee a document about extra yearly pay in an office\",\"used_in\":[\"p4\",\"a4\"]},{\"id\":\"v6\",\"term_target\":\"competitive\",\"translation_native\":\"competitivo\",\"pronunciation_native\":\"compètitiv\",\"definition_target\":\"good compared with similar jobs\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\"]},{\"id\":\"v7\",\"term_target\":\"negotiable\",\"translation_native\":\"negoziabile\",\"pronunciation_native\":\"nigòusciabl\",\"definition_target\":\"able to be discussed and changed\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"offer\",\"translation_native\":\"offerta\",\"pronunciation_native\":\"òfer\",\"definition_target\":\"the job conditions proposed by the company\",\"kind\":\"word\",\"image_prompt\":\"A printed job offer letter on a desk in an office\",\"used_in\":[\"p6\",\"p7\",\"a6\"]},{\"id\":\"v9\",\"term_target\":\"paid holidays\",\"translation_native\":\"ferie retribuite\",\"pronunciation_native\":\"pèid hòlideiz\",\"definition_target\":\"days off from work that are still paid\",\"kind\":\"chunk\",\"image_prompt\":\"A vacation calendar and approved leave form on an office desk\",\"used_in\":[\"p7\",\"a6\"]}]}\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "card": {
+                    "id": "p4",
+                    "kind": "ask",
+                    "must_say": [
+                        4
+                    ],
+                    "frame_target": "Are there ___?",
+                    "frame_native": "Ci sono ___?",
+                    "pronunciation_native": "ar dher ___",
+                    "slot": {
+                        "hint_native": "il benefit",
+                        "fillers": [
+                            {
+                                "target": "bonuses",
+                                "native": "bonus",
+                                "pronunciation_native": "bòunesiz",
+                                "in_dialogue": true
+                            },
+                            {
+                                "target": "health insurance",
+                                "native": "assicurazioni sanitarie",
+                                "pronunciation_native": "helth insciurans",
+                                "in_dialogue": false
+                            },
+                            {
+                                "target": "meal vouchers",
+                                "native": "buoni pasto",
+                                "pronunciation_native": "mìil vàucers",
+                                "in_dialogue": false
+                            }
+                        ]
+                    }
+                }
+            },
+            "raw": "{\"card\":{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar dher ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"bonuses\",\"native\":\"bonus\",\"pronunciation_native\":\"bòunesiz\",\"in_dialogue\":true},{\"target\":\"health insurance\",\"native\":\"assicurazioni sanitarie\",\"pronunciation_native\":\"helth insciurans\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vàucers\",\"in_dialogue\":false}]}}}",
+            "wire": {
+                "id": "chatcmpl-ETPCP4hHCEPpUbAizUe3elTWppos7",
+                "object": "chat.completion",
+                "created": 1790677085,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"card\":{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar dher ___\",\"slot\":{\"hint_native\":\"il benefit\",\"fillers\":[{\"target\":\"bonuses\",\"native\":\"bonus\",\"pronunciation_native\":\"bòunesiz\",\"in_dialogue\":true},{\"target\":\"health insurance\",\"native\":\"assicurazioni sanitarie\",\"pronunciation_native\":\"helth insciurans\",\"in_dialogue\":false},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vàucers\",\"in_dialogue\":false}]}}}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 6108,
+                    "completion_tokens": 613,
+                    "total_tokens": 6721,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 3785,
+                        "cache_write_tokens": 2320,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 460,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            },
+            "address": "p4",
+            "kind": "frame"
+        },
+        {
+            "purpose": "seam_judge",
+            "at": "2026-09-29T10:18:11Z",
+            "prompt_version": "lesson_seam_judge.v1.1",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "tokens_in": 788,
+            "cached_tokens_in": 0,
+            "tokens_out": 79,
+            "reasoning_tokens": 0,
+            "cost_usd": "0.000947",
+            "latency_ms": 954,
+            "wall_ms": 954,
+            "call_id": "01M3PAR1B7P03RKW0HRGKKK6YP",
+            "user": "NATIVE_LANGUAGE: Italian\n\nITEMS (id · the pattern with its slot · the value put into the slot · the sentence they make):\n[\n{\"id\":\"p2.f1\",\"pattern\":\"___ è al lordo o al netto?\",\"value\":\"questo importo\",\"sentence\":\"questo importo è al lordo o al netto?\"},\n{\"id\":\"p2.f2\",\"pattern\":\"___ è al lordo o al netto?\",\"value\":\"la cifra\",\"sentence\":\"la cifra è al lordo o al netto?\"},\n{\"id\":\"p2.f3\",\"pattern\":\"___ è al lordo o al netto?\",\"value\":\"trentamila\",\"sentence\":\"trentamila è al lordo o al netto?\"},\n{\"id\":\"p4.f1\",\"pattern\":\"Ci sono ___?\",\"value\":\"bonus\",\"sentence\":\"Ci sono bonus?\"},\n{\"id\":\"p4.f2\",\"pattern\":\"Ci sono ___?\",\"value\":\"assicurazioni sanitarie\",\"sentence\":\"Ci sono assicurazioni sanitarie?\"},\n{\"id\":\"p4.f3\",\"pattern\":\"Ci sono ___?\",\"value\":\"buoni pasto\",\"sentence\":\"Ci sono buoni pasto?\"}\n]",
+            "payload": {
+                "verdicts": [
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f3",
+                        "reads": true
+                    }
+                ]
+            },
+            "raw": "{\"verdicts\":[{\"id\":\"p2.f1\",\"reads\":true},{\"id\":\"p2.f2\",\"reads\":true},{\"id\":\"p2.f3\",\"reads\":true},{\"id\":\"p4.f1\",\"reads\":true},{\"id\":\"p4.f2\",\"reads\":true},{\"id\":\"p4.f3\",\"reads\":true}]}",
+            "wire": {
+                "id": "chatcmpl-ETPCVsnFFtpYoR7FSMx0MI6iGytxv",
+                "object": "chat.completion",
+                "created": 1790677091,
+                "model": "gpt-5.4-mini-2026-03-17",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"verdicts\":[{\"id\":\"p2.f1\",\"reads\":true},{\"id\":\"p2.f2\",\"reads\":true},{\"id\":\"p2.f3\",\"reads\":true},{\"id\":\"p4.f1\",\"reads\":true},{\"id\":\"p4.f2\",\"reads\":true},{\"id\":\"p4.f3\",\"reads\":true}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 788,
+                    "completion_tokens": 79,
+                    "total_tokens": 867,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 0,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "dialogue",
+            "at": "2026-09-29T10:18:12Z",
+            "user": "TOPIC_DESCRIPTION: Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.\n\nAbout the learner, in their own words: colloquio di lavoro, domande sullo stipendio\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Italian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidate / Candidato\n\nPARTNER_ROLE: Interviewer / Selezionatore\n\nDIALOGUE_COUNT: 8\n\nEARLIER_DAYS:\nnone\n\nSKELETON:\n{\n    \"topic\": {\n        \"title_target\": \"Salary\",\n        \"title_native\": \"Stipendio\",\n        \"description_target\": \"Ask about salary, payment schedule, benefits, and negotiation in a job interview.\",\n        \"description_native\": \"Chiedere dello stipendio, della frequenza di pagamento, dei benefit e della trattativa in un colloquio.\"\n    },\n    \"learner_role\": {\n        \"role_target\": \"Candidate\",\n        \"role_native\": \"Candidato\"\n    },\n    \"role_gender\": \"male\",\n    \"phrases\": [\n        {\n            \"id\": \"p1\",\n            \"kind\": \"ask\",\n            \"must_say\": [\n                1\n            ],\n            \"frame_target\": \"What salary range is offered for ___?\",\n            \"frame_native\": \"Che fascia di stipendio è prevista per ___?\",\n            \"pronunciation_native\": \"uòt sèlari rèindg is òferd for ___\",\n            \"slot\": {\n                \"hint_native\": \"la posizione\",\n                \"fillers\": [\n                    {\n                        \"target\": \"this role\",\n                        \"native\": \"questo ruolo\",\n                        \"pronunciation_native\": \"dhis ròl\",\n                        \"in_dialogue\": true\n                    },\n                    {\n                        \"target\": \"the position\",\n                        \"native\": \"la posizione\",\n                        \"pronunciation_native\": \"dhə pozìscion\",\n                        \"in_dialogue\": false\n                    },\n                    {\n                        \"target\": \"the job\",\n                        \"native\": \"il lavoro\",\n                        \"pronunciation_native\": \"dhə giob\",\n                        \"in_dialogue\": false\n                    }\n                ]\n            }\n        },\n        {\n            \"id\": \"p2\",\n            \"kind\": \"ask\",\n            \"must_say\": [\n                2\n            ],\n            \"frame_target\": \"Is ___ gross or net?\",\n            \"frame_native\": \"___ è al lordo o al netto?\",\n            \"pronunciation_native\": \"iz ___ gròus or nèt\",\n            \"slot\": {\n                \"hint_native\": \"la cifra\",\n                \"fillers\": [\n                    {\n                        \"target\": \"this amount\",\n                        \"native\": \"questo importo\",\n                        \"pronunciation_native\": \"dhis amàunt\",\n                        \"in_dialogue\": true\n                    },\n                    {\n                        \"target\": \"the figure\",\n                        \"native\": \"la cifra\",\n                        \"pronunciation_native\": \"dhə figher\",\n                        \"in_dialogue\": false\n                    },\n                    {\n                        \"target\": \"thirty thousand\",\n                        \"native\": \"trentamila\",\n                        \"pronunciation_native\": \"thèrti thàuzand\",\n                        \"in_dialogue\": false\n                    }\n                ]\n            }\n        },\n        {\n            \"id\": \"p3\",\n            \"kind\": \"ask\",\n            \"must_say\": [\n                3\n            ],\n            \"frame_target\": \"Is salary paid ___?\",\n            \"frame_native\": \"Lo stipendio viene pagato ___?\",\n            \"pronunciation_native\": \"is sèlari pèid ___\",\n            \"slot\": {\n                \"hint_native\": \"la frequenza\",\n                \"fillers\": [\n                    {\n                        \"target\": \"monthly\",\n                        \"native\": \"mensilmente\",\n                        \"pronunciation_native\": \"mànthli\",\n                        \"in_dialogue\": true\n                    },\n                    {\n                        \"target\": \"weekly\",\n                        \"native\": \"settimanalmente\",\n                        \"pronunciation_native\": \"uìikli\",\n                        \"in_dialogue\": false\n                    },\n                    {\n                        \"target\": \"every two weeks\",\n                        \"native\": \"ogni due settimane\",\n                        \"pronunciation_native\": \"èvri tù uìiks\",\n                        \"in_dialogue\": false\n                    }\n                ]\n            }\n        },\n        {\n            \"id\": \"p4\",\n            \"kind\": \"ask\",\n            \"must_say\": [\n                4\n            ],\n            \"frame_target\": \"Are there ___?\",\n            \"frame_native\": \"Ci sono ___?\",\n            \"pronunciation_native\": \"ar dher ___\",\n            \"slot\": {\n                \"hint_native\": \"il benefit\",\n                \"fillers\": [\n                    {\n                        \"target\": \"bonuses\",\n                        \"native\": \"bonus\",\n                        \"pronunciation_native\": \"bòunesiz\",\n                        \"in_dialogue\": true\n                    },\n                    {\n                        \"target\": \"health insurance\",\n                        \"native\": \"assicurazioni sanitarie\",\n                        \"pronunciation_native\": \"helth insciurans\",\n                        \"in_dialogue\": false\n                    },\n                    {\n                        \"target\": \"meal vouchers\",\n                        \"native\": \"buoni pasto\",\n                        \"pronunciation_native\": \"mìil vàucers\",\n                        \"in_dialogue\": false\n                    }\n                ]\n            }\n        },\n        {\n            \"id\": \"p5\",\n            \"kind\": \"answer\",\n            \"must_say\": [\n                5\n            ],\n            \"frame_target\": \"I'm looking for ___\",\n            \"frame_native\": \"Cerco ___\",\n            \"pronunciation_native\": \"aim lùchin for ___\",\n            \"slot\": {\n                \"hint_native\": \"l'importo o la fascia\",\n                \"fillers\": [\n                    {\n                        \"target\": \"something competitive\",\n                        \"native\": \"qualcosa di competitivo\",\n                        \"pronunciation_native\": \"sàmthing compètitiv\",\n                        \"in_dialogue\": true\n                    },\n                    {\n                        \"target\": \"around thirty thousand\",\n                        \"native\": \"circa trentamila\",\n                        \"pronunciation_native\": \"aràund thèrti thàuzand\",\n                        \"in_dialogue\": false\n                    },\n                    {\n                        \"target\": \"thirty to thirty-five thousand\",\n                        \"native\": \"tra trentamila e trentacinquemila\",\n                        \"pronunciation_native\": \"thèrti tu thèrti-faiv thàuzand\",\n                        \"in_dialogue\": false\n                    }\n                ]\n            }\n        },\n        {\n            \"id\": \"p6\",\n            \"kind\": \"ask\",\n            \"must_say\": [\n                6\n            ],\n            \"frame_target\": \"Is ___ negotiable?\",\n            \"frame_native\": \"___ è negoziabile?\",\n            \"pronunciation_native\": \"is ___ nigòusciabl\",\n            \"slot\": {\n                \"hint_native\": \"l'importo\",\n                \"fillers\": [\n                    {\n                        \"target\": \"the offer\",\n                        \"native\": \"l'offerta\",\n                        \"pronunciation_native\": \"dhə òfer\",\n                        \"in_dialogue\": true\n                    },\n                    {\n                        \"target\": \"that amount\",\n                        \"native\": \"quell'importo\",\n                        \"pronunciation_native\": \"dhat amàunt\",\n                        \"in_dialogue\": false\n                    },\n                    {\n                        \"target\": \"the starting salary\",\n                        \"native\": \"lo stipendio iniziale\",\n                        \"pronunciation_native\": \"dhə stàrting sèlari\",\n                        \"in_dialogue\": false\n                    }\n                ]\n            }\n        },\n        {\n            \"id\": \"p7\",\n            \"kind\": \"ask\",\n            \"must_say\": [\n                7\n            ],\n            \"frame_target\": \"Does the offer include ___?\",\n            \"frame_native\": \"L'offerta include ___?\",\n            \"pronunciation_native\": \"daz dhi òfer inclùud ___\",\n            \"slot\": {\n                \"hint_native\": \"l'elemento incluso\",\n                \"fillers\": [\n                    {\n                        \"target\": \"paid holidays\",\n                        \"native\": \"ferie retribuite\",\n                        \"pronunciation_native\": \"pèid hòlideiz\",\n                        \"in_dialogue\": true\n                    },\n                    {\n                        \"target\": \"training\",\n                        \"native\": \"formazione\",\n                        \"pronunciation_native\": \"trèining\",\n                        \"in_dialogue\": false\n                    },\n                    {\n                        \"target\": \"transport allowance\",\n                        \"native\": \"indennità di trasporto\",\n                        \"pronunciation_native\": \"trànsport alàuans\",\n                        \"in_dialogue\": false\n                    }\n                ]\n            }\n        }\n    ],\n    \"partner_lines\": [\n        {\n            \"id\": \"a1\",\n            \"must_understand\": 1,\n            \"kind\": \"statement\",\n            \"pairs_with\": [\n                1\n            ],\n            \"text_target\": \"For this role, the range is between twenty-eight and thirty-two thousand a year.\",\n            \"text_native\": \"Per questo ruolo, la fascia è tra ventottomila e trentaduemila all'anno.\"\n        },\n        {\n            \"id\": \"a2\",\n            \"must_understand\": 2,\n            \"kind\": \"statement\",\n            \"pairs_with\": [\n                2\n            ],\n            \"text_target\": \"That amount is gross, before taxes and contributions.\",\n            \"text_native\": \"Quell'importo è lordo, prima delle tasse e dei contributi.\"\n        },\n        {\n            \"id\": \"a3\",\n            \"must_understand\": 3,\n            \"kind\": \"statement\",\n            \"pairs_with\": [\n                3\n            ],\n            \"text_target\": \"Employees are paid monthly, at the end of each month.\",\n            \"text_native\": \"I dipendenti vengono pagati ogni mese, alla fine del mese.\"\n        },\n        {\n            \"id\": \"a4\",\n            \"must_understand\": 4,\n            \"kind\": \"statement\",\n            \"pairs_with\": [\n                4\n            ],\n            \"text_target\": \"There is a yearly bonus and private health insurance.\",\n            \"text_native\": \"Ci sono un bonus annuale e un'assicurazione sanitaria privata.\"\n        },\n        {\n            \"id\": \"a5\",\n            \"must_understand\": 5,\n            \"kind\": \"question\",\n            \"pairs_with\": [\n                5\n            ],\n            \"text_target\": \"What salary are you expecting?\",\n            \"text_native\": \"Che stipendio si aspetta?\"\n        },\n        {\n            \"id\": \"a6\",\n            \"must_understand\": 4,\n            \"kind\": \"statement\",\n            \"pairs_with\": [\n                7\n            ],\n            \"text_target\": \"Yes, the offer also includes paid holidays from the first year.\",\n            \"text_native\": \"Sì, l'offerta include anche ferie retribuite dal primo anno.\"\n        }\n    ],\n    \"vocabulary\": [\n        {\n            \"id\": \"v1\",\n            \"term_target\": \"salary range\",\n            \"translation_native\": \"fascia di stipendio\",\n            \"pronunciation_native\": \"sèlari rèindg\",\n            \"definition_target\": \"the minimum and maximum pay offered\",\n            \"kind\": \"chunk\",\n            \"image_prompt\": null,\n            \"used_in\": [\n                \"p1\",\n                \"a1\"\n            ]\n        },\n        {\n            \"id\": \"v2\",\n            \"term_target\": \"gross\",\n            \"translation_native\": \"lordo\",\n            \"pronunciation_native\": \"gròus\",\n            \"definition_target\": \"before taxes are taken away\",\n            \"kind\": \"word\",\n            \"image_prompt\": null,\n            \"used_in\": [\n                \"p2\",\n                \"a2\"\n            ]\n        },\n        {\n            \"id\": \"v3\",\n            \"term_target\": \"net\",\n            \"translation_native\": \"netto\",\n            \"pronunciation_native\": \"nèt\",\n            \"definition_target\": \"after taxes are taken away\",\n            \"kind\": \"word\",\n            \"image_prompt\": null,\n            \"used_in\": [\n                \"p2\"\n            ]\n        },\n        {\n            \"id\": \"v4\",\n            \"term_target\": \"monthly\",\n            \"translation_native\": \"mensilmente\",\n            \"pronunciation_native\": \"mànthli\",\n            \"definition_target\": \"happening once every month\",\n            \"kind\": \"word\",\n            \"image_prompt\": null,\n            \"used_in\": [\n                \"p3\",\n                \"a3\"\n            ]\n        },\n        {\n            \"id\": \"v5\",\n            \"term_target\": \"bonus\",\n            \"translation_native\": \"bonus\",\n            \"pronunciation_native\": \"bòunus\",\n            \"definition_target\": \"extra money in addition to salary\",\n            \"kind\": \"word\",\n            \"image_prompt\": \"A manager handing an employee a document about extra yearly pay in an office\",\n            \"used_in\": [\n                \"p4\",\n                \"a4\"\n            ]\n        },\n        {\n            \"id\": \"v6\",\n            \"term_target\": \"competitive\",\n            \"translation_native\": \"competitivo\",\n            \"pronunciation_native\": \"compètitiv\",\n            \"definition_target\": \"good compared with similar jobs\",\n            \"kind\": \"word\",\n            \"image_prompt\": null,\n            \"used_in\": [\n                \"p5\"\n            ]\n        },\n        {\n            \"id\": \"v7\",\n            \"term_target\": \"negotiable\",\n            \"translation_native\": \"negoziabile\",\n            \"pronunciation_native\": \"nigòusciabl\",\n            \"definition_target\": \"able to be discussed and changed\",\n            \"kind\": \"word\",\n            \"image_prompt\": null,\n            \"used_in\": [\n                \"p6\"\n            ]\n        },\n        {\n            \"id\": \"v8\",\n            \"term_target\": \"offer\",\n            \"translation_native\": \"offerta\",\n            \"pronunciation_native\": \"òfer\",\n            \"definition_target\": \"the job conditions proposed by the company\",\n            \"kind\": \"word\",\n            \"image_prompt\": \"A printed job offer letter on a desk in an office\",\n            \"used_in\": [\n                \"p6\",\n                \"p7\",\n                \"a6\"\n            ]\n        },\n        {\n            \"id\": \"v9\",\n            \"term_target\": \"paid holidays\",\n            \"translation_native\": \"ferie retribuite\",\n            \"pronunciation_native\": \"pèid hòlideiz\",\n            \"definition_target\": \"days off from work that are still paid\",\n            \"kind\": \"chunk\",\n            \"image_prompt\": \"A vacation calendar and approved leave form on an office desk\",\n            \"used_in\": [\n                \"p7\",\n                \"a6\"\n            ]\n        }\n    ]\n}",
+            "error": "OpenAI API error: 429 {\n    \"error\": {\n        \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"credit_balance_exhausted\"\n    }\n}\n",
+            "wire": "{\n    \"error\": {\n        \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"credit_balance_exhausted\"\n    }\n}\n",
+            "wall_ms": 25451
+        }
+    ]
+}

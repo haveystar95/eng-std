@@ -1,0 +1,502 @@
+{
+    "plan": "03",
+    "inputs": {
+        "native": "pl",
+        "target": "en",
+        "level": "intermediate",
+        "scenes": 3,
+        "goal": "wynajem mieszkania, oglądanie z agentem, mam małego psa",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/03-pl-en.json (GEN-4a paid $0.022518)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: title_native over 18 («Spotkanie z agentem», 19)"
+            },
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: goals_native 1 over 30 («zapytać, czy pies jest dozwolony», 32)"
+            },
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 3: goals_native 0 over 30 («powiedzieć, że lokal cię interesuje», 35)"
+            },
+            {
+                "check": "survival_unanswered",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: must_understand 4 «asks what you are looking for» has no answer in must_say"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: title_native «Spotkanie z agentem» (19) → «Z agentem» (9)"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: goals_native 1 «zapytać, czy pies jest dozwolony» (32) → «zapytać, czy pies może wejść» (28)"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 3: goals_native 0 «powiedzieć, że lokal cię interesuje» (35) still over 30: «wyrazić zainteresowanie lokalem» (31)"
+            }
+        ],
+        "plan": {
+            "title_native": "Oglądanie mieszkania",
+            "title_target": "Apartment viewing",
+            "overdue_native": "Oglądanie było wczoraj",
+            "learner_role": [
+                "Tenant",
+                "Najemca"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Z agentem",
+                "title_target": "Meeting the agent",
+                "teaches_native": "przedstawić się i ustalić plan",
+                "goals_native": [
+                    "powiedzieć, po co tu jesteś",
+                    "podać swoje imię",
+                    "zapytać o plan oglądania",
+                    "wyjaśnić, czego szukasz"
+                ],
+                "learner_role": [
+                    "Tenant",
+                    "Najemca"
+                ],
+                "partner_role": [
+                    "Agent",
+                    "Agent"
+                ],
+                "topic_description": "Situation: You arrive to view a rental apartment with an agent for the first time. This short exchange happens before you start walking through the flat and helps you understand the process and set expectations for the visit.\nLearner: Tenant. Partner: Agent.\nNot in this scene: discussing the apartment in detail, asking about pet rules, rent, deposit, documents, making a decision.",
+                "must_say": [
+                    "say you are here for the viewing — slot: the apartment",
+                    "give your name — slot: the name",
+                    "ask how long the viewing will take — slot: none",
+                    "ask which rooms you will see first — slot: the part of the apartment",
+                    "explain what kind of place you need — slot: the requirement",
+                    "ask whether there are other viewings today — slot: none"
+                ],
+                "must_understand": [
+                    "asks whether you are here for a specific apartment",
+                    "asks your name",
+                    "says how the viewing will go and which rooms you will see",
+                    "asks what you are looking for",
+                    "says whether other people are viewing the place"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Oglądanie lokalu",
+                "title_target": "Viewing the apartment",
+                "teaches_native": "pytać o warunki i zasady",
+                "goals_native": [
+                    "zapytać, co jest w cenie",
+                    "zapytać, czy pies może wejść",
+                    "zapytać o dodatkowe opłaty",
+                    "zgłosić swoją wątpliwość"
+                ],
+                "learner_role": [
+                    "Tenant",
+                    "Najemca"
+                ],
+                "partner_role": [
+                    "Agent",
+                    "Agent"
+                ],
+                "topic_description": "Situation: You are walking through the apartment with the agent and need to decide whether the place could work for you. You have a small dog, so the pet rule is especially important, along with costs, condition, and practical details.\nLearner: Tenant. Partner: Agent.\nNot in this scene: introductions and viewing plan, application steps, required documents, negotiating the contract, arranging the next contact.",
+                "must_say": [
+                    "ask what is included in the rent — slot: the thing included",
+                    "ask whether a pet is allowed — slot: the pet",
+                    "ask whether there are extra monthly costs — slot: the cost",
+                    "ask how old something in the flat is — slot: the thing",
+                    "explain a concern about the apartment — slot: the concern",
+                    "ask whether something can be changed — slot: the change",
+                    "ask about the neighbourhood — slot: the place nearby",
+                    "confirm what matters most to you — slot: the priority"
+                ],
+                "must_understand": [
+                    "says what is included in the rent and what is not",
+                    "explains the building or flat rules about pets",
+                    "says what extra monthly costs there are",
+                    "explains whether changes are possible and under what conditions",
+                    "tells you about the area or nearby services"
+                ]
+            },
+            {
+                "order": 3,
+                "kind": "situation",
+                "priority": 3,
+                "title_native": "Dalsze kroki",
+                "title_target": "Next steps",
+                "teaches_native": "ustalić wniosek i dokumenty",
+                "goals_native": [
+                    "powiedzieć, że lokal cię interesuje",
+                    "zapytać o potrzebne dokumenty",
+                    "zapytać, jak złożyć wniosek",
+                    "ustalić dalszy kontakt"
+                ],
+                "learner_role": [
+                    "Tenant",
+                    "Najemca"
+                ],
+                "partner_role": [
+                    "Agent",
+                    "Agent"
+                ],
+                "topic_description": "Situation: The viewing is ending and you want to move forward if the apartment suits you. This interaction covers the application process, timing, and what you need to send after the visit to keep your chance of renting the place.\nLearner: Tenant. Partner: Agent.\nNot in this scene: first introductions, detailed questions about the apartment, pet rules, room-by-room comments, discussing what is included in the rent.",
+                "must_say": [
+                    "say you are interested in the apartment — slot: the apartment",
+                    "ask what documents are required — slot: the document type",
+                    "ask when a decision will be made — slot: the decision",
+                    "ask how to submit an application — slot: the application method",
+                    "ask whether a holding deposit is needed — slot: the deposit",
+                    "ask who will contact you next — slot: the person",
+                    "confirm when you will send something — slot: the document",
+                    "confirm how you will stay in touch — slot: the contact method"
+                ],
+                "must_understand": [
+                    "says what documents you need to provide",
+                    "explains how to apply and by when",
+                    "says whether a deposit is needed and how it works",
+                    "tells you when the landlord or agent will decide",
+                    "gives the next contact step"
+                ]
+            }
+        ],
+        "cost_usd": "0.007363"
+    },
+    "wall_ms": 10399,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:25:31Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4855,
+            "cached_tokens_in": 3840,
+            "tokens_out": 1268,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 20251,
+            "wall_ms": 0,
+            "call_id": null,
+            "user": "GOAL: wynajem mieszkania, oglądanie z agentem, mam małego psa\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Polish\nLEVEL: Intermediate\nSCENES_COUNT: 3\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Oglądanie mieszkania",
+                    "title_target": "Apartment viewing",
+                    "event_native": "Oglądanie",
+                    "until_phrase_native": "Do oglądania",
+                    "overdue_native": "Oglądanie było wczoraj",
+                    "cover_image_prompt": "real estate agent showing a bright apartment living room, realistic photo, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Tenant",
+                    "learner_role_native": "Najemca"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "say you are here for the viewing — slot: the apartment",
+                            "give your name — slot: the name",
+                            "ask how long the viewing will take — slot: none",
+                            "ask which rooms you will see first — slot: the part of the apartment",
+                            "explain what kind of place you need — slot: the requirement",
+                            "ask whether there are other viewings today — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks whether you are here for a specific apartment",
+                            "asks your name",
+                            "says how the viewing will go and which rooms you will see",
+                            "asks what you are looking for",
+                            "says whether other people are viewing the place"
+                        ],
+                        "title_native": "Spotkanie z agentem",
+                        "title_target": "Meeting the agent",
+                        "teaches_native": "przedstawić się i ustalić plan",
+                        "goals_native": [
+                            "powiedzieć, po co tu jesteś",
+                            "podać swoje imię",
+                            "zapytać o plan oglądania",
+                            "wyjaśnić, czego szukasz"
+                        ],
+                        "learner_role_target": "Tenant",
+                        "learner_role_native": "Najemca",
+                        "partner_role_target": "Agent",
+                        "partner_role_native": "Agent",
+                        "topic_description": "Situation: You arrive to view a rental apartment with an agent for the first time. This short exchange happens before you start walking through the flat and helps you understand the process and set expectations for the visit.\nLearner: Tenant. Partner: Agent.\nNot in this scene: discussing the apartment in detail, asking about pet rules, rent, deposit, documents, making a decision.",
+                        "image_prompt": "apartment building entrance with a real estate agent waiting, realistic photo, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "ask what is included in the rent — slot: the thing included",
+                            "ask whether a pet is allowed — slot: the pet",
+                            "ask whether there are extra monthly costs — slot: the cost",
+                            "ask how old something in the flat is — slot: the thing",
+                            "explain a concern about the apartment — slot: the concern",
+                            "ask whether something can be changed — slot: the change",
+                            "ask about the neighbourhood — slot: the place nearby",
+                            "confirm what matters most to you — slot: the priority"
+                        ],
+                        "must_understand": [
+                            "says what is included in the rent and what is not",
+                            "explains the building or flat rules about pets",
+                            "says what extra monthly costs there are",
+                            "explains whether changes are possible and under what conditions",
+                            "tells you about the area or nearby services"
+                        ],
+                        "title_native": "Oglądanie lokalu",
+                        "title_target": "Viewing the apartment",
+                        "teaches_native": "pytać o warunki i zasady",
+                        "goals_native": [
+                            "zapytać, co jest w cenie",
+                            "zapytać, czy pies jest dozwolony",
+                            "zapytać o dodatkowe opłaty",
+                            "zgłosić swoją wątpliwość"
+                        ],
+                        "learner_role_target": "Tenant",
+                        "learner_role_native": "Najemca",
+                        "partner_role_target": "Agent",
+                        "partner_role_native": "Agent",
+                        "topic_description": "Situation: You are walking through the apartment with the agent and need to decide whether the place could work for you. You have a small dog, so the pet rule is especially important, along with costs, condition, and practical details.\nLearner: Tenant. Partner: Agent.\nNot in this scene: introductions and viewing plan, application steps, required documents, negotiating the contract, arranging the next contact.",
+                        "image_prompt": "real estate agent showing an apartment interior during a viewing, realistic photo, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 3,
+                        "kind": "situation",
+                        "priority": 3,
+                        "must_say": [
+                            "say you are interested in the apartment — slot: the apartment",
+                            "ask what documents are required — slot: the document type",
+                            "ask when a decision will be made — slot: the decision",
+                            "ask how to submit an application — slot: the application method",
+                            "ask whether a holding deposit is needed — slot: the deposit",
+                            "ask who will contact you next — slot: the person",
+                            "confirm when you will send something — slot: the document",
+                            "confirm how you will stay in touch — slot: the contact method"
+                        ],
+                        "must_understand": [
+                            "says what documents you need to provide",
+                            "explains how to apply and by when",
+                            "says whether a deposit is needed and how it works",
+                            "tells you when the landlord or agent will decide",
+                            "gives the next contact step"
+                        ],
+                        "title_native": "Dalsze kroki",
+                        "title_target": "Next steps",
+                        "teaches_native": "ustalić wniosek i dokumenty",
+                        "goals_native": [
+                            "powiedzieć, że lokal cię interesuje",
+                            "zapytać o potrzebne dokumenty",
+                            "zapytać, jak złożyć wniosek",
+                            "ustalić dalszy kontakt"
+                        ],
+                        "learner_role_target": "Tenant",
+                        "learner_role_native": "Najemca",
+                        "partner_role_target": "Agent",
+                        "partner_role_native": "Agent",
+                        "topic_description": "Situation: The viewing is ending and you want to move forward if the apartment suits you. This interaction covers the application process, timing, and what you need to send after the visit to keep your chance of renting the place.\nLearner: Tenant. Partner: Agent.\nNot in this scene: first introductions, detailed questions about the apartment, pet rules, room-by-room comments, discussing what is included in the rent.",
+                        "image_prompt": "apartment hallway near the exit, tenant speaking with a real estate agent after a viewing, realistic photo, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Oglądanie mieszkania\",\"title_target\":\"Apartment viewing\",\"event_native\":\"Oglądanie\",\"until_phrase_native\":\"Do oglądania\",\"overdue_native\":\"Oglądanie było wczoraj\",\"cover_image_prompt\":\"real estate agent showing a bright apartment living room, realistic photo, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Tenant\",\"learner_role_native\":\"Najemca\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"say you are here for the viewing — slot: the apartment\",\"give your name — slot: the name\",\"ask how long the viewing will take — slot: none\",\"ask which rooms you will see first — slot: the part of the apartment\",\"explain what kind of place you need — slot: the requirement\",\"ask whether there are other viewings today — slot: none\"],\"must_understand\":[\"asks whether you are here for a specific apartment\",\"asks your name\",\"says how the viewing will go and which rooms you will see\",\"asks what you are looking for\",\"says whether other people are viewing the place\"],\"title_native\":\"Spotkanie z agentem\",\"title_target\":\"Meeting the agent\",\"teaches_native\":\"przedstawić się i ustalić plan\",\"goals_native\":[\"powiedzieć, po co tu jesteś\",\"podać swoje imię\",\"zapytać o plan oglądania\",\"wyjaśnić, czego szukasz\"],\"learner_role_target\":\"Tenant\",\"learner_role_native\":\"Najemca\",\"partner_role_target\":\"Agent\",\"partner_role_native\":\"Agent\",\"topic_description\":\"Situation: You arrive to view a rental apartment with an agent for the first time. This short exchange happens before you start walking through the flat and helps you understand the process and set expectations for the visit.\\nLearner: Tenant. Partner: Agent.\\nNot in this scene: discussing the apartment in detail, asking about pet rules, rent, deposit, documents, making a decision.\",\"image_prompt\":\"apartment building entrance with a real estate agent waiting, realistic photo, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"ask what is included in the rent — slot: the thing included\",\"ask whether a pet is allowed — slot: the pet\",\"ask whether there are extra monthly costs — slot: the cost\",\"ask how old something in the flat is — slot: the thing\",\"explain a concern about the apartment — slot: the concern\",\"ask whether something can be changed — slot: the change\",\"ask about the neighbourhood — slot: the place nearby\",\"confirm what matters most to you — slot: the priority\"],\"must_understand\":[\"says what is included in the rent and what is not\",\"explains the building or flat rules about pets\",\"says what extra monthly costs there are\",\"explains whether changes are possible and under what conditions\",\"tells you about the area or nearby services\"],\"title_native\":\"Oglądanie lokalu\",\"title_target\":\"Viewing the apartment\",\"teaches_native\":\"pytać o warunki i zasady\",\"goals_native\":[\"zapytać, co jest w cenie\",\"zapytać, czy pies jest dozwolony\",\"zapytać o dodatkowe opłaty\",\"zgłosić swoją wątpliwość\"],\"learner_role_target\":\"Tenant\",\"learner_role_native\":\"Najemca\",\"partner_role_target\":\"Agent\",\"partner_role_native\":\"Agent\",\"topic_description\":\"Situation: You are walking through the apartment with the agent and need to decide whether the place could work for you. You have a small dog, so the pet rule is especially important, along with costs, condition, and practical details.\\nLearner: Tenant. Partner: Agent.\\nNot in this scene: introductions and viewing plan, application steps, required documents, negotiating the contract, arranging the next contact.\",\"image_prompt\":\"real estate agent showing an apartment interior during a viewing, realistic photo, no text, no logos, no faces in close-up\"},{\"order\":3,\"kind\":\"situation\",\"priority\":3,\"must_say\":[\"say you are interested in the apartment — slot: the apartment\",\"ask what documents are required — slot: the document type\",\"ask when a decision will be made — slot: the decision\",\"ask how to submit an application — slot: the application method\",\"ask whether a holding deposit is needed — slot: the deposit\",\"ask who will contact you next — slot: the person\",\"confirm when you will send something — slot: the document\",\"confirm how you will stay in touch — slot: the contact method\"],\"must_understand\":[\"says what documents you need to provide\",\"explains how to apply and by when\",\"says whether a deposit is needed and how it works\",\"tells you when the landlord or agent will decide\",\"gives the next contact step\"],\"title_native\":\"Dalsze kroki\",\"title_target\":\"Next steps\",\"teaches_native\":\"ustalić wniosek i dokumenty\",\"goals_native\":[\"powiedzieć, że lokal cię interesuje\",\"zapytać o potrzebne dokumenty\",\"zapytać, jak złożyć wniosek\",\"ustalić dalszy kontakt\"],\"learner_role_target\":\"Tenant\",\"learner_role_native\":\"Najemca\",\"partner_role_target\":\"Agent\",\"partner_role_native\":\"Agent\",\"topic_description\":\"Situation: The viewing is ending and you want to move forward if the apartment suits you. This interaction covers the application process, timing, and what you need to send after the visit to keep your chance of renting the place.\\nLearner: Tenant. Partner: Agent.\\nNot in this scene: first introductions, detailed questions about the apartment, pet rules, room-by-room comments, discussing what is included in the rent.\",\"image_prompt\":\"apartment hallway near the exit, tenant speaking with a real estate agent after a viewing, realistic photo, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:31Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 479,
+            "cached_tokens_in": 0,
+            "tokens_out": 244,
+            "reasoning_tokens": 225,
+            "cost_usd": "0.001943",
+            "latency_ms": 3149,
+            "wall_ms": 3149,
+            "call_id": "01M3P7QJZDX69ZVTG7FHX3MX12",
+            "user": "FIELD: title_native\nLANGUAGE: Polish\nLIMIT: 18\nLINE: Spotkanie z agentem",
+            "payload": {
+                "line": "Z agentem"
+            },
+            "raw": "{\"line\":\"Z agentem\"}",
+            "wire": {
+                "id": "chatcmpl-ETONX3QFl1gQRYZyiweUDsEjSjYk3",
+                "object": "chat.completion",
+                "created": 1790673931,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"Z agentem\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 479,
+                    "completion_tokens": 244,
+                    "total_tokens": 723,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 225,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:34Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 485,
+            "cached_tokens_in": 0,
+            "tokens_out": 525,
+            "reasoning_tokens": 500,
+            "cost_usd": "0.003635",
+            "latency_ms": 4917,
+            "wall_ms": 4917,
+            "call_id": "01M3P7QP1WMZD9V3QGNJ6Q3GVR",
+            "user": "FIELD: goals_native\nLANGUAGE: Polish\nLIMIT: 30\nLINE: zapytać, czy pies jest dozwolony",
+            "payload": {
+                "line": "zapytać, czy pies może wejść"
+            },
+            "raw": "{\"line\":\"zapytać, czy pies może wejść\"}",
+            "wire": {
+                "id": "chatcmpl-ETONa2UogHz79FuAiofgkTGG3Ult3",
+                "object": "chat.completion",
+                "created": 1790673934,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"zapytać, czy pies może wejść\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 485,
+                    "completion_tokens": 525,
+                    "total_tokens": 1010,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 500,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:39Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 483,
+            "cached_tokens_in": 0,
+            "tokens_out": 217,
+            "reasoning_tokens": 194,
+            "cost_usd": "0.001785",
+            "latency_ms": 2323,
+            "wall_ms": 2323,
+            "call_id": "01M3P7QTVKBG5XRH6Y55F0DDNY",
+            "user": "FIELD: goals_native\nLANGUAGE: Polish\nLIMIT: 30\nLINE: powiedzieć, że lokal cię interesuje",
+            "payload": {
+                "line": "wyrazić zainteresowanie lokalem"
+            },
+            "raw": "{\"line\":\"wyrazić zainteresowanie lokalem\"}",
+            "wire": {
+                "id": "chatcmpl-ETONfjmMOlrL0Xb4bPEWt6kBSB76j",
+                "object": "chat.completion",
+                "created": 1790673939,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"wyrazić zainteresowanie lokalem\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 483,
+                    "completion_tokens": 217,
+                    "total_tokens": 700,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 194,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

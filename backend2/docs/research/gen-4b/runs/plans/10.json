@@ -1,0 +1,291 @@
+{
+    "plan": "10",
+    "inputs": {
+        "native": "ro",
+        "target": "fr",
+        "level": "intermediate",
+        "scenes": 2,
+        "goal": "interviu pentru un job în Franța, prima dată, emoții la întrebări despre experiență",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/10-ro-fr.json (GEN-4a paid $0.017000)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: goals_native 3 over 30 («să întrebi despre pașii următori», 32)"
+            },
+            {
+                "check": "survival_unanswered",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: must_understand 1 «asks you to introduce yourself briefly» has no answer in must_say"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: goals_native 3 «să întrebi despre pașii următori» (32) → «a întreba de următorii pași» (27)"
+            }
+        ],
+        "plan": {
+            "title_native": "Interviu în Franța",
+            "title_target": "Entretien en France",
+            "overdue_native": "Interviul a fost ieri",
+            "learner_role": [
+                "Candidat",
+                "Candidat"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Începutul",
+                "title_target": "Début d'entretien",
+                "teaches_native": "să te prezinți și experiența",
+                "goals_native": [
+                    "să spui pentru ce post",
+                    "să spui unde ai lucrat",
+                    "să descrii responsabilități",
+                    "a întreba de următorii pași"
+                ],
+                "learner_role": [
+                    "Candidat",
+                    "Candidat"
+                ],
+                "partner_role": [
+                    "Recruteur",
+                    "Recrutor"
+                ],
+                "topic_description": "Situation: The learner has arrived for a first job interview in France and is meeting the recruiter at the start of the conversation. This opening sets the tone and covers identification and basic work background before more detailed evaluation begins. The learner is nervous about questions on experience.\nLearner: Candidate. Partner: Recruiter.\nNot in this scene: discussing strengths and weaknesses, answering difficult fit questions, salary, schedule, contract details.",
+                "must_say": [
+                    "give your name — slot: the full name",
+                    "say which position you are applying for — slot: the position",
+                    "say where you worked before — slot: the workplace",
+                    "say how long you worked there — slot: the length of time",
+                    "explain what your main duties were — slot: the duty",
+                    "ask whether they want a concrete example — slot: none",
+                    "ask what the next step is — slot: none"
+                ],
+                "must_understand": [
+                    "asks you to introduce yourself briefly",
+                    "asks which position you are applying for",
+                    "asks where you worked and for how long",
+                    "asks what your main responsibilities were",
+                    "explains how the interview will continue"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Întrebări-cheie",
+                "title_target": "Questions clés",
+                "teaches_native": "să răspunzi despre experiență",
+                "goals_native": [
+                    "să explici de ce vrei postul",
+                    "să legi experiența de rol",
+                    "să dai un exemplu concret",
+                    "să întrebi când decid"
+                ],
+                "learner_role": [
+                    "Candidat",
+                    "Candidat"
+                ],
+                "partner_role": [
+                    "Recruteur",
+                    "Recrutor"
+                ],
+                "topic_description": "Situation: The interview moves to the decisive part, where the recruiter tests motivation and past experience. This is the core interaction because the learner's main worry is handling questions about experience well enough to show fit for the role and leave a strong impression.\nLearner: Candidate. Partner: Recruiter.\nNot in this scene: introductions, stating your name, saying which job you applied for, basic work history, salary negotiation, signing documents.",
+                "must_say": [
+                    "answer why you want this job — slot: the reason",
+                    "explain which experience fits the role — slot: the relevant experience",
+                    "give a concrete example of a success — slot: the achievement",
+                    "answer how you handled a problem at work — slot: the problem",
+                    "ask whether a skill is important for the role — slot: the skill",
+                    "ask what the team is like — slot: the aspect of the team",
+                    "ask when they will make a decision — slot: none"
+                ],
+                "must_understand": [
+                    "asks why you want this job",
+                    "asks which past experience is most relevant",
+                    "asks for an example of a success or a difficult situation",
+                    "asks how you work with others or under pressure",
+                    "says when they will contact candidates"
+                ]
+            }
+        ],
+        "cost_usd": "0.003514"
+    },
+    "wall_ms": 4483,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:26:05Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4862,
+            "cached_tokens_in": 3840,
+            "tokens_out": 899,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 15349,
+            "wall_ms": 1,
+            "call_id": null,
+            "user": "GOAL: interviu pentru un job în Franța, prima dată, emoții la întrebări despre experiență\nTARGET_LANGUAGE: French\nNATIVE_LANGUAGE: Romanian\nLEVEL: Intermediate\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Interviu în Franța",
+                    "title_target": "Entretien en France",
+                    "event_native": "Interviu",
+                    "until_phrase_native": "Până la interviu",
+                    "overdue_native": "Interviul a fost ieri",
+                    "cover_image_prompt": "realistic photo of a job interview in a French office, recruiter across a desk, neutral daylight, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Candidat",
+                    "learner_role_native": "Candidat"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "give your name — slot: the full name",
+                            "say which position you are applying for — slot: the position",
+                            "say where you worked before — slot: the workplace",
+                            "say how long you worked there — slot: the length of time",
+                            "explain what your main duties were — slot: the duty",
+                            "ask whether they want a concrete example — slot: none",
+                            "ask what the next step is — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks you to introduce yourself briefly",
+                            "asks which position you are applying for",
+                            "asks where you worked and for how long",
+                            "asks what your main responsibilities were",
+                            "explains how the interview will continue"
+                        ],
+                        "title_native": "Începutul",
+                        "title_target": "Début d'entretien",
+                        "teaches_native": "să te prezinți și experiența",
+                        "goals_native": [
+                            "să spui pentru ce post",
+                            "să spui unde ai lucrat",
+                            "să descrii responsabilități",
+                            "să întrebi despre pașii următori"
+                        ],
+                        "learner_role_target": "Candidat",
+                        "learner_role_native": "Candidat",
+                        "partner_role_target": "Recruteur",
+                        "partner_role_native": "Recrutor",
+                        "topic_description": "Situation: The learner has arrived for a first job interview in France and is meeting the recruiter at the start of the conversation. This opening sets the tone and covers identification and basic work background before more detailed evaluation begins. The learner is nervous about questions on experience.\nLearner: Candidate. Partner: Recruiter.\nNot in this scene: discussing strengths and weaknesses, answering difficult fit questions, salary, schedule, contract details.",
+                        "image_prompt": "realistic photo of the start of a job interview in a French office, two people seated across a desk, tidy workspace, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "answer why you want this job — slot: the reason",
+                            "explain which experience fits the role — slot: the relevant experience",
+                            "give a concrete example of a success — slot: the achievement",
+                            "answer how you handled a problem at work — slot: the problem",
+                            "ask whether a skill is important for the role — slot: the skill",
+                            "ask what the team is like — slot: the aspect of the team",
+                            "ask when they will make a decision — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks why you want this job",
+                            "asks which past experience is most relevant",
+                            "asks for an example of a success or a difficult situation",
+                            "asks how you work with others or under pressure",
+                            "says when they will contact candidates"
+                        ],
+                        "title_native": "Întrebări-cheie",
+                        "title_target": "Questions clés",
+                        "teaches_native": "să răspunzi despre experiență",
+                        "goals_native": [
+                            "să explici de ce vrei postul",
+                            "să legi experiența de rol",
+                            "să dai un exemplu concret",
+                            "să întrebi când decid"
+                        ],
+                        "learner_role_target": "Candidat",
+                        "learner_role_native": "Candidat",
+                        "partner_role_target": "Recruteur",
+                        "partner_role_native": "Recrutor",
+                        "topic_description": "Situation: The interview moves to the decisive part, where the recruiter tests motivation and past experience. This is the core interaction because the learner's main worry is handling questions about experience well enough to show fit for the role and leave a strong impression.\nLearner: Candidate. Partner: Recruiter.\nNot in this scene: introductions, stating your name, saying which job you applied for, basic work history, salary negotiation, signing documents.",
+                        "image_prompt": "realistic photo of the main question-and-answer phase of a job interview, recruiter listening across a desk in a modern French office, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Interviu în Franța\",\"title_target\":\"Entretien en France\",\"event_native\":\"Interviu\",\"until_phrase_native\":\"Până la interviu\",\"overdue_native\":\"Interviul a fost ieri\",\"cover_image_prompt\":\"realistic photo of a job interview in a French office, recruiter across a desk, neutral daylight, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Candidat\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"give your name — slot: the full name\",\"say which position you are applying for — slot: the position\",\"say where you worked before — slot: the workplace\",\"say how long you worked there — slot: the length of time\",\"explain what your main duties were — slot: the duty\",\"ask whether they want a concrete example — slot: none\",\"ask what the next step is — slot: none\"],\"must_understand\":[\"asks you to introduce yourself briefly\",\"asks which position you are applying for\",\"asks where you worked and for how long\",\"asks what your main responsibilities were\",\"explains how the interview will continue\"],\"title_native\":\"Începutul\",\"title_target\":\"Début d'entretien\",\"teaches_native\":\"să te prezinți și experiența\",\"goals_native\":[\"să spui pentru ce post\",\"să spui unde ai lucrat\",\"să descrii responsabilități\",\"să întrebi despre pașii următori\"],\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Candidat\",\"partner_role_target\":\"Recruteur\",\"partner_role_native\":\"Recrutor\",\"topic_description\":\"Situation: The learner has arrived for a first job interview in France and is meeting the recruiter at the start of the conversation. This opening sets the tone and covers identification and basic work background before more detailed evaluation begins. The learner is nervous about questions on experience.\\nLearner: Candidate. Partner: Recruiter.\\nNot in this scene: discussing strengths and weaknesses, answering difficult fit questions, salary, schedule, contract details.\",\"image_prompt\":\"realistic photo of the start of a job interview in a French office, two people seated across a desk, tidy workspace, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"answer why you want this job — slot: the reason\",\"explain which experience fits the role — slot: the relevant experience\",\"give a concrete example of a success — slot: the achievement\",\"answer how you handled a problem at work — slot: the problem\",\"ask whether a skill is important for the role — slot: the skill\",\"ask what the team is like — slot: the aspect of the team\",\"ask when they will make a decision — slot: none\"],\"must_understand\":[\"asks why you want this job\",\"asks which past experience is most relevant\",\"asks for an example of a success or a difficult situation\",\"asks how you work with others or under pressure\",\"says when they will contact candidates\"],\"title_native\":\"Întrebări-cheie\",\"title_target\":\"Questions clés\",\"teaches_native\":\"să răspunzi despre experiență\",\"goals_native\":[\"să explici de ce vrei postul\",\"să legi experiența de rol\",\"să dai un exemplu concret\",\"să întrebi când decid\"],\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Candidat\",\"partner_role_target\":\"Recruteur\",\"partner_role_native\":\"Recrutor\",\"topic_description\":\"Situation: The interview moves to the decisive part, where the recruiter tests motivation and past experience. This is the core interaction because the learner's main worry is handling questions about experience well enough to show fit for the role and leave a strong impression.\\nLearner: Candidate. Partner: Recruiter.\\nNot in this scene: introductions, stating your name, saying which job you applied for, basic work history, salary negotiation, signing documents.\",\"image_prompt\":\"realistic photo of the main question-and-answer phase of a job interview, recruiter listening across a desk in a modern French office, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:26:05Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 484,
+            "cached_tokens_in": 0,
+            "tokens_out": 505,
+            "reasoning_tokens": 480,
+            "cost_usd": "0.003514",
+            "latency_ms": 4476,
+            "wall_ms": 4476,
+            "call_id": "01M3P7RM5YGYKSDXQSTP84V4XV",
+            "user": "FIELD: goals_native\nLANGUAGE: Romanian\nLIMIT: 30\nLINE: să întrebi despre pașii următori",
+            "payload": {
+                "line": "a întreba de următorii pași"
+            },
+            "raw": "{\"line\":\"a întreba de următorii pași\"}",
+            "wire": {
+                "id": "chatcmpl-ETOO5FvKuRq4YnQlOCcWARm9KR4Wh",
+                "object": "chat.completion",
+                "created": 1790673965,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"a întreba de următorii pași\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 484,
+                    "completion_tokens": 505,
+                    "total_tokens": 989,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 480,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

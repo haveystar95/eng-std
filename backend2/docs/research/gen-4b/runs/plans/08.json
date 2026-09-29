@@ -1,0 +1,144 @@
+{
+    "plan": "08",
+    "inputs": {
+        "native": "ru",
+        "target": "en",
+        "level": "beginner",
+        "scenes": 1,
+        "goal": "врач",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/08-ru-en.json (GEN-4a paid $0.010825)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [],
+        "plan": {
+            "title_native": "Приём у врача",
+            "title_target": "Doctor's appointment",
+            "overdue_native": "Приём был вчера",
+            "learner_role": [
+                "Patient",
+                "Пациент"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Приём у врача",
+                "title_target": "Doctor's appointment",
+                "teaches_native": "описать боль, понять лечение",
+                "goals_native": [
+                    "сказать, где болит",
+                    "сказать, когда началось",
+                    "спросить про анализ",
+                    "понять назначение"
+                ],
+                "learner_role": [
+                    "Patient",
+                    "Пациент"
+                ],
+                "partner_role": [
+                    "Doctor",
+                    "Врач"
+                ],
+                "topic_description": "Situation: The learner is at a medical consultation with a doctor in a clinic. This is the main interaction where the health problem is described, the doctor asks basic questions, and the learner needs to understand the likely problem and the treatment plan.\nLearner: Patient. Partner: Doctor.\nNot in this scene: booking the appointment, reception questions, payment, buying medicine at a pharmacy.",
+                "must_say": [
+                    "say where it hurts — slot: the part of the body",
+                    "say when it started — slot: the time expression",
+                    "say how strong it is — slot: the number or word",
+                    "answer whether you have a symptom — slot: the symptom",
+                    "ask what the problem is — slot: none",
+                    "ask whether you need a test — slot: the test",
+                    "ask how often to take something — slot: the medicine",
+                    "confirm you understand the instruction — slot: none"
+                ],
+                "must_understand": [
+                    "asks where it hurts, since when, and how bad it is",
+                    "asks whether you have other symptoms",
+                    "says what the problem is or what they think it is",
+                    "explains whether you need a test or medicine",
+                    "gives instructions for treatment and when to come back"
+                ]
+            }
+        ],
+        "cost_usd": "0.000000"
+    },
+    "wall_ms": 3,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:26:01Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4840,
+            "cached_tokens_in": 3840,
+            "tokens_out": 491,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 7784,
+            "wall_ms": 1,
+            "call_id": null,
+            "user": "GOAL: врач\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: Beginner\nSCENES_COUNT: 1\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Приём у врача",
+                    "title_target": "Doctor's appointment",
+                    "event_native": "Приём",
+                    "until_phrase_native": "До приёма",
+                    "overdue_native": "Приём был вчера",
+                    "cover_image_prompt": "doctor's consultation room in a small clinic, desk and two chairs, warm natural light, realistic photo, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Patient",
+                    "learner_role_native": "Пациент"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "say where it hurts — slot: the part of the body",
+                            "say when it started — slot: the time expression",
+                            "say how strong it is — slot: the number or word",
+                            "answer whether you have a symptom — slot: the symptom",
+                            "ask what the problem is — slot: none",
+                            "ask whether you need a test — slot: the test",
+                            "ask how often to take something — slot: the medicine",
+                            "confirm you understand the instruction — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks where it hurts, since when, and how bad it is",
+                            "asks whether you have other symptoms",
+                            "says what the problem is or what they think it is",
+                            "explains whether you need a test or medicine",
+                            "gives instructions for treatment and when to come back"
+                        ],
+                        "title_native": "Приём у врача",
+                        "title_target": "Doctor's appointment",
+                        "teaches_native": "описать боль, понять лечение",
+                        "goals_native": [
+                            "сказать, где болит",
+                            "сказать, когда началось",
+                            "спросить про анализ",
+                            "понять назначение"
+                        ],
+                        "learner_role_target": "Patient",
+                        "learner_role_native": "Пациент",
+                        "partner_role_target": "Doctor",
+                        "partner_role_native": "Врач",
+                        "topic_description": "Situation: The learner is at a medical consultation with a doctor in a clinic. This is the main interaction where the health problem is described, the doctor asks basic questions, and the learner needs to understand the likely problem and the treatment plan.\nLearner: Patient. Partner: Doctor.\nNot in this scene: booking the appointment, reception questions, payment, buying medicine at a pharmacy.",
+                        "image_prompt": "doctor's consultation room in a clinic, doctor sitting across from a patient at a desk, realistic photo, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Приём у врача\",\"title_target\":\"Doctor's appointment\",\"event_native\":\"Приём\",\"until_phrase_native\":\"До приёма\",\"overdue_native\":\"Приём был вчера\",\"cover_image_prompt\":\"doctor's consultation room in a small clinic, desk and two chairs, warm natural light, realistic photo, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Patient\",\"learner_role_native\":\"Пациент\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"say where it hurts — slot: the part of the body\",\"say when it started — slot: the time expression\",\"say how strong it is — slot: the number or word\",\"answer whether you have a symptom — slot: the symptom\",\"ask what the problem is — slot: none\",\"ask whether you need a test — slot: the test\",\"ask how often to take something — slot: the medicine\",\"confirm you understand the instruction — slot: none\"],\"must_understand\":[\"asks where it hurts, since when, and how bad it is\",\"asks whether you have other symptoms\",\"says what the problem is or what they think it is\",\"explains whether you need a test or medicine\",\"gives instructions for treatment and when to come back\"],\"title_native\":\"Приём у врача\",\"title_target\":\"Doctor's appointment\",\"teaches_native\":\"описать боль, понять лечение\",\"goals_native\":[\"сказать, где болит\",\"сказать, когда началось\",\"спросить про анализ\",\"понять назначение\"],\"learner_role_target\":\"Patient\",\"learner_role_native\":\"Пациент\",\"partner_role_target\":\"Doctor\",\"partner_role_native\":\"Врач\",\"topic_description\":\"Situation: The learner is at a medical consultation with a doctor in a clinic. This is the main interaction where the health problem is described, the doctor asks basic questions, and the learner needs to understand the likely problem and the treatment plan.\\nLearner: Patient. Partner: Doctor.\\nNot in this scene: booking the appointment, reception questions, payment, buying medicine at a pharmacy.\",\"image_prompt\":\"doctor's consultation room in a clinic, doctor sitting across from a patient at a desk, realistic photo, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        }
+    ]
+}

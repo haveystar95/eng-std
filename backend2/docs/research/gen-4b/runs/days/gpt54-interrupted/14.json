@@ -1,0 +1,84 @@
+{
+    "plan": "14",
+    "run": "gpt54",
+    "models": {
+        "stages": {
+            "model": "gpt-5.4",
+            "effort": null
+        },
+        "repair": "gpt-5.6-luna",
+        "seam_judge": "gpt-5.4-mini"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Interview",
+        "title_target": "Interviu",
+        "teaches_native": "talk about experience simply",
+        "goals_native": [
+            "say where you worked",
+            "say your job title",
+            "describe main duties",
+            "ask about next steps"
+        ],
+        "learner_role": [
+            "Candidat",
+            "Candidate"
+        ],
+        "partner_role": [
+            "Intervievator",
+            "Interviewer"
+        ],
+        "topic_description": "Situation: You are in the main job interview on Friday with the person hiring for the role. Your main worry is answering simple questions about your past experience clearly enough to make a good impression and understand what the job includes.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: checking in at reception, waiting arrangements, handing over documents at the front desk.",
+        "must_say": [
+            "say where you worked before — slot: the workplace",
+            "say what your job was — slot: the job title",
+            "say how long you worked there — slot: the length of time",
+            "explain what your main duties were — slot: the duty",
+            "answer whether you have used a tool or skill — slot: the tool or skill",
+            "ask what the main duties are — slot: the position",
+            "ask whether training is provided — slot: the skill or task",
+            "ask what the next step is — slot: none"
+        ],
+        "must_understand": [
+            "asks where you worked before and for how long",
+            "asks what your main duties were",
+            "asks whether you have used a tool or skill before",
+            "says what the job involves day to day",
+            "explains the next step in the hiring process"
+        ]
+    },
+    "request": {
+        "topic": "Interview",
+        "vocabulary": [
+            8,
+            12
+        ],
+        "scene_id": "gen4b-14"
+    },
+    "outcome": {
+        "status": "error",
+        "error": "Модель не ответила: OpenAI API error: 429 {\n    \"error\": {\n        \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"credit_balance_exhausted\"\n    }\n}\n",
+        "fail_reason": null,
+        "findings": [],
+        "attempts": [],
+        "repairs": [],
+        "judgements": [],
+        "skeleton": null,
+        "lesson": null
+    },
+    "cost_usd": 0.0,
+    "latency_ms": 0,
+    "wall_ms": 25111,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T10:18:38Z",
+            "user": "TOPIC: Interview\n\nTOPIC_DESCRIPTION: Situation: You are in the main job interview on Friday with the person hiring for the role. Your main worry is answering simple questions about your past experience clearly enough to make a good impression and understand what the job includes.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: checking in at reception, waiting arrangements, handing over documents at the front desk.\n\nAbout the learner, in their own words: Job interview on Friday, worried about questions on my experience\n\nSURVIVAL_SET:\nmust_say:\n1. say where you worked before — slot: the workplace\n2. say what your job was — slot: the job title\n3. say how long you worked there — slot: the length of time\n4. explain what your main duties were — slot: the duty\n5. answer whether you have used a tool or skill — slot: the tool or skill\n6. ask what the main duties are — slot: the position\n7. ask whether training is provided — slot: the skill or task\n8. ask what the next step is — slot: none\nmust_understand:\n1. asks where you worked before and for how long\n2. asks what your main duties were\n3. asks whether you have used a tool or skill before\n4. says what the job involves day to day\n5. explains the next step in the hiring process\n\nTARGET_LANGUAGE: Romanian\n\nNATIVE_LANGUAGE: English\n\nLEVEL: Beginner\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidat / Candidate\n\nPARTNER_ROLE: Intervievator / Interviewer\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "error": "OpenAI API error: 429 {\n    \"error\": {\n        \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"credit_balance_exhausted\"\n    }\n}\n",
+            "wire": "{\n    \"error\": {\n        \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"credit_balance_exhausted\"\n    }\n}\n",
+            "wall_ms": 25105
+        }
+    ]
+}

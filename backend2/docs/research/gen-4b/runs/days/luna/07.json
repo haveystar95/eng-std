@@ -1,0 +1,1327 @@
+{
+    "plan": "07",
+    "run": "luna",
+    "models": {
+        "stages": {
+            "model": "gpt-5.6-luna",
+            "effort": null
+        },
+        "repair": "gpt-5.6-luna",
+        "seam_judge": "gpt-5.4-mini"
+    },
+    "scene": {
+        "order": 1,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Разговор с учит.",
+        "title_target": "Colloquio",
+        "teaches_native": "обсудить проблему и причины",
+        "goals_native": [
+            "сказать класс ребёнка",
+            "спросить, что случилось",
+            "уточнить, когда это бывает",
+            "спросить про причины"
+        ],
+        "learner_role": [
+            "Genitore",
+            "Родитель"
+        ],
+        "partner_role": [
+            "Insegnante",
+            "Учительница"
+        ],
+        "topic_description": "Situation: You are meeting your son's teacher at school because there have been behavior problems. This is the first serious discussion of what has been happening in class or during breaks, and you need to understand the teacher's concerns clearly before deciding what to do next.\nLearner: Parent. Partner: Teacher.\nNot in this scene: agreeing on a plan at home and school, consequences, follow-up dates, contact methods.",
+        "must_say": [
+            "give your name and your child's class — slot: the class",
+            "say why you asked for the meeting — slot: the concern",
+            "ask what behavior the teacher has noticed — slot: the behavior",
+            "ask when and where it usually happens — slot: the moment or place",
+            "answer whether there were similar problems before — slot: the time or situation",
+            "ask how serious the problem is at school — slot: the area (lessons, breaks)",
+            "ask what may be causing it — slot: the possible cause",
+            "confirm you understand the main concern — slot: the concern"
+        ],
+        "must_understand": [
+            "asks who your child is and which class they are in",
+            "says what behavior has been a problem at school",
+            "explains when and where it usually happens",
+            "asks whether this has happened before or at home",
+            "says how serious the issue is and what may be behind it"
+        ]
+    },
+    "request": {
+        "topic": "Разговор с учит.",
+        "vocabulary": [
+            8,
+            12
+        ],
+        "scene_id": "gen4b-07"
+    },
+    "outcome": {
+        "status": "failed",
+        "error": null,
+        "fail_reason": "fatal: vocab.not_found, pronunciation.foreign_script",
+        "findings": [
+            {
+                "code": "vocab.not_found",
+                "address": "v9",
+                "detail": "«causa» occurs in no frame and no partner line"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p4.f3",
+                "detail": "the reading «нэл коррიდойо» has letters of another alphabet: ი დ"
+            },
+            {
+                "code": "partner.names_filler",
+                "address": "a4",
+                "detail": "the line names «durante la ricreazione», a filler of p4"
+            },
+            {
+                "code": "partner.names_filler",
+                "address": "a6",
+                "detail": "the line names «anche a casa», a filler of p5"
+            },
+            {
+                "code": "partner.names_filler",
+                "address": "a7",
+                "detail": "the line names «durante le lezioni», a filler of p6"
+            },
+            {
+                "code": "partner.names_filler",
+                "address": "a8",
+                "detail": "the line names «la stanchezza», a filler of p7"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v9",
+                "detail": "«causa» is not in p7"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v1",
+                "detail": "the definition «the way someone acts» of «comportamento» reads as en, not it (the)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v7",
+                "detail": "the definition «important and needing attention» of «serio» reads as en, not it (and)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v9",
+                "detail": "the definition «the reason something happens» of «causa» reads as en, not it (the)"
+            },
+            {
+                "code": "vocab.definition_language",
+                "address": "v10",
+                "detail": "the definition «the state of being tired» of «stanchezza» reads as en, not it (the, of)"
+            }
+        ],
+        "attempts": [
+            {
+                "stage": "skeleton",
+                "attempt": 1,
+                "findings": [
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v10",
+                        "detail": "«causa» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p6.f3",
+                        "detail": "the reading «нэлле аттивита спортでвэ» has letters of another alphabet: で"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a4",
+                        "detail": "the line names «на переменах», a filler of p4"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a6",
+                        "detail": "the line names «a casa», a filler of p5"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a7",
+                        "detail": "the line names «с усталостью», a filler of p7"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v5",
+                        "detail": "«grave» is not in a7"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v10",
+                        "detail": "«causa» is not in a7"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v2",
+                        "detail": "the definition «the way someone acts» of «comportamento» reads as en, not it (the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v8",
+                        "detail": "the definition «to stop someone while they are speaking» of «interrompere» reads as en, not it (they)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v9",
+                        "detail": "the definition «a feeling of tiredness» of «stanchezza» reads as en, not it (of)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v10",
+                        "detail": "the definition «the reason something happens» of «causa» reads as en, not it (the)"
+                    }
+                ],
+                "fatal": [
+                    "vocab.not_found",
+                    "pronunciation.foreign_script"
+                ],
+                "off_schema": null
+            },
+            {
+                "stage": "skeleton",
+                "attempt": 2,
+                "findings": [
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v9",
+                        "detail": "«causa» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p4.f3",
+                        "detail": "the reading «нэл коррიდойо» has letters of another alphabet: ი დ"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a4",
+                        "detail": "the line names «durante la ricreazione», a filler of p4"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a6",
+                        "detail": "the line names «anche a casa», a filler of p5"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a7",
+                        "detail": "the line names «durante le lezioni», a filler of p6"
+                    },
+                    {
+                        "code": "partner.names_filler",
+                        "address": "a8",
+                        "detail": "the line names «la stanchezza», a filler of p7"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v9",
+                        "detail": "«causa» is not in p7"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v1",
+                        "detail": "the definition «the way someone acts» of «comportamento» reads as en, not it (the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v7",
+                        "detail": "the definition «important and needing attention» of «serio» reads as en, not it (and)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v9",
+                        "detail": "the definition «the reason something happens» of «causa» reads as en, not it (the)"
+                    },
+                    {
+                        "code": "vocab.definition_language",
+                        "address": "v10",
+                        "detail": "the definition «the state of being tired» of «stanchezza» reads as en, not it (the, of)"
+                    }
+                ],
+                "fatal": [
+                    "vocab.not_found",
+                    "pronunciation.foreign_script"
+                ],
+                "off_schema": null
+            }
+        ],
+        "repairs": [],
+        "judgements": [],
+        "skeleton": null,
+        "lesson": null
+    },
+    "cost_usd": 0.066707,
+    "latency_ms": 93455,
+    "wall_ms": 93511,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:38:36Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5039,
+            "cached_tokens_in": 4642,
+            "tokens_out": 5505,
+            "reasoning_tokens": 3072,
+            "cost_usd": "0.033891",
+            "latency_ms": 47941,
+            "wall_ms": 47942,
+            "call_id": "01M3P8FHPSHQ28MHZDEWJ87P3K",
+            "user": "TOPIC: Разговор с учит.\n\nTOPIC_DESCRIPTION: Situation: You are meeting your son's teacher at school because there have been behavior problems. This is the first serious discussion of what has been happening in class or during breaks, and you need to understand the teacher's concerns clearly before deciding what to do next.\nLearner: Parent. Partner: Teacher.\nNot in this scene: agreeing on a plan at home and school, consequences, follow-up dates, contact methods.\n\nAbout the learner, in their own words: школа: встреча с учительницей сына, проблемы с поведением\n\nSURVIVAL_SET:\nmust_say:\n1. give your name and your child's class — slot: the class\n2. say why you asked for the meeting — slot: the concern\n3. ask what behavior the teacher has noticed — slot: the behavior\n4. ask when and where it usually happens — slot: the moment or place\n5. answer whether there were similar problems before — slot: the time or situation\n6. ask how serious the problem is at school — slot: the area (lessons, breaks)\n7. ask what may be causing it — slot: the possible cause\n8. confirm you understand the main concern — slot: the concern\nmust_understand:\n1. asks who your child is and which class they are in\n2. says what behavior has been a problem at school\n3. explains when and where it usually happens\n4. asks whether this has happened before or at home\n5. says how serious the issue is and what may be behind it\n\nTARGET_LANGUAGE: Italian\n\nNATIVE_LANGUAGE: Russian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Genitore / Родитель\n\nPARTNER_ROLE: Insegnante / Учительница\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Parlare con l'insegnante",
+                    "title_native": "Разговор с учительницей",
+                    "description_target": "Capire quali problemi di comportamento ha notato l'insegnante, quando si verificano e quanto sono seri.",
+                    "description_native": "Понять, какие проблемы с поведением заметила учительница, когда они происходят и насколько они серьёзны."
+                },
+                "learner_role": {
+                    "role_target": "Genitore",
+                    "role_native": "Родитель"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Mio figlio è in ___",
+                        "frame_native": "Мой сын учится ___",
+                        "pronunciation_native": "мио фильо э ин ___",
+                        "slot": {
+                            "hint_native": "класс ребёнка",
+                            "fillers": [
+                                {
+                                    "target": "terza B",
+                                    "native": "в третьем «Б» классе",
+                                    "pronunciation_native": "тэрца би",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "seconda A",
+                                    "native": "во втором «А» классе",
+                                    "pronunciation_native": "секонда а",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "quarta C",
+                                    "native": "в четвёртом «В» классе",
+                                    "pronunciation_native": "куарта чи",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Mi serve un incontro per ___",
+                        "frame_native": "Мне нужна встреча из-за ___",
+                        "pronunciation_native": "ми сэрвэ ун инконтро пэр ___",
+                        "slot": {
+                            "hint_native": "причина встречи",
+                            "fillers": [
+                                {
+                                    "target": "problemi di comportamento",
+                                    "native": "проблем с поведением",
+                                    "pronunciation_native": "проблеми ди компортамэнто",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "difficoltà di studio",
+                                    "native": "трудностей в учёбе",
+                                    "pronunciation_native": "диффикольта ди студио",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "conflitti con compagni",
+                                    "native": "конфликтов с одноклассниками",
+                                    "pronunciation_native": "конфлитти кон компаньи",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Che cosa ha notato riguardo a ___?",
+                        "frame_native": "Что вы заметили насчёт ___?",
+                        "pronunciation_native": "кэ коза а нотато ригуардо а ___",
+                        "slot": {
+                            "hint_native": "замеченное поведение",
+                            "fillers": [
+                                {
+                                    "target": "litigi",
+                                    "native": "ссорах",
+                                    "pronunciation_native": "литиджи",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "interruzioni",
+                                    "native": "перебиваниях",
+                                    "pronunciation_native": "интерруцьони",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "spinte",
+                                    "native": "толчках",
+                                    "pronunciation_native": "спинтэ",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Quando e dove succede ___?",
+                        "frame_native": "Когда и где это происходит ___?",
+                        "pronunciation_native": "куандо э довэ суччедэ ___",
+                        "slot": {
+                            "hint_native": "время или место",
+                            "fillers": [
+                                {
+                                    "target": "durante la ricreazione",
+                                    "native": "на переменах",
+                                    "pronunciation_native": "дурантэ ла рикреацьонэ",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "in corridoio",
+                                    "native": "в коридоре",
+                                    "pronunciation_native": "ин корридойо",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "dopo pranzo",
+                                    "native": "после обеда",
+                                    "pronunciation_native": "допо пранцо",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "È successo anche ___?",
+                        "frame_native": "Такое уже бывало ___?",
+                        "pronunciation_native": "э суччэссо анкэ ___",
+                        "slot": {
+                            "hint_native": "прошлое время или ситуация",
+                            "fillers": [
+                                {
+                                    "target": "l'anno scorso",
+                                    "native": "в прошлом году",
+                                    "pronunciation_native": "ланно скорсо",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "a casa",
+                                    "native": "дома",
+                                    "pronunciation_native": "а каза",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "in un'altra scuola",
+                                    "native": "в другой школе",
+                                    "pronunciation_native": "ин унальтра скуола",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Quanto è grave a scuola, soprattutto ___?",
+                        "frame_native": "Насколько это серьёзно в школе, особенно ___?",
+                        "pronunciation_native": "куанто э гравэ а скуола сопрaтутто ___",
+                        "slot": {
+                            "hint_native": "область: уроки или перемены",
+                            "fillers": [
+                                {
+                                    "target": "durante le lezioni",
+                                    "native": "на уроках",
+                                    "pronunciation_native": "дурантэ ле лецьони",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "durante le pause",
+                                    "native": "на переменах",
+                                    "pronunciation_native": "дурантэ ле паузэ",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "nelle attività sportive",
+                                    "native": "на спортивных занятиях",
+                                    "pronunciation_native": "нэлле аттивита спортでвэ",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Secondo lei, dipende ___?",
+                        "frame_native": "Как вы думаете, это связано ___?",
+                        "pronunciation_native": "секондо лэй дипэндэ ___",
+                        "slot": {
+                            "hint_native": "возможная причина",
+                            "fillers": [
+                                {
+                                    "target": "dalla stanchezza",
+                                    "native": "с усталостью",
+                                    "pronunciation_native": "далла станкэцца",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "dalla noia",
+                                    "native": "со скукой",
+                                    "pronunciation_native": "далла нойа",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "da difficoltà emotive",
+                                    "native": "с эмоциональными трудностями",
+                                    "pronunciation_native": "да диффикольта эмотивэ",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "answer",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "Quindi, la preoccupa ___?",
+                        "frame_native": "Значит, вас беспокоит ___?",
+                        "pronunciation_native": "куинди ла прэоккупа ___",
+                        "slot": {
+                            "hint_native": "главная проблема",
+                            "fillers": [
+                                {
+                                    "target": "il suo comportamento",
+                                    "native": "его поведение",
+                                    "pronunciation_native": "иль суо компортамэнто",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la sua impulsività",
+                                    "native": "его импульсивность",
+                                    "pronunciation_native": "ла суа импульсивита",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "il suo atteggiamento",
+                                    "native": "его отношение",
+                                    "pronunciation_native": "иль суо аттэджамэнто",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Come si chiama suo figlio?",
+                        "text_native": "Как зовут вашего сына?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "In quale classe è?",
+                        "text_native": "В каком он классе?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 2,
+                        "kind": "statement",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "A volte interrompe la lezione e litiga con i compagni.",
+                        "text_native": "Иногда он перебивает на уроке и ссорится с одноклассниками."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Succede soprattutto durante le lezioni, in classe e durante le pause.",
+                        "text_native": "Это происходит главным образом на уроках, в классе и на переменах."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 4,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "È già successo prima?",
+                        "text_native": "Такое уже случалось раньше?"
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 4,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "Succede anche a casa?",
+                        "text_native": "Это происходит и дома?"
+                    },
+                    {
+                        "id": "a7",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            6,
+                            7
+                        ],
+                        "text_target": "È un problema serio, forse legato alla stanchezza.",
+                        "text_native": "Это серьёзная проблема, возможно, связанная с усталостью."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "incontro",
+                        "translation_native": "встреча",
+                        "pronunciation_native": "инконтро",
+                        "definition_target": "a meeting",
+                        "kind": "word",
+                        "image_prompt": "A parent and a teacher sitting together at a school table",
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "comportamento",
+                        "translation_native": "поведение",
+                        "pronunciation_native": "компортамэнто",
+                        "definition_target": "the way someone acts",
+                        "kind": "word",
+                        "image_prompt": "A child behaving disruptively in a classroom",
+                        "used_in": [
+                            "a3",
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "notare",
+                        "translation_native": "замечать",
+                        "pronunciation_native": "нотaрэ",
+                        "definition_target": "to notice something",
+                        "kind": "word",
+                        "image_prompt": "A teacher observing students in a classroom",
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "succedere",
+                        "translation_native": "происходить",
+                        "pronunciation_native": "суччедэ",
+                        "definition_target": "to happen",
+                        "kind": "word",
+                        "image_prompt": "Students having an incident during a school break",
+                        "used_in": [
+                            "p4",
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "grave",
+                        "translation_native": "серьёзный",
+                        "pronunciation_native": "гравэ",
+                        "definition_target": "serious or severe",
+                        "kind": "word",
+                        "image_prompt": "A concerned teacher speaking seriously with a parent",
+                        "used_in": [
+                            "p6",
+                            "a7"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "dipendere da",
+                        "translation_native": "зависеть от",
+                        "pronunciation_native": "дипэндэрэ да",
+                        "definition_target": "to be caused by something",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "preoccupare",
+                        "translation_native": "беспокоить",
+                        "pronunciation_native": "прэоккупарэ",
+                        "definition_target": "to worry someone",
+                        "kind": "word",
+                        "image_prompt": "A worried teacher talking about a student",
+                        "used_in": [
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "interrompere",
+                        "translation_native": "перебивать",
+                        "pronunciation_native": "интэрромпэрэ",
+                        "definition_target": "to stop someone while they are speaking",
+                        "kind": "word",
+                        "image_prompt": "A student interrupting a teacher during a lesson",
+                        "used_in": [
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "stanchezza",
+                        "translation_native": "усталость",
+                        "pronunciation_native": "станкэцца",
+                        "definition_target": "a feeling of tiredness",
+                        "kind": "word",
+                        "image_prompt": "A tired child sitting at a school desk",
+                        "used_in": [
+                            "a7"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "causa",
+                        "translation_native": "причина",
+                        "pronunciation_native": "кауза",
+                        "definition_target": "the reason something happens",
+                        "kind": "word",
+                        "image_prompt": "A teacher and parent discussing reasons for a school problem",
+                        "used_in": [
+                            "a7"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Parlare con l'insegnante\",\"title_native\":\"Разговор с учительницей\",\"description_target\":\"Capire quali problemi di comportamento ha notato l'insegnante, quando si verificano e quanto sono seri.\",\"description_native\":\"Понять, какие проблемы с поведением заметила учительница, когда они происходят и насколько они серьёзны.\"},\"learner_role\":{\"role_target\":\"Genitore\",\"role_native\":\"Родитель\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Mio figlio è in ___\",\"frame_native\":\"Мой сын учится ___\",\"pronunciation_native\":\"мио фильо э ин ___\",\"slot\":{\"hint_native\":\"класс ребёнка\",\"fillers\":[{\"target\":\"terza B\",\"native\":\"в третьем «Б» классе\",\"pronunciation_native\":\"тэрца би\",\"in_dialogue\":true},{\"target\":\"seconda A\",\"native\":\"во втором «А» классе\",\"pronunciation_native\":\"секонда а\",\"in_dialogue\":false},{\"target\":\"quarta C\",\"native\":\"в четвёртом «В» классе\",\"pronunciation_native\":\"куарта чи\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mi serve un incontro per ___\",\"frame_native\":\"Мне нужна встреча из-за ___\",\"pronunciation_native\":\"ми сэрвэ ун инконтро пэр ___\",\"slot\":{\"hint_native\":\"причина встречи\",\"fillers\":[{\"target\":\"problemi di comportamento\",\"native\":\"проблем с поведением\",\"pronunciation_native\":\"проблеми ди компортамэнто\",\"in_dialogue\":true},{\"target\":\"difficoltà di studio\",\"native\":\"трудностей в учёбе\",\"pronunciation_native\":\"диффикольта ди студио\",\"in_dialogue\":false},{\"target\":\"conflitti con compagni\",\"native\":\"конфликтов с одноклассниками\",\"pronunciation_native\":\"конфлитти кон компаньи\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Che cosa ha notato riguardo a ___?\",\"frame_native\":\"Что вы заметили насчёт ___?\",\"pronunciation_native\":\"кэ коза а нотато ригуардо а ___\",\"slot\":{\"hint_native\":\"замеченное поведение\",\"fillers\":[{\"target\":\"litigi\",\"native\":\"ссорах\",\"pronunciation_native\":\"литиджи\",\"in_dialogue\":true},{\"target\":\"interruzioni\",\"native\":\"перебиваниях\",\"pronunciation_native\":\"интерруцьони\",\"in_dialogue\":false},{\"target\":\"spinte\",\"native\":\"толчках\",\"pronunciation_native\":\"спинтэ\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Quando e dove succede ___?\",\"frame_native\":\"Когда и где это происходит ___?\",\"pronunciation_native\":\"куандо э довэ суччедэ ___\",\"slot\":{\"hint_native\":\"время или место\",\"fillers\":[{\"target\":\"durante la ricreazione\",\"native\":\"на переменах\",\"pronunciation_native\":\"дурантэ ла рикреацьонэ\",\"in_dialogue\":true},{\"target\":\"in corridoio\",\"native\":\"в коридоре\",\"pronunciation_native\":\"ин корридойо\",\"in_dialogue\":false},{\"target\":\"dopo pranzo\",\"native\":\"после обеда\",\"pronunciation_native\":\"допо пранцо\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"È successo anche ___?\",\"frame_native\":\"Такое уже бывало ___?\",\"pronunciation_native\":\"э суччэссо анкэ ___\",\"slot\":{\"hint_native\":\"прошлое время или ситуация\",\"fillers\":[{\"target\":\"l'anno scorso\",\"native\":\"в прошлом году\",\"pronunciation_native\":\"ланно скорсо\",\"in_dialogue\":true},{\"target\":\"a casa\",\"native\":\"дома\",\"pronunciation_native\":\"а каза\",\"in_dialogue\":false},{\"target\":\"in un'altra scuola\",\"native\":\"в другой школе\",\"pronunciation_native\":\"ин унальтра скуола\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Quanto è grave a scuola, soprattutto ___?\",\"frame_native\":\"Насколько это серьёзно в школе, особенно ___?\",\"pronunciation_native\":\"куанто э гравэ а скуола сопрaтутто ___\",\"slot\":{\"hint_native\":\"область: уроки или перемены\",\"fillers\":[{\"target\":\"durante le lezioni\",\"native\":\"на уроках\",\"pronunciation_native\":\"дурантэ ле лецьони\",\"in_dialogue\":true},{\"target\":\"durante le pause\",\"native\":\"на переменах\",\"pronunciation_native\":\"дурантэ ле паузэ\",\"in_dialogue\":false},{\"target\":\"nelle attività sportive\",\"native\":\"на спортивных занятиях\",\"pronunciation_native\":\"нэлле аттивита спортでвэ\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Secondo lei, dipende ___?\",\"frame_native\":\"Как вы думаете, это связано ___?\",\"pronunciation_native\":\"секондо лэй дипэндэ ___\",\"slot\":{\"hint_native\":\"возможная причина\",\"fillers\":[{\"target\":\"dalla stanchezza\",\"native\":\"с усталостью\",\"pronunciation_native\":\"далла станкэцца\",\"in_dialogue\":true},{\"target\":\"dalla noia\",\"native\":\"со скукой\",\"pronunciation_native\":\"далла нойа\",\"in_dialogue\":false},{\"target\":\"da difficoltà emotive\",\"native\":\"с эмоциональными трудностями\",\"pronunciation_native\":\"да диффикольта эмотивэ\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Quindi, la preoccupa ___?\",\"frame_native\":\"Значит, вас беспокоит ___?\",\"pronunciation_native\":\"куинди ла прэоккупа ___\",\"slot\":{\"hint_native\":\"главная проблема\",\"fillers\":[{\"target\":\"il suo comportamento\",\"native\":\"его поведение\",\"pronunciation_native\":\"иль суо компортамэнто\",\"in_dialogue\":true},{\"target\":\"la sua impulsività\",\"native\":\"его импульсивность\",\"pronunciation_native\":\"ла суа импульсивита\",\"in_dialogue\":false},{\"target\":\"il suo atteggiamento\",\"native\":\"его отношение\",\"pronunciation_native\":\"иль суо аттэджамэнто\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Come si chiama suo figlio?\",\"text_native\":\"Как зовут вашего сына?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"In quale classe è?\",\"text_native\":\"В каком он классе?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"A volte interrompe la lezione e litiga con i compagni.\",\"text_native\":\"Иногда он перебивает на уроке и ссорится с одноклассниками.\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Succede soprattutto durante le lezioni, in classe e durante le pause.\",\"text_native\":\"Это происходит главным образом на уроках, в классе и на переменах.\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"È già successo prima?\",\"text_native\":\"Такое уже случалось раньше?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"Succede anche a casa?\",\"text_native\":\"Это происходит и дома?\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[6,7],\"text_target\":\"È un problema serio, forse legato alla stanchezza.\",\"text_native\":\"Это серьёзная проблема, возможно, связанная с усталостью.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"incontro\",\"translation_native\":\"встреча\",\"pronunciation_native\":\"инконтро\",\"definition_target\":\"a meeting\",\"kind\":\"word\",\"image_prompt\":\"A parent and a teacher sitting together at a school table\",\"used_in\":[\"p2\"]},{\"id\":\"v2\",\"term_target\":\"comportamento\",\"translation_native\":\"поведение\",\"pronunciation_native\":\"компортамэнто\",\"definition_target\":\"the way someone acts\",\"kind\":\"word\",\"image_prompt\":\"A child behaving disruptively in a classroom\",\"used_in\":[\"a3\",\"p8\"]},{\"id\":\"v3\",\"term_target\":\"notare\",\"translation_native\":\"замечать\",\"pronunciation_native\":\"нотaрэ\",\"definition_target\":\"to notice something\",\"kind\":\"word\",\"image_prompt\":\"A teacher observing students in a classroom\",\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"succedere\",\"translation_native\":\"происходить\",\"pronunciation_native\":\"суччедэ\",\"definition_target\":\"to happen\",\"kind\":\"word\",\"image_prompt\":\"Students having an incident during a school break\",\"used_in\":[\"p4\",\"p5\"]},{\"id\":\"v5\",\"term_target\":\"grave\",\"translation_native\":\"серьёзный\",\"pronunciation_native\":\"гравэ\",\"definition_target\":\"serious or severe\",\"kind\":\"word\",\"image_prompt\":\"A concerned teacher speaking seriously with a parent\",\"used_in\":[\"p6\",\"a7\"]},{\"id\":\"v6\",\"term_target\":\"dipendere da\",\"translation_native\":\"зависеть от\",\"pronunciation_native\":\"дипэндэрэ да\",\"definition_target\":\"to be caused by something\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"preoccupare\",\"translation_native\":\"беспокоить\",\"pronunciation_native\":\"прэоккупарэ\",\"definition_target\":\"to worry someone\",\"kind\":\"word\",\"image_prompt\":\"A worried teacher talking about a student\",\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"interrompere\",\"translation_native\":\"перебивать\",\"pronunciation_native\":\"интэрромпэрэ\",\"definition_target\":\"to stop someone while they are speaking\",\"kind\":\"word\",\"image_prompt\":\"A student interrupting a teacher during a lesson\",\"used_in\":[\"a3\"]},{\"id\":\"v9\",\"term_target\":\"stanchezza\",\"translation_native\":\"усталость\",\"pronunciation_native\":\"станкэцца\",\"definition_target\":\"a feeling of tiredness\",\"kind\":\"word\",\"image_prompt\":\"A tired child sitting at a school desk\",\"used_in\":[\"a7\"]},{\"id\":\"v10\",\"term_target\":\"causa\",\"translation_native\":\"причина\",\"pronunciation_native\":\"кауза\",\"definition_target\":\"the reason something happens\",\"kind\":\"word\",\"image_prompt\":\"A teacher and parent discussing reasons for a school problem\",\"used_in\":[\"a7\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOaC7et0MSxpoAlBUE7atd6wSgqH",
+                "object": "chat.completion",
+                "created": 1790674716,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Parlare con l'insegnante\",\"title_native\":\"Разговор с учительницей\",\"description_target\":\"Capire quali problemi di comportamento ha notato l'insegnante, quando si verificano e quanto sono seri.\",\"description_native\":\"Понять, какие проблемы с поведением заметила учительница, когда они происходят и насколько они серьёзны.\"},\"learner_role\":{\"role_target\":\"Genitore\",\"role_native\":\"Родитель\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Mio figlio è in ___\",\"frame_native\":\"Мой сын учится ___\",\"pronunciation_native\":\"мио фильо э ин ___\",\"slot\":{\"hint_native\":\"класс ребёнка\",\"fillers\":[{\"target\":\"terza B\",\"native\":\"в третьем «Б» классе\",\"pronunciation_native\":\"тэрца би\",\"in_dialogue\":true},{\"target\":\"seconda A\",\"native\":\"во втором «А» классе\",\"pronunciation_native\":\"секонда а\",\"in_dialogue\":false},{\"target\":\"quarta C\",\"native\":\"в четвёртом «В» классе\",\"pronunciation_native\":\"куарта чи\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mi serve un incontro per ___\",\"frame_native\":\"Мне нужна встреча из-за ___\",\"pronunciation_native\":\"ми сэрвэ ун инконтро пэр ___\",\"slot\":{\"hint_native\":\"причина встречи\",\"fillers\":[{\"target\":\"problemi di comportamento\",\"native\":\"проблем с поведением\",\"pronunciation_native\":\"проблеми ди компортамэнто\",\"in_dialogue\":true},{\"target\":\"difficoltà di studio\",\"native\":\"трудностей в учёбе\",\"pronunciation_native\":\"диффикольта ди студио\",\"in_dialogue\":false},{\"target\":\"conflitti con compagni\",\"native\":\"конфликтов с одноклассниками\",\"pronunciation_native\":\"конфлитти кон компаньи\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Che cosa ha notato riguardo a ___?\",\"frame_native\":\"Что вы заметили насчёт ___?\",\"pronunciation_native\":\"кэ коза а нотато ригуардо а ___\",\"slot\":{\"hint_native\":\"замеченное поведение\",\"fillers\":[{\"target\":\"litigi\",\"native\":\"ссорах\",\"pronunciation_native\":\"литиджи\",\"in_dialogue\":true},{\"target\":\"interruzioni\",\"native\":\"перебиваниях\",\"pronunciation_native\":\"интерруцьони\",\"in_dialogue\":false},{\"target\":\"spinte\",\"native\":\"толчках\",\"pronunciation_native\":\"спинтэ\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Quando e dove succede ___?\",\"frame_native\":\"Когда и где это происходит ___?\",\"pronunciation_native\":\"куандо э довэ суччедэ ___\",\"slot\":{\"hint_native\":\"время или место\",\"fillers\":[{\"target\":\"durante la ricreazione\",\"native\":\"на переменах\",\"pronunciation_native\":\"дурантэ ла рикреацьонэ\",\"in_dialogue\":true},{\"target\":\"in corridoio\",\"native\":\"в коридоре\",\"pronunciation_native\":\"ин корридойо\",\"in_dialogue\":false},{\"target\":\"dopo pranzo\",\"native\":\"после обеда\",\"pronunciation_native\":\"допо пранцо\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"È successo anche ___?\",\"frame_native\":\"Такое уже бывало ___?\",\"pronunciation_native\":\"э суччэссо анкэ ___\",\"slot\":{\"hint_native\":\"прошлое время или ситуация\",\"fillers\":[{\"target\":\"l'anno scorso\",\"native\":\"в прошлом году\",\"pronunciation_native\":\"ланно скорсо\",\"in_dialogue\":true},{\"target\":\"a casa\",\"native\":\"дома\",\"pronunciation_native\":\"а каза\",\"in_dialogue\":false},{\"target\":\"in un'altra scuola\",\"native\":\"в другой школе\",\"pronunciation_native\":\"ин унальтра скуола\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Quanto è grave a scuola, soprattutto ___?\",\"frame_native\":\"Насколько это серьёзно в школе, особенно ___?\",\"pronunciation_native\":\"куанто э гравэ а скуола сопрaтутто ___\",\"slot\":{\"hint_native\":\"область: уроки или перемены\",\"fillers\":[{\"target\":\"durante le lezioni\",\"native\":\"на уроках\",\"pronunciation_native\":\"дурантэ ле лецьони\",\"in_dialogue\":true},{\"target\":\"durante le pause\",\"native\":\"на переменах\",\"pronunciation_native\":\"дурантэ ле паузэ\",\"in_dialogue\":false},{\"target\":\"nelle attività sportive\",\"native\":\"на спортивных занятиях\",\"pronunciation_native\":\"нэлле аттивита спортでвэ\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Secondo lei, dipende ___?\",\"frame_native\":\"Как вы думаете, это связано ___?\",\"pronunciation_native\":\"секондо лэй дипэндэ ___\",\"slot\":{\"hint_native\":\"возможная причина\",\"fillers\":[{\"target\":\"dalla stanchezza\",\"native\":\"с усталостью\",\"pronunciation_native\":\"далла станкэцца\",\"in_dialogue\":true},{\"target\":\"dalla noia\",\"native\":\"со скукой\",\"pronunciation_native\":\"далла нойа\",\"in_dialogue\":false},{\"target\":\"da difficoltà emotive\",\"native\":\"с эмоциональными трудностями\",\"pronunciation_native\":\"да диффикольта эмотивэ\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Quindi, la preoccupa ___?\",\"frame_native\":\"Значит, вас беспокоит ___?\",\"pronunciation_native\":\"куинди ла прэоккупа ___\",\"slot\":{\"hint_native\":\"главная проблема\",\"fillers\":[{\"target\":\"il suo comportamento\",\"native\":\"его поведение\",\"pronunciation_native\":\"иль суо компортамэнто\",\"in_dialogue\":true},{\"target\":\"la sua impulsività\",\"native\":\"его импульсивность\",\"pronunciation_native\":\"ла суа импульсивита\",\"in_dialogue\":false},{\"target\":\"il suo atteggiamento\",\"native\":\"его отношение\",\"pronunciation_native\":\"иль суо аттэджамэнто\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Come si chiama suo figlio?\",\"text_native\":\"Как зовут вашего сына?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"In quale classe è?\",\"text_native\":\"В каком он классе?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"A volte interrompe la lezione e litiga con i compagni.\",\"text_native\":\"Иногда он перебивает на уроке и ссорится с одноклассниками.\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Succede soprattutto durante le lezioni, in classe e durante le pause.\",\"text_native\":\"Это происходит главным образом на уроках, в классе и на переменах.\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"È già successo prima?\",\"text_native\":\"Такое уже случалось раньше?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"Succede anche a casa?\",\"text_native\":\"Это происходит и дома?\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[6,7],\"text_target\":\"È un problema serio, forse legato alla stanchezza.\",\"text_native\":\"Это серьёзная проблема, возможно, связанная с усталостью.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"incontro\",\"translation_native\":\"встреча\",\"pronunciation_native\":\"инконтро\",\"definition_target\":\"a meeting\",\"kind\":\"word\",\"image_prompt\":\"A parent and a teacher sitting together at a school table\",\"used_in\":[\"p2\"]},{\"id\":\"v2\",\"term_target\":\"comportamento\",\"translation_native\":\"поведение\",\"pronunciation_native\":\"компортамэнто\",\"definition_target\":\"the way someone acts\",\"kind\":\"word\",\"image_prompt\":\"A child behaving disruptively in a classroom\",\"used_in\":[\"a3\",\"p8\"]},{\"id\":\"v3\",\"term_target\":\"notare\",\"translation_native\":\"замечать\",\"pronunciation_native\":\"нотaрэ\",\"definition_target\":\"to notice something\",\"kind\":\"word\",\"image_prompt\":\"A teacher observing students in a classroom\",\"used_in\":[\"p3\"]},{\"id\":\"v4\",\"term_target\":\"succedere\",\"translation_native\":\"происходить\",\"pronunciation_native\":\"суччедэ\",\"definition_target\":\"to happen\",\"kind\":\"word\",\"image_prompt\":\"Students having an incident during a school break\",\"used_in\":[\"p4\",\"p5\"]},{\"id\":\"v5\",\"term_target\":\"grave\",\"translation_native\":\"серьёзный\",\"pronunciation_native\":\"гравэ\",\"definition_target\":\"serious or severe\",\"kind\":\"word\",\"image_prompt\":\"A concerned teacher speaking seriously with a parent\",\"used_in\":[\"p6\",\"a7\"]},{\"id\":\"v6\",\"term_target\":\"dipendere da\",\"translation_native\":\"зависеть от\",\"pronunciation_native\":\"дипэндэрэ да\",\"definition_target\":\"to be caused by something\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v7\",\"term_target\":\"preoccupare\",\"translation_native\":\"беспокоить\",\"pronunciation_native\":\"прэоккупарэ\",\"definition_target\":\"to worry someone\",\"kind\":\"word\",\"image_prompt\":\"A worried teacher talking about a student\",\"used_in\":[\"p8\"]},{\"id\":\"v8\",\"term_target\":\"interrompere\",\"translation_native\":\"перебивать\",\"pronunciation_native\":\"интэрромпэрэ\",\"definition_target\":\"to stop someone while they are speaking\",\"kind\":\"word\",\"image_prompt\":\"A student interrupting a teacher during a lesson\",\"used_in\":[\"a3\"]},{\"id\":\"v9\",\"term_target\":\"stanchezza\",\"translation_native\":\"усталость\",\"pronunciation_native\":\"станкэцца\",\"definition_target\":\"a feeling of tiredness\",\"kind\":\"word\",\"image_prompt\":\"A tired child sitting at a school desk\",\"used_in\":[\"a7\"]},{\"id\":\"v10\",\"term_target\":\"causa\",\"translation_native\":\"причина\",\"pronunciation_native\":\"кауза\",\"definition_target\":\"the reason something happens\",\"kind\":\"word\",\"image_prompt\":\"A teacher and parent discussing reasons for a school problem\",\"used_in\":[\"a7\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5039,
+                    "completion_tokens": 5505,
+                    "total_tokens": 10544,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 394,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 3072,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:39:24Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5104,
+            "cached_tokens_in": 4642,
+            "tokens_out": 5315,
+            "reasoning_tokens": 2903,
+            "cost_usd": "0.032816",
+            "latency_ms": 45514,
+            "wall_ms": 45515,
+            "call_id": "01M3P8H0HSD9M6TE8TYXXRNCAH",
+            "user": "TOPIC: Разговор с учит.\n\nTOPIC_DESCRIPTION: Situation: You are meeting your son's teacher at school because there have been behavior problems. This is the first serious discussion of what has been happening in class or during breaks, and you need to understand the teacher's concerns clearly before deciding what to do next.\nLearner: Parent. Partner: Teacher.\nNot in this scene: agreeing on a plan at home and school, consequences, follow-up dates, contact methods.\n\nAbout the learner, in their own words: школа: встреча с учительницей сына, проблемы с поведением\n\nSURVIVAL_SET:\nmust_say:\n1. give your name and your child's class — slot: the class\n2. say why you asked for the meeting — slot: the concern\n3. ask what behavior the teacher has noticed — slot: the behavior\n4. ask when and where it usually happens — slot: the moment or place\n5. answer whether there were similar problems before — slot: the time or situation\n6. ask how serious the problem is at school — slot: the area (lessons, breaks)\n7. ask what may be causing it — slot: the possible cause\n8. confirm you understand the main concern — slot: the concern\nmust_understand:\n1. asks who your child is and which class they are in\n2. says what behavior has been a problem at school\n3. explains when and where it usually happens\n4. asks whether this has happened before or at home\n5. says how serious the issue is and what may be behind it\n\nTARGET_LANGUAGE: Italian\n\nNATIVE_LANGUAGE: Russian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Genitore / Родитель\n\nPARTNER_ROLE: Insegnante / Учительница\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone\n\nPREVIOUS_ATTEMPT_REJECTED_FOR:\n- vocab.not_found · v10: «causa» occurs in no frame and no partner line\n- pronunciation.foreign_script · p6.f3: the reading «нэлле аттивита спортでвэ» has letters of another alphabet: で",
+            "payload": {
+                "topic": {
+                    "title_target": "Parlare con l'insegnante",
+                    "title_native": "Разговор с учительницей",
+                    "description_target": "Imparare a presentare suo figlio, capire le preoccupazioni dell'insegnante e chiedere quando, dove e quanto è serio il problema.",
+                    "description_native": "Научиться представить сына, понять опасения учительницы и спросить, когда, где и насколько серьёзна проблема."
+                },
+                "learner_role": {
+                    "role_target": "Genitore",
+                    "role_native": "Родитель"
+                },
+                "role_gender": "female",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "answer",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "Mio figlio è ___",
+                        "frame_native": "Мой сын — ___",
+                        "pronunciation_native": "мио фльо э ___",
+                        "slot": {
+                            "hint_native": "Имя и класс ребёнка",
+                            "fillers": [
+                                {
+                                    "target": "Luca, in seconda",
+                                    "native": "Лука, второклассник",
+                                    "pronunciation_native": "лука, ин секонда",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "Marco, in terza",
+                                    "native": "Марко, третьеклассник",
+                                    "pronunciation_native": "марко, ин тэрца",
+                                    "in_dialogue": true
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "answer",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Mi serve parlare di ___",
+                        "frame_native": "Мне нужно обсудить ___",
+                        "pronunciation_native": "ми сэрвэ парларэ ди ___",
+                        "slot": {
+                            "hint_native": "Причина встречи",
+                            "fillers": [
+                                {
+                                    "target": "problemi di comportamento",
+                                    "native": "проблемы с поведением",
+                                    "pronunciation_native": "проблеми ди компортамэнто",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "litigi frequenti",
+                                    "native": "частые ссоры",
+                                    "pronunciation_native": "литиджи фрэквэнти",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "distrazione in classe",
+                                    "native": "рассеянность на уроках",
+                                    "pronunciation_native": "дистрационэ ин классе",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "Ha notato questo comportamento: ___?",
+                        "frame_native": "Вы заметили такое поведение: ___?",
+                        "pronunciation_native": "а нотато куэсто компортамэнто ___",
+                        "slot": {
+                            "hint_native": "Замеченное поведение",
+                            "fillers": [
+                                {
+                                    "target": "urla frequenti",
+                                    "native": "частые крики",
+                                    "pronunciation_native": "урла фрэквэнти",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "interruzioni continue",
+                                    "native": "постоянные перебивания",
+                                    "pronunciation_native": "интэрруцьони контиуэ",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "spinte ai compagni",
+                                    "native": "толчки одноклассников",
+                                    "pronunciation_native": "спинтэ ай компаньи",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Quando e dove succede ___?",
+                        "frame_native": "Когда и где это происходит ___?",
+                        "pronunciation_native": "куандо э довэ суччэде ___",
+                        "slot": {
+                            "hint_native": "Время или место",
+                            "fillers": [
+                                {
+                                    "target": "durante la ricreazione",
+                                    "native": "на перемене",
+                                    "pronunciation_native": "дурантэ ла рекреацьонэ",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "in classe",
+                                    "native": "на уроке",
+                                    "pronunciation_native": "ин классе",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "nel corridoio",
+                                    "native": "в коридоре",
+                                    "pronunciation_native": "нэл коррიდойо",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "È già successo ___?",
+                        "frame_native": "Такое уже случалось ___?",
+                        "pronunciation_native": "э джа суччэсо ___",
+                        "slot": {
+                            "hint_native": "Прежнее время или ситуация",
+                            "fillers": [
+                                {
+                                    "target": "prima a scuola",
+                                    "native": "раньше в школе",
+                                    "pronunciation_native": "прима а скуола",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "anche a casa",
+                                    "native": "также дома",
+                                    "pronunciation_native": "анке а каза",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "l'anno scorso",
+                                    "native": "в прошлом году",
+                                    "pronunciation_native": "ланно скорсо",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Quanto è serio il problema ___?",
+                        "frame_native": "Насколько серьёзна проблема ___?",
+                        "pronunciation_native": "куанто э сэрьо иль проблема ___",
+                        "slot": {
+                            "hint_native": "Область: уроки или перемены",
+                            "fillers": [
+                                {
+                                    "target": "durante le lezioni",
+                                    "native": "на уроках",
+                                    "pronunciation_native": "дурантэ ле лецьони",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "nei corridoi",
+                                    "native": "в коридорах",
+                                    "pronunciation_native": "нэй корридой",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "durante la ricreazione",
+                                    "native": "на переменах",
+                                    "pronunciation_native": "дурантэ ла рекреацьонэ",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Può dipendere da ___?",
+                        "frame_native": "Это может зависеть от ___?",
+                        "pronunciation_native": "пуо дипэндэрэ да ___",
+                        "slot": {
+                            "hint_native": "Возможная причина",
+                            "fillers": [
+                                {
+                                    "target": "la stanchezza",
+                                    "native": "усталости",
+                                    "pronunciation_native": "ла станкецца",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "la frustrazione",
+                                    "native": "разочарования",
+                                    "pronunciation_native": "ла фрустрацьонэ",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "difficoltà familiari",
+                                    "native": "семейных трудностей",
+                                    "pronunciation_native": "диффиколта фамильяри",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p8",
+                        "kind": "answer",
+                        "must_say": [
+                            8
+                        ],
+                        "frame_target": "Capisco: il problema è ___",
+                        "frame_native": "Я понимаю: проблема — ___",
+                        "pronunciation_native": "каписко иль проблема э ___",
+                        "slot": {
+                            "hint_native": "Главная проблема",
+                            "fillers": [
+                                {
+                                    "target": "questo comportamento",
+                                    "native": "такое поведение",
+                                    "pronunciation_native": "куэсто компортамэнто",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "le interruzioni",
+                                    "native": "перебивания",
+                                    "pronunciation_native": "ле интэрруцьони",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "i litigi",
+                                    "native": "ссоры",
+                                    "pronunciation_native": "и литиджи",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "Come si chiama suo figlio?",
+                        "text_native": "Как зовут вашего сына?"
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 1,
+                        "kind": "question",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "In quale classe è?",
+                        "text_native": "В каком он классе?"
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 2,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Durante le lezioni interrompe spesso e litiga con i compagni.",
+                        "text_native": "На уроках он часто перебивает и ссорится с одноклассниками."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Succede soprattutto durante la ricreazione, nel cortile.",
+                        "text_native": "Это происходит главным образом на перемене, во дворе."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 4,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "È già successo prima?",
+                        "text_native": "Такое уже случалось раньше?"
+                    },
+                    {
+                        "id": "a6",
+                        "must_understand": 4,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "Succede anche a casa?",
+                        "text_native": "Это происходит и дома?"
+                    },
+                    {
+                        "id": "a7",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            6
+                        ],
+                        "text_target": "È un problema serio, soprattutto durante le lezioni.",
+                        "text_native": "Это серьёзная проблема, особенно на уроках."
+                    },
+                    {
+                        "id": "a8",
+                        "must_understand": 5,
+                        "kind": "statement",
+                        "pairs_with": [
+                            7
+                        ],
+                        "text_target": "Potrebbe dipendere dalla stanchezza.",
+                        "text_native": "Возможно, это связано с усталостью."
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "comportamento",
+                        "translation_native": "поведение",
+                        "pronunciation_native": "компортамэнто",
+                        "definition_target": "the way someone acts",
+                        "kind": "word",
+                        "image_prompt": "A child behaving disruptively in a classroom",
+                        "used_in": [
+                            "p2",
+                            "p3",
+                            "p8"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "notare",
+                        "translation_native": "замечать",
+                        "pronunciation_native": "нотарэ",
+                        "definition_target": "to see or observe something",
+                        "kind": "word",
+                        "image_prompt": "A teacher observing a student in class",
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "ricreazione",
+                        "translation_native": "перемена",
+                        "pronunciation_native": "рекреацьонэ",
+                        "definition_target": "a break between school lessons",
+                        "kind": "word",
+                        "image_prompt": "Schoolchildren talking in a playground during a break",
+                        "used_in": [
+                            "p4"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "succedere",
+                        "translation_native": "происходить",
+                        "pronunciation_native": "суччэдерэ",
+                        "definition_target": "to happen",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p4",
+                            "p5"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "interrompere",
+                        "translation_native": "перебивать",
+                        "pronunciation_native": "интэрромпэрэ",
+                        "definition_target": "to stop someone by speaking over them",
+                        "kind": "word",
+                        "image_prompt": "A student speaking while another person is talking in class",
+                        "used_in": [
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "compagno",
+                        "translation_native": "одноклассник",
+                        "pronunciation_native": "компаньо",
+                        "definition_target": "a fellow student",
+                        "kind": "word",
+                        "image_prompt": "Two schoolchildren sitting together at a desk",
+                        "used_in": [
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "serio",
+                        "translation_native": "серьёзный",
+                        "pronunciation_native": "сэрьо",
+                        "definition_target": "important and needing attention",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6",
+                            "a7"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "dipendere da",
+                        "translation_native": "зависеть от",
+                        "pronunciation_native": "дипэндэрэ да",
+                        "definition_target": "to be caused or influenced by something",
+                        "kind": "chunk",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "causa",
+                        "translation_native": "причина",
+                        "pronunciation_native": "кауза",
+                        "definition_target": "the reason something happens",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "stanchezza",
+                        "translation_native": "усталость",
+                        "pronunciation_native": "станкецца",
+                        "definition_target": "the state of being tired",
+                        "kind": "word",
+                        "image_prompt": "A tired child resting with a school backpack",
+                        "used_in": [
+                            "a8"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Parlare con l'insegnante\",\"title_native\":\"Разговор с учительницей\",\"description_target\":\"Imparare a presentare suo figlio, capire le preoccupazioni dell'insegnante e chiedere quando, dove e quanto è serio il problema.\",\"description_native\":\"Научиться представить сына, понять опасения учительницы и спросить, когда, где и насколько серьёзна проблема.\"},\"learner_role\":{\"role_target\":\"Genitore\",\"role_native\":\"Родитель\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Mio figlio è ___\",\"frame_native\":\"Мой сын — ___\",\"pronunciation_native\":\"мио фльо э ___\",\"slot\":{\"hint_native\":\"Имя и класс ребёнка\",\"fillers\":[{\"target\":\"Luca, in seconda\",\"native\":\"Лука, второклассник\",\"pronunciation_native\":\"лука, ин секонда\",\"in_dialogue\":false},{\"target\":\"Marco, in terza\",\"native\":\"Марко, третьеклассник\",\"pronunciation_native\":\"марко, ин тэрца\",\"in_dialogue\":true}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mi serve parlare di ___\",\"frame_native\":\"Мне нужно обсудить ___\",\"pronunciation_native\":\"ми сэрвэ парларэ ди ___\",\"slot\":{\"hint_native\":\"Причина встречи\",\"fillers\":[{\"target\":\"problemi di comportamento\",\"native\":\"проблемы с поведением\",\"pronunciation_native\":\"проблеми ди компортамэнто\",\"in_dialogue\":true},{\"target\":\"litigi frequenti\",\"native\":\"частые ссоры\",\"pronunciation_native\":\"литиджи фрэквэнти\",\"in_dialogue\":false},{\"target\":\"distrazione in classe\",\"native\":\"рассеянность на уроках\",\"pronunciation_native\":\"дистрационэ ин классе\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Ha notato questo comportamento: ___?\",\"frame_native\":\"Вы заметили такое поведение: ___?\",\"pronunciation_native\":\"а нотато куэсто компортамэнто ___\",\"slot\":{\"hint_native\":\"Замеченное поведение\",\"fillers\":[{\"target\":\"urla frequenti\",\"native\":\"частые крики\",\"pronunciation_native\":\"урла фрэквэнти\",\"in_dialogue\":true},{\"target\":\"interruzioni continue\",\"native\":\"постоянные перебивания\",\"pronunciation_native\":\"интэрруцьони контиуэ\",\"in_dialogue\":false},{\"target\":\"spinte ai compagni\",\"native\":\"толчки одноклассников\",\"pronunciation_native\":\"спинтэ ай компаньи\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Quando e dove succede ___?\",\"frame_native\":\"Когда и где это происходит ___?\",\"pronunciation_native\":\"куандо э довэ суччэде ___\",\"slot\":{\"hint_native\":\"Время или место\",\"fillers\":[{\"target\":\"durante la ricreazione\",\"native\":\"на перемене\",\"pronunciation_native\":\"дурантэ ла рекреацьонэ\",\"in_dialogue\":true},{\"target\":\"in classe\",\"native\":\"на уроке\",\"pronunciation_native\":\"ин классе\",\"in_dialogue\":false},{\"target\":\"nel corridoio\",\"native\":\"в коридоре\",\"pronunciation_native\":\"нэл коррიდойо\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"È già successo ___?\",\"frame_native\":\"Такое уже случалось ___?\",\"pronunciation_native\":\"э джа суччэсо ___\",\"slot\":{\"hint_native\":\"Прежнее время или ситуация\",\"fillers\":[{\"target\":\"prima a scuola\",\"native\":\"раньше в школе\",\"pronunciation_native\":\"прима а скуола\",\"in_dialogue\":false},{\"target\":\"anche a casa\",\"native\":\"также дома\",\"pronunciation_native\":\"анке а каза\",\"in_dialogue\":true},{\"target\":\"l'anno scorso\",\"native\":\"в прошлом году\",\"pronunciation_native\":\"ланно скорсо\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Quanto è serio il problema ___?\",\"frame_native\":\"Насколько серьёзна проблема ___?\",\"pronunciation_native\":\"куанто э сэрьо иль проблема ___\",\"slot\":{\"hint_native\":\"Область: уроки или перемены\",\"fillers\":[{\"target\":\"durante le lezioni\",\"native\":\"на уроках\",\"pronunciation_native\":\"дурантэ ле лецьони\",\"in_dialogue\":true},{\"target\":\"nei corridoi\",\"native\":\"в коридорах\",\"pronunciation_native\":\"нэй корридой\",\"in_dialogue\":false},{\"target\":\"durante la ricreazione\",\"native\":\"на переменах\",\"pronunciation_native\":\"дурантэ ла рекреацьонэ\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Può dipendere da ___?\",\"frame_native\":\"Это может зависеть от ___?\",\"pronunciation_native\":\"пуо дипэндэрэ да ___\",\"slot\":{\"hint_native\":\"Возможная причина\",\"fillers\":[{\"target\":\"la stanchezza\",\"native\":\"усталости\",\"pronunciation_native\":\"ла станкецца\",\"in_dialogue\":true},{\"target\":\"la frustrazione\",\"native\":\"разочарования\",\"pronunciation_native\":\"ла фрустрацьонэ\",\"in_dialogue\":false},{\"target\":\"difficoltà familiari\",\"native\":\"семейных трудностей\",\"pronunciation_native\":\"диффиколта фамильяри\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Capisco: il problema è ___\",\"frame_native\":\"Я понимаю: проблема — ___\",\"pronunciation_native\":\"каписко иль проблема э ___\",\"slot\":{\"hint_native\":\"Главная проблема\",\"fillers\":[{\"target\":\"questo comportamento\",\"native\":\"такое поведение\",\"pronunciation_native\":\"куэсто компортамэнто\",\"in_dialogue\":true},{\"target\":\"le interruzioni\",\"native\":\"перебивания\",\"pronunciation_native\":\"ле интэрруцьони\",\"in_dialogue\":false},{\"target\":\"i litigi\",\"native\":\"ссоры\",\"pronunciation_native\":\"и литиджи\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Come si chiama suo figlio?\",\"text_native\":\"Как зовут вашего сына?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"In quale classe è?\",\"text_native\":\"В каком он классе?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Durante le lezioni interrompe spesso e litiga con i compagni.\",\"text_native\":\"На уроках он часто перебивает и ссорится с одноклассниками.\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Succede soprattutto durante la ricreazione, nel cortile.\",\"text_native\":\"Это происходит главным образом на перемене, во дворе.\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"È già successo prima?\",\"text_native\":\"Такое уже случалось раньше?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"Succede anche a casa?\",\"text_native\":\"Это происходит и дома?\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"È un problema serio, soprattutto durante le lezioni.\",\"text_native\":\"Это серьёзная проблема, особенно на уроках.\"},{\"id\":\"a8\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Potrebbe dipendere dalla stanchezza.\",\"text_native\":\"Возможно, это связано с усталостью.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"comportamento\",\"translation_native\":\"поведение\",\"pronunciation_native\":\"компортамэнто\",\"definition_target\":\"the way someone acts\",\"kind\":\"word\",\"image_prompt\":\"A child behaving disruptively in a classroom\",\"used_in\":[\"p2\",\"p3\",\"p8\"]},{\"id\":\"v2\",\"term_target\":\"notare\",\"translation_native\":\"замечать\",\"pronunciation_native\":\"нотарэ\",\"definition_target\":\"to see or observe something\",\"kind\":\"word\",\"image_prompt\":\"A teacher observing a student in class\",\"used_in\":[\"p3\"]},{\"id\":\"v3\",\"term_target\":\"ricreazione\",\"translation_native\":\"перемена\",\"pronunciation_native\":\"рекреацьонэ\",\"definition_target\":\"a break between school lessons\",\"kind\":\"word\",\"image_prompt\":\"Schoolchildren talking in a playground during a break\",\"used_in\":[\"p4\"]},{\"id\":\"v4\",\"term_target\":\"succedere\",\"translation_native\":\"происходить\",\"pronunciation_native\":\"суччэдерэ\",\"definition_target\":\"to happen\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"p5\"]},{\"id\":\"v5\",\"term_target\":\"interrompere\",\"translation_native\":\"перебивать\",\"pronunciation_native\":\"интэрромпэрэ\",\"definition_target\":\"to stop someone by speaking over them\",\"kind\":\"word\",\"image_prompt\":\"A student speaking while another person is talking in class\",\"used_in\":[\"a3\"]},{\"id\":\"v6\",\"term_target\":\"compagno\",\"translation_native\":\"одноклассник\",\"pronunciation_native\":\"компаньо\",\"definition_target\":\"a fellow student\",\"kind\":\"word\",\"image_prompt\":\"Two schoolchildren sitting together at a desk\",\"used_in\":[\"a3\"]},{\"id\":\"v7\",\"term_target\":\"serio\",\"translation_native\":\"серьёзный\",\"pronunciation_native\":\"сэрьо\",\"definition_target\":\"important and needing attention\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\",\"a7\"]},{\"id\":\"v8\",\"term_target\":\"dipendere da\",\"translation_native\":\"зависеть от\",\"pronunciation_native\":\"дипэндэрэ да\",\"definition_target\":\"to be caused or influenced by something\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v9\",\"term_target\":\"causa\",\"translation_native\":\"причина\",\"pronunciation_native\":\"кауза\",\"definition_target\":\"the reason something happens\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v10\",\"term_target\":\"stanchezza\",\"translation_native\":\"усталость\",\"pronunciation_native\":\"станкецца\",\"definition_target\":\"the state of being tired\",\"kind\":\"word\",\"image_prompt\":\"A tired child resting with a school backpack\",\"used_in\":[\"a8\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOay0VIlaOQRdFJVtLcTbKbIiIEZ",
+                "object": "chat.completion",
+                "created": 1790674764,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Parlare con l'insegnante\",\"title_native\":\"Разговор с учительницей\",\"description_target\":\"Imparare a presentare suo figlio, capire le preoccupazioni dell'insegnante e chiedere quando, dove e quanto è serio il problema.\",\"description_native\":\"Научиться представить сына, понять опасения учительницы и спросить, когда, где и насколько серьёзна проблема.\"},\"learner_role\":{\"role_target\":\"Genitore\",\"role_native\":\"Родитель\"},\"role_gender\":\"female\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"answer\",\"must_say\":[1],\"frame_target\":\"Mio figlio è ___\",\"frame_native\":\"Мой сын — ___\",\"pronunciation_native\":\"мио фльо э ___\",\"slot\":{\"hint_native\":\"Имя и класс ребёнка\",\"fillers\":[{\"target\":\"Luca, in seconda\",\"native\":\"Лука, второклассник\",\"pronunciation_native\":\"лука, ин секонда\",\"in_dialogue\":false},{\"target\":\"Marco, in terza\",\"native\":\"Марко, третьеклассник\",\"pronunciation_native\":\"марко, ин тэрца\",\"in_dialogue\":true}]}},{\"id\":\"p2\",\"kind\":\"answer\",\"must_say\":[2],\"frame_target\":\"Mi serve parlare di ___\",\"frame_native\":\"Мне нужно обсудить ___\",\"pronunciation_native\":\"ми сэрвэ парларэ ди ___\",\"slot\":{\"hint_native\":\"Причина встречи\",\"fillers\":[{\"target\":\"problemi di comportamento\",\"native\":\"проблемы с поведением\",\"pronunciation_native\":\"проблеми ди компортамэнто\",\"in_dialogue\":true},{\"target\":\"litigi frequenti\",\"native\":\"частые ссоры\",\"pronunciation_native\":\"литиджи фрэквэнти\",\"in_dialogue\":false},{\"target\":\"distrazione in classe\",\"native\":\"рассеянность на уроках\",\"pronunciation_native\":\"дистрационэ ин классе\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"Ha notato questo comportamento: ___?\",\"frame_native\":\"Вы заметили такое поведение: ___?\",\"pronunciation_native\":\"а нотато куэсто компортамэнто ___\",\"slot\":{\"hint_native\":\"Замеченное поведение\",\"fillers\":[{\"target\":\"urla frequenti\",\"native\":\"частые крики\",\"pronunciation_native\":\"урла фрэквэнти\",\"in_dialogue\":true},{\"target\":\"interruzioni continue\",\"native\":\"постоянные перебивания\",\"pronunciation_native\":\"интэрруцьони контиуэ\",\"in_dialogue\":false},{\"target\":\"spinte ai compagni\",\"native\":\"толчки одноклассников\",\"pronunciation_native\":\"спинтэ ай компаньи\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Quando e dove succede ___?\",\"frame_native\":\"Когда и где это происходит ___?\",\"pronunciation_native\":\"куандо э довэ суччэде ___\",\"slot\":{\"hint_native\":\"Время или место\",\"fillers\":[{\"target\":\"durante la ricreazione\",\"native\":\"на перемене\",\"pronunciation_native\":\"дурантэ ла рекреацьонэ\",\"in_dialogue\":true},{\"target\":\"in classe\",\"native\":\"на уроке\",\"pronunciation_native\":\"ин классе\",\"in_dialogue\":false},{\"target\":\"nel corridoio\",\"native\":\"в коридоре\",\"pronunciation_native\":\"нэл коррიდойо\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"È già successo ___?\",\"frame_native\":\"Такое уже случалось ___?\",\"pronunciation_native\":\"э джа суччэсо ___\",\"slot\":{\"hint_native\":\"Прежнее время или ситуация\",\"fillers\":[{\"target\":\"prima a scuola\",\"native\":\"раньше в школе\",\"pronunciation_native\":\"прима а скуола\",\"in_dialogue\":false},{\"target\":\"anche a casa\",\"native\":\"также дома\",\"pronunciation_native\":\"анке а каза\",\"in_dialogue\":true},{\"target\":\"l'anno scorso\",\"native\":\"в прошлом году\",\"pronunciation_native\":\"ланно скорсо\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Quanto è serio il problema ___?\",\"frame_native\":\"Насколько серьёзна проблема ___?\",\"pronunciation_native\":\"куанто э сэрьо иль проблема ___\",\"slot\":{\"hint_native\":\"Область: уроки или перемены\",\"fillers\":[{\"target\":\"durante le lezioni\",\"native\":\"на уроках\",\"pronunciation_native\":\"дурантэ ле лецьони\",\"in_dialogue\":true},{\"target\":\"nei corridoi\",\"native\":\"в коридорах\",\"pronunciation_native\":\"нэй корридой\",\"in_dialogue\":false},{\"target\":\"durante la ricreazione\",\"native\":\"на переменах\",\"pronunciation_native\":\"дурантэ ла рекреацьонэ\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Può dipendere da ___?\",\"frame_native\":\"Это может зависеть от ___?\",\"pronunciation_native\":\"пуо дипэндэрэ да ___\",\"slot\":{\"hint_native\":\"Возможная причина\",\"fillers\":[{\"target\":\"la stanchezza\",\"native\":\"усталости\",\"pronunciation_native\":\"ла станкецца\",\"in_dialogue\":true},{\"target\":\"la frustrazione\",\"native\":\"разочарования\",\"pronunciation_native\":\"ла фрустрацьонэ\",\"in_dialogue\":false},{\"target\":\"difficoltà familiari\",\"native\":\"семейных трудностей\",\"pronunciation_native\":\"диффиколта фамильяри\",\"in_dialogue\":false}]}},{\"id\":\"p8\",\"kind\":\"answer\",\"must_say\":[8],\"frame_target\":\"Capisco: il problema è ___\",\"frame_native\":\"Я понимаю: проблема — ___\",\"pronunciation_native\":\"каписко иль проблема э ___\",\"slot\":{\"hint_native\":\"Главная проблема\",\"fillers\":[{\"target\":\"questo comportamento\",\"native\":\"такое поведение\",\"pronunciation_native\":\"куэсто компортамэнто\",\"in_dialogue\":true},{\"target\":\"le interruzioni\",\"native\":\"перебивания\",\"pronunciation_native\":\"ле интэрруцьони\",\"in_dialogue\":false},{\"target\":\"i litigi\",\"native\":\"ссоры\",\"pronunciation_native\":\"и литиджи\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"Come si chiama suo figlio?\",\"text_native\":\"Как зовут вашего сына?\"},{\"id\":\"a2\",\"must_understand\":1,\"kind\":\"question\",\"pairs_with\":[1],\"text_target\":\"In quale classe è?\",\"text_native\":\"В каком он классе?\"},{\"id\":\"a3\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Durante le lezioni interrompe spesso e litiga con i compagni.\",\"text_native\":\"На уроках он часто перебивает и ссорится с одноклассниками.\"},{\"id\":\"a4\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Succede soprattutto durante la ricreazione, nel cortile.\",\"text_native\":\"Это происходит главным образом на перемене, во дворе.\"},{\"id\":\"a5\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"È già successo prima?\",\"text_native\":\"Такое уже случалось раньше?\"},{\"id\":\"a6\",\"must_understand\":4,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"Succede anche a casa?\",\"text_native\":\"Это происходит и дома?\"},{\"id\":\"a7\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[6],\"text_target\":\"È un problema serio, soprattutto durante le lezioni.\",\"text_native\":\"Это серьёзная проблема, особенно на уроках.\"},{\"id\":\"a8\",\"must_understand\":5,\"kind\":\"statement\",\"pairs_with\":[7],\"text_target\":\"Potrebbe dipendere dalla stanchezza.\",\"text_native\":\"Возможно, это связано с усталостью.\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"comportamento\",\"translation_native\":\"поведение\",\"pronunciation_native\":\"компортамэнто\",\"definition_target\":\"the way someone acts\",\"kind\":\"word\",\"image_prompt\":\"A child behaving disruptively in a classroom\",\"used_in\":[\"p2\",\"p3\",\"p8\"]},{\"id\":\"v2\",\"term_target\":\"notare\",\"translation_native\":\"замечать\",\"pronunciation_native\":\"нотарэ\",\"definition_target\":\"to see or observe something\",\"kind\":\"word\",\"image_prompt\":\"A teacher observing a student in class\",\"used_in\":[\"p3\"]},{\"id\":\"v3\",\"term_target\":\"ricreazione\",\"translation_native\":\"перемена\",\"pronunciation_native\":\"рекреацьонэ\",\"definition_target\":\"a break between school lessons\",\"kind\":\"word\",\"image_prompt\":\"Schoolchildren talking in a playground during a break\",\"used_in\":[\"p4\"]},{\"id\":\"v4\",\"term_target\":\"succedere\",\"translation_native\":\"происходить\",\"pronunciation_native\":\"суччэдерэ\",\"definition_target\":\"to happen\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\",\"p5\"]},{\"id\":\"v5\",\"term_target\":\"interrompere\",\"translation_native\":\"перебивать\",\"pronunciation_native\":\"интэрромпэрэ\",\"definition_target\":\"to stop someone by speaking over them\",\"kind\":\"word\",\"image_prompt\":\"A student speaking while another person is talking in class\",\"used_in\":[\"a3\"]},{\"id\":\"v6\",\"term_target\":\"compagno\",\"translation_native\":\"одноклассник\",\"pronunciation_native\":\"компаньо\",\"definition_target\":\"a fellow student\",\"kind\":\"word\",\"image_prompt\":\"Two schoolchildren sitting together at a desk\",\"used_in\":[\"a3\"]},{\"id\":\"v7\",\"term_target\":\"serio\",\"translation_native\":\"серьёзный\",\"pronunciation_native\":\"сэрьо\",\"definition_target\":\"important and needing attention\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\",\"a7\"]},{\"id\":\"v8\",\"term_target\":\"dipendere da\",\"translation_native\":\"зависеть от\",\"pronunciation_native\":\"дипэндэрэ да\",\"definition_target\":\"to be caused or influenced by something\",\"kind\":\"chunk\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v9\",\"term_target\":\"causa\",\"translation_native\":\"причина\",\"pronunciation_native\":\"кауза\",\"definition_target\":\"the reason something happens\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p7\"]},{\"id\":\"v10\",\"term_target\":\"stanchezza\",\"translation_native\":\"усталость\",\"pronunciation_native\":\"станкецца\",\"definition_target\":\"the state of being tired\",\"kind\":\"word\",\"image_prompt\":\"A tired child resting with a school backpack\",\"used_in\":[\"a8\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5104,
+                    "completion_tokens": 5315,
+                    "total_tokens": 10419,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 459,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2903,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

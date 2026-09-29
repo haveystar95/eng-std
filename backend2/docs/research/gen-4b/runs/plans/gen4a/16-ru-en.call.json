@@ -1,0 +1,87 @@
+{
+    "plan": "16",
+    "at": "2026-09-28T14:46:35Z",
+    "inputs": {
+        "goal": "Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения",
+        "target": "en",
+        "native": "ru",
+        "target_language": "English",
+        "native_language": "Russian",
+        "level": "Beginner",
+        "scenes_count": 2,
+        "existing_scenes": [
+            {
+                "title": "Регистратура",
+                "must_say": [
+                    "give your name — slot: the name",
+                    "say who the appointment is for — slot: the person",
+                    "answer whether you have been here before — slot: the last visit (never, before)",
+                    "give the document you have — slot: the document",
+                    "ask where to wait — slot: none",
+                    "ask how long the wait is — slot: none"
+                ]
+            },
+            {
+                "title": "Приём у врача",
+                "must_say": [
+                    "say where it hurts — slot: the part of the body",
+                    "say when it started — slot: the time expression",
+                    "say what makes it worse — slot: the movement or activity",
+                    "answer whether there were other symptoms — slot: the symptom",
+                    "ask what a word means — slot: the word",
+                    "ask whether an activity is allowed — slot: the activity",
+                    "ask how often to give something — slot: the medicine",
+                    "confirm you understand the instruction — slot: the instruction"
+                ]
+            },
+            {
+                "title": "Аптека",
+                "must_say": [
+                    "say what medicine you need — slot: the medicine",
+                    "say who the medicine is for — slot: the person",
+                    "ask whether this medicine is available — slot: the medicine",
+                    "ask how to give it — slot: the medicine",
+                    "ask whether there are side effects — slot: the medicine",
+                    "ask whether you need anything else — slot: the item",
+                    "confirm the amount you need to pay — slot: the amount"
+                ]
+            }
+        ]
+    },
+    "rules": "v8",
+    "user": "GOAL: Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике, боюсь не понять назначения\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Russian\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:\n- Регистратура\n  - give your name — slot: the name\n  - say who the appointment is for — slot: the person\n  - answer whether you have been here before — slot: the last visit (never, before)\n  - give the document you have — slot: the document\n  - ask where to wait — slot: none\n  - ask how long the wait is — slot: none\n- Приём у врача\n  - say where it hurts — slot: the part of the body\n  - say when it started — slot: the time expression\n  - say what makes it worse — slot: the movement or activity\n  - answer whether there were other symptoms — slot: the symptom\n  - ask what a word means — slot: the word\n  - ask whether an activity is allowed — slot: the activity\n  - ask how often to give something — slot: the medicine\n  - confirm you understand the instruction — slot: the instruction\n- Аптека\n  - say what medicine you need — slot: the medicine\n  - say who the medicine is for — slot: the person\n  - ask whether this medicine is available — slot: the medicine\n  - ask how to give it — slot: the medicine\n  - ask whether there are side effects — slot: the medicine\n  - ask whether you need anything else — slot: the item\n  - confirm the amount you need to pay — slot: the amount",
+    "prompt": {
+        "file": "docs/research/gen-4/plan-builder-v2.1.md",
+        "version": "plan-builder-v2.1",
+        "system_chars": 19135,
+        "system_bytes": 19999,
+        "system_sha256": "c629b22af9d11762384efd037c78cc5adb91ff200d3f8ac8e50c5cc4188462d0"
+    },
+    "schema": "v2.1",
+    "asked_model": "gpt-5.4",
+    "answered_model": "gpt-5.4-2026-03-05",
+    "response_id": "chatcmpl-ET6uhcVgM73aDV7NX0zDGQxwQu061",
+    "finish_reason": "stop",
+    "usage": {
+        "prompt_tokens": 5171,
+        "completion_tokens": 890,
+        "total_tokens": 6061,
+        "prompt_tokens_details": {
+            "cached_tokens": 3840,
+            "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+        }
+    },
+    "tokens_in": 5171,
+    "cached_tokens_in": 3840,
+    "tokens_out": 890,
+    "cost_usd": "0.017638",
+    "latency_ms": 14206,
+    "journal_call_id": "01M3M7PRHMENS5QQ05G2PBD0C7",
+    "error": null
+}

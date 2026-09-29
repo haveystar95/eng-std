@@ -1,0 +1,220 @@
+{
+    "plan": "13",
+    "inputs": {
+        "native": "it",
+        "target": "en",
+        "level": "intermediate",
+        "scenes": 2,
+        "goal": "colloquio di lavoro, domande sullo stipendio",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/13-it-en.json (GEN-4a paid $0.015563)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [
+            {
+                "check": "survival_asks",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: 1 must_say items start with ask (at least 2)"
+            }
+        ],
+        "plan": {
+            "title_native": "Colloquio di lavoro",
+            "title_target": "Job interview",
+            "overdue_native": "Il colloquio era ieri",
+            "learner_role": [
+                "Candidate",
+                "Candidato"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Esperienza",
+                "title_target": "Experience",
+                "teaches_native": "presentarsi e parlare del lavoro",
+                "goals_native": [
+                    "dire per quale ruolo",
+                    "dire dove hai lavorato",
+                    "spiegare le mansioni",
+                    "chiedere del team"
+                ],
+                "learner_role": [
+                    "Candidate",
+                    "Candidato"
+                ],
+                "partner_role": [
+                    "Interviewer",
+                    "Selezionatore"
+                ],
+                "topic_description": "Situation: You are in a job interview with the person assessing your application. This first part focuses on your background, your previous work, and your reasons for applying before practical conditions are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: salary, benefits, contract details, next steps after the interview.",
+                "must_say": [
+                    "give your name — slot: the name",
+                    "say what position you are applying for — slot: the position",
+                    "say where you worked before — slot: the workplace",
+                    "say what your main duties were — slot: the duties",
+                    "explain why you want this job — slot: the reason",
+                    "ask what the team works on — slot: the work area"
+                ],
+                "must_understand": [
+                    "asks which position you are applying for",
+                    "asks about your previous workplace and duties",
+                    "asks why you want this job",
+                    "says what the role involves day to day"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Stipendio",
+                "title_target": "Salary",
+                "teaches_native": "chiedere di stipendio e benefit",
+                "goals_native": [
+                    "chiedere la fascia salariale",
+                    "chiedere lordo o netto",
+                    "dire la tua richiesta",
+                    "chiedere se è trattabile"
+                ],
+                "learner_role": [
+                    "Candidate",
+                    "Candidato"
+                ],
+                "partner_role": [
+                    "Interviewer",
+                    "Selezionatore"
+                ],
+                "topic_description": "Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.",
+                "must_say": [
+                    "ask what salary range is offered — slot: the position",
+                    "ask whether the salary is gross or net — slot: the salary figure",
+                    "ask how often salary is paid — slot: the pay period",
+                    "ask whether there are bonuses or benefits — slot: the benefit",
+                    "explain your salary expectation — slot: the amount or range",
+                    "ask whether the amount is negotiable — slot: the amount",
+                    "confirm what is included in the offer — slot: the item included"
+                ],
+                "must_understand": [
+                    "says the salary range for the role",
+                    "explains whether the amount is gross or net",
+                    "tells how often employees are paid",
+                    "offers information about bonuses or benefits",
+                    "asks what salary you are expecting"
+                ]
+            }
+        ],
+        "cost_usd": "0.000000"
+    },
+    "wall_ms": 3,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:26:12Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4851,
+            "cached_tokens_in": 3840,
+            "tokens_out": 805,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 14267,
+            "wall_ms": 0,
+            "call_id": null,
+            "user": "GOAL: colloquio di lavoro, domande sullo stipendio\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: Italian\nLEVEL: Intermediate\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Colloquio di lavoro",
+                    "title_target": "Job interview",
+                    "event_native": "Colloquio",
+                    "until_phrase_native": "Al colloquio",
+                    "overdue_native": "Il colloquio era ieri.",
+                    "cover_image_prompt": "realistic photo of a job interview in a modern office meeting room, two people seated across a table, natural light, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Candidate",
+                    "learner_role_native": "Candidato"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "give your name — slot: the name",
+                            "say what position you are applying for — slot: the position",
+                            "say where you worked before — slot: the workplace",
+                            "say what your main duties were — slot: the duties",
+                            "explain why you want this job — slot: the reason",
+                            "ask what the team works on — slot: the work area"
+                        ],
+                        "must_understand": [
+                            "asks which position you are applying for",
+                            "asks about your previous workplace and duties",
+                            "asks why you want this job",
+                            "says what the role involves day to day"
+                        ],
+                        "title_native": "Esperienza",
+                        "title_target": "Experience",
+                        "teaches_native": "presentarsi e parlare del lavoro",
+                        "goals_native": [
+                            "dire per quale ruolo",
+                            "dire dove hai lavorato",
+                            "spiegare le mansioni",
+                            "chiedere del team"
+                        ],
+                        "learner_role_target": "Candidate",
+                        "learner_role_native": "Candidato",
+                        "partner_role_target": "Interviewer",
+                        "partner_role_native": "Selezionatore",
+                        "topic_description": "Situation: You are in a job interview with the person assessing your application. This first part focuses on your background, your previous work, and your reasons for applying before practical conditions are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: salary, benefits, contract details, next steps after the interview.",
+                        "image_prompt": "realistic photo of an office interview table with a candidate and interviewer speaking, notebooks and water glasses, natural light, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "ask what salary range is offered — slot: the position",
+                            "ask whether the salary is gross or net — slot: the salary figure",
+                            "ask how often salary is paid — slot: the pay period",
+                            "ask whether there are bonuses or benefits — slot: the benefit",
+                            "explain your salary expectation — slot: the amount or range",
+                            "ask whether the amount is negotiable — slot: the amount",
+                            "confirm what is included in the offer — slot: the item included"
+                        ],
+                        "must_understand": [
+                            "says the salary range for the role",
+                            "explains whether the amount is gross or net",
+                            "tells how often employees are paid",
+                            "offers information about bonuses or benefits",
+                            "asks what salary you are expecting"
+                        ],
+                        "title_native": "Stipendio",
+                        "title_target": "Salary",
+                        "teaches_native": "chiedere di stipendio e benefit",
+                        "goals_native": [
+                            "chiedere la fascia salariale",
+                            "chiedere lordo o netto",
+                            "dire la tua richiesta",
+                            "chiedere se è trattabile"
+                        ],
+                        "learner_role_target": "Candidate",
+                        "learner_role_native": "Candidato",
+                        "partner_role_target": "Interviewer",
+                        "partner_role_native": "Selezionatore",
+                        "topic_description": "Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.",
+                        "image_prompt": "realistic photo of a salary discussion during a job interview in a meeting room, documents on the table, professional office setting, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Colloquio di lavoro\",\"title_target\":\"Job interview\",\"event_native\":\"Colloquio\",\"until_phrase_native\":\"Al colloquio\",\"overdue_native\":\"Il colloquio era ieri.\",\"cover_image_prompt\":\"realistic photo of a job interview in a modern office meeting room, two people seated across a table, natural light, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Candidate\",\"learner_role_native\":\"Candidato\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"give your name — slot: the name\",\"say what position you are applying for — slot: the position\",\"say where you worked before — slot: the workplace\",\"say what your main duties were — slot: the duties\",\"explain why you want this job — slot: the reason\",\"ask what the team works on — slot: the work area\"],\"must_understand\":[\"asks which position you are applying for\",\"asks about your previous workplace and duties\",\"asks why you want this job\",\"says what the role involves day to day\"],\"title_native\":\"Esperienza\",\"title_target\":\"Experience\",\"teaches_native\":\"presentarsi e parlare del lavoro\",\"goals_native\":[\"dire per quale ruolo\",\"dire dove hai lavorato\",\"spiegare le mansioni\",\"chiedere del team\"],\"learner_role_target\":\"Candidate\",\"learner_role_native\":\"Candidato\",\"partner_role_target\":\"Interviewer\",\"partner_role_native\":\"Selezionatore\",\"topic_description\":\"Situation: You are in a job interview with the person assessing your application. This first part focuses on your background, your previous work, and your reasons for applying before practical conditions are discussed.\\nLearner: Candidate. Partner: Interviewer.\\nNot in this scene: salary, benefits, contract details, next steps after the interview.\",\"image_prompt\":\"realistic photo of an office interview table with a candidate and interviewer speaking, notebooks and water glasses, natural light, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"ask what salary range is offered — slot: the position\",\"ask whether the salary is gross or net — slot: the salary figure\",\"ask how often salary is paid — slot: the pay period\",\"ask whether there are bonuses or benefits — slot: the benefit\",\"explain your salary expectation — slot: the amount or range\",\"ask whether the amount is negotiable — slot: the amount\",\"confirm what is included in the offer — slot: the item included\"],\"must_understand\":[\"says the salary range for the role\",\"explains whether the amount is gross or net\",\"tells how often employees are paid\",\"offers information about bonuses or benefits\",\"asks what salary you are expecting\"],\"title_native\":\"Stipendio\",\"title_target\":\"Salary\",\"teaches_native\":\"chiedere di stipendio e benefit\",\"goals_native\":[\"chiedere la fascia salariale\",\"chiedere lordo o netto\",\"dire la tua richiesta\",\"chiedere se è trattabile\"],\"learner_role_target\":\"Candidate\",\"learner_role_native\":\"Candidato\",\"partner_role_target\":\"Interviewer\",\"partner_role_native\":\"Selezionatore\",\"topic_description\":\"Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\\nLearner: Candidate. Partner: Interviewer.\\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.\",\"image_prompt\":\"realistic photo of a salary discussion during a job interview in a meeting room, documents on the table, professional office setting, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        }
+    ]
+}

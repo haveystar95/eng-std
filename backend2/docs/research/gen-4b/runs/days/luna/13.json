@@ -1,0 +1,1121 @@
+{
+    "plan": "13",
+    "run": "luna",
+    "models": {
+        "stages": {
+            "model": "gpt-5.6-luna",
+            "effort": null
+        },
+        "repair": "gpt-5.6-luna",
+        "seam_judge": "gpt-5.4-mini"
+    },
+    "scene": {
+        "order": 2,
+        "kind": "situation",
+        "priority": 1,
+        "title_native": "Stipendio",
+        "title_target": "Salary",
+        "teaches_native": "chiedere di stipendio e benefit",
+        "goals_native": [
+            "chiedere la fascia salariale",
+            "chiedere lordo o netto",
+            "dire la tua richiesta",
+            "chiedere se è trattabile"
+        ],
+        "learner_role": [
+            "Candidate",
+            "Candidato"
+        ],
+        "partner_role": [
+            "Interviewer",
+            "Selezionatore"
+        ],
+        "topic_description": "Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.",
+        "must_say": [
+            "ask what salary range is offered — slot: the position",
+            "ask whether the salary is gross or net — slot: the salary figure",
+            "ask how often salary is paid — slot: the pay period",
+            "ask whether there are bonuses or benefits — slot: the benefit",
+            "explain your salary expectation — slot: the amount or range",
+            "ask whether the amount is negotiable — slot: the amount",
+            "confirm what is included in the offer — slot: the item included"
+        ],
+        "must_understand": [
+            "says the salary range for the role",
+            "explains whether the amount is gross or net",
+            "tells how often employees are paid",
+            "offers information about bonuses or benefits",
+            "asks what salary you are expecting"
+        ]
+    },
+    "request": {
+        "topic": "Stipendio",
+        "vocabulary": [
+            8,
+            12
+        ],
+        "scene_id": "gen4b-13"
+    },
+    "outcome": {
+        "status": "failed",
+        "error": null,
+        "fail_reason": "fatal: vocab.not_found, pronunciation.foreign_script",
+        "findings": [
+            {
+                "code": "vocab.not_found",
+                "address": "v8",
+                "detail": "«included» occurs in no frame and no partner line"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p1.f2",
+                "detail": "the reading «ze fainàन्स rol» has letters of another alphabet: न स"
+            },
+            {
+                "code": "pronunciation.foreign_script",
+                "address": "p7.f3",
+                "detail": "the reading «ze trènспорт elaùens» has letters of another alphabet: с п о р т"
+            },
+            {
+                "code": "vocab.used_in_wrong",
+                "address": "v8",
+                "detail": "«included» is not in p7"
+            },
+            {
+                "code": "frame.too_long",
+                "address": "p7",
+                "detail": "the frame part of «Could you confirm that ___ is part of the offer?» is 9 words (at most 7)"
+            }
+        ],
+        "attempts": [
+            {
+                "stage": "skeleton",
+                "attempt": 1,
+                "findings": [
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f3",
+                        "detail": "the reading «tràvel rìimbर्सment» has letters of another alphabet: र स"
+                    }
+                ],
+                "fatal": [
+                    "pronunciation.foreign_script"
+                ],
+                "off_schema": null
+            },
+            {
+                "stage": "skeleton",
+                "attempt": 2,
+                "findings": [
+                    {
+                        "code": "vocab.not_found",
+                        "address": "v8",
+                        "detail": "«included» occurs in no frame and no partner line"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p1.f2",
+                        "detail": "the reading «ze fainàन्स rol» has letters of another alphabet: न स"
+                    },
+                    {
+                        "code": "pronunciation.foreign_script",
+                        "address": "p7.f3",
+                        "detail": "the reading «ze trènспорт elaùens» has letters of another alphabet: с п о р т"
+                    },
+                    {
+                        "code": "vocab.used_in_wrong",
+                        "address": "v8",
+                        "detail": "«included» is not in p7"
+                    },
+                    {
+                        "code": "frame.too_long",
+                        "address": "p7",
+                        "detail": "the frame part of «Could you confirm that ___ is part of the offer?» is 9 words (at most 7)"
+                    }
+                ],
+                "fatal": [
+                    "vocab.not_found",
+                    "pronunciation.foreign_script"
+                ],
+                "off_schema": null
+            }
+        ],
+        "repairs": [],
+        "judgements": [],
+        "skeleton": null,
+        "lesson": null
+    },
+    "cost_usd": 0.055988,
+    "latency_ms": 69221,
+    "wall_ms": 69271,
+    "calls": [
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:49:04Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 4983,
+            "cached_tokens_in": 4642,
+            "tokens_out": 4975,
+            "reasoning_tokens": 2799,
+            "cost_usd": "0.030655",
+            "latency_ms": 39133,
+            "wall_ms": 39134,
+            "call_id": "01M3P92Q8715XRNMKAFEESRPRQ",
+            "user": "TOPIC: Stipendio\n\nTOPIC_DESCRIPTION: Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.\n\nAbout the learner, in their own words: colloquio di lavoro, domande sullo stipendio\n\nSURVIVAL_SET:\nmust_say:\n1. ask what salary range is offered — slot: the position\n2. ask whether the salary is gross or net — slot: the salary figure\n3. ask how often salary is paid — slot: the pay period\n4. ask whether there are bonuses or benefits — slot: the benefit\n5. explain your salary expectation — slot: the amount or range\n6. ask whether the amount is negotiable — slot: the amount\n7. confirm what is included in the offer — slot: the item included\nmust_understand:\n1. says the salary range for the role\n2. explains whether the amount is gross or net\n3. tells how often employees are paid\n4. offers information about bonuses or benefits\n5. asks what salary you are expecting\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Italian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidate / Candidato\n\nPARTNER_ROLE: Interviewer / Selezionatore\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone",
+            "payload": {
+                "topic": {
+                    "title_target": "Salary",
+                    "title_native": "Stipendio",
+                    "description_target": "Ask about the salary, clarify gross or net pay, discuss benefits, and state your expectations.",
+                    "description_native": "Chiedere informazioni sullo stipendio, chiarire se è lordo o netto, discutere i benefit ed esprimere le proprie aspettative."
+                },
+                "learner_role": {
+                    "role_target": "Candidate",
+                    "role_native": "Candidato"
+                },
+                "role_gender": "male",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "What salary range is offered for ___?",
+                        "frame_native": "Qual è lo stipendio previsto ___?",
+                        "pronunciation_native": "uòt sàlari rèindj iz òferd for ___?",
+                        "slot": {
+                            "hint_native": "posizione",
+                            "fillers": [
+                                {
+                                    "target": "this position",
+                                    "native": "per questa posizione",
+                                    "pronunciation_native": "dis pozìscion",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the sales role",
+                                    "native": "per il ruolo commerciale",
+                                    "pronunciation_native": "de sèils roul",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the advertised post",
+                                    "native": "per la posizione pubblicizzata",
+                                    "pronunciation_native": "di àdvertàizd pòust",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Is ___ gross or net?",
+                        "frame_native": "___ è lordo o netto?",
+                        "pronunciation_native": "iz ___ gròus or net?",
+                        "slot": {
+                            "hint_native": "cifra dello stipendio",
+                            "fillers": [
+                                {
+                                    "target": "the monthly amount",
+                                    "native": "l'importo mensile",
+                                    "pronunciation_native": "de màntli amàunt",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the stated salary",
+                                    "native": "lo stipendio indicato",
+                                    "pronunciation_native": "de stèitid sàlari",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the annual figure",
+                                    "native": "la cifra annuale",
+                                    "pronunciation_native": "di ànjual fìguer",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "How often is ___ paid?",
+                        "frame_native": "Ogni quanto avviene il pagamento ___?",
+                        "pronunciation_native": "hau òfen iz ___ pèid?",
+                        "slot": {
+                            "hint_native": "periodo di pagamento",
+                            "fillers": [
+                                {
+                                    "target": "the salary",
+                                    "native": "dello stipendio",
+                                    "pronunciation_native": "de sàlari",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the agreed amount",
+                                    "native": "dell'importo concordato",
+                                    "pronunciation_native": "di egrìid amàunt",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the first payment",
+                                    "native": "della prima rata",
+                                    "pronunciation_native": "de de ferst pèiment",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Are there ___?",
+                        "frame_native": "Ci sono ___?",
+                        "pronunciation_native": "ar der ___?",
+                        "slot": {
+                            "hint_native": "bonus o benefit",
+                            "fillers": [
+                                {
+                                    "target": "performance bonuses",
+                                    "native": "bonus di rendimento",
+                                    "pronunciation_native": "perfòrmans bòunesis",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "meal vouchers",
+                                    "native": "buoni pasto",
+                                    "pronunciation_native": "mìil vauchers",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "health insurance",
+                                    "native": "assicurazione sanitaria",
+                                    "pronunciation_native": "hèlth insciùerens",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "I am expecting ___ .",
+                        "frame_native": "Mi aspetto ___ .",
+                        "pronunciation_native": "ai em ekspècting ___ .",
+                        "slot": {
+                            "hint_native": "importo o fascia",
+                            "fillers": [
+                                {
+                                    "target": "about €2,800",
+                                    "native": "circa 2.800 euro",
+                                    "pronunciation_native": "abàut tu tàusend èit handred iùrou",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "around €3,000",
+                                    "native": "circa 3.000 euro",
+                                    "pronunciation_native": "aràund thrì tàusend iùrou",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "€2,700 to €3,000",
+                                    "native": "da 2.700 a 3.000 euro",
+                                    "pronunciation_native": "tu tàusend sèven handred tu thrì tàusend iùrou",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Is ___ negotiable?",
+                        "frame_native": "___ è trattabile?",
+                        "pronunciation_native": "iz ___ negòushiabol?",
+                        "slot": {
+                            "hint_native": "importo",
+                            "fillers": [
+                                {
+                                    "target": "the starting amount",
+                                    "native": "l'importo iniziale",
+                                    "pronunciation_native": "de stàarting amàunt",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the monthly figure",
+                                    "native": "la cifra mensile",
+                                    "pronunciation_native": "de màntli fìguer",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the proposed salary",
+                                    "native": "lo stipendio proposto",
+                                    "pronunciation_native": "de propòuzd sàlari",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Does the offer include ___?",
+                        "frame_native": "L'offerta comprende ___?",
+                        "pronunciation_native": "daz di òfer inclùud ___?",
+                        "slot": {
+                            "hint_native": "elemento incluso",
+                            "fillers": [
+                                {
+                                    "target": "paid leave",
+                                    "native": "ferie pagate",
+                                    "pronunciation_native": "pèid lìiv",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "meal vouchers",
+                                    "native": "buoni pasto",
+                                    "pronunciation_native": "mìil vauchers",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "travel reimbursement",
+                                    "native": "rimborso spese di viaggio",
+                                    "pronunciation_native": "tràvel rìimbर्सment",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "The salary range for this role is €2,500 to €3,000 per month.",
+                        "text_native": "La fascia salariale per questo ruolo va da 2.500 a 3.000 euro al mese."
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "statement",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "The quoted amount is gross, before taxes.",
+                        "text_native": "L'importo indicato è lordo, prima delle tasse."
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Employees are paid once a month.",
+                        "text_native": "I dipendenti vengono pagati una volta al mese."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Yes. The package includes additional pay after the trial period.",
+                        "text_native": "Sì. Il pacchetto prevede una maggiorazione dopo il periodo di prova."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 5,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "What salary are you expecting?",
+                        "text_native": "Quale stipendio si aspetta?"
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "salary",
+                        "translation_native": "stipendio",
+                        "pronunciation_native": "sàlari",
+                        "definition_target": "money paid for work",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1",
+                            "p2",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "range",
+                        "translation_native": "fascia",
+                        "pronunciation_native": "rèindj",
+                        "definition_target": "the space between a lower and higher amount",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p1",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "gross",
+                        "translation_native": "lordo",
+                        "pronunciation_native": "gròus",
+                        "definition_target": "before taxes are removed",
+                        "kind": "word",
+                        "image_prompt": "A payslip showing a gross salary before deductions",
+                        "used_in": [
+                            "p2",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "paid",
+                        "translation_native": "pagato",
+                        "pronunciation_native": "pèid",
+                        "definition_target": "given money for work",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p3",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "payment",
+                        "translation_native": "pagamento",
+                        "pronunciation_native": "pèiment",
+                        "definition_target": "the act of giving money",
+                        "kind": "word",
+                        "image_prompt": "An employee receiving a monthly paycheck",
+                        "used_in": [
+                            "p3"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "expect",
+                        "translation_native": "aspettarsi",
+                        "pronunciation_native": "ekspèct",
+                        "definition_target": "to think something should be provided",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p5",
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "negotiable",
+                        "translation_native": "trattabile",
+                        "pronunciation_native": "negòushiabol",
+                        "definition_target": "open to discussion or change",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "include",
+                        "translation_native": "comprendere",
+                        "pronunciation_native": "inclùud",
+                        "definition_target": "to contain something as part of a whole",
+                        "kind": "word",
+                        "image_prompt": "An employment offer listing several included benefits",
+                        "used_in": [
+                            "p7",
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "amount",
+                        "translation_native": "importo",
+                        "pronunciation_native": "amàunt",
+                        "definition_target": "a quantity of money",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "package",
+                        "translation_native": "pacchetto",
+                        "pronunciation_native": "pàkij",
+                        "definition_target": "the complete set of pay and benefits",
+                        "kind": "word",
+                        "image_prompt": "A printed employment benefits package on a desk",
+                        "used_in": [
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v11",
+                        "term_target": "trial period",
+                        "translation_native": "periodo di prova",
+                        "pronunciation_native": "tràiol pìeriod",
+                        "definition_target": "a short time when a new employee is evaluated",
+                        "kind": "chunk",
+                        "image_prompt": "A calendar marking the beginning of a new employee's trial period",
+                        "used_in": [
+                            "a4"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Salary\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about the salary, clarify gross or net pay, discuss benefits, and state your expectations.\",\"description_native\":\"Chiedere informazioni sullo stipendio, chiarire se è lordo o netto, discutere i benefit ed esprimere le proprie aspettative.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Qual è lo stipendio previsto ___?\",\"pronunciation_native\":\"uòt sàlari rèindj iz òferd for ___?\",\"slot\":{\"hint_native\":\"posizione\",\"fillers\":[{\"target\":\"this position\",\"native\":\"per questa posizione\",\"pronunciation_native\":\"dis pozìscion\",\"in_dialogue\":true},{\"target\":\"the sales role\",\"native\":\"per il ruolo commerciale\",\"pronunciation_native\":\"de sèils roul\",\"in_dialogue\":false},{\"target\":\"the advertised post\",\"native\":\"per la posizione pubblicizzata\",\"pronunciation_native\":\"di àdvertàizd pòust\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"iz ___ gròus or net?\",\"slot\":{\"hint_native\":\"cifra dello stipendio\",\"fillers\":[{\"target\":\"the monthly amount\",\"native\":\"l'importo mensile\",\"pronunciation_native\":\"de màntli amàunt\",\"in_dialogue\":true},{\"target\":\"the stated salary\",\"native\":\"lo stipendio indicato\",\"pronunciation_native\":\"de stèitid sàlari\",\"in_dialogue\":false},{\"target\":\"the annual figure\",\"native\":\"la cifra annuale\",\"pronunciation_native\":\"di ànjual fìguer\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"How often is ___ paid?\",\"frame_native\":\"Ogni quanto avviene il pagamento ___?\",\"pronunciation_native\":\"hau òfen iz ___ pèid?\",\"slot\":{\"hint_native\":\"periodo di pagamento\",\"fillers\":[{\"target\":\"the salary\",\"native\":\"dello stipendio\",\"pronunciation_native\":\"de sàlari\",\"in_dialogue\":true},{\"target\":\"the agreed amount\",\"native\":\"dell'importo concordato\",\"pronunciation_native\":\"di egrìid amàunt\",\"in_dialogue\":false},{\"target\":\"the first payment\",\"native\":\"della prima rata\",\"pronunciation_native\":\"de de ferst pèiment\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar der ___?\",\"slot\":{\"hint_native\":\"bonus o benefit\",\"fillers\":[{\"target\":\"performance bonuses\",\"native\":\"bonus di rendimento\",\"pronunciation_native\":\"perfòrmans bòunesis\",\"in_dialogue\":true},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vauchers\",\"in_dialogue\":false},{\"target\":\"health insurance\",\"native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"hèlth insciùerens\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I am expecting ___ .\",\"frame_native\":\"Mi aspetto ___ .\",\"pronunciation_native\":\"ai em ekspècting ___ .\",\"slot\":{\"hint_native\":\"importo o fascia\",\"fillers\":[{\"target\":\"about €2,800\",\"native\":\"circa 2.800 euro\",\"pronunciation_native\":\"abàut tu tàusend èit handred iùrou\",\"in_dialogue\":true},{\"target\":\"around €3,000\",\"native\":\"circa 3.000 euro\",\"pronunciation_native\":\"aràund thrì tàusend iùrou\",\"in_dialogue\":false},{\"target\":\"€2,700 to €3,000\",\"native\":\"da 2.700 a 3.000 euro\",\"pronunciation_native\":\"tu tàusend sèven handred tu thrì tàusend iùrou\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è trattabile?\",\"pronunciation_native\":\"iz ___ negòushiabol?\",\"slot\":{\"hint_native\":\"importo\",\"fillers\":[{\"target\":\"the starting amount\",\"native\":\"l'importo iniziale\",\"pronunciation_native\":\"de stàarting amàunt\",\"in_dialogue\":true},{\"target\":\"the monthly figure\",\"native\":\"la cifra mensile\",\"pronunciation_native\":\"de màntli fìguer\",\"in_dialogue\":false},{\"target\":\"the proposed salary\",\"native\":\"lo stipendio proposto\",\"pronunciation_native\":\"de propòuzd sàlari\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta comprende ___?\",\"pronunciation_native\":\"daz di òfer inclùud ___?\",\"slot\":{\"hint_native\":\"elemento incluso\",\"fillers\":[{\"target\":\"paid leave\",\"native\":\"ferie pagate\",\"pronunciation_native\":\"pèid lìiv\",\"in_dialogue\":true},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vauchers\",\"in_dialogue\":false},{\"target\":\"travel reimbursement\",\"native\":\"rimborso spese di viaggio\",\"pronunciation_native\":\"tràvel rìimbर्सment\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"The salary range for this role is €2,500 to €3,000 per month.\",\"text_native\":\"La fascia salariale per questo ruolo va da 2.500 a 3.000 euro al mese.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"The quoted amount is gross, before taxes.\",\"text_native\":\"L'importo indicato è lordo, prima delle tasse.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid once a month.\",\"text_native\":\"I dipendenti vengono pagati una volta al mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Yes. The package includes additional pay after the trial period.\",\"text_native\":\"Sì. Il pacchetto prevede una maggiorazione dopo il periodo di prova.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Quale stipendio si aspetta?\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary\",\"translation_native\":\"stipendio\",\"pronunciation_native\":\"sàlari\",\"definition_target\":\"money paid for work\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\",\"p2\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"range\",\"translation_native\":\"fascia\",\"pronunciation_native\":\"rèindj\",\"definition_target\":\"the space between a lower and higher amount\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v3\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"gròus\",\"definition_target\":\"before taxes are removed\",\"kind\":\"word\",\"image_prompt\":\"A payslip showing a gross salary before deductions\",\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v4\",\"term_target\":\"paid\",\"translation_native\":\"pagato\",\"pronunciation_native\":\"pèid\",\"definition_target\":\"given money for work\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"payment\",\"translation_native\":\"pagamento\",\"pronunciation_native\":\"pèiment\",\"definition_target\":\"the act of giving money\",\"kind\":\"word\",\"image_prompt\":\"An employee receiving a monthly paycheck\",\"used_in\":[\"p3\"]},{\"id\":\"v6\",\"term_target\":\"expect\",\"translation_native\":\"aspettarsi\",\"pronunciation_native\":\"ekspèct\",\"definition_target\":\"to think something should be provided\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v7\",\"term_target\":\"negotiable\",\"translation_native\":\"trattabile\",\"pronunciation_native\":\"negòushiabol\",\"definition_target\":\"open to discussion or change\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"include\",\"translation_native\":\"comprendere\",\"pronunciation_native\":\"inclùud\",\"definition_target\":\"to contain something as part of a whole\",\"kind\":\"word\",\"image_prompt\":\"An employment offer listing several included benefits\",\"used_in\":[\"p7\",\"a4\"]},{\"id\":\"v9\",\"term_target\":\"amount\",\"translation_native\":\"importo\",\"pronunciation_native\":\"amàunt\",\"definition_target\":\"a quantity of money\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v10\",\"term_target\":\"package\",\"translation_native\":\"pacchetto\",\"pronunciation_native\":\"pàkij\",\"definition_target\":\"the complete set of pay and benefits\",\"kind\":\"word\",\"image_prompt\":\"A printed employment benefits package on a desk\",\"used_in\":[\"a4\"]},{\"id\":\"v11\",\"term_target\":\"trial period\",\"translation_native\":\"periodo di prova\",\"pronunciation_native\":\"tràiol pìeriod\",\"definition_target\":\"a short time when a new employee is evaluated\",\"kind\":\"chunk\",\"image_prompt\":\"A calendar marking the beginning of a new employee's trial period\",\"used_in\":[\"a4\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOkLF605rOaLnGLoiUPAnKklPupH",
+                "object": "chat.completion",
+                "created": 1790675345,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Salary\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about the salary, clarify gross or net pay, discuss benefits, and state your expectations.\",\"description_native\":\"Chiedere informazioni sullo stipendio, chiarire se è lordo o netto, discutere i benefit ed esprimere le proprie aspettative.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range is offered for ___?\",\"frame_native\":\"Qual è lo stipendio previsto ___?\",\"pronunciation_native\":\"uòt sàlari rèindj iz òferd for ___?\",\"slot\":{\"hint_native\":\"posizione\",\"fillers\":[{\"target\":\"this position\",\"native\":\"per questa posizione\",\"pronunciation_native\":\"dis pozìscion\",\"in_dialogue\":true},{\"target\":\"the sales role\",\"native\":\"per il ruolo commerciale\",\"pronunciation_native\":\"de sèils roul\",\"in_dialogue\":false},{\"target\":\"the advertised post\",\"native\":\"per la posizione pubblicizzata\",\"pronunciation_native\":\"di àdvertàizd pòust\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"iz ___ gròus or net?\",\"slot\":{\"hint_native\":\"cifra dello stipendio\",\"fillers\":[{\"target\":\"the monthly amount\",\"native\":\"l'importo mensile\",\"pronunciation_native\":\"de màntli amàunt\",\"in_dialogue\":true},{\"target\":\"the stated salary\",\"native\":\"lo stipendio indicato\",\"pronunciation_native\":\"de stèitid sàlari\",\"in_dialogue\":false},{\"target\":\"the annual figure\",\"native\":\"la cifra annuale\",\"pronunciation_native\":\"di ànjual fìguer\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"How often is ___ paid?\",\"frame_native\":\"Ogni quanto avviene il pagamento ___?\",\"pronunciation_native\":\"hau òfen iz ___ pèid?\",\"slot\":{\"hint_native\":\"periodo di pagamento\",\"fillers\":[{\"target\":\"the salary\",\"native\":\"dello stipendio\",\"pronunciation_native\":\"de sàlari\",\"in_dialogue\":true},{\"target\":\"the agreed amount\",\"native\":\"dell'importo concordato\",\"pronunciation_native\":\"di egrìid amàunt\",\"in_dialogue\":false},{\"target\":\"the first payment\",\"native\":\"della prima rata\",\"pronunciation_native\":\"de de ferst pèiment\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar der ___?\",\"slot\":{\"hint_native\":\"bonus o benefit\",\"fillers\":[{\"target\":\"performance bonuses\",\"native\":\"bonus di rendimento\",\"pronunciation_native\":\"perfòrmans bòunesis\",\"in_dialogue\":true},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vauchers\",\"in_dialogue\":false},{\"target\":\"health insurance\",\"native\":\"assicurazione sanitaria\",\"pronunciation_native\":\"hèlth insciùerens\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"I am expecting ___ .\",\"frame_native\":\"Mi aspetto ___ .\",\"pronunciation_native\":\"ai em ekspècting ___ .\",\"slot\":{\"hint_native\":\"importo o fascia\",\"fillers\":[{\"target\":\"about €2,800\",\"native\":\"circa 2.800 euro\",\"pronunciation_native\":\"abàut tu tàusend èit handred iùrou\",\"in_dialogue\":true},{\"target\":\"around €3,000\",\"native\":\"circa 3.000 euro\",\"pronunciation_native\":\"aràund thrì tàusend iùrou\",\"in_dialogue\":false},{\"target\":\"€2,700 to €3,000\",\"native\":\"da 2.700 a 3.000 euro\",\"pronunciation_native\":\"tu tàusend sèven handred tu thrì tàusend iùrou\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Is ___ negotiable?\",\"frame_native\":\"___ è trattabile?\",\"pronunciation_native\":\"iz ___ negòushiabol?\",\"slot\":{\"hint_native\":\"importo\",\"fillers\":[{\"target\":\"the starting amount\",\"native\":\"l'importo iniziale\",\"pronunciation_native\":\"de stàarting amàunt\",\"in_dialogue\":true},{\"target\":\"the monthly figure\",\"native\":\"la cifra mensile\",\"pronunciation_native\":\"de màntli fìguer\",\"in_dialogue\":false},{\"target\":\"the proposed salary\",\"native\":\"lo stipendio proposto\",\"pronunciation_native\":\"de propòuzd sàlari\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Does the offer include ___?\",\"frame_native\":\"L'offerta comprende ___?\",\"pronunciation_native\":\"daz di òfer inclùud ___?\",\"slot\":{\"hint_native\":\"elemento incluso\",\"fillers\":[{\"target\":\"paid leave\",\"native\":\"ferie pagate\",\"pronunciation_native\":\"pèid lìiv\",\"in_dialogue\":true},{\"target\":\"meal vouchers\",\"native\":\"buoni pasto\",\"pronunciation_native\":\"mìil vauchers\",\"in_dialogue\":false},{\"target\":\"travel reimbursement\",\"native\":\"rimborso spese di viaggio\",\"pronunciation_native\":\"tràvel rìimbर्सment\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"The salary range for this role is €2,500 to €3,000 per month.\",\"text_native\":\"La fascia salariale per questo ruolo va da 2.500 a 3.000 euro al mese.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"The quoted amount is gross, before taxes.\",\"text_native\":\"L'importo indicato è lordo, prima delle tasse.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid once a month.\",\"text_native\":\"I dipendenti vengono pagati una volta al mese.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Yes. The package includes additional pay after the trial period.\",\"text_native\":\"Sì. Il pacchetto prevede una maggiorazione dopo il periodo di prova.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Quale stipendio si aspetta?\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary\",\"translation_native\":\"stipendio\",\"pronunciation_native\":\"sàlari\",\"definition_target\":\"money paid for work\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\",\"p2\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"range\",\"translation_native\":\"fascia\",\"pronunciation_native\":\"rèindj\",\"definition_target\":\"the space between a lower and higher amount\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v3\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"gròus\",\"definition_target\":\"before taxes are removed\",\"kind\":\"word\",\"image_prompt\":\"A payslip showing a gross salary before deductions\",\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v4\",\"term_target\":\"paid\",\"translation_native\":\"pagato\",\"pronunciation_native\":\"pèid\",\"definition_target\":\"given money for work\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"payment\",\"translation_native\":\"pagamento\",\"pronunciation_native\":\"pèiment\",\"definition_target\":\"the act of giving money\",\"kind\":\"word\",\"image_prompt\":\"An employee receiving a monthly paycheck\",\"used_in\":[\"p3\"]},{\"id\":\"v6\",\"term_target\":\"expect\",\"translation_native\":\"aspettarsi\",\"pronunciation_native\":\"ekspèct\",\"definition_target\":\"to think something should be provided\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v7\",\"term_target\":\"negotiable\",\"translation_native\":\"trattabile\",\"pronunciation_native\":\"negòushiabol\",\"definition_target\":\"open to discussion or change\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"include\",\"translation_native\":\"comprendere\",\"pronunciation_native\":\"inclùud\",\"definition_target\":\"to contain something as part of a whole\",\"kind\":\"word\",\"image_prompt\":\"An employment offer listing several included benefits\",\"used_in\":[\"p7\",\"a4\"]},{\"id\":\"v9\",\"term_target\":\"amount\",\"translation_native\":\"importo\",\"pronunciation_native\":\"amàunt\",\"definition_target\":\"a quantity of money\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v10\",\"term_target\":\"package\",\"translation_native\":\"pacchetto\",\"pronunciation_native\":\"pàkij\",\"definition_target\":\"the complete set of pay and benefits\",\"kind\":\"word\",\"image_prompt\":\"A printed employment benefits package on a desk\",\"used_in\":[\"a4\"]},{\"id\":\"v11\",\"term_target\":\"trial period\",\"translation_native\":\"periodo di prova\",\"pronunciation_native\":\"tràiol pìeriod\",\"definition_target\":\"a short time when a new employee is evaluated\",\"kind\":\"chunk\",\"image_prompt\":\"A calendar marking the beginning of a new employee's trial period\",\"used_in\":[\"a4\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 4983,
+                    "completion_tokens": 4975,
+                    "total_tokens": 9958,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 338,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 2799,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "skeleton",
+            "at": "2026-09-29T09:49:43Z",
+            "prompt_version": "lesson_skeleton.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 5025,
+            "cached_tokens_in": 4642,
+            "tokens_out": 4081,
+            "reasoning_tokens": 1962,
+            "cost_usd": "0.025333",
+            "latency_ms": 30088,
+            "wall_ms": 30089,
+            "call_id": "01M3P93XFW1K9JH2YZAVYZKHKY",
+            "user": "TOPIC: Stipendio\n\nTOPIC_DESCRIPTION: Situation: Later in the same interview, the conversation turns to pay and conditions. The learner is especially worried about salary questions, so this is the core scene where compensation is clarified and expectations are discussed.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: introductions, work history, daily duties, detailed next steps after the interview.\n\nAbout the learner, in their own words: colloquio di lavoro, domande sullo stipendio\n\nSURVIVAL_SET:\nmust_say:\n1. ask what salary range is offered — slot: the position\n2. ask whether the salary is gross or net — slot: the salary figure\n3. ask how often salary is paid — slot: the pay period\n4. ask whether there are bonuses or benefits — slot: the benefit\n5. explain your salary expectation — slot: the amount or range\n6. ask whether the amount is negotiable — slot: the amount\n7. confirm what is included in the offer — slot: the item included\nmust_understand:\n1. says the salary range for the role\n2. explains whether the amount is gross or net\n3. tells how often employees are paid\n4. offers information about bonuses or benefits\n5. asks what salary you are expecting\n\nTARGET_LANGUAGE: English\n\nNATIVE_LANGUAGE: Italian\n\nLEVEL: Intermediate\n\nLEARNER_GENDER: unknown\n\nLEARNER_ROLE: Candidate / Candidato\n\nPARTNER_ROLE: Interviewer / Selezionatore\n\nVOCABULARY_COUNT: 8–12\n\nEARLIER_DAYS:\nnone\n\nPREVIOUS_ATTEMPT_REJECTED_FOR:\n- pronunciation.foreign_script · p7.f3: the reading «tràvel rìimbर्सment» has letters of another alphabet: र स",
+            "payload": {
+                "topic": {
+                    "title_target": "Salary and benefits",
+                    "title_native": "Stipendio",
+                    "description_target": "Ask about the salary, payment conditions, benefits, and whether the offer is negotiable.",
+                    "description_native": "Chiedere informazioni sullo stipendio, sulle condizioni di pagamento, sui benefit e sulla possibilità di negoziare l'offerta."
+                },
+                "learner_role": {
+                    "role_target": "Candidate",
+                    "role_native": "Candidato"
+                },
+                "role_gender": "male",
+                "phrases": [
+                    {
+                        "id": "p1",
+                        "kind": "ask",
+                        "must_say": [
+                            1
+                        ],
+                        "frame_target": "What salary range do you offer for ___?",
+                        "frame_native": "Qual è la fascia di stipendio per ___?",
+                        "pronunciation_native": "uòt sèleri rèind du iu òfer for ___?",
+                        "slot": {
+                            "hint_native": "posizione",
+                            "fillers": [
+                                {
+                                    "target": "this position",
+                                    "native": "questa posizione",
+                                    "pronunciation_native": "dis posìscion",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the finance role",
+                                    "native": "il ruolo finanziario",
+                                    "pronunciation_native": "ze fainàन्स rol",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "a customer-service role",
+                                    "native": "un ruolo nel servizio clienti",
+                                    "pronunciation_native": "e càstomer sèrviz rol",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p2",
+                        "kind": "ask",
+                        "must_say": [
+                            2
+                        ],
+                        "frame_target": "Is ___ gross or net?",
+                        "frame_native": "___ è lordo o netto?",
+                        "pronunciation_native": "is ___ groŭs or net?",
+                        "slot": {
+                            "hint_native": "cifra dello stipendio",
+                            "fillers": [
+                                {
+                                    "target": "the salary",
+                                    "native": "lo stipendio",
+                                    "pronunciation_native": "ze sèleri",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the monthly amount",
+                                    "native": "l'importo mensile",
+                                    "pronunciation_native": "ze mànthli emaunt",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the yearly figure",
+                                    "native": "il valore annuale",
+                                    "pronunciation_native": "ze ièrli fìgher",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p3",
+                        "kind": "ask",
+                        "must_say": [
+                            3
+                        ],
+                        "frame_target": "How often is ___ paid?",
+                        "frame_native": "Con quale frequenza viene pagato ___?",
+                        "pronunciation_native": "hau òfen is ___ peid?",
+                        "slot": {
+                            "hint_native": "periodo di pagamento",
+                            "fillers": [
+                                {
+                                    "target": "the salary",
+                                    "native": "lo stipendio",
+                                    "pronunciation_native": "ze sèleri",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the amount",
+                                    "native": "l'importo",
+                                    "pronunciation_native": "zi emaunt",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the payment",
+                                    "native": "il pagamento",
+                                    "pronunciation_native": "ze pèiment",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p4",
+                        "kind": "ask",
+                        "must_say": [
+                            4
+                        ],
+                        "frame_target": "Are there any ___?",
+                        "frame_native": "Ci sono ___?",
+                        "pronunciation_native": "ar zer eni ___?",
+                        "slot": {
+                            "hint_native": "benefit o vantaggio",
+                            "fillers": [
+                                {
+                                    "target": "additional benefits",
+                                    "native": "benefit aggiuntivi",
+                                    "pronunciation_native": "edìscional bènefits",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "performance bonuses",
+                                    "native": "bonus legati ai risultati",
+                                    "pronunciation_native": "perfòrmens bòunesis",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "health coverage",
+                                    "native": "copertura sanitaria",
+                                    "pronunciation_native": "helth càverage",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p5",
+                        "kind": "answer",
+                        "must_say": [
+                            5
+                        ],
+                        "frame_target": "My salary expectation is ___.",
+                        "frame_native": "La mia aspettativa salariale è ___.",
+                        "pronunciation_native": "mai sèleri ekspekteiscion is ___.",
+                        "slot": {
+                            "hint_native": "importo o fascia",
+                            "fillers": [
+                                {
+                                    "target": "forty thousand euros",
+                                    "native": "quarantamila euro",
+                                    "pronunciation_native": "fòrti tháusend iùroŭs",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "forty-five thousand euros",
+                                    "native": "quarantacinquemila euro",
+                                    "pronunciation_native": "fòrti-faiv tháusend iùroŭs",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "thirty-eight thousand euros",
+                                    "native": "trentottomila euro",
+                                    "pronunciation_native": "thèrti-eit tháusend iùroŭs",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p6",
+                        "kind": "ask",
+                        "must_say": [
+                            6
+                        ],
+                        "frame_target": "Can ___ be negotiated?",
+                        "frame_native": "Si può negoziare ___?",
+                        "pronunciation_native": "ken ___ bi negòushieited?",
+                        "slot": {
+                            "hint_native": "importo",
+                            "fillers": [
+                                {
+                                    "target": "the starting salary",
+                                    "native": "lo stipendio iniziale",
+                                    "pronunciation_native": "ze stàrting sèleri",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "the annual amount",
+                                    "native": "l'importo annuale",
+                                    "pronunciation_native": "zi ènual emaunt",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the proposed figure",
+                                    "native": "la cifra proposta",
+                                    "pronunciation_native": "ze propòuzd fìgher",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "p7",
+                        "kind": "ask",
+                        "must_say": [
+                            7
+                        ],
+                        "frame_target": "Could you confirm that ___ is part of the offer?",
+                        "frame_native": "Può confermare che ___ fa parte dell'offerta?",
+                        "pronunciation_native": "cud iu conferm zat ___ is part ov zi òfer?",
+                        "slot": {
+                            "hint_native": "elemento incluso",
+                            "fillers": [
+                                {
+                                    "target": "the pension plan",
+                                    "native": "il piano pensionistico",
+                                    "pronunciation_native": "ze pènscion plen",
+                                    "in_dialogue": true
+                                },
+                                {
+                                    "target": "meal vouchers",
+                                    "native": "i buoni pasto",
+                                    "pronunciation_native": "miil vòucers",
+                                    "in_dialogue": false
+                                },
+                                {
+                                    "target": "the transport allowance",
+                                    "native": "il rimborso trasporti",
+                                    "pronunciation_native": "ze trènспорт elaùens",
+                                    "in_dialogue": false
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "partner_lines": [
+                    {
+                        "id": "a1",
+                        "must_understand": 1,
+                        "kind": "statement",
+                        "pairs_with": [
+                            1
+                        ],
+                        "text_target": "The salary range for this role is between thirty-five and forty thousand euros per year.",
+                        "text_native": "La fascia di stipendio per questo ruolo va da trentacinquemila a quarantamila euro lordi all'anno."
+                    },
+                    {
+                        "id": "a2",
+                        "must_understand": 2,
+                        "kind": "statement",
+                        "pairs_with": [
+                            2
+                        ],
+                        "text_target": "The figure is gross, before taxes and social contributions.",
+                        "text_native": "La cifra è lorda, prima delle tasse e dei contributi previdenziali."
+                    },
+                    {
+                        "id": "a3",
+                        "must_understand": 3,
+                        "kind": "statement",
+                        "pairs_with": [
+                            3
+                        ],
+                        "text_target": "Employees are paid monthly, on the last working day.",
+                        "text_native": "I dipendenti vengono pagati ogni mese, nell'ultimo giorno lavorativo."
+                    },
+                    {
+                        "id": "a4",
+                        "must_understand": 4,
+                        "kind": "statement",
+                        "pairs_with": [
+                            4
+                        ],
+                        "text_target": "Yes. A performance bonus is available after the probation period.",
+                        "text_native": "Sì. È previsto un bonus legato ai risultati dopo il periodo di prova."
+                    },
+                    {
+                        "id": "a5",
+                        "must_understand": 5,
+                        "kind": "question",
+                        "pairs_with": [
+                            5
+                        ],
+                        "text_target": "What salary are you expecting?",
+                        "text_native": "Quale stipendio si aspetta?"
+                    }
+                ],
+                "vocabulary": [
+                    {
+                        "id": "v1",
+                        "term_target": "salary range",
+                        "translation_native": "fascia di stipendio",
+                        "pronunciation_native": "sèleri rèindj",
+                        "definition_target": "the lowest and highest salary offered",
+                        "kind": "chunk",
+                        "image_prompt": "A job offer document showing a salary range",
+                        "used_in": [
+                            "p1",
+                            "a1"
+                        ]
+                    },
+                    {
+                        "id": "v2",
+                        "term_target": "gross",
+                        "translation_native": "lordo",
+                        "pronunciation_native": "groŭs",
+                        "definition_target": "before taxes and deductions",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2",
+                            "a2"
+                        ]
+                    },
+                    {
+                        "id": "v3",
+                        "term_target": "net",
+                        "translation_native": "netto",
+                        "pronunciation_native": "net",
+                        "definition_target": "after taxes and deductions",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p2"
+                        ]
+                    },
+                    {
+                        "id": "v4",
+                        "term_target": "paid",
+                        "translation_native": "pagato",
+                        "pronunciation_native": "peid",
+                        "definition_target": "given as payment",
+                        "kind": "word",
+                        "image_prompt": "An employee receiving a monthly salary payment",
+                        "used_in": [
+                            "p3",
+                            "a3"
+                        ]
+                    },
+                    {
+                        "id": "v5",
+                        "term_target": "additional",
+                        "translation_native": "aggiuntivo",
+                        "pronunciation_native": "edìscional",
+                        "definition_target": "extra or added",
+                        "kind": "word",
+                        "image_prompt": null,
+                        "used_in": [
+                            "p4"
+                        ]
+                    },
+                    {
+                        "id": "v6",
+                        "term_target": "salary expectation",
+                        "translation_native": "aspettativa salariale",
+                        "pronunciation_native": "sèleri ekspekteiscion",
+                        "definition_target": "the salary a candidate hopes to receive",
+                        "kind": "chunk",
+                        "image_prompt": "A candidate discussing expected pay with an interviewer",
+                        "used_in": [
+                            "p5",
+                            "a5"
+                        ]
+                    },
+                    {
+                        "id": "v7",
+                        "term_target": "negotiated",
+                        "translation_native": "negoziato",
+                        "pronunciation_native": "negòushieited",
+                        "definition_target": "changed by discussion between both sides",
+                        "kind": "word",
+                        "image_prompt": "Two people discussing terms across a table",
+                        "used_in": [
+                            "p6"
+                        ]
+                    },
+                    {
+                        "id": "v8",
+                        "term_target": "included",
+                        "translation_native": "incluso",
+                        "pronunciation_native": "inklùudid",
+                        "definition_target": "provided as part of something",
+                        "kind": "word",
+                        "image_prompt": "A benefits list with one item checked",
+                        "used_in": [
+                            "p7"
+                        ]
+                    },
+                    {
+                        "id": "v9",
+                        "term_target": "performance bonus",
+                        "translation_native": "bonus legato ai risultati",
+                        "pronunciation_native": "perfòrmens bòunus",
+                        "definition_target": "extra money for good work results",
+                        "kind": "chunk",
+                        "image_prompt": "An employee receiving a reward for strong performance",
+                        "used_in": [
+                            "a4"
+                        ]
+                    },
+                    {
+                        "id": "v10",
+                        "term_target": "probation period",
+                        "translation_native": "periodo di prova",
+                        "pronunciation_native": "probeiscion pìriod",
+                        "definition_target": "an initial trial period in a job",
+                        "kind": "chunk",
+                        "image_prompt": "A new employee working during an initial trial period",
+                        "used_in": [
+                            "a4"
+                        ]
+                    }
+                ]
+            },
+            "raw": "{\"topic\":{\"title_target\":\"Salary and benefits\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about the salary, payment conditions, benefits, and whether the offer is negotiable.\",\"description_native\":\"Chiedere informazioni sullo stipendio, sulle condizioni di pagamento, sui benefit e sulla possibilità di negoziare l'offerta.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range do you offer for ___?\",\"frame_native\":\"Qual è la fascia di stipendio per ___?\",\"pronunciation_native\":\"uòt sèleri rèind du iu òfer for ___?\",\"slot\":{\"hint_native\":\"posizione\",\"fillers\":[{\"target\":\"this position\",\"native\":\"questa posizione\",\"pronunciation_native\":\"dis posìscion\",\"in_dialogue\":true},{\"target\":\"the finance role\",\"native\":\"il ruolo finanziario\",\"pronunciation_native\":\"ze fainàन्स rol\",\"in_dialogue\":false},{\"target\":\"a customer-service role\",\"native\":\"un ruolo nel servizio clienti\",\"pronunciation_native\":\"e càstomer sèrviz rol\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"is ___ groŭs or net?\",\"slot\":{\"hint_native\":\"cifra dello stipendio\",\"fillers\":[{\"target\":\"the salary\",\"native\":\"lo stipendio\",\"pronunciation_native\":\"ze sèleri\",\"in_dialogue\":true},{\"target\":\"the monthly amount\",\"native\":\"l'importo mensile\",\"pronunciation_native\":\"ze mànthli emaunt\",\"in_dialogue\":false},{\"target\":\"the yearly figure\",\"native\":\"il valore annuale\",\"pronunciation_native\":\"ze ièrli fìgher\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"How often is ___ paid?\",\"frame_native\":\"Con quale frequenza viene pagato ___?\",\"pronunciation_native\":\"hau òfen is ___ peid?\",\"slot\":{\"hint_native\":\"periodo di pagamento\",\"fillers\":[{\"target\":\"the salary\",\"native\":\"lo stipendio\",\"pronunciation_native\":\"ze sèleri\",\"in_dialogue\":true},{\"target\":\"the amount\",\"native\":\"l'importo\",\"pronunciation_native\":\"zi emaunt\",\"in_dialogue\":false},{\"target\":\"the payment\",\"native\":\"il pagamento\",\"pronunciation_native\":\"ze pèiment\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there any ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar zer eni ___?\",\"slot\":{\"hint_native\":\"benefit o vantaggio\",\"fillers\":[{\"target\":\"additional benefits\",\"native\":\"benefit aggiuntivi\",\"pronunciation_native\":\"edìscional bènefits\",\"in_dialogue\":true},{\"target\":\"performance bonuses\",\"native\":\"bonus legati ai risultati\",\"pronunciation_native\":\"perfòrmens bòunesis\",\"in_dialogue\":false},{\"target\":\"health coverage\",\"native\":\"copertura sanitaria\",\"pronunciation_native\":\"helth càverage\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"My salary expectation is ___.\",\"frame_native\":\"La mia aspettativa salariale è ___.\",\"pronunciation_native\":\"mai sèleri ekspekteiscion is ___.\",\"slot\":{\"hint_native\":\"importo o fascia\",\"fillers\":[{\"target\":\"forty thousand euros\",\"native\":\"quarantamila euro\",\"pronunciation_native\":\"fòrti tháusend iùroŭs\",\"in_dialogue\":true},{\"target\":\"forty-five thousand euros\",\"native\":\"quarantacinquemila euro\",\"pronunciation_native\":\"fòrti-faiv tháusend iùroŭs\",\"in_dialogue\":false},{\"target\":\"thirty-eight thousand euros\",\"native\":\"trentottomila euro\",\"pronunciation_native\":\"thèrti-eit tháusend iùroŭs\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Can ___ be negotiated?\",\"frame_native\":\"Si può negoziare ___?\",\"pronunciation_native\":\"ken ___ bi negòushieited?\",\"slot\":{\"hint_native\":\"importo\",\"fillers\":[{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"ze stàrting sèleri\",\"in_dialogue\":true},{\"target\":\"the annual amount\",\"native\":\"l'importo annuale\",\"pronunciation_native\":\"zi ènual emaunt\",\"in_dialogue\":false},{\"target\":\"the proposed figure\",\"native\":\"la cifra proposta\",\"pronunciation_native\":\"ze propòuzd fìgher\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Could you confirm that ___ is part of the offer?\",\"frame_native\":\"Può confermare che ___ fa parte dell'offerta?\",\"pronunciation_native\":\"cud iu conferm zat ___ is part ov zi òfer?\",\"slot\":{\"hint_native\":\"elemento incluso\",\"fillers\":[{\"target\":\"the pension plan\",\"native\":\"il piano pensionistico\",\"pronunciation_native\":\"ze pènscion plen\",\"in_dialogue\":true},{\"target\":\"meal vouchers\",\"native\":\"i buoni pasto\",\"pronunciation_native\":\"miil vòucers\",\"in_dialogue\":false},{\"target\":\"the transport allowance\",\"native\":\"il rimborso trasporti\",\"pronunciation_native\":\"ze trènспорт elaùens\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"The salary range for this role is between thirty-five and forty thousand euros per year.\",\"text_native\":\"La fascia di stipendio per questo ruolo va da trentacinquemila a quarantamila euro lordi all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"The figure is gross, before taxes and social contributions.\",\"text_native\":\"La cifra è lorda, prima delle tasse e dei contributi previdenziali.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid monthly, on the last working day.\",\"text_native\":\"I dipendenti vengono pagati ogni mese, nell'ultimo giorno lavorativo.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Yes. A performance bonus is available after the probation period.\",\"text_native\":\"Sì. È previsto un bonus legato ai risultati dopo il periodo di prova.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Quale stipendio si aspetta?\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia di stipendio\",\"pronunciation_native\":\"sèleri rèindj\",\"definition_target\":\"the lowest and highest salary offered\",\"kind\":\"chunk\",\"image_prompt\":\"A job offer document showing a salary range\",\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"groŭs\",\"definition_target\":\"before taxes and deductions\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"net\",\"definition_target\":\"after taxes and deductions\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"paid\",\"translation_native\":\"pagato\",\"pronunciation_native\":\"peid\",\"definition_target\":\"given as payment\",\"kind\":\"word\",\"image_prompt\":\"An employee receiving a monthly salary payment\",\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"additional\",\"translation_native\":\"aggiuntivo\",\"pronunciation_native\":\"edìscional\",\"definition_target\":\"extra or added\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\"]},{\"id\":\"v6\",\"term_target\":\"salary expectation\",\"translation_native\":\"aspettativa salariale\",\"pronunciation_native\":\"sèleri ekspekteiscion\",\"definition_target\":\"the salary a candidate hopes to receive\",\"kind\":\"chunk\",\"image_prompt\":\"A candidate discussing expected pay with an interviewer\",\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v7\",\"term_target\":\"negotiated\",\"translation_native\":\"negoziato\",\"pronunciation_native\":\"negòushieited\",\"definition_target\":\"changed by discussion between both sides\",\"kind\":\"word\",\"image_prompt\":\"Two people discussing terms across a table\",\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"included\",\"translation_native\":\"incluso\",\"pronunciation_native\":\"inklùudid\",\"definition_target\":\"provided as part of something\",\"kind\":\"word\",\"image_prompt\":\"A benefits list with one item checked\",\"used_in\":[\"p7\"]},{\"id\":\"v9\",\"term_target\":\"performance bonus\",\"translation_native\":\"bonus legato ai risultati\",\"pronunciation_native\":\"perfòrmens bòunus\",\"definition_target\":\"extra money for good work results\",\"kind\":\"chunk\",\"image_prompt\":\"An employee receiving a reward for strong performance\",\"used_in\":[\"a4\"]},{\"id\":\"v10\",\"term_target\":\"probation period\",\"translation_native\":\"periodo di prova\",\"pronunciation_native\":\"probeiscion pìriod\",\"definition_target\":\"an initial trial period in a job\",\"kind\":\"chunk\",\"image_prompt\":\"A new employee working during an initial trial period\",\"used_in\":[\"a4\"]}]}",
+            "wire": {
+                "id": "chatcmpl-ETOkyCXU73dGbmdzacktOv8sxbzGY",
+                "object": "chat.completion",
+                "created": 1790675384,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"topic\":{\"title_target\":\"Salary and benefits\",\"title_native\":\"Stipendio\",\"description_target\":\"Ask about the salary, payment conditions, benefits, and whether the offer is negotiable.\",\"description_native\":\"Chiedere informazioni sullo stipendio, sulle condizioni di pagamento, sui benefit e sulla possibilità di negoziare l'offerta.\"},\"learner_role\":{\"role_target\":\"Candidate\",\"role_native\":\"Candidato\"},\"role_gender\":\"male\",\"phrases\":[{\"id\":\"p1\",\"kind\":\"ask\",\"must_say\":[1],\"frame_target\":\"What salary range do you offer for ___?\",\"frame_native\":\"Qual è la fascia di stipendio per ___?\",\"pronunciation_native\":\"uòt sèleri rèind du iu òfer for ___?\",\"slot\":{\"hint_native\":\"posizione\",\"fillers\":[{\"target\":\"this position\",\"native\":\"questa posizione\",\"pronunciation_native\":\"dis posìscion\",\"in_dialogue\":true},{\"target\":\"the finance role\",\"native\":\"il ruolo finanziario\",\"pronunciation_native\":\"ze fainàन्स rol\",\"in_dialogue\":false},{\"target\":\"a customer-service role\",\"native\":\"un ruolo nel servizio clienti\",\"pronunciation_native\":\"e càstomer sèrviz rol\",\"in_dialogue\":false}]}},{\"id\":\"p2\",\"kind\":\"ask\",\"must_say\":[2],\"frame_target\":\"Is ___ gross or net?\",\"frame_native\":\"___ è lordo o netto?\",\"pronunciation_native\":\"is ___ groŭs or net?\",\"slot\":{\"hint_native\":\"cifra dello stipendio\",\"fillers\":[{\"target\":\"the salary\",\"native\":\"lo stipendio\",\"pronunciation_native\":\"ze sèleri\",\"in_dialogue\":true},{\"target\":\"the monthly amount\",\"native\":\"l'importo mensile\",\"pronunciation_native\":\"ze mànthli emaunt\",\"in_dialogue\":false},{\"target\":\"the yearly figure\",\"native\":\"il valore annuale\",\"pronunciation_native\":\"ze ièrli fìgher\",\"in_dialogue\":false}]}},{\"id\":\"p3\",\"kind\":\"ask\",\"must_say\":[3],\"frame_target\":\"How often is ___ paid?\",\"frame_native\":\"Con quale frequenza viene pagato ___?\",\"pronunciation_native\":\"hau òfen is ___ peid?\",\"slot\":{\"hint_native\":\"periodo di pagamento\",\"fillers\":[{\"target\":\"the salary\",\"native\":\"lo stipendio\",\"pronunciation_native\":\"ze sèleri\",\"in_dialogue\":true},{\"target\":\"the amount\",\"native\":\"l'importo\",\"pronunciation_native\":\"zi emaunt\",\"in_dialogue\":false},{\"target\":\"the payment\",\"native\":\"il pagamento\",\"pronunciation_native\":\"ze pèiment\",\"in_dialogue\":false}]}},{\"id\":\"p4\",\"kind\":\"ask\",\"must_say\":[4],\"frame_target\":\"Are there any ___?\",\"frame_native\":\"Ci sono ___?\",\"pronunciation_native\":\"ar zer eni ___?\",\"slot\":{\"hint_native\":\"benefit o vantaggio\",\"fillers\":[{\"target\":\"additional benefits\",\"native\":\"benefit aggiuntivi\",\"pronunciation_native\":\"edìscional bènefits\",\"in_dialogue\":true},{\"target\":\"performance bonuses\",\"native\":\"bonus legati ai risultati\",\"pronunciation_native\":\"perfòrmens bòunesis\",\"in_dialogue\":false},{\"target\":\"health coverage\",\"native\":\"copertura sanitaria\",\"pronunciation_native\":\"helth càverage\",\"in_dialogue\":false}]}},{\"id\":\"p5\",\"kind\":\"answer\",\"must_say\":[5],\"frame_target\":\"My salary expectation is ___.\",\"frame_native\":\"La mia aspettativa salariale è ___.\",\"pronunciation_native\":\"mai sèleri ekspekteiscion is ___.\",\"slot\":{\"hint_native\":\"importo o fascia\",\"fillers\":[{\"target\":\"forty thousand euros\",\"native\":\"quarantamila euro\",\"pronunciation_native\":\"fòrti tháusend iùroŭs\",\"in_dialogue\":true},{\"target\":\"forty-five thousand euros\",\"native\":\"quarantacinquemila euro\",\"pronunciation_native\":\"fòrti-faiv tháusend iùroŭs\",\"in_dialogue\":false},{\"target\":\"thirty-eight thousand euros\",\"native\":\"trentottomila euro\",\"pronunciation_native\":\"thèrti-eit tháusend iùroŭs\",\"in_dialogue\":false}]}},{\"id\":\"p6\",\"kind\":\"ask\",\"must_say\":[6],\"frame_target\":\"Can ___ be negotiated?\",\"frame_native\":\"Si può negoziare ___?\",\"pronunciation_native\":\"ken ___ bi negòushieited?\",\"slot\":{\"hint_native\":\"importo\",\"fillers\":[{\"target\":\"the starting salary\",\"native\":\"lo stipendio iniziale\",\"pronunciation_native\":\"ze stàrting sèleri\",\"in_dialogue\":true},{\"target\":\"the annual amount\",\"native\":\"l'importo annuale\",\"pronunciation_native\":\"zi ènual emaunt\",\"in_dialogue\":false},{\"target\":\"the proposed figure\",\"native\":\"la cifra proposta\",\"pronunciation_native\":\"ze propòuzd fìgher\",\"in_dialogue\":false}]}},{\"id\":\"p7\",\"kind\":\"ask\",\"must_say\":[7],\"frame_target\":\"Could you confirm that ___ is part of the offer?\",\"frame_native\":\"Può confermare che ___ fa parte dell'offerta?\",\"pronunciation_native\":\"cud iu conferm zat ___ is part ov zi òfer?\",\"slot\":{\"hint_native\":\"elemento incluso\",\"fillers\":[{\"target\":\"the pension plan\",\"native\":\"il piano pensionistico\",\"pronunciation_native\":\"ze pènscion plen\",\"in_dialogue\":true},{\"target\":\"meal vouchers\",\"native\":\"i buoni pasto\",\"pronunciation_native\":\"miil vòucers\",\"in_dialogue\":false},{\"target\":\"the transport allowance\",\"native\":\"il rimborso trasporti\",\"pronunciation_native\":\"ze trènспорт elaùens\",\"in_dialogue\":false}]}}],\"partner_lines\":[{\"id\":\"a1\",\"must_understand\":1,\"kind\":\"statement\",\"pairs_with\":[1],\"text_target\":\"The salary range for this role is between thirty-five and forty thousand euros per year.\",\"text_native\":\"La fascia di stipendio per questo ruolo va da trentacinquemila a quarantamila euro lordi all'anno.\"},{\"id\":\"a2\",\"must_understand\":2,\"kind\":\"statement\",\"pairs_with\":[2],\"text_target\":\"The figure is gross, before taxes and social contributions.\",\"text_native\":\"La cifra è lorda, prima delle tasse e dei contributi previdenziali.\"},{\"id\":\"a3\",\"must_understand\":3,\"kind\":\"statement\",\"pairs_with\":[3],\"text_target\":\"Employees are paid monthly, on the last working day.\",\"text_native\":\"I dipendenti vengono pagati ogni mese, nell'ultimo giorno lavorativo.\"},{\"id\":\"a4\",\"must_understand\":4,\"kind\":\"statement\",\"pairs_with\":[4],\"text_target\":\"Yes. A performance bonus is available after the probation period.\",\"text_native\":\"Sì. È previsto un bonus legato ai risultati dopo il periodo di prova.\"},{\"id\":\"a5\",\"must_understand\":5,\"kind\":\"question\",\"pairs_with\":[5],\"text_target\":\"What salary are you expecting?\",\"text_native\":\"Quale stipendio si aspetta?\"}],\"vocabulary\":[{\"id\":\"v1\",\"term_target\":\"salary range\",\"translation_native\":\"fascia di stipendio\",\"pronunciation_native\":\"sèleri rèindj\",\"definition_target\":\"the lowest and highest salary offered\",\"kind\":\"chunk\",\"image_prompt\":\"A job offer document showing a salary range\",\"used_in\":[\"p1\",\"a1\"]},{\"id\":\"v2\",\"term_target\":\"gross\",\"translation_native\":\"lordo\",\"pronunciation_native\":\"groŭs\",\"definition_target\":\"before taxes and deductions\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\",\"a2\"]},{\"id\":\"v3\",\"term_target\":\"net\",\"translation_native\":\"netto\",\"pronunciation_native\":\"net\",\"definition_target\":\"after taxes and deductions\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p2\"]},{\"id\":\"v4\",\"term_target\":\"paid\",\"translation_native\":\"pagato\",\"pronunciation_native\":\"peid\",\"definition_target\":\"given as payment\",\"kind\":\"word\",\"image_prompt\":\"An employee receiving a monthly salary payment\",\"used_in\":[\"p3\",\"a3\"]},{\"id\":\"v5\",\"term_target\":\"additional\",\"translation_native\":\"aggiuntivo\",\"pronunciation_native\":\"edìscional\",\"definition_target\":\"extra or added\",\"kind\":\"word\",\"image_prompt\":null,\"used_in\":[\"p4\"]},{\"id\":\"v6\",\"term_target\":\"salary expectation\",\"translation_native\":\"aspettativa salariale\",\"pronunciation_native\":\"sèleri ekspekteiscion\",\"definition_target\":\"the salary a candidate hopes to receive\",\"kind\":\"chunk\",\"image_prompt\":\"A candidate discussing expected pay with an interviewer\",\"used_in\":[\"p5\",\"a5\"]},{\"id\":\"v7\",\"term_target\":\"negotiated\",\"translation_native\":\"negoziato\",\"pronunciation_native\":\"negòushieited\",\"definition_target\":\"changed by discussion between both sides\",\"kind\":\"word\",\"image_prompt\":\"Two people discussing terms across a table\",\"used_in\":[\"p6\"]},{\"id\":\"v8\",\"term_target\":\"included\",\"translation_native\":\"incluso\",\"pronunciation_native\":\"inklùudid\",\"definition_target\":\"provided as part of something\",\"kind\":\"word\",\"image_prompt\":\"A benefits list with one item checked\",\"used_in\":[\"p7\"]},{\"id\":\"v9\",\"term_target\":\"performance bonus\",\"translation_native\":\"bonus legato ai risultati\",\"pronunciation_native\":\"perfòrmens bòunus\",\"definition_target\":\"extra money for good work results\",\"kind\":\"chunk\",\"image_prompt\":\"An employee receiving a reward for strong performance\",\"used_in\":[\"a4\"]},{\"id\":\"v10\",\"term_target\":\"probation period\",\"translation_native\":\"periodo di prova\",\"pronunciation_native\":\"probeiscion pìriod\",\"definition_target\":\"an initial trial period in a job\",\"kind\":\"chunk\",\"image_prompt\":\"A new employee working during an initial trial period\",\"used_in\":[\"a4\"]}]}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 5025,
+                    "completion_tokens": 4081,
+                    "total_tokens": 9106,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 4642,
+                        "cache_write_tokens": 380,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 1962,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

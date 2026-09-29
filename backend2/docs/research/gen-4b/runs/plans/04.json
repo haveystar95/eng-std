@@ -1,0 +1,360 @@
+{
+    "plan": "04",
+    "inputs": {
+        "native": "ru",
+        "target": "de",
+        "level": "beginner",
+        "scenes": 2,
+        "goal": "открыть счёт в банке, первый раз, нет постоянной регистрации",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/04-ru-de.json (GEN-4a paid $0.017113)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: teaches_native over 34 («сказать цель и спросить про документы», 37)"
+            },
+            {
+                "check": "char_limits",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: teaches_native over 34 («ответить про адрес, спросить про условия», 40)"
+            },
+            {
+                "check": "survival_unanswered",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: must_understand 1 «asks what you need today» has no answer in must_say"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: teaches_native «сказать цель и спросить про документы» (37) → «назвать цель и узнать о документах» (34)"
+            },
+            {
+                "check": "line_repair",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 2: teaches_native «ответить про адрес, спросить про условия» (40) → «назвать адрес, узнать условия» (29)"
+            }
+        ],
+        "plan": {
+            "title_native": "Открытие счёта",
+            "title_target": "Kontoeröffnung",
+            "overdue_native": "Открытие счёта было вчера",
+            "learner_role": [
+                "Kunde",
+                "Клиент"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Стойка банка",
+                "title_target": "Bankschalter",
+                "teaches_native": "назвать цель и узнать о документах",
+                "goals_native": [
+                    "сказать, какой счёт нужен",
+                    "сказать, какие есть документы",
+                    "спросить, что нужно для счёта",
+                    "спросить, нужна ли запись"
+                ],
+                "learner_role": [
+                    "Kunde",
+                    "Клиент"
+                ],
+                "partner_role": [
+                    "Mitarbeiter",
+                    "Сотрудник"
+                ],
+                "topic_description": "Situation: The learner comes to a bank branch for the first time to start opening an account. They do not have permanent registration, so the first hurdle is whether the branch can help today, what identification is acceptable, and whether another step is required before the application.\nLearner: Customer. Partner: Bank employee.\nNot in this scene: personal details for the application form, account features, fees, cards, online banking, final decision on opening the account.",
+                "must_say": [
+                    "say that you want to open an account — slot: the account type",
+                    "give your name — slot: the full name",
+                    "say what documents you have — slot: the document",
+                    "answer whether you have an address in the country — slot: the address status",
+                    "ask what document is needed — slot: the purpose",
+                    "ask whether an appointment is necessary — slot: none",
+                    "ask where to wait — slot: none"
+                ],
+                "must_understand": [
+                    "asks what you need today",
+                    "asks for your name and identification",
+                    "asks whether you have a local address",
+                    "says which documents are needed for account opening",
+                    "tells you whether you can do it now or need an appointment"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Открытие счёта",
+                "title_target": "Kontoeröffnung",
+                "teaches_native": "назвать адрес, узнать условия",
+                "goals_native": [
+                    "сказать, зачем нужен счёт",
+                    "ответить про адрес и статус",
+                    "спросить, примут ли адрес",
+                    "спросить про карту и плату"
+                ],
+                "learner_role": [
+                    "Kunde",
+                    "Клиент"
+                ],
+                "partner_role": [
+                    "Berater",
+                    "Консультант"
+                ],
+                "topic_description": "Situation: The learner is now speaking with the bank adviser who handles account opening. This is the key interaction because the question of registration or temporary address is decided here, along with whether the bank can accept the application and which basic account conditions apply.\nLearner: Customer. Partner: Bank adviser.\nNot in this scene: greeting at the front desk, asking where to wait, basic document check before the appointment.",
+                "must_say": [
+                    "say why you need the account — slot: the purpose",
+                    "answer what your address situation is — slot: the address status",
+                    "answer whether you work or study — slot: the status",
+                    "ask whether a temporary address is acceptable — slot: the address type",
+                    "ask which account is best for you — slot: the need",
+                    "ask about the monthly fee — slot: the account",
+                    "ask when the card will arrive — slot: the thing (the card, the PIN)",
+                    "confirm you understand the next step — slot: the next step"
+                ],
+                "must_understand": [
+                    "asks why you want to open the account",
+                    "asks about your address and work or study status",
+                    "explains whether a temporary address is accepted",
+                    "offers one or two account options with a fee",
+                    "tells you what happens next with the card or confirmation"
+                ]
+            }
+        ],
+        "cost_usd": "0.005008"
+    },
+    "wall_ms": 7781,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:25:41Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4853,
+            "cached_tokens_in": 3840,
+            "tokens_out": 908,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 15037,
+            "wall_ms": 0,
+            "call_id": null,
+            "user": "GOAL: открыть счёт в банке, первый раз, нет постоянной регистрации\nTARGET_LANGUAGE: German\nNATIVE_LANGUAGE: Russian\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Открытие счёта",
+                    "title_target": "Kontoeröffnung",
+                    "event_native": "Открытие счёта",
+                    "until_phrase_native": "До открытия счёта",
+                    "overdue_native": "Открытие счёта было вчера",
+                    "cover_image_prompt": "bank service desk in a modern branch, customer seated with a bank clerk, realistic photo, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Kunde",
+                    "learner_role_native": "Клиент"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "say that you want to open an account — slot: the account type",
+                            "give your name — slot: the full name",
+                            "say what documents you have — slot: the document",
+                            "answer whether you have an address in the country — slot: the address status",
+                            "ask what document is needed — slot: the purpose",
+                            "ask whether an appointment is necessary — slot: none",
+                            "ask where to wait — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks what you need today",
+                            "asks for your name and identification",
+                            "asks whether you have a local address",
+                            "says which documents are needed for account opening",
+                            "tells you whether you can do it now or need an appointment"
+                        ],
+                        "title_native": "Стойка банка",
+                        "title_target": "Bankschalter",
+                        "teaches_native": "сказать цель и спросить про документы",
+                        "goals_native": [
+                            "сказать, какой счёт нужен",
+                            "сказать, какие есть документы",
+                            "спросить, что нужно для счёта",
+                            "спросить, нужна ли запись"
+                        ],
+                        "learner_role_target": "Kunde",
+                        "learner_role_native": "Клиент",
+                        "partner_role_target": "Mitarbeiter",
+                        "partner_role_native": "Сотрудник",
+                        "topic_description": "Situation: The learner comes to a bank branch for the first time to start opening an account. They do not have permanent registration, so the first hurdle is whether the branch can help today, what identification is acceptable, and whether another step is required before the application.\nLearner: Customer. Partner: Bank employee.\nNot in this scene: personal details for the application form, account features, fees, cards, online banking, final decision on opening the account.",
+                        "image_prompt": "reception area of a bank branch with a service counter, realistic photo, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "say why you need the account — slot: the purpose",
+                            "answer what your address situation is — slot: the address status",
+                            "answer whether you work or study — slot: the status",
+                            "ask whether a temporary address is acceptable — slot: the address type",
+                            "ask which account is best for you — slot: the need",
+                            "ask about the monthly fee — slot: the account",
+                            "ask when the card will arrive — slot: the thing (the card, the PIN)",
+                            "confirm you understand the next step — slot: the next step"
+                        ],
+                        "must_understand": [
+                            "asks why you want to open the account",
+                            "asks about your address and work or study status",
+                            "explains whether a temporary address is accepted",
+                            "offers one or two account options with a fee",
+                            "tells you what happens next with the card or confirmation"
+                        ],
+                        "title_native": "Открытие счёта",
+                        "title_target": "Kontoeröffnung",
+                        "teaches_native": "ответить про адрес, спросить про условия",
+                        "goals_native": [
+                            "сказать, зачем нужен счёт",
+                            "ответить про адрес и статус",
+                            "спросить, примут ли адрес",
+                            "спросить про карту и плату"
+                        ],
+                        "learner_role_target": "Kunde",
+                        "learner_role_native": "Клиент",
+                        "partner_role_target": "Berater",
+                        "partner_role_native": "Консультант",
+                        "topic_description": "Situation: The learner is now speaking with the bank adviser who handles account opening. This is the key interaction because the question of registration or temporary address is decided here, along with whether the bank can accept the application and which basic account conditions apply.\nLearner: Customer. Partner: Bank adviser.\nNot in this scene: greeting at the front desk, asking where to wait, basic document check before the appointment.",
+                        "image_prompt": "private consultation desk in a bank office, customer speaking with a bank adviser, realistic photo, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Открытие счёта\",\"title_target\":\"Kontoeröffnung\",\"event_native\":\"Открытие счёта\",\"until_phrase_native\":\"До открытия счёта\",\"overdue_native\":\"Открытие счёта было вчера\",\"cover_image_prompt\":\"bank service desk in a modern branch, customer seated with a bank clerk, realistic photo, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Kunde\",\"learner_role_native\":\"Клиент\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"say that you want to open an account — slot: the account type\",\"give your name — slot: the full name\",\"say what documents you have — slot: the document\",\"answer whether you have an address in the country — slot: the address status\",\"ask what document is needed — slot: the purpose\",\"ask whether an appointment is necessary — slot: none\",\"ask where to wait — slot: none\"],\"must_understand\":[\"asks what you need today\",\"asks for your name and identification\",\"asks whether you have a local address\",\"says which documents are needed for account opening\",\"tells you whether you can do it now or need an appointment\"],\"title_native\":\"Стойка банка\",\"title_target\":\"Bankschalter\",\"teaches_native\":\"сказать цель и спросить про документы\",\"goals_native\":[\"сказать, какой счёт нужен\",\"сказать, какие есть документы\",\"спросить, что нужно для счёта\",\"спросить, нужна ли запись\"],\"learner_role_target\":\"Kunde\",\"learner_role_native\":\"Клиент\",\"partner_role_target\":\"Mitarbeiter\",\"partner_role_native\":\"Сотрудник\",\"topic_description\":\"Situation: The learner comes to a bank branch for the first time to start opening an account. They do not have permanent registration, so the first hurdle is whether the branch can help today, what identification is acceptable, and whether another step is required before the application.\\nLearner: Customer. Partner: Bank employee.\\nNot in this scene: personal details for the application form, account features, fees, cards, online banking, final decision on opening the account.\",\"image_prompt\":\"reception area of a bank branch with a service counter, realistic photo, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"say why you need the account — slot: the purpose\",\"answer what your address situation is — slot: the address status\",\"answer whether you work or study — slot: the status\",\"ask whether a temporary address is acceptable — slot: the address type\",\"ask which account is best for you — slot: the need\",\"ask about the monthly fee — slot: the account\",\"ask when the card will arrive — slot: the thing (the card, the PIN)\",\"confirm you understand the next step — slot: the next step\"],\"must_understand\":[\"asks why you want to open the account\",\"asks about your address and work or study status\",\"explains whether a temporary address is accepted\",\"offers one or two account options with a fee\",\"tells you what happens next with the card or confirmation\"],\"title_native\":\"Открытие счёта\",\"title_target\":\"Kontoeröffnung\",\"teaches_native\":\"ответить про адрес, спросить про условия\",\"goals_native\":[\"сказать, зачем нужен счёт\",\"ответить про адрес и статус\",\"спросить, примут ли адрес\",\"спросить про карту и плату\"],\"learner_role_target\":\"Kunde\",\"learner_role_native\":\"Клиент\",\"partner_role_target\":\"Berater\",\"partner_role_native\":\"Консультант\",\"topic_description\":\"Situation: The learner is now speaking with the bank adviser who handles account opening. This is the key interaction because the question of registration or temporary address is decided here, along with whether the bank can accept the application and which basic account conditions apply.\\nLearner: Customer. Partner: Bank adviser.\\nNot in this scene: greeting at the front desk, asking where to wait, basic document check before the appointment.\",\"image_prompt\":\"private consultation desk in a bank office, customer speaking with a bank adviser, realistic photo, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:41Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 481,
+            "cached_tokens_in": 0,
+            "tokens_out": 318,
+            "reasoning_tokens": 292,
+            "cost_usd": "0.002389",
+            "latency_ms": 3455,
+            "wall_ms": 3455,
+            "call_id": "01M3P7QX4DYNWHPST20NN6ZTNB",
+            "user": "FIELD: teaches_native\nLANGUAGE: Russian\nLIMIT: 34\nLINE: сказать цель и спросить про документы",
+            "payload": {
+                "line": "назвать цель и узнать о документах"
+            },
+            "raw": "{\"line\":\"назвать цель и узнать о документах\"}",
+            "wire": {
+                "id": "chatcmpl-ETONhBsw2HyDF8jpJZfaGGmRx9xRN",
+                "object": "chat.completion",
+                "created": 1790673941,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"назвать цель и узнать о документах\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 481,
+                    "completion_tokens": 318,
+                    "total_tokens": 799,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 292,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        },
+        {
+            "purpose": "plan_line_repair",
+            "at": "2026-09-29T09:25:45Z",
+            "prompt_version": "plan_line_repair.v1",
+            "model": "gpt-5.6-luna",
+            "tokens_in": 483,
+            "cached_tokens_in": 0,
+            "tokens_out": 356,
+            "reasoning_tokens": 334,
+            "cost_usd": "0.002619",
+            "latency_ms": 4317,
+            "wall_ms": 4317,
+            "call_id": "01M3P7R0GD3S25X5EB3TXJ9FC8",
+            "user": "FIELD: teaches_native\nLANGUAGE: Russian\nLIMIT: 34\nLINE: ответить про адрес, спросить про условия",
+            "payload": {
+                "line": "назвать адрес, узнать условия"
+            },
+            "raw": "{\"line\":\"назвать адрес, узнать условия\"}",
+            "wire": {
+                "id": "chatcmpl-ETONlDqEmhzTR8IVE6CxwM00xrr4v",
+                "object": "chat.completion",
+                "created": 1790673945,
+                "model": "gpt-5.6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": "{\"line\":\"назвать адрес, узнать условия\"}",
+                            "refusal": null,
+                            "annotations": []
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 483,
+                    "completion_tokens": 356,
+                    "total_tokens": 839,
+                    "prompt_tokens_details": {
+                        "cached_tokens": 0,
+                        "cache_write_tokens": 0,
+                        "audio_tokens": 0
+                    },
+                    "completion_tokens_details": {
+                        "reasoning_tokens": 334,
+                        "audio_tokens": 0,
+                        "accepted_prediction_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                    }
+                },
+                "service_tier": "default",
+                "system_fingerprint": null
+            }
+        }
+    ]
+}

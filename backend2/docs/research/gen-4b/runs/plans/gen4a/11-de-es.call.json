@@ -1,0 +1,50 @@
+{
+    "plan": "11",
+    "at": "2026-09-28T14:45:13Z",
+    "inputs": {
+        "goal": "Wohnung mieten in Madrid, Besichtigung mit dem Makler, kleines Kind",
+        "target": "es",
+        "native": "de",
+        "target_language": "Spanish",
+        "native_language": "German",
+        "level": "Beginner",
+        "scenes_count": 3,
+        "existing_scenes": []
+    },
+    "rules": "v8",
+    "user": "GOAL: Wohnung mieten in Madrid, Besichtigung mit dem Makler, kleines Kind\nTARGET_LANGUAGE: Spanish\nNATIVE_LANGUAGE: German\nLEVEL: Beginner\nSCENES_COUNT: 3\nEXISTING_SCENES:",
+    "prompt": {
+        "file": "docs/research/gen-4/plan-builder-v2.1.md",
+        "version": "plan-builder-v2.1",
+        "system_chars": 19135,
+        "system_bytes": 19999,
+        "system_sha256": "c629b22af9d11762384efd037c78cc5adb91ff200d3f8ac8e50c5cc4188462d0"
+    },
+    "schema": "v2.1",
+    "asked_model": "gpt-5.4",
+    "answered_model": "gpt-5.4-2026-03-05",
+    "response_id": "chatcmpl-ET6tNj0Cp8K6Iwdrcdh41ZTN7fb88",
+    "finish_reason": "stop",
+    "usage": {
+        "prompt_tokens": 4854,
+        "completion_tokens": 1235,
+        "total_tokens": 6089,
+        "prompt_tokens_details": {
+            "cached_tokens": 3840,
+            "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+        }
+    },
+    "tokens_in": 4854,
+    "cached_tokens_in": 3840,
+    "tokens_out": 1235,
+    "cost_usd": "0.022020",
+    "latency_ms": 20668,
+    "journal_call_id": "01M3M7M8K71BZJ5SRDGKGV9PVK",
+    "error": null
+}

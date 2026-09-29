@@ -1,0 +1,222 @@
+{
+    "plan": "12",
+    "inputs": {
+        "native": "fr",
+        "target": "en",
+        "level": "beginner",
+        "scenes": 2,
+        "goal": "rendez-vous à la banque pour ouvrir un compte, sans adresse permanente",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/12-fr-en.json (GEN-4a paid $0.015910)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [
+            {
+                "check": "survival_unanswered",
+                "mode": "observe",
+                "action": "counted",
+                "detail": "scene 1: must_understand 2 «asks what you are here for» has no answer in must_say"
+            }
+        ],
+        "plan": {
+            "title_native": "Ouverture de compte",
+            "title_target": "Opening a bank account",
+            "overdue_native": "Le rendez-vous était hier",
+            "learner_role": [
+                "Customer",
+                "Client"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Accueil banque",
+                "title_target": "Bank reception",
+                "teaches_native": "se présenter et attendre",
+                "goals_native": [
+                    "dire l’heure du rendez-vous",
+                    "donner son nom",
+                    "demander un document",
+                    "demander où attendre"
+                ],
+                "learner_role": [
+                    "Customer",
+                    "Client"
+                ],
+                "partner_role": [
+                    "Receptionist",
+                    "Réceptionniste"
+                ],
+                "topic_description": "Situation: You arrive at the bank branch for a scheduled appointment to open an account. This is the first contact before the main meeting. The learner does not have a permanent address, but that issue is not decided here and will be handled with the bank employee.\nLearner: Customer. Partner: Receptionist.\nNot in this scene: account type, address requirements, proof of address, fees, card delivery, next steps after approval.",
+                "must_say": [
+                    "say you have an appointment — slot: the time",
+                    "give your name — slot: the name",
+                    "say why you are here — slot: the purpose",
+                    "answer whether you have identification — slot: the document",
+                    "ask whether a document is needed — slot: the document",
+                    "ask where to wait — slot: none"
+                ],
+                "must_understand": [
+                    "asks your name and whether you have an appointment",
+                    "asks what you are here for",
+                    "asks whether you have identification",
+                    "tells you which document they need first",
+                    "tells you where to wait or where to go"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Ouverture compte",
+                "title_target": "Account opening",
+                "teaches_native": "parler des papiers requis",
+                "goals_native": [
+                    "dire le type de compte",
+                    "dire l’usage du compte",
+                    "demander un autre document",
+                    "demander si c’est possible"
+                ],
+                "learner_role": [
+                    "Customer",
+                    "Client"
+                ],
+                "partner_role": [
+                    "Bank employee",
+                    "Conseiller bancaire"
+                ],
+                "topic_description": "Situation: In the appointment, you sit with a bank employee to open an account. The key complication is that you do not have a permanent address, so the meeting depends on documents, alternatives and whether the bank can proceed today.\nLearner: Customer. Partner: Bank employee.\nNot in this scene: checking in at reception, giving your appointment time, asking where to wait.",
+                "must_say": [
+                    "say what kind of account you want — slot: the account type",
+                    "answer what you will use the account for — slot: the purpose",
+                    "answer whether you have a permanent address — slot: the address status",
+                    "ask whether another document is acceptable — slot: the document",
+                    "ask what you can use instead of proof of address — slot: the document",
+                    "ask whether you can still open the account — slot: none",
+                    "ask how long the process takes — slot: none"
+                ],
+                "must_understand": [
+                    "asks what kind of account you want and what you will use it for",
+                    "asks for proof of address and identification",
+                    "says a permanent address is normally required",
+                    "offers acceptable alternatives or explains the condition",
+                    "tells you whether the account can be opened now or later"
+                ]
+            }
+        ],
+        "cost_usd": "0.000000"
+    },
+    "wall_ms": 4,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:26:12Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4852,
+            "cached_tokens_in": 3840,
+            "tokens_out": 828,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 13772,
+            "wall_ms": 1,
+            "call_id": null,
+            "user": "GOAL: rendez-vous à la banque pour ouvrir un compte, sans adresse permanente\nTARGET_LANGUAGE: English\nNATIVE_LANGUAGE: French\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Ouverture de compte",
+                    "title_target": "Opening a bank account",
+                    "event_native": "Rendez-vous",
+                    "until_phrase_native": "Jusqu’au rendez-vous",
+                    "overdue_native": "Le rendez-vous était hier.",
+                    "cover_image_prompt": "realistic photo of a bank desk during an account opening appointment, modern branch interior, natural light, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Customer",
+                    "learner_role_native": "Client"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "say you have an appointment — slot: the time",
+                            "give your name — slot: the name",
+                            "say why you are here — slot: the purpose",
+                            "answer whether you have identification — slot: the document",
+                            "ask whether a document is needed — slot: the document",
+                            "ask where to wait — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks your name and whether you have an appointment",
+                            "asks what you are here for",
+                            "asks whether you have identification",
+                            "tells you which document they need first",
+                            "tells you where to wait or where to go"
+                        ],
+                        "title_native": "Accueil banque",
+                        "title_target": "Bank reception",
+                        "teaches_native": "se présenter et attendre",
+                        "goals_native": [
+                            "dire l’heure du rendez-vous",
+                            "donner son nom",
+                            "demander un document",
+                            "demander où attendre"
+                        ],
+                        "learner_role_target": "Customer",
+                        "learner_role_native": "Client",
+                        "partner_role_target": "Receptionist",
+                        "partner_role_native": "Réceptionniste",
+                        "topic_description": "Situation: You arrive at the bank branch for a scheduled appointment to open an account. This is the first contact before the main meeting. The learner does not have a permanent address, but that issue is not decided here and will be handled with the bank employee.\nLearner: Customer. Partner: Receptionist.\nNot in this scene: account type, address requirements, proof of address, fees, card delivery, next steps after approval.",
+                        "image_prompt": "realistic photo of a bank reception desk in a modern branch, customer check-in area, natural light, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "say what kind of account you want — slot: the account type",
+                            "answer what you will use the account for — slot: the purpose",
+                            "answer whether you have a permanent address — slot: the address status",
+                            "ask whether another document is acceptable — slot: the document",
+                            "ask what you can use instead of proof of address — slot: the document",
+                            "ask whether you can still open the account — slot: none",
+                            "ask how long the process takes — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks what kind of account you want and what you will use it for",
+                            "asks for proof of address and identification",
+                            "says a permanent address is normally required",
+                            "offers acceptable alternatives or explains the condition",
+                            "tells you whether the account can be opened now or later"
+                        ],
+                        "title_native": "Ouverture compte",
+                        "title_target": "Account opening",
+                        "teaches_native": "parler des papiers requis",
+                        "goals_native": [
+                            "dire le type de compte",
+                            "dire l’usage du compte",
+                            "demander un autre document",
+                            "demander si c’est possible"
+                        ],
+                        "learner_role_target": "Customer",
+                        "learner_role_native": "Client",
+                        "partner_role_target": "Bank employee",
+                        "partner_role_native": "Conseiller bancaire",
+                        "topic_description": "Situation: In the appointment, you sit with a bank employee to open an account. The key complication is that you do not have a permanent address, so the meeting depends on documents, alternatives and whether the bank can proceed today.\nLearner: Customer. Partner: Bank employee.\nNot in this scene: checking in at reception, giving your appointment time, asking where to wait.",
+                        "image_prompt": "realistic photo of a bank employee meeting a customer at a desk with forms and documents, modern branch interior, natural light, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Ouverture de compte\",\"title_target\":\"Opening a bank account\",\"event_native\":\"Rendez-vous\",\"until_phrase_native\":\"Jusqu’au rendez-vous\",\"overdue_native\":\"Le rendez-vous était hier.\",\"cover_image_prompt\":\"realistic photo of a bank desk during an account opening appointment, modern branch interior, natural light, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Customer\",\"learner_role_native\":\"Client\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"say you have an appointment — slot: the time\",\"give your name — slot: the name\",\"say why you are here — slot: the purpose\",\"answer whether you have identification — slot: the document\",\"ask whether a document is needed — slot: the document\",\"ask where to wait — slot: none\"],\"must_understand\":[\"asks your name and whether you have an appointment\",\"asks what you are here for\",\"asks whether you have identification\",\"tells you which document they need first\",\"tells you where to wait or where to go\"],\"title_native\":\"Accueil banque\",\"title_target\":\"Bank reception\",\"teaches_native\":\"se présenter et attendre\",\"goals_native\":[\"dire l’heure du rendez-vous\",\"donner son nom\",\"demander un document\",\"demander où attendre\"],\"learner_role_target\":\"Customer\",\"learner_role_native\":\"Client\",\"partner_role_target\":\"Receptionist\",\"partner_role_native\":\"Réceptionniste\",\"topic_description\":\"Situation: You arrive at the bank branch for a scheduled appointment to open an account. This is the first contact before the main meeting. The learner does not have a permanent address, but that issue is not decided here and will be handled with the bank employee.\\nLearner: Customer. Partner: Receptionist.\\nNot in this scene: account type, address requirements, proof of address, fees, card delivery, next steps after approval.\",\"image_prompt\":\"realistic photo of a bank reception desk in a modern branch, customer check-in area, natural light, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"say what kind of account you want — slot: the account type\",\"answer what you will use the account for — slot: the purpose\",\"answer whether you have a permanent address — slot: the address status\",\"ask whether another document is acceptable — slot: the document\",\"ask what you can use instead of proof of address — slot: the document\",\"ask whether you can still open the account — slot: none\",\"ask how long the process takes — slot: none\"],\"must_understand\":[\"asks what kind of account you want and what you will use it for\",\"asks for proof of address and identification\",\"says a permanent address is normally required\",\"offers acceptable alternatives or explains the condition\",\"tells you whether the account can be opened now or later\"],\"title_native\":\"Ouverture compte\",\"title_target\":\"Account opening\",\"teaches_native\":\"parler des papiers requis\",\"goals_native\":[\"dire le type de compte\",\"dire l’usage du compte\",\"demander un autre document\",\"demander si c’est possible\"],\"learner_role_target\":\"Customer\",\"learner_role_native\":\"Client\",\"partner_role_target\":\"Bank employee\",\"partner_role_native\":\"Conseiller bancaire\",\"topic_description\":\"Situation: In the appointment, you sit with a bank employee to open an account. The key complication is that you do not have a permanent address, so the meeting depends on documents, alternatives and whether the bank can proceed today.\\nLearner: Customer. Partner: Bank employee.\\nNot in this scene: checking in at reception, giving your appointment time, asking where to wait.\",\"image_prompt\":\"realistic photo of a bank employee meeting a customer at a desk with forms and documents, modern branch interior, natural light, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        }
+    ]
+}

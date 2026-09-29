@@ -1,0 +1,217 @@
+{
+    "plan": "01",
+    "inputs": {
+        "native": "ru",
+        "target": "ro",
+        "level": "beginner",
+        "scenes": 2,
+        "goal": "Собеседование в пятницу, боюсь вопросов про опыт",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/01-ru-ro.json (GEN-4a paid $0.024967)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [],
+        "plan": {
+            "title_native": "Собеседование",
+            "title_target": "Interviu de angajare",
+            "overdue_native": "Собеседование было вчера",
+            "learner_role": [
+                "Candidat",
+                "Кандидат"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Опыт работы",
+                "title_target": "Experiența",
+                "teaches_native": "рассказать про опыт и график",
+                "goals_native": [
+                    "сказать, где работали",
+                    "сказать, как долго",
+                    "описать свои задачи",
+                    "спросить про график"
+                ],
+                "learner_role": [
+                    "Candidat",
+                    "Кандидат"
+                ],
+                "partner_role": [
+                    "Intervievator",
+                    "Интервьюер"
+                ],
+                "topic_description": "Situation: You are in a first job interview on Friday with the person hiring for the role. The main worry is questions about your past experience, so this scene focuses on presenting previous work clearly and understanding what the job usually involves.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: talking about your strengths and weaknesses, salary, next steps after the interview.",
+                "must_say": [
+                    "give your name — slot: the name",
+                    "say which position you are applying for — slot: the position",
+                    "say where you worked before — slot: the workplace",
+                    "say how long you worked there — slot: the length of time",
+                    "say what your main duties were — slot: the duties",
+                    "ask whether this position includes a duty — slot: the duty",
+                    "ask what the usual schedule is — slot: none"
+                ],
+                "must_understand": [
+                    "asks your name and which position you want",
+                    "asks where you worked before and for how long",
+                    "asks what your main duties were",
+                    "says what the job involves",
+                    "tells you the usual schedule"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Основные вопросы",
+                "title_target": "Întrebări importante",
+                "teaches_native": "ответить на главные вопросы",
+                "goals_native": [
+                    "сказать, почему хотите",
+                    "сказать, что умеете",
+                    "спросить про обучение",
+                    "спросить, что дальше"
+                ],
+                "learner_role": [
+                    "Candidat",
+                    "Кандидат"
+                ],
+                "partner_role": [
+                    "Intervievator",
+                    "Интервьюер"
+                ],
+                "topic_description": "Situation: After discussing your background, the interviewer moves to the key decision points of the interview. This is where they judge your fit for the role, your practical ability, and your availability, and where you need to understand what happens after the meeting.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: giving your name, naming the position, describing previous workplaces and duties, discussing salary.",
+                "must_say": [
+                    "say why you want this job — slot: the reason",
+                    "say what you do well at work — slot: the skill",
+                    "answer whether you can do a task — slot: the task",
+                    "answer whether you can start on a date — slot: the date",
+                    "ask whether training is provided — slot: none",
+                    "ask what the next step is — slot: none",
+                    "confirm you are interested in the job — slot: the position"
+                ],
+                "must_understand": [
+                    "asks why you want this job",
+                    "asks what you are good at and whether you can do a task",
+                    "asks when you can start",
+                    "explains whether training is provided",
+                    "tells you the next step after the interview"
+                ]
+            }
+        ],
+        "cost_usd": "0.000000"
+    },
+    "wall_ms": 8,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:25:26Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4851,
+            "cached_tokens_in": 0,
+            "tokens_out": 856,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 14447,
+            "wall_ms": 0,
+            "call_id": null,
+            "user": "GOAL: Собеседование в пятницу, боюсь вопросов про опыт\nTARGET_LANGUAGE: Romanian\nNATIVE_LANGUAGE: Russian\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Собеседование",
+                    "title_target": "Interviu de angajare",
+                    "event_native": "Собеседование",
+                    "until_phrase_native": "До собеседования",
+                    "overdue_native": "Собеседование было вчера",
+                    "cover_image_prompt": "realistic photo of a job interview in a small office, desk with two chairs, daylight, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Candidat",
+                    "learner_role_native": "Кандидат"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "give your name — slot: the name",
+                            "say which position you are applying for — slot: the position",
+                            "say where you worked before — slot: the workplace",
+                            "say how long you worked there — slot: the length of time",
+                            "say what your main duties were — slot: the duties",
+                            "ask whether this position includes a duty — slot: the duty",
+                            "ask what the usual schedule is — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks your name and which position you want",
+                            "asks where you worked before and for how long",
+                            "asks what your main duties were",
+                            "says what the job involves",
+                            "tells you the usual schedule"
+                        ],
+                        "title_native": "Опыт работы",
+                        "title_target": "Experiența",
+                        "teaches_native": "рассказать про опыт и график",
+                        "goals_native": [
+                            "сказать, где работали",
+                            "сказать, как долго",
+                            "описать свои задачи",
+                            "спросить про график"
+                        ],
+                        "learner_role_target": "Candidat",
+                        "learner_role_native": "Кандидат",
+                        "partner_role_target": "Intervievator",
+                        "partner_role_native": "Интервьюер",
+                        "topic_description": "Situation: You are in a first job interview on Friday with the person hiring for the role. The main worry is questions about your past experience, so this scene focuses on presenting previous work clearly and understanding what the job usually involves.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: talking about your strengths and weaknesses, salary, next steps after the interview.",
+                        "image_prompt": "realistic photo of a candidate sitting across from an interviewer in an office, notebooks on the desk, natural light, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "say why you want this job — slot: the reason",
+                            "say what you do well at work — slot: the skill",
+                            "answer whether you can do a task — slot: the task",
+                            "answer whether you can start on a date — slot: the date",
+                            "ask whether training is provided — slot: none",
+                            "ask what the next step is — slot: none",
+                            "confirm you are interested in the job — slot: the position"
+                        ],
+                        "must_understand": [
+                            "asks why you want this job",
+                            "asks what you are good at and whether you can do a task",
+                            "asks when you can start",
+                            "explains whether training is provided",
+                            "tells you the next step after the interview"
+                        ],
+                        "title_native": "Основные вопросы",
+                        "title_target": "Întrebări importante",
+                        "teaches_native": "ответить на главные вопросы",
+                        "goals_native": [
+                            "сказать, почему хотите",
+                            "сказать, что умеете",
+                            "спросить про обучение",
+                            "спросить, что дальше"
+                        ],
+                        "learner_role_target": "Candidat",
+                        "learner_role_native": "Кандидат",
+                        "partner_role_target": "Intervievator",
+                        "partner_role_native": "Интервьюер",
+                        "topic_description": "Situation: After discussing your background, the interviewer moves to the key decision points of the interview. This is where they judge your fit for the role, your practical ability, and your availability, and where you need to understand what happens after the meeting.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: giving your name, naming the position, describing previous workplaces and duties, discussing salary.",
+                        "image_prompt": "realistic photo of the later stage of a job interview in an office, interviewer listening and candidate speaking, papers on desk, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Собеседование\",\"title_target\":\"Interviu de angajare\",\"event_native\":\"Собеседование\",\"until_phrase_native\":\"До собеседования\",\"overdue_native\":\"Собеседование было вчера\",\"cover_image_prompt\":\"realistic photo of a job interview in a small office, desk with two chairs, daylight, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Кандидат\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"give your name — slot: the name\",\"say which position you are applying for — slot: the position\",\"say where you worked before — slot: the workplace\",\"say how long you worked there — slot: the length of time\",\"say what your main duties were — slot: the duties\",\"ask whether this position includes a duty — slot: the duty\",\"ask what the usual schedule is — slot: none\"],\"must_understand\":[\"asks your name and which position you want\",\"asks where you worked before and for how long\",\"asks what your main duties were\",\"says what the job involves\",\"tells you the usual schedule\"],\"title_native\":\"Опыт работы\",\"title_target\":\"Experiența\",\"teaches_native\":\"рассказать про опыт и график\",\"goals_native\":[\"сказать, где работали\",\"сказать, как долго\",\"описать свои задачи\",\"спросить про график\"],\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Кандидат\",\"partner_role_target\":\"Intervievator\",\"partner_role_native\":\"Интервьюер\",\"topic_description\":\"Situation: You are in a first job interview on Friday with the person hiring for the role. The main worry is questions about your past experience, so this scene focuses on presenting previous work clearly and understanding what the job usually involves.\\nLearner: Candidate. Partner: Interviewer.\\nNot in this scene: talking about your strengths and weaknesses, salary, next steps after the interview.\",\"image_prompt\":\"realistic photo of a candidate sitting across from an interviewer in an office, notebooks on the desk, natural light, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"say why you want this job — slot: the reason\",\"say what you do well at work — slot: the skill\",\"answer whether you can do a task — slot: the task\",\"answer whether you can start on a date — slot: the date\",\"ask whether training is provided — slot: none\",\"ask what the next step is — slot: none\",\"confirm you are interested in the job — slot: the position\"],\"must_understand\":[\"asks why you want this job\",\"asks what you are good at and whether you can do a task\",\"asks when you can start\",\"explains whether training is provided\",\"tells you the next step after the interview\"],\"title_native\":\"Основные вопросы\",\"title_target\":\"Întrebări importante\",\"teaches_native\":\"ответить на главные вопросы\",\"goals_native\":[\"сказать, почему хотите\",\"сказать, что умеете\",\"спросить про обучение\",\"спросить, что дальше\"],\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Кандидат\",\"partner_role_target\":\"Intervievator\",\"partner_role_native\":\"Интервьюер\",\"topic_description\":\"Situation: After discussing your background, the interviewer moves to the key decision points of the interview. This is where they judge your fit for the role, your practical ability, and your availability, and where you need to understand what happens after the meeting.\\nLearner: Candidate. Partner: Interviewer.\\nNot in this scene: giving your name, naming the position, describing previous workplaces and duties, discussing salary.\",\"image_prompt\":\"realistic photo of the later stage of a job interview in an office, interviewer listening and candidate speaking, papers on desk, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        }
+    ]
+}

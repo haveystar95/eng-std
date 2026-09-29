@@ -1,0 +1,50 @@
+{
+    "plan": "04",
+    "at": "2026-09-28T14:43:20Z",
+    "inputs": {
+        "goal": "открыть счёт в банке, первый раз, нет постоянной регистрации",
+        "target": "de",
+        "native": "ru",
+        "target_language": "German",
+        "native_language": "Russian",
+        "level": "Beginner",
+        "scenes_count": 2,
+        "existing_scenes": []
+    },
+    "rules": "v8",
+    "user": "GOAL: открыть счёт в банке, первый раз, нет постоянной регистрации\nTARGET_LANGUAGE: German\nNATIVE_LANGUAGE: Russian\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+    "prompt": {
+        "file": "docs/research/gen-4/plan-builder-v2.1.md",
+        "version": "plan-builder-v2.1",
+        "system_chars": 19135,
+        "system_bytes": 19999,
+        "system_sha256": "c629b22af9d11762384efd037c78cc5adb91ff200d3f8ac8e50c5cc4188462d0"
+    },
+    "schema": "v2.1",
+    "asked_model": "gpt-5.4",
+    "answered_model": "gpt-5.4-2026-03-05",
+    "response_id": "chatcmpl-ET6rZZ9vt6BQRyzRRYowRC7xicKxR",
+    "finish_reason": "stop",
+    "usage": {
+        "prompt_tokens": 4853,
+        "completion_tokens": 908,
+        "total_tokens": 5761,
+        "prompt_tokens_details": {
+            "cached_tokens": 3840,
+            "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+        }
+    },
+    "tokens_in": 4853,
+    "cached_tokens_in": 3840,
+    "tokens_out": 908,
+    "cost_usd": "0.017113",
+    "latency_ms": 15037,
+    "journal_call_id": "01M3M7GTB6ZGN53V88B0GF80J5",
+    "error": null
+}

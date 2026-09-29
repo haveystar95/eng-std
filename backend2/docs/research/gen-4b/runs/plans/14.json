@@ -1,0 +1,217 @@
+{
+    "plan": "14",
+    "inputs": {
+        "native": "en",
+        "target": "ro",
+        "level": "beginner",
+        "scenes": 2,
+        "goal": "Job interview on Friday, worried about questions on my experience",
+        "existing_scenes": []
+    },
+    "answer": "replayed: runs/plans/gen4a/14-en-ro.json (GEN-4a paid $0.015830)",
+    "outcome": {
+        "status": "ok",
+        "error": null,
+        "unclear_reason": null,
+        "fail_reason": null,
+        "findings": [],
+        "plan": {
+            "title_native": "Job interview",
+            "title_target": "Interviu de angajare",
+            "overdue_native": "The interview was yesterday",
+            "learner_role": [
+                "Candidat",
+                "Candidate"
+            ]
+        },
+        "scenes": [
+            {
+                "order": 1,
+                "kind": "situation",
+                "priority": 2,
+                "title_native": "Arrival",
+                "title_target": "Sosire",
+                "teaches_native": "check in and ask about waiting",
+                "goals_native": [
+                    "give your name",
+                    "say the position",
+                    "ask where to wait",
+                    "confirm a document"
+                ],
+                "learner_role": [
+                    "Candidat",
+                    "Candidate"
+                ],
+                "partner_role": [
+                    "Recepționer",
+                    "Receptionist"
+                ],
+                "topic_description": "Situation: You arrive at the company before a job interview and check in at the front desk. This is a short first contact before the main meeting. The goal is to identify yourself, confirm why you are there, and understand where to wait and what happens next.\nLearner: Candidate. Partner: Receptionist.\nNot in this scene: talking about your experience, answering interview questions, asking about salary or duties.",
+                "must_say": [
+                    "give your name — slot: the name",
+                    "say which job you are here for — slot: the position",
+                    "answer whether you have been here before — slot: the last visit (never, once before)",
+                    "ask where to wait — slot: none",
+                    "ask how long the wait is — slot: none",
+                    "confirm you have the requested document — slot: the document"
+                ],
+                "must_understand": [
+                    "asks your name and which position you are here for",
+                    "asks whether you have an appointment or have been here before",
+                    "tells you where to wait",
+                    "says how long the wait may be",
+                    "asks whether you have a document with you"
+                ]
+            },
+            {
+                "order": 2,
+                "kind": "situation",
+                "priority": 1,
+                "title_native": "Interview",
+                "title_target": "Interviu",
+                "teaches_native": "talk about experience simply",
+                "goals_native": [
+                    "say where you worked",
+                    "say your job title",
+                    "describe main duties",
+                    "ask about next steps"
+                ],
+                "learner_role": [
+                    "Candidat",
+                    "Candidate"
+                ],
+                "partner_role": [
+                    "Intervievator",
+                    "Interviewer"
+                ],
+                "topic_description": "Situation: You are in the main job interview on Friday with the person hiring for the role. Your main worry is answering simple questions about your past experience clearly enough to make a good impression and understand what the job includes.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: checking in at reception, waiting arrangements, handing over documents at the front desk.",
+                "must_say": [
+                    "say where you worked before — slot: the workplace",
+                    "say what your job was — slot: the job title",
+                    "say how long you worked there — slot: the length of time",
+                    "explain what your main duties were — slot: the duty",
+                    "answer whether you have used a tool or skill — slot: the tool or skill",
+                    "ask what the main duties are — slot: the position",
+                    "ask whether training is provided — slot: the skill or task",
+                    "ask what the next step is — slot: none"
+                ],
+                "must_understand": [
+                    "asks where you worked before and for how long",
+                    "asks what your main duties were",
+                    "asks whether you have used a tool or skill before",
+                    "says what the job involves day to day",
+                    "explains the next step in the hiring process"
+                ]
+            }
+        ],
+        "cost_usd": "0.000000"
+    },
+    "wall_ms": 2,
+    "calls": [
+        {
+            "purpose": "plan",
+            "at": "2026-09-29T09:26:12Z",
+            "prompt_version": "plan-builder-v2.1",
+            "model": "gpt-5.4-2026-03-05",
+            "tokens_in": 4850,
+            "cached_tokens_in": 3840,
+            "tokens_out": 823,
+            "reasoning_tokens": null,
+            "cost_usd": "0.000000",
+            "latency_ms": 12642,
+            "wall_ms": 0,
+            "call_id": null,
+            "user": "GOAL: Job interview on Friday, worried about questions on my experience\nTARGET_LANGUAGE: Romanian\nNATIVE_LANGUAGE: English\nLEVEL: Beginner\nSCENES_COUNT: 2\nEXISTING_SCENES:",
+            "payload": {
+                "status": "ok",
+                "unclear_reason": null,
+                "plan": {
+                    "title_native": "Job interview",
+                    "title_target": "Interviu de angajare",
+                    "event_native": "Interview",
+                    "until_phrase_native": "Until the interview",
+                    "overdue_native": "The interview was yesterday.",
+                    "cover_image_prompt": "realistic photo of a small office interview room with two chairs and a desk, natural light, no text, no logos, no faces in close-up",
+                    "learner_role_target": "Candidat",
+                    "learner_role_native": "Candidate"
+                },
+                "scenes": [
+                    {
+                        "order": 1,
+                        "kind": "situation",
+                        "priority": 2,
+                        "must_say": [
+                            "give your name — slot: the name",
+                            "say which job you are here for — slot: the position",
+                            "answer whether you have been here before — slot: the last visit (never, once before)",
+                            "ask where to wait — slot: none",
+                            "ask how long the wait is — slot: none",
+                            "confirm you have the requested document — slot: the document"
+                        ],
+                        "must_understand": [
+                            "asks your name and which position you are here for",
+                            "asks whether you have an appointment or have been here before",
+                            "tells you where to wait",
+                            "says how long the wait may be",
+                            "asks whether you have a document with you"
+                        ],
+                        "title_native": "Arrival",
+                        "title_target": "Sosire",
+                        "teaches_native": "check in and ask about waiting",
+                        "goals_native": [
+                            "give your name",
+                            "say the position",
+                            "ask where to wait",
+                            "confirm a document"
+                        ],
+                        "learner_role_target": "Candidat",
+                        "learner_role_native": "Candidate",
+                        "partner_role_target": "Recepționer",
+                        "partner_role_native": "Receptionist",
+                        "topic_description": "Situation: You arrive at the company before a job interview and check in at the front desk. This is a short first contact before the main meeting. The goal is to identify yourself, confirm why you are there, and understand where to wait and what happens next.\nLearner: Candidate. Partner: Receptionist.\nNot in this scene: talking about your experience, answering interview questions, asking about salary or duties.",
+                        "image_prompt": "realistic photo of a company reception desk and waiting area, soft office lighting, no text, no logos, no faces in close-up"
+                    },
+                    {
+                        "order": 2,
+                        "kind": "situation",
+                        "priority": 1,
+                        "must_say": [
+                            "say where you worked before — slot: the workplace",
+                            "say what your job was — slot: the job title",
+                            "say how long you worked there — slot: the length of time",
+                            "explain what your main duties were — slot: the duty",
+                            "answer whether you have used a tool or skill — slot: the tool or skill",
+                            "ask what the main duties are — slot: the position",
+                            "ask whether training is provided — slot: the skill or task",
+                            "ask what the next step is — slot: none"
+                        ],
+                        "must_understand": [
+                            "asks where you worked before and for how long",
+                            "asks what your main duties were",
+                            "asks whether you have used a tool or skill before",
+                            "says what the job involves day to day",
+                            "explains the next step in the hiring process"
+                        ],
+                        "title_native": "Interview",
+                        "title_target": "Interviu",
+                        "teaches_native": "talk about experience simply",
+                        "goals_native": [
+                            "say where you worked",
+                            "say your job title",
+                            "describe main duties",
+                            "ask about next steps"
+                        ],
+                        "learner_role_target": "Candidat",
+                        "learner_role_native": "Candidate",
+                        "partner_role_target": "Intervievator",
+                        "partner_role_native": "Interviewer",
+                        "topic_description": "Situation: You are in the main job interview on Friday with the person hiring for the role. Your main worry is answering simple questions about your past experience clearly enough to make a good impression and understand what the job includes.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: checking in at reception, waiting arrangements, handing over documents at the front desk.",
+                        "image_prompt": "realistic photo of a job interview in a small office with a desk, two chairs, notebooks, natural light, no text, no logos, no faces in close-up"
+                    }
+                ]
+            },
+            "raw": "{\"status\":\"ok\",\"unclear_reason\":null,\"plan\":{\"title_native\":\"Job interview\",\"title_target\":\"Interviu de angajare\",\"event_native\":\"Interview\",\"until_phrase_native\":\"Until the interview\",\"overdue_native\":\"The interview was yesterday.\",\"cover_image_prompt\":\"realistic photo of a small office interview room with two chairs and a desk, natural light, no text, no logos, no faces in close-up\",\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Candidate\"},\"scenes\":[{\"order\":1,\"kind\":\"situation\",\"priority\":2,\"must_say\":[\"give your name — slot: the name\",\"say which job you are here for — slot: the position\",\"answer whether you have been here before — slot: the last visit (never, once before)\",\"ask where to wait — slot: none\",\"ask how long the wait is — slot: none\",\"confirm you have the requested document — slot: the document\"],\"must_understand\":[\"asks your name and which position you are here for\",\"asks whether you have an appointment or have been here before\",\"tells you where to wait\",\"says how long the wait may be\",\"asks whether you have a document with you\"],\"title_native\":\"Arrival\",\"title_target\":\"Sosire\",\"teaches_native\":\"check in and ask about waiting\",\"goals_native\":[\"give your name\",\"say the position\",\"ask where to wait\",\"confirm a document\"],\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Candidate\",\"partner_role_target\":\"Recepționer\",\"partner_role_native\":\"Receptionist\",\"topic_description\":\"Situation: You arrive at the company before a job interview and check in at the front desk. This is a short first contact before the main meeting. The goal is to identify yourself, confirm why you are there, and understand where to wait and what happens next.\\nLearner: Candidate. Partner: Receptionist.\\nNot in this scene: talking about your experience, answering interview questions, asking about salary or duties.\",\"image_prompt\":\"realistic photo of a company reception desk and waiting area, soft office lighting, no text, no logos, no faces in close-up\"},{\"order\":2,\"kind\":\"situation\",\"priority\":1,\"must_say\":[\"say where you worked before — slot: the workplace\",\"say what your job was — slot: the job title\",\"say how long you worked there — slot: the length of time\",\"explain what your main duties were — slot: the duty\",\"answer whether you have used a tool or skill — slot: the tool or skill\",\"ask what the main duties are — slot: the position\",\"ask whether training is provided — slot: the skill or task\",\"ask what the next step is — slot: none\"],\"must_understand\":[\"asks where you worked before and for how long\",\"asks what your main duties were\",\"asks whether you have used a tool or skill before\",\"says what the job involves day to day\",\"explains the next step in the hiring process\"],\"title_native\":\"Interview\",\"title_target\":\"Interviu\",\"teaches_native\":\"talk about experience simply\",\"goals_native\":[\"say where you worked\",\"say your job title\",\"describe main duties\",\"ask about next steps\"],\"learner_role_target\":\"Candidat\",\"learner_role_native\":\"Candidate\",\"partner_role_target\":\"Intervievator\",\"partner_role_native\":\"Interviewer\",\"topic_description\":\"Situation: You are in the main job interview on Friday with the person hiring for the role. Your main worry is answering simple questions about your past experience clearly enough to make a good impression and understand what the job includes.\\nLearner: Candidate. Partner: Interviewer.\\nNot in this scene: checking in at reception, waiting arrangements, handing over documents at the front desk.\",\"image_prompt\":\"realistic photo of a job interview in a small office with a desk, two chairs, notebooks, natural light, no text, no logos, no faces in close-up\"}]}",
+            "wire": null
+        }
+    ]
+}
