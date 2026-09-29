@@ -23,7 +23,7 @@ final class LessonBuildLog
     /** @var list<array{stage: string, address: string, kind: string, sent_for: list<string>, status: string, kept: bool, broke: list<string>, left: list<string>, helped: bool|null, note: string}> */
     public array $repairs = [];
 
-    /** @var list<array{frames: list<string>, items: int, judged: int, status: string, not_reading: list<string>}> */
+    /** @var list<array{frames: list<string>, items: int, judged: int, status: string, not_reading: list<string>, replies: list<string>, naming: list<string>}> */
     public array $judgements = [];
 
     public function call(string $stage, int $attempt, ModelReply $reply): void
@@ -72,16 +72,21 @@ final class LessonBuildLog
     }
 
     /**
-     * @param  list<string>  $frames
-     * @param  list<string>  $notReading
+     * @param  list<string>  $frames  the frames whose native seams were sent
+     * @param  list<string>  $notReading  the fillers whose sentence does not read
+     * @param  list<string>  $replies  the partner lines whose replies were sent (наряд GEN-4c)
+     * @param  list<string>  $naming  the partner lines whose reply names a filler
      */
-    public function judgement(array $frames, int $items, int $judged, string $status, array $notReading): void
+    public function judgement(array $frames, int $items, int $judged, string $status, array $notReading, array $replies = [], array $naming = []): void
     {
-        $this->judgements[] = ['frames' => $frames, 'items' => $items, 'judged' => $judged, 'status' => $status, 'not_reading' => $notReading];
+        $this->judgements[] = [
+            'frames' => $frames, 'items' => $items, 'judged' => $judged, 'status' => $status, 'not_reading' => $notReading,
+            'replies' => $replies, 'naming' => $naming,
+        ];
     }
 
     /**
-     * A repair's verdict, known only once the seam judge has read its frame again: whether it helped.
+     * A repair's verdict, known only once the seam judge has read its frame or its reply again: whether it helped.
      *
      * @param  list<string>  $left  the codes still at the card
      */

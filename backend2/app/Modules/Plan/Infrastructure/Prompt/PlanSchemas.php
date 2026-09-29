@@ -138,13 +138,16 @@ final class PlanSchemas
     }
 
     /**
-     * THE SEAM JUDGE (`lesson_seam_judge.v1.1`): a verdict per sentence sent — its id (the enum has only the ids
-     * sent) and whether it reads. No length (п. 202): a sentence left without a verdict is simply not judged.
+     * THE SEAM JUDGE (`lesson_seam_judge.v1.2`): a verdict per sentence sent — its id (the enum has only the ids
+     * sent) and whether it reads. No length (п. 202): a sentence left without a verdict is simply not judged. And (наряд GEN-4c)
+     * the ids of the replies that name a value of their question — the enum has only the replies sent; an empty list when none
+     * does, or when none was sent.
      *
      * @param  list<string>  $ids
+     * @param  list<string>  $replyIds
      * @return array<string, mixed>
      */
-    public static function seamJudge(array $ids): array
+    public static function seamJudge(array $ids, array $replyIds = []): array
     {
         return self::object([
             'verdicts' => [
@@ -153,6 +156,10 @@ final class PlanSchemas
                     'id' => ['type' => 'string', 'enum' => $ids === [] ? ['p1.f1'] : $ids],
                     'reads' => ['type' => 'boolean'],
                 ]),
+            ],
+            'replies_naming_values' => [
+                'type' => 'array',
+                'items' => ['type' => 'string', 'enum' => $replyIds === [] ? ['a1'] : $replyIds],
             ],
         ]);
     }

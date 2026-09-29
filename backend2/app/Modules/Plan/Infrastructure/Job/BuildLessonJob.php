@@ -19,9 +19,9 @@ use Throwable;
  * waits for the learner's retry (наряд GEN-3).
  *
  * Its timeout covers every model call the build may make, each waited for as long as the plan's config says, and a minute
- * for the writes (наряд GEN-4): each of the two stages with its one repeat, the repairs of each stage's cards, the seam judge
- * and its second read of the repaired frames. Anything shorter kills a healthy build between two paid calls; the queue's
- * `retry_after` and the stale window of a build (`plan.build_stale_seconds`) stay above it.
+ * for the writes (наряд GEN-4): each of the two stages with its one repeat, the repairs of each stage's cards (four since
+ * наряд GEN-4c), the seam judge and its second read of what the repairs changed. Anything shorter kills a healthy build
+ * between two paid calls; the queue's `retry_after` and the stale window of a build (`plan.build_stale_seconds`) stay above it.
  */
 final class BuildLessonJob implements ShouldQueue
 {

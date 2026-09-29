@@ -20,12 +20,15 @@ use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerNamesFiller;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerPairsMany;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerPairsNone;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerTooLong;
+use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerYesNoExtra;
+use App\Modules\Plan\Domain\Check\Skeleton\Rule\PartnerYesNoMissing;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PronunciationEqualsNative;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PronunciationForeignScript;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\PronunciationNearNative;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\SkeletonIds;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\VocabCount;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\VocabDefinitionLanguage;
+use App\Modules\Plan\Domain\Check\Skeleton\Rule\VocabFromPlaceholder;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\VocabNotFound;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\VocabReading;
 use App\Modules\Plan\Domain\Check\Skeleton\Rule\VocabStopWord;
@@ -40,6 +43,9 @@ use App\Modules\Plan\Domain\Lesson\Skeleton;
  * one of them), and `vocab.reading`, `vocab.definition_language`, the codes the repair prompt names for a word it keeps. Since
  * GEN-4b: `partner.pairs_none` (fatal — a line paired with nothing while a frame has no line), and
  * `pronunciation.foreign_script` a warning the repairs take first, fatal only beyond them ({@see \App\Modules\Plan\Domain\Check\LessonCodes::BUDGETED}).
+ * Since GEN-4c, three more of that kind, taken next: `vocab.from_placeholder` (a word said only through a filler the
+ * learner did not give), `partner.yes_no_missing` and `partner.yes_no_extra` (a reply to a question of the learner's that
+ * opens with no yes or no when the question asks yes or no — or with one when it asks for a fact, {@see AskedFor}).
  */
 final readonly class SkeletonCheck
 {
@@ -68,6 +74,9 @@ final readonly class SkeletonCheck
             new PartnerPairsMany,
             new PartnerPairsNone,
             new PronunciationForeignScript,
+            new VocabFromPlaceholder,
+            new PartnerYesNoMissing,
+            new PartnerYesNoExtra,
             new PronunciationNearNative,
             new FrameNativeTwin,
             new FillerCommonPrefix,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Lesson;
 
+use App\Modules\Plan\Domain\ValueObject\ExchangeKind;
 use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
@@ -98,6 +99,32 @@ final readonly class Skeleton
         }
 
         return false;
+    }
+
+    /**
+     * THE PARTNER'S REPLIES TO THE LEARNER'S QUESTIONS (наряд GEN-4c): every statement of the partner with an `ask` frame it
+     * pairs with — the learner asks with the frame, A answers with the line. Each pair once, in the order of the lines.
+     *
+     * @return list<array{0: PartnerLine, 1: SkeletonFrame}>
+     */
+    public function repliesToAsks(): array
+    {
+        $out = [];
+        foreach ($this->partnerLines as $line) {
+            if ($line->isQuestion()) {
+                continue;
+            }
+            $seen = [];
+            foreach ($line->pairsWith as $number) {
+                $frame = $this->frameOfItem($number);
+                if ($frame !== null && $frame->phrase->kind === ExchangeKind::Ask && ! isset($seen[$frame->id()])) {
+                    $seen[$frame->id()] = true;
+                    $out[] = [$line, $frame];
+                }
+            }
+        }
+
+        return $out;
     }
 
     /**

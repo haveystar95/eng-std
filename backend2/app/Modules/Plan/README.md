@@ -175,12 +175,15 @@ that target and gender; served by `GET /plans/rescue-audio/{key}`).
 `WordUsage` (the line of the day a word is said in — by the lesson's `used_in` — and its place in it, sheet 23-0e).
 Application: `LessonBuildService` (наряд GEN-4 — the conveyor: skeleton → `SkeletonCheck` → seam judge → the skeleton's
 repairs → dialogue → `DialogueCheck` → shuffle → the dialogue's repairs → `LessonAssembler`; a stage asked once more for a
-fatal finding or an answer off the schema, a second fails the day `fatal: <codes>`; warnings send their card to a repair, two
-a stage, kept only when it brings nothing fatal; every finding counted under its stage's prompt version), `LessonRequests`
+fatal finding or an answer off the schema, a second fails the day `fatal: <codes>`; warnings send their card to a repair, four
+a stage since GEN-4c in the repairs' order (`LessonCodes::REPAIR_ORDER`), kept only when it brings nothing fatal; every finding
+counted under its stage's prompt version), `LessonRequests`
 (the day's inputs — the survival set, the learner's words beside the brief, the gender as the profile says it now, the
 roles, `EARLIER_DAYS`), `LessonContexts` (what each stage's check reads: the set, VOCABULARY_COUNT, the pair's packs, the
-learner's gender, the earlier days; the skeleton for the dialogue), `LessonSeamJudge` (the skeleton's native frames with
-their fillers in one call, before the dialogue; a «no» is `filler.native_seam`), `LessonCardRepairer` (one card by the
+learner's gender, the earlier days, the learner's own words — GEN-4c; the skeleton for the dialogue), `LessonSeamJudge` (the
+skeleton's native frames with their fillers in one call, before the dialogue; a «no» is `filler.native_seam`; in the same call
+— GEN-4c — the partner's replies to the learner's questions, a reply naming a filler is `partner.names_filler_meaning`),
+`LessonCardRepairer` (one card by the
 model, `lesson_card_repair.v1.5`), `LessonBuildLog` / `LessonBill` (what the build did and what it cost — the calls, the
 attempts, the judgements, the repairs and whether each helped). The plan: `PlanBuildService` (the plan call, its checks,
 one retry for `gate`; then `PlanLineRepairer` — a screen line over its limit shortened by `plan_line_repair.v1`, a call of
@@ -266,7 +269,7 @@ reads plan tables.
 
 - The prompts live in `Infrastructure/Prompt/current/` and only there (наряд PROMPTS-1): one file per prompt, named as the
   prompt and its version — `plan-builder-v2.1`, `plan_line_repair.v1`, `lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`,
-  `lesson_card_repair.v1.5`, `lesson_seam_judge.v1.1`, `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES`
+  `lesson_card_repair.v1.5`, `lesson_seam_judge.v1.2`, `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES`
   is the one map from a prompt to its file; `docs/prompts/REGISTRY.md` holds each one's name, version, path and sha256, and
   `PromptRegistryTest` holds the directory and the registry to each other. The files are FROZEN; the version is the file
   name. A new version replaces the old file in the same commit — no rollback file lies beside the current one; the history
@@ -286,14 +289,21 @@ reads plan tables.
   `config/plan.php`, never in code. The day's checks have no modes: a rule is fatal or a warning by itself
   (`plan-v2.md` §4); they count (`checks_json` of the scene, `plan_check_counters` by code under the stage's prompt version).
   A fatal finding asks its stage once more, and a second fails the day `fatal: <codes>`; a warning sends its card to a
-  repair (two a stage), kept only when it brings nothing fatal; no fatal finding is ever stored. A letter of another writing
-  in a reading (`pronunciation.foreign_script`) is a warning whose cards the repairs take first — fatal only beyond them
-  (`LessonCodes::BUDGETED`, наряд GEN-4b). The stages run on `gpt-5.4`, the repairs on `gpt-5.6-luna`. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
+  repair (four a stage since GEN-4c; two before), kept only when it brings nothing fatal; no fatal finding is ever stored. A
+  letter of another writing in a reading (`pronunciation.foreign_script`, наряд GEN-4b), a word of the day said only through a
+  placeholder filler (`vocab.from_placeholder`) and a reply to a learner's question that opens with no yes or no when it is
+  asked one, or with one when it is asked for a fact (`partner.yes_no_missing`, `partner.yes_no_extra` — the target pack's
+  `yes_no`, `question_words`, `alternative_words`; GEN-4c) are warnings whose cards the repairs take first, in that order —
+  fatal only beyond them (`LessonCodes::BUDGETED`); then the replies the seam judge finds naming a filler, then the rest —
+  the order the cards are TAKEN in; the cards taken are repaired frames first, then lines, then words. The stages run on `gpt-5.4`, the repairs on `gpt-5.6-luna`. A failed lesson is asked for again only by the learner's retry — no open, close, reschedule or
   extension rebuilds it. Every answer of the plan's model is read without the characters that print nothing
   (`Domain/Service/ModelText`, at `ContentModelPlanBuilder`; `plan:clean-text` for what was stored before, наряд LANG-1b §6 —
   and, since its last step, the readings stored in `plan_terms` and the dealt cards, by the parser's own rule,
   `Domain/Service/ReadingLetters`). The skeleton is read by the seam judge before the dialogue (`Application/Service/LessonSeamJudge`,
-  `filler.native_seam`, a warning; `judge.unavailable` when it does not answer), and the frames a repair changed once more. The SLOT judge counts in the same
+  `filler.native_seam`, a warning; `judge.unavailable` when it does not answer) — and in the same call, `lesson_seam_judge.v1.2`
+  (GEN-4c), whether the partner's reply to a question of the learner's names a filler of it, word for word, in another form
+  or by its meaning (`partner.names_filler_meaning`, a warning, never fatal); what a repair changed that it reads — a frame, a
+  reply, a question whose fillers changed — once more, in one call. The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
   conversation's guards count there too, under `conversation_agent.v3.4` (`conversation.learner_line`, `…_cut`, `…_kept`,

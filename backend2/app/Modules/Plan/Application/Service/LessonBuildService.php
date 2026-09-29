@@ -15,11 +15,14 @@ use App\Modules\Plan\Application\Port\CheckCounters;
 use App\Modules\Plan\Application\Port\PlanModelPort;
 use App\Modules\Plan\Domain\Check\Dialogue\DialogueCheck;
 use App\Modules\Plan\Domain\Check\Dialogue\DialogueContext;
+use App\Modules\Plan\Domain\Check\Language\LanguageWords;
 use App\Modules\Plan\Domain\Check\LessonCodes;
 use App\Modules\Plan\Domain\Check\LessonViolation;
+use App\Modules\Plan\Domain\Check\Skeleton\CarriedWords;
 use App\Modules\Plan\Domain\Check\Skeleton\SkeletonCheck;
 use App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
+use App\Modules\Plan\Domain\Lesson\AskReplies;
 use App\Modules\Plan\Domain\Lesson\Dialogue;
 use App\Modules\Plan\Domain\Lesson\LessonAssembler;
 use App\Modules\Plan\Domain\Lesson\LessonCard;
@@ -41,10 +44,14 @@ use Throwable;
  *  - THE SKELETON (`lesson_skeleton.v1.1`) turns the scene's survival set into frames, partner lines and words. {@see SkeletonCheck}
  *    reads it; a FATAL finding asks the skeleton once more with the findings quoted (`PREVIOUS_ATTEMPT_REJECTED_FOR`), an
  *    answer off the schema the same — one repeat a stage, no more; still fatal, the day fails with its codes.
- *  - THE SEAM JUDGE reads the skeleton's native frames said with their fillers, before the dialogue exists.
- *  - THE SKELETON'S REPAIRS: the cards its warnings — and the seam judge's «does not read» — stand at, at most
- *    {@see REPAIR_CARDS}, frames first ({@see LessonCard::SKELETON_KINDS}); each repair is checked again and kept only if it
- *    brings no fatal finding. The frames a repair changed are read by the seam judge once more.
+ *  - THE SEAM JUDGE reads the skeleton's native frames said with their fillers, before the dialogue exists — and in the same
+ *    call the partner's replies to the learner's questions, whether one names a filler of its question (наряд GEN-4c).
+ *  - THE SKELETON'S REPAIRS: the cards its warnings — and the seam judge's findings — stand at, at most {@see REPAIR_CARDS},
+ *    taken in the repairs' order ({@see LessonCodes::REPAIR_ORDER}: a letter of another writing, a placeholder word, a yes or
+ *    no, a reply naming a filler, then the rest) and repaired frames first, then lines, then words
+ *    ({@see LessonCard::SKELETON_KINDS}); each repair is checked again and kept only if it brings no fatal finding. What a
+ *    repair changed that the judge reads — a frame, a reply, a question whose fillers changed — the seam judge reads once
+ *    more, in one call.
  *  - THE DIALOGUE (`lesson_dialogue.v1.1`) puts the repaired skeleton into DIALOGUE_COUNT exchanges; {@see DialogueCheck}, one
  *    repeat for a fatal finding, as the skeleton.
  *  - THE SHUFFLE: the server puts the right option of every check and every listening question where the scene's seed says
@@ -62,8 +69,8 @@ final readonly class LessonBuildService
     /** How many times a stage is asked: once, and once more for a fatal finding or an answer off the schema. */
     public const STAGE_ATTEMPTS = 2;
 
-    /** How many cards of a stage are sent to a repair, at most, each once. */
-    public const REPAIR_CARDS = 2;
+    /** How many cards of a stage are sent to a repair, at most, each once — four of the skeleton, four of the dialogue (наряд GEN-4c; two before it). */
+    public const REPAIR_CARDS = 4;
 
     public function __construct(
         private PlanModelPort $model,
@@ -88,7 +95,7 @@ final readonly class LessonBuildService
             return LessonBuildOutcome::failed((string) $failed, $this->call($bill), self::rows($found), $log);
         }
 
-        $seams = $this->judge($skeleton->phrases(), $request, $log, $bill);
+        $seams = $this->judge($skeleton, null, null, $request, $log, $bill);
         [$skeleton, $found, $seams] = $this->repairSkeleton($skeleton, $found, $seams, $request, $skeletonContext, $log, $bill);
 
         $dialogueContext = $this->contexts->dialogue($request, $skeleton);
@@ -194,7 +201,9 @@ final readonly class LessonBuildService
     }
 
     /**
-     * The skeleton's warnings sent to repairs — the seam judge's among them — and the frames a repair changed read again.
+     * The skeleton's warnings sent to repairs — the seam judge's among them — and what the judge reads that a repair changed
+     * read again: a frame's native seams, and a reply to a question of the learner's — its partner line rewritten, or its
+     * question's fillers (наряд GEN-4c).
      *
      * @param  list<LessonViolation>  $found
      * @param  list<LessonViolation>  $seams
@@ -202,10 +211,16 @@ final readonly class LessonBuildService
      */
     private function repairSkeleton(Skeleton $skeleton, array $found, array $seams, LessonRequest $request, SkeletonContext $context, LessonBuildLog $log, LessonBill $bill): array
     {
-        $changed = [];
+        $frames = [];
+        $lines = [];
+        $words = $context->targetReading('function_words', 'word_forms');
         foreach (self::cards([...$found, ...$seams], LessonCard::SKELETON_KINDS) as $card) {
             $sent = self::at($card, [...$found, ...$seams]);
-            $outcome = $this->repairer->repair($skeleton, null, $card, $sent, $request);
+            if ($sent === []) {
+                // An earlier repair took the card's findings away (the e2e of GEN-4c paid for a word sent with none).
+                continue;
+            }
+            $outcome = $this->repairer->repair($skeleton, null, $card, [...$sent, ...self::carried($skeleton, $card, $words)], $request);
             $bill->repair($outcome);
             $after = $outcome->skeleton === null ? null : $this->skeletons->run($outcome->skeleton, $context);
             if (! $this->kept($outcome, $after, 'skeleton', $card, $sent, $log) || $outcome->skeleton === null || $after === null) {
@@ -214,17 +229,30 @@ final readonly class LessonBuildService
             $skeleton = $outcome->skeleton;
             $found = $after;
             if ($card->kind === LessonCard::FRAME) {
-                $changed[] = $card->id;
-                $seams = array_values(array_filter($seams, static fn (LessonViolation $v): bool => ! $card->covers($v)));
+                $frames[] = $card->id;
+            } elseif ($card->kind === LessonCard::PARTNER_LINE) {
+                $lines[] = $card->id;
             }
         }
-        if ($changed !== []) {
-            $again = $this->judge(array_values(array_filter($skeleton->phrases(), static fn (Phrase $p): bool => in_array($p->id, $changed, true))), $request, $log, $bill);
+        foreach ($skeleton->repliesToAsks() as [$line, $frame]) {
+            if (in_array($frame->id(), $frames, true)) {
+                $lines[] = $line->id;
+            }
+        }
+        $lines = array_values(array_unique($lines));
+        if ($frames !== [] || $lines !== []) {
+            // What the judge found at a card it reads again is its answer of then: the answer of now replaces it.
+            $seams = array_values(array_filter($seams, static function (LessonViolation $v) use ($frames, $lines): bool {
+                $card = LessonCard::at($v->address);
+
+                return $card === null || ! in_array($card->id, [...$frames, ...$lines], true);
+            }));
+            $again = $this->judge($skeleton, $frames, $lines, $request, $log, $bill);
             $seams = [...$seams, ...$again];
-            foreach ($changed as $frameId) {
-                $card = LessonCard::at($frameId);
-                $left = $card === null ? [] : self::codes(self::at($card, [...$found, ...$again]));
-                $log->helped($frameId, array_intersect($left, self::sentCodes($log, $frameId)) === [], $left);
+            foreach ([...$frames, ...$lines] as $address) {
+                $card = LessonCard::at($address);
+                $left = $card === null ? [] : self::codes(self::at($card, [...$found, ...$seams]));
+                $log->helped($address, array_intersect($left, self::sentCodes($log, $address)) === [], $left);
             }
         }
 
@@ -241,6 +269,9 @@ final readonly class LessonBuildService
     {
         foreach (self::cards($found, LessonCard::DIALOGUE_KINDS) as $card) {
             $sent = self::at($card, $found);
+            if ($sent === []) {
+                continue;
+            }
             $outcome = $this->repairer->repair($skeleton, $dialogue, $card, $sent, $request);
             $bill->repair($outcome);
             $after = $outcome->dialogue === null ? null : $this->dialogues->run($outcome->dialogue, $context);
@@ -255,9 +286,10 @@ final readonly class LessonBuildService
     }
 
     /**
-     * Is a repair kept? It came back as a card, and its stage checked again has no fatal finding. Written down either way,
-     * with whether it helped: the codes it was sent for are gone from its card (a frame's seams are known only after the
-     * judge reads it again).
+     * Is a repair kept? It came back as a card, and its stage checked again has no fatal finding — and no finding of a code the
+     * repairs take first ({@see LessonCodes::BUDGETED}) at its card that the card was not sent with (наряд GEN-4c). Written
+     * down either way, with whether it helped: the codes it was sent for are gone from its card (a frame's seams and a
+     * reply's naming are known only after the judge reads it again).
      *
      * @param  list<LessonViolation>|null  $after
      * @param  list<LessonViolation>  $sent
@@ -276,22 +308,35 @@ final readonly class LessonBuildService
 
             return false;
         }
+        // A finding the repairs take first that the card did not have (наряд GEN-4c): the e2e of GEN-4c sent «a veni», a
+        // stop word, to a repair, and the repair wrote «casier» — a word of a placeholder. The card stays as it was.
+        $brought = array_values(array_diff(array_intersect(self::codes(self::at($card, $after)), LessonCodes::BUDGETED), $sentFor));
+        if ($brought !== []) {
+            $log->repair($stage, $card->address, $card->kind, $sentFor, $outcome->status, false, $brought, $sentFor, false, 'the repair brings a finding the repairs take first');
+
+            return false;
+        }
         $left = self::codes(self::at($card, $after));
-        $waiting = $card->kind === LessonCard::FRAME && in_array(LessonCodes::FILLER_NATIVE_SEAM, $sentFor, true);
+        $waiting = ($card->kind === LessonCard::FRAME && in_array(LessonCodes::FILLER_NATIVE_SEAM, $sentFor, true))
+            || ($card->kind === LessonCard::PARTNER_LINE && in_array(LessonCodes::NAMES_FILLER_MEANING, $sentFor, true));
         $log->repair($stage, $card->address, $card->kind, $sentFor, $outcome->status, true, [], $left, $waiting ? null : array_intersect($left, $sentFor) === []);
 
         return true;
     }
 
     /**
-     * The seam judge over some frames: what does not read, as findings at the fillers.
+     * The seam judge over some frames and some replies of the skeleton — every one of them when null: what does not read, as
+     * findings at the fillers; a reply that names a filler of its question (наряд GEN-4c), at its partner line.
      *
-     * @param  list<Phrase>  $phrases
+     * @param  list<string>|null  $frames  the frames whose native seams to read
+     * @param  list<string>|null  $lines  the partner lines whose replies to read
      * @return list<LessonViolation>
      */
-    private function judge(array $phrases, LessonRequest $request, LessonBuildLog $log, LessonBill $bill): array
+    private function judge(Skeleton $skeleton, ?array $frames, ?array $lines, LessonRequest $request, LessonBuildLog $log, LessonBill $bill): array
     {
-        $verdict = $this->seams->judge($phrases, $request->nativeLanguage);
+        $phrases = array_values(array_filter($skeleton->phrases(), static fn (Phrase $p): bool => $frames === null || in_array($p->id, $frames, true)));
+        $replies = AskReplies::of($skeleton, $lines);
+        $verdict = $this->seams->judge($phrases, $request->nativeLanguage, $replies, $request->targetLanguage);
         $bill->judge($verdict);
         $version = $this->model->skeletonPromptVersion();
         $this->counters->recordCodes($version, self::codes($verdict->violations));
@@ -303,7 +348,12 @@ final readonly class LessonBuildService
             $verdict->items,
             $verdict->judged,
             $verdict->status,
-            array_map(static fn (LessonViolation $v): string => $v->address, $verdict->violations),
+            array_values(array_map(
+                static fn (LessonViolation $v): string => $v->address,
+                array_filter($verdict->violations, static fn (LessonViolation $v): bool => $v->code === LessonCodes::FILLER_NATIVE_SEAM),
+            )),
+            array_map(static fn (array $reply): string => $reply['id'], $replies),
+            $verdict->naming,
         );
 
         return $verdict->violations;
@@ -339,9 +389,13 @@ final readonly class LessonBuildService
     }
 
     /**
-     * The cards the non-fatal findings stand at, each once: first the cards of a budgeted code ({@see LessonCodes::BUDGETED}),
-     * then in the order of their stage's kinds, then by address; at most {@see REPAIR_CARDS}. A finding about a stage as a
-     * whole stands at no card.
+     * The cards the non-fatal findings stand at, each once, at most {@see REPAIR_CARDS} — TAKEN in the repairs' order (наряд
+     * GEN-4c §4, {@see LessonCodes::REPAIR_ORDER}: a card goes by the first of its findings there — a letter of another
+     * writing, a placeholder word, a yes or no, a reply the judge finds naming a filler — then by its stage's kinds, then by
+     * address) and REPAIRED in the order of their stage's kinds, then by address: what the others are built on goes first
+     * ({@see LessonCard::SKELETON_KINDS}). The e2e of GEN-4c repaired a placeholder word first, into a word of a line that named
+     * a filler, and the line's own repair was then refused — it took that word away (`vocab.not_found`). A finding about a
+     * stage as a whole stands at no card.
      *
      * @param  list<LessonViolation>  $findings
      * @param  list<string>  $kinds
@@ -350,20 +404,39 @@ final readonly class LessonBuildService
     private static function cards(array $findings, array $kinds): array
     {
         $cards = [];
-        $first = [];
+        $rank = [];
         foreach ($findings as $finding) {
             $card = LessonCodes::isFatal($finding->code) ? null : LessonCard::at($finding->address);
             if ($card !== null && in_array($card->kind, $kinds, true)) {
                 $cards[$card->address] = $card;
-                $first[$card->address] = ($first[$card->address] ?? false) || in_array($finding->code, LessonCodes::BUDGETED, true);
+                $rank[$card->address] = min($rank[$card->address] ?? PHP_INT_MAX, LessonCodes::repairRank($finding->code));
             }
         }
+        $byKind = static fn (LessonCard $a, LessonCard $b): int => array_search($a->kind, $kinds, true) <=> array_search($b->kind, $kinds, true)
+            ?: strnatcmp($a->address, $b->address);
         $cards = array_values($cards);
-        usort($cards, static fn (LessonCard $a, LessonCard $b): int => $first[$b->address] <=> $first[$a->address]
-            ?: array_search($a->kind, $kinds, true) <=> array_search($b->kind, $kinds, true)
-            ?: strnatcmp($a->address, $b->address));
+        usort($cards, static fn (LessonCard $a, LessonCard $b): int => $rank[$a->address] <=> $rank[$b->address] ?: $byKind($a, $b));
+        $taken = array_slice($cards, 0, self::REPAIR_CARDS);
+        usort($taken, $byKind);
 
-        return array_slice($cards, 0, self::REPAIR_CARDS);
+        return $taken;
+    }
+
+    /**
+     * The note a repair of a frame or a partner line is sent with beside its findings (наряд GEN-4c): the words of the day only
+     * this card says ({@see CarriedWords}) — keep them. None when there are none.
+     *
+     * @return list<LessonViolation>
+     */
+    private static function carried(Skeleton $skeleton, LessonCard $card, ?LanguageWords $words): array
+    {
+        $items = CarriedWords::of($skeleton, $card, $words);
+        if ($items === []) {
+            return [];
+        }
+        $named = implode(', ', array_map(static fn ($v): string => "«{$v->termTarget}» ({$v->id})", $items));
+
+        return [new LessonViolation(LessonCodes::REPAIR_NOTE_CARRIED, $card->address, "not a finding: this card alone says the words of the day {$named} — keep each of them in the card you write, or the day loses it")];
     }
 
     /**

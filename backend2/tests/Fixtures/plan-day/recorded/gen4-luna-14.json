@@ -1,0 +1,446 @@
+{
+    "source": "GEN-4 gate run, Luna, day 14 (en→ro), the first skeleton answer as the model wrote it — docs/research/gen-4b/runs/days/luna/14.json",
+    "native": "en",
+    "target": "ro",
+    "gender": null,
+    "goal": "Job interview on Friday, worried about questions on my experience",
+    "survival": {
+        "must_say": [
+            "say where you worked before — slot: the workplace",
+            "say what your job was — slot: the job title",
+            "say how long you worked there — slot: the length of time",
+            "explain what your main duties were — slot: the duty",
+            "answer whether you have used a tool or skill — slot: the tool or skill",
+            "ask what the main duties are — slot: the position",
+            "ask whether training is provided — slot: the skill or task",
+            "ask what the next step is — slot: none"
+        ],
+        "must_understand": [
+            "asks where you worked before and for how long",
+            "asks what your main duties were",
+            "asks whether you have used a tool or skill before",
+            "says what the job involves day to day",
+            "explains the next step in the hiring process"
+        ]
+    },
+    "skeleton": {
+        "topic": {
+            "title_target": "Interviu de angajare",
+            "title_native": "Job interview",
+            "description_target": "Răspundeți clar la întrebări despre experiența anterioară și întrebați despre sarcini, instruire și următorii pași.",
+            "description_native": "Answer clearly about your previous experience and ask about duties, training, and the next steps."
+        },
+        "learner_role": {
+            "role_target": "Candidat",
+            "role_native": "Candidate"
+        },
+        "role_gender": "female",
+        "phrases": [
+            {
+                "id": "p1",
+                "kind": "answer",
+                "must_say": [
+                    1
+                ],
+                "frame_target": "Am lucrat la ___",
+                "frame_native": "I worked at ___",
+                "pronunciation_native": "am lukrat la ___",
+                "slot": {
+                    "hint_native": "workplace",
+                    "fillers": [
+                        {
+                            "target": "un atelier",
+                            "native": "a workshop",
+                            "pronunciation_native": "oon ah-teh-lyer",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "un hotel",
+                            "native": "a hotel",
+                            "pronunciation_native": "oon ho-tel",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "o școală",
+                            "native": "a school",
+                            "pronunciation_native": "oh shko-luh",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p2",
+                "kind": "answer",
+                "must_say": [
+                    2
+                ],
+                "frame_target": "Am lucrat ca ___",
+                "frame_native": "I worked as ___",
+                "pronunciation_native": "am lukrat ka ___",
+                "slot": {
+                    "hint_native": "job title",
+                    "fillers": [
+                        {
+                            "target": "operator",
+                            "native": "operator",
+                            "pronunciation_native": "oh-peh-rah-tor",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "designer",
+                            "native": "designer",
+                            "pronunciation_native": "deh-zai-ner",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "consultant",
+                            "native": "consultant",
+                            "pronunciation_native": "kon-sool-tant",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p3",
+                "kind": "answer",
+                "must_say": [
+                    3
+                ],
+                "frame_target": "Am lucrat acolo ___",
+                "frame_native": "I worked there for ___",
+                "pronunciation_native": "am lukrat ah-ko-lo ___",
+                "slot": {
+                    "hint_native": "length of time",
+                    "fillers": [
+                        {
+                            "target": "șase luni",
+                            "native": "six months",
+                            "pronunciation_native": "shah-seh loon",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "doi ani",
+                            "native": "two years",
+                            "pronunciation_native": "doy an",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "trei săptămâni",
+                            "native": "three weeks",
+                            "pronunciation_native": "tray suhp-tuh-myn",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p4",
+                "kind": "answer",
+                "must_say": [
+                    4
+                ],
+                "frame_target": "Mă ocupam de ___",
+                "frame_native": "I handled ___",
+                "pronunciation_native": "muh oh-koo-pam deh ___",
+                "slot": {
+                    "hint_native": "main duty",
+                    "fillers": [
+                        {
+                            "target": "rapoarte",
+                            "native": "reports",
+                            "pronunciation_native": "rah-pwar-teh",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "comenzi",
+                            "native": "orders",
+                            "pronunciation_native": "koh-men-zee",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "apeluri",
+                            "native": "calls",
+                            "pronunciation_native": "ah-peh-loor",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p5",
+                "kind": "answer",
+                "must_say": [
+                    5
+                ],
+                "frame_target": "Am folosit ___",
+                "frame_native": "I have used ___",
+                "pronunciation_native": "am fo-lo-seet ___",
+                "slot": {
+                    "hint_native": "tool or skill",
+                    "fillers": [
+                        {
+                            "target": "un scanner",
+                            "native": "a scanner",
+                            "pronunciation_native": "oon skah-ner",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "un program",
+                            "native": "a software program",
+                            "pronunciation_native": "oon proh-gram",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "o casă de marcat",
+                            "native": "a cash register",
+                            "pronunciation_native": "oh kah-suh deh mar-kat",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p6",
+                "kind": "ask",
+                "must_say": [
+                    6
+                ],
+                "frame_target": "Care sunt atribuțiile pentru ___?",
+                "frame_native": "What are the duties for ___?",
+                "pronunciation_native": "kare sunt ah-tree-boo-tsee-il-eh pen-troo ___",
+                "slot": {
+                    "hint_native": "position",
+                    "fillers": [
+                        {
+                            "target": "postul de recepționer",
+                            "native": "the receptionist role",
+                            "pronunciation_native": "pos-tool deh reh-chep-tsee-oh-ner",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "postul de vânzător",
+                            "native": "the sales role",
+                            "pronunciation_native": "pos-tool deh vun-zuh-tor",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "postul de tehnician",
+                            "native": "the technician role",
+                            "pronunciation_native": "pos-tool deh tek-nee-chyan",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p7",
+                "kind": "ask",
+                "must_say": [
+                    7
+                ],
+                "frame_target": "Oferiți instruire pentru ___?",
+                "frame_native": "Do you provide training for ___?",
+                "pronunciation_native": "oh-feh-reets instroo-ee-reh pen-troo ___",
+                "slot": {
+                    "hint_native": "skill or task",
+                    "fillers": [
+                        {
+                            "target": "acest program",
+                            "native": "this software",
+                            "pronunciation_native": "ah-chest proh-gram",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "munca în echipă",
+                            "native": "teamwork",
+                            "pronunciation_native": "moon-kah un eh-kee-puh",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "serviciul clienților",
+                            "native": "customer service",
+                            "pronunciation_native": "ser-vee-chee-ool klee-en-tsee-lor",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p8",
+                "kind": "ask",
+                "must_say": [
+                    8
+                ],
+                "frame_target": "Care este următorul pas?",
+                "frame_native": "What is the next step?",
+                "pronunciation_native": "kare yeste ur-muh-tor-ool pahs",
+                "slot": null
+            }
+        ],
+        "partner_lines": [
+            {
+                "id": "a1",
+                "must_understand": 1,
+                "kind": "question",
+                "pairs_with": [
+                    1
+                ],
+                "text_target": "Unde ați lucrat înainte?",
+                "text_native": "Where did you work before?"
+            },
+            {
+                "id": "a2",
+                "must_understand": 1,
+                "kind": "question",
+                "pairs_with": [
+                    3
+                ],
+                "text_target": "Cât timp ați lucrat acolo?",
+                "text_native": "How long did you work there?"
+            },
+            {
+                "id": "a3",
+                "must_understand": 2,
+                "kind": "question",
+                "pairs_with": [
+                    4
+                ],
+                "text_target": "Care au fost principalele dumneavoastră sarcini?",
+                "text_native": "What were your main duties?"
+            },
+            {
+                "id": "a4",
+                "must_understand": 3,
+                "kind": "question",
+                "pairs_with": [
+                    5
+                ],
+                "text_target": "Ați folosit vreodată un instrument de lucru?",
+                "text_native": "Have you ever used a work tool?"
+            },
+            {
+                "id": "a5",
+                "must_understand": 4,
+                "kind": "statement",
+                "pairs_with": [
+                    6
+                ],
+                "text_target": "Da, postul include apeluri și programări.",
+                "text_native": "Yes, the position includes calls and appointments."
+            },
+            {
+                "id": "a6",
+                "must_understand": 5,
+                "kind": "statement",
+                "pairs_with": [
+                    8
+                ],
+                "text_target": "Următorul pas este o discuție scurtă online.",
+                "text_native": "The next step is a short online discussion."
+            }
+        ],
+        "vocabulary": [
+            {
+                "id": "v1",
+                "term_target": "atribuție",
+                "translation_native": "duty",
+                "pronunciation_native": "ah-tree-boo-tsee-eh",
+                "definition_target": "a responsibility in a job",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "p6"
+                ]
+            },
+            {
+                "id": "v2",
+                "term_target": "post",
+                "translation_native": "position",
+                "pronunciation_native": "post",
+                "definition_target": "a job position",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "p6",
+                    "a5"
+                ]
+            },
+            {
+                "id": "v3",
+                "term_target": "instruire",
+                "translation_native": "training",
+                "pronunciation_native": "instroo-ee-reh",
+                "definition_target": "learning how to do a job",
+                "kind": "word",
+                "image_prompt": "A trainer showing a new employee how to use workplace equipment",
+                "used_in": [
+                    "p7"
+                ]
+            },
+            {
+                "id": "v4",
+                "term_target": "apel",
+                "translation_native": "call",
+                "pronunciation_native": "ah-pel",
+                "definition_target": "a telephone call",
+                "kind": "word",
+                "image_prompt": "A person speaking on a phone at a desk",
+                "used_in": [
+                    "a5"
+                ]
+            },
+            {
+                "id": "v5",
+                "term_target": "programare",
+                "translation_native": "appointment",
+                "pronunciation_native": "proh-grah-mah-reh",
+                "definition_target": "an arranged meeting time",
+                "kind": "word",
+                "image_prompt": "A calendar showing several scheduled appointments",
+                "used_in": [
+                    "a5"
+                ]
+            },
+            {
+                "id": "v6",
+                "term_target": "următor",
+                "translation_native": "next",
+                "pronunciation_native": "oor-muh-tor",
+                "definition_target": "coming immediately after this one",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "p8",
+                    "a6"
+                ]
+            },
+            {
+                "id": "v7",
+                "term_target": "pas",
+                "translation_native": "step",
+                "pronunciation_native": "pahs",
+                "definition_target": "one stage in a process",
+                "kind": "word",
+                "image_prompt": "A staircase with one highlighted step",
+                "used_in": [
+                    "p8",
+                    "a6"
+                ]
+            },
+            {
+                "id": "v8",
+                "term_target": "discuție",
+                "translation_native": "discussion",
+                "pronunciation_native": "dees-koo-tsee-eh",
+                "definition_target": "a conversation about a topic",
+                "kind": "word",
+                "image_prompt": "Two people having a professional conversation across a table",
+                "used_in": [
+                    "a6"
+                ]
+            }
+        ]
+    }
+}

@@ -72,6 +72,21 @@ return [
     // («¿Usted tiene cita?», «¿Tiene usted cita?», «¿Tiene cita?» all ask): a question is its mark alone — the no-op.
     'question_word_order' => ['auxiliaries' => [], 'subjects' => []],
 
+    // THE ANSWER A YES-OR-NO QUESTION OPENS WITH (наряд GEN-4c, `partner.yes_no_missing` / `partner.yes_no_extra`): the
+    // partner's reply to a yes-or-no question of the learner's opens with one of these words, a reply to a question that
+    // asks for a fact opens with none. «Yes» first, «no» second — the finding names the two. «Sí» with its accent: «Si le
+    // interesa…» opens with «if», not with a yes. Read against the reply's first word, case and marks aside.
+    'yes_no' => ['sí', 'no'],
+
+    // THE WORDS OF A QUESTION THAT ASKS FOR A FACT (наряд GEN-4c) — with their accents, which is what tells them from the
+    // conjunctions («cómo» asks, «como» compares): a word, or a phrase of words standing in a row («por qué», «a qué hora»).
+    // An ask frame that holds none of them, anywhere, and offers no choice (`alternative_words` between two of its words)
+    // is a yes-or-no question: «¿Se permite ___?», «¿Hay algún problema con ___?».
+    'question_words' => [
+        'qué', 'cuál', 'cuáles', 'quién', 'quiénes', 'dónde', 'adónde', 'cuándo', 'cómo', 'cuánto', 'cuánta', 'cuántos',
+        'cuántas', 'por qué', 'a qué hora', 'qué tan', 'de dónde', 'desde cuándo', 'hasta cuándo',
+    ],
+
     // Words that carry no content of their own: articles and the contracted al/del, prepositions, conjunctions,
     // pronouns and possessives, the question and relative words, the forms of ser, estar, haber, tener and poder, the
     // particles of politeness and yes/no.

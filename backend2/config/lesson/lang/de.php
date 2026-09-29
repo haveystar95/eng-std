@@ -94,6 +94,23 @@ return [
         'subjects' => ['ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'man'],
     ],
 
+    // THE ANSWER A YES-OR-NO QUESTION OPENS WITH (наряд GEN-4c, `partner.yes_no_missing` / `partner.yes_no_extra`): the
+    // partner's reply to a yes-or-no question of the learner's opens with one of these words, a reply to a question that
+    // asks for a fact opens with none. «Yes» first, «no» second — the finding names the two —, then «doch», the yes to a
+    // question asked in the negative. Read against the reply's first word, case and marks aside.
+    'yes_no' => ['ja', 'nein', 'doch'],
+
+    // THE WORDS OF A QUESTION THAT ASKS FOR A FACT (наряд GEN-4c): the w-words and their phrases standing in a row («wie
+    // viel», «wie lange», «um wie viel Uhr», «was für»), «wieviel» written as one word. An ask frame that holds none of them,
+    // anywhere, and offers no choice (`alternative_words` between two of its words — «Zahle ich bar oder mit ___?»; the
+    // «…, oder?» at its end asks yes or no) is a yes-or-no question: «Ist ___ erlaubt?», «Gibt es Regeln für ___?».
+    'question_words' => [
+        'was', 'wer', 'wen', 'wem', 'wessen', 'wo', 'wohin', 'woher', 'wann', 'warum', 'wieso', 'weshalb', 'weswegen',
+        'wie', 'welcher', 'welche', 'welches', 'welchen', 'welchem', 'wie viel', 'wie viele', 'wieviel', 'wie lange',
+        'wie oft', 'wie spät', 'um wie viel uhr', 'was für', 'wozu', 'womit', 'wofür', 'worauf', 'woran', 'worüber',
+        'wovon', 'wodurch',
+    ],
+
     // Words that carry no content of their own: articles, pronouns (the polite «Sie», «Ihnen», «Ihr» among them),
     // possessives, prepositions and their fusions with the article, conjunctions, the forms of sein/haben/werden — the
     // polite «hätte», «wäre» too — and the modals, negation, question words, the pronominal adverbs, particles,

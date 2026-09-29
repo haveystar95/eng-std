@@ -6,13 +6,15 @@ namespace App\Modules\Plan\Domain\Check\Language;
 
 use App\Modules\Plan\Domain\Check\Dialogue\DialogueContext;
 use App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext;
+use App\Modules\Plan\Domain\Check\StageText;
 use App\Modules\Plan\Domain\Service\Words;
 
 /**
  * THE WORD RULES OF ONE LANGUAGE, READ OFF ITS PACK (наряд GEN-2b, `docs/plan-v2.md` §4) — the same questions for
  * every language, the answers from its pack: which words carry no content, when two words are forms of one, what
- * is a number or a time, whether a text asks, which words are too plain to teach, which past forms say the learner's
- * gender, which letters of a reading belong to another writing.
+ * is a number or a time, whether a text asks, whether a question asks yes or no and whether a reply opens with a yes or a
+ * no (наряд GEN-4c), which words are too plain to teach, which past forms say the learner's gender, which letters of a
+ * reading belong to another writing.
  *
  * Every method reads the keys it names from the pack and throws when one is missing: a rule asks first — a rule of
  * the day's checks asks its context, which hands it no reading of a language whose pack lacks a key it names
@@ -150,6 +152,84 @@ final readonly class LanguageWords
         return count($last) >= 2
             && in_array($last[0], $this->pack->mapWords('question_word_order', 'auxiliaries'), true)
             && in_array($last[1], $this->pack->mapWords('question_word_order', 'subjects'), true);
+    }
+
+    // ── yes or no (`yes_no`, `question_words`, `alternative_words`) — наряд GEN-4c ─────────────────────────────
+
+    /**
+     * The words a reply to a yes-or-no question opens with (`yes_no`), lower-cased — «yes» first, «no» second.
+     *
+     * @return list<string>
+     */
+    public function yesNoWords(): array
+    {
+        return $this->pack->words('yes_no');
+    }
+
+    /** The word of `yes_no` a text opens with — its first word, case and marks aside («Da. Programul…», «¡Sí!») — or null. */
+    public function yesNoOpening(string $text): ?string
+    {
+        $first = Words::tokens($text)[0] ?? null;
+
+        return $first !== null && $this->pack->listed('yes_no', $first) ? LanguagePack::normal($first) : null;
+    }
+
+    /**
+     * The longest word or phrase of `question_words` a text holds anywhere — the words of a phrase in a row, each word of the
+     * text read whole and, when an apostrophe or a hyphen joins it, in its parts too («What's» holds «what», «Dov'è» holds
+     * «dov») — or null.
+     */
+    public function questionWord(string $text): ?string
+    {
+        $whole = array_map(LanguagePack::normal(...), Words::tokens($text));
+        $parts = [];
+        foreach ($whole as $token) {
+            array_push($parts, ...(preg_split("/['-]/u", $token, -1, PREG_SPLIT_NO_EMPTY) ?: []));
+        }
+        $found = null;
+        foreach ($this->pack->words('question_words') as $entry) {
+            $words = array_map(LanguagePack::normal(...), Words::tokens($entry));
+            if ($words !== [] && (self::inRow($words, $whole) || self::inRow($words, $parts)) && ($found === null || mb_strlen($entry) > mb_strlen($found))) {
+                $found = $entry;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * The word of `alternative_words` a question offers a choice with — standing between two of its words, its slot one of
+     * them («Is ___ gross or net?», «Pot plăti cu cardul sau ___?») — or null. Not its first word, nor its last: «…, oder?»
+     * asks yes or no.
+     */
+    public function alternative(string $text): ?string
+    {
+        $words = explode(' ', StageText::normal($text));
+        for ($i = 1; $i < count($words) - 1; $i++) {
+            if ($words[$i] !== '___' && $this->pack->listed('alternative_words', $words[$i])) {
+                return LanguagePack::normal($words[$i]);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Do the words of `$needle` stand in `$haystack` one after another?
+     *
+     * @param  list<string>  $needle
+     * @param  list<string>  $haystack
+     */
+    private static function inRow(array $needle, array $haystack): bool
+    {
+        $n = count($needle);
+        for ($i = 0; $i + $n <= count($haystack); $i++) {
+            if (array_slice($haystack, $i, $n) === $needle) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // ── a closed list of the target (`everyday_words`) ──────────────────────────────────────────────────────

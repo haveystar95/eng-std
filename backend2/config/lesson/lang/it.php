@@ -47,6 +47,22 @@ return [
     // Italian asks by intonation and the mark, never by inverting a subject and its auxiliary — the spec's no-op.
     'question_word_order' => ['auxiliaries' => [], 'subjects' => []],
 
+    // THE ANSWER A YES-OR-NO QUESTION OPENS WITH (наряд GEN-4c, `partner.yes_no_missing` / `partner.yes_no_extra`): the
+    // partner's reply to a yes-or-no question of the learner's opens with one of these words, a reply to a question that
+    // asks for a fact opens with none. «Yes» first, «no» second — the finding names the two. «Sì» with its accent: «Si può…»
+    // opens with the pronoun, not with a yes. Read against the reply's first word, case and marks aside.
+    'yes_no' => ['sì', 'no'],
+
+    // THE WORDS OF A QUESTION THAT ASKS FOR A FACT (наряд GEN-4c): a word, or a phrase of words standing in a row («che
+    // cosa», «a che ora»), and the elided forms a word of the text is read in the parts of («Dov'è», «Com'è», «Cos'è»,
+    // «Quant'è»). An ask frame that holds none of them, anywhere, and offers no choice (`alternative_words` between two of
+    // its words) is a yes-or-no question: «Può dipendere da ___?», «Ha notato ___?». «Come» and «quando» are also «as» and
+    // «when» of a clause («Posso lavorare come ___?»): such a frame reads as asking for a fact — the side that asks no «Sì».
+    'question_words' => [
+        'che', 'cosa', 'che cosa', 'chi', 'quale', 'quali', 'qual', 'dove', 'dov', 'quando', 'come', 'com', 'cos', 'perché',
+        'quanto', 'quanta', 'quanti', 'quante', 'quant', 'a che ora', 'da quando', 'fino a quando', 'per quanto tempo',
+    ],
+
     // Words that carry no content of their own: articles, prepositions and their forms with the article, conjunctions,
     // pronouns (clitic and stressed), possessives, demonstratives, the forms of essere / avere and the modals, question
     // words, «non», «sì», «no», the courtesy words, and the elided forms a token keeps whole («c'è», «l'ho»). Not «sei»:

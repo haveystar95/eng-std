@@ -29,7 +29,7 @@ void main() {
       await pumpCard(tester, probeEnv(listenAt(1), probe, voice: voice, day: day));
       expect(find.text('Послушай разговор'), findsOneWidget);
       expect(find.text(nb('8 обменов')), findsOneWidget);
-      expect(find.text('0:40'), findsOneWidget, reason: 'the whole length — total_ms 40 810');
+      expect(find.text('0:41'), findsOneWidget, reason: 'the whole length — total_ms 41 090');
       for (var i = 0; i < 8; i++) {
         expect(find.byKey(ValueKey('player-mark-$i')), findsOneWidget);
       }
@@ -177,7 +177,7 @@ void main() {
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(review, probe, day: answered));
       expect(find.text('Где это прозвучало'), findsOneWidget);
-      expect(find.text('Только если через неделю ещё будет болеть.'), findsOneWidget);
+      expect(find.text('Нет, только если через неделю ещё будет болеть.'), findsOneWidget);
       expect(find.byKey(const ValueKey('review-x6b')), findsOneWidget, reason: 'the learner\'s lines too');
       // L1 — right, a span in x1b; L2 — missed, the whole x5; L3 — right, the whole x8.
       expect(find.byKey(const ValueKey('mark-sage-16')), findsOneWidget);
@@ -185,7 +185,7 @@ void main() {
       final x5 = marks.firstWhere((m) => m.text.startsWith('It looks like'));
       expect(x5.marks.single.look, MarkLook.brass);
       expect((x5.marks.single.start, x5.marks.single.end), (0, x5.text.length));
-      final x8 = marks.firstWhere((m) => m.text.startsWith('Only if'));
+      final x8 = marks.firstWhere((m) => m.text.startsWith('No, only if'));
       expect(x8.marks.single.look, MarkLook.sage);
       expect(marks.where((m) => m.marks.isEmpty), hasLength(13));
       await tapText(tester, 'Дальше');
@@ -392,9 +392,9 @@ void main() {
       expect(results(probe), [SessionResult.passed]);
       await tester.pump(const Duration(milliseconds: 250));
       final text = tester.widget<SessionMarkedText>(find.byType(SessionMarkedText));
-      expect(text.text, 'Only if it still hurts after one week.');
-      expect(text.marks.single, (start: 29, end: 32, look: MarkLook.sage));
-      expect(text.text.substring(29, 32), 'one');
+      expect(text.text, 'No, only if it still hurts after one week.');
+      expect(text.marks.single, (start: 33, end: 36, look: MarkLook.sage));
+      expect(text.text.substring(33, 36), 'one');
       await settleCard(tester);
 
       final wrong = CardProbe();

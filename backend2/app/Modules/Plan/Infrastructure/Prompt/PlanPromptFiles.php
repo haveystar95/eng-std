@@ -44,7 +44,9 @@ final class PlanPromptFiles
      * Every prompt of the plan and its file in {@see self::DIRECTORY}: the plan builder; the repair of one screen line of the
      * plan; the day's two stages — the skeleton and the dialogue (наряд GEN-4); the repair of one card of either — a wrapper
      * that quotes the stage's own sections ({@see self::REPAIR_SECTIONS}); the seam judge of the day's native frames; the slot
-     * judge of the day's spoken cards; the role the learner talks to in the sixth stage of a day.
+     * judge of the day's spoken cards; the role the learner talks to in the sixth stage of a day. The seam judge's second
+     * question — does the partner's reply to a question of the learner's name a filler of it (наряд GEN-4c) — is asked in the
+     * same call and the same file.
      */
     public const FILES = [
         'plan' => 'plan-builder-v2.1.md',
@@ -52,7 +54,7 @@ final class PlanPromptFiles
         'skeleton' => 'lesson_skeleton.v1.1.md',
         'dialogue' => 'lesson_dialogue.v1.1.md',
         'repair' => 'lesson_card_repair.v1.5.md',
-        'seam_judge' => 'lesson_seam_judge.v1.1.md',
+        'seam_judge' => 'lesson_seam_judge.v1.2.md',
         'slot_judge' => 'slot_judge.v3.md',
         'conversation' => 'conversation_agent.v3.4.md',
     ];
@@ -316,14 +318,23 @@ final class PlanPromptFiles
         return $this->text('seam_judge');
     }
 
-    /** The seam judge's data: the learner's language by name and every sentence to read, with its id. */
+    /**
+     * The seam judge's data (`lesson_seam_judge.v1.2`): the learner's language by name and every sentence to read, with its id;
+     * then the target's language by name and every reply of the partner to a question of the learner's, with its partner line's
+     * id (наряд GEN-4c) — `none` for a list with nothing in it.
+     */
     public function judgeUser(NativeSeamJudgeRequest $request): string
     {
         return implode("\n", [
             'NATIVE_LANGUAGE: '.$request->nativeLanguage,
             '',
             'ITEMS (id · the pattern with its slot · the value put into the slot · the sentence they make):',
-            self::json($request->items),
+            $request->items === [] ? 'none' : self::json($request->items),
+            '',
+            'TARGET_LANGUAGE: '.$request->targetLanguage,
+            '',
+            'REPLIES (id · the question with its slot · the values put into the slot · the reply said to every one of them):',
+            $request->replies === [] ? 'none' : self::json($request->replies),
         ]);
     }
 

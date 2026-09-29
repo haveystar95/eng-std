@@ -52,11 +52,27 @@ final readonly class LessonRequests
         );
     }
 
+    /** How TOPIC_DESCRIPTION names the learner's own words — the line the skeleton reads them on. */
+    public const LEARNER_WORDS = 'About the learner, in their own words:';
+
     /** The scene's brief, then the learner's own words — the facts a frame's slot may take. */
     public static function topicDescription(string $brief, string $goal): string
     {
         $goal = trim((string) preg_replace('/\s+/u', ' ', $goal));
 
-        return $goal === '' ? trim($brief) : trim($brief)."\n\nAbout the learner, in their own words: {$goal}";
+        return $goal === '' ? trim($brief) : trim($brief)."\n\n".self::LEARNER_WORDS." {$goal}";
+    }
+
+    /**
+     * THE LEARNER'S OWN WORDS AS THE SKELETON GOT THEM (наряд GEN-4c) — the line of a TOPIC_DESCRIPTION this class wrote
+     * ({@see topicDescription()}), '' when it has none: the only details of the learner a day is written from (the profile
+     * gives the skeleton the learner's gender and no words). What `vocab.from_placeholder` tells a learner's detail from a
+     * placeholder by.
+     */
+    public static function learnerWords(string $topicDescription): string
+    {
+        $at = mb_strrpos($topicDescription, self::LEARNER_WORDS);
+
+        return $at === false ? '' : trim(mb_substr($topicDescription, $at + mb_strlen(self::LEARNER_WORDS)));
     }
 }

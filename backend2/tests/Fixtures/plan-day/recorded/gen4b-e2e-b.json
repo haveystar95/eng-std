@@ -1,0 +1,424 @@
+{
+    "source": "GEN-4b, the e2e day 1 through the API, its skeleton as stored after its repairs — docs/research/gen-4b/e2e-b/day1-skeleton.json",
+    "native": "ru",
+    "target": "ro",
+    "gender": "male",
+    "goal": "Собеседование в пятницу, боюсь вопросов про опыт",
+    "survival": {
+        "must_say": [
+            "give your name — slot: the name",
+            "say which position you are applying for — slot: the position",
+            "say where you worked before — slot: the workplace",
+            "say how long you worked there — slot: the length of time",
+            "say what your main duties were — slot: the duty",
+            "ask what this position includes — slot: the duty",
+            "ask about the work schedule — slot: none"
+        ],
+        "must_understand": [
+            "asks your name and which position you want",
+            "asks where you worked before and for how long",
+            "asks what your main duties were",
+            "says the role includes specific tasks",
+            "explains the work schedule"
+        ]
+    },
+    "skeleton": {
+        "topic": {
+            "title_native": "Опыт работы",
+            "title_target": "Experiență de muncă",
+            "description_native": "Просто рассказать о своём опыте и спросить об обязанностях и графике.",
+            "description_target": "Să vorbești simplu despre experiența ta și să întrebi despre sarcini și program."
+        },
+        "phrases": [
+            {
+                "id": "p1",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "Андрей",
+                            "target": "Andrei",
+                            "in_dialogue": true,
+                            "pronunciation_native": "андрей"
+                        },
+                        {
+                            "native": "Михаил",
+                            "target": "Mihail",
+                            "in_dialogue": false,
+                            "pronunciation_native": "михаил"
+                        },
+                        {
+                            "native": "Виктор",
+                            "target": "Victor",
+                            "in_dialogue": false,
+                            "pronunciation_native": "виктор"
+                        }
+                    ],
+                    "hint_native": "имя"
+                },
+                "must_say": [
+                    1
+                ],
+                "frame_native": "Меня зовут ___",
+                "frame_target": "Mă numesc ___",
+                "pronunciation_native": "мэ нумеск ___"
+            },
+            {
+                "id": "p2",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "продавца",
+                            "target": "vânzător",
+                            "in_dialogue": true,
+                            "pronunciation_native": "вынзэтор"
+                        },
+                        {
+                            "native": "кассира",
+                            "target": "casier",
+                            "in_dialogue": false,
+                            "pronunciation_native": "касиер"
+                        },
+                        {
+                            "native": "администратора на стойке",
+                            "target": "recepționer",
+                            "in_dialogue": false,
+                            "pronunciation_native": "речепционер"
+                        }
+                    ],
+                    "hint_native": "должность"
+                },
+                "must_say": [
+                    2
+                ],
+                "frame_native": "Я претендую на должность ___",
+                "frame_target": "Candidez pentru postul de ___",
+                "pronunciation_native": "кандидез пентру постул де ___"
+            },
+            {
+                "id": "p3",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "на складе",
+                            "target": "un depozit",
+                            "in_dialogue": true,
+                            "pronunciation_native": "ун депозит"
+                        },
+                        {
+                            "native": "в кафе",
+                            "target": "o cafenea",
+                            "in_dialogue": false,
+                            "pronunciation_native": "о кафеня"
+                        },
+                        {
+                            "native": "в школе",
+                            "target": "o școală",
+                            "in_dialogue": false,
+                            "pronunciation_native": "о шкоалэ"
+                        }
+                    ],
+                    "hint_native": "место работы"
+                },
+                "must_say": [
+                    3
+                ],
+                "frame_native": "Я работал ___",
+                "frame_target": "Am lucrat la ___",
+                "pronunciation_native": "ам лукрат ла ___"
+            },
+            {
+                "id": "p4",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "два года",
+                            "target": "doi ani",
+                            "in_dialogue": true,
+                            "pronunciation_native": "дой ань"
+                        },
+                        {
+                            "native": "шесть месяцев",
+                            "target": "șase luni",
+                            "in_dialogue": false,
+                            "pronunciation_native": "шасе лунь"
+                        },
+                        {
+                            "native": "один год",
+                            "target": "un an",
+                            "in_dialogue": false,
+                            "pronunciation_native": "ун ан"
+                        }
+                    ],
+                    "hint_native": "как долго"
+                },
+                "must_say": [
+                    4
+                ],
+                "frame_native": "Я работал там ___",
+                "frame_target": "Am lucrat acolo ___",
+                "pronunciation_native": "ам лукрат аколо ___"
+            },
+            {
+                "id": "p5",
+                "kind": "answer",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "товаром",
+                            "target": "marfă",
+                            "in_dialogue": true,
+                            "pronunciation_native": "марфэ"
+                        },
+                        {
+                            "native": "клиентами",
+                            "target": "clienți",
+                            "in_dialogue": false,
+                            "pronunciation_native": "клиенць"
+                        },
+                        {
+                            "native": "документами",
+                            "target": "documente",
+                            "in_dialogue": false,
+                            "pronunciation_native": "документе"
+                        }
+                    ],
+                    "hint_native": "основная обязанность"
+                },
+                "must_say": [
+                    5
+                ],
+                "frame_native": "Я занимался ___",
+                "frame_target": "Mă ocupam de ___",
+                "pronunciation_native": "мэ окупам де ___"
+            },
+            {
+                "id": "p6",
+                "kind": "ask",
+                "slot": {
+                    "fillers": [
+                        {
+                            "native": "работа с товаром",
+                            "target": "lucrul cu marfa",
+                            "in_dialogue": true,
+                            "pronunciation_native": "лукрул ку марфа"
+                        },
+                        {
+                            "native": "работа с клиентами",
+                            "target": "lucrul cu clienții",
+                            "in_dialogue": false,
+                            "pronunciation_native": "лукрул ку клиенций"
+                        },
+                        {
+                            "native": "подготовка документов",
+                            "target": "pregătirea actelor",
+                            "in_dialogue": false,
+                            "pronunciation_native": "прегэтиря актелор"
+                        }
+                    ],
+                    "hint_native": "обязанность"
+                },
+                "must_say": [
+                    6
+                ],
+                "frame_native": "В эту должность входит ___?",
+                "frame_target": "Postul include ___?",
+                "pronunciation_native": "постул инклуде ___"
+            },
+            {
+                "id": "p7",
+                "kind": "ask",
+                "slot": null,
+                "must_say": [
+                    7
+                ],
+                "frame_native": "Какой график?",
+                "frame_target": "Care este programul?",
+                "pronunciation_native": "каре есте програмул"
+            }
+        ],
+        "vocabulary": [
+            {
+                "id": "v1",
+                "kind": "word",
+                "used_in": [
+                    "p2",
+                    "a2"
+                ],
+                "term_target": "a candida",
+                "image_prompt": "a person handing a job application to an employer in an office",
+                "definition_target": "a cere un post",
+                "translation_native": "претендовать",
+                "pronunciation_native": "а кандида"
+            },
+            {
+                "id": "v2",
+                "kind": "word",
+                "used_in": [
+                    "p2",
+                    "a2"
+                ],
+                "term_target": "post",
+                "image_prompt": "a printed job vacancy notice on an office board",
+                "definition_target": "loc de muncă oferit",
+                "translation_native": "должность",
+                "pronunciation_native": "пост"
+            },
+            {
+                "id": "v3",
+                "kind": "word",
+                "used_in": [
+                    "p3"
+                ],
+                "term_target": "depozit",
+                "image_prompt": "a warehouse interior with shelves and boxes",
+                "definition_target": "loc unde se păstrează marfa",
+                "translation_native": "склад",
+                "pronunciation_native": "депозит"
+            },
+            {
+                "id": "v4",
+                "kind": "word",
+                "used_in": [
+                    "a5"
+                ],
+                "term_target": "sarcină",
+                "image_prompt": "a worker checking a task list on a clipboard",
+                "definition_target": "ce trebuie să faci la serviciu",
+                "translation_native": "обязанность",
+                "pronunciation_native": "сарчине"
+            },
+            {
+                "id": "v5",
+                "kind": "word",
+                "used_in": [
+                    "p6",
+                    "a6"
+                ],
+                "term_target": "a include",
+                "image_prompt": null,
+                "definition_target": "a avea ca parte",
+                "translation_native": "включать",
+                "pronunciation_native": "а инклуде"
+            },
+            {
+                "id": "v6",
+                "kind": "chunk",
+                "used_in": [
+                    "p6",
+                    "a6"
+                ],
+                "term_target": "lucru cu clienții",
+                "image_prompt": "a store employee speaking with a customer at a counter",
+                "definition_target": "activitate de ajutor și comunicare cu clienții",
+                "translation_native": "работа с клиентами",
+                "pronunciation_native": "лукру ку клиенций"
+            },
+            {
+                "id": "v7",
+                "kind": "chunk",
+                "used_in": [
+                    "p6"
+                ],
+                "term_target": "pregătirea actelor",
+                "image_prompt": "hands organizing papers and forms on an office desk",
+                "definition_target": "aranjarea și completarea documentelor",
+                "translation_native": "подготовка документов",
+                "pronunciation_native": "прегэтиря актелор"
+            },
+            {
+                "id": "v8",
+                "kind": "word",
+                "used_in": [
+                    "p7",
+                    "a7"
+                ],
+                "term_target": "program",
+                "image_prompt": "a weekly work schedule pinned on a wall",
+                "definition_target": "orele și zilele de muncă",
+                "translation_native": "график",
+                "pronunciation_native": "програм"
+            }
+        ],
+        "role_gender": "male",
+        "learner_role": {
+            "role_native": "Кандидат",
+            "role_target": "Candidat"
+        },
+        "partner_lines": [
+            {
+                "id": "a1",
+                "kind": "question",
+                "pairs_with": [
+                    1
+                ],
+                "text_native": "Как вас зовут?",
+                "text_target": "Cum vă numiți?",
+                "must_understand": 1
+            },
+            {
+                "id": "a2",
+                "kind": "question",
+                "pairs_with": [
+                    2
+                ],
+                "text_native": "На какую должность вы претендуете?",
+                "text_target": "Pentru ce post candidați?",
+                "must_understand": 1
+            },
+            {
+                "id": "a3",
+                "kind": "question",
+                "pairs_with": [
+                    3
+                ],
+                "text_native": "Где вы раньше работали?",
+                "text_target": "Unde ați lucrat înainte?",
+                "must_understand": 2
+            },
+            {
+                "id": "a4",
+                "kind": "question",
+                "pairs_with": [
+                    4
+                ],
+                "text_native": "Как долго вы там работали?",
+                "text_target": "Cât timp ați lucrat acolo?",
+                "must_understand": 2
+            },
+            {
+                "id": "a5",
+                "kind": "question",
+                "pairs_with": [
+                    5
+                ],
+                "text_native": "Какие у вас были основные обязанности?",
+                "text_target": "Care au fost sarcinile dumneavoastră principale?",
+                "must_understand": 3
+            },
+            {
+                "id": "a6",
+                "kind": "statement",
+                "pairs_with": [
+                    6
+                ],
+                "text_native": "Эта должность включает работу с клиентами и подготовку документов.",
+                "text_target": "Postul include lucru cu clienții și pregătirea documentelor.",
+                "must_understand": 4
+            },
+            {
+                "id": "a7",
+                "kind": "statement",
+                "pairs_with": [
+                    7
+                ],
+                "text_native": "График с понедельника по пятницу, в утреннюю смену.",
+                "text_target": "Programul este de luni până vineri, de dimineață.",
+                "must_understand": 5
+            }
+        ]
+    }
+}

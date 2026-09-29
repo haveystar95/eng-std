@@ -233,6 +233,46 @@ it('partner.names_filler — a partner line that says a filler of the frame it p
         ->toContain('partner.names_filler@a3');
 });
 
+// Наряд GEN-4c §1: `lesson_skeleton.v1.1`, VOCABULARY — «Never: a word of a placeholder filler». Catches a word of the day said
+// only through a placeholder («magazin» of «Am lucrat la un magazin» for a learner who named no shop) let through — and the
+// same word refused when the learner's own words give it — in the learner's language by its form («Работал в магазине два
+// года»), or in the target's with the diacritics a keyboard left out («o scoala»).
+it('vocab.from_placeholder — a word said only through a filler the learner did not give', function (string $term, string $learnerWords, bool $found) {
+    $skeleton = dayCanonSkeleton(scAt('vocabulary', 'v8', static fn (array $v): array => [...$v, 'term_target' => $term, 'used_in' => ['p3']]));
+    $findings = skeletonFound($skeleton, dayCanonSkeletonContext(learnerWords: $learnerWords));
+
+    $found ? expect($findings)->toContain('vocab.from_placeholder@v8') : expect($findings)->not->toContain('vocab.from_placeholder@v8');
+})->with([
+    'no words of the learner\'s' => ['magazin', '', true],
+    'the learner named another place' => ['magazin', 'Работал в кафе два года', true],
+    'the learner named the shop' => ['magazin', 'Работал в магазине два года', false],
+    'the learner named the school without diacritics' => ['școală', 'Am lucrat la o scoala', false],
+    // The e2e of GEN-4c: «продавца» is no «про» of «…боюсь вопросов про опыт» — three letters in common are no detail.
+    'the learner\'s «про» is no «продавца»' => ['vânzător', 'Собеседование в пятницу, боюсь вопросов про опыт', true],
+]);
+
+// Наряд GEN-4c §2: `lesson_skeleton.v1.1`, PARTNER LINES — «To a yes-or-no question it has TWO parts, the answer ("Da." /
+// "Nu.") and the fact». Catches the reply to «Postul include ___?» that opens with neither, let through — and a «Nu» refused.
+it('partner.yes_no_missing — a reply to a yes-or-no question that opens with no «Da» and no «Nu»', function (string $reply, bool $found) {
+    $findings = skeletonFound(dayCanonSkeleton(scAt('partner_lines', 'a6', static fn (array $l): array => [...$l, 'text_target' => $reply])));
+
+    $found ? expect($findings)->toContain('partner.yes_no_missing@a6') : expect($findings)->not->toContain('partner.yes_no_missing@a6');
+})->with([
+    'the fact alone' => ['Lucrați în ture, dimineața sau seara.', true],
+    'a «Nu» first' => ['Nu. Lucrați în ture, dimineața sau seara.', false],
+]);
+
+// Наряд GEN-4c §2: PARTNER LINES — «To a question of which, what, how many or when it is the fact itself, with no "Da." /
+// "Nu."». Catches the reply to «Care este programul obișnuit?» that opens with «Da», let through — and a reply to a question
+// that offers a choice («dimineața sau seara») told either way: it may be answered with the choice, a yes or neither.
+it('partner.yes_no_extra — a «Da» opening the reply to a question that asks for a fact, and nothing for a choice', function () {
+    $da = scAt('partner_lines', 'a7', static fn (array $l): array => [...$l, 'text_target' => 'Da. '.$l['text_target']]);
+    $choice = static fn (array $raw): array => scAt('phrases', 'p7', static fn (array $f): array => [...$f, 'frame_target' => 'Lucrez dimineața sau seara?'])($da($raw));
+
+    expect(skeletonFound(dayCanonSkeleton($da)))->toContain('partner.yes_no_extra@a7')
+        ->and(skeletonFound(dayCanonSkeleton($choice)))->not->toContain('partner.yes_no_extra@a7')->not->toContain('partner.yes_no_missing@a7');
+});
+
 it('vocab.stop_word — a word of the stop list or a bare function word', function (string $term, string $usedIn) {
     expect(skeletonFound(dayCanonSkeleton(scAt('vocabulary', 'v8', static fn (array $v): array => [...$v, 'term_target' => $term, 'used_in' => [$usedIn]]))))
         ->toContain('vocab.stop_word@v8');

@@ -56,6 +56,23 @@ return [
     // mark (pack-keys §3.5 — the no-op for pl).
     'question_word_order' => ['auxiliaries' => [], 'subjects' => []],
 
+    // THE ANSWER A YES-OR-NO QUESTION OPENS WITH (наряд GEN-4c, `partner.yes_no_missing` / `partner.yes_no_extra`): the
+    // partner's reply to a yes-or-no question of the learner's opens with one of these words, a reply to a question that
+    // asks for a fact opens with none. «Yes» first, «no» second — the finding names the two. Read against the reply's
+    // first word, case and marks aside: «Nie trzeba…» opens with «nie» as well as «Nie, …» does.
+    'yes_no' => ['tak', 'nie'],
+
+    // THE WORDS OF A QUESTION THAT ASKS FOR A FACT (наряд GEN-4c): a word in its cases, or a phrase of words standing in a
+    // row («o której», «jak długo», «po co»). Not «czy» — it is what ASKS yes or no («Czy potrzebuję ___?»). An ask frame
+    // that holds none of them, anywhere, and offers no choice (`alternative_words` between two of its words) is a yes-or-no
+    // question. «Co» is also «every» («co miesiąc»): such a frame reads as asking for a fact — the side that asks no «Tak».
+    'question_words' => [
+        'co', 'kto', 'kogo', 'komu', 'kim', 'czego', 'czym', 'gdzie', 'dokąd', 'skąd', 'kiedy', 'jak', 'dlaczego', 'czemu',
+        'po co', 'ile', 'ilu', 'jaki', 'jaka', 'jakie', 'jakiego', 'jakiej', 'jakiemu', 'jakim', 'jakich', 'jakimi', 'który',
+        'która', 'które', 'którego', 'której', 'któremu', 'którym', 'których', 'którymi', 'czyj', 'czyja', 'czyje',
+        'o której', 'od kiedy', 'do kiedy', 'jak długo', 'jak często',
+    ],
+
     // Words that carry no content of their own — prepositions, conjunctions and particles, pronouns in their cases (the
     // polite «pan / pani / państwo» among them: «Czy Pan ma…» names nobody), possessives and demonstratives, question
     // words, the forms of «być» and «mieć» and of the modals, «można / trzeba», «tak / nie / proszę / dziękuję /

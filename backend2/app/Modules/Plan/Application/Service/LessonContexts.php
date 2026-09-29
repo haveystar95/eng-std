@@ -12,8 +12,9 @@ use App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext;
 use App\Modules\Plan\Domain\Lesson\Skeleton;
 
 /**
- * What the two stages' checks are given for a day (наряд GEN-4): the survival set, VOCABULARY_COUNT, the learner's gender and
- * the story so far for the skeleton; the skeleton for the dialogue; and for both the pair of languages as their packs — by the
+ * What the two stages' checks are given for a day (наряд GEN-4): the survival set, VOCABULARY_COUNT, the learner's gender,
+ * the story so far and the learner's own words (наряд GEN-4c, {@see LessonRequests::learnerWords()}) for the skeleton; the
+ * skeleton for the dialogue; and for both the pair of languages as their packs — by the
  * language CODES of the request (`ru`), never the names the prompts read («Russian»). A language with no pack gets an empty
  * one: the rules that need it do not run.
  */
@@ -31,6 +32,7 @@ final readonly class LessonContexts
             $this->target($request),
             $request->learnerGender,
             $request->earlierDays,
+            LessonRequests::learnerWords($request->topicDescription),
         );
     }
 

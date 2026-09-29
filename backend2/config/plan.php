@@ -49,8 +49,9 @@ return [
     // A build that started and never came back in this many seconds counts as dead: the client sees `failed` and may ask
     // for a retry — by hand, nothing retries a DEAD build on its own (the repeats the server makes are inside the build: a
     // stage asked once more for a fatal finding — наряд GEN-4). Longer than the lesson's job may run (every call it can
-    // make × the timeout, plus a minute — BuildLessonJob, 1 860 s), so a retry never races a job still waiting for an answer.
-    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 1920),
+    // make × the timeout, plus a minute — BuildLessonJob, 2 580 s with four repairs a stage, наряд GEN-4c), so a retry never
+    // races a job still waiting for an answer.
+    'build_stale_seconds' => (int) env('PLAN_BUILD_STALE_SECONDS', 2640),
 
     // What a day orders, per level: VOCABULARY_COUNT — a range, «min–max» in the skeleton's input; the skeleton takes as
     // many words as its frames and lines yield within it (наряд GEN-4). Frames and exchanges are not ordered: the frames

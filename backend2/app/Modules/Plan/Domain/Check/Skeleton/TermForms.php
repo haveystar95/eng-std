@@ -63,6 +63,49 @@ final class TermForms
         return true;
     }
 
+    /**
+     * DOES A VALUE STAND AMONG THE LEARNER'S OWN WORDS (наряд GEN-4c, `vocab.from_placeholder`) — stricter than {@see in()}:
+     * every content word of the value (every word, when all are function words) stands among the CONTENT words of the text,
+     * read whole and in the parts an apostrophe or a hyphen joins — the same word, one stem by the pack
+     * ({@see LanguageWords::sameStem()}) or a form the pack lists ({@see LanguageWords::irregular()}, either way round). The
+     * loose rule of {@see form()} — three first letters in common — is left out, and a function word of the text stands for
+     * nothing: the e2e of GEN-4c read «продавца» and «продажах» in «…боюсь вопросов про опыт» by its «про».
+     *
+     * `$words` null — a language nobody has written a pack for: the whole value, word for word ({@see Words::containsTerm()}).
+     */
+    public static function among(string $value, string $text, ?LanguageWords $words): bool
+    {
+        if ($words === null) {
+            return Words::containsTerm($value, $text);
+        }
+        $all = [];
+        foreach (Words::tokens($value) as $token) {
+            // «l'adresse» is «l» and «adresse»: the elided article aside, as a text's word is read in its parts.
+            array_push($all, ...(preg_split("/['’-]/u", $token, -1, PREG_SPLIT_NO_EMPTY) ?: [$token]));
+        }
+        $content = array_values(array_filter($all, static fn (string $t): bool => ! $words->isFunction($t)));
+        $content = $content === [] ? $all : $content;
+        $theirs = array_values(array_filter(self::pieces(Words::tokens($text)), static fn (string $t): bool => ! $words->isFunction($t)));
+        if ($content === [] || $theirs === []) {
+            return false;
+        }
+        foreach ($content as $word) {
+            $found = false;
+            foreach ($theirs as $other) {
+                if (LanguagePack::normal($word) === LanguagePack::normal($other) || $words->sameStem($word, $other)
+                    || $words->irregular($word, $other) || $words->irregular($other, $word)) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (! $found) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /** Is `$form`, a word of the text, a form of `$lemma`, a word of the term? */
     public static function form(string $lemma, string $form, LanguageWords $words): bool
     {

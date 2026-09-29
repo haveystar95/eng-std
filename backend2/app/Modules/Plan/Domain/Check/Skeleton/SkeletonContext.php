@@ -12,7 +12,9 @@ use App\Modules\Shared\Domain\ValueObject\VoiceGender;
 
 /**
  * What the skeleton was ORDERED with (`lesson_skeleton.v1.1`, INPUTS): the scene's survival set, VOCABULARY_COUNT, the pair of
- * languages as their packs, the learner's gender (null — unknown) and the days of the plan already written (EARLIER_DAYS).
+ * languages as their packs, the learner's gender (null — unknown), the days of the plan already written (EARLIER_DAYS) and
+ * the learner's own words (наряд GEN-4c) — what TOPIC_DESCRIPTION gives as «About the learner, in their own words»: the plan's
+ * goal as the learner wrote it, the only details of the learner the skeleton is given ('' — none).
  */
 final readonly class SkeletonContext
 {
@@ -24,6 +26,7 @@ final readonly class SkeletonContext
         public LanguagePack $target,
         public ?VoiceGender $learnerGender = null,
         public EarlierDays $earlierDays = new EarlierDays,
+        public string $learnerWords = '',
     ) {}
 
     public function targetWords(): LanguageWords

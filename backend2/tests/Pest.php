@@ -450,7 +450,8 @@ function planCreate(object $ctx, string $token, array $overrides = []): array
 {
     return $ctx->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/plans', $overrides + [
-            'goal_text' => 'Иду к врачу с ребёнком, болит спина. Первый раз в местной клинике.',
+            // The fake's learner (наряд GEN-4c): the day's filler words are the details this goal gives — a clean day.
+            'goal_text' => App\Modules\Plan\Infrastructure\Model\FakePlanModel::LEARNER_GOAL,
             'target_lang' => 'en',
             'level' => 'beginner',
             'days_total' => 5,
@@ -909,10 +910,11 @@ function dayCanonSkeletonContext(
     ?App\Modules\Plan\Domain\Blueprint\SurvivalSet $survival = null,
     string $native = 'ru',
     string $target = 'ro',
+    string $learnerWords = '',
 ): App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext {
     return new App\Modules\Plan\Domain\Check\Skeleton\SkeletonContext(
         $survival ?? dayCanonSurvival(), 8, 12, lessonPacks()->for($native), lessonPacks()->for($target), $gender,
-        $earlier ?? new App\Modules\Plan\Domain\Lesson\EarlierDays,
+        $earlier ?? new App\Modules\Plan\Domain\Lesson\EarlierDays, $learnerWords,
     );
 }
 

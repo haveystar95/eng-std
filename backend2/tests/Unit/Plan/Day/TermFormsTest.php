@@ -26,7 +26,22 @@ it('finds a word of the day in the form a text says it', function (string $targe
     'de: a vowel that changes (GEN-4b)' => ['de', 'gelten', 'Ich verstehe, dass die Hausordnung gilt.', true],
     'de: a separable participle (GEN-4b)' => ['de', 'anmelden', 'Haustiere sind erlaubt, wenn sie angemeldet sind.', true],
     'it: an impersonal verb (GEN-4b)' => ['it', 'bisognare', 'Bisogna portare un documento?', true],
+    'ro: a noun whose vowel changes (GEN-4c)' => ['ro', 'marfă', 'Mă ocupam de aranjarea mărfii.', true],
     'fr: another verb' => ['fr', 'vouloir', 'Je peux venir demain.', false],
     'ro: another verb' => ['ro', 'a putea', 'Vreau să încep luni.', false],
     'en: another word of the same meaning' => ['en', 'return', 'Please come back in three days.', false],
+]);
+
+// Canon (наряд GEN-4c, `vocab.from_placeholder`): a filler is the learner's detail when it stands among the learner's own
+// words — by form, never by three letters in common, never by a preposition of the goal. Catches «продавца» read in «про
+// опыт» (the e2e of GEN-4c let «vânzări» through so), and a detail in another case or number refused.
+it('reads a value among the learner\'s own words by its content words, one stem apart at most', function (string $code, string $value, string $words, bool $found) {
+    expect(TermForms::among($value, $words, new LanguageWords(lessonPacks()->for($code))))->toBe($found);
+})->with([
+    'ru: another case' => ['ru', 'поваром', 'Собеседование, я повар, работал в ресторане три года', true],
+    'ru: a preposition aside' => ['ru', 'в ресторане', 'Собеседование, я повар, работал в ресторане три года', true],
+    'ru: another number' => ['ru', 'два года', 'Собеседование, я повар, работал в ресторане три года', false],
+    'ru: «про» is no «продавца»' => ['ru', 'продавца', 'Собеседование в пятницу, боюсь вопросов про опыт', false],
+    'es: a plural' => ['es', 'pasaporte', 'vuelo a Londres, primera vez, miedo al control de pasaportes', true],
+    'fr: an elided article aside' => ['fr', "l'adresse", 'sans adresse permanente', true],
 ]);

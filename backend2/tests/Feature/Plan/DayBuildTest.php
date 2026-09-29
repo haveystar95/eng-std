@@ -24,7 +24,7 @@ beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
  * THE DAY, BUILT IN TWO STAGES (наряд GEN-4, §3) — through the build as production runs it: skeleton → its check → the seam
  * judge → the skeleton's repairs → the dialogue over the repaired skeleton → its check → the options shuffled → the dialogue's
  * repairs → the lesson. A fatal finding asks its stage once more, and a second fails the day; a warning sends its card to a
- * repair, two cards a stage at most, and a repair is kept only when it brings no fatal finding.
+ * repair, four cards a stage at most (two before наряд GEN-4c), and a repair is kept only when it brings no fatal finding.
  */
 
 /**
@@ -146,29 +146,46 @@ it('asks a stage once more for an answer off the schema, fails the day on the se
         ->and(dbScene($id)->lesson_status)->toBe('ready');
 });
 
-/** The fake's clean day with a warning on each of three cards of the skeleton — a frame, a partner line, a word. */
-function dbThreeWarnings(LessonRequest $request): array
+/**
+ * The fake's clean day with a warning on each of five cards of the skeleton — a placeholder word, a reply to a yes-or-no
+ * question with no «No», a frame, a partner line, a word defined in the learner's language.
+ */
+function dbFiveWarnings(LessonRequest $request): array
 {
     $p = planCleanLesson($request);
+    // v2 «dull» — said only through p3's filler «dull», a value the learner never gave (`vocab.from_placeholder`).
+    $p['vocabulary'][1]['term_target'] = 'dull';
+    // x8's A line — a7 of the skeleton — answers «Do we need a follow-up appointment?» with no «No» (`partner.yes_no_missing`).
+    $p['dialogue'][7]['messages'][1]['text_target'] = 'Only if it still hurts after one week.';
     // p2: eight words before its window (`frame.too_long`), said so in its exchange.
     $p['phrases'][1]['frame_target'] = 'It started, as far as I can tell, ___.';
     $p['dialogue'][1]['messages'][1]['text_target'] = 'It started, as far as I can tell, three days ago.';
     // a1 names the filler of the frame it pairs with (`partner.names_filler`).
     $p['dialogue'][0]['messages'][0]['text_target'] = 'Is it his lower back that hurts?';
-    // v2 defined in the learner's language (`vocab.definition_language`).
-    $p['vocabulary'][1]['definition_target'] = 'резкая и сильная';
+    // v8 defined in the learner's language (`vocab.definition_language`).
+    $p['vocabulary'][7]['definition_target'] = 'записка от врача для школы';
 
     return $p;
 }
 
-// Наряд GEN-4, 3.9: «починка v1.5 карточек frame/term/partner_line на скелете»; «после починки partner_line код заменяет реплику
-// A»; 3.4: the seam judge reads the repaired frames. Catches a third card repaired, cards repaired in another order than
-// frames first, a repair kept that the dialogue then says the old way, and a repaired frame never read by the judge again.
-it('sends two cards of the skeleton\'s warnings to repairs, frames first, and writes the dialogue over the repaired skeleton', function () {
+// Наряд GEN-4c §4: «бюджет починок: скелет 2 → 4 карточек; порядок: бюджетные фатальные (foreign_script) → vocab.from_placeholder
+// → yes_no → names_filler_meaning → остальные в прежнем порядке» — the order the cards are TAKEN in; the ones taken are repaired
+// frames first, then lines, then words (GEN-4: what the others are built on goes first — the e2e of GEN-4c lost a line's repair
+// to a word repaired before it). GEN-4, 3.9: «после починки partner_line код заменяет реплику A»; the seam judge reads again
+// what a repair changed. Catches a fifth card repaired, the placeholder word or the yes-or-no reply left out for the frames, a
+// word repaired before the lines it may take its new word from, a repair kept that the dialogue then says the old way, and a
+// repaired frame or reply never read by the judge again.
+it('takes four cards of the skeleton\'s warnings, the placeholder word and the yes-or-no reply before the rest, repairs them frames first, and writes the dialogue over the repaired skeleton', function () {
     $fake = new FakePlanModel(
-        lesson: dbThreeWarnings(...),
+        lesson: dbFiveWarnings(...),
         repair: static function (LessonCardRepairRequest $request): array {
             $card = $request->card;
+            if ($request->address === 'v2') {
+                $card = [...$card, 'term_target' => 'ache', 'translation_native' => 'ноющая боль', 'pronunciation_native' => 'эйк', 'definition_target' => 'a pain that goes on and is not strong', 'used_in' => ['a3']];
+            }
+            if ($request->address === 'a7') {
+                $card['text_target'] = 'No, only if it still hurts after one week.';
+            }
             if ($request->address === 'p2') {
                 $card['frame_target'] = 'It started ___.';
             }
@@ -182,18 +199,26 @@ it('sends two cards of the skeleton\'s warnings to repairs, frames first, and wr
     [, , $scene] = dbBuild($this, $fake);
     $lesson = json_decode((string) $scene->lesson_json, true);
 
-    expect(array_map(static fn (LessonCardRepairRequest $r): string => "{$r->kind}:{$r->address}", $fake->repairRequests))->toBe(['frame:p2', 'partner_line:a1'])
-        ->and(array_column($fake->repairRequests[0]->findings, 'code'))->toBe(['frame.too_long'])
-        ->and($fake->repairRequests[1]->dialogue)->toBeNull()
+    expect(array_map(static fn (LessonCardRepairRequest $r): string => "{$r->kind}:{$r->address}", $fake->repairRequests))->toBe(['frame:p2', 'partner_line:a1', 'partner_line:a7', 'term:v2'])
+        ->and(array_column($fake->repairRequests[3]->findings, 'code'))->toBe(['vocab.from_placeholder'])
+        ->and(array_column($fake->repairRequests[2]->findings, 'code'))->toBe(['partner.yes_no_missing'])
+        ->and($fake->repairRequests[2]->findings[0]['detail'])->toStartWith('a7: a yes-or-no question: start with Yes. or No., then one general fact')
+        // The word is repaired over the lines as the repairs left them.
+        ->and($fake->repairRequests[3]->skeleton['partner_lines'][6]['text_target'])->toBe('No, only if it still hurts after one week.')
+        ->and($fake->repairRequests[3]->dialogue)->toBeNull()
         ->and($scene->lesson_status)->toBe('ready')
-        // The word was the third card: its warning stays with the day.
-        ->and(dbFound($scene))->toBe(['vocab.definition_language@v2'])
+        // The word defined in Russian was the fifth card: its warning stays with the day.
+        ->and(dbFound($scene))->toBe(['vocab.definition_language@v8'])
         ->and($fake->dialogueRequests[0]->skeleton->frame('p2')?->phrase->frameTarget)->toBe('It started ___.')
         ->and($lesson['phrases'][1]['frame_target'])->toBe('It started ___.')
+        ->and($lesson['vocabulary'][1]['term_target'])->toBe('ache')
         ->and($lesson['dialogue'][1]['messages'][1]['text_target'])->toBe('It started three days ago.')
         ->and($lesson['dialogue'][0]['messages'][0]['text_target'])->toBe('Where does it hurt: in his upper back or lower down?')
+        ->and($lesson['dialogue'][7]['messages'][1]['text_target'])->toBe('No, only if it still hurts after one week.')
+        // Read again, in one call: the frame's native seams and the reply to the learner's question; a1 asks, it is no reply.
         ->and($fake->judgeCalls)->toBe(2)
-        ->and($fake->judgeRequests[1]->ids())->toBe(['p2.f1', 'p2.f2', 'p2.f3']);
+        ->and($fake->judgeRequests[1]->ids())->toBe(['p2.f1', 'p2.f2', 'p2.f3'])
+        ->and($fake->judgeRequests[1]->replyIds())->toBe(['a7']);
 });
 
 // «Repair kept only if no new fatal»: a repair that breaks what the check holds is thrown away, the card as the stage wrote it
@@ -214,17 +239,21 @@ it('keeps the card as written when its repair brings a fatal finding', function 
     $lesson = json_decode((string) $scene->lesson_json, true);
 
     expect(array_map(static fn (LessonCardRepairRequest $r): string => $r->address, $fake->repairRequests))->toBe(['a5'])
+        // Наряд GEN-4c: the repair is told the word only this line says — a note, no finding: counted nowhere, stored nowhere.
+        ->and(array_column($fake->repairRequests[0]->findings, 'code'))->toBe(['partner.too_long', 'vocab.carried'])
+        ->and($fake->repairRequests[0]->findings[1]['detail'])->toContain('«heating pad» (v5)')
+        ->and(DB::table('plan_check_counters')->where('check_name', 'vocab.carried')->count())->toBe(0)
         ->and($scene->lesson_status)->toBe('ready')
         ->and(dbFound($scene))->toBe(['partner.too_long@a5'])
         ->and($lesson['dialogue'][4]['messages'][0]['text_target'])->toBe($long);
 });
 
 // Наряд GEN-4b §3: «pronunciation.foreign_script — из фатальных в предупреждения: находка идёт в починку карточки (frame /
-// partner_line / term с этим чтением), фатально только если таких карточек больше бюджета починок ступени». Catches a letter
-// of another writing still asking the skeleton again, its card left behind the other warnings' — and cards beyond the stage's
-// two repairs let through into a day.
-it('sends a reading with a letter of another writing to a repair first, and asks the skeleton again only beyond two cards', function (int $cards, bool $again) {
-    $readings = ['p2' => 'ит стартэд ___ ק', 'p3' => 'зэ пэйн из ___ вэн хи бэндз ק', 'p5' => 'хи уил рэст ___ ק'];
+// partner_line / term с этим чтением), фатально только если таких карточек больше бюджета починок ступени» — four since GEN-4c.
+// Catches a letter of another writing still asking the skeleton again, its card left behind the other warnings' — and cards
+// beyond the stage's four repairs let through into a day.
+it('sends a reading with a letter of another writing to a repair first, and asks the skeleton again only beyond four cards', function (int $cards, bool $again) {
+    $readings = ['p2' => 'ит стартэд ___ ק', 'p3' => 'зэ пэйн из ___ вэн хи бэндз ק', 'p4' => 'хи дазнт хэв э фивер ק', 'p5' => 'хи уил рэст ___ ק', 'p6' => 'ду уи нид ___ ק'];
     $fake = new FakePlanModel(
         skeleton: static function (LessonRequest $request) use ($readings, $cards): array {
             $s = FakePlanModel::stagesOf(planCleanLesson($request), $request)['skeleton'];
@@ -257,16 +286,16 @@ it('sends a reading with a letter of another writing to a repair first, and asks
     expect($fake->skeletonCalls)->toBe($again ? 2 : 1)
         ->and($scene->lesson_status)->toBe('ready');
     if ($again) {
-        expect($fake->skeletonRequests[1]->previousViolations)->toHaveCount(3)
+        expect($fake->skeletonRequests[1]->previousViolations)->toHaveCount(5)
             ->and($fake->skeletonRequests[1]->previousViolations[0])->toStartWith('pronunciation.foreign_script · p2:');
     } else {
-        // Both readings repaired first, the first frame's own warning (the third card) left with the day.
-        expect(array_map(static fn (LessonCardRepairRequest $r): string => $r->address, $fake->repairRequests))->toBe(['p2', 'p3'])
+        // The four readings repaired first, the first frame's own warning (the fifth card) left with the day.
+        expect(array_map(static fn (LessonCardRepairRequest $r): string => $r->address, $fake->repairRequests))->toBe(['p2', 'p3', 'p4', 'p5'])
             ->and(dbFound($scene))->toBe(['frame.too_long@p1']);
     }
 })->with([
-    'two cards — the repairs take them' => [2, false],
-    'three cards — beyond the stage\'s repairs' => [3, true],
+    'four cards — the repairs take them' => [4, false],
+    'five cards — beyond the stage\'s repairs' => [5, true],
 ]);
 
 // Наряд GEN-4, 3.4: «судья швов по родным каркасам скелета до диалога; false → карточка каркаса в починку». Catches a judge asked
@@ -293,6 +322,56 @@ it('sends a frame the seam judge cannot read to a repair, and has the judge read
         ->and($fake->judgeRequests[1]->ids())->toBe(['p1.f1', 'p1.f2', 'p1.f3'])
         ->and(dbFound($scene))->toBe([])
         ->and($scene->lesson_status)->toBe('ready');
+});
+
+// Наряд GEN-4c (the e2e ru→en): the cards are taken once and repaired frames first — a word whose finding the repair of a frame
+// took away is sent to no repair: the e2e paid for a word sent with no finding. Catches that call bought again.
+it('sends no card to a repair whose findings an earlier repair of the stage took away', function () {
+    $fake = new FakePlanModel(
+        lesson: static function (LessonRequest $request): array {
+            $p = planCleanLesson($request);
+            // v5 «heating pad» named in p5, which does not say it (`vocab.used_in_wrong`); p5 eight words long (`frame.too_long`).
+            $p['vocabulary'][4]['used_in'] = ['p5'];
+            $p['phrases'][4]['frame_target'] = 'He will rest, as the doctor told him to, ___.';
+            $p['dialogue'][4]['messages'][1]['text_target'] = 'Okay, he will rest, as the doctor told him to, at home.';
+
+            return $p;
+        },
+        repair: static fn (LessonCardRepairRequest $request): array => ['card' => $request->address === 'p5'
+            ? [...$request->card, 'frame_target' => 'He will rest with a heating pad ___.']
+            : $request->card],
+    );
+    [, , $scene] = dbBuild($this, $fake);
+
+    expect(array_map(static fn (LessonCardRepairRequest $r): string => $r->address, $fake->repairRequests))->toBe(['p5'])
+        ->and(dbFound($scene))->toBe([])
+        ->and($scene->lesson_status)->toBe('ready');
+});
+
+// Наряд GEN-4c §3: «судья: называет ли ответ хотя бы одно наполнение этого каркаса … partner.names_filler_meaning — предупреждение
+// с бюджетом, карточка partner_line»; «все новые коды — в plan_check_counters». Catches a named reply sent to no repair, a
+// repaired reply the judge never reads again (so its finding would stay or vanish unread), a second call bought for the second
+// question, and the code left out of the counters.
+it('sends a reply the seam judge finds naming a filler to a repair, and has the judge read that reply again', function () {
+    $fake = new FakePlanModel(
+        repair: static fn (LessonCardRepairRequest $request): array => ['card' => [...$request->card, 'text_target' => 'No, only if it still hurts after one week.']],
+        judge: static fn (NativeSeamJudgeRequest $request, int $call): array => [
+            'verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids()),
+            // a7 — the reply to «Do we need ___?» of x8 — named once; the line the repair writes names nothing.
+            'replies_naming_values' => $call === 1 ? ['a7'] : [],
+        ],
+    );
+    [, , $scene] = dbBuild($this, $fake);
+
+    expect(array_map(static fn (LessonCardRepairRequest $r): string => "{$r->kind}:{$r->address}", $fake->repairRequests))->toBe(['partner_line:a7'])
+        ->and(array_column($fake->repairRequests[0]->findings, 'code'))->toBe(['partner.names_filler_meaning'])
+        ->and($fake->judgeCalls)->toBe(2)
+        ->and($fake->judgeRequests[0]->replyIds())->toBe(['a6', 'a7'])
+        ->and($fake->judgeRequests[1]->ids())->toBe([])
+        ->and($fake->judgeRequests[1]->replyIds())->toBe(['a7'])
+        ->and(dbFound($scene))->toBe([])
+        ->and($scene->lesson_status)->toBe('ready')
+        ->and(dbCounted('lesson_skeleton.v1.1', 'partner.names_filler_meaning'))->toBe(['counted' => 1]);
 });
 
 // Наряд GEN-4, 3.9: «exchange/check/listening на диалоге». Catches a check repaired without the dialogue it belongs to, one

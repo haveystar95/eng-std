@@ -76,6 +76,21 @@ return [
         'subjects' => ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'there'],
     ],
 
+    // THE ANSWER A YES-OR-NO QUESTION OPENS WITH (наряд GEN-4c, `partner.yes_no_missing` / `partner.yes_no_extra`): the
+    // partner's reply to a yes-or-no question of the learner's opens with one of these words, a reply to a question that
+    // asks for a fact opens with none. «Yes» first, «no» second — the finding names the two. Read against the reply's
+    // first word, case and marks aside: «No test is needed now.» opens with «no» as well as «No, …» does.
+    'yes_no' => ['yes', 'no'],
+
+    // THE WORDS OF A QUESTION THAT ASKS FOR A FACT (наряд GEN-4c): a word, or a phrase of words standing in a row («how
+    // many»); a word an apostrophe joins is read in its parts as well («What's» holds «what»). An ask frame that holds none
+    // of them, anywhere, and offers no choice (`alternative_words` between two of its words: «Is ___ gross or net?») is a
+    // yes-or-no question: «Do we need ___?», «Is ___ included in the rent?».
+    'question_words' => [
+        'what', 'which', 'who', 'whom', 'whose', 'where', 'when', 'why', 'how', 'how many', 'how much', 'how long',
+        'how often', 'what time', 'what kind of',
+    ],
+
     // Words that carry no content of their own: the server's speaking key takes the part of the frame with more words
     // that are not one of them; a repeated pair of two of them copies nothing.
     'function_words' => [

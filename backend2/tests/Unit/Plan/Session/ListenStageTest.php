@@ -417,13 +417,13 @@ it('asks the number of the visit — the line, its place in the text, the value 
     $texts = s1lTexts($payload);
 
     expect(array_keys($payload))->toBe(['scene_id', 'line', 'span', 'options', 'correct'])
-        // «It started three days ago.» says a number too, but «Only if it still hurts after one week.» is longer.
+        // «It started three days ago.» says a number too, but «No, only if it still hurts after one week.» is longer.
         ->and($payload['line'])->toBe([
             'ref' => 'x8', 'role' => 'partner', 'exchange_step' => 8,
             'text_target' => $partner->textTarget, 'text_native' => $partner->textNative, 'audio' => Audio::of('x8'),
         ])
-        ->and($payload['span'])->toBe([29, 32])
-        ->and(mb_substr($partner->textTarget, 29, 3))->toBe('one')
+        ->and($payload['span'])->toBe([33, 36])
+        ->and(mb_substr($partner->textTarget, 33, 3))->toBe('one')
         ->and($payload['options'])->toHaveCount(3)
         ->and(s1lRight($payload))->toBe('Через неделю')
         ->and(array_unique(array_map(mb_strtolower(...), $texts)))->toHaveCount(3)

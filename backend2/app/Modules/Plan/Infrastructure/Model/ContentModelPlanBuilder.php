@@ -128,7 +128,7 @@ final readonly class ContentModelPlanBuilder implements PlanModelPort
 
     public function judgeNativeSeams(NativeSeamJudgeRequest $request): ModelReply
     {
-        return $this->ask(self::SEAM_JUDGE, $this->lessonTimeout, $this->prompts->judgeSystem(), $this->prompts->judgeVersion(), $this->prompts->judgeUser($request), PlanSchemas::seamJudge($request->ids()));
+        return $this->ask(self::SEAM_JUDGE, $this->lessonTimeout, $this->prompts->judgeSystem(), $this->prompts->judgeVersion(), $this->prompts->judgeUser($request), PlanSchemas::seamJudge($request->ids(), $request->replyIds()));
     }
 
     public function judgeSlot(SlotJudgeRequest $request): ModelReply

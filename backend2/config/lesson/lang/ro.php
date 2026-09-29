@@ -52,6 +52,21 @@ return [
     // only its mark (pack-keys §3.5 — the no-op for ro).
     'question_word_order' => ['auxiliaries' => [], 'subjects' => []],
 
+    // THE ANSWER A YES-OR-NO QUESTION OPENS WITH (наряд GEN-4c, `partner.yes_no_missing` / `partner.yes_no_extra`): the
+    // partner's reply to a yes-or-no question of the learner's opens with one of these words, a reply to a question that
+    // asks for a fact opens with none. «Yes» first, «no» second — the finding names the two. Read against the reply's
+    // first word, case and marks aside: «Nu este nevoie…» opens with «nu» as well as «Nu, …» does.
+    'yes_no' => ['da', 'nu'],
+
+    // THE WORDS OF A QUESTION THAT ASKS FOR A FACT (наряд GEN-4c): what, which, who, where, when, how, how many, why — a
+    // word, or a phrase of words standing in a row («de ce», «cât de»). An ask frame that holds none of them, anywhere, and
+    // offers no choice (`alternative_words` between two of its words) is a yes-or-no question: «Postul include ___?»,
+    // «Oferiți instruire?»; «Care este programul?», «Ce face ___?» ask for a fact.
+    'question_words' => [
+        'ce', 'care', 'cine', 'cui', 'unde', 'încotro', 'când', 'cum', 'cât', 'câtă', 'câți', 'câte', 'de ce', 'cât de',
+        'de când', 'până când', 'cât timp', 'la ce oră', 'ce fel de',
+    ],
+
     // Words that carry no content of their own — prepositions, conjunctions, pronouns and clitics, the articles, the
     // forms of «a fi», «a avea», the modals and the auxiliaries, «aici / acolo / atunci», «da / nu / vă rog / mulțumesc».
     // A hyphenated clitic group is one word of the text («n-am», «s-a», «într-o», «mi-e») and is listed whole.
@@ -169,6 +184,9 @@ return [
         'pune' => ['pun', 'pui', 'pus'],
         'scrie' => ['scriu', 'scris'],
         'mânca' => ['mănânc', 'mănânci', 'mănâncă'],
+        // A noun whose stem changes its vowel (наряд GEN-4c: the e2e skeleton taught «marfă» said as «aranjarea mărfii» —
+        // a false fatal `vocab.not_found` that failed the day).
+        'marfă' => ['mărfii', 'mărfuri', 'mărfurile', 'mărfurilor'],
     ],
 
     // A number: a digit anywhere in the word, a number word, an ordinal («al doilea», «a treia», «prima»), «jumătate»,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Check;
 
 use App\Modules\Plan\Domain\Check\Language\LanguagePack;
+use Normalizer;
 
 /**
  * HOW THE STAGES' RULES READ TEXT (наряд GEN-4) — one reading for all of them, so that «the same» and «close» never mean two
@@ -19,6 +20,21 @@ final class StageText
         $text = (string) preg_replace('/[^\p{L}\p{N}_\s]+/u', ' ', $text);
 
         return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    /**
+     * A text WITHOUT ITS DIACRITICS (наряд GEN-4c) — «ребёнок» and «ребенок», «șofer» and «sofer», «café» and «cafe» are one
+     * word to a learner who types them: every combining mark of the decomposed text gone, the rest composed again.
+     */
+    public static function plain(string $text): string
+    {
+        $decomposed = Normalizer::normalize($text, Normalizer::FORM_D);
+        if (! is_string($decomposed)) {
+            return $text;
+        }
+        $plain = Normalizer::normalize((string) preg_replace('/\p{Mn}+/u', '', $decomposed), Normalizer::FORM_C);
+
+        return is_string($plain) ? $plain : $text;
     }
 
     /** How alike two texts are, 0…1: one minus their edit distance over the longer, read {@see normal()}. */

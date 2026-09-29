@@ -170,6 +170,23 @@ return [
     // text, which this rule cannot read, pack-keys §3.5): a question is its mark alone — the no-op.
     'question_word_order' => ['auxiliaries' => [], 'subjects' => []],
 
+    // THE ANSWER A YES-OR-NO QUESTION OPENS WITH (наряд GEN-4c, `partner.yes_no_missing` / `partner.yes_no_extra`): the
+    // partner's reply to a yes-or-no question of the learner's opens with one of these words, a reply to a question that
+    // asks for a fact opens with none. «Yes» first, «no» second — the finding names the two —, then «si», the yes to a
+    // question asked in the negative. Read against the reply's first word, case and marks aside — a reply opening with the
+    // «si» of «if» («Si vous…») reads as opening with a yes: the limit of a list, not a finding to trust.
+    'yes_no' => ['oui', 'non', 'si'],
+
+    // THE WORDS OF A QUESTION THAT ASKS FOR A FACT (наряд GEN-4c), anywhere in the question — French puts them last as
+    // often as first («Je commence à quelle heure ?», «C'est combien ?»): a word, or a phrase of words standing in a row
+    // («à quelle heure», «qu'est-ce que»). Not a bare «que»: «Est-ce que ___ compte ?» asks yes or no. An ask frame that
+    // holds none of them and offers no choice (`alternative_words` between two of its words) is a yes-or-no question.
+    'question_words' => [
+        'qui', 'quoi', 'quel', 'quelle', 'quels', 'quelles', 'lequel', 'laquelle', 'lesquels', 'lesquelles', 'où', 'quand',
+        'comment', 'combien', 'pourquoi', "qu'est-ce que", "qu'est-ce qui", 'à quelle heure', 'combien de temps',
+        'depuis quand', "jusqu'à quand",
+    ],
+
     // Words that carry no content of their own (Ⓐ: a word glued by an apostrophe or a hyphen is one word of the text and
     // is listed whole — «c'est», «j'ai», «est-ce», «puis-je», «avez-vous», «d'accord»): articles and their contracted
     // forms, prepositions, conjunctions, pronouns, possessives and demonstratives, the question words, the forms of être,

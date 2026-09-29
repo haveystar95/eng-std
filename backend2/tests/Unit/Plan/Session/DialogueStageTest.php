@@ -150,8 +150,8 @@ it('deals an ask as one card: the learner\'s own line, the partner\'s answer, an
         ->and($ask['own_line']['key'])->not->toBeNull()
         ->and($ask['partner_line'])->toBe([
             'ref' => 'x8',
-            'text_target' => 'Only if it still hurts after one week.',
-            'text_native' => 'Только если через неделю ещё будет болеть.',
+            'text_target' => 'No, only if it still hurts after one week.',
+            'text_native' => 'Нет, только если через неделю ещё будет болеть.',
             'audio' => Audio::of('x8'),
         ])
         ->and($ask['frame']['ref'])->toBe('p6')

@@ -14,6 +14,7 @@ use App\Modules\Plan\Application\Dto\PlanLineRepairRequest;
 use App\Modules\Plan\Application\Dto\PlanRequest;
 use App\Modules\Plan\Application\Dto\SlotJudgeRequest;
 use App\Modules\Plan\Application\Port\PlanModelPort;
+use App\Modules\Plan\Application\Service\LessonRequests;
 use App\Modules\Plan\Domain\Blueprint\SurvivalSet;
 use App\Modules\Plan\Domain\Check\Dialogue\LearnerLine;
 use App\Modules\Plan\Domain\Exception\ModelAnswerOffSchema;
@@ -33,7 +34,7 @@ use Closure;
  * stages — a skeleton and a dialogue that break no rule of their checks and assemble into THE FIXTURE LESSON
  * ({@see lessonPayload()}): the day every plan test deals from. The two stages are read off that lesson ({@see
  * skeletonPayload()}, {@see dialoguePayload()}), so the fixture has one source. The seam judge reads every native sentence as
- * fine; a repair gives the card back as it was; a line repair cuts the line to its limit; the slot judge accepts every attempt,
+ * fine and finds no reply naming a filler; a repair gives the card back as it was; a line repair cuts the line to its limit; the slot judge accepts every attempt,
  * taking what was heard for the slot. A goal containing «unclear» comes back `unclear`, the way the prompt answers a
  * non-situation. A test that wants a BROKEN answer hands in its own closure for any call — or a closure that throws, for a
  * model that does not answer.
@@ -50,6 +51,8 @@ final class FakePlanModel implements PlanModelPort
     public const DIALOGUE_VERSION = 'lesson_dialogue.v1.1';
 
     public const REPAIR_VERSION = 'lesson_card_repair.v1.5';
+
+    public const JUDGE_VERSION = 'lesson_seam_judge.v1.2';
 
     /** How many times each call was made — the assertion behind «one repeat, not two». */
     public int $planCalls = 0;
@@ -179,9 +182,9 @@ final class FakePlanModel implements PlanModelPort
         $this->judgeRequests[] = $request;
         $payload = $this->judge !== null
             ? ($this->judge)($request, $this->judgeCalls)
-            : ['verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids())];
+            : ['verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids()), 'replies_naming_values' => []];
 
-        return new ModelReply($payload, 'lesson_seam_judge.v1.1', self::MODEL, 400, 120, '0.000000', 2, '');
+        return new ModelReply($payload, self::JUDGE_VERSION, self::MODEL, 400, 120, '0.000000', 2, '');
     }
 
     public function judgeSlot(SlotJudgeRequest $request): ModelReply
@@ -297,7 +300,7 @@ final class FakePlanModel implements PlanModelPort
 
     public function judgePromptVersion(): string
     {
-        return 'lesson_seam_judge.v1.1';
+        return self::JUDGE_VERSION;
     }
 
     public function slotJudgePromptVersion(): string
@@ -403,13 +406,23 @@ final class FakePlanModel implements PlanModelPort
     }
 
     /**
-     * A day's inputs as the fixture reads them — the doctor's visit of the fake's plan, day `count($earlier) + 1` of the story.
+     * THE LEARNER'S OWN WORDS OF THE FIXTURE DAY (наряд GEN-4c) — the goal of a parent who names what the day's fillers say:
+     * the sharp pain (p3), the X-ray, the follow-up visit and the note for school (p6). The day's words of those fillers
+     * («sharp», «X-ray», «follow-up appointment», «sick note») are words of the learner's details, not placeholder words
+     * (`vocab.from_placeholder`): the clean day stays clean for this learner — for a learner who said none of it, those four
+     * words are placeholders.
+     */
+    public const LEARNER_GOAL = 'Иду к врачу с ребёнком: у сына острая боль в спине. Хочу понять, нужно ли сделать рентген, прийти на повторный приём и взять справку для школы.';
+
+    /**
+     * A day's inputs as the fixture reads them — the doctor's visit of the fake's plan, day `count($earlier) + 1` of the story,
+     * for the learner of {@see LEARNER_GOAL}.
      */
     public static function lessonRequest(string $topic = 'Приём у врача', EarlierDays $earlier = new EarlierDays, string $sceneId = ''): LessonRequest
     {
         return new LessonRequest(
             topic: $topic,
-            topicDescription: 'Situation: Consultation at a local clinic with a child who has back pain.',
+            topicDescription: LessonRequests::topicDescription('Situation: Consultation at a local clinic with a child who has back pain.', self::LEARNER_GOAL),
             survival: self::survival(),
             targetLanguage: 'English',
             nativeLanguage: 'Russian',
@@ -677,7 +690,7 @@ final class FakePlanModel implements PlanModelPort
             ], 1, 'При растяжении мышцы рентген не нужен.')],
             ['ask', 'B', [
                 $b('p6', 'a follow-up appointment', 'Do we need a follow-up appointment?', 'Нам нужно прийти на повторный приём?', 'ду уи нид э фоллоу-ап эпойнтмент', 'Do we need', ['Should we come back?']),
-                $a('Only if it still hurts after one week.', 'Только если через неделю ещё будет болеть.'),
+                $a('No, only if it still hurts after one week.', 'Нет, только если через неделю ещё будет болеть.'),
             ], $check('When should they come back?', 'Когда нужно прийти снова?', [
                 ['Tomorrow morning before lunch', 'Завтра утром до обеда'], ['In a year for a check-up', 'Через год на осмотр'], ['If the pain does not stop in seven days', 'Если боль не пройдёт через семь дней'],
             ], 2, 'Прийти снова, если через неделю ещё болит.')],

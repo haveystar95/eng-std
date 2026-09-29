@@ -5971,11 +5971,11 @@
                             "audio": {
                                 "ref": "x8",
                                 "url": "http://localhost/api/v1/plans/audio/ulid-0109",
-                                "duration_ms": 2660,
+                                "duration_ms": 2940,
                                 "voice": "partner"
                             },
-                            "text_native": "Только если через неделю ещё будет болеть.",
-                            "text_target": "Only if it still hurts after one week."
+                            "text_native": "Нет, только если через неделю ещё будет болеть.",
+                            "text_target": "No, only if it still hurts after one week."
                         },
                         "question_native": "Когда нужно прийти снова?"
                     },
@@ -6211,16 +6211,16 @@
                                 "audio": {
                                     "ref": "x8",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0109",
-                                    "duration_ms": 2660,
+                                    "duration_ms": 2940,
                                     "voice": "partner"
                                 },
-                                "text_native": "Только если через неделю ещё будет болеть.",
-                                "text_target": "Only if it still hurts after one week.",
+                                "text_native": "Нет, только если через неделю ещё будет болеть.",
+                                "text_target": "No, only if it still hurts after one week.",
                                 "exchange_step": 8
                             }
                         ],
                         "scene_id": "ulid-0003",
-                        "total_ms": 40810
+                        "total_ms": 41090
                     },
                     "result": null,
                     "attempts": 0,
@@ -6590,11 +6590,11 @@
                                 "audio": {
                                     "ref": "x8",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0109",
-                                    "duration_ms": 2660,
+                                    "duration_ms": 2940,
                                     "voice": "partner"
                                 },
-                                "text_native": "Только если через неделю ещё будет болеть.",
-                                "text_target": "Only if it still hurts after one week.",
+                                "text_native": "Нет, только если через неделю ещё будет болеть.",
+                                "text_target": "No, only if it still hurts after one week.",
                                 "exchange_step": 8
                             }
                         ],
@@ -6622,7 +6622,7 @@
                             }
                         ],
                         "scene_id": "ulid-0003",
-                        "total_ms": 40810
+                        "total_ms": 41090
                     },
                     "result": null,
                     "attempts": 0,
@@ -6666,11 +6666,11 @@
                                 "audio": {
                                     "ref": "x8",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0109",
-                                    "duration_ms": 2660,
+                                    "duration_ms": 2940,
                                     "voice": "partner"
                                 },
-                                "text_native": "Только если через неделю ещё будет болеть.",
-                                "text_target": "Only if it still hurts after one week."
+                                "text_native": "Нет, только если через неделю ещё будет болеть.",
+                                "text_target": "No, only if it still hurts after one week."
                             },
                             {
                                 "id": "o3",
@@ -6768,11 +6768,11 @@
                                 "audio": {
                                     "ref": "x8",
                                     "url": "http://localhost/api/v1/plans/audio/ulid-0109",
-                                    "duration_ms": 2660,
+                                    "duration_ms": 2940,
                                     "voice": "partner"
                                 },
-                                "text_native": "Только если через неделю ещё будет болеть.",
-                                "text_target": "Only if it still hurts after one week."
+                                "text_native": "Нет, только если через неделю ещё будет болеть.",
+                                "text_target": "No, only if it still hurts after one week."
                             }
                         ],
                         "exchange": {
@@ -6797,11 +6797,11 @@
                             "audio": {
                                 "ref": "x8",
                                 "url": "http://localhost/api/v1/plans/audio/ulid-0109",
-                                "duration_ms": 2660,
+                                "duration_ms": 2940,
                                 "voice": "partner"
                             },
-                            "text_native": "Только если через неделю ещё будет болеть.",
-                            "text_target": "Only if it still hurts after one week."
+                            "text_native": "Нет, только если через неделю ещё будет болеть.",
+                            "text_target": "No, only if it still hurts after one week."
                         }
                     },
                     "result": null,
@@ -6876,16 +6876,16 @@
                             "audio": {
                                 "ref": "x8",
                                 "url": "http://localhost/api/v1/plans/audio/ulid-0109",
-                                "duration_ms": 2660,
+                                "duration_ms": 2940,
                                 "voice": "partner"
                             },
-                            "text_native": "Только если через неделю ещё будет болеть.",
-                            "text_target": "Only if it still hurts after one week.",
+                            "text_native": "Нет, только если через неделю ещё будет болеть.",
+                            "text_target": "No, only if it still hurts after one week.",
                             "exchange_step": 8
                         },
                         "span": [
-                            29,
-                            32
+                            33,
+                            36
                         ],
                         "correct": "o3",
                         "options": [
@@ -8708,8 +8708,8 @@
                         "step": 8,
                         "kind": "ask",
                         "partner": {
-                            "text": "Only if it still hurts after one week.",
-                            "translation": "Только если через неделю ещё будет болеть.",
+                            "text": "No, only if it still hurts after one week.",
+                            "translation": "Нет, только если через неделю ещё будет болеть.",
                             "audio_url": "http://localhost/api/v1/plans/audio/ulid-0109"
                         },
                         "learner": {
