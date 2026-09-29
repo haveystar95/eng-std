@@ -30,6 +30,26 @@ final class OptionShuffle
         return $dialogue->withExchanges($exchanges)->withListening($listening);
     }
 
+    /**
+     * A LESSON WRITTEN IN ONE CALL (`lesson_day`, before GEN-4 — a lesson with no skeleton) shuffled as it was served: its
+     * options are stored as the model wrote them, and until GEN-4 the served lesson put them in this order at every reading,
+     * with these seeds. Shuffled once — by the migration that brings the stored lessons of that time to the stored order —
+     * it deals what its learner was dealt before.
+     */
+    public static function lesson(Lesson $lesson, string $seed): Lesson
+    {
+        $exchanges = array_map(
+            static fn (Exchange $e): Exchange => $e->withCheck(self::check($e->check, "{$seed}:x{$e->step}:check")),
+            $lesson->exchanges,
+        );
+        $listening = [];
+        foreach ($lesson->listening as $index => $question) {
+            $listening[] = self::listening($question, "{$seed}:listening:{$index}");
+        }
+
+        return $lesson->withExchanges($exchanges)->withListening($listening);
+    }
+
     public static function check(ExchangeCheck $check, string $seed): ExchangeCheck
     {
         [$options, $correct] = self::shuffled($check->options, $check->correctOptionIndex, $seed);

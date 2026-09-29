@@ -639,16 +639,7 @@ function planWriteLessons(App\Modules\Plan\Domain\Entity\Plan $plan): void
  */
 function planServed(App\Modules\Plan\Domain\Lesson\Lesson $answer, string $seed, App\Modules\Plan\Domain\Check\Language\LanguagePack $target): App\Modules\Plan\Domain\Lesson\Lesson
 {
-    $exchanges = array_map(
-        static fn (App\Modules\Plan\Domain\Lesson\Exchange $e): App\Modules\Plan\Domain\Lesson\Exchange => $e->withCheck(App\Modules\Plan\Domain\Lesson\OptionShuffle::check($e->check, "{$seed}:x{$e->step}:check")),
-        $answer->exchanges,
-    );
-    $listening = [];
-    foreach ($answer->listening as $index => $question) {
-        $listening[] = App\Modules\Plan\Domain\Lesson\OptionShuffle::listening($question, "{$seed}:listening:{$index}");
-    }
-
-    return App\Modules\Plan\Domain\Lesson\LessonAssembly::serve($answer->withExchanges($exchanges)->withListening($listening), $target);
+    return App\Modules\Plan\Domain\Lesson\LessonAssembly::serve(App\Modules\Plan\Domain\Lesson\OptionShuffle::lesson($answer, $seed), $target);
 }
 
 /**
@@ -794,13 +785,6 @@ function planGymLoad(string $userId): string
 }
 
 /**
- * THE CANON DAY OF THE STAGES' CHECKS (наряд GEN-4) — the day of the architect's own TEST INPUT (`lesson_dialogue.v1`: ru→ro,
- * the candidate's work experience, a male learner): its survival set, its skeleton, and a dialogue written to it that breaks
- * no rule, in `tests/Fixtures/plan-day/`. Every rule of `SkeletonCheck` and `DialogueCheck` is tested on it with one defect.
- *
- * @return array<string, mixed>
- */
-/**
  * THE CLEAN FIXTURE DAY as one lesson — the doctor's visit the default fake writes
  * ({@see \App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload()}):
  * for `new FakePlanModel(lesson: …)`, a test that changes what a day says and reads it back.
@@ -812,6 +796,13 @@ function planCleanLesson(App\Modules\Plan\Application\Dto\LessonRequest $request
     return App\Modules\Plan\Infrastructure\Model\FakePlanModel::lessonPayload($request);
 }
 
+/**
+ * THE CANON DAY OF THE STAGES' CHECKS (наряд GEN-4) — the day of the architect's own TEST INPUT (`lesson_dialogue.v1`: ru→ro,
+ * the candidate's work experience, a male learner): its survival set, its skeleton, and a dialogue written to it that breaks
+ * no rule, in `tests/Fixtures/plan-day/`. Every rule of `SkeletonCheck` and `DialogueCheck` is tested on it with one defect.
+ *
+ * @return array<string, mixed>
+ */
 function dayCanonJson(string $part): array
 {
     return json_decode((string) file_get_contents(__DIR__."/Fixtures/plan-day/interview-ro-{$part}.json"), true, flags: JSON_THROW_ON_ERROR);
